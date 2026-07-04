@@ -4,7 +4,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import BottomSheet, {
@@ -12,6 +11,15 @@ import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import {
   AudioModule,
@@ -22,9 +30,9 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
-import { useSession, RecordingDraft } from '../lib/store';
+import { useSession, RecordingDraft, fmtTime } from '../lib/store';
 import { colors, fonts, radius } from '../lib/theme';
-import { Mic, PlayIcon, PauseIcon, Trash, Close } from './icons';
+import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
 import { GoldButton } from './ui';
 
 type Props = {
@@ -43,8 +51,10 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   const [text, setText] = useState('');
   const [recs, setRecs] = useState<RecordingDraft[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openRef = useRef(false);
   // qIndex фиксируется при открытии шторки: пока человек пишет, индекс в store
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
@@ -65,12 +75,14 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
     setText(a?.text ?? '');
     setRecs(a?.recordings ? a.recordings.map((r) => ({ ...r })) : []);
     setConfirmDeleteId(null);
+    setConfirmCancel(false);
     setPlayingId(null);
   }, []);
 
   useEffect(
     () => () => {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
+      if (cancelTimer.current) clearTimeout(cancelTimer.current);
     },
     [],
   );
@@ -149,6 +161,22 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  // «Отмена» с подтверждением: несохранённый контент не выбрасываем молча
+  const requestClose = () => {
+    const hasContent = !!text.trim() || recs.length > 0;
+    if (!hasContent || confirmCancel) {
+      if (cancelTimer.current) clearTimeout(cancelTimer.current);
+      setConfirmCancel(false);
+      Keyboard.dismiss();
+      sheetRef.current?.close();
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setConfirmCancel(true);
+    if (cancelTimer.current) clearTimeout(cancelTimer.current);
+    cancelTimer.current = setTimeout(() => setConfirmCancel(false), 3000);
+  };
+
   // автосохранение при истечении таймера: черновик не должен пропасть
   useEffect(() => {
     if (!flushRef) return;
@@ -169,6 +197,11 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   );
 
   const recording = recorderState.isRecording;
+  // прогресс воспроизведения активной записи (0..1)
+  const playProgress =
+    playingId !== null && playerStatus.duration > 0
+      ? Math.min(playerStatus.currentTime / playerStatus.duration, 1)
+      : 0;
 
   return (
     <BottomSheet
@@ -186,6 +219,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
           player.pause();
           setPlayingId(null);
         }
+        if (i < 0) setConfirmCancel(false);
       }}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.sheetBg}
@@ -212,52 +246,104 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
         />
 
         <Pressable
-          onPress={recording ? stopRecording : startRecording}
-          style={({ pressed }) => [
-            styles.micBtn,
-            recording && styles.micBtnActive,
-            pressed && { transform: [{ scale: 0.985 }] },
-          ]}
+          onPress={startRecording}
+          style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.985 }] }]}
         >
-          <Mic color={recording ? '#f0a0a0' : colors.goldSoft} />
-          <Text style={[styles.micLabel, recording && { color: '#f0a0a0' }]}>
-            {recording ? 'Остановить запись' : 'Записать аудио'}
-          </Text>
+          <Mic color={colors.greenSoft} />
+          <Text style={styles.micLabel}>Записать аудио</Text>
         </Pressable>
 
-        {recs.map((r) => (
-          <View key={r.id} style={styles.recRow}>
-            <Pressable onPress={() => togglePlay(r)} style={styles.recPlay}>
-              {playingId === r.id ? <PauseIcon /> : <PlayIcon />}
-            </Pressable>
-            <Text style={styles.recDur}>
-              {Math.floor(r.durationSec / 60)}:{String(r.durationSec % 60).padStart(2, '0')}
+        {recs.map((r, i) => {
+          const playing = playingId === r.id;
+          return (
+            <View key={r.id} style={styles.recRow}>
+              <Pressable onPress={() => togglePlay(r)} style={styles.recPlay}>
+                {playing ? <PauseIcon size={12} color="#f0c074" /> : <PlayIcon size={13} color="#f0c074" />}
+              </Pressable>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={styles.recTrack}>
+                  <View
+                    style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
+                  />
+                </View>
+                <Text style={styles.recMeta}>
+                  Запись {i + 1} · {fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => askOrConfirmDelete(r.id)}
+                style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
+              >
+                <Trash color={confirmDeleteId === r.id ? '#ec8a7a' : 'rgba(255,255,255,.5)'} />
+              </Pressable>
+            </View>
+          );
+        })}
+
+        <View style={styles.actionsRow}>
+          <Pressable
+            onPress={requestClose}
+            style={({ pressed }) => [
+              styles.cancelBtn,
+              confirmCancel && styles.cancelBtnConfirming,
+              pressed && { transform: [{ scale: 0.97 }] },
+            ]}
+          >
+            <Text style={[styles.cancelLabel, confirmCancel && { color: '#ec9b8e' }]}>
+              {confirmCancel ? 'Точно закрыть?' : 'Отмена'}
             </Text>
-            <View style={{ flex: 1 }} />
-            <Pressable onPress={() => askOrConfirmDelete(r.id)} style={styles.recDel}>
-              {confirmDeleteId === r.id ? (
-                <Text style={styles.recDelConfirm}>точно?</Text>
-              ) : (
-                <Trash />
-              )}
-            </Pressable>
-          </View>
-        ))}
-
-        <GoldButton label="Сохранить ответ" onPress={save} style={{ marginTop: 16 }} />
-        <Pressable
-          onPress={() => {
-            Keyboard.dismiss();
-            sheetRef.current?.close();
-          }}
-          style={styles.cancelBtn}
-        >
-          <Close size={13} />
-          <Text style={styles.cancelLabel}>Закрыть без сохранения</Text>
-        </Pressable>
+          </Pressable>
+          <GoldButton label="Сохранить" onPress={save} style={{ flex: 1 }} />
+        </View>
       </BottomSheetScrollView>
+
+      {/* оверлей записи — как listening overlay в прототипе */}
+      {recording && (
+        <View style={styles.recOverlay}>
+          <Text style={styles.recOverlayKicker}>идёт запись…</Text>
+          <View style={styles.waveRow}>
+            {WAVE_BARS.map((b, i) => (
+              <WaveBar key={i} color={b.color} delay={b.delay} />
+            ))}
+          </View>
+          <Text style={styles.recOverlayHint}>говори — я запишу твои слова</Text>
+          <Pressable
+            onPress={stopRecording}
+            style={({ pressed }) => [styles.recDoneBtn, pressed && { transform: [{ scale: 0.97 }] }]}
+          >
+            <Text style={styles.recDoneLabel}>готово</Text>
+          </Pressable>
+        </View>
+      )}
     </BottomSheet>
   );
+}
+
+const WAVE_BARS = [
+  { color: '#d68a2e', delay: 0 },
+  { color: '#e6a23c', delay: 150 },
+  { color: '#f0c074', delay: 300 },
+  { color: '#e6a23c', delay: 450 },
+  { color: '#f0c074', delay: 600 },
+  { color: '#d68a2e', delay: 750 },
+];
+
+// столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
+function WaveBar({ color, delay }: { color: string; delay: number }) {
+  const k = useSharedValue(0.3);
+  useEffect(() => {
+    k.value = withDelay(
+      delay,
+      withRepeat(
+        withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true,
+      ),
+    );
+    return () => cancelAnimation(k);
+  }, [k, delay]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scaleY: k.value }] }));
+  return <Animated.View style={[styles.waveBar, { backgroundColor: color }, style]} />;
 }
 
 const styles = StyleSheet.create({
@@ -324,18 +410,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingVertical: 9,
     borderRadius: radius.sm,
-    backgroundColor: colors.btnGoldBgDim,
+    backgroundColor: 'rgba(127,174,154,.12)',
     borderWidth: 1,
-    borderColor: colors.btnGoldBorderDim,
-  },
-  micBtnActive: {
-    backgroundColor: 'rgba(240,120,120,.1)',
-    borderColor: 'rgba(240,120,120,.35)',
+    borderColor: 'rgba(127,174,154,.28)',
   },
   micLabel: {
     fontFamily: fonts.sansMedium,
     fontSize: 13,
-    color: colors.goldSoft,
+    color: colors.greenSoft,
   },
   recRow: {
     flexDirection: 'row',
@@ -349,40 +431,115 @@ const styles = StyleSheet.create({
     borderColor: colors.white08,
   },
   recPlay: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.btnGoldBgDim,
+    backgroundColor: 'rgba(230,162,60,.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(230,162,60,.34)',
   },
-  recDur: {
+  recTrack: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,.1)',
+    overflow: 'hidden',
+  },
+  recTrackFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: colors.amber,
+  },
+  recMeta: {
+    marginTop: 5,
     fontFamily: fonts.mono,
-    fontSize: 12,
-    color: 'rgba(240,230,210,.6)',
+    fontSize: 10,
+    color: 'rgba(240,200,140,.55)',
   },
   recDel: {
-    minWidth: 44,
-    height: 32,
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: radius.sm,
+    opacity: 0.45,
   },
-  recDelConfirm: {
-    fontFamily: fonts.sansMedium,
-    fontSize: 12,
-    color: '#f0a0a0',
+  recDelConfirming: {
+    opacity: 1,
+    backgroundColor: 'rgba(220,90,70,.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(220,90,70,.45)',
   },
-  cancelBtn: {
+  actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+  },
+  cancelBtn: {
+    paddingHorizontal: 14,
+    height: 44,
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 8,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(255,255,255,.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,.09)',
+  },
+  cancelBtnConfirming: {
+    backgroundColor: 'rgba(220,90,70,.18)',
+    borderColor: 'rgba(220,90,70,.45)',
   },
   cancelLabel: {
     fontFamily: fonts.sans,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.white45,
+  },
+  recOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 14,
+    backgroundColor: 'rgba(18,12,7,.97)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+  },
+  recOverlayKicker: {
+    fontFamily: fonts.sans,
+    fontSize: 11,
+    letterSpacing: 2.2,
+    textTransform: 'uppercase',
+    color: 'rgba(240,200,140,.75)',
+  },
+  waveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    height: 48,
+  },
+  waveBar: {
+    width: 4,
+    height: 48,
+    borderRadius: 3,
+  },
+  recOverlayHint: {
+    fontFamily: fonts.serifItalic,
+    fontSize: 14,
+    color: 'rgba(240,225,195,.6)',
+    textAlign: 'center',
+    paddingHorizontal: 24,
+  },
+  recDoneBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(230,162,60,.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(230,162,60,.42)',
+  },
+  recDoneLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 14,
+    color: '#f6ecd4',
   },
 });

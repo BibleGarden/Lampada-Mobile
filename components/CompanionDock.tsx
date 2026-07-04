@@ -72,7 +72,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
       {/* заголовок + переключатель */}
       <View style={styles.header}>
         <Text style={styles.label} numberOfLines={1}>
-          {isQ ? 'СПУТНИК · ВОПРОС' : `ПИСАНИЕ · ${curScripture.ref}`}
+          {isQ ? 'Спутник спрашивает' : curScripture.ref}
         </Text>
         <View style={styles.switcher}>
           <Pressable
@@ -117,7 +117,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
             >
               {answered ? <Check /> : <Pen />}
               <Text style={[styles.mainBtnLabel, answered && { color: colors.greenSoft }]}>
-                {answered ? 'Ответ записан' : 'Ответить'}
+                {answered ? 'Изменить' : 'Ответить'}
               </Text>
             </Pressable>
             <SquareBtn onPress={tap(() => s.nextQuestion())}>

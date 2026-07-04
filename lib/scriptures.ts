@@ -45,4 +45,4 @@ export const scriptures: Scripture[] = [
 ];
 
 // Отрывок считается «длинным», если не помещается в 3 строки карточки
-export const isLong = (s: Scripture) => s.text.length > 140;
+export const isLong = (s: Scripture) => s.text.length > 160;

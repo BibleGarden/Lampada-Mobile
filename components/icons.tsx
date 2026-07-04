@@ -119,6 +119,20 @@ export const Bell = ({ size = 13, color = 'rgba(255,255,255,.3)', strokeWidth = 
   </Svg>
 );
 
+export const Clock = ({ size = 16, color = 'rgba(230,162,60,.85)', strokeWidth = 1.7 }: P) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M12 7v5l3 2" />
+    <Path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
+  </Svg>
+);
+
+export const Shield = ({ size = 16, color = 'rgba(230,162,60,.85)', strokeWidth = 1.7 }: P) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+    <Path d="M9.5 12l1.8 1.8 3.5-3.6" />
+  </Svg>
+);
+
 export const Lamp = ({ size = 23, color = 'rgba(240,200,140,.85)', strokeWidth = 1.5 }: P) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
     <Path d="M12 3a6 6 0 0 0-6 6c0 2 1 3.3 2 4.5.7.8 1 1.5 1 2.5h6c0-1 .3-1.7 1-2.5 1-1.2 2-2.5 2-4.5a6 6 0 0 0-6-6z" />

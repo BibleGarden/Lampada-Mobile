@@ -83,7 +83,9 @@ export default function Session() {
   };
 
   const timerLabel = s.remaining === null ? fmtTime(s.elapsed) : fmtTime(s.remaining);
-  const timerSub = s.remaining === null ? 'свободная молитва' : 'осталось';
+  const timerSub = s.remaining === null ? 'идёт' : 'осталось';
+  // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
+  const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
 
   return (
     <View style={styles.root}>
@@ -126,23 +128,21 @@ export default function Session() {
           </View>
           {adjustOpen && s.remaining !== null && (
             <>
-              <AdjustBtn side="left" label="−5" onPress={() => s.adjustTimer(-5)} />
-              <AdjustBtn side="right" label="+5" accent onPress={() => s.adjustTimer(5)} />
+              <AdjustBtn side="left" label={`−${adjStep}`} onPress={() => s.adjustTimer(-adjStep)} />
+              <AdjustBtn side="right" label={`+${adjStep}`} accent onPress={() => s.adjustTimer(adjStep)} />
             </>
           )}
         </View>
 
         {/* цель */}
-        {!!s.topic.trim() && (
-          <View style={styles.goalWrap}>
-            <Kicker style={{ fontSize: 9, color: colors.labelGoldDim, marginBottom: 5 }}>
-              цель
-            </Kicker>
-            <Text style={styles.goalText} numberOfLines={3}>
-              {s.goalPhrase || s.topic.trim()}
-            </Text>
-          </View>
-        )}
+        <View style={styles.goalWrap}>
+          <Kicker style={{ fontSize: 9, color: colors.labelGoldDim, marginBottom: 5 }}>
+            цель
+          </Kicker>
+          <Text style={styles.goalText} numberOfLines={3}>
+            {s.topic.trim() || s.goalPhrase || 'Свободная молитва — без конкретной темы'}
+          </Text>
+        </View>
 
         {/* карточка-спутник */}
         <View style={[styles.dockWrap, { bottom: insets.bottom + 14 }]}>

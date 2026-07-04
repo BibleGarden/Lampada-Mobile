@@ -23,19 +23,19 @@ export default function Done() {
         <View style={styles.center}>
           <Flame width={220} lit />
           <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.textBlock}>
-            <Text style={styles.title}>Лампада зажжена</Text>
-            <Kicker style={{ marginTop: 10 }}>
-              {s.streak.count}-й день подряд
-            </Kicker>
+            <Text style={styles.title}>Огонёк горит</Text>
+            <Text style={styles.streakLine}>
+              {s.streak.count}-й день, как ты возвращаешься
+            </Text>
             {!!s.takeaway && (
               <View style={styles.takeawayCard}>
-                <Kicker style={{ fontSize: 9, marginBottom: 6 }}>ты уносишь с собой</Kicker>
-                <Text style={styles.takeawayText}>{s.takeaway}</Text>
+                <Kicker style={{ fontSize: 10, marginBottom: 8 }}>ты вынес из молитвы</Kicker>
+                <Text style={styles.takeawayText}>«{s.takeaway}»</Text>
               </View>
             )}
           </Animated.View>
         </View>
-        <GoldButton label="Вернуться" onPress={() => router.dismissAll()} />
+        <GoldButton label="На главную" onPress={() => router.dismissAll()} />
       </Animated.View>
     </View>
   );
@@ -62,6 +62,12 @@ const styles = StyleSheet.create({
     fontSize: 26,
     color: colors.cream,
   },
+  streakLine: {
+    marginTop: 7,
+    fontFamily: fonts.sans,
+    fontSize: 13,
+    color: 'rgba(255,225,180,.5)',
+  },
   takeawayCard: {
     marginTop: 20,
     padding: 14,
@@ -73,10 +79,10 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   takeawayText: {
-    fontFamily: fonts.serifItalic,
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.cardText,
+    fontFamily: fonts.serifRegular,
+    fontSize: 16,
+    lineHeight: 23,
+    color: '#e8ddc6',
     textAlign: 'center',
   },
 });

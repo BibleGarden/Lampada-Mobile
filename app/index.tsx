@@ -6,8 +6,13 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton } from '../components/ui';
+import { Bell } from '../components/icons';
 import { useSession } from '../lib/store';
 import { colors, fonts } from '../lib/theme';
+
+// время тихого напоминания; пока фиксировано, как в прототипе —
+// настройка появится вместе с expo-notifications
+const REMINDER_TIME = '7:30';
 
 const greetingByHour = () => {
   const h = new Date().getHours();
@@ -43,6 +48,10 @@ export default function Home() {
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
         <View style={[styles.top, { top: insets.top + 18 }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
+          <View style={styles.bellChip}>
+            <Bell />
+            <Text style={styles.bellLabel}>{REMINDER_TIME}</Text>
+          </View>
         </View>
 
         <View style={styles.center}>
@@ -84,11 +93,24 @@ const styles = StyleSheet.create({
     left: 18,
     right: 18,
     zIndex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   greeting: {
     fontFamily: fonts.serifRegular,
     fontSize: 15,
     color: colors.creamDim,
+  },
+  bellChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  bellLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: 'rgba(255,255,255,.3)',
   },
   center: {
     flex: 1,

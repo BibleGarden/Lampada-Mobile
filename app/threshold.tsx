@@ -8,30 +8,48 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import ProgressRing from '../components/ProgressRing';
 import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Lamp, QuestionMark, Book, Mic } from '../components/icons';
-import { useSession } from '../lib/store';
+import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
+import { plMinutes, useSession } from '../lib/store';
 import { colors, fonts, durations } from '../lib/theme';
 
-const BRIEF = [
-  {
-    icon: <QuestionMark size={15} color={colors.amberBright} />,
-    text: 'Спутник будет тихо предлагать вопросы — они помогут молитве не рассыпаться.',
-  },
-  {
-    icon: <Book size={15} color={colors.amberBright} />,
-    text: 'Рядом — Писание: стихи, созвучные твоей цели. Можно листать и сохранять.',
-  },
-  {
-    icon: <Mic size={15} color={colors.amberBright} />,
-    text: 'Отвечать можно словами или голосом — всё останется только у тебя.',
-  },
-];
+// «15 минут» / «час» / «1:30» — как timeAmount в прототипе
+const timeAmount = (minutes: number) => {
+  if (minutes < 60) return `${minutes} ${plMinutes(minutes)}`;
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) return hrs === 1 ? 'час' : `${hrs} часа`;
+  return `${hrs}:${mins < 10 ? '0' : ''}${mins} ч`;
+};
 
 export default function Threshold() {
   const insets = useSafeAreaInsets();
   const s = useSession();
+
+  // брифинг собирается из выбора на «Настройке» — как в прототипе
+  const topicTrim = s.topic.trim();
+  const goalClause = (s.goalPhrase || topicTrim).replace(/^[А-ЯA-ZЁ]/, (c) =>
+    c.toLowerCase(),
+  );
+  const timeText = topicTrim
+    ? s.minutes === 0
+      ? `У тебя столько времени, сколько нужно, чтобы ${goalClause}`
+      : `У тебя ${timeAmount(s.minutes)}, чтобы ${goalClause}`
+    : s.minutes === 0
+      ? 'Столько времени, сколько нужно — без таймера и спешки'
+      : `У тебя ${timeAmount(s.minutes)} наедине с Богом`;
+  const brief = [
+    { icon: <Clock size={16} color={colors.amberBright} />, text: timeText },
+    {
+      icon: <QuestionMark size={16} color={colors.amberBright} />,
+      text: 'Спутник будет задавать наводящие вопросы — отвечай на те, что отзываются',
+    },
+    {
+      icon: <Shield size={16} color={colors.amberBright} />,
+      text: 'Ответы и выводы сохранятся только на этом устройстве',
+    },
+  ];
   const progress = useSharedValue(0);
-  const [hint, setHint] = useState('удерживай');
+  const [hint, setHint] = useState('нажми и держи');
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const entering = useRef(false);
@@ -46,7 +64,7 @@ export default function Threshold() {
 
   const begin = () => {
     if (entering.current) return;
-    setHint('не отпускай');
+    setHint('держи…');
     progress.value = withTiming(1, {
       duration: durations.holdToStart,
       easing: Easing.out(Easing.quad),
@@ -77,7 +95,7 @@ export default function Threshold() {
   const cancel = () => {
     if (entering.current) return;
     clearTimers();
-    setHint('удерживай');
+    setHint('нажми и держи');
     progress.value = withTiming(0, { duration: 250 });
   };
 
@@ -104,12 +122,19 @@ export default function Threshold() {
         </View>
 
         <View style={styles.brief}>
-          {BRIEF.map((b, i) => (
-            <View key={i} style={styles.briefRow}>
-              <View style={styles.briefIcon}>{b.icon}</View>
-              <Text style={styles.briefText}>{b.text}</Text>
-            </View>
-          ))}
+          {brief.map((b, i) => {
+            // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе)
+            const long = Math.ceil(b.text.length / 30) >= 3;
+            return (
+              <View
+                key={i}
+                style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
+              >
+                <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
+                <Text style={styles.briefText}>{b.text}</Text>
+              </View>
+            );
+          })}
         </View>
 
         <View style={styles.holdWrap}>
@@ -164,7 +189,6 @@ const styles = StyleSheet.create({
   },
   briefRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
     gap: 12,
   },
   briefIcon: {
@@ -176,7 +200,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(230,162,60,.12)',
     borderWidth: 1,
     borderColor: 'rgba(230,162,60,.28)',
-    marginTop: 1,
   },
   briefText: {
     flex: 1,

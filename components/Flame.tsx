@@ -26,13 +26,15 @@ type Props = {
   width?: number;
   /** Огонёк горит (true) или тлеет углём в ожидании (false) */
   lit?: boolean;
+  /** Только пламя с гало, без чаши — тёплый уголёк на экране рефлексии */
+  ember?: boolean;
 };
 
 // Огонёк лампады: гало + пламя-капля + чаша.
 // Дрожание — сумма синусоид с некратными частотами, чтобы глаз не ловил повтор.
-export default function Flame({ width = 240, lit = true }: Props) {
+export default function Flame({ width = 240, lit = true, ember = false }: Props) {
   const W = width;
-  const H = width * 1.17;
+  const H = ember ? width : width * 1.17;
   const cx = W / 2;
   const bowlTop = H * 0.72;
   const flameH = W * 0.14 * (lit ? 1 : 0.45);
@@ -122,6 +124,7 @@ export default function Flame({ width = 240, lit = true }: Props) {
       </Group>
 
       {/* чаша лампады */}
+      {!ember && (
       <Group>
         <RoundedRect
           x={cx - W * 0.25}
@@ -149,6 +152,7 @@ export default function Flame({ width = 240, lit = true }: Props) {
           <BlurMask blur={3} style="normal" />
         </RoundedRect>
       </Group>
+      )}
     </Canvas>
   );
 }
