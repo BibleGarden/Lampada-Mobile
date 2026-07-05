@@ -65,7 +65,9 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
 
-  const snapPoints = useMemo(() => ['62%'], []);
+  // вторая точка — для открытой клавиатуры: keyboardBehavior="extend"
+  // поднимает шторку до верхней, и поле ввода с кнопками остаются видны
+  const snapPoints = useMemo(() => ['62%', '92%'], []);
 
   // при открытии подтягиваем черновик текущего вопроса
   const handleOpen = useCallback(() => {
@@ -91,6 +93,22 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   useEffect(() => {
     if (playerStatus.didJustFinish) setPlayingId(null);
   }, [playerStatus.didJustFinish]);
+
+  // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
+  // и кнопки остались видны; спряталась — обратно на нижнюю.
+  // Слушатель, а не onFocus: свой snap шторка перебивает при показе клавиатуры
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => {
+      if (openRef.current) sheetRef.current?.snapToIndex(1);
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      if (openRef.current) sheetRef.current?.snapToIndex(0);
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [sheetRef]);
 
   const startRecording = async () => {
     const perm = await AudioModule.requestRecordingPermissionsAsync();
@@ -208,6 +226,8 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
+      // без этого v5 подмешивает snap-точку «по контенту», и индексы съезжают
+      enableDynamicSizing={false}
       enablePanDownToClose
       onChange={(i) => {
         const wasOpen = openRef.current;
