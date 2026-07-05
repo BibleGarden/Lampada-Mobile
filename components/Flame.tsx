@@ -84,12 +84,11 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const bowlH = W * 0.175;
   const bowlHW = W * 0.25;
 
-  // пламя: в прототипе 24×34 при чаше 120 — то есть W*0.1 × W*0.142;
-  // уголёк на рефлексии крупнее относительно холста (22×32 при 104).
-  // lit=false — не «уголь», а скромное горение: ~83% размера,
-  // разница деликатная, но после молитвы огонёк заметно оживает
-  const flameH = (ember ? W * 0.31 : W * 0.142) * (lit ? 1 : 0.83);
-  const flameRW = (ember ? W * 0.106 : W * 0.05) * (lit ? 1 : 0.88);
+  // размеры из прототипа (чаша 120 = W/2, т.е. 1 px прототипа = W/240):
+  // скромное горение (до молитвы) — 24×34, разгоревшееся (после) — 36×62,
+  // уголёк на рефлексии — 22×32 при холсте 104
+  const flameH = ember ? W * 0.31 : lit ? W * 0.258 : W * 0.142;
+  const flameRW = ember ? W * 0.106 : lit ? W * 0.075 : W * 0.05;
   const flameBase = ember ? pad + H * 0.66 : bowlTop + W / 60;
   const flameMidY = flameBase - flameH * 0.5;
 
