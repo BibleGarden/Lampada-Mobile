@@ -13,13 +13,20 @@ BUNDLE="${BUNDLE:-com.marianovikov.lampada}"
 WS="ios/Lampada.xcworkspace"
 APP="ios/build/Build/Products/Release-iphoneos/Lampada.app"
 
+# --- нативная папка ------------------------------------------------------
+if [ ! -d ios ]; then
+  echo "▶︎ ios/ отсутствует — генерирую (expo prebuild)…"
+  npx expo prebuild -p ios
+fi
+
 # --- определяем телефон -------------------------------------------------
+# Спрашиваем у самого xcodebuild реально доступные для сборки устройства
+# и берём физический iOS-девайс (не Mac, не симулятор, не placeholder).
 DEVICE="${DEVICE:-}"
 if [ -z "$DEVICE" ]; then
-  DEVICE=$(xcrun xctrace list devices 2>/dev/null \
-    | sed -n '1,/== Simulators ==/p' \
-    | grep -Eo '\([0-9A-Fa-f]{8}-[0-9A-Fa-f]{16}\)|\([0-9a-f]{40}\)' \
-    | head -1 | tr -d '()')
+  DEVICE=$(xcrun xcodebuild -workspace "$WS" -scheme Lampada -showdestinations 2>/dev/null \
+    | grep 'platform:iOS,' | grep -v placeholder \
+    | grep -Eo 'id:[0-9A-Fa-f-]+' | head -1 | cut -d: -f2-)
 fi
 if [ -z "$DEVICE" ]; then
   echo "✗ Не нашёл подключённый iPhone. Подключи кабелем, разблокируй, доверься компьютеру." >&2
@@ -27,12 +34,6 @@ if [ -z "$DEVICE" ]; then
   exit 1
 fi
 echo "▶︎ Устройство: $DEVICE"
-
-# --- нативная папка ------------------------------------------------------
-if [ ! -d ios ]; then
-  echo "▶︎ ios/ отсутствует — генерирую (expo prebuild)…"
-  npx expo prebuild -p ios
-fi
 
 # prebuild иногда сбрасывает DEVELOPMENT_TEAM — принудительно ставим нужную
 if [ -f ios/Lampada.xcodeproj/project.pbxproj ]; then
