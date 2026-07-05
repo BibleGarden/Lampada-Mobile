@@ -41,6 +41,15 @@ export default function Home() {
     return i === 6 ? 'today' : 'empty';
   });
 
+  // подпись согласована с точками: горит — серия, ждёт — итог недели
+  const weekDays = streak.week.filter(Boolean).length;
+  const dayWord = (n: number) => (n === 1 ? 'день' : n < 5 ? 'дня' : 'дней');
+  const streakLine = streak.prayedToday
+    ? `${streak.count}-й день подряд`
+    : weekDays > 0
+      ? `${weekDays} ${dayWord(weekDays)} за неделю`
+      : '';
+
   return (
     <View style={styles.root}>
       <ScreenBg variant="home" />
@@ -72,11 +81,7 @@ export default function Home() {
               />
             ))}
           </View>
-          {streak.count > 0 && (
-            <Text style={styles.streakLabel}>
-              {streak.count}-й день подряд
-            </Text>
-          )}
+          {!!streakLine && <Text style={styles.streakLabel}>{streakLine}</Text>}
         </View>
 
         <View style={[styles.bottom, { bottom: insets.bottom + sc(24) }]}>
