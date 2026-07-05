@@ -112,8 +112,15 @@ export async function rephraseGoal(topic: string): Promise<string | null> {
         'Пример: цель «поговорить про ссору с мамой» → «побыть с Богом в том, что случилось с мамой». ' +
         'Ответь только придаточным.',
     );
-    const clean = p.replace(/^["«]|[»".]+$/g, '').trim();
-    return clean && clean.length <= 90 ? clean : null;
+    const clean = p
+      .replace(/^["«]|[»".]+$/g, '')
+      .trim()
+      // придаточное продолжает «…, чтобы» — первая буква всегда строчная
+      .replace(/^[А-ЯA-ZЁ]/, (c) => c.toLowerCase());
+    if (!clean || clean.length > 90) return null;
+    // ИИ ничего не изменил по сути — не подменять фразу (экран не дёрнется)
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+    return norm(clean) === norm(topic) ? null : clean;
   } catch {
     return null;
   }
