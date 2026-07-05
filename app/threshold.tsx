@@ -115,10 +115,13 @@ export default function Threshold() {
         style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(20) }]}
       >
         <View>
-          <IconButton size={sc(30)} onPress={() => router.back()} style={{ marginLeft: -4 }}>
-            <ChevronLeft size={18} color={colors.white55} />
-          </IconButton>
-          <Kicker style={{ marginTop: sc(14) }}>Прежде чем войти</Kicker>
+          {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
+          <View style={styles.headerRow}>
+            <IconButton size={sc(30)} onPress={() => router.back()}>
+              <ChevronLeft size={18} color={colors.white55} />
+            </IconButton>
+            <Kicker style={{ fontSize: sc(11) }}>Прежде чем войти</Kicker>
+          </View>
           <Text style={styles.title}>Отложи остальное — вот что впереди</Text>
         </View>
 
@@ -158,10 +161,6 @@ export default function Threshold() {
               </View>
             </View>
           </GestureDetector>
-          <View style={styles.quietRow}>
-            <View style={styles.quietDot} />
-            <Text style={styles.quietText}>приложение будет молчать всю молитву</Text>
-          </View>
         </View>
       </Animated.View>
     </View>
@@ -175,8 +174,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: sc(16),
     justifyContent: 'space-between',
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(8),
+    marginLeft: -4,
+  },
   title: {
-    marginTop: sc(7),
+    marginTop: sc(16),
     fontFamily: fonts.serif,
     fontSize: sc(22),
     lineHeight: sc(28),
@@ -244,21 +249,5 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serifRegular,
     fontSize: sc(17),
     color: colors.creamBright,
-  },
-  quietRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(8),
-  },
-  quietDot: {
-    width: sc(7),
-    height: sc(7),
-    borderRadius: sc(4),
-    backgroundColor: colors.green,
-  },
-  quietText: {
-    fontFamily: fonts.sans,
-    fontSize: sc(12),
-    color: colors.creamDim,
   },
 });
