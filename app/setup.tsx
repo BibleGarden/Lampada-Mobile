@@ -79,7 +79,9 @@ export default function Setup() {
               value={s.topic}
               onChangeText={s.setTopic}
               multiline
-              placeholder="О чём хочешь помолиться?"
+              // подсказка в тон заголовку: просим цель («понять…», «решиться…»),
+              // а не тему («о завтрашнем дне») — молитва целеустремлённая
+              placeholder="Чего хочешь достичь?"
               placeholderTextColor="rgba(240,230,210,.35)"
               style={styles.topicInput}
               // цель — одна фраза, переносы строк не нужны: клавиша ввода
