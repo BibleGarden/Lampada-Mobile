@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -68,10 +67,9 @@ export default function Reflect() {
         entering={FadeIn.duration(500)}
         style={[styles.body, { paddingTop: insets.top + sc(16), paddingBottom: insets.bottom + sc(24) }]}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
+        {/* элементы не двигаются под клавиатуру: она открывается поверх,
+            тап по пустому месту её прячет — как на «Настройке» */}
+        <Pressable onPress={Keyboard.dismiss} accessible={false} style={{ flex: 1 }}>
           {/* тёплый уголёк */}
           <View style={styles.emberWrap}>
             <Flame width={sc(104)} ember />
@@ -108,7 +106,7 @@ export default function Reflect() {
               <Text style={styles.continueLabel}>Вернуться к молитве</Text>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        </Pressable>
       </Animated.View>
     </View>
   );

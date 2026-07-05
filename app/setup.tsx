@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -39,19 +37,6 @@ export default function Setup() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
-  // пока открыта клавиатура, блок длительности прячется: иначе
-  // KeyboardAvoidingView сжимает экран и всё наезжает друг на друга
-  const [kbOpen, setKbOpen] = useState(false);
-  useEffect(() => {
-    const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEv, () => setKbOpen(true));
-    const hide = Keyboard.addListener(hideEv, () => setKbOpen(false));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
 
   const next = () => {
     s.prepareThreshold();
@@ -65,8 +50,11 @@ export default function Setup() {
         entering={FadeIn.duration(450)}
         style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        {/* элементы не двигаются под клавиатуру: она открывается поверх,
+            а тап по пустому месту экрана её прячет */}
+        <Pressable
+          onPress={Keyboard.dismiss}
+          accessible={false}
           style={{ flex: 1, justifyContent: 'space-between' }}
         >
           <View style={styles.headerRow}>
@@ -97,7 +85,6 @@ export default function Setup() {
             />
           </View>
 
-          {!kbOpen && (
           <View>
             <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
               Длительность
@@ -162,10 +149,9 @@ export default function Setup() {
               })}
             </View>
           </View>
-          )}
 
           <GoldButton label="Далее" onPress={next} />
-        </KeyboardAvoidingView>
+        </Pressable>
       </Animated.View>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
