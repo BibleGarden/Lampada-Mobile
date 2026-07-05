@@ -32,7 +32,14 @@ type Props = {
 
 // Огонёк лампады: гало + пламя-«яйцо» + чаша-плошка, как в прототипе.
 // t идёт 2π в секунду, поэтому sin(t·k) имеет период 1/k секунд.
-// Пульс — как emberFlicker из прототипа: 2.6 с, мягкий, без вращения.
+//
+// «Живость» построена на трёх слоях:
+// 1) кончик пламени блуждает (верхние точки Безье гуляют, основание
+//    приковано к фитилю) — путь пересчитывается на UI-потоке;
+// 2) огибающая ~13 с делает ритм неровным: пламя горит спокойно
+//    и лишь изредка «вздрагивает», как от сквозняка;
+// 3) гало подсвечивается тем же сигналом — свет в комнате отзывается
+//    на каждое вздрагивание, и глаз связывает их в одну физику.
 export default function Flame({ width = 240, lit = true, ember = false }: Props) {
   const W = width;
   const H = ember ? width : width * 1.17;
@@ -63,19 +70,49 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return () => cancelAnimation(t);
   }, [t]);
 
-  // яйцо: купол сверху, чуть уже к основанию (border-radius из прототипа)
-  const flamePath = useMemo(() => {
-    const p = Skia.Path.Make();
+  // яйцо с гуляющим кончиком: смещение затухает от вершины к основанию —
+  // верх ходит на полный sway, середина на долю, низ неподвижен
+  const flamePath = useDerivedValue(() => {
+    // огибающая: большую часть периода ~0, раз в ~13 с — короткое оживление
+    const env =
+      0.3 + 0.7 * Math.pow(0.5 + 0.5 * Math.sin(t.value * 0.077), 3);
+    const sway =
+      (Math.sin(t.value * 0.9) * 0.6 + Math.sin(t.value * 1.53) * 0.4) *
+      env *
+      flameRW *
+      (lit ? 0.45 : 0.2);
+
     const yt = flameBase - flameH;
     const ym = yt + flameH * 0.45;
-    p.moveTo(cx, yt);
-    p.cubicTo(cx + flameRW * 0.8, yt + flameH * 0.08, cx + flameRW, yt + flameH * 0.25, cx + flameRW, ym);
-    p.cubicTo(cx + flameRW, flameBase - flameH * 0.2, cx + flameRW * 0.55, flameBase, cx, flameBase);
-    p.cubicTo(cx - flameRW * 0.55, flameBase, cx - flameRW, flameBase - flameH * 0.2, cx - flameRW, ym);
-    p.cubicTo(cx - flameRW, yt + flameH * 0.25, cx - flameRW * 0.8, yt + flameH * 0.08, cx, yt);
+    const tip = sway; // вершина
+    const upper = sway * 0.55; // верхние контрольные точки
+    const mid = sway * 0.22; // «талия»
+
+    const p = Skia.Path.Make();
+    p.moveTo(cx + tip, yt);
+    p.cubicTo(
+      cx + flameRW * 0.8 + upper, yt + flameH * 0.08,
+      cx + flameRW + mid, yt + flameH * 0.25,
+      cx + flameRW + mid * 0.5, ym,
+    );
+    p.cubicTo(
+      cx + flameRW, flameBase - flameH * 0.2,
+      cx + flameRW * 0.55, flameBase,
+      cx, flameBase,
+    );
+    p.cubicTo(
+      cx - flameRW * 0.55, flameBase,
+      cx - flameRW, flameBase - flameH * 0.2,
+      cx - flameRW + mid * 0.5, ym,
+    );
+    p.cubicTo(
+      cx - flameRW + mid, yt + flameH * 0.25,
+      cx - flameRW * 0.8 + upper, yt + flameH * 0.08,
+      cx + tip, yt,
+    );
     p.close();
     return p;
-  }, [cx, flameBase, flameH, flameRW]);
+  });
 
   // чаша-плошка: плоский верх, полуэллипс снизу
   const bowlPath = useMemo(() => {
@@ -89,25 +126,35 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return p;
   }, [cx, bowlTop, bowlH, bowlHW]);
 
-  // тихий пульс 2.6 с (плюс едва заметная вторая волна, чтобы не было метронома)
+  // тихий пульс 2.6 с; вытягиваясь вверх, пламя чуть сужается —
+  // объём сохраняется, и пульс читается как колебание огня
   const flameTransform = useDerivedValue(() => {
-    const pulse =
-      1.04 + Math.sin(t.value * 0.385) * (lit ? 0.04 : 0.02) + Math.sin(t.value * 0.617) * 0.008;
-    return [{ scale: pulse }];
+    const s =
+      Math.sin(t.value * 0.385) * (lit ? 0.04 : 0.02) +
+      Math.sin(t.value * 0.617) * 0.008;
+    return [{ scaleY: 1.04 + s }, { scaleX: 1.04 - s * 0.6 }];
   });
   const flameOpacity = useDerivedValue(
     () => (lit ? 0.825 : 0.6) + Math.sin(t.value * 0.385) * 0.125,
   );
 
-  // гало дышит 6 секунд
+  // гало: медленное дыхание 6 с + отклик на вздрагивания пламени
   const haloR = W * 0.5;
   const haloTransform = useDerivedValue(() => {
     const k = 1.08 + Math.sin(t.value * 0.167) * 0.08;
     return [{ scale: k }];
   });
-  const haloOpacity = useDerivedValue(() =>
-    (lit ? 0.64 : 0.32) + Math.sin(t.value * 0.167) * (lit ? 0.14 : 0.06),
-  );
+  const haloOpacity = useDerivedValue(() => {
+    const env =
+      0.3 + 0.7 * Math.pow(0.5 + 0.5 * Math.sin(t.value * 0.077), 3);
+    const flick =
+      (Math.sin(t.value * 0.9) * 0.6 + Math.sin(t.value * 1.53) * 0.4) * env;
+    return (
+      (lit ? 0.64 : 0.32) +
+      Math.sin(t.value * 0.167) * (lit ? 0.12 : 0.06) +
+      flick * (lit ? 0.06 : 0.02)
+    );
+  });
 
   const glowOpacity = useDerivedValue(
     () => (lit ? 0.7 : 0.45) + Math.sin(t.value * 0.385) * 0.15,
