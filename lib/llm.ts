@@ -22,6 +22,10 @@ export const llmConfigured = () => Boolean(PROXY_URL);
  * Один вызов модели: system + user → текст ответа.
  * Формат тела — Anthropic Messages API (прокси пробрасывает его дальше).
  * Бросает при любой проблеме: не настроено, таймаут, не-2xx, пустой ответ.
+ *
+ * Поле system прокси подменяет своим (он собран под Claude Code), поэтому
+ * персона кладётся в начало пользовательского сообщения. Это обход: когда
+ * прокси начнёт пробрасывать system — вернуть `system, messages: [{…user}]`.
  */
 export async function complete(system: string, user: string): Promise<string> {
   if (!PROXY_URL) throw new Error('AI proxy is not configured');
@@ -39,8 +43,7 @@ export async function complete(system: string, user: string): Promise<string> {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1024,
-        system,
-        messages: [{ role: 'user', content: user }],
+        messages: [{ role: 'user', content: `${system}\n\n---\n\n${user}` }],
       }),
     });
     if (!res.ok) throw new Error(`AI proxy: HTTP ${res.status}`);
