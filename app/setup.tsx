@@ -258,13 +258,17 @@ const styles = StyleSheet.create({
   stepValue: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: sc(8),
+    justifyContent: 'center',
+    // высота фиксирована: у «∞» глиф из шрифта-фоллбэка с другими
+    // метриками, без фиксации степпер прыгает при переключении
+    height: sc(76),
   },
   stepBig: {
     fontFamily: fonts.serif,
     fontSize: sc(36),
     // у Spectral высокие цифры: lineHeight ниже ~1.25 em срезает их сверху
     lineHeight: sc(45),
+    height: sc(45),
     color: colors.creamBright,
   },
   stepUnit: {
