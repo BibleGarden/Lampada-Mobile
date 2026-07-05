@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -38,6 +39,19 @@ export default function Setup() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
+  // пока открыта клавиатура, блок длительности прячется: иначе
+  // KeyboardAvoidingView сжимает экран и всё наезжает друг на друга
+  const [kbOpen, setKbOpen] = useState(false);
+  useEffect(() => {
+    const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEv, () => setKbOpen(true));
+    const hide = Keyboard.addListener(hideEv, () => setKbOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   const next = () => {
     s.prepareThreshold();
@@ -83,6 +97,7 @@ export default function Setup() {
             />
           </View>
 
+          {!kbOpen && (
           <View>
             <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
               Длительность
@@ -147,6 +162,7 @@ export default function Setup() {
               })}
             </View>
           </View>
+          )}
 
           <GoldButton label="Далее" onPress={next} />
         </KeyboardAvoidingView>
