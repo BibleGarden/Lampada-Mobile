@@ -11,7 +11,9 @@ const PERSONA =
   'Ты — «Спутник» в приложении для личной христианской молитвы «Лампада». ' +
   'Твои вопросы помогают человеку молиться своими словами: честно, глубоко, без клише. ' +
   'Пиши по-русски, обращайся на «ты». Тон тёплый и тихий, без пафоса и без морализаторства. ' +
-  'Вопросы короткие — одна строка, до 90 знаков, каждый заканчивается знаком вопроса.';
+  'Каждый вопрос — одна простая мысль, живой разговорный русский без сложных подчинений и канцелярита. ' +
+  'Следи за грамматикой, особенно за предлогами и падежами. ' +
+  'Одна строка, до 120 знаков, каждый вопрос заканчивается знаком вопроса.';
 
 export const curatedQuestions: string[] = [
   'Что на самом деле тревожит тебя сейчас больше всего?',
@@ -45,24 +47,26 @@ const tidy = (q: string) =>
   q.replace(/^[\s\d.\-—)*]+/, '').replace(/\s+/g, ' ').trim();
 
 const isQuestion = (q: unknown): q is string =>
-  typeof q === 'string' && q.trim().length >= 8 && q.trim().length <= 140 && q.includes('?');
+  typeof q === 'string' && q.trim().length >= 8 && q.trim().length <= 180 && q.includes('?');
 
-/** 5 наводящих вопросов по теме молитвы */
-export async function generateQuestions(topic: string): Promise<string[]> {
-  if (!llmConfigured() || !topic.trim()) return curatedQuestions;
+/**
+ * Первый вопрос молитвы — готовится заранее, на «пороге».
+ * Остальные вопросы не заготавливаются пакетом: каждый следующий
+ * генерируется по ходу молитвы, когда уже есть живые ответы.
+ */
+export async function generateFirstQuestion(topic: string): Promise<string> {
+  if (!llmConfigured() || !topic.trim()) return pickRandom(curatedQuestions);
   try {
-    const qs = await completeJson<string[]>(
+    const q = await complete(
       PERSONA,
       `Человек начинает молитву. Его цель: «${topic.trim()}».\n` +
-        'Составь ровно 5 наводящих вопросов для этой молитвы. Иди от поверхности вглубь: ' +
-        'первый — про то, что происходит и что он чувствует, последние — про доверие Богу и следующий шаг. ' +
-        'Не пересказывай цель дословно в каждом вопросе.\n' +
-        'Ответь строго JSON-массивом из 5 строк, без пояснений.',
+        'Задай первый наводящий вопрос — про то, что сейчас происходит и что он чувствует. ' +
+        'Не пересказывай цель дословно. Ответь только текстом вопроса, без кавычек и пояснений.',
     );
-    const clean = Array.isArray(qs) ? qs.filter(isQuestion).map(tidy) : [];
-    return clean.length === 5 ? clean : curatedQuestions;
+    const clean = tidy(q);
+    return isQuestion(clean) ? clean : pickRandom(curatedQuestions);
   } catch {
-    return curatedQuestions;
+    return pickRandom(curatedQuestions);
   }
 }
 

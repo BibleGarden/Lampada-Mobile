@@ -102,6 +102,11 @@ const pickScripture = (used: number[]): number => {
 
 let prepareToken = 0;
 
+// Префетч следующего вопроса. Стартует при сохранении ответа на фронтире:
+// пока человек читает экран, вопрос уже генерируется — и к нажатию «вперёд»
+// обычно готов. nextQuestion переиспользует этот промис вместо нового запроса.
+let nextQFetch: { sessionId: number; index: number; promise: Promise<string> } | null = null;
+
 const initial: SessionState = {
   topic: '',
   minutes: 10,
@@ -146,9 +151,10 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // токен отсекает результаты устаревших промисов: повторный заход
     // на порог с другой темой или reset() делают старый ответ неактуальным
     const token = ++prepareToken;
-    // вопросы подгружаются заранее, пока человек на «пороге»
-    ai.generateQuestions(topic).then((qs) => {
-      if (token === prepareToken) set({ questions: qs });
+    // заранее готовится только первый вопрос: остальные генерируются
+    // по ходу молитвы, с учётом живых ответов (если человек разрешил)
+    ai.generateFirstQuestion(topic).then((q) => {
+      if (token === prepareToken) set({ questions: [q] });
     });
   },
 
@@ -211,7 +217,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         set({ answeredCount: nf, qIndex: nf });
       } else {
         set({ generating: true });
-        const q = await ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
+        // если saveAnswer уже запустил префетч этого вопроса — дождаться его,
+        // а не начинать генерацию заново
+        const pending =
+          nextQFetch && nextQFetch.sessionId === sessionToken && nextQFetch.index === nf
+            ? nextQFetch.promise
+            : ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
+        const q = await pending;
         set((st) => {
           if (st.sessionId !== sessionToken) return st; // сессия уже другая
           const questions = st.questions.slice();
@@ -222,6 +234,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     } else {
       // перегенерация: заменить текущий на месте
       set({ generating: true });
+      nextQFetch = null; // префетч опирался на прежний текст фронтира
       const q = await ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
       set((st) => {
         if (st.sessionId !== sessionToken) return st;
@@ -239,9 +252,23 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   saveAnswer: (questionIndex, text, recordings) => {
     const s = get();
-    set({
-      answers: { ...s.answers, [questionIndex]: { text, recordings } },
-    });
+    const answers = { ...s.answers, [questionIndex]: { text, recordings } };
+    set({ answers });
+    // ответ на фронтире — следующий вопрос начинает готовиться сразу,
+    // не дожидаясь нажатия «вперёд»: к переходу он обычно уже есть
+    const nf = s.answeredCount + 1;
+    if (
+      s.sessionId !== null &&
+      questionIndex === s.answeredCount &&
+      s.questions[nf] === undefined &&
+      isAnswered(answers[questionIndex])
+    ) {
+      nextQFetch = {
+        sessionId: s.sessionId,
+        index: nf,
+        promise: ai.generateQuestion(s.topic, s.questions, answersForAi(answers)),
+      };
+    }
     if (s.sessionId !== null) {
       db.saveAnswer({
         sessionId: s.sessionId,

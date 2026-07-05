@@ -174,6 +174,9 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
       if (draft) finalRecs = [...recs, draft];
     }
     saveAnswerToStore(answerIndexRef.current, text, finalRecs);
+    // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
+    // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
+    openRef.current = false;
     Keyboard.dismiss();
     sheetRef.current?.close();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -185,6 +188,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
     if (!hasContent || confirmCancel) {
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       setConfirmCancel(false);
+      openRef.current = false; // см. комментарий в save()
       Keyboard.dismiss();
       sheetRef.current?.close();
       return;

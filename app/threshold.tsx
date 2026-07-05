@@ -130,8 +130,9 @@ export default function Threshold() {
         <View style={styles.brief}>
           <Text style={styles.title}>Отложи остальное — вот что впереди</Text>
           {brief.map((b, i) => {
-            // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе)
-            const long = Math.ceil(b.text.length / 30) >= 3;
+            // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
+            // цель — часть той же строки, её длина тоже считается
+            const long = Math.ceil((b.text.length + (b.goal?.length ?? 0)) / 30) >= 3;
             return (
               <View
                 key={i}
