@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     fontSize: sc(10),
     letterSpacing: sc(1.4),
     textTransform: 'uppercase',
-    color: 'rgba(214,182,120,.7)',
+    color: colors.labelGold,
   },
   switcher: {
     flexDirection: 'row',

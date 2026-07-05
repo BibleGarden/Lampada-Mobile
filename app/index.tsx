@@ -57,7 +57,7 @@ export default function Home() {
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
           <View style={styles.bellChip}>
-            <Bell />
+            <Bell color={colors.labelGold} />
             <Text style={styles.bellLabel}>{REMINDER_TIME}</Text>
           </View>
         </View>
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   bellLabel: {
     fontFamily: fonts.mono,
     fontSize: sc(11),
-    color: 'rgba(255,255,255,.3)',
+    color: colors.labelGold,
   },
   center: {
     flex: 1,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   streakLabel: {
     fontFamily: fonts.mono,
     fontSize: sc(11),
-    color: 'rgba(214,182,120,.5)',
+    color: colors.labelGold,
     marginTop: sc(4),
   },
   bottom: {

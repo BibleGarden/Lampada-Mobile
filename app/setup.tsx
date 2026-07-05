@@ -80,7 +80,7 @@ export default function Setup() {
               onChangeText={s.setTopic}
               multiline
               placeholder="О чём хочешь помолиться?"
-              placeholderTextColor="rgba(240,230,210,.3)"
+              placeholderTextColor="rgba(240,230,210,.35)"
               style={styles.topicInput}
               // цель — одна фраза, переносы строк не нужны: клавиша ввода
               // становится синей «Готово» и закрывает клавиатуру
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   goalTitle: {
     fontFamily: fonts.serif,
     fontSize: sc(21),
-    color: colors.parchment,
+    color: colors.cream,
   },
   helpBtn: {
     width: sc(23),
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white05,
     borderWidth: 1,
     borderColor: colors.white10,
-    color: '#f0e6d2',
+    color: colors.parchment,
     fontSize: sc(16),
     lineHeight: sc(24),
     fontFamily: fonts.serifRegular,
@@ -265,12 +265,12 @@ const styles = StyleSheet.create({
     fontSize: sc(36),
     // у Spectral высокие цифры: lineHeight ниже ~1.25 em срезает их сверху
     lineHeight: sc(45),
-    color: '#f6ecd4',
+    color: colors.creamBright,
   },
   stepUnit: {
     fontFamily: fonts.sans,
     fontSize: sc(11),
-    color: colors.white45,
+    color: colors.creamDim,
     marginTop: -3,
   },
   presets: {
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   presetLabel: {
     fontFamily: fonts.mono,
     fontSize: sc(12),
-    color: colors.white45,
+    color: colors.creamDim,
   },
   modalBackdrop: {
     flex: 1,
@@ -321,6 +321,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serifRegular,
     fontSize: sc(14),
     lineHeight: sc(19),
-    color: '#ece4d4',
+    color: colors.parchment,
   },
 });

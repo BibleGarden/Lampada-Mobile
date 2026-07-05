@@ -398,13 +398,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: sc(9),
     letterSpacing: sc(1.4),
-    color: 'rgba(170,210,190,.5)',
+    color: 'rgba(170,210,190,.65)',
   },
   question: {
     fontFamily: fonts.serif,
     fontSize: sc(16),
     lineHeight: sc(22),
-    color: '#f2e7cf',
+    color: colors.cream,
     textAlign: 'center',
     marginBottom: sc(12),
   },
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,.045)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,.12)',
-    color: '#f2e9d6',
+    color: colors.parchment,
     fontSize: sc(15),
     lineHeight: sc(23),
     fontFamily: fonts.serifRegular,
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: sc(5),
     fontFamily: fonts.mono,
     fontSize: sc(10),
-    color: 'rgba(240,200,140,.55)',
+    color: colors.labelGold,
   },
   recDel: {
     width: sc(28),
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   cancelLabel: {
     fontFamily: fonts.sans,
     fontSize: sc(13),
-    color: colors.white45,
+    color: colors.creamDim,
   },
   recOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     fontSize: sc(11),
     letterSpacing: sc(2.2),
     textTransform: 'uppercase',
-    color: 'rgba(240,200,140,.75)',
+    color: colors.warmHint,
   },
   waveRow: {
     flexDirection: 'row',
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
   recOverlayHint: {
     fontFamily: fonts.serifItalic,
     fontSize: sc(14),
-    color: 'rgba(240,225,195,.6)',
+    color: colors.creamDim,
     textAlign: 'center',
     paddingHorizontal: sc(24),
   },
@@ -560,6 +560,6 @@ const styles = StyleSheet.create({
   recDoneLabel: {
     fontFamily: fonts.sansMedium,
     fontSize: sc(14),
-    color: '#f6ecd4',
+    color: colors.creamBright,
   },
 });

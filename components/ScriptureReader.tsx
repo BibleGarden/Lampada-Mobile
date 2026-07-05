@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: sc(11),
     letterSpacing: sc(1.4),
-    color: 'rgba(214,182,120,.7)',
+    color: colors.labelGold,
   },
   content: {
     paddingHorizontal: sc(18),

@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: sc(22),
     lineHeight: sc(28),
-    color: '#efe9da',
+    color: colors.cream,
   },
   brief: {
     flex: 1,
@@ -238,12 +238,12 @@ const styles = StyleSheet.create({
     fontSize: sc(10),
     letterSpacing: sc(1.8),
     textTransform: 'uppercase',
-    color: 'rgba(240,200,140,.7)',
+    color: colors.warmHint,
   },
   holdLabel: {
     fontFamily: fonts.serifRegular,
     fontSize: sc(17),
-    color: '#f3eee2',
+    color: colors.creamBright,
   },
   quietRow: {
     flexDirection: 'row',
@@ -259,6 +259,6 @@ const styles = StyleSheet.create({
   quietText: {
     fontFamily: fonts.sans,
     fontSize: sc(12),
-    color: 'rgba(255,255,255,.5)',
+    color: colors.creamDim,
   },
 });

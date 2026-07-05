@@ -24,24 +24,28 @@ export const colors = {
   gold: '#d9a94e',
   goldSoft: '#e7cf95',
 
-  // текст
+  // текст — по ролям, не плодить оттенки:
+  // cream — заголовки и вопросы; parchment — основной текст (поля, карточки);
+  // creamBright — крупные цифры; creamDim — вторичные строки;
+  // labelGold — mono-подписи капсом; warmHint — тёплые хинты у кнопок
   cream: '#f3e6c8',
-  creamDim: 'rgba(240,225,195,.55)',
-  parchment: '#f1e6cf',
+  creamBright: '#f6ecd4',
+  creamDim: 'rgba(240,225,195,.65)',
+  parchment: '#f2e9d6',
   ink: '#2a1a06', // текст на золотых кнопках
   body: 'rgba(238,233,225,.82)',
   cardText: '#eef0e6',
+  warmHint: 'rgba(240,200,140,.7)',
 
   // служебные
   white05: 'rgba(255,255,255,.05)',
   white08: 'rgba(255,255,255,.08)',
   white10: 'rgba(255,255,255,.1)',
-  white30: 'rgba(255,255,255,.3)',
-  white45: 'rgba(255,255,255,.45)',
+  white50: 'rgba(255,255,255,.5)',
   white55: 'rgba(255,255,255,.55)',
   white65: 'rgba(255,255,255,.65)',
-  labelGold: 'rgba(214,182,120,.55)',
-  labelGoldDim: 'rgba(214,182,120,.42)',
+  labelGold: 'rgba(214,182,120,.68)',
+  labelGoldDim: 'rgba(214,182,120,.5)',
   cardBorder: 'rgba(214,182,120,.42)',
   cardBg: 'rgba(214,182,120,.08)',
   btnGoldBg: 'rgba(214,182,120,.16)',

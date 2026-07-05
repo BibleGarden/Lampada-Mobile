@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     marginTop: sc(7),
     fontFamily: fonts.sans,
     fontSize: sc(13),
-    color: 'rgba(255,225,180,.5)',
+    color: colors.creamDim,
   },
   takeawayCard: {
     marginTop: sc(20),
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serifRegular,
     fontSize: sc(16),
     lineHeight: sc(23),
-    color: '#e8ddc6',
+    color: colors.parchment,
     textAlign: 'center',
   },
 });

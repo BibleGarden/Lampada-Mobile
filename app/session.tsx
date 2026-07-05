@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: sc(48),
     lineHeight: sc(54),
-    color: '#f6ecd4',
+    color: colors.creamBright,
   },
   timerTextAdjustable: {
     borderBottomWidth: 1,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   adjustLabel: {
     fontFamily: fonts.mono,
     fontSize: sc(12),
-    color: 'rgba(231,207,149,.8)',
+    color: colors.goldSoft,
   },
   goalWrap: {
     marginTop: sc(16),
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serifItalic,
     fontSize: sc(14),
     lineHeight: sc(20),
-    color: 'rgba(243,238,226,.85)',
+    color: colors.body,
     textAlign: 'center',
   },
   dockWrap: {

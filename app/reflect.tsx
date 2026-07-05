@@ -87,7 +87,7 @@ export default function Reflect() {
             onChangeText={setTakeaway}
             multiline
             placeholder="Одна-две строки…"
-            placeholderTextColor="rgba(240,230,210,.3)"
+            placeholderTextColor="rgba(240,230,210,.35)"
             style={styles.input}
             // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
             returnKeyType="done"
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: sc(22),
     lineHeight: sc(29),
-    color: '#f3e7cf',
+    color: colors.cream,
     textAlign: 'center',
   },
   input: {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,.045)',
     borderWidth: 1,
     borderColor: 'rgba(230,162,60,.24)',
-    color: '#f1e7d3',
+    color: colors.parchment,
     fontSize: sc(16),
     lineHeight: sc(24),
     fontFamily: fonts.serifRegular,
