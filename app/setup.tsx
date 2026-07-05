@@ -82,6 +82,11 @@ export default function Setup() {
               placeholder="О чём хочешь помолиться?"
               placeholderTextColor="rgba(240,230,210,.3)"
               style={styles.topicInput}
+              // цель — одна фраза, переносы строк не нужны: клавиша ввода
+              // становится синей «Готово» и закрывает клавиатуру
+              returnKeyType="done"
+              submitBehavior="blurAndSubmit"
+              onSubmitEditing={Keyboard.dismiss}
             />
           </View>
 
@@ -258,7 +263,8 @@ const styles = StyleSheet.create({
   stepBig: {
     fontFamily: fonts.serif,
     fontSize: sc(36),
-    lineHeight: sc(40),
+    // у Spectral высокие цифры: lineHeight ниже ~1.25 em срезает их сверху
+    lineHeight: sc(45),
     color: '#f6ecd4',
   },
   stepUnit: {

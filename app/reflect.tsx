@@ -89,6 +89,10 @@ export default function Reflect() {
             placeholder="Одна-две строки…"
             placeholderTextColor="rgba(240,230,210,.3)"
             style={styles.input}
+            // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
+            onSubmitEditing={Keyboard.dismiss}
           />
 
           <View style={{ flex: 1, minHeight: sc(16) }} />
