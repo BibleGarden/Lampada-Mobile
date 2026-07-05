@@ -17,7 +17,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius } from '../lib/theme';
+import { colors, fonts, radius, sc } from '../lib/theme';
 
 const EXAMPLES = [
   'Привести мысли в порядок',
@@ -49,17 +49,17 @@ export default function Setup() {
       <ScreenBg />
       <Animated.View
         entering={FadeIn.duration(450)}
-        style={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]}
+        style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1, justifyContent: 'space-between' }}
         >
           <View style={styles.headerRow}>
-            <IconButton size={30} onPress={() => router.back()}>
+            <IconButton size={sc(30)} onPress={() => router.back()}>
               <ChevronLeft size={18} color={colors.white65} />
             </IconButton>
-            <Kicker style={{ fontSize: 11 }}>Молитвенный поиск</Kicker>
+            <Kicker style={{ fontSize: sc(11) }}>Молитвенный поиск</Kicker>
           </View>
 
           <View>
@@ -84,7 +84,7 @@ export default function Setup() {
           </View>
 
           <View>
-            <Kicker style={{ fontSize: 11, marginBottom: 12, marginHorizontal: 2 }}>
+            <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
               Длительность
             </Kicker>
             <View style={styles.stepper}>
@@ -136,7 +136,7 @@ export default function Setup() {
                     <Text
                       style={[
                         styles.presetLabel,
-                        p.v === 0 && { fontSize: 18 },
+                        p.v === 0 && { fontSize: sc(18) },
                         active && { color: colors.amberBright },
                       ]}
                     >
@@ -154,8 +154,8 @@ export default function Setup() {
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
-          <View style={[styles.examplesCard, { marginTop: insets.top + 92 }]}>
-            <Kicker style={{ marginBottom: 8 }}>Примеры целей · нажми, чтобы выбрать</Kicker>
+          <View style={[styles.examplesCard, { marginTop: insets.top + sc(92) }]}>
+            <Kicker style={{ marginBottom: sc(8) }}>Примеры целей · нажми, чтобы выбрать</Kicker>
             {EXAMPLES.map((ex) => (
               <Pressable
                 key={ex}
@@ -186,28 +186,28 @@ const plUnit = (n: number) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  body: { flex: 1, paddingHorizontal: 18 },
+  body: { flex: 1, paddingHorizontal: sc(18) },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: sc(8),
     marginLeft: -4,
   },
   goalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: sc(8),
   },
   goalTitle: {
     fontFamily: fonts.serif,
-    fontSize: 21,
+    fontSize: sc(21),
     color: colors.parchment,
   },
   helpBtn: {
-    width: 23,
-    height: 23,
-    borderRadius: 12,
+    width: sc(23),
+    height: sc(23),
+    borderRadius: sc(12),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,.06)',
@@ -216,19 +216,19 @@ const styles = StyleSheet.create({
   },
   helpBtnLabel: {
     fontFamily: fonts.sansSemiBold,
-    fontSize: 13,
+    fontSize: sc(13),
     color: colors.amber,
   },
   topicInput: {
-    minHeight: 120,
-    padding: 13,
+    minHeight: sc(120),
+    padding: sc(13),
     borderRadius: radius.sm,
     backgroundColor: colors.white05,
     borderWidth: 1,
     borderColor: colors.white10,
     color: '#f0e6d2',
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: sc(16),
+    lineHeight: sc(24),
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
   },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   stepBtn: {
-    width: 60,
+    width: sc(60),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -251,28 +251,28 @@ const styles = StyleSheet.create({
   stepValue: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: sc(8),
   },
   stepBig: {
     fontFamily: fonts.serif,
-    fontSize: 36,
-    lineHeight: 40,
+    fontSize: sc(36),
+    lineHeight: sc(40),
     color: '#f6ecd4',
   },
   stepUnit: {
     fontFamily: fonts.sans,
-    fontSize: 11,
+    fontSize: sc(11),
     color: colors.white45,
     marginTop: -3,
   },
   presets: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
+    gap: sc(8),
+    marginTop: sc(12),
   },
   preset: {
     flex: 1,
-    height: 30,
+    height: sc(30),
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   presetLabel: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: sc(12),
     color: colors.white45,
   },
   modalBackdrop: {
@@ -294,25 +294,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,.5)',
   },
   examplesCard: {
-    marginHorizontal: 18,
-    padding: 12,
+    marginHorizontal: sc(18),
+    padding: sc(12),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(26,20,14,.98)',
     borderWidth: 1,
     borderColor: 'rgba(230,162,60,.32)',
   },
   exampleRow: {
-    padding: 11,
+    padding: sc(11),
     borderRadius: radius.sm,
     backgroundColor: colors.white05,
     borderWidth: 1,
     borderColor: colors.white08,
-    marginBottom: 8,
+    marginBottom: sc(8),
   },
   exampleText: {
     fontFamily: fonts.serifRegular,
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: sc(14),
+    lineHeight: sc(19),
     color: '#ece4d4',
   },
 });

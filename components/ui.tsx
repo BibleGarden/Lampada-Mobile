@@ -11,7 +11,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { colors, fonts, radius } from '../lib/theme';
+import { colors, fonts, radius, sc } from '../lib/theme';
 
 /** Подпись капсом моноширинным — фирменный элемент прототипа */
 export function Kicker({
@@ -62,7 +62,7 @@ export function GoldButton({
 export function IconButton({
   children,
   onPress,
-  size = 34,
+  size = sc(34),
   bg = colors.white05,
   border,
   style,
@@ -140,7 +140,7 @@ export function WindowDots({
       dots.push({ i, kind });
     }
   }
-  const size = (k: Kind) => (k === 'cur' ? 8 : k === 'edge' ? 4 : 6);
+  const size = (k: Kind) => sc(k === 'cur' ? 8 : k === 'edge' ? 4 : 6);
   const bg = (k: Kind) =>
     k === 'cur' ? colors.goldSoft : k === 'edge' ? 'rgba(214,182,120,.2)' : 'rgba(214,182,120,.32)';
   return (
@@ -164,31 +164,31 @@ export function WindowDots({
 const styles = StyleSheet.create({
   kicker: {
     fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 1.6,
+    fontSize: sc(10),
+    letterSpacing: sc(1.6),
     textTransform: 'uppercase',
     color: colors.labelGold,
   },
   goldBtn: {
-    paddingVertical: 13,
+    paddingVertical: sc(13),
     borderRadius: radius.sm,
     alignItems: 'center',
     shadowColor: 'rgba(220,150,50,1)',
     shadowOpacity: 0.5,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: sc(12),
+    shadowOffset: { width: 0, height: sc(8) },
     elevation: 6,
   },
   goldBtnLabel: {
     fontFamily: fonts.sansSemiBold,
-    fontSize: 14,
+    fontSize: sc(14),
     color: colors.ink,
   },
   dotsRow: {
     flexDirection: 'row',
-    gap: 7,
+    gap: sc(7),
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 8,
+    minHeight: sc(8),
   },
 });

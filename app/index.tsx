@@ -8,7 +8,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton } from '../components/ui';
 import { Bell } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts } from '../lib/theme';
+import { colors, fonts, sc } from '../lib/theme';
 
 // время тихого напоминания; пока фиксировано, как в прототипе —
 // настройка появится вместе с expo-notifications
@@ -46,7 +46,7 @@ export default function Home() {
     <View style={styles.root}>
       <ScreenBg variant="home" />
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
-        <View style={[styles.top, { top: insets.top + 18 }]}>
+        <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
           <View style={styles.bellChip}>
             <Bell />
@@ -57,7 +57,7 @@ export default function Home() {
         <View style={styles.center}>
           {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
               после — в полную силу: «поддержи» обретает буквальный смысл */}
-          <Flame width={240} lit={streak.prayedToday} />
+          <Flame width={sc(240)} lit={streak.prayedToday} />
           <Text style={styles.title}>
             {streak.prayedToday ? 'Лампада горит' : 'Поддержи огонёк'}
           </Text>
@@ -80,7 +80,7 @@ export default function Home() {
           )}
         </View>
 
-        <View style={[styles.bottom, { bottom: insets.bottom + 24 }]}>
+        <View style={[styles.bottom, { bottom: insets.bottom + sc(24) }]}>
           <GoldButton label="Начать молитву" onPress={() => router.push('/setup')} />
         </View>
       </Animated.View>
@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
     position: 'absolute',
-    left: 18,
-    right: 18,
+    left: sc(18),
+    right: sc(18),
     zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -101,66 +101,66 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontFamily: fonts.serifRegular,
-    fontSize: 15,
+    fontSize: sc(15),
     color: colors.creamDim,
   },
   bellChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: sc(5),
   },
   bellLabel: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: sc(11),
     color: 'rgba(255,255,255,.3)',
   },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: sc(8),
   },
   title: {
     fontFamily: fonts.serif,
-    fontSize: 26,
+    fontSize: sc(26),
     color: colors.cream,
-    marginTop: 12,
+    marginTop: sc(12),
   },
   dotsRow: {
     flexDirection: 'row',
-    gap: 4,
+    gap: sc(4),
     alignItems: 'center',
-    marginTop: 14,
+    marginTop: sc(14),
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: sc(6),
+    height: sc(6),
+    borderRadius: sc(3),
     backgroundColor: 'rgba(217,169,78,.25)',
   },
   dotFilled: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+    width: sc(7),
+    height: sc(7),
+    borderRadius: sc(4),
     backgroundColor: colors.gold,
   },
   dotToday: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
+    width: sc(9),
+    height: sc(9),
+    borderRadius: sc(5),
     backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderColor: 'rgba(255,200,90,.55)',
   },
   streakLabel: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: sc(11),
     color: 'rgba(214,182,120,.5)',
-    marginTop: 4,
+    marginTop: sc(4),
   },
   bottom: {
     position: 'absolute',
-    left: 18,
-    right: 18,
+    left: sc(18),
+    right: sc(18),
   },
 });

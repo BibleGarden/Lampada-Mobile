@@ -14,7 +14,7 @@ import ScriptureReader from '../components/ScriptureReader';
 import { IconButton, Kicker } from '../components/ui';
 import { Close } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
-import { colors, fonts, radius } from '../lib/theme';
+import { colors, fonts, radius, sc } from '../lib/theme';
 
 export default function Session() {
   useKeepAwake(); // экран не гаснет во время молитвы
@@ -92,7 +92,7 @@ export default function Session() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
         {/* top bar */}
-        <View style={[styles.topBar, { top: insets.top + 8 }]}>
+        <View style={[styles.topBar, { top: insets.top + sc(8) }]}>
           <IconButton onPress={finishEarly}>
             <Close />
           </IconButton>
@@ -101,12 +101,12 @@ export default function Session() {
           </Kicker>
           {/* симметричная заглушка вместо кнопки музыки: воспроизведение
               ещё не реализовано, а неработающая кнопка хуже её отсутствия */}
-          <View style={{ width: 34 }} />
+          <View style={{ width: sc(34) }} />
         </View>
 
         {/* таймер */}
-        <View style={[styles.timerWrap, { marginTop: insets.top + 64 }]}>
-          <ProgressRing size={208} strokeWidth={3} progress={ringProgress} />
+        <View style={[styles.timerWrap, { marginTop: insets.top + sc(64) }]}>
+          <ProgressRing size={sc(208)} strokeWidth={3} progress={ringProgress} />
           <View style={styles.timerContent}>
             <Pressable
               onPress={() => {
@@ -124,7 +124,7 @@ export default function Session() {
                 {timerLabel}
               </Text>
             </Pressable>
-            <Kicker style={{ fontSize: 10 }}>{timerSub}</Kicker>
+            <Kicker style={{ fontSize: sc(10) }}>{timerSub}</Kicker>
           </View>
           {adjustOpen && s.remaining !== null && (
             <>
@@ -136,7 +136,7 @@ export default function Session() {
 
         {/* цель */}
         <View style={styles.goalWrap}>
-          <Kicker style={{ fontSize: 9, color: colors.labelGoldDim, marginBottom: 5 }}>
+          <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
             цель
           </Kicker>
           <Text style={styles.goalText} numberOfLines={3}>
@@ -145,7 +145,7 @@ export default function Session() {
         </View>
 
         {/* карточка-спутник */}
-        <View style={[styles.dockWrap, { bottom: insets.bottom + 14 }]}>
+        <View style={[styles.dockWrap, { bottom: insets.bottom + sc(14) }]}>
           <CompanionDock
             onOpenAnswer={() => answerRef.current?.snapToIndex(0)}
             onOpenReader={() => readerRef.current?.snapToIndex(0)}
@@ -173,7 +173,7 @@ function AdjustBtn({
   return (
     <Animated.View
       entering={FadeInDown.duration(200)}
-      style={[styles.adjustBtnWrap, side === 'left' ? { left: -68 } : { right: -68 }]}
+      style={[styles.adjustBtnWrap, side === 'left' ? { left: -sc(68) } : { right: -sc(68) }]}
     >
       <Pressable
         onPress={() => {
@@ -196,35 +196,35 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   topBar: {
     position: 'absolute',
-    left: 14,
-    right: 14,
+    left: sc(14),
+    right: sc(14),
     zIndex: 5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: sc(8),
   },
   topTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 10,
-    letterSpacing: 1.8,
+    fontSize: sc(10),
+    letterSpacing: sc(1.8),
   },
   timerWrap: {
     alignSelf: 'center',
-    width: 208,
-    height: 208,
+    width: sc(208),
+    height: sc(208),
   },
   timerContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: sc(4),
   },
   timerText: {
     fontFamily: fonts.serif,
-    fontSize: 48,
-    lineHeight: 54,
+    fontSize: sc(48),
+    lineHeight: sc(54),
     color: '#f6ecd4',
   },
   timerTextAdjustable: {
@@ -235,12 +235,12 @@ const styles = StyleSheet.create({
   },
   adjustBtnWrap: {
     position: 'absolute',
-    top: 82,
+    top: sc(82),
   },
   adjustBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: sc(44),
+    height: sc(44),
+    borderRadius: sc(22),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.white05,
@@ -253,24 +253,24 @@ const styles = StyleSheet.create({
   },
   adjustLabel: {
     fontFamily: fonts.mono,
-    fontSize: 12,
+    fontSize: sc(12),
     color: 'rgba(231,207,149,.8)',
   },
   goalWrap: {
-    marginTop: 16,
-    paddingHorizontal: 24,
+    marginTop: sc(16),
+    paddingHorizontal: sc(24),
     alignItems: 'center',
   },
   goalText: {
     fontFamily: fonts.serifItalic,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: sc(14),
+    lineHeight: sc(20),
     color: 'rgba(243,238,226,.85)',
     textAlign: 'center',
   },
   dockWrap: {
     position: 'absolute',
-    left: 18,
-    right: 18,
+    left: sc(18),
+    right: sc(18),
   },
 });

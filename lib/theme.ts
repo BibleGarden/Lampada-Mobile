@@ -1,5 +1,15 @@
 // Дизайн-токены, перенесённые из прототипа (Прототип.dc.html)
 
+import { Dimensions } from 'react-native';
+
+// Прототип свёрстан в кадре 294×654 (экран «телефона» 320 минус рамка 13+13).
+// Реальные экраны шире, поэтому каждый размер из прототипа масштабируется
+// пропорционально ширине экрана; на планшетах рост ограничен.
+const PROTO_WIDTH = 294;
+export const scale = Math.min(Dimensions.get('window').width, 460) / PROTO_WIDTH;
+/** px из прототипа → pt на текущем экране (шаг 0.5 для чёткости линий) */
+export const sc = (v: number) => Math.round(v * scale * 2) / 2;
+
 export const colors = {
   // фоны
   bgHome: ['#2a1c0e', '#120b06', '#080604'] as const, // radial 85% 55% at 50% 52%
@@ -62,13 +72,13 @@ export const fonts = {
   monoMedium: 'JetBrainsMono_500Medium',
 } as const;
 
-export const radius = { sm: 8, md: 14, pill: 999 } as const;
+export const radius = { sm: sc(8), md: sc(14), pill: 999 } as const;
 
 // подпись капсом в стиле прототипа
 export const kicker = {
   fontFamily: fonts.mono,
-  fontSize: 10,
-  letterSpacing: 1.6,
+  fontSize: sc(10),
+  letterSpacing: sc(1.6),
   textTransform: 'uppercase' as const,
   color: colors.labelGold,
 };

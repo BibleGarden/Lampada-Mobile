@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { scriptures, isLong } from '../lib/scriptures';
-import { colors, fonts, radius } from '../lib/theme';
+import { colors, fonts, radius, sc } from '../lib/theme';
 import { WindowDots } from './ui';
 import {
   Book,
@@ -197,7 +197,7 @@ function SquareBtn({
 
 const styles = StyleSheet.create({
   card: {
-    padding: 12,
+    padding: sc(12),
     borderRadius: radius.sm,
     backgroundColor: colors.cardBg,
     borderWidth: 1,
@@ -207,14 +207,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: 10,
+    gap: sc(8),
+    marginBottom: sc(10),
   },
   label: {
     flex: 1,
     fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 1.4,
+    fontSize: sc(10),
+    letterSpacing: sc(1.4),
     textTransform: 'uppercase',
     color: 'rgba(214,182,120,.7)',
   },
@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
     borderColor: colors.white08,
   },
   switchBtn: {
-    width: 30,
-    height: 24,
+    width: sc(30),
+    height: sc(24),
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -238,15 +238,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(214,182,120,.22)',
   },
   textWrap: {
-    minHeight: 44,
+    minHeight: sc(44),
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: sc(4),
   },
   cardText: {
     fontFamily: fonts.serif,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: sc(15),
+    lineHeight: sc(22),
     color: colors.cardText,
     textAlign: 'center',
   },
@@ -254,23 +254,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    marginTop: 8,
+    gap: sc(5),
+    marginTop: sc(8),
   },
   readMoreLabel: {
     fontFamily: fonts.sansMedium,
-    fontSize: 12,
+    fontSize: sc(12),
     color: colors.goldSoft,
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
+    gap: sc(8),
+    marginTop: sc(12),
   },
   squareBtn: {
-    width: 44,
-    height: 44,
+    width: sc(44),
+    height: sc(44),
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -287,8 +287,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    gap: sc(8),
+    paddingVertical: sc(12),
     borderRadius: radius.sm,
     backgroundColor: colors.btnGoldBg,
     borderWidth: 1,
@@ -300,10 +300,10 @@ const styles = StyleSheet.create({
   },
   mainBtnLabel: {
     fontFamily: fonts.sansMedium,
-    fontSize: 13,
+    fontSize: sc(13),
     color: colors.goldSoft,
   },
   dotsWrap: {
-    marginTop: 12,
+    marginTop: sc(12),
   },
 });

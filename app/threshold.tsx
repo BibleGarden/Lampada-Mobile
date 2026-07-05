@@ -10,7 +10,7 @@ import ProgressRing from '../components/ProgressRing';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { plMinutes, useSession } from '../lib/store';
-import { colors, fonts, durations } from '../lib/theme';
+import { colors, fonts, durations, sc } from '../lib/theme';
 
 // «15 минут» / «час» / «1:30» — как timeAmount в прототипе
 const timeAmount = (minutes: number) => {
@@ -40,6 +40,7 @@ export default function Threshold() {
   const brief = [
     { icon: <Clock size={16} color={colors.amberBright} />, text: timeText },
     {
+      // размер здесь в px прототипа — sc() применяется внутри иконок
       icon: <QuestionMark size={16} color={colors.amberBright} />,
       text: 'Спутник будет задавать наводящие вопросы — отвечай на те, что отзываются',
     },
@@ -111,13 +112,13 @@ export default function Threshold() {
       <ScreenBg />
       <Animated.View
         entering={FadeIn.duration(500)}
-        style={[styles.body, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 20 }]}
+        style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(20) }]}
       >
         <View>
-          <IconButton size={30} onPress={() => router.back()} style={{ marginLeft: -4 }}>
+          <IconButton size={sc(30)} onPress={() => router.back()} style={{ marginLeft: -4 }}>
             <ChevronLeft size={18} color={colors.white55} />
           </IconButton>
-          <Kicker style={{ marginTop: 14 }}>Прежде чем войти</Kicker>
+          <Kicker style={{ marginTop: sc(14) }}>Прежде чем войти</Kicker>
           <Text style={styles.title}>Отложи остальное — вот что впереди</Text>
         </View>
 
@@ -143,7 +144,7 @@ export default function Threshold() {
               <View style={styles.holdInner} />
               <View style={StyleSheet.absoluteFill}>
                 <ProgressRing
-                  size={158}
+                  size={sc(158)}
                   strokeWidth={2.5}
                   progress={progress}
                   trackColor="rgba(230,162,60,.14)"
@@ -171,30 +172,30 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   body: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: sc(16),
     justifyContent: 'space-between',
   },
   title: {
-    marginTop: 7,
+    marginTop: sc(7),
     fontFamily: fonts.serif,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: sc(22),
+    lineHeight: sc(28),
     color: '#efe9da',
   },
   brief: {
     flex: 1,
     justifyContent: 'center',
-    gap: 12,
+    gap: sc(12),
     paddingHorizontal: 2,
   },
   briefRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: sc(12),
   },
   briefIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
+    width: sc(30),
+    height: sc(30),
+    borderRadius: sc(8),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(230,162,60,.12)',
@@ -204,60 +205,60 @@ const styles = StyleSheet.create({
   briefText: {
     flex: 1,
     fontFamily: fonts.sans,
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: sc(13),
+    lineHeight: sc(20),
     color: colors.body,
   },
   holdWrap: {
     alignItems: 'center',
-    gap: 16,
+    gap: sc(16),
   },
   holdBtn: {
-    width: 158,
-    height: 158,
+    width: sc(158),
+    height: sc(158),
   },
   holdInner: {
     position: 'absolute',
-    top: 11,
-    left: 11,
-    right: 11,
-    bottom: 11,
-    borderRadius: 79,
+    top: sc(11),
+    left: sc(11),
+    right: sc(11),
+    bottom: sc(11),
+    borderRadius: sc(79),
     backgroundColor: 'rgba(230,162,60,.07)',
   },
   holdContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 46,
-    paddingBottom: 42,
+    paddingTop: sc(46),
+    paddingBottom: sc(42),
   },
   holdHint: {
     fontFamily: fonts.sans,
-    fontSize: 10,
-    letterSpacing: 1.8,
+    fontSize: sc(10),
+    letterSpacing: sc(1.8),
     textTransform: 'uppercase',
     color: 'rgba(240,200,140,.7)',
   },
   holdLabel: {
     fontFamily: fonts.serifRegular,
-    fontSize: 17,
+    fontSize: sc(17),
     color: '#f3eee2',
   },
   quietRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: sc(8),
   },
   quietDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+    width: sc(7),
+    height: sc(7),
+    borderRadius: sc(4),
     backgroundColor: colors.green,
   },
   quietText: {
     fontFamily: fonts.sans,
-    fontSize: 12,
+    fontSize: sc(12),
     color: 'rgba(255,255,255,.5)',
   },
 });

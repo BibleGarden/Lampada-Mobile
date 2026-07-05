@@ -18,7 +18,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius } from '../lib/theme';
+import { colors, fonts, radius, sc } from '../lib/theme';
 
 export default function Reflect() {
   const insets = useSafeAreaInsets();
@@ -66,7 +66,7 @@ export default function Reflect() {
       <ScreenBg />
       <Animated.View
         entering={FadeIn.duration(500)}
-        style={[styles.body, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
+        style={[styles.body, { paddingTop: insets.top + sc(16), paddingBottom: insets.bottom + sc(24) }]}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -74,11 +74,11 @@ export default function Reflect() {
         >
           {/* тёплый уголёк */}
           <View style={styles.emberWrap}>
-            <Flame width={104} ember />
+            <Flame width={sc(104)} ember />
           </View>
 
           <View style={styles.questionBlock}>
-            <Kicker style={{ textAlign: 'center', marginBottom: 10 }}>
+            <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
               прежде чем закрыть
             </Kicker>
             <Text style={styles.question}>{s.reflectQ || fallbackQ}</Text>
@@ -93,9 +93,9 @@ export default function Reflect() {
             style={styles.input}
           />
 
-          <View style={{ flex: 1, minHeight: 16 }} />
+          <View style={{ flex: 1, minHeight: sc(16) }} />
 
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: sc(12) }}>
             <GoldButton
               label={takeaway.trim() ? 'Сохранить и завершить' : 'Завершить'}
               onPress={() => complete(takeaway.trim())}
@@ -116,32 +116,32 @@ export default function Reflect() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  body: { flex: 1, paddingHorizontal: 18 },
+  body: { flex: 1, paddingHorizontal: sc(18) },
   emberWrap: {
     alignItems: 'center',
   },
   questionBlock: {
-    paddingHorizontal: 6,
-    marginTop: 4,
+    paddingHorizontal: sc(6),
+    marginTop: sc(4),
   },
   question: {
     fontFamily: fonts.serif,
-    fontSize: 22,
-    lineHeight: 29,
+    fontSize: sc(22),
+    lineHeight: sc(29),
     color: '#f3e7cf',
     textAlign: 'center',
   },
   input: {
-    marginTop: 20,
-    height: 128,
-    padding: 13,
+    marginTop: sc(20),
+    height: sc(128),
+    padding: sc(13),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.045)',
     borderWidth: 1,
     borderColor: 'rgba(230,162,60,.24)',
     color: '#f1e7d3',
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: sc(16),
+    lineHeight: sc(24),
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
   },
@@ -149,8 +149,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    gap: sc(8),
+    paddingVertical: sc(12),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(230,162,60,.08)',
     borderWidth: 1,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   },
   continueLabel: {
     fontFamily: fonts.sansMedium,
-    fontSize: 13,
+    fontSize: sc(13),
     color: colors.amberBright,
   },
 });

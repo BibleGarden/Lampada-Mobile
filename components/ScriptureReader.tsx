@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSession } from '../lib/store';
 import { scriptures } from '../lib/scriptures';
-import { colors, fonts } from '../lib/theme';
+import { colors, fonts, radius, sc } from '../lib/theme';
 import { Heart, Close } from './icons';
 import { IconButton } from './ui';
 
@@ -42,11 +42,11 @@ export default function ScriptureReader({ sheetRef }: Props) {
       <View style={styles.header}>
         <Text style={styles.ref}>{cur.ref}</Text>
         <View style={styles.headerBtns}>
-          <IconButton size={32} bg="rgba(255,255,255,.04)" border={colors.white08} onPress={toggleFav}>
+          <IconButton size={sc(32)} bg="rgba(255,255,255,.04)" border={colors.white08} onPress={toggleFav}>
             <Heart size={16} fill={fav ? '#e7cf95' : 'none'} />
           </IconButton>
           <IconButton
-            size={32}
+            size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}
             onPress={() => sheetRef.current?.close()}
@@ -65,39 +65,39 @@ export default function ScriptureReader({ sheetRef }: Props) {
 const styles = StyleSheet.create({
   bg: {
     backgroundColor: '#131f1a',
-    borderRadius: 14,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: 'rgba(214,182,120,.28)',
   },
   handle: {
     backgroundColor: 'rgba(214,182,120,.3)',
-    width: 36,
+    width: sc(36),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: sc(16),
+    paddingBottom: sc(12),
   },
   headerBtns: {
     flexDirection: 'row',
-    gap: 8,
+    gap: sc(8),
   },
   ref: {
     fontFamily: fonts.mono,
-    fontSize: 11,
-    letterSpacing: 1.4,
+    fontSize: sc(11),
+    letterSpacing: sc(1.4),
     color: 'rgba(214,182,120,.7)',
   },
   content: {
-    paddingHorizontal: 18,
-    paddingBottom: 40,
+    paddingHorizontal: sc(18),
+    paddingBottom: sc(40),
   },
   text: {
     fontFamily: fonts.serif,
-    fontSize: 16,
-    lineHeight: 27,
+    fontSize: sc(16),
+    lineHeight: sc(27),
     color: '#eef0e6',
   },
 });
