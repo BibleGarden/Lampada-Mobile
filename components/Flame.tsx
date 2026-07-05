@@ -30,23 +30,38 @@ type Props = {
   ember?: boolean;
 };
 
-// Многочастотное «дрожание»: три некратные гармоники со сдвигом фаз —
-// рисунок движения не повторяется и слегка асимметричен (рывок — возврат).
-const wave = (tt: number) => {
+// Детерминированный value-noise: гладкий фрактальный шум без периода.
+// hash — псевдослучайные узлы, между ними smoothstep-интерполяция;
+// fbm — три октавы. Результат в [-1, 1], непрерывный и «дышащий»,
+// как запись настоящего огня, а не сумма синусоид.
+const hash = (n: number) => {
   'worklet';
-  const w =
-    Math.sin(tt * 0.9) * 0.55 +
-    Math.sin(tt * 1.53 + 1.7) * 0.33 +
-    Math.sin(tt * 2.71 + 0.5) * 0.2;
-  return w * (1 + 0.35 * Math.abs(w)); // пики заостряются
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
 };
 
-// Огибающая: большую часть периода ~0.3, раз в ~13 с — короткое оживление,
-// как будто пламя тронул сквозняк.
+const vnoise = (x: number) => {
+  'worklet';
+  const i = Math.floor(x);
+  const f = x - i;
+  const u = f * f * (3 - 2 * f);
+  return hash(i) * (1 - u) + hash(i + 1) * u;
+};
+
+const wave = (tt: number) => {
+  'worklet';
+  const x = tt * 0.55; // базовая скорость дрожания
+  const n =
+    vnoise(x) * 0.55 + vnoise(x * 2.17 + 7.3) * 0.3 + vnoise(x * 4.31 + 13.7) * 0.15;
+  return (n * 2 - 1) * 1.6;
+};
+
+// Огибающая-«сквозняк»: тоже шум, но очень медленный. Большую часть
+// времени тихо, изредка — оживление; интервалы неравномерные.
 const gust = (tt: number) => {
   'worklet';
-  const s = 0.5 + 0.5 * Math.sin(tt * 0.077);
-  return 0.3 + 0.7 * s * s * s;
+  const s = vnoise(tt * 0.045 + 51.3);
+  return 0.25 + 0.75 * s * s;
 };
 
 // Огонёк лампады: гало + пламя-«яйцо» + яркое ядро у фитиля + чаша-плошка.
@@ -96,7 +111,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     const amp = flameRW * (lit ? 0.5 : 0.22) * env;
     const mid = wave(t.value) * amp * 0.35;
     const tip = wave(t.value - 1.2) * amp;
-    const hh = flameH * (1 + env * 0.07 * Math.sin(t.value * 1.13 + 0.9));
+    const hh = flameH * (1 + env * 0.1 * (vnoise(t.value * 0.31 + 29.1) * 2 - 1));
 
     const yt = flameBase - hh;
     const ym = yt + hh * 0.45;
@@ -132,14 +147,14 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const corePath = useDerivedValue(() => {
     const env = gust(t.value);
     const sway = wave(t.value) * flameRW * (lit ? 0.5 : 0.22) * env * 0.18;
-    const ch = flameH * 0.5 * (1 + env * 0.05 * Math.sin(t.value * 1.13));
+    const ch = flameH * 0.5 * (1 + env * 0.05 * (vnoise(t.value * 0.31 + 29.1) * 2 - 1));
     const crw = flameRW * 0.45;
     const p = Skia.Path.Make();
     p.addOval(Skia.XYWHRect(cx - crw + sway, flameBase - ch, crw * 2, ch));
     return p;
   });
   const coreOpacity = useDerivedValue(
-    () => (lit ? 0.85 : 0.55) + Math.sin(t.value * 2.03) * 0.08,
+    () => (lit ? 0.85 : 0.55) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
   );
 
   // чаша-плошка: плоский верх, полуэллипс снизу
@@ -184,6 +199,12 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const glowOpacity = useDerivedValue(
     () => (lit ? 0.7 : 0.45) + Math.sin(t.value * 0.385) * 0.15,
   );
+  // «смаз движения»: чем быстрее дёргается кончик, тем сильнее размыт
+  // светящийся слой — быстрые рывки читаются мягко, а не машут флагом
+  const glowBlur = useDerivedValue(() => {
+    const vel = Math.abs(wave(t.value) - wave(t.value - 0.35)) * gust(t.value);
+    return (lit ? 11 : 7) + vel * (lit ? 9 : 4);
+  });
 
   const flameOrigin = useMemo(() => vec(cx, flameBase), [cx, flameBase]);
   const haloCenter = useMemo(() => vec(cx, flameMidY), [cx, flameMidY]);
@@ -209,7 +230,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
             r={flameH * 1.6}
             colors={[colors.flameMid, 'rgba(214,96,26,0)']}
           />
-          <BlurMask blur={lit ? 12 : 7} style="normal" />
+          <BlurMask blur={glowBlur} style="normal" />
         </Path>
         {/* оболочка пламени */}
         <Path path={flamePath} opacity={flameOpacity}>
