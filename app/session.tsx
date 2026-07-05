@@ -2,7 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeInDown,
+  cancelAnimation,
+  useDerivedValue,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+import { Canvas, Circle, Group, RadialGradient, vec } from '@shopify/react-native-skia';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -15,6 +25,13 @@ import { IconButton, Kicker } from '../components/ui';
 import { Close } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { colors, fonts, radius, sc } from '../lib/theme';
+
+// Кольцо таймера. В прототипе 208 px, но при честном масштабе круг
+// выходит на весь экран и «теряет» содержимое — держим компактнее,
+// цифры при том же кегле заполняют его гармоничнее.
+const RING = sc(172);
+// запас холста вокруг кольца под гало
+const HALO_PAD = sc(56);
 
 export default function Session() {
   useKeepAwake(); // экран не гаснет во время молитвы
@@ -106,7 +123,8 @@ export default function Session() {
 
         {/* таймер */}
         <View style={[styles.timerWrap, { marginTop: insets.top + sc(64) }]}>
-          <ProgressRing size={sc(208)} strokeWidth={3} progress={ringProgress} />
+          <TimerHalo />
+          <ProgressRing size={RING} strokeWidth={3} progress={ringProgress} />
           <View style={styles.timerContent}>
             <Pressable
               onPress={() => {
@@ -156,6 +174,47 @@ export default function Session() {
       <AnswerSheet sheetRef={answerRef} flushRef={flushAnswerRef} />
       <ScriptureReader sheetRef={readerRef} />
     </View>
+  );
+}
+
+// тёплое дыхание за кольцом — halo 7s из прототипа
+function TimerHalo() {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withRepeat(
+      withTiming(1, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
+    return () => cancelAnimation(t);
+  }, [t]);
+  const size = RING + HALO_PAD * 2;
+  const r = size / 2;
+  const transform = useDerivedValue(() => [{ scale: 1 + t.value * 0.16 }]);
+  const opacity = useDerivedValue(() => 0.62 + t.value * 0.38);
+  const c = vec(r, r);
+  return (
+    <Canvas
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: -HALO_PAD,
+        left: -HALO_PAD,
+        width: size,
+        height: size,
+      }}
+    >
+      <Group origin={c} transform={transform} opacity={opacity}>
+        <Circle cx={r} cy={r} r={r}>
+          <RadialGradient
+            c={c}
+            r={r}
+            colors={['rgba(230,162,60,.14)', 'rgba(230,162,60,0)']}
+            positions={[0, 0.68]}
+          />
+        </Circle>
+      </Group>
+    </Canvas>
   );
 }
 
@@ -212,8 +271,8 @@ const styles = StyleSheet.create({
   },
   timerWrap: {
     alignSelf: 'center',
-    width: sc(208),
-    height: sc(208),
+    width: RING,
+    height: RING,
   },
   timerContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -235,7 +294,7 @@ const styles = StyleSheet.create({
   },
   adjustBtnWrap: {
     position: 'absolute',
-    top: sc(82),
+    top: RING / 2 - sc(22), // по вертикальному центру кольца
   },
   adjustBtn: {
     width: sc(44),
