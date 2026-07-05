@@ -42,6 +42,11 @@ const reflectPool: string[] = [
 
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
+// деградация тихая для человека, но не для разработчика: причина отката
+// на курируемый пул видна в логах dev-сервера
+const warn = (where: string, e: unknown) =>
+  console.warn(`[ai] ${where}: fallback на пул —`, e instanceof Error ? e.message : e);
+
 // один вопрос — одна строка: нумерация и маркеры из модели вычищаются
 const tidy = (q: string) =>
   q.replace(/^[\s\d.\-—)*]+/, '').replace(/\s+/g, ' ').trim();
@@ -64,8 +69,10 @@ export async function generateFirstQuestion(topic: string): Promise<string> {
         'Не пересказывай цель дословно. Ответь только текстом вопроса, без кавычек и пояснений.',
     );
     const clean = tidy(q);
+    if (!isQuestion(clean)) warn('firstQuestion', `кривой ответ: «${q}»`);
     return isQuestion(clean) ? clean : pickRandom(curatedQuestions);
-  } catch {
+  } catch (e) {
+    warn('firstQuestion', e);
     return pickRandom(curatedQuestions);
   }
 }
@@ -98,8 +105,10 @@ export async function generateQuestion(
         'Ответь только текстом вопроса, без кавычек и пояснений.',
     );
     const clean = tidy(q);
+    if (!isQuestion(clean)) warn('question', `кривой ответ: «${q}»`);
     return isQuestion(clean) ? clean : fallback();
-  } catch {
+  } catch (e) {
+    warn('question', e);
     return fallback();
   }
 }
@@ -122,8 +131,10 @@ export async function generateReflectQuestion(
         'Не цитируй его ответы дословно. Ответь только текстом вопроса.',
     );
     const clean = tidy(q);
+    if (!isQuestion(clean)) warn('reflect', `кривой ответ: «${q}»`);
     return isQuestion(clean) ? clean : pickRandom(reflectPool);
-  } catch {
+  } catch (e) {
+    warn('reflect', e);
     return pickRandom(reflectPool);
   }
 }

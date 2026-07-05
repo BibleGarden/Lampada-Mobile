@@ -39,6 +39,7 @@ export default function Session() {
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const answerRef = useRef<BottomSheet>(null);
+  const openAnswerRef = useRef<(() => void) | null>(null);
   const readerRef = useRef<BottomSheet>(null);
   const flushAnswerRef = useRef<(() => Promise<void>) | null>(null);
   const ringProgress = useSharedValue(0);
@@ -165,13 +166,13 @@ export default function Session() {
         {/* карточка-спутник */}
         <View style={[styles.dockWrap, { bottom: insets.bottom + sc(14) }]}>
           <CompanionDock
-            onOpenAnswer={() => answerRef.current?.snapToIndex(0)}
+            onOpenAnswer={() => openAnswerRef.current?.()}
             onOpenReader={() => readerRef.current?.snapToIndex(0)}
           />
         </View>
       </Animated.View>
 
-      <AnswerSheet sheetRef={answerRef} flushRef={flushAnswerRef} />
+      <AnswerSheet sheetRef={answerRef} openRef={openAnswerRef} flushRef={flushAnswerRef} />
       <ScriptureReader sheetRef={readerRef} />
     </View>
   );

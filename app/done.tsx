@@ -35,7 +35,12 @@ export default function Done() {
             )}
           </Animated.View>
         </View>
-        <GoldButton label="На главную" onPress={() => router.dismissAll()} />
+        {/* после хот-релоада или деп-линка стек может быть пуст —
+            тогда dismissAll молча ничего не делает */}
+        <GoldButton
+          label="На главную"
+          onPress={() => (router.canDismiss() ? router.dismissAll() : router.replace('/'))}
+        />
       </Animated.View>
     </View>
   );

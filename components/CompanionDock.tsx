@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useShallow } from 'zustand/react/shallow';
@@ -96,7 +96,16 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
             {s.generating ? (
               <ActivityIndicator color={colors.goldSoft} />
             ) : (
-              <Text style={styles.cardText}>{s.questions[s.qIndex]}</Text>
+              // maxHeight + прокрутка: длинный вопрос не выталкивает карточку
+              // за экран, а листается внутри неё
+              <ScrollView
+                style={styles.textScroll}
+                contentContainerStyle={styles.textScrollContent}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                <Text style={styles.cardText}>{s.questions[s.qIndex]}</Text>
+              </ScrollView>
             )}
           </View>
           <View style={styles.actionsRow}>
@@ -242,6 +251,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: sc(4),
+  },
+  // ~5 строк вопроса; дальше — прокрутка внутри карточки
+  textScroll: {
+    maxHeight: sc(110),
+    alignSelf: 'stretch',
+  },
+  textScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   cardText: {
     fontFamily: fonts.serif,

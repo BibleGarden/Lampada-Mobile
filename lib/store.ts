@@ -152,17 +152,26 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // на порог с другой темой или reset() делают старый ответ неактуальным
     const token = ++prepareToken;
     // заранее готовится только первый вопрос: остальные генерируются
-    // по ходу молитвы, с учётом живых ответов (если человек разрешил)
+    // по ходу молитвы, с учётом живых ответов (если человек разрешил).
+    // Результат применяется только до входа в сессию: опоздавший вопрос
+    // не должен затирать уже идущую молитву
     ai.generateFirstQuestion(topic).then((q) => {
-      if (token === prepareToken) set({ questions: [q] });
+      if (token === prepareToken) set((st) => (st.sessionId === null ? { questions: [q] } : st));
     });
   },
 
   enterSession: async () => {
     const { topic, minutes } = get();
     const sessionId = await db.createSession(topic, minutes);
-    set({
+    // висящая генерация первого вопроса с порога больше не применится
+    prepareToken++;
+    nextQFetch = null;
+    set((s) => ({
       sessionId,
+      // в сессию входит только первый вопрос: если человек вошёл раньше,
+      // чем сгенерировался стартовый, остаток запасной пятёрки обрезается —
+      // иначе все следующие вопросы листались бы из неё без генерации
+      questions: s.questions.slice(0, 1),
       qIndex: 0,
       answeredCount: 0,
       answers: {},
@@ -173,7 +182,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       musicOn: false,
       remaining: minutes === 0 ? null : minutes * 60,
       elapsed: 0,
-    });
+    }));
   },
 
   tick: () =>

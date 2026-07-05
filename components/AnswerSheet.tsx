@@ -37,13 +37,16 @@ import { GoldButton } from './ui';
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
+  /** Единственный способ открыть шторку: черновик готовится ДО анимации,
+   * иначе на открытии мелькает контент прошлого вопроса */
+  openRef: React.MutableRefObject<(() => void) | null>;
   /** Сессия зовёт это перед уходом на рефлексию: дописать открытый черновик */
   flushRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 };
 
 // Шторка ответа: текст + голосовые записи. Открывается на текущем вопросе,
 // черновик считывается из сохранённого ответа.
-export default function AnswerSheet({ sheetRef, flushRef }: Props) {
+export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
   // подписка только на нужное — не ререндерим шторку от тика таймера
   const questions = useSession((st) => st.questions);
   const qIndex = useSession((st) => st.qIndex);
@@ -55,7 +58,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   const [playingId, setPlayingId] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const openRef = useRef(false);
+  const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
   // qIndex фиксируется при открытии шторки: пока человек пишет, индекс в store
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
@@ -69,7 +72,8 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   // поднимает шторку до верхней, и поле ввода с кнопками остаются видны
   const snapPoints = useMemo(() => ['62%', '92%'], []);
 
-  // при открытии подтягиваем черновик текущего вопроса
+  // черновик текущего вопроса подтягивается ДО показа шторки: если делать
+  // это в onChange, на открытии успевает мелькнуть контент прошлого вопроса
   const handleOpen = useCallback(() => {
     const st = useSession.getState();
     answerIndexRef.current = st.qIndex;
@@ -79,7 +83,15 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
     setConfirmDeleteId(null);
     setConfirmCancel(false);
     setPlayingId(null);
-  }, []);
+    sheetRef.current?.snapToIndex(0);
+  }, [sheetRef]);
+
+  useEffect(() => {
+    openRef.current = handleOpen;
+    return () => {
+      openRef.current = null;
+    };
+  }, [openRef, handleOpen]);
 
   useEffect(
     () => () => {
@@ -99,10 +111,10 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   // Слушатель, а не onFocus: свой snap шторка перебивает при показе клавиатуры
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', () => {
-      if (openRef.current) sheetRef.current?.snapToIndex(1);
+      if (openSheetRef.current) sheetRef.current?.snapToIndex(1);
     });
     const hide = Keyboard.addListener('keyboardDidHide', () => {
-      if (openRef.current) sheetRef.current?.snapToIndex(0);
+      if (openSheetRef.current) sheetRef.current?.snapToIndex(0);
     });
     return () => {
       show.remove();
@@ -176,7 +188,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
     saveAnswerToStore(answerIndexRef.current, text, finalRecs);
     // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
     // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
-    openRef.current = false;
+    openSheetRef.current = false;
     Keyboard.dismiss();
     sheetRef.current?.close();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -188,7 +200,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
     if (!hasContent || confirmCancel) {
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       setConfirmCancel(false);
-      openRef.current = false; // см. комментарий в save()
+      openSheetRef.current = false; // см. комментарий в save()
       Keyboard.dismiss();
       sheetRef.current?.close();
       return;
@@ -203,7 +215,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
   useEffect(() => {
     if (!flushRef) return;
     flushRef.current = async () => {
-      if (!openRef.current) return;
+      if (!openSheetRef.current) return;
       await save();
     };
     return () => {
@@ -234,9 +246,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
       enableDynamicSizing={false}
       enablePanDownToClose
       onChange={(i) => {
-        const wasOpen = openRef.current;
-        openRef.current = i >= 0;
-        if (i >= 0 && !wasOpen) handleOpen();
+        openSheetRef.current = i >= 0;
         // закрыли (свайпом/кнопкой) во время записи — остановить микрофон
         if (i < 0 && recorder.isRecording) stopRecording();
         if (i < 0 && playingId !== null) {
@@ -257,7 +267,7 @@ export default function AnswerSheet({ sheetRef, flushRef }: Props) {
           <Text style={styles.orbLabel}>СПУТНИК СПРОСИЛ</Text>
         </View>
         <Text style={styles.question}>
-          {questions[openRef.current ? answerIndexRef.current : qIndex]}
+          {questions[answerIndexRef.current] ?? questions[qIndex]}
         </Text>
 
         <BottomSheetTextInput
