@@ -55,7 +55,9 @@ export default function Home() {
         </View>
 
         <View style={styles.center}>
-          <Flame width={240} lit={streak.prayedToday} />
+          {/* пламя горит всегда, как в прототипе: «зажги» — приглашение,
+              а не буквально потухшая лампада (иначе экран слишком тёмный) */}
+          <Flame width={240} />
           <Text style={styles.title}>
             {streak.prayedToday ? 'Лампада горит' : 'Зажги огонёк'}
           </Text>
