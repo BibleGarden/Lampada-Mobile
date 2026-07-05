@@ -85,9 +85,11 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const bowlHW = W * 0.25;
 
   // пламя: в прототипе 24×34 при чаше 120 — то есть W*0.1 × W*0.142;
-  // уголёк на рефлексии крупнее относительно холста (22×32 при 104)
-  const flameH = (ember ? W * 0.31 : W * 0.142) * (lit ? 1 : 0.6);
-  const flameRW = (ember ? W * 0.106 : W * 0.05) * (lit ? 1 : 0.7);
+  // уголёк на рефлексии крупнее относительно холста (22×32 при 104).
+  // lit=false — не «уголь», а скромное горение: ~83% размера,
+  // разница деликатная, но после молитвы огонёк заметно оживает
+  const flameH = (ember ? W * 0.31 : W * 0.142) * (lit ? 1 : 0.83);
+  const flameRW = (ember ? W * 0.106 : W * 0.05) * (lit ? 1 : 0.88);
   const flameBase = ember ? pad + H * 0.66 : bowlTop + W / 60;
   const flameMidY = flameBase - flameH * 0.5;
 
@@ -108,7 +110,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   // возмущение рождается у фитиля и уходит вверх.
   const flamePath = useDerivedValue(() => {
     const env = gust(t.value);
-    const amp = flameRW * (lit ? 0.5 : 0.22) * env;
+    const amp = flameRW * (lit ? 0.5 : 0.38) * env;
     const mid = wave(t.value) * amp * 0.35;
     const tip = wave(t.value - 1.2) * amp;
     const hh = flameH * (1 + env * 0.1 * (vnoise(t.value * 0.31 + 29.1) * 2 - 1));
@@ -146,7 +148,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   // ядро у фитиля: маленькое, яркое, почти неподвижное
   const corePath = useDerivedValue(() => {
     const env = gust(t.value);
-    const sway = wave(t.value) * flameRW * (lit ? 0.5 : 0.22) * env * 0.18;
+    const sway = wave(t.value) * flameRW * (lit ? 0.5 : 0.38) * env * 0.18;
     const ch = flameH * 0.5 * (1 + env * 0.05 * (vnoise(t.value * 0.31 + 29.1) * 2 - 1));
     const crw = flameRW * 0.45;
     const p = Skia.Path.Make();
@@ -154,7 +156,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return p;
   });
   const coreOpacity = useDerivedValue(
-    () => (lit ? 0.85 : 0.55) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
+    () => (lit ? 0.85 : 0.72) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
   );
 
   // чаша-плошка: плоский верх, полуэллипс снизу
@@ -178,7 +180,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return [{ scaleY: 1.04 + s }, { scaleX: 1.04 - s * 0.6 }];
   });
   const flameOpacity = useDerivedValue(
-    () => (lit ? 0.825 : 0.6) + Math.sin(t.value * 0.385) * 0.125,
+    () => (lit ? 0.825 : 0.72) + Math.sin(t.value * 0.385) * 0.125,
   );
 
   // гало: медленное дыхание 6 с + отклик на вздрагивания пламени
@@ -190,20 +192,20 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const haloOpacity = useDerivedValue(() => {
     const flick = wave(t.value) * gust(t.value);
     return (
-      (lit ? 0.64 : 0.32) +
-      Math.sin(t.value * 0.167) * (lit ? 0.12 : 0.06) +
-      flick * (lit ? 0.05 : 0.02)
+      (lit ? 0.64 : 0.46) +
+      Math.sin(t.value * 0.167) * (lit ? 0.12 : 0.09) +
+      flick * (lit ? 0.05 : 0.03)
     );
   });
 
   const glowOpacity = useDerivedValue(
-    () => (lit ? 0.7 : 0.45) + Math.sin(t.value * 0.385) * 0.15,
+    () => (lit ? 0.7 : 0.55) + Math.sin(t.value * 0.385) * 0.15,
   );
   // «смаз движения»: чем быстрее дёргается кончик, тем сильнее размыт
   // светящийся слой — быстрые рывки читаются мягко, а не машут флагом
   const glowBlur = useDerivedValue(() => {
     const vel = Math.abs(wave(t.value) - wave(t.value - 0.35)) * gust(t.value);
-    return (lit ? 11 : 7) + vel * (lit ? 9 : 4);
+    return (lit ? 11 : 9) + vel * (lit ? 9 : 6);
   });
 
   const flameOrigin = useMemo(() => vec(cx, flameBase), [cx, flameBase]);

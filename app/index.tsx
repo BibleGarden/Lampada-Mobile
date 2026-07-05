@@ -55,11 +55,11 @@ export default function Home() {
         </View>
 
         <View style={styles.center}>
-          {/* пламя горит всегда, как в прототипе: «зажги» — приглашение,
-              а не буквально потухшая лампада (иначе экран слишком тёмный) */}
-          <Flame width={240} />
+          {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
+              после — в полную силу: «поддержи» обретает буквальный смысл */}
+          <Flame width={240} lit={streak.prayedToday} />
           <Text style={styles.title}>
-            {streak.prayedToday ? 'Лампада горит' : 'Зажги огонёк'}
+            {streak.prayedToday ? 'Лампада горит' : 'Поддержи огонёк'}
           </Text>
           <View style={styles.dotsRow}>
             {dots.map((kind, i) => (
