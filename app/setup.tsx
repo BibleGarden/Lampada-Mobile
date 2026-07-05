@@ -61,7 +61,7 @@ export default function Setup() {
             <IconButton size={sc(30)} onPress={() => router.back()}>
               <ChevronLeft size={18} color={colors.white65} />
             </IconButton>
-            <Kicker style={{ fontSize: sc(11) }}>Молитвенный поиск</Kicker>
+            <Kicker style={{ fontSize: sc(11) }}>Перед молитвой</Kicker>
           </View>
 
           <View>

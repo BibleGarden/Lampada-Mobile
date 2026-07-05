@@ -114,7 +114,7 @@ export default function Session() {
             <Close />
           </IconButton>
           <Kicker numberOfLines={1} style={styles.topTitle}>
-            Молитвенный поиск
+            Молитва
           </Kicker>
           {/* симметричная заглушка вместо кнопки музыки: воспроизведение
               ещё не реализовано, а неработающая кнопка хуже её отсутствия */}
