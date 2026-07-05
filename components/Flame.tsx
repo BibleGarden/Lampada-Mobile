@@ -81,14 +81,14 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const pad = W * 0.45;
   const cx = pad + W / 2;
   const bowlTop = pad + H * 0.72;
-  const bowlH = W * 0.175;
-  const bowlHW = W * 0.25;
+  const bowlH = W * 0.195;
+  const bowlHW = W * 0.285;
 
-  // размеры из прототипа (чаша 120 = W/2, т.е. 1 px прототипа = W/240):
-  // скромное горение (до молитвы) — 24×34, разгоревшееся (после) — 36×62,
-  // уголёк на рефлексии — 22×32 при холсте 104
-  const flameH = ember ? W * 0.31 : lit ? W * 0.258 : W * 0.142;
-  const flameRW = ember ? W * 0.106 : lit ? W * 0.075 : W * 0.05;
+  // в прототипе чаша 120 и пламя 36×62 / 24×34, но вживую пламя давило
+  // чашу: чаша здесь крупнее прототипа, горящее пламя скромнее,
+  // незажжённое — совсем маленькое. Уголёк на рефлексии — 22×32 при 104
+  const flameH = ember ? W * 0.31 : lit ? W * 0.225 : W * 0.117;
+  const flameRW = ember ? W * 0.106 : lit ? W * 0.066 : W * 0.042;
   const flameBase = ember ? pad + H * 0.66 : bowlTop + W / 60;
   const flameMidY = flameBase - flameH * 0.5;
 
@@ -155,7 +155,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return p;
   });
   const coreOpacity = useDerivedValue(
-    () => (lit ? 0.85 : 0.72) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
+    () => (lit ? 0.85 : 0.6) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
   );
 
   // чаша-плошка: плоский верх, полуэллипс снизу
@@ -179,7 +179,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return [{ scaleY: 1.04 + s }, { scaleX: 1.04 - s * 0.6 }];
   });
   const flameOpacity = useDerivedValue(
-    () => (lit ? 0.825 : 0.72) + Math.sin(t.value * 0.385) * 0.125,
+    () => (lit ? 0.825 : 0.62) + Math.sin(t.value * 0.385) * (lit ? 0.125 : 0.09),
   );
 
   // гало: медленное дыхание 6 с + отклик на вздрагивания пламени
@@ -191,14 +191,14 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const haloOpacity = useDerivedValue(() => {
     const flick = wave(t.value) * gust(t.value);
     return (
-      (lit ? 0.64 : 0.46) +
-      Math.sin(t.value * 0.167) * (lit ? 0.12 : 0.09) +
+      (lit ? 0.64 : 0.32) +
+      Math.sin(t.value * 0.167) * (lit ? 0.12 : 0.06) +
       flick * (lit ? 0.05 : 0.03)
     );
   });
 
   const glowOpacity = useDerivedValue(
-    () => (lit ? 0.7 : 0.55) + Math.sin(t.value * 0.385) * 0.15,
+    () => (lit ? 0.7 : 0.42) + Math.sin(t.value * 0.385) * (lit ? 0.15 : 0.1),
   );
   // «смаз движения»: чем быстрее дёргается кончик, тем сильнее размыт
   // светящийся слой — быстрые рывки читаются мягко, а не машут флагом
