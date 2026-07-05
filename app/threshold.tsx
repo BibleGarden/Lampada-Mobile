@@ -26,12 +26,14 @@ export default function Threshold() {
   const s = useSession();
 
   // брифинг собирается из выбора на «Настройке»: цель не переписывается,
-  // а выводится как есть отдельной строкой-капителью после двоеточия
+  // а вливается в фразу как есть, с золотой подсветкой (строчная — она
+  // продолжает предложение после двоеточия)
   const topicTrim = s.topic.trim();
+  const goal = topicTrim.replace(/^[А-ЯA-ZЁ]/, (c) => c.toLowerCase());
   const timeText = topicTrim
     ? s.minutes === 0
-      ? 'У тебя столько времени, сколько нужно, чтобы достичь цели:'
-      : `У тебя ${timeAmount(s.minutes)}, чтобы достичь цели:`
+      ? 'У тебя столько времени, сколько нужно, чтобы достичь цели: '
+      : `У тебя ${timeAmount(s.minutes)}, чтобы достичь цели: `
     : s.minutes === 0
       ? 'Столько времени, сколько нужно — без таймера и спешки'
       : `У тебя ${timeAmount(s.minutes)} наедине с Богом`;
@@ -39,7 +41,7 @@ export default function Threshold() {
     {
       icon: <Clock size={16} color={colors.amberBright} />,
       text: timeText,
-      goal: topicTrim || undefined,
+      goal: goal || undefined,
     },
     {
       // размер здесь в px прототипа — sc() применяется внутри иконок
@@ -114,20 +116,19 @@ export default function Threshold() {
       <ScreenBg />
       <Animated.View
         entering={FadeIn.duration(500)}
-        style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(20) }]}
+        style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(34) }]}
       >
-        <View>
-          {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
-          <View style={styles.headerRow}>
-            <IconButton size={sc(30)} onPress={() => router.back()}>
-              <ChevronLeft size={18} color={colors.white55} />
-            </IconButton>
-            <Kicker style={{ fontSize: sc(11) }}>Прежде чем войти</Kicker>
-          </View>
-          <Text style={styles.title}>Отложи остальное — вот что впереди</Text>
+        {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
+        <View style={styles.headerRow}>
+          <IconButton size={sc(30)} onPress={() => router.back()}>
+            <ChevronLeft size={18} color={colors.white55} />
+          </IconButton>
+          <Kicker style={{ fontSize: sc(11) }}>Прежде чем войти</Kicker>
         </View>
 
+        {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
         <View style={styles.brief}>
+          <Text style={styles.title}>Отложи остальное — вот что впереди</Text>
           {brief.map((b, i) => {
             // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе)
             const long = Math.ceil(b.text.length / 30) >= 3;
@@ -137,11 +138,15 @@ export default function Threshold() {
                 style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
               >
                 <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
+                {/* Text с вложенным Text меряет ширину криво (уезжает за
+                    край) — ширину ограничивает View-обёртка */}
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.briefText}>{b.text}</Text>
-                  {'goal' in b && !!b.goal && (
-                    <Text style={styles.briefGoal}>{b.goal}</Text>
-                  )}
+                  <Text style={styles.briefText}>
+                    {b.text}
+                    {'goal' in b && !!b.goal && (
+                      <Text style={styles.briefGoal}>{b.goal}</Text>
+                    )}
+                  </Text>
                 </View>
               </View>
             );
@@ -188,7 +193,7 @@ const styles = StyleSheet.create({
     marginLeft: -4,
   },
   title: {
-    marginTop: sc(16),
+    marginBottom: sc(6),
     fontFamily: fonts.serif,
     fontSize: sc(22),
     lineHeight: sc(28),
@@ -220,15 +225,9 @@ const styles = StyleSheet.create({
     lineHeight: sc(20),
     color: colors.body,
   },
-  // цель — как ввёл человек; «капитель» эмулируется мелким капсом
-  // с разрядкой, в тоне кикеров приложения
+  // цель — внутри фразы, тем же кеглем, выделена только золотом
   briefGoal: {
-    marginTop: sc(3),
-    fontFamily: fonts.monoMedium,
-    fontSize: sc(11),
-    lineHeight: sc(17),
-    letterSpacing: sc(0.8),
-    textTransform: 'uppercase',
+    fontFamily: fonts.sansMedium,
     color: colors.goldSoft,
   },
   holdWrap: {
