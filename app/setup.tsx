@@ -271,7 +271,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: sc(11),
     color: colors.creamDim,
-    marginTop: -3,
+    // lineHeight цифры оставляет запас снизу (сверху резать нельзя —
+    // Spectral срежет верх), поэтому подпись подтягивается к цифре
+    marginTop: -sc(8),
   },
   presets: {
     flexDirection: 'row',
