@@ -67,7 +67,27 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS prayed_days (
+      day TEXT PRIMARY KEY
+    );
   `);
+  // дозаполнить prayed_days из старого стрика: count дней, заканчивая last_day.
+  // Идемпотентно (OR IGNORE), так что можно гнать при каждом открытии
+  const last = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM meta WHERE key = 'streak_last_day'",
+  );
+  const cnt = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM meta WHERE key = 'streak_count'",
+  );
+  if (last?.value) {
+    const n = Math.max(1, parseInt(cnt?.value ?? '1', 10) || 1);
+    const [yy, mm, dd] = last.value.split('-').map(Number);
+    for (let i = 0; i < n; i++) {
+      const dt = new Date(yy, mm - 1, dd);
+      dt.setDate(dt.getDate() - i);
+      await db.runAsync('INSERT OR IGNORE INTO prayed_days (day) VALUES (?)', dayKey(dt));
+    }
+  }
   return db;
 }
 
@@ -155,43 +175,48 @@ const dayKey = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
-export type Streak = { count: number; prayedToday: boolean };
+export type Streak = { count: number; prayedToday: boolean; week: boolean[] };
 
-async function getMeta(key: string): Promise<string | null> {
+/** Последние 7 дней: [0] — 6 дней назад, [6] — сегодня; true = молился */
+async function getWeek(): Promise<boolean[]> {
   const d = await getDb();
-  const row = await d.getFirstAsync<{ value: string }>('SELECT value FROM meta WHERE key = ?', key);
-  return row?.value ?? null;
-}
-
-async function setMeta(key: string, value: string) {
-  const d = await getDb();
-  await d.runAsync(
-    'INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
-    key,
-    value,
+  const rows = await d.getAllAsync<{ day: string }>(
+    'SELECT day FROM prayed_days ORDER BY day DESC LIMIT 7',
   );
+  const prayed = new Set(rows.map((r) => r.day));
+  return Array.from({ length: 7 }, (_, i) => {
+    const dt = new Date();
+    dt.setDate(dt.getDate() - (6 - i));
+    return prayed.has(dayKey(dt));
+  });
 }
 
+// Стрик выводится из prayed_days, отдельного счётчика нет — точки-календарь
+// и подпись «N-й день подряд» не могут разойтись.
 export async function getStreak(): Promise<Streak> {
-  const count = parseInt((await getMeta('streak_count')) ?? '0', 10) || 0;
-  const lastDay = await getMeta('streak_last_day');
-  const today = dayKey(new Date());
-  if (lastDay === today) return { count, prayedToday: true };
-  // «вчера» через календарную дату, а не минус 24 часа: DST-переход
-  // делает сутки 23-часовыми и ломает арифметику на миллисекундах
-  const y = new Date();
-  y.setDate(y.getDate() - 1);
-  if (lastDay === dayKey(y)) return { count, prayedToday: false };
-  // пропуск дня — стрик сгорел
-  return { count: 0, prayedToday: false };
+  const week = await getWeek();
+  const d = await getDb();
+  const rows = await d.getAllAsync<{ day: string }>(
+    'SELECT day FROM prayed_days ORDER BY day DESC LIMIT 400',
+  );
+  const prayed = new Set(rows.map((r) => r.day));
+  const prayedToday = prayed.has(dayKey(new Date()));
+
+  // серия: подряд идущие календарные дни, заканчивая сегодня либо вчера.
+  // Дата через setDate, а не минус 24 часа: DST делает сутки 23-часовыми
+  const cursor = new Date();
+  if (!prayedToday) cursor.setDate(cursor.getDate() - 1);
+  let count = 0;
+  while (prayed.has(dayKey(cursor))) {
+    count++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return { count, prayedToday, week };
 }
 
 /** Отметить сегодняшнюю молитву; возвращает новый стрик */
 export async function markPrayedToday(): Promise<Streak> {
-  const { count, prayedToday } = await getStreak();
-  if (prayedToday) return { count, prayedToday: true };
-  const next = count + 1;
-  await setMeta('streak_count', String(next));
-  await setMeta('streak_last_day', dayKey(new Date()));
-  return { count: next, prayedToday: true };
+  const d = await getDb();
+  await d.runAsync('INSERT OR IGNORE INTO prayed_days (day) VALUES (?)', dayKey(new Date()));
+  return getStreak();
 }

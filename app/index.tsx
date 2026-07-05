@@ -34,12 +34,11 @@ export default function Home() {
     }, []),
   );
 
-  // 7 точек стрика: заполненные дни + сегодняшняя (контурная, пока не молился)
-  const cap = Math.min(streak.count + (streak.prayedToday ? 0 : 1), 7);
-  const dots = Array.from({ length: 7 }, (_, i) => {
-    if (i < cap - 1 || (streak.prayedToday && i < cap)) return 'filled';
-    if (i === cap - 1) return streak.prayedToday ? 'filled' : 'today';
-    return 'empty';
+  // календарь последней недели: правая точка — сегодня, левая — 6 дней назад.
+  // Молился — золотая, пропустил — потухшая, сегодня ещё нет — контур «ждёт»
+  const dots = streak.week.map((prayed, i) => {
+    if (prayed) return 'filled';
+    return i === 6 ? 'today' : 'empty';
   });
 
   return (
@@ -132,11 +131,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: sc(14),
   },
+  // потухший день: пепельный, без золота
   dot: {
     width: sc(6),
     height: sc(6),
     borderRadius: sc(3),
-    backgroundColor: 'rgba(217,169,78,.25)',
+    backgroundColor: 'rgba(200,185,160,.16)',
   },
   dotFilled: {
     width: sc(7),

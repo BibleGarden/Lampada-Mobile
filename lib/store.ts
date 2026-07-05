@@ -113,7 +113,7 @@ const initial: SessionState = {
   goalPhrase: '',
   reflectQ: '',
   takeaway: '',
-  streak: { count: 0, prayedToday: false },
+  streak: { count: 0, prayedToday: false, week: Array(7).fill(false) },
 };
 
 export const useSession = create<SessionState & SessionActions>((set, get) => ({
