@@ -5,14 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
-import { GoldButton } from '../components/ui';
-import { Bell } from '../components/icons';
+import { GoldButton, IconButton } from '../components/ui';
+import { Gear } from '../components/icons';
 import { useSession } from '../lib/store';
 import { colors, fonts, sc } from '../lib/theme';
-
-// время тихого напоминания; пока фиксировано, как в прототипе —
-// настройка появится вместе с expo-notifications
-const REMINDER_TIME = '7:30';
 
 const greetingByHour = () => {
   const h = new Date().getHours();
@@ -56,10 +52,9 @@ export default function Home() {
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
-          <View style={styles.bellChip}>
-            <Bell color={colors.labelGold} />
-            <Text style={styles.bellLabel}>{REMINDER_TIME}</Text>
-          </View>
+          <IconButton onPress={() => router.push('/settings')} size={sc(30)}>
+            <Gear color={colors.labelGold} />
+          </IconButton>
         </View>
 
         <View style={styles.center}>
@@ -107,16 +102,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serifRegular,
     fontSize: sc(15),
     color: colors.creamDim,
-  },
-  bellChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(5),
-  },
-  bellLabel: {
-    fontFamily: fonts.mono,
-    fontSize: sc(11),
-    color: colors.labelGold,
   },
   center: {
     flex: 1,

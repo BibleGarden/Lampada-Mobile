@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import * as ai from './ai';
 import { scriptures } from './scriptures';
 import * as db from './db';
+import { shareAnswersNow } from './settings';
 
 // Логика сессии, перенесённая из прототипа.
 //
@@ -85,6 +86,15 @@ type SessionActions = {
 
 const isAnswered = (a: Answer | undefined) =>
   !!(a && (a.text.trim() || a.recordings.length));
+
+// тексты ответов для промпта — только с разрешения из настроек
+// («Учитывать мои ответы»); без него ответы не покидают устройство
+const answersForAi = (answers: Record<number, Answer>) =>
+  shareAnswersNow()
+    ? Object.values(answers)
+        .map((a) => a.text.trim())
+        .filter(Boolean)
+    : [];
 
 const pickScripture = (used: number[]): number => {
   const set = new Set(used);
@@ -208,7 +218,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         set({ answeredCount: nf, qIndex: nf });
       } else {
         set({ generating: true });
-        const q = await ai.generateQuestion(s.topic, s.questions);
+        const q = await ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
         set((st) => {
           if (st.sessionId !== sessionToken) return st; // сессия уже другая
           const questions = st.questions.slice();
@@ -219,7 +229,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     } else {
       // перегенерация: заменить текущий на месте
       set({ generating: true });
-      const q = await ai.generateQuestion(s.topic, s.questions);
+      const q = await ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
       set((st) => {
         if (st.sessionId !== sessionToken) return st;
         const questions = st.questions.slice();
@@ -287,10 +297,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   finish: async () => {
     const s = get();
     set({ reflectQ: '' });
-    const answers = Object.values(s.answers)
-      .map((a) => a.text.trim())
-      .filter(Boolean);
-    ai.generateReflectQuestion(s.topic, answers).then((q) => set({ reflectQ: q }));
+    ai.generateReflectQuestion(s.topic, answersForAi(s.answers)).then((q) =>
+      set({ reflectQ: q }),
+    );
   },
 
   complete: async (takeaway) => {

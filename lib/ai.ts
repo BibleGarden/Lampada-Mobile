@@ -66,8 +66,16 @@ export async function generateQuestions(topic: string): Promise<string[]> {
   }
 }
 
-/** Один новый вопрос, не повторяющий уже заданные */
-export async function generateQuestion(topic: string, asked: string[]): Promise<string> {
+/**
+ * Один новый вопрос, не повторяющий уже заданные.
+ * answers передаются только если человек разрешил это в настройках
+ * («Учитывать мои ответы») — иначе вызывающий обязан передать [].
+ */
+export async function generateQuestion(
+  topic: string,
+  asked: string[],
+  answers: string[] = [],
+): Promise<string> {
   const fallback = () => {
     const used = new Set(asked);
     const fresh = questionPool.filter((q) => !used.has(q));
@@ -79,6 +87,9 @@ export async function generateQuestion(topic: string, asked: string[]): Promise<
       PERSONA,
       (topic.trim() ? `Цель молитвы: «${topic.trim()}».\n` : 'Молитва без конкретной темы.\n') +
         `Уже прозвучали вопросы:\n${asked.map((a) => `— ${a}`).join('\n')}\n` +
+        (answers.length
+          ? `Что человек ответил (опирайся на это, но не цитируй дословно):\n${answers.map((a) => `— ${a}`).join('\n')}\n`
+          : '') +
         'Задай один новый вопрос, который смотрит на ситуацию с другой стороны и не повторяет прозвучавшие. ' +
         'Ответь только текстом вопроса, без кавычек и пояснений.',
     );
