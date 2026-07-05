@@ -25,20 +25,22 @@ export default function Threshold() {
   const insets = useSafeAreaInsets();
   const s = useSession();
 
-  // брифинг собирается из выбора на «Настройке» — как в прототипе
+  // брифинг собирается из выбора на «Настройке»: цель не переписывается,
+  // а выводится как есть отдельной строкой-капителью после двоеточия
   const topicTrim = s.topic.trim();
-  const goalClause = (s.goalPhrase || topicTrim).replace(/^[А-ЯA-ZЁ]/, (c) =>
-    c.toLowerCase(),
-  );
   const timeText = topicTrim
     ? s.minutes === 0
-      ? `У тебя столько времени, сколько нужно, чтобы ${goalClause}`
-      : `У тебя ${timeAmount(s.minutes)}, чтобы ${goalClause}`
+      ? 'У тебя столько времени, сколько нужно, чтобы достичь цели:'
+      : `У тебя ${timeAmount(s.minutes)}, чтобы достичь цели:`
     : s.minutes === 0
       ? 'Столько времени, сколько нужно — без таймера и спешки'
       : `У тебя ${timeAmount(s.minutes)} наедине с Богом`;
   const brief = [
-    { icon: <Clock size={16} color={colors.amberBright} />, text: timeText },
+    {
+      icon: <Clock size={16} color={colors.amberBright} />,
+      text: timeText,
+      goal: topicTrim || undefined,
+    },
     {
       // размер здесь в px прототипа — sc() применяется внутри иконок
       icon: <QuestionMark size={16} color={colors.amberBright} />,
@@ -135,15 +137,12 @@ export default function Threshold() {
                 style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
               >
                 <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
-                {/* key по тексту: когда ИИ дошлифует формулировку цели,
-                    строка не дёргается, а мягко проявляется заново */}
-                <Animated.Text
-                  key={b.text}
-                  entering={FadeIn.duration(450)}
-                  style={styles.briefText}
-                >
-                  {b.text}
-                </Animated.Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.briefText}>{b.text}</Text>
+                  {'goal' in b && !!b.goal && (
+                    <Text style={styles.briefGoal}>{b.goal}</Text>
+                  )}
+                </View>
               </View>
             );
           })}
@@ -216,11 +215,21 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(230,162,60,.28)',
   },
   briefText: {
-    flex: 1,
     fontFamily: fonts.sans,
     fontSize: sc(13),
     lineHeight: sc(20),
     color: colors.body,
+  },
+  // цель — как ввёл человек; «капитель» эмулируется мелким капсом
+  // с разрядкой, в тоне кикеров приложения
+  briefGoal: {
+    marginTop: sc(3),
+    fontFamily: fonts.monoMedium,
+    fontSize: sc(11),
+    lineHeight: sc(17),
+    letterSpacing: sc(0.8),
+    textTransform: 'uppercase',
+    color: colors.goldSoft,
   },
   holdWrap: {
     alignItems: 'center',

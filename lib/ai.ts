@@ -100,32 +100,6 @@ export async function generateQuestion(
   }
 }
 
-/** Придаточное для фразы «у тебя N минут, чтобы …»; null — показать цель как есть */
-export async function rephraseGoal(topic: string): Promise<string | null> {
-  if (!llmConfigured() || !topic.trim()) return null;
-  try {
-    const p = await complete(
-      PERSONA,
-      `Человек сформулировал цель молитвы: «${topic.trim()}».\n` +
-        'Преврати её в короткое придаточное для фразы «У тебя есть десять минут, чтобы …». ' +
-        'Начни с глагола в инфинитиве, до 60 знаков, без точки в конце. ' +
-        'Пример: цель «поговорить про ссору с мамой» → «побыть с Богом в том, что случилось с мамой». ' +
-        'Ответь только придаточным.',
-    );
-    const clean = p
-      .replace(/^["«]|[»".]+$/g, '')
-      .trim()
-      // придаточное продолжает «…, чтобы» — первая буква всегда строчная
-      .replace(/^[А-ЯA-ZЁ]/, (c) => c.toLowerCase());
-    if (!clean || clean.length > 90) return null;
-    // ИИ ничего не изменил по сути — не подменять фразу (экран не дёрнется)
-    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-    return norm(clean) === norm(topic) ? null : clean;
-  } catch {
-    return null;
-  }
-}
-
 /** Вопрос рефлексии по цели и ответам сессии */
 export async function generateReflectQuestion(
   topic: string,

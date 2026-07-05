@@ -45,8 +45,6 @@ type SessionState = {
   remaining: number | null; // сек; null = без таймера
   elapsed: number;
 
-  goalPhrase: string;
-
   // reflect
   reflectQ: string;
   takeaway: string;
@@ -120,7 +118,6 @@ const initial: SessionState = {
   musicOn: false,
   remaining: 600,
   elapsed: 0,
-  goalPhrase: '',
   reflectQ: '',
   takeaway: '',
   streak: { count: 0, prayedToday: false, week: Array(7).fill(false) },
@@ -149,13 +146,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // токен отсекает результаты устаревших промисов: повторный заход
     // на порог с другой темой или reset() делают старый ответ неактуальным
     const token = ++prepareToken;
-    set({ goalPhrase: '' });
-    // вопросы и формулировка цели подгружаются заранее, пока человек на «пороге»
+    // вопросы подгружаются заранее, пока человек на «пороге»
     ai.generateQuestions(topic).then((qs) => {
       if (token === prepareToken) set({ questions: qs });
-    });
-    ai.rephraseGoal(topic).then((p) => {
-      if (p && token === prepareToken) set({ goalPhrase: p });
     });
   },
 

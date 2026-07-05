@@ -158,7 +158,7 @@ export default function Session() {
             цель
           </Kicker>
           <Text style={styles.goalText} numberOfLines={3}>
-            {s.topic.trim() || s.goalPhrase || 'Свободная молитва — без конкретной темы'}
+            {s.topic.trim() || 'Свободная молитва — без конкретной темы'}
           </Text>
         </View>
 
