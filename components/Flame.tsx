@@ -30,16 +30,34 @@ type Props = {
   ember?: boolean;
 };
 
-// Огонёк лампады: гало + пламя-«яйцо» + чаша-плошка, как в прототипе.
+// Многочастотное «дрожание»: три некратные гармоники со сдвигом фаз —
+// рисунок движения не повторяется и слегка асимметричен (рывок — возврат).
+const wave = (tt: number) => {
+  'worklet';
+  const w =
+    Math.sin(tt * 0.9) * 0.55 +
+    Math.sin(tt * 1.53 + 1.7) * 0.33 +
+    Math.sin(tt * 2.71 + 0.5) * 0.2;
+  return w * (1 + 0.35 * Math.abs(w)); // пики заостряются
+};
+
+// Огибающая: большую часть периода ~0.3, раз в ~13 с — короткое оживление,
+// как будто пламя тронул сквозняк.
+const gust = (tt: number) => {
+  'worklet';
+  const s = 0.5 + 0.5 * Math.sin(tt * 0.077);
+  return 0.3 + 0.7 * s * s * s;
+};
+
+// Огонёк лампады: гало + пламя-«яйцо» + яркое ядро у фитиля + чаша-плошка.
 // t идёт 2π в секунду, поэтому sin(t·k) имеет период 1/k секунд.
 //
-// «Живость» построена на трёх слоях:
-// 1) кончик пламени блуждает (верхние точки Безье гуляют, основание
-//    приковано к фитилю) — путь пересчитывается на UI-потоке;
-// 2) огибающая ~13 с делает ритм неровным: пламя горит спокойно
-//    и лишь изредка «вздрагивает», как от сквозняка;
-// 3) гало подсвечивается тем же сигналом — свет в комнате отзывается
-//    на каждое вздрагивание, и глаз связывает их в одну физику.
+// «Живость» построена так:
+// - возмущение поднимается по пламени снизу вверх: кончик повторяет
+//   движение «талии» с запаздыванием ~200 мс (волна, а не шарнир);
+// - высота дышит: пламя чуть подрастает и оседает вместе с порывами;
+// - ядро у фитиля почти неподвижно — танцует только оболочка;
+// - гало подсвечивается тем же сигналом, свет отзывается на вздрагивания.
 export default function Flame({ width = 240, lit = true, ember = false }: Props) {
   const W = width;
   const H = ember ? width : width * 1.17;
@@ -70,49 +88,59 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return () => cancelAnimation(t);
   }, [t]);
 
-  // яйцо с гуляющим кончиком: смещение затухает от вершины к основанию —
-  // верх ходит на полный sway, середина на долю, низ неподвижен
+  // оболочка: яйцо с блуждающим кончиком и дышащей высотой.
+  // Талия движется «сейчас», кончик — с запаздыванием 1.2 рад (~190 мс):
+  // возмущение рождается у фитиля и уходит вверх.
   const flamePath = useDerivedValue(() => {
-    // огибающая: большую часть периода ~0, раз в ~13 с — короткое оживление
-    const env =
-      0.3 + 0.7 * Math.pow(0.5 + 0.5 * Math.sin(t.value * 0.077), 3);
-    const sway =
-      (Math.sin(t.value * 0.9) * 0.6 + Math.sin(t.value * 1.53) * 0.4) *
-      env *
-      flameRW *
-      (lit ? 0.45 : 0.2);
+    const env = gust(t.value);
+    const amp = flameRW * (lit ? 0.5 : 0.22) * env;
+    const mid = wave(t.value) * amp * 0.35;
+    const tip = wave(t.value - 1.2) * amp;
+    const hh = flameH * (1 + env * 0.07 * Math.sin(t.value * 1.13 + 0.9));
 
-    const yt = flameBase - flameH;
-    const ym = yt + flameH * 0.45;
-    const tip = sway; // вершина
-    const upper = sway * 0.55; // верхние контрольные точки
-    const mid = sway * 0.22; // «талия»
+    const yt = flameBase - hh;
+    const ym = yt + hh * 0.45;
+    const upper = tip * 0.55 + mid * 0.35;
 
     const p = Skia.Path.Make();
     p.moveTo(cx + tip, yt);
     p.cubicTo(
-      cx + flameRW * 0.8 + upper, yt + flameH * 0.08,
-      cx + flameRW + mid, yt + flameH * 0.25,
+      cx + flameRW * 0.8 + upper, yt + hh * 0.08,
+      cx + flameRW + mid, yt + hh * 0.25,
       cx + flameRW + mid * 0.5, ym,
     );
     p.cubicTo(
-      cx + flameRW, flameBase - flameH * 0.2,
+      cx + flameRW, flameBase - hh * 0.2,
       cx + flameRW * 0.55, flameBase,
       cx, flameBase,
     );
     p.cubicTo(
       cx - flameRW * 0.55, flameBase,
-      cx - flameRW, flameBase - flameH * 0.2,
+      cx - flameRW, flameBase - hh * 0.2,
       cx - flameRW + mid * 0.5, ym,
     );
     p.cubicTo(
-      cx - flameRW + mid, yt + flameH * 0.25,
-      cx - flameRW * 0.8 + upper, yt + flameH * 0.08,
+      cx - flameRW + mid, yt + hh * 0.25,
+      cx - flameRW * 0.8 + upper, yt + hh * 0.08,
       cx + tip, yt,
     );
     p.close();
     return p;
   });
+
+  // ядро у фитиля: маленькое, яркое, почти неподвижное
+  const corePath = useDerivedValue(() => {
+    const env = gust(t.value);
+    const sway = wave(t.value) * flameRW * (lit ? 0.5 : 0.22) * env * 0.18;
+    const ch = flameH * 0.5 * (1 + env * 0.05 * Math.sin(t.value * 1.13));
+    const crw = flameRW * 0.45;
+    const p = Skia.Path.Make();
+    p.addOval(Skia.XYWHRect(cx - crw + sway, flameBase - ch, crw * 2, ch));
+    return p;
+  });
+  const coreOpacity = useDerivedValue(
+    () => (lit ? 0.85 : 0.55) + Math.sin(t.value * 2.03) * 0.08,
+  );
 
   // чаша-плошка: плоский верх, полуэллипс снизу
   const bowlPath = useMemo(() => {
@@ -145,14 +173,11 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     return [{ scale: k }];
   });
   const haloOpacity = useDerivedValue(() => {
-    const env =
-      0.3 + 0.7 * Math.pow(0.5 + 0.5 * Math.sin(t.value * 0.077), 3);
-    const flick =
-      (Math.sin(t.value * 0.9) * 0.6 + Math.sin(t.value * 1.53) * 0.4) * env;
+    const flick = wave(t.value) * gust(t.value);
     return (
       (lit ? 0.64 : 0.32) +
       Math.sin(t.value * 0.167) * (lit ? 0.12 : 0.06) +
-      flick * (lit ? 0.06 : 0.02)
+      flick * (lit ? 0.05 : 0.02)
     );
   });
 
@@ -186,7 +211,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
           />
           <BlurMask blur={lit ? 12 : 7} style="normal" />
         </Path>
-        {/* само пламя: яркое ядро внизу по центру, как в прототипе */}
+        {/* оболочка пламени */}
         <Path path={flamePath} opacity={flameOpacity}>
           <RadialGradient
             c={vec(cx, flameBase - flameH * 0.3)}
@@ -194,6 +219,16 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
             colors={[colors.flameCore, colors.flameMid, colors.flameEdge]}
             positions={[0, 0.4, 1]}
           />
+        </Path>
+        {/* ядро у фитиля */}
+        <Path path={corePath} opacity={coreOpacity}>
+          <RadialGradient
+            c={vec(cx, flameBase - flameH * 0.18)}
+            r={flameH * 0.45}
+            colors={['#fff6dd', '#ffd27a', 'rgba(255,150,50,0)']}
+            positions={[0, 0.55, 1]}
+          />
+          <BlurMask blur={2} style="normal" />
         </Path>
       </Group>
 
