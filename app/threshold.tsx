@@ -135,7 +135,15 @@ export default function Threshold() {
                 style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
               >
                 <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
-                <Text style={styles.briefText}>{b.text}</Text>
+                {/* key по тексту: когда ИИ дошлифует формулировку цели,
+                    строка не дёргается, а мягко проявляется заново */}
+                <Animated.Text
+                  key={b.text}
+                  entering={FadeIn.duration(450)}
+                  style={styles.briefText}
+                >
+                  {b.text}
+                </Animated.Text>
               </View>
             );
           })}
