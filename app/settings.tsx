@@ -39,7 +39,8 @@ export default function Settings() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
-          <IconButton onPress={() => router.back()}>
+          {/* при заходе по диплинку истории нет — уходить на главную */}
+          <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
           <Kicker>Настройки</Kicker>
