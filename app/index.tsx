@@ -2,11 +2,10 @@ import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
-import { Gear } from '../components/icons';
+import { Book, Gear } from '../components/icons';
 import { useSession } from '../lib/store';
 import { colors, fonts, sc } from '../lib/theme';
 
@@ -49,12 +48,20 @@ export default function Home() {
   return (
     <View style={styles.root}>
       <ScreenBg variant="home" />
-      <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
+      {/* без entering-анимации: на холодном старте, пока JS-поток занят
+          загрузкой бандла, FadeIn замирает на полупрозрачности — весь экран
+          остаётся «бледным». Home — первый экран, ему проявление не нужно */}
+      <View style={{ flex: 1 }}>
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
-          <IconButton onPress={() => router.push('/settings')} size={sc(30)}>
-            <Gear color={colors.labelGold} />
-          </IconButton>
+          <View style={styles.topBtns}>
+            <IconButton onPress={() => router.push('/journal')} size={sc(30)}>
+              <Book size={15} color={colors.labelGold} />
+            </IconButton>
+            <IconButton onPress={() => router.push('/settings')} size={sc(30)}>
+              <Gear color={colors.labelGold} />
+            </IconButton>
+          </View>
         </View>
 
         <View style={styles.center}>
@@ -82,7 +89,7 @@ export default function Home() {
         <View style={[styles.bottom, { bottom: insets.bottom + sc(24) }]}>
           <GoldButton label="Начать молитву" onPress={() => router.push('/setup')} />
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -102,6 +109,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.serifRegular,
     fontSize: sc(15),
     color: colors.creamDim,
+  },
+  topBtns: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(6),
   },
   center: {
     flex: 1,

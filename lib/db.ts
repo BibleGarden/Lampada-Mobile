@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { File } from 'expo-file-system';
 
 // Все данные — только на устройстве.
 
@@ -131,6 +132,11 @@ export async function replaceRecordings(
   recordings: { uri: string; durationSec: number }[],
 ) {
   const d = await getDb();
+  const previous = await d.getAllAsync<{ uri: string }>(
+    'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
+    sessionId,
+    questionIndex,
+  );
   await d.withTransactionAsync(async () => {
     await d.runAsync(
       'DELETE FROM recordings WHERE session_id = ? AND question_index = ?',
@@ -147,6 +153,118 @@ export async function replaceRecordings(
       );
     }
   });
+
+  const retained = new Set(recordings.map((r) => r.uri));
+  deleteRecordingFiles(previous.map((r) => r.uri).filter((uri) => !retained.has(uri)));
+}
+
+// ---- дневник: история молитв, поиск, удаление ----
+
+export type JournalEntry = {
+  id: number;
+  startedAt: string;
+  topic: string;
+  elapsedSec: number;
+  takeaway: string;
+  answerCount: number;
+};
+
+export type JournalDetail = {
+  answers: { questionIndex: number; question: string; text: string }[];
+  recordings: { questionIndex: number; uri: string; durationSec: number }[];
+};
+
+/**
+ * Список молитв для дневника, свежие сверху. Пустые сессии (не завершена,
+ * ни ответа, ни вывода) не показываются — это брошенные заходы, не молитвы.
+ * query ищет по цели, выводу и текстам вопросов-ответов.
+ *
+ * Регистр сворачивается в JS: LIKE в SQLite регистронезависим только для
+ * ASCII, кириллицу он не сворачивает («Тревога» != «тревога»), а lower()
+ * без ICU-расширения — тоже. Поэтому тянем искомый текст одной строкой и
+ * фильтруем через toLowerCase().includes() (Unicode понимает правильно).
+ */
+export async function getJournal(query = ''): Promise<JournalEntry[]> {
+  const d = await getDb();
+  const q = query.trim().toLowerCase();
+  const rows = await d.getAllAsync<{
+    id: number;
+    started_at: string;
+    topic: string;
+    elapsed_sec: number;
+    takeaway: string;
+    answer_count: number;
+    search_blob: string | null;
+  }>(
+    `SELECT s.id, s.started_at, s.topic, s.elapsed_sec, s.takeaway,
+            (SELECT COUNT(*) FROM answers a
+              WHERE a.session_id = s.id AND TRIM(a.text) != '') AS answer_count,
+            (SELECT GROUP_CONCAT(a.text || ' ' || a.question, ' ')
+               FROM answers a WHERE a.session_id = s.id) AS search_blob
+       FROM sessions s
+      WHERE s.elapsed_sec > 0 OR s.takeaway != ''
+             OR EXISTS (SELECT 1 FROM answers a WHERE a.session_id = s.id AND TRIM(a.text) != '')
+             OR EXISTS (SELECT 1 FROM recordings r WHERE r.session_id = s.id)
+      ORDER BY s.started_at DESC`,
+  );
+  return rows
+    .filter(
+      (r) =>
+        !q ||
+        `${r.topic} ${r.takeaway} ${r.search_blob ?? ''}`.toLowerCase().includes(q),
+    )
+    .map((r) => ({
+      id: r.id,
+      startedAt: r.started_at,
+      topic: r.topic,
+      elapsedSec: r.elapsed_sec,
+      takeaway: r.takeaway,
+      answerCount: r.answer_count,
+    }));
+}
+
+/** Содержимое одной молитвы: пары вопрос-ответ и аудиозаписи */
+export async function getJournalDetail(sessionId: number): Promise<JournalDetail> {
+  const d = await getDb();
+  const answers = await d.getAllAsync<{ question_index: number; question: string; text: string }>(
+    `SELECT question_index, question, text FROM answers
+      WHERE session_id = ? AND TRIM(text) != '' ORDER BY question_index`,
+    sessionId,
+  );
+  const recordings = await d.getAllAsync<{ question_index: number; uri: string; duration_sec: number }>(
+    'SELECT question_index, uri, duration_sec FROM recordings WHERE session_id = ? ORDER BY question_index, id',
+    sessionId,
+  );
+  return {
+    answers: answers.map((a) => ({ questionIndex: a.question_index, question: a.question, text: a.text })),
+    recordings: recordings.map((r) => ({ questionIndex: r.question_index, uri: r.uri, durationSec: r.duration_sec })),
+  };
+}
+
+/** Удалить молитву со всеми ответами и записями. День в стрике остаётся. */
+export async function deleteSession(sessionId: number) {
+  const d = await getDb();
+  const recordings = await d.getAllAsync<{ uri: string }>(
+    'SELECT uri FROM recordings WHERE session_id = ?',
+    sessionId,
+  );
+  await d.withTransactionAsync(async () => {
+    await d.runAsync('DELETE FROM recordings WHERE session_id = ?', sessionId);
+    await d.runAsync('DELETE FROM answers WHERE session_id = ?', sessionId);
+    await d.runAsync('DELETE FROM sessions WHERE id = ?', sessionId);
+  });
+  deleteRecordingFiles(recordings.map((r) => r.uri));
+}
+
+function deleteRecordingFiles(uris: string[]) {
+  for (const uri of uris) {
+    try {
+      const file = new File(uri);
+      if (file.exists) file.delete();
+    } catch {
+      // The database deletion must still succeed if iOS already removed a file.
+    }
+  }
 }
 
 export async function toggleFavorite(ref: string): Promise<boolean> {

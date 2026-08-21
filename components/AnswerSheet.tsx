@@ -35,6 +35,12 @@ import { colors, fonts, radius, sc } from '../lib/theme';
 import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
 import { GoldButton } from './ui';
 
+const RECORDING_OPTIONS = {
+  ...RecordingPresets.HIGH_QUALITY,
+  // Expo Audio otherwise uses cache, which iOS may clear at any time.
+  directory: 'document' as const,
+};
+
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
   /** Единственный способ открыть шторку: черновик готовится ДО анимации,
@@ -63,7 +69,7 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
 
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder(RECORDING_OPTIONS);
   const recorderState = useAudioRecorderState(recorder);
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
@@ -128,7 +134,7 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
     // пресет обязателен: без options рекордер переиспользует один URL
     // и каждая новая запись затирает файл предыдущей
-    await recorder.prepareToRecordAsync(RecordingPresets.HIGH_QUALITY);
+    await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
     recorder.record();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };

@@ -36,7 +36,8 @@
       "expo-font",
       "expo-sqlite",
       "expo-audio",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-asset"
     ],
     "scheme": "lampada",
     "backgroundColor": "#0e0a07"
