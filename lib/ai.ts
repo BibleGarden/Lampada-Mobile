@@ -7,6 +7,12 @@
 
 import { complete, completeJson, llmConfigured } from './llm';
 
+export type QuestionSource = 'ai' | 'fallback';
+export type GeneratedQuestion = { text: string; source: QuestionSource };
+
+const fromAi = (text: string): GeneratedQuestion => ({ text, source: 'ai' });
+const fromFallback = (text: string): GeneratedQuestion => ({ text, source: 'fallback' });
+
 const PERSONA =
   'Ты — «Спутник» в приложении для личной христианской молитвы «Лампада». ' +
   'Твои вопросы помогают человеку молиться своими словами: честно, глубоко, без клише. ' +
@@ -42,6 +48,13 @@ const reflectPool: string[] = [
 
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
+/** Мгновенный локальный вопрос на случай, если фоновый слот ещё не готов. */
+export const pickFallbackQuestion = (asked: string[]): string => {
+  const used = new Set(asked);
+  const fresh = questionPool.filter((q) => !used.has(q));
+  return pickRandom(fresh.length ? fresh : questionPool);
+};
+
 // деградация тихая для человека, но не для разработчика: причина отката
 // на курируемый пул видна в логах dev-сервера
 const warn = (where: string, e: unknown) =>
@@ -56,11 +69,11 @@ const isQuestion = (q: unknown): q is string =>
 
 /**
  * Первый вопрос молитвы — готовится заранее, на «пороге».
- * Остальные вопросы не заготавливаются пакетом: каждый следующий
- * генерируется по ходу молитвы, когда уже есть живые ответы.
+ * Остальные вопросы не заготавливаются пакетом: одноэлементный буфер
+ * пополняется по ходу молитвы и пересобирается после нового ответа.
  */
-export async function generateFirstQuestion(topic: string): Promise<string> {
-  if (!llmConfigured() || !topic.trim()) return pickRandom(curatedQuestions);
+export async function generateFirstQuestion(topic: string): Promise<GeneratedQuestion> {
+  if (!llmConfigured() || !topic.trim()) return fromFallback(pickRandom(curatedQuestions));
   try {
     const q = await complete(
       PERSONA,
@@ -70,10 +83,10 @@ export async function generateFirstQuestion(topic: string): Promise<string> {
     );
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('firstQuestion', `кривой ответ: «${q}»`);
-    return isQuestion(clean) ? clean : pickRandom(curatedQuestions);
+    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(curatedQuestions));
   } catch (e) {
     warn('firstQuestion', e);
-    return pickRandom(curatedQuestions);
+    return fromFallback(pickRandom(curatedQuestions));
   }
 }
 
@@ -86,12 +99,8 @@ export async function generateQuestion(
   topic: string,
   asked: string[],
   answers: string[] = [],
-): Promise<string> {
-  const fallback = () => {
-    const used = new Set(asked);
-    const fresh = questionPool.filter((q) => !used.has(q));
-    return pickRandom(fresh.length ? fresh : questionPool);
-  };
+): Promise<GeneratedQuestion> {
+  const fallback = () => fromFallback(pickFallbackQuestion(asked));
   if (!llmConfigured()) return fallback();
   try {
     const q = await complete(
@@ -106,7 +115,7 @@ export async function generateQuestion(
     );
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('question', `кривой ответ: «${q}»`);
-    return isQuestion(clean) ? clean : fallback();
+    return isQuestion(clean) ? fromAi(clean) : fallback();
   } catch (e) {
     warn('question', e);
     return fallback();
@@ -117,8 +126,8 @@ export async function generateQuestion(
 export async function generateReflectQuestion(
   topic: string,
   answers: string[],
-): Promise<string> {
-  if (!llmConfigured()) return pickRandom(reflectPool);
+): Promise<GeneratedQuestion> {
+  if (!llmConfigured()) return fromFallback(pickRandom(reflectPool));
   try {
     const q = await complete(
       PERSONA,
@@ -132,9 +141,9 @@ export async function generateReflectQuestion(
     );
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('reflect', `кривой ответ: «${q}»`);
-    return isQuestion(clean) ? clean : pickRandom(reflectPool);
+    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(reflectPool));
   } catch (e) {
     warn('reflect', e);
-    return pickRandom(reflectPool);
+    return fromFallback(pickRandom(reflectPool));
   }
 }

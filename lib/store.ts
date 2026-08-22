@@ -3,13 +3,15 @@ import * as ai from './ai';
 import { scriptures } from './scriptures';
 import * as db from './db';
 import { shareAnswersNow } from './settings';
+import { createOneAheadPool } from './oneAheadPool';
 
 // Логика сессии, перенесённая из прототипа.
 //
 // Вопросы: линейный «след» открытых вопросов + «фронтир» (текущий неотвеченный).
 // ◀ ▶ ходят только по открытым (0..answeredCount). На фронтире правая кнопка:
-//  - вопрос отвечен → открыть следующий (из пула или сгенерировать);
-//  - не отвечен → заменить вопрос на месте (перегенерация).
+//  - вопрос отвечен → открыть следующий из пула;
+//  - не отвечен → заменить вопрос на месте из того же пула.
+// Ready-слот показывается сразу, pending-слот дожидается своего запроса.
 //
 // Писание: та же механика, но «след» растёт сердечком (избранное), не ответом.
 
@@ -30,6 +32,7 @@ type SessionState = {
   // session runtime
   sessionId: number | null;
   questions: string[];
+  questionSources: ai.QuestionSource[];
   qIndex: number;
   answeredCount: number;
   answers: Record<number, Answer>;
@@ -38,6 +41,7 @@ type SessionState = {
   scrList: number[]; // индексы каталога в следе
   scrIndex: number; // позиция в scrList
   scrFav: number[]; // каталожные индексы в избранном
+  scrNext: number; // готовый запасной индекс для ротации
 
   dockMode: 'question' | 'scripture';
   musicOn: boolean;
@@ -47,6 +51,8 @@ type SessionState = {
 
   // reflect
   reflectQ: string;
+  reflectSource: ai.QuestionSource | null;
+  reflectGenerating: boolean;
   takeaway: string;
 
   streak: db.Streak;
@@ -59,6 +65,7 @@ type SessionActions = {
   decMinutes: () => void;
 
   prepareThreshold: () => void;
+  prepareReflect: () => void;
   enterSession: () => Promise<void>;
   tick: () => void;
   adjustTimer: (deltaMin: number) => void;
@@ -101,17 +108,49 @@ const pickScripture = (used: number[]): number => {
 };
 
 let prepareToken = 0;
+let reflectToken = 0;
+let firstQuestionFetch: { topic: string; promise: Promise<ai.GeneratedQuestion> } | null = null;
 
-// Префетч следующего вопроса. Стартует при сохранении ответа на фронтире:
-// пока человек читает экран, вопрос уже генерируется — и к нажатию «вперёд»
-// обычно готов. nextQuestion переиспользует этот промис вместо нового запроса.
-let nextQFetch: { sessionId: number; index: number; promise: Promise<string> } | null = null;
+// Готовый слот показывается синхронно. Если слот ещё pending, кнопка ждёт
+// именно уже запущенный запрос; новый refill стартует только после показа.
+const questionPool = createOneAheadPool<ai.GeneratedQuestion>();
+const reflectPool = createOneAheadPool<ai.GeneratedQuestion>();
+
+const poolKey = (
+  s: SessionState,
+  index: number,
+  answers: Record<number, Answer> = s.answers,
+) => JSON.stringify([s.sessionId, index, s.topic, s.questions, answersForAi(answers)]);
+
+const prepareQuestion = (
+  s: SessionState,
+  index: number,
+  answers: Record<number, Answer> = s.answers,
+) => {
+  if (s.sessionId === null) return null;
+  const key = poolKey(s, index, answers);
+  return questionPool.prepare(key, () =>
+    ai.generateQuestion(s.topic, s.questions, answersForAi(answers)),
+  );
+};
+
+const reflectKey = (s: SessionState) =>
+  JSON.stringify([s.sessionId, s.topic, answersForAi(s.answers)]);
+
+const prepareReflectQuestion = (s: SessionState) => {
+  if (s.sessionId === null) return null;
+  const key = reflectKey(s);
+  return reflectPool.prepare(key, () =>
+    ai.generateReflectQuestion(s.topic, answersForAi(s.answers)),
+  );
+};
 
 const initial: SessionState = {
   topic: '',
   minutes: 10,
   sessionId: null,
   questions: ai.curatedQuestions,
+  questionSources: ai.curatedQuestions.map(() => 'fallback'),
   qIndex: 0,
   answeredCount: 0,
   answers: {},
@@ -119,11 +158,14 @@ const initial: SessionState = {
   scrList: [0],
   scrIndex: 0,
   scrFav: [],
+  scrNext: pickScripture([0]),
   dockMode: 'question',
   musicOn: false,
   remaining: 600,
   elapsed: 0,
   reflectQ: '',
+  reflectSource: null,
+  reflectGenerating: false,
   takeaway: '',
   streak: { count: 0, prayedToday: false, week: Array(7).fill(false) },
 };
@@ -155,42 +197,76 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // по ходу молитвы, с учётом живых ответов (если человек разрешил).
     // Результат применяется только до входа в сессию: опоздавший вопрос
     // не должен затирать уже идущую молитву
-    ai.generateFirstQuestion(topic).then((q) => {
-      if (token === prepareToken) set((st) => (st.sessionId === null ? { questions: [q] } : st));
+    const promise = ai.generateFirstQuestion(topic);
+    firstQuestionFetch = { topic, promise };
+    promise.then((q) => {
+      if (token === prepareToken) {
+        set((st) =>
+          st.sessionId === null
+            ? { questions: [q.text], questionSources: [q.source] }
+            : st,
+        );
+      }
     });
+  },
+
+  prepareReflect: () => {
+    prepareReflectQuestion(get());
   },
 
   enterSession: async () => {
     const { topic, minutes } = get();
+    reflectToken++;
+    // Если порог уже запустил генерацию, ждём именно её. Новый запрос нужен
+    // только при прямом входе без prepareThreshold или при другой теме.
+    const firstQuestion = await (
+      firstQuestionFetch?.topic === topic
+        ? firstQuestionFetch.promise
+        : ai.generateFirstQuestion(topic)
+    );
     const sessionId = await db.createSession(topic, minutes);
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
-    nextQFetch = null;
-    set((s) => ({
+    firstQuestionFetch = null;
+    questionPool.invalidate();
+    reflectPool.invalidate();
+    set({
       sessionId,
-      // в сессию входит только первый вопрос: если человек вошёл раньше,
-      // чем сгенерировался стартовый, остаток запасной пятёрки обрезается —
-      // иначе все следующие вопросы листались бы из неё без генерации
-      questions: s.questions.slice(0, 1),
+      questions: [firstQuestion.text],
+      questionSources: [firstQuestion.source],
       qIndex: 0,
       answeredCount: 0,
       answers: {},
+      generating: false,
       scrList: [0],
       scrIndex: 0,
       scrFav: [],
+      scrNext: pickScripture([0]),
       dockMode: 'question',
       musicOn: false,
       remaining: minutes === 0 ? null : minutes * 60,
       elapsed: 0,
-    }));
+      reflectQ: '',
+      reflectSource: null,
+      reflectGenerating: false,
+    });
+    // Первый запасной вопрос начинает готовиться сразу после входа.
+    prepareQuestion(get(), 0);
   },
 
-  tick: () =>
+  tick: () => {
     set((s) => {
       const elapsed = s.elapsed + 1;
       if (s.remaining === null) return { elapsed };
       return { elapsed, remaining: Math.max(0, s.remaining - 1) };
-    }),
+    });
+    const current = get();
+    // Итоговый вопрос готовится заранее. Повторные тики с тем же ключом
+    // дедуплицируются пулом, а изменение ответов создаёт новый ключ.
+    if (current.remaining !== null && current.remaining > 0 && current.remaining <= 15) {
+      prepareReflectQuestion(current);
+    }
+  },
 
   adjustTimer: (deltaMin) =>
     set((s) => {
@@ -203,8 +279,6 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       return { remaining, minutes };
     }),
 
-  // навигация по вопросам заморожена, пока идёт генерация: иначе результат
-  // await-а ляжет на чужой индекс
   prevQuestion: () =>
     set((s) => (!s.generating && s.qIndex > 0 ? { qIndex: s.qIndex - 1 } : s)),
 
@@ -216,42 +290,54 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       return;
     }
     const sessionToken = s.sessionId;
-    // индекс фиксируется до await — навигация заблокирована generating,
-    // но токен сессии дополнительно отсекает результат после reset()
     const frontier = s.qIndex;
+    const target = isAnswered(s.answers[frontier]) ? s.answeredCount + 1 : frontier;
+    const key = poolKey(s, target);
+    let q = questionPool.takeReady(key);
+    if (q === undefined) {
+      set({ generating: true });
+      const pending = questionPool.wait(key) ?? prepareQuestion(s, target);
+      if (pending === null) {
+        set({ generating: false });
+        return;
+      }
+      await pending;
+      const latest = get();
+      if (latest.sessionId !== sessionToken || poolKey(latest, target) !== key) {
+        set((st) => (st.sessionId === sessionToken ? { generating: false } : st));
+        return;
+      }
+      q = questionPool.takeReady(key);
+      if (q === undefined) {
+        set({ generating: false });
+        return;
+      }
+    }
+
     if (isAnswered(s.answers[frontier])) {
       // плюс: открыть следующий вопрос в след
       const nf = s.answeredCount + 1;
       if (s.questions[nf] !== undefined) {
-        set({ answeredCount: nf, qIndex: nf });
+        set({ answeredCount: nf, qIndex: nf, generating: false });
       } else {
-        set({ generating: true });
-        // если saveAnswer уже запустил префетч этого вопроса — дождаться его,
-        // а не начинать генерацию заново
-        const pending =
-          nextQFetch && nextQFetch.sessionId === sessionToken && nextQFetch.index === nf
-            ? nextQFetch.promise
-            : ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
-        const q = await pending;
-        set((st) => {
-          if (st.sessionId !== sessionToken) return st; // сессия уже другая
-          const questions = st.questions.slice();
-          questions[nf] = q;
-          return { questions, answeredCount: nf, qIndex: nf, generating: false };
-        });
+        questionPool.invalidate();
+        const questions = s.questions.slice();
+        questions[nf] = q.text;
+        const questionSources = s.questionSources.slice();
+        questionSources[nf] = q.source;
+        set({ questions, questionSources, answeredCount: nf, qIndex: nf, generating: false });
       }
     } else {
-      // перегенерация: заменить текущий на месте
-      set({ generating: true });
-      nextQFetch = null; // префетч опирался на прежний текст фронтира
-      const q = await ai.generateQuestion(s.topic, s.questions, answersForAi(s.answers));
-      set((st) => {
-        if (st.sessionId !== sessionToken) return st;
-        const questions = st.questions.slice();
-        questions[frontier] = q;
-        return { questions, generating: false };
-      });
+      questionPool.invalidate();
+      const questions = s.questions.slice();
+      questions[frontier] = q.text;
+      const questionSources = s.questionSources.slice();
+      questionSources[frontier] = q.source;
+      set({ questions, questionSources, generating: false });
     }
+
+    // Уже показанный вопрос не зависит от этого запроса: refill идёт в фоне.
+    prepareQuestion(get(), get().qIndex);
   },
 
   jumpQuestion: (pos) =>
@@ -263,20 +349,23 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     const s = get();
     const answers = { ...s.answers, [questionIndex]: { text, recordings } };
     set({ answers });
-    // ответ на фронтире — следующий вопрос начинает готовиться сразу,
-    // не дожидаясь нажатия «вперёд»: к переходу он обычно уже есть
-    const nf = s.answeredCount + 1;
+    // Любое изменение доступного AI-контекста инвалидирует старый слот.
+    // Для отвеченного фронтира готовится следующий индекс, иначе — замена
+    // текущего вопроса на месте.
+    if (s.sessionId !== null && questionIndex <= s.answeredCount) {
+      const updated = get();
+      const frontier = updated.answeredCount;
+      const target = isAnswered(updated.answers[frontier]) ? frontier + 1 : frontier;
+      prepareQuestion(updated, target);
+    }
+    const updatedForReflect = get();
     if (
-      s.sessionId !== null &&
-      questionIndex === s.answeredCount &&
-      s.questions[nf] === undefined &&
-      isAnswered(answers[questionIndex])
+      updatedForReflect.sessionId !== null &&
+      updatedForReflect.remaining !== null &&
+      updatedForReflect.remaining > 0 &&
+      updatedForReflect.remaining <= 15
     ) {
-      nextQFetch = {
-        sessionId: s.sessionId,
-        index: nf,
-        promise: ai.generateQuestion(s.topic, s.questions, answersForAi(answers)),
-      };
+      prepareReflectQuestion(updatedForReflect);
     }
     if (s.sessionId !== null) {
       db.saveAnswer({
@@ -303,11 +392,15 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       const fav = s.scrFav.includes(s.scrList[s.scrIndex]);
       const scrList = s.scrList.slice();
       if (fav) {
-        scrList.push(pickScripture(scrList));
-        return { scrList, scrIndex: s.scrIndex + 1 };
+        scrList.push(s.scrNext);
+        return {
+          scrList,
+          scrIndex: s.scrIndex + 1,
+          scrNext: pickScripture(scrList),
+        };
       }
-      scrList[s.scrIndex] = pickScripture(scrList);
-      return { scrList };
+      scrList[s.scrIndex] = s.scrNext;
+      return { scrList, scrNext: pickScripture(scrList) };
     }),
 
   jumpScripture: (pos) => set({ scrIndex: pos }),
@@ -325,10 +418,35 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   finish: async () => {
     const s = get();
-    set({ reflectQ: '' });
-    ai.generateReflectQuestion(s.topic, answersForAi(s.answers)).then((q) =>
-      set({ reflectQ: q }),
-    );
+    const token = ++reflectToken;
+    const sessionToken = s.sessionId;
+    const key = reflectKey(s);
+    questionPool.invalidate();
+    let q = reflectPool.takeReady(key);
+    if (q === undefined) {
+      set({ reflectQ: '', reflectSource: null, reflectGenerating: true });
+      const pending = reflectPool.wait(key) ?? prepareReflectQuestion(s);
+      if (pending === null) {
+        set({ reflectGenerating: false });
+        return;
+      }
+      await pending;
+      if (
+        token !== reflectToken ||
+        get().sessionId !== sessionToken ||
+        reflectKey(get()) !== key
+      ) {
+        return;
+      }
+      q = reflectPool.takeReady(key);
+      if (q === undefined) {
+        set({ reflectGenerating: false });
+        return;
+      }
+    }
+    if (token === reflectToken && get().sessionId === sessionToken) {
+      set({ reflectQ: q.text, reflectSource: q.source, reflectGenerating: false });
+    }
   },
 
   complete: async (takeaway) => {
@@ -340,10 +458,15 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   reset: () => {
     prepareToken++; // висящие prepareThreshold-промисы больше не применятся
+    reflectToken++;
+    firstQuestionFetch = null;
+    questionPool.invalidate();
+    reflectPool.invalidate();
     set((s) => ({
       ...initial,
       streak: s.streak,
       questions: ai.curatedQuestions,
+      questionSources: ai.curatedQuestions.map(() => 'fallback'),
     }));
   },
 

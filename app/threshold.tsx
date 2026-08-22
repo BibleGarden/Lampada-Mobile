@@ -87,6 +87,7 @@ export default function Threshold() {
     });
     holdTimer.current = setTimeout(async () => {
       entering.current = true;
+      setHint('готовлю вопрос…');
       try {
         await s.enterSession();
       } catch (error) {

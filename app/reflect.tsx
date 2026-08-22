@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
+  ActivityIndicator,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -64,10 +65,6 @@ function ReflectScreen() {
     }
   };
 
-  const fallbackQ = s.topic.trim()
-    ? 'Удалось ли то, с чем ты пришёл сегодня?'
-    : 'Что ты вынес из этой молитвы?';
-
   return (
     <View style={styles.root}>
       <ScreenBg />
@@ -85,9 +82,16 @@ function ReflectScreen() {
 
           <View style={styles.questionBlock}>
             <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
-              прежде чем закрыть
+              {s.reflectSource === 'fallback' ? 'резервный вопрос' : 'прежде чем закрыть'}
             </Kicker>
-            <Text style={styles.question}>{s.reflectQ || fallbackQ}</Text>
+            {s.reflectGenerating ? (
+              <View style={styles.questionLoading}>
+                <ActivityIndicator color={colors.goldSoft} />
+                <Text style={styles.loadingText}>готовлю вопрос…</Text>
+              </View>
+            ) : (
+              <Text style={styles.question}>{s.reflectQ}</Text>
+            )}
           </View>
 
           <TextInput
@@ -140,6 +144,17 @@ const styles = StyleSheet.create({
     lineHeight: sc(29),
     color: colors.cream,
     textAlign: 'center',
+  },
+  questionLoading: {
+    minHeight: sc(58),
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: sc(10),
+  },
+  loadingText: {
+    fontFamily: fonts.sans,
+    fontSize: sc(12),
+    color: colors.white55,
   },
   input: {
     marginTop: sc(20),

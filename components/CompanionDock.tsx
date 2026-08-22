@@ -33,6 +33,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
     useShallow((st) => ({
       dockMode: st.dockMode,
       questions: st.questions,
+      questionSources: st.questionSources,
       qIndex: st.qIndex,
       answeredCount: st.answeredCount,
       answers: st.answers,
@@ -72,7 +73,11 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
       {/* заголовок + переключатель */}
       <View style={styles.header}>
         <Text style={styles.label} numberOfLines={1}>
-          {isQ ? 'Спутник спрашивает' : curScripture.ref}
+          {isQ
+            ? s.questionSources[s.qIndex] === 'fallback'
+              ? 'Резервный вопрос'
+              : 'Спутник спрашивает'
+            : curScripture.ref}
         </Text>
         <View style={styles.switcher}>
           <Pressable
