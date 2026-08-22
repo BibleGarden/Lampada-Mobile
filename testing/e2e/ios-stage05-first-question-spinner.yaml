@@ -1,0 +1,24 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "QA first-question spinner"
+- hideKeyboard
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- assertVisible: "Готовлю вопрос"
+- assertVisible: "Что для тебя сейчас важнее всего?"

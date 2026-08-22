@@ -73,11 +73,13 @@ const isQuestion = (q: unknown): q is string =>
  * пополняется по ходу молитвы и пересобирается после нового ответа.
  */
 export async function generateFirstQuestion(topic: string): Promise<GeneratedQuestion> {
-  if (!llmConfigured() || !topic.trim()) return fromFallback(pickRandom(curatedQuestions));
+  if (!llmConfigured()) return fromFallback(pickRandom(curatedQuestions));
   try {
     const q = await complete(
       PERSONA,
-      `Человек начинает молитву. Его цель: «${topic.trim()}».\n` +
+      (topic.trim()
+        ? `Человек начинает молитву. Его цель: «${topic.trim()}».\n`
+        : 'Человек начинает молитву без конкретной темы.\n') +
         'Задай первый наводящий вопрос — про то, что сейчас происходит и что он чувствует. ' +
         'Не пересказывай цель дословно. Ответь только текстом вопроса, без кавычек и пояснений.',
     );

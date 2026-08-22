@@ -1,0 +1,38 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- openLink: "lampada://settings"
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- assertVisible: "Учитывать мои ответы"
+- tapOn:
+    point: "86%,32%"
+- tapOn:
+    point: "10%,10%"
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "QA opt-in payload"
+- hideKeyboard
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "Ответить"
+- tapOn: "Ответить"
+- tapOn:
+    point: "50%,62%"
+- inputText: "QA private answer"
+- tapOn:
+    point: "65%,50%"
+- assertVisible: "Изменить"
+- tapOn:
+    point: "85%,77%"
+- assertVisible: "Спутник спрашивает"

@@ -1,0 +1,15 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- openLink: "lampada://settings"
+- assertVisible: "Учитывать мои ответы"
+- assertVisible: "Сейчас твои ответы не покидают устройство.*"
+- tapOn:
+    point: "86%,32%"
+- assertVisible: "Текст твоих ответов будет отправляться на сервер.*"
+- launchApp:
+    stopApp: true
+- openLink: "lampada://settings"
+- assertVisible: "Текст твоих ответов будет отправляться на сервер.*"

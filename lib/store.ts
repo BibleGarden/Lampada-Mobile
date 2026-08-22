@@ -109,7 +109,11 @@ const pickScripture = (used: number[]): number => {
 
 let prepareToken = 0;
 let reflectToken = 0;
-let firstQuestionFetch: { topic: string; promise: Promise<ai.GeneratedQuestion> } | null = null;
+let firstQuestionFetch: {
+  topic: string;
+  promise: Promise<ai.GeneratedQuestion>;
+  result?: ai.GeneratedQuestion;
+} | null = null;
 
 // Готовый слот показывается синхронно. Если слот ещё pending, кнопка ждёт
 // именно уже запущенный запрос; новый refill стартует только после показа.
@@ -198,8 +202,10 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // Результат применяется только до входа в сессию: опоздавший вопрос
     // не должен затирать уже идущую молитву
     const promise = ai.generateFirstQuestion(topic);
-    firstQuestionFetch = { topic, promise };
+    const fetch: NonNullable<typeof firstQuestionFetch> = { topic, promise };
+    firstQuestionFetch = fetch;
     promise.then((q) => {
+      if (firstQuestionFetch === fetch) fetch.result = q;
       if (token === prepareToken) {
         set((st) =>
           st.sessionId === null
@@ -217,13 +223,15 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   enterSession: async () => {
     const { topic, minutes } = get();
     reflectToken++;
-    // Если порог уже запустил генерацию, ждём именно её. Новый запрос нужен
-    // только при прямом входе без prepareThreshold или при другой теме.
-    const firstQuestion = await (
+    // Вход не зависит от сети. Пока первый вопрос готовится, карточка вопроса
+    // показывает spinner; fallback появляется только когда AI-слой вернул его
+    // из-за явной ошибки.
+    const fetch: NonNullable<typeof firstQuestionFetch> =
       firstQuestionFetch?.topic === topic
-        ? firstQuestionFetch.promise
-        : ai.generateFirstQuestion(topic)
-    );
+        ? firstQuestionFetch
+        : { topic, promise: ai.generateFirstQuestion(topic) };
+    firstQuestionFetch = fetch;
+    const firstQuestion = fetch.result;
     const sessionId = await db.createSession(topic, minutes);
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
@@ -232,12 +240,12 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     reflectPool.invalidate();
     set({
       sessionId,
-      questions: [firstQuestion.text],
-      questionSources: [firstQuestion.source],
+      questions: [firstQuestion?.text ?? ''],
+      questionSources: [firstQuestion?.source ?? 'ai'],
       qIndex: 0,
       answeredCount: 0,
       answers: {},
-      generating: false,
+      generating: !firstQuestion,
       scrList: [0],
       scrIndex: 0,
       scrFav: [],
@@ -250,8 +258,21 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       reflectSource: null,
       reflectGenerating: false,
     });
-    // Первый запасной вопрос начинает готовиться сразу после входа.
-    prepareQuestion(get(), 0);
+    if (firstQuestion) {
+      // Первый запасной вопрос начинает готовиться сразу после входа.
+      prepareQuestion(get(), 0);
+      return;
+    }
+
+    void fetch.promise.then((question) => {
+      if (get().sessionId !== sessionId) return;
+      set({
+        questions: [question.text],
+        questionSources: [question.source],
+        generating: false,
+      });
+      prepareQuestion(get(), 0);
+    });
   },
 
   tick: () => {

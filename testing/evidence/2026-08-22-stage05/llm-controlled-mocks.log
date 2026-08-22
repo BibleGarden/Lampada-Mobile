@@ -1,0 +1,7 @@
+Command environment: Node 24.18.0, EXPO_PUBLIC_AI_PROXY_URL=https://qa.invalid
+
+HTTP 502 mock: PASS — `complete()` rejected with `AI proxy: HTTP 502`.
+Malformed JSON mock: PASS — `complete()` rejected when `res.json()` rejected.
+Timeout mock: PASS — immediate mocked timer aborted request; `complete()` rejected.
+
+Each command exit code: 0.

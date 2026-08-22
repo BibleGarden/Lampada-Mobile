@@ -1,0 +1,22 @@
+npm test: exit 0 — 5 passed, 0 failed
+npm run typecheck: exit 0
+maestro test testing/e2e/ios-stage05-privacy-setting.yaml: exit 0
+npx expo export --platform ios: exit 0
+Forbidden Google/master-key patterns in exported iOS bundle: not found
+Controlled `lib/llm.ts` HTTP 502 mock: exit 0
+Controlled `lib/llm.ts` malformed JSON mock: exit 0
+Controlled `lib/llm.ts` AbortController timeout mock: exit 0
+Test iOS build with local HTTPS AI mock: exit 0
+Maestro `ios-stage05-ai-success-payload.yaml`: exit 0
+Maestro `ios-stage05-ai-opt-in-payload.yaml`: exit 0
+Maestro `ios-stage05-ai-timeout.yaml`: failed as expected — session did not open before AI timeout; Bug 86cb8n4tg created
+Bug 86cb8n4tg fix: `npm test` exit 0 — 5 passed, 0 failed
+Bug 86cb8n4tg fix: `npm run typecheck` exit 0
+Bug 86cb8n4tg retest: Maestro `ios-stage05-ai-timeout.yaml` exit 0
+Bug 86cb8n4tg late-result retest: Maestro `ios-stage05-ai-late-response.yaml` exit 0
+Final iOS build restored with original local proxy configuration: exit 0
+First-question spinner change: `npm test` exit 0 — 5 passed, 0 failed
+First-question spinner change: `npm run typecheck` exit 0
+Maestro `ios-stage05-first-question-spinner.yaml`: exit 0
+Maestro `ios-stage05-first-question-error-fallback.yaml`: exit 0
+Maestro `ios-stage05-first-question-no-topic.yaml`: exit 0

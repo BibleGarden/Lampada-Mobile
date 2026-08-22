@@ -99,7 +99,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
         <Animated.View key={`q-${s.qIndex}`} entering={FadeInDown.duration(350)}>
           <View style={styles.textWrap}>
             {s.generating ? (
-              <ActivityIndicator color={colors.goldSoft} />
+              <ActivityIndicator accessibilityLabel="Готовлю вопрос" color={colors.goldSoft} />
             ) : (
               // maxHeight + прокрутка: длинный вопрос не выталкивает карточку
               // за экран, а листается внутри неё

@@ -1,0 +1,3 @@
+appId: com.marianovikov.lampada
+---
+- assertVisible: "Резервный вопрос"

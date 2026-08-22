@@ -1,0 +1,31 @@
+Environment: iPhone 17 Pro Simulator, iOS 26.5; test build with a trusted local HTTPS proxy mock.
+
+Successful AI flow:
+- request 1: POST /complete; X-API-Key present; no answer context; no audio URI
+- request 2: POST /complete; X-API-Key present; no answer context; no audio URI
+
+Opt-in flow:
+- request 3: no answer context; no audio URI
+- request 4: no answer context; no audio URI
+- request 5: answer context present after explicit opt-in; no audio URI
+
+Delayed-response flow:
+- first POST received at 1787400061451
+- next POST received at 1787400086554 (about 25.1 seconds later)
+- server first response was held for 30 seconds
+- Maestro did not observe the "МОЛИТВА" screen within its UI wait and failed.
+
+Result: confirmed Bug 86cb8n4tg — AI timeout blocks entry into prayer.
+
+Retest after fix:
+- local proxy again held both responses for 30 seconds;
+- `ios-stage05-ai-timeout.yaml` passed: the "МОЛИТВА" screen opened without waiting for the response;
+- delayed responses arrived after the session began;
+- `ios-stage05-ai-late-response.yaml` passed: the active question remained marked "Резервный вопрос".
+
+Result: Bug 86cb8n4tg fixed and retested.
+
+Product-corrected retest:
+- delayed successful response: session opened, then the question area exposed the "Готовлю вопрос" spinner, then displayed the returned AI question;
+- HTTP 502: session opened and the question area displayed "Резервный вопрос" only after the explicit AI failure;
+- no-topic prayer: local mock received the no-topic prompt and the returned AI question was displayed.
