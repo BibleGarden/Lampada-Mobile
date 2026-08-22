@@ -1,0 +1,23 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "SETUP-004 very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
+- assertVisible: "Далее"
+- tapOn:
+    point: "87%,88%"
+- assertVisible: "ДЛИТЕЛЬНОСТЬ"
+- assertVisible: "Далее"
+- tapOn: "Далее"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ВОЙТИ"
+- assertVisible: ".*SETUP-004 very long prayer goal.*"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- assertVisible: ".*SETUP-004 very long prayer goal.*"

@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -20,6 +20,14 @@ import { useSession } from '../lib/store';
 import { colors, fonts, radius, sc } from '../lib/theme';
 
 export default function Reflect() {
+  const sessionId = useSession((state) => state.sessionId);
+
+  if (sessionId === null) return <Redirect href="/" />;
+
+  return <ReflectScreen />;
+}
+
+function ReflectScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');

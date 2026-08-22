@@ -1,0 +1,7 @@
+appId: com.marianovikov.lampada
+---
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"

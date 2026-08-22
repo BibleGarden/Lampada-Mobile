@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
@@ -10,6 +10,7 @@ import ProgressRing from '../components/ProgressRing';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { plMinutes, useSession } from '../lib/store';
+import { recordDiagnostic } from '../lib/db';
 import { colors, fonts, durations, sc } from '../lib/theme';
 
 // «15 минут» / «час» / «1:30» — как timeAmount в прототипе
@@ -87,13 +88,16 @@ export default function Threshold() {
     holdTimer.current = setTimeout(async () => {
       entering.current = true;
       try {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         await s.enterSession();
-        router.replace('/session');
-      } finally {
+      } catch (error) {
+        recordDiagnostic('session_start_failed', error);
+        Alert.alert('Не удалось начать молитву', 'Попробуй ещё раз.', [{ text: 'Понятно' }]);
         // при ошибке enterSession кнопка не должна остаться мёртвой
         entering.current = false;
+        return;
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/session');
     }, durations.holdToStart);
   };
 

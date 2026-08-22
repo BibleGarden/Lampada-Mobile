@@ -1,0 +1,17 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage03-session-infinite
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SES-002 infinite timer... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "∞"... COMPLETED
+Tap on "Далее"... COMPLETED
+Assert that ".*столько времени, сколько нужно.*" is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Assert that "идёт" is visible... COMPLETED
+Assert that "0:0[2-9]" is visible... COMPLETED
+Assert that "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ" is not visible... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ" is visible... COMPLETED

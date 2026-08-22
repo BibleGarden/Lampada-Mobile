@@ -1,7 +1,25 @@
 import * as SQLite from 'expo-sqlite';
-import { File } from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 
 // Все данные — только на устройстве.
+
+const diagnosticLog = new File(Paths.document, 'lampada-diagnostics.log');
+
+/** Безопасная диагностическая запись, доступная даже при ошибке SQLite. */
+export function recordDiagnostic(event: 'session_start_failed', error: unknown) {
+  try {
+    diagnosticLog.write(
+      `${JSON.stringify({
+        at: new Date().toISOString(),
+        event,
+        errorKind: error instanceof Error ? 'error' : typeof error,
+      })}\n`,
+      { append: true },
+    );
+  } catch {
+    // Диагностика не должна менять пользовательский сценарий при ошибке файловой системы.
+  }
+}
 
 export type SessionRow = {
   id: number;

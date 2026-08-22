@@ -1,0 +1,13 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "START-004 SQLite lock"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- assertVisible: "НАЖМИ И ДЕРЖИ"

@@ -1,0 +1,17 @@
+Deep links on clean state:
+sessions|0
+prayed_days|0
+
+SQLite BEGIN EXCLUSIVE:
+sessions_under_lock|0
+
+Safe diagnostic JSONL:
+{"at":"2026-08-22T02:44:47.613Z","event":"session_start_failed","errorKind":"error"}
+
+Sensitive topic matches: 0
+Raw error/message/stack/database/locked fields: 0
+
+After ROLLBACK and retry:
+sessions_after_retry|1
+1|'START-004 SQLite lock'|5|0|''
+prayed_days|0

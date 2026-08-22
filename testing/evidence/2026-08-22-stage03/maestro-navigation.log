@@ -1,0 +1,21 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage03-navigation
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Double tap on "Начать молитву"... COMPLETED
+Assert that "ПЕРЕД МОЛИТВОЙ" is visible... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text NAV-002 draft... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "30"... COMPLETED
+Double tap on "Далее"... COMPLETED
+Assert that ".*30 минут.*NAV-002 draft.*" is visible... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "ПЕРЕД МОЛИТВОЙ" is visible... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Assert that "10" is visible... COMPLETED
+Assert that "NAV-002 draft" is not visible... COMPLETED

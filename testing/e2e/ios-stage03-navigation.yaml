@@ -1,0 +1,27 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- doubleTapOn: "Начать молитву"
+- assertVisible: "ПЕРЕД МОЛИТВОЙ"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "NAV-002 draft"
+- hideKeyboard
+- tapOn: "30"
+- doubleTapOn: "Далее"
+- assertVisible: ".*30 минут.*NAV-002 draft.*"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПЕРЕД МОЛИТВОЙ"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- assertVisible: "10"
+- assertNotVisible: "NAV-002 draft"

@@ -1,0 +1,42 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage03-setup-start
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Assert that "10" is visible... COMPLETED
+Assert that "минут" is visible... COMPLETED
+Tap on "?"... COMPLETED
+Assert that ".*Привести мысли в порядок.*" is visible... COMPLETED
+Tap on point (50%,32%)... COMPLETED
+Assert that "Привести мысли в порядок" is visible... COMPLETED
+Tap on "?"... COMPLETED
+Tap on point (50%,39%)... COMPLETED
+Assert that "Принять важное решение" is visible... COMPLETED
+Tap on "?"... COMPLETED
+Tap on point (50%,46%)... COMPLETED
+Assert that "Подготовиться к разговору" is visible... COMPLETED
+Tap on "?"... COMPLETED
+Tap on point (50%,53%)... COMPLETED
+Assert that "Подготовиться к проповеди" is visible... COMPLETED
+Tap on "Подготовиться к проповеди"... COMPLETED
+Erase 100 characters... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Assert that "5" is visible... COMPLETED
+Assert that "минут" is visible... COMPLETED
+Tap on "15"... COMPLETED
+Assert that "15" is visible... COMPLETED
+Tap on "30"... COMPLETED
+Assert that "30" is visible... COMPLETED
+Tap on "час"... COMPLETED
+Assert that "60" is visible... COMPLETED
+Tap on "∞"... COMPLETED
+Assert that "без таймера" is visible... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Assert that "У тебя 5 минут наедине с Богом" is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 450 ms... COMPLETED
+Assert that "НАЖМИ И ДЕРЖИ" is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Assert that "Свободная молитва — без конкретной темы" is visible... COMPLETED

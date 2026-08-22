@@ -1,0 +1,54 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- assertVisible: "10"
+- assertVisible: "минут"
+- tapOn: "?"
+- assertVisible: ".*Привести мысли в порядок.*"
+- tapOn:
+    point: "50%,32%"
+- assertVisible: "Привести мысли в порядок"
+- tapOn: "?"
+- tapOn:
+    point: "50%,39%"
+- assertVisible: "Принять важное решение"
+- tapOn: "?"
+- tapOn:
+    point: "50%,46%"
+- assertVisible: "Подготовиться к разговору"
+- tapOn: "?"
+- tapOn:
+    point: "50%,53%"
+- assertVisible: "Подготовиться к проповеди"
+- tapOn: "Подготовиться к проповеди"
+- eraseText: 100
+- hideKeyboard
+- tapOn: "5"
+- assertVisible: "5"
+- assertVisible: "минут"
+- tapOn: "15"
+- assertVisible: "15"
+- tapOn: "30"
+- assertVisible: "30"
+- tapOn: "час"
+- assertVisible: "60"
+- tapOn: "∞"
+- assertVisible: "без таймера"
+- tapOn: "5"
+- tapOn: "Далее"
+- assertVisible: "У тебя 5 минут наедине с Богом"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 450
+- assertVisible: "НАЖМИ И ДЕРЖИ"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- assertVisible: "Свободная молитва — без конкретной темы"

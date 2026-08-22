@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -34,6 +34,14 @@ const RING = sc(172);
 const HALO_PAD = sc(56);
 
 export default function Session() {
+  const sessionId = useSession((state) => state.sessionId);
+
+  if (sessionId === null) return <Redirect href="/" />;
+
+  return <SessionScreen />;
+}
+
+function SessionScreen() {
   useKeepAwake(); // экран не гаснет во время молитвы
   const insets = useSafeAreaInsets();
   const s = useSession();

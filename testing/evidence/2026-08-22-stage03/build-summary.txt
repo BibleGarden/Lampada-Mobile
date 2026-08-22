@@ -1,0 +1,9 @@
+Release build: PASSED
+Command exit code: 0
+Full clean build log: /tmp/pray-stage03-final/xcodebuild-release.log (58,589 lines)
+Final incremental build log: /tmp/pray-stage03-final/xcodebuild-release-final2.log (8,196 lines)
+Final marker: ** BUILD SUCCEEDED **
+Final error lines: 0
+Final warning lines: 58
+Warnings from ios/Lampada project sources: 0
+App: /tmp/pray-stage03-final/DerivedData/Build/Products/Release-iphonesimulator/Lampada.app

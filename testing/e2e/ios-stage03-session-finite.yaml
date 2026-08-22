@@ -1,0 +1,33 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "SES-001 finite timer"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "50%,29%"
+- assertVisible: "−1"
+- assertVisible: "+1"
+- tapOn: "−1"
+- tapOn: "−1"
+- tapOn: "−1"
+- tapOn: "−1"
+- tapOn: "−1"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn: "Вернуться к молитве"
+- assertVisible: "МОЛИТВА"
+- assertVisible: "SES-001 finite timer"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"

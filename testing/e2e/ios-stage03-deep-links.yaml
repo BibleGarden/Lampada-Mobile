@@ -1,0 +1,11 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- openLink: "lampada://session"
+- assertVisible: "Начать молитву"
+- openLink: "lampada://reflect"
+- assertVisible: "Начать молитву"
+- openLink: "lampada://done"
+- assertVisible: "Начать молитву"

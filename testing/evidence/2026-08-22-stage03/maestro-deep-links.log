@@ -1,0 +1,9 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage03-deep-links
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Open lampada://session... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Open lampada://reflect... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Open lampada://done... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED

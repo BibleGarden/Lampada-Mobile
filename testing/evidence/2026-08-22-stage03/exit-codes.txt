@@ -1,0 +1,15 @@
+npm run typecheck: 0
+git diff --check: 0
+xcodebuild Release clean: 0
+xcodebuild Release final incremental: 0
+simctl install final Release: 0
+maestro navigation: 0
+maestro setup/start: 0
+maestro finite session: 0
+maestro infinite session: 0
+maestro long goal: 0
+maestro deep links final: 0
+maestro SQLite lock prepare: 0
+maestro SQLite failure alert: 0
+maestro SQLite failure dismiss: 0
+maestro SQLite retry: 0

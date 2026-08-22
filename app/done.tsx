@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import ScreenBg from '../components/ScreenBg';
@@ -10,6 +10,14 @@ import { useSession } from '../lib/store';
 import { colors, fonts, radius, sc } from '../lib/theme';
 
 export default function Done() {
+  const sessionId = useSession((state) => state.sessionId);
+
+  if (sessionId === null) return <Redirect href="/" />;
+
+  return <DoneScreen />;
+}
+
+function DoneScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
 
