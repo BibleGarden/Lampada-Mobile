@@ -1,0 +1,42 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-smoke-full
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-001-cold-launch... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Финальный smoke... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Assert that ".*5 минут.*финальный smoke.*" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-002-threshold... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 450 ms... COMPLETED
+Assert that "НАЖМИ И ДЕРЖИ" is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Assert that "Ответить" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-003-session... COMPLETED
+Tap on "Ответить"... COMPLETED
+Tap on point (50%,62%)... COMPLETED
+Input text Финальный ответ... COMPLETED
+Tap on point (65%,50%)... COMPLETED
+Assert that "Изменить" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-004-answer... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ" is visible... COMPLETED
+Tap on "Одна-две строки…"... COMPLETED
+Input text Финальный вывод... COMPLETED
+Press Enter key... COMPLETED
+Tap on "Сохранить и завершить"... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
+Assert that "«Финальный вывод»" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-005-done... COMPLETED
+Tap on "На главную"... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Assert that ".*Финальный smoke.*" is visible... COMPLETED
+Tap on ".*Финальный smoke.*"... COMPLETED
+Assert that ".*Финальный ответ.*" is visible... COMPLETED
+Assert that ".*Финальный вывод.*" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-006-journal... COMPLETED

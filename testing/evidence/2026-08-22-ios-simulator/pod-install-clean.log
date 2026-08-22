@@ -1,0 +1,316 @@
+🔍️ Scanning for pods...
+> pod install
+Using Expo modules
+[34m[Expo] [0mEnabling modular headers for pod [32mExpoModulesCore[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mExpoModulesWorklets[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-RCTFabric[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mExpoModulesJSI[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-RCTAppDelegate[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReactAppDependencyProvider[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-Core[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReactCodegen[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mRCTRequired[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mRCTTypeSafety[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReactCommon[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-NativeModulesApple[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mYoga[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-Fabric[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-graphics[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-utils[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-featureflags[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-debug[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-ImageManager[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-rendererdebug[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-jsi[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mReact-renderercss[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mhermes-engine[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mglog[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mboost[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mDoubleConversion[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mfast_float[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mfmt[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mRCT-Folly[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mSocketRocket[0m
+[34m[Expo] [0mEnabling modular headers for pod [32mRNScreens[0m
+[34m[Expo-precompiled] [0m[33mRNReanimated: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/react-native-reanimated/output/4.5.1/0.86.2/250829098.0.16/debug/xcframeworks/RNReanimated.tar.gz
+[34m[Expo-precompiled] [0m[33mreact-native-safe-area-context: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/react-native-safe-area-context/output/5.7.0/0.86.2/250829098.0.16/debug/xcframeworks/RNCSafeAreaContext.tar.gz
+[34m[Expo-precompiled] [0m[33mRNScreens: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/react-native-screens/output/4.26.2/0.86.2/250829098.0.16/debug/xcframeworks/RNScreens.tar.gz
+[34m[Expo-precompiled] [0m[33mRNSVG: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/react-native-svg/output/15.15.4/0.86.2/250829098.0.16/debug/xcframeworks/RNSVG.tar.gz
+[34m[Expo-precompiled] [0m[33mRNWorklets: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/react-native-worklets/output/0.10.1/0.86.2/250829098.0.16/debug/xcframeworks/RNWorklets.tar.gz
+[34m[Expo-precompiled] [0m[33mRNCAsyncStorage: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/@react-native-async-storage/async-storage/output/2.2.0/0.86.2/250829098.0.16/debug/xcframeworks/RNCAsyncStorage.tar.gz
+[34m[Expo-precompiled] [0m[33mreact-native-skia: prebuilt xcframework unavailable; building from source[0m
+[34m[Expo-precompiled] [0m  Expected tarball: /Users/maria/Desktop/Dev/pray/packages/precompile/.build/@shopify/react-native-skia/output/2.6.2/0.86.2/250829098.0.16/debug/xcframeworks/RNSkia.tar.gz
+-- SK_GRAPHITE: OFF (detected via libs/.graphite marker file)
+[RNScreens] Gamma project enabled. Including source files.
+Found 10 modules for target `Lampada`
+link_native_modules! {ios_packages: [{configurations: [], name: "@react-native-async-storage/async-storage", root: "/Users/maria/Desktop/Dev/pray/node_modules/@react-native-async-storage/async-storage", path: "../node_modules/@react-native-async-storage/async-storage", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/@react-native-async-storage/async-storage/RNCAsyncStorage.podspec", script_phases: []}, {configurations: [], name: "@react-native-masked-view/masked-view", root: "/Users/maria/Desktop/Dev/pray/node_modules/@react-native-masked-view/masked-view", path: "../node_modules/@react-native-masked-view/masked-view", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/@react-native-masked-view/masked-view/RNCMaskedView.podspec", script_phases: []}, {configurations: [], name: "@shopify/react-native-skia", root: "/Users/maria/Desktop/Dev/pray/node_modules/@shopify/react-native-skia", path: "../node_modules/@shopify/react-native-skia", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/@shopify/react-native-skia/react-native-skia.podspec", script_phases: []}, {configurations: [], name: "expo", root: "/Users/maria/Desktop/Dev/pray/node_modules/expo", path: "../node_modules/expo", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/expo/Expo.podspec", script_phases: []}, {configurations: [], name: "react-native-gesture-handler", root: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-gesture-handler", path: "../node_modules/react-native-gesture-handler", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-gesture-handler/RNGestureHandler.podspec", script_phases: []}, {configurations: [], name: "react-native-reanimated", root: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-reanimated", path: "../node_modules/react-native-reanimated", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-reanimated/RNReanimated.podspec", script_phases: []}, {configurations: [], name: "react-native-safe-area-context", root: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-safe-area-context", path: "../node_modules/react-native-safe-area-context", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec", script_phases: []}, {configurations: [], name: "react-native-screens", root: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-screens", path: "../node_modules/react-native-screens", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-screens/RNScreens.podspec", script_phases: []}, {configurations: [], name: "react-native-svg", root: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-svg", path: "../node_modules/react-native-svg", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-svg/RNSVG.podspec", script_phases: []}, {configurations: [], name: "react-native-worklets", root: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-worklets", path: "../node_modules/react-native-worklets", podspec_path: "/Users/maria/Desktop/Dev/pray/node_modules/react-native-worklets/RNWorklets.podspec", script_phases: []}], ios_project_root_path: "/Users/maria/Desktop/Dev/pray/ios", react_native_path: "../node_modules/react-native"}
+-- SK_GRAPHITE: OFF (detected via libs/.graphite marker file)
+[RNScreens] Gamma project enabled. Including source files.
+Auto-linking React Native modules for target `Lampada`: RNCAsyncStorage, RNCMaskedView, RNGestureHandler, RNReanimated, RNSVG, RNScreens, RNWorklets, react-native-safe-area-context, and react-native-skia
+Framework build type is static library
+[32m[ReactNativeDependencies] [0mSetting up ReactNativeDependencies...
+[32m[ReactNativeDependencies] [0mBuilding from source: false
+[32m[ReactNativeDependencies] [0mUsing tarball from URL: https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.2/react-native-artifacts-0.86.2-reactnative-dependencies-debug.tar.gz
+[32m[ReactNativeDependencies] [0mVerifying checksum for cached reactnative-dependencies-0.86.2-debug.tar.gz...
+[32m[Cache] [0mSHA1 verified for reactnative-dependencies-0.86.2-debug.tar.gz
+[32m[ReactNativeDependencies] [0mCache hit: copying reactnative-dependencies-0.86.2-debug.tar.gz from shared cache (/Users/maria/Library/Caches/ReactNative)
+[32m[ReactNativeDependencies] [0mVerifying checksum for cached reactnative-dependencies-0.86.2-release.tar.gz...
+[32m[Cache] [0mSHA1 verified for reactnative-dependencies-0.86.2-release.tar.gz
+[32m[ReactNativeDependencies] [0mCache hit: copying reactnative-dependencies-0.86.2-release.tar.gz from shared cache (/Users/maria/Library/Caches/ReactNative)
+[32m[ReactNativeDependencies] [0mSource: {http: "https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.2/react-native-artifacts-0.86.2-reactnative-dependencies-debug.tar.gz"}
+[32m[ReactNativeCore] [0mSetting up ReactNativeCore...
+[32m[ReactNativeCore] [0mBuilding from source: false
+Configuring the target with the New Architecture
+[32m[ReactNativeCore] [0mUsing React Native Core and React Native Dependencies prebuilt versions.
+[36m[1m[Codegen][0m Analyzing /Users/maria/Desktop/Dev/pray/package.json[0m
+[36m[1m[Codegen][0m [33mSearching for codegen-enabled libraries in the app.[0m
+[36m[1m[Codegen][0m [33mThe "codegenConfig" field is not defined in package.json. Assuming there is nothing to generate at the app level.[0m
+[36m[1m[Codegen][0m [33mSearching for codegen-enabled libraries in react-native.config.js[0m
+[36m[1m[Codegen][0m Found @react-native-async-storage/async-storage[0m
+[36m[1m[Codegen][0m Found @shopify/react-native-skia[0m
+[36m[1m[Codegen][0m Found react-native-gesture-handler[0m
+[36m[1m[Codegen][0m Found react-native-reanimated[0m
+[36m[1m[Codegen][0m Found react-native-safe-area-context[0m
+[36m[1m[Codegen][0m Found react-native-screens[0m
+[36m[1m[Codegen][0m Found react-native-svg[0m
+[36m[1m[Codegen][0m Found react-native-worklets[0m
+[36m[1m[Codegen][0m Processing rnasyncstorage[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnasyncstorage[0m
+[36m[1m[Codegen][0m Processing rnskia[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos for rnskia[0m
+[36m[1m[Codegen][0m Processing rngesturehandler_codegen[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rngesturehandler_codegen[0m
+[36m[1m[Codegen][0m Processing rnreanimated[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnreanimated[0m
+[36m[1m[Codegen][0m Processing safeareacontext[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for safeareacontext[0m
+[36m[1m[Codegen][0m Processing rnscreens[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, tvos, visionos for rnscreens[0m
+[36m[1m[Codegen][0m Processing rnsvg[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnsvg[0m
+[36m[1m[Codegen][0m Processing rnworklets[0m
+[36m[1m[Codegen][0m [33mSearching for podspec in the project dependencies.[0m
+[36m[1m[Codegen][0m Supported Apple platforms: ios, macos, tvos, visionos for rnworklets[0m
+[36m[1m[Codegen][0m Generating Native Code for rnasyncstorage - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnskia - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rngesturehandler_codegen - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnreanimated - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for safeareacontext - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnscreens - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnsvg - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating Native Code for rnworklets - ios[0m
+[36m[1m[Codegen][0m Generated artifacts: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen[0m
+[36m[1m[Codegen][0m Generating RCTThirdPartyComponentsProvider.h[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.h[0m
+[36m[1m[Codegen][0m Generating RCTThirdPartyComponentsProvider.mm[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen/RCTThirdPartyComponentsProvider.mm[0m
+[36m[1m[Codegen][0m Generating RCTModulesProvider.h[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen/RCTModuleProviders.h[0m
+[36m[1m[Codegen][0m Generating RCTModuleProviders.mm[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen/RCTModuleProviders.mm[0m
+[36m[1m[Codegen][0m Generating RCTAppDependencyProvider[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactAppDependencyProvider/RCTAppDependencyProvider.h[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactAppDependencyProvider/RCTAppDependencyProvider.mm[0m
+[36m[1m[Codegen][0m Generated podspec: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactAppDependencyProvider/ReactAppDependencyProvider.podspec[0m
+[36m[1m[Codegen][0m Generated podspec: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/ReactCodegen/ReactCodegen.podspec[0m
+[36m[1m[Codegen][0m Generating Package.swift[0m
+[36m[1m[Codegen][0m Generated artifact: /Users/maria/Desktop/Dev/pray/ios/build/generated/ios/Package.swift[0m
+[36m[1m[Codegen][0m [33mDone.[0m
+Analyzing dependencies
+Fetching podspec for `ExpoFileSystem` from `../node_modules/expo-file-system/ios/ExpoFileSystem.podspec`
+Fetching podspec for `ExpoFont` from `../node_modules/expo-font/ios/ExpoFont.podspec`
+Fetching podspec for `ExpoModulesCore` from `../node_modules/expo-modules-core/ExpoModulesCore.podspec`
+Fetching podspec for `ExpoModulesWorklets` from `../node_modules/expo-modules-core/ExpoModulesWorklets.podspec`
+[RNScreens] Gamma project enabled. Including source files.
+Fetching podspec for `React-Core-prebuilt` from `../node_modules/react-native/React-Core-prebuilt.podspec`
+[32m[ReactNativeCore] [0mCache miss: downloading reactnative-core-0.86.2-debug.tar.gz from https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.2/react-native-artifacts-0.86.2-reactnative-core-debug.tar.gz
+[32m[ReactNativeCore] [0mVerifying checksum for downloaded reactnative-core-0.86.2-debug.tar.gz...
+[32m[Cache] [0mSHA1 verified for reactnative-core-0.86.2-debug.tar.gz
+[32m[ReactNativeCore] [0mSaved reactnative-core-0.86.2-debug.tar.gz to shared cache (/Users/maria/Library/Caches/ReactNative)
+[32m[ReactNativeCore] [0mCache miss: downloading reactnative-core-0.86.2-release.tar.gz from https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.2/react-native-artifacts-0.86.2-reactnative-core-release.tar.gz
+[32m[ReactNativeCore] [0mVerifying checksum for downloaded reactnative-core-0.86.2-release.tar.gz...
+[32m[Cache] [0mSHA1 verified for reactnative-core-0.86.2-release.tar.gz
+[32m[ReactNativeCore] [0mSaved reactnative-core-0.86.2-release.tar.gz to shared cache (/Users/maria/Library/Caches/ReactNative)
+[32m[ReactNativeCore] [0mResolved stable ReactNativeCore-prebuilt version:
+[32m[ReactNativeCore] [0m  ../../ios/Pods/ReactNativeCore-artifacts/reactnative-core-0.86.2-debug.tar.gz
+[32m[ReactNativeCore] [0m  ../../ios/Pods/ReactNativeCore-artifacts/reactnative-core-0.86.2-release.tar.gz
+Fetching podspec for `ReactNativeDependencies` from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`
+[32m[ReactNativeDependencies] [0mUsing tarball from URL: https://repo1.maven.org/maven2/com/facebook/react/react-native-artifacts/0.86.2/react-native-artifacts-0.86.2-reactnative-dependencies-debug.tar.gz
+[32m[ReactNativeDependencies] [0mTarball reactnative-dependencies-0.86.2-debug.tar.gz already exists in Pods. Skipping download.
+[32m[ReactNativeDependencies] [0mTarball reactnative-dependencies-0.86.2-release.tar.gz already exists in Pods. Skipping download.
+Fetching podspec for `hermes-engine` from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`
+[33m[Hermes] Using release tarball from URL: https://repo1.maven.org/maven2/com/facebook/hermes/hermes-ios/250829098.0.16/hermes-ios-250829098.0.16-hermes-ios-debug.tar.gz[0m
+[32m[Hermes] Verifying checksum for cached hermes-ios-250829098.0.16-debug.tar.gz...[0m
+[32m[Hermes] SHA1 verified for hermes-ios-250829098.0.16-debug.tar.gz[0m
+[32m[Hermes] Cache hit: copying hermes-ios-250829098.0.16-debug.tar.gz from shared cache (/Users/maria/Library/Caches/ReactNative)[0m
+[32m[Hermes] Verifying checksum for cached hermes-ios-250829098.0.16-release.tar.gz...[0m
+[32m[Hermes] SHA1 verified for hermes-ios-250829098.0.16-release.tar.gz[0m
+[32m[Hermes] Cache hit: copying hermes-ios-250829098.0.16-release.tar.gz from shared cache (/Users/maria/Library/Caches/ReactNative)[0m
+-- SK_GRAPHITE: OFF (detected via libs/.graphite marker file)
+Downloading dependencies
+[32mInstalling EXConstants (57.0.13)[0m
+[32mInstalling Expo (57.0.15)[0m
+[32mInstalling ExpoAsset (57.0.13)[0m
+[32mInstalling ExpoAudio (57.0.4)[0m
+[32mInstalling ExpoDomWebView (57.0.1)[0m
+[32mInstalling ExpoFileSystem (57.0.5)[0m
+[32mInstalling ExpoFont (57.0.1)[0m
+[32mInstalling ExpoGlassEffect (57.0.1)[0m
+[32mInstalling ExpoHaptics (57.0.1)[0m
+[32mInstalling ExpoKeepAwake (57.0.1)[0m
+[32mInstalling ExpoLinearGradient (57.0.1)[0m
+[32mInstalling ExpoLinking (57.0.7)[0m
+[32mInstalling ExpoLogBox (57.0.3)[0m
+[32mInstalling ExpoModulesCore (57.0.12)[0m
+[32mInstalling ExpoModulesJSI (57.0.5)[0m
+[32mInstalling ExpoModulesWorklets (57.0.12)[0m
+[32mInstalling ExpoModulesWorkletsAdapter (57.0.12)[0m
+[32mInstalling ExpoRouter (57.0.15)[0m
+[32mInstalling ExpoSQLite (57.0.1)[0m
+[32mInstalling ExpoSymbols (57.0.2)[0m
+[32mInstalling ExpoUI (57.0.12)[0m
+[32mInstalling FBLazyVector (0.86.2)[0m
+[32mInstalling RCTDeprecation (0.86.2)[0m
+[32mInstalling RCTRequired (0.86.2)[0m
+[32mInstalling RCTSwiftUI (0.86.2)[0m
+[32mInstalling RCTSwiftUIWrapper (0.86.2)[0m
+[32mInstalling RCTTypeSafety (0.86.2)[0m
+[32mInstalling RNCAsyncStorage (2.2.0)[0m
+[32mInstalling RNCMaskedView (0.3.2)[0m
+[32mInstalling RNGestureHandler (2.32.0)[0m
+[32mInstalling RNReanimated (4.5.1)[0m
+[32mInstalling RNSVG (15.15.4)[0m
+[32mInstalling RNScreens (4.26.2)[0m
+[32mInstalling RNWorklets (0.10.1)[0m
+[32mInstalling React (0.86.2)[0m
+[32mInstalling React-Core (0.86.2)[0m
+[32mInstalling React-Core-prebuilt (0.86.2)[0m
+[32mInstalling React-CoreModules (0.86.2)[0m
+[32mInstalling React-Fabric (0.86.2)[0m
+[32mInstalling React-FabricComponents (0.86.2)[0m
+[32mInstalling React-FabricImage (0.86.2)[0m
+[32mInstalling React-ImageManager (0.86.2)[0m
+[32mInstalling React-Mapbuffer (0.86.2)[0m
+[32mInstalling React-NativeModulesApple (0.86.2)[0m
+[32mInstalling React-RCTActionSheet (0.86.2)[0m
+[32mInstalling React-RCTAnimation (0.86.2)[0m
+[32mInstalling React-RCTAppDelegate (0.86.2)[0m
+[32mInstalling React-RCTBlob (0.86.2)[0m
+[32mInstalling React-RCTFBReactNativeSpec (0.86.2)[0m
+[32mInstalling React-RCTFabric (0.86.2)[0m
+[32mInstalling React-RCTImage (0.86.2)[0m
+[32mInstalling React-RCTLinking (0.86.2)[0m
+[32mInstalling React-RCTNetwork (0.86.2)[0m
+[32mInstalling React-RCTRuntime (0.86.2)[0m
+[32mInstalling React-RCTSettings (0.86.2)[0m
+[32mInstalling React-RCTText (0.86.2)[0m
+[32mInstalling React-RCTVibration (0.86.2)[0m
+[32mInstalling React-RuntimeApple (0.86.2)[0m
+[32mInstalling React-RuntimeCore (0.86.2)[0m
+[32mInstalling React-RuntimeHermes (0.86.2)[0m
+[32mInstalling React-callinvoker (0.86.2)[0m
+[32mInstalling React-cxxreact (0.86.2)[0m
+[32mInstalling React-debug (0.86.2)[0m
+[32mInstalling React-defaultsnativemodule (0.86.2)[0m
+[32mInstalling React-domnativemodule (0.86.2)[0m
+[32mInstalling React-featureflags (0.86.2)[0m
+[32mInstalling React-featureflagsnativemodule (0.86.2)[0m
+[32mInstalling React-graphics (0.86.2)[0m
+[32mInstalling React-hermes (0.86.2)[0m
+[32mInstalling React-idlecallbacksnativemodule (0.86.2)[0m
+[32mInstalling React-intersectionobservernativemodule (0.86.2)[0m
+[32mInstalling React-jserrorhandler (0.86.2)[0m
+[32mInstalling React-jsi (0.86.2)[0m
+[32mInstalling React-jsiexecutor (0.86.2)[0m
+[32mInstalling React-jsinspector (0.86.2)[0m
+[32mInstalling React-jsinspectorcdp (0.86.2)[0m
+[32mInstalling React-jsinspectornetwork (0.86.2)[0m
+[32mInstalling React-jsinspectortracing (0.86.2)[0m
+[32mInstalling React-jsitooling (0.86.2)[0m
+[32mInstalling React-jsitracing (0.86.2)[0m
+[32mInstalling React-logger (0.86.2)[0m
+[32mInstalling React-microtasksnativemodule (0.86.2)[0m
+[32mInstalling React-mutationobservernativemodule (0.86.2)[0m
+[32mInstalling React-networking (0.86.2)[0m
+[32mInstalling React-oscompat (0.86.2)[0m
+[32mInstalling React-perflogger (0.86.2)[0m
+[32mInstalling React-performancecdpmetrics (0.86.2)[0m
+[32mInstalling React-performancetimeline (0.86.2)[0m
+[32mInstalling React-rendererconsistency (0.86.2)[0m
+[32mInstalling React-renderercss (0.86.2)[0m
+[32mInstalling React-rendererdebug (0.86.2)[0m
+[32mInstalling React-runtimeexecutor (0.86.2)[0m
+[32mInstalling React-runtimescheduler (0.86.2)[0m
+[32mInstalling React-timing (0.86.2)[0m
+[32mInstalling React-utils (0.86.2)[0m
+[32mInstalling React-viewtransitionnativemodule (0.86.2)[0m
+[32mInstalling React-webperformancenativemodule (0.86.2)[0m
+[32mInstalling ReactAppDependencyProvider (0.86.2)[0m
+[32mInstalling ReactCodegen (0.86.2)[0m
+[32mInstalling ReactCommon (0.86.2)[0m
+[32mInstalling ReactNativeDependencies (0.86.2)[0m
+[32mInstalling Yoga (0.0.0)[0m
+[32mInstalling hermes-engine (250829098.0.16)[0m
+[32mInstalling react-native-safe-area-context (5.7.0)[0m
+[32mInstalling react-native-skia (2.6.2)[0m
+[Expo] Ensuring required slices in ExpoModulesJSI.xcframework
+Generating Pods project
+Setting USE_HERMES build settings
+Setting REACT_NATIVE_PATH build settings
+Setting SWIFT_ACTIVE_COMPILATION_CONDITIONS build settings
+[Ccache]: Removing Ccache from CC, LD, CXX & LDPLUSPLUS build settings
+Setting SWIFT_ENABLE_EXPLICIT_MODULES build settings
+[32m[ReactNativeCore] [0mProcessing VFS overlay file...
+[32m[ReactNativeCore] [0m  Created VFS overlay at /Users/maria/Desktop/Dev/pray/ios/Pods/React-Core-prebuilt/React-VFS.yaml
+[32m[ReactNativeCore] [0mVFS overlay setup complete
+[32m[ReactNativeCore] [0mConfiguring xcconfig for prebuilt React Native Core...
+[32m[ReactNativeCore] [0mPrebuilt xcconfig configuration complete
+[SPM] Cleaning old SPM dependencies from Pods project
+[SPM] Adding SPM dependencies to Pods project
+[Privacy Manifest Aggregation] Appending aggregated reasons to existing PrivacyInfo.xcprivacy file.
+[Privacy Manifest Aggregation] Reading .xcprivacy files to aggregate all used Required Reason APIs.
+Setting CLANG_CXX_LANGUAGE_STANDARD to c++20 on /Users/maria/Desktop/Dev/pray/ios/Lampada.xcodeproj
+
+[33m==================== DEPRECATION NOTICE =====================[0m
+[33mCalling `pod install` directly is deprecated in React Native[0m
+[33mbecause we are moving away from Cocoapods toward alternative[0m
+[33msolutions to build the project.[0m
+[33m* If you are using Expo, please run:[0m
+[33m`npx expo run:ios`[0m
+[33m* If you are using the Community CLI, please run:[0m
+[33m`yarn ios`[0m
+[33m=============================================================[0m
+
+[32mPod install took 63 [s] to run[0m
+Integrating client project
+[32mPod installation complete! There are 106 dependencies from the Podfile and 105 total pods installed.[0m
+[34m[Expo-precompiled] [0mPrecompiled modules:
+[34m[Expo-precompiled] [0m  📦 [32mExpoFileSystem[0m [2m(57.0.5)[0m
+[34m[Expo-precompiled] [0m  📦 [32mExpoFont[0m [2m(57.0.1)[0m
+[34m[Expo-precompiled] [0m  📦 [32mExpoModulesCore[0m [2m(57.0.12)[0m
+[34m[Expo-precompiled] [0m  📦 [32mExpoModulesWorklets[0m [2m(57.0.12)[0m
+[34m[Expo] [0mDisabling SWIFT_EMIT_MODULE_INTERFACE for pod targets (prebuilt React compatibility)
+[34m[Expo-precompiled] [0mLooking for ExpoModulesCore.xcframework at: /Users/maria/Desktop/Dev/pray/ios/Pods/ExpoModulesCore/ExpoModulesCore.xcframework
+[34m[Expo-precompiled] [0mAdding ExpoModulesJSI header search paths to all targets
+[34m[Expo] [0mAdding '[Expo] Remove duplicate codegen output' build phase to ReactCodegen
+[34m[Expo] [0m[33mRaised resource bundle deployment targets to match their pods: RNCAsyncStorage-RNCAsyncStorage_resources, RNSVG-RNSVGFilters[0m

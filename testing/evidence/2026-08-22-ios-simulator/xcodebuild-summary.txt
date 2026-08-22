@@ -1,0 +1,4 @@
+warnings=2796
+errors=0
+build_succeeded_markers=1
+build_failed_markers=0

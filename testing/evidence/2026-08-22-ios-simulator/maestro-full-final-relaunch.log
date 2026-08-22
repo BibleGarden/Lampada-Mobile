@@ -1,0 +1,11 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-smoke-full-relaunch
+Launch app "com.marianovikov.lampada"... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Assert that ".*Финальный smoke.*" is visible... COMPLETED
+Tap on ".*Финальный smoke.*"... COMPLETED
+Assert that ".*Финальный ответ.*" is visible... COMPLETED
+Assert that ".*Финальный вывод.*" is visible... COMPLETED
+Take screenshot testing/evidence/2026-08-22-ios-simulator/final-SMK-007-relaunch... COMPLETED

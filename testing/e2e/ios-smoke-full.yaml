@@ -1,0 +1,49 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Финальный smoke"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- assertVisible: ".*5 минут.*финальный smoke.*"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 450
+- assertVisible: "НАЖМИ И ДЕРЖИ"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- assertVisible: "Ответить"
+- tapOn: "Ответить"
+- tapOn:
+    point: "50%,62%"
+- inputText: "Финальный ответ"
+- tapOn:
+    point: "65%,50%"
+- assertVisible: "Изменить"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn: "Одна-две строки…"
+- inputText: "Финальный вывод"
+- pressKey: Enter
+- tapOn: "Сохранить и завершить"
+- assertVisible: "Огонёк горит"
+- assertVisible: "«Финальный вывод»"
+- tapOn: "На главную"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: ".*Финальный smoke.*"
+- tapOn: ".*Финальный smoke.*"
+- assertVisible: ".*Финальный ответ.*"
+- assertVisible: ".*Финальный вывод.*"

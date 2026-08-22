@@ -1,0 +1,13 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: false
+- assertVisible: "Начать молитву"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: ".*Финальный smoke.*"
+- tapOn: ".*Финальный smoke.*"
+- assertVisible: ".*Финальный ответ.*"
+- assertVisible: ".*Финальный вывод.*"
