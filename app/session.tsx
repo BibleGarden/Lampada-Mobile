@@ -46,6 +46,7 @@ function SessionScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
+  const [answerOpen, setAnswerOpen] = useState(false);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
   const readerRef = useRef<BottomSheet>(null);
@@ -79,11 +80,24 @@ function SessionScreen() {
   // конец таймера → рефлексия
   useEffect(() => {
     if (s.remaining === 0 && !finished.current) {
+      // Ноль на таймере не обрывает мысль: ждём явного сохранения или
+      // закрытия шторки, включая активную голосовую запись.
+      if (answerOpen) return;
       finished.current = true;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       finishTimeout.current = setTimeout(goToReflect, 400);
     }
-  }, [s.remaining]);
+  }, [s.remaining, answerOpen]);
+
+  // Если шторка начала открываться в 400-мс окне перед переходом,
+  // запланированное завершение отменяется и ждёт ответа.
+  useEffect(() => {
+    if (s.remaining === 0 && answerOpen && finishTimeout.current) {
+      clearTimeout(finishTimeout.current);
+      finishTimeout.current = null;
+      finished.current = false;
+    }
+  }, [s.remaining, answerOpen]);
 
   // кольцо: доля прошедшего времени (или минутный цикл в ∞-режиме)
   useEffect(() => {
@@ -109,7 +123,12 @@ function SessionScreen() {
   };
 
   const timerLabel = s.remaining === null ? fmtTime(s.elapsed) : fmtTime(s.remaining);
-  const timerSub = s.remaining === null ? 'идёт' : 'осталось';
+  const timerSub =
+    s.remaining === 0 && answerOpen
+      ? 'закончи ответ'
+      : s.remaining === null
+        ? 'идёт'
+        : 'осталось';
   // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
 
@@ -180,7 +199,13 @@ function SessionScreen() {
         </View>
       </Animated.View>
 
-      <AnswerSheet sheetRef={answerRef} openRef={openAnswerRef} flushRef={flushAnswerRef} />
+      <AnswerSheet
+        sheetRef={answerRef}
+        openRef={openAnswerRef}
+        flushRef={flushAnswerRef}
+        onEditingChange={setAnswerOpen}
+        timeExpired={s.remaining === 0}
+      />
       <ScriptureReader sheetRef={readerRef} />
     </View>
   );

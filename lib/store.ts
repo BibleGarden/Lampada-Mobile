@@ -362,7 +362,6 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     if (
       updatedForReflect.sessionId !== null &&
       updatedForReflect.remaining !== null &&
-      updatedForReflect.remaining > 0 &&
       updatedForReflect.remaining <= 15
     ) {
       prepareReflectQuestion(updatedForReflect);

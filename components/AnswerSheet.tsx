@@ -48,11 +48,21 @@ type Props = {
   openRef: React.MutableRefObject<(() => void) | null>;
   /** Сессия зовёт это перед уходом на рефлексию: дописать открытый черновик */
   flushRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  /** Таймер не завершает молитву, пока человек отвечает в открытой шторке. */
+  onEditingChange?: (editing: boolean) => void;
+  /** После нуля ответ завершается только явной кнопкой или подтверждённой отменой. */
+  timeExpired?: boolean;
 };
 
 // Шторка ответа: текст + голосовые записи. Открывается на текущем вопросе,
 // черновик считывается из сохранённого ответа.
-export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
+export default function AnswerSheet({
+  sheetRef,
+  openRef,
+  flushRef,
+  onEditingChange,
+  timeExpired = false,
+}: Props) {
   // подписка только на нужное — не ререндерим шторку от тика таймера
   const questions = useSession((st) => st.questions);
   const qIndex = useSession((st) => st.qIndex);
@@ -65,6 +75,7 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
+  const savingRef = useRef(false);
   // qIndex фиксируется при открытии шторки: пока человек пишет, индекс в store
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
@@ -89,8 +100,9 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
     setConfirmDeleteId(null);
     setConfirmCancel(false);
     setPlayingId(null);
+    onEditingChange?.(true);
     sheetRef.current?.snapToIndex(0);
-  }, [sheetRef]);
+  }, [sheetRef, onEditingChange]);
 
   useEffect(() => {
     openRef.current = handleOpen;
@@ -185,23 +197,30 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
   };
 
   const save = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     let finalRecs = recs;
-    // активная запись не должна молча продолжаться после сохранения
-    if (recorderState.isRecording) {
-      const draft = await stopRecording();
-      if (draft) finalRecs = [...recs, draft];
+    try {
+      // активная запись не должна молча продолжаться после сохранения
+      if (recorderState.isRecording) {
+        const draft = await stopRecording();
+        if (draft) finalRecs = [...recs, draft];
+      }
+      saveAnswerToStore(answerIndexRef.current, text, finalRecs);
+      // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
+      // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
+      openSheetRef.current = false;
+      Keyboard.dismiss();
+      sheetRef.current?.close();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } finally {
+      savingRef.current = false;
     }
-    saveAnswerToStore(answerIndexRef.current, text, finalRecs);
-    // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
-    // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
-    openSheetRef.current = false;
-    Keyboard.dismiss();
-    sheetRef.current?.close();
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   // «Отмена» с подтверждением: несохранённый контент не выбрасываем молча
   const requestClose = () => {
+    if (savingRef.current) return;
     const hasContent = !!text.trim() || recs.length > 0;
     if (!hasContent || confirmCancel) {
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
@@ -250,9 +269,11 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
       snapPoints={snapPoints}
       // без этого v5 подмешивает snap-точку «по контенту», и индексы съезжают
       enableDynamicSizing={false}
-      enablePanDownToClose
+      enablePanDownToClose={!timeExpired}
       onChange={(i) => {
-        openSheetRef.current = i >= 0;
+        const editing = i >= 0;
+        openSheetRef.current = editing;
+        onEditingChange?.(editing);
         // закрыли (свайпом/кнопкой) во время записи — остановить микрофон
         if (i < 0 && recorder.isRecording) stopRecording();
         if (i < 0 && playingId !== null) {
@@ -333,7 +354,11 @@ export default function AnswerSheet({ sheetRef, openRef, flushRef }: Props) {
               {confirmCancel ? 'Точно закрыть?' : 'Отмена'}
             </Text>
           </Pressable>
-          <GoldButton label="Сохранить" onPress={save} style={{ flex: 1 }} />
+          <GoldButton
+            label={timeExpired ? 'Сохранить и завершить' : 'Сохранить'}
+            onPress={save}
+            style={{ flex: 1 }}
+          />
         </View>
       </BottomSheetScrollView>
 
