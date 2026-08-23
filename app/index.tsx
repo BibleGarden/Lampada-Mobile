@@ -69,7 +69,7 @@ export default function Home() {
               после — в полную силу: «поддержи» обретает буквальный смысл */}
           <Flame width={sc(240)} lit={streak.prayedToday} />
           <Text style={styles.title}>
-            {streak.prayedToday ? 'Лампада горит' : 'Поддержи огонёк'}
+            {streak.prayedToday ? 'Огонёк горит' : 'Поддержи огонёк'}
           </Text>
           <View style={styles.dotsRow}>
             {dots.map((kind, i) => (

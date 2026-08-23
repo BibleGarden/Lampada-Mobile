@@ -33,7 +33,7 @@ appId: com.marianovikov.lampada
 - assertVisible: ".*END-002 вывод молитвы.*"
 - takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-002-done-takeaway-card
 - tapOn: "На главную"
-- assertVisible: "Лампада горит"
+- assertVisible: "Огонёк горит"
 - tapOn:
     point: "76%,12%"
 - assertVisible: "ДНЕВНИК"

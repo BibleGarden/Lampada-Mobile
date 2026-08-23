@@ -1,4 +1,4 @@
-# Лампада
+# Twinkler
 
 Молитвенное приложение на Expo (SDK 57) / React Native.
 

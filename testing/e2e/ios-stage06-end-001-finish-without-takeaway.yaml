@@ -32,7 +32,7 @@ appId: com.marianovikov.lampada
 - assertNotVisible: "ТЫ ВЫНЕС ИЗ МОЛИТВЫ"
 - takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-done-no-takeaway-card
 - tapOn: "На главную"
-- assertVisible: "Лампада горит"
+- assertVisible: "Огонёк горит"
 - takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
 - tapOn:
     point: "76%,12%"

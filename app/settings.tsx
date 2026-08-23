@@ -61,10 +61,6 @@ export default function Settings() {
             <View style={styles.row}>
               <View style={{ flex: 1, paddingRight: sc(12) }}>
                 <Text style={styles.rowTitle}>Учитывать мои ответы</Text>
-                <Text style={styles.rowSub}>
-                  Спутник будет опираться на то, что ты пишешь во время молитвы,
-                  подбирая следующие вопросы и места Писания.
-                </Text>
               </View>
               <Toggle value={shareAnswers} onChange={setShareAnswers} />
             </View>
@@ -73,8 +69,8 @@ export default function Settings() {
 
             <Text style={styles.disclaimer}>
               {shareAnswers
-                ? 'Текст твоих ответов будет отправляться на сервер вместе с запросом к ИИ — только ради подбора вопросов, он не сохраняется и не используется иначе. Выключи, и записи снова останутся только на устройстве.'
-                : 'Сейчас твои ответы не покидают устройство. Если включить, их текст будет отправляться на сервер вместе с запросом к ИИ — вопросы станут внимательнее к тому, что ты пишешь.'}
+                ? 'Текст твоих ответов будет отправляться на сервер вместе с запросами к ИИ — только ради подбора вопросов, он не сохраняется и не используется иначе. Выключи, если хочешь чтобы твои записи оставались только локально.'
+                : 'Сейчас твои ответы не покидают устройство. Если включить, их текст будет отправляться на сервер вместе с запросами к ИИ — вопросы станут учитывать твои ответы в текущей молитве.'}
             </Text>
           </View>
         </ScrollView>
@@ -113,13 +109,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansMedium,
     fontSize: sc(13.5),
     color: colors.parchment,
-    marginBottom: sc(4),
-  },
-  rowSub: {
-    fontFamily: fonts.sans,
-    fontSize: sc(11),
-    lineHeight: sc(15.5),
-    color: colors.creamDim,
   },
   divider: {
     height: 1,
