@@ -18,6 +18,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Close, PauseIcon, PlayIcon, Trash } from '../components/icons';
 import * as db from '../lib/db';
 import { fmtTime } from '../lib/store';
+import { transcribeRecording } from '../lib/transcription';
 import { colors, fonts, radius, sc } from '../lib/theme';
 
 // «5 июля», «5 июля 2025» — год только если не текущий
@@ -58,6 +59,10 @@ export default function Journal() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const detailRequest = useRef(0);
+  const transcriptionControllers = useRef(new Map<number, AbortController>());
+  const [transcriptionStates, setTranscriptionStates] = useState<
+    Record<number, 'loading' | 'error'>
+  >({});
   const [playingUri, setPlayingUri] = useState<string | null>(null);
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
@@ -83,6 +88,8 @@ export default function Journal() {
   useEffect(
     () => () => {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
+      for (const controller of transcriptionControllers.current.values()) controller.abort();
+      transcriptionControllers.current.clear();
     },
     [],
   );
@@ -92,6 +99,9 @@ export default function Journal() {
   }, [playerStatus.didJustFinish]);
 
   const toggleOpen = useCallback(async (id: number) => {
+    for (const controller of transcriptionControllers.current.values()) controller.abort();
+    transcriptionControllers.current.clear();
+    setTranscriptionStates({});
     const request = ++detailRequest.current;
     Haptics.selectionAsync();
     setConfirmDeleteId(null);
@@ -109,6 +119,46 @@ export default function Journal() {
     const nextDetail = await db.getJournalDetail(id);
     if (detailRequest.current === request) setDetail(nextDetail);
   }, [openId, playingUri, player]);
+
+  const startJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
+    transcriptionControllers.current.get(recording.id)?.abort();
+    const controller = new AbortController();
+    transcriptionControllers.current.set(recording.id, controller);
+    setTranscriptionStates((current) => ({ ...current, [recording.id]: 'loading' }));
+
+    try {
+      const transcript = await transcribeRecording(recording.uri, controller.signal);
+      if (transcriptionControllers.current.get(recording.id) !== controller) return;
+      await db.updateRecordingTranscript(recording.id, transcript);
+      if (transcriptionControllers.current.get(recording.id) !== controller) return;
+      setDetail((current) =>
+        current === null
+          ? current
+          : {
+              ...current,
+              recordings: current.recordings.map((item) =>
+                item.id === recording.id ? { ...item, transcript } : item,
+              ),
+            },
+      );
+      setTranscriptionStates((current) => {
+        const next = { ...current };
+        delete next[recording.id];
+        return next;
+      });
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      console.warn(
+        'Не удалось расшифровать запись из дневника',
+        error instanceof Error ? error.message : 'unknown error',
+      );
+      setTranscriptionStates((current) => ({ ...current, [recording.id]: 'error' }));
+    } finally {
+      if (transcriptionControllers.current.get(recording.id) === controller) {
+        transcriptionControllers.current.delete(recording.id);
+      }
+    }
+  };
 
   const togglePlay = (uri: string) => {
     if (playingUri === uri) {
@@ -130,6 +180,9 @@ export default function Journal() {
         player.pause();
         setPlayingUri(null);
       }
+      for (const controller of transcriptionControllers.current.values()) controller.abort();
+      transcriptionControllers.current.clear();
+      setTranscriptionStates({});
       await db.deleteSession(id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (openId === id) {
@@ -181,12 +234,14 @@ export default function Journal() {
                     {!!a.text.trim() && <Text style={styles.qaAnswer}>{a.text}</Text>}
                     {recs.map((r) => (
                       <RecordingRow
-                        key={r.uri}
+                        key={r.id}
                         uri={r.uri}
                         durationSec={r.durationSec}
                         transcript={r.transcript}
                         playing={playingUri === r.uri}
                         onToggle={() => togglePlay(r.uri)}
+                        transcriptionState={transcriptionStates[r.id]}
+                        onTranscribe={() => startJournalTranscription(r)}
                       />
                     ))}
                   </View>
@@ -199,12 +254,14 @@ export default function Journal() {
                 .filter((r) => !detail.answers.some((a) => a.questionIndex === r.questionIndex))
                 .map((r) => (
                   <RecordingRow
-                    key={r.uri}
+                    key={r.id}
                     uri={r.uri}
                     durationSec={r.durationSec}
                     transcript={r.transcript}
                     playing={playingUri === r.uri}
                     onToggle={() => togglePlay(r.uri)}
+                    transcriptionState={transcriptionStates[r.id]}
+                    onTranscribe={() => startJournalTranscription(r)}
                   />
                 ))}
 
@@ -284,12 +341,16 @@ function RecordingRow({
   transcript,
   playing,
   onToggle,
+  transcriptionState,
+  onTranscribe,
 }: {
   uri: string;
   durationSec: number;
   transcript: string | null;
   playing: boolean;
   onToggle: () => void;
+  transcriptionState?: 'loading' | 'error';
+  onTranscribe: () => void;
 }) {
   return (
     <View style={styles.recBlock}>
@@ -300,6 +361,20 @@ function RecordingRow({
         <Text style={styles.recLabel}>Аудиозапись · {fmtTime(durationSec)}</Text>
       </Pressable>
       {!!transcript && <Text style={styles.recTranscript}>{transcript}</Text>}
+      {!transcript && transcriptionState === 'loading' ? (
+        <Text style={styles.recTranscriptionState}>Расшифровываю…</Text>
+      ) : !transcript && transcriptionState === 'error' ? (
+        <View style={styles.recTranscriptionErrorRow}>
+          <Text style={styles.recTranscriptionError}>Не удалось расшифровать</Text>
+          <Pressable onPress={onTranscribe} hitSlop={8}>
+            <Text style={styles.recTranscriptionRetry}>Повторить</Text>
+          </Pressable>
+        </View>
+      ) : !transcript ? (
+        <Pressable onPress={onTranscribe} style={styles.recTranscriptionAction}>
+          <Text style={styles.recTranscriptionActionLabel}>Расшифровать</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -432,6 +507,46 @@ const styles = StyleSheet.create({
     fontSize: sc(13.5),
     lineHeight: sc(19),
     color: colors.body,
+  },
+  recTranscriptionState: {
+    marginTop: sc(6),
+    marginLeft: sc(36),
+    fontFamily: fonts.sans,
+    fontSize: sc(11.5),
+    color: colors.warmHint,
+  },
+  recTranscriptionAction: {
+    alignSelf: 'flex-start',
+    marginTop: sc(7),
+    marginLeft: sc(36),
+    paddingVertical: sc(5),
+    paddingHorizontal: sc(9),
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(127,174,154,.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(127,174,154,.3)',
+  },
+  recTranscriptionActionLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(11),
+    color: colors.greenSoft,
+  },
+  recTranscriptionErrorRow: {
+    marginTop: sc(6),
+    marginLeft: sc(36),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(10),
+  },
+  recTranscriptionError: {
+    fontFamily: fonts.sans,
+    fontSize: sc(11.5),
+    color: '#ec9b8e',
+  },
+  recTranscriptionRetry: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(11.5),
+    color: colors.goldSoft,
   },
   deleteBtn: {
     flexDirection: 'row',

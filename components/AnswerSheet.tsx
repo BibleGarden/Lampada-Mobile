@@ -124,6 +124,7 @@ export default function AnswerSheet({
 
   const startTranscription = useCallback(
     (recording: RecordingDraft) => {
+      if (savingRef.current) return;
       pendingTranscriptions.current.get(recording.id)?.controller.abort();
       const controller = new AbortController();
       updateRecs((current) =>
@@ -272,11 +273,10 @@ export default function AnswerSheet({
         uri,
         durationSec: Math.max(1, Math.round(durationMillis / 1000)),
         transcript: null,
-        transcriptState: 'loading',
+        transcriptState: 'idle',
       };
       unsavedRecordingUris.current.add(uri);
       updateRecs((current) => [...current, draft]);
-      startTranscription(draft);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       return draft;
     } finally {
@@ -483,7 +483,7 @@ export default function AnswerSheet({
           <Text style={styles.micLabel}>Записать аудио</Text>
         </Pressable>
         <Text style={styles.transcriptionPrivacy}>
-          Для расшифровки запись отправляется в Gemini. Сервер приложения её не сохраняет.
+          Аудио отправится в Gemini, только если нажмёшь «Расшифровать».
         </Text>
 
         {recs.map((r, i) => {
@@ -534,7 +534,17 @@ export default function AnswerSheet({
                   multiline
                   style={styles.transcriptInput}
                 />
-              ) : null}
+              ) : (
+                <Pressable
+                  onPress={() => startTranscription(r)}
+                  style={({ pressed }) => [
+                    styles.transcriptionAction,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <Text style={styles.transcriptionActionLabel}>Расшифровать</Text>
+                </Pressable>
+              )}
             </View>
           );
         })}
@@ -758,6 +768,21 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: sc(12),
     color: colors.warmHint,
+  },
+  transcriptionAction: {
+    alignSelf: 'flex-start',
+    marginTop: sc(9),
+    paddingVertical: sc(6),
+    paddingHorizontal: sc(10),
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(127,174,154,.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(127,174,154,.3)',
+  },
+  transcriptionActionLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(11.5),
+    color: colors.greenSoft,
   },
   transcriptionErrorRow: {
     marginTop: sc(9),

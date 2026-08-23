@@ -211,6 +211,7 @@ export type JournalEntry = {
 export type JournalDetail = {
   answers: { questionIndex: number; question: string; text: string }[];
   recordings: {
+    id: number;
     questionIndex: number;
     uri: string;
     durationSec: number;
@@ -287,24 +288,36 @@ export async function getJournalDetail(sessionId: number): Promise<JournalDetail
     sessionId,
   );
   const recordings = await d.getAllAsync<{
+    id: number;
     question_index: number;
     uri: string;
     duration_sec: number;
     transcript: string;
   }>(
-    `SELECT question_index, uri, duration_sec, transcript
+    `SELECT id, question_index, uri, duration_sec, transcript
        FROM recordings WHERE session_id = ? ORDER BY question_index, id`,
     sessionId,
   );
   return {
     answers: answers.map((a) => ({ questionIndex: a.question_index, question: a.question, text: a.text })),
     recordings: recordings.map((r) => ({
+      id: r.id,
       questionIndex: r.question_index,
       uri: resolveRecordingUri(r.uri, Paths.document.uri),
       durationSec: r.duration_sec,
       transcript: r.transcript.trim() || null,
     })),
   };
+}
+
+/** Сохранить расшифровку одной записи без перезаписи остальных файлов ответа. */
+export async function updateRecordingTranscript(recordingId: number, transcript: string) {
+  const d = await getDb();
+  await d.runAsync(
+    'UPDATE recordings SET transcript = ? WHERE id = ?',
+    transcript.trim(),
+    recordingId,
+  );
 }
 
 /** Удалить молитву со всеми ответами и записями. День в стрике остаётся. */
