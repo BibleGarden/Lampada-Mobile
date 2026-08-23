@@ -2,6 +2,8 @@
 
 Молитвенное приложение на Expo (SDK 57) / React Native.
 
+Текущее устройство проекта описано в [`architect/README.md`](architect/README.md), история архитектурных решений — в [`architect/decisions/`](architect/decisions/README.md).
+
 ## Разработка
 
 ```bash
