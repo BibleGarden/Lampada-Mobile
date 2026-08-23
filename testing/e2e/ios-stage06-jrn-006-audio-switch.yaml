@@ -1,0 +1,22 @@
+appId: com.marianovikov.lampada
+---
+# JRN-006: closing one detail stops its audio; another source starts independently.
+- launchApp:
+    stopApp: true
+    clearState: false
+- runFlow:
+    when:
+      visible: "Начать молитву"
+    commands:
+      - tapOn:
+          point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- tapOn: ".*JRN-008 upgrade retest.*"
+- tapOn: ".*Аудиозапись.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-006-first-playing
+- tapOn: ".*JRN-008 upgrade retest.*"
+- assertVisible: ".*JRN-006 second audio.*"
+- tapOn: ".*JRN-006 second audio.*"
+- tapOn: ".*Аудиозапись.*"
+- assertVisible: "ДНЕВНИК"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-006-second-playing

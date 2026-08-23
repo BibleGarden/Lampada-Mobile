@@ -1,0 +1,27 @@
+appId: com.marianovikov.lampada
+---
+# ANS-001: a saved text answer is restored when the same question is reopened.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "ANS text persistence"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- tapOn:
+    point: "50%,62%"
+- inputText: "ANS-001 сохранённый текст"
+- tapOn:
+    point: "65%,50%"
+- assertVisible: "Изменить"
+- tapOn: "Изменить"
+- takeScreenshot: ANS-001-restored-text

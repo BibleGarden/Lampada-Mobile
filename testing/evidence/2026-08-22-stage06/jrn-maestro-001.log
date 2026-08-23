@@ -1,0 +1,14 @@
+Running on iPhone 17 - iOS 26.5 - 8ED60129-5BE6-4D38-8394-312D6FD18447
+ > Flow ios-stage06-jrn-001-empty-history
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Assert that "Здесь появятся твои молитвы" is visible... COMPLETED
+Take screenshot JRN-001-empty-history... COMPLETED
+Tap on "Найти молитву…"... COMPLETED
+Input text тревога... COMPLETED
+Assert that "тревога" is visible... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that "Ничего не нашлось — попробуй другое слово" is visible... COMPLETED
+Take screenshot JRN-001-empty-search... COMPLETED

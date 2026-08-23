@@ -1,0 +1,33 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-stage06-end-003-004-idempotency
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text END-003 double finish... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ" is visible... COMPLETED
+Tap on "Завершить"... COMPLETED
+Tap on point (50%,79%)... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
+Tap on "На главную"... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text END-004 second prayer... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Tap on "Завершить"... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
+Tap on "На главную"... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that ".*END-003 double finish.*" is visible... COMPLETED
+Assert that ".*END-004 second prayer.*" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-003-004-two-prayers-one-day... COMPLETED

@@ -1,0 +1,36 @@
+appId: com.marianovikov.lampada
+---
+# JRN-003/004: search covers topic, takeaway, question and answer; Cyrillic is case-insensitive.
+- launchApp:
+    stopApp: true
+    clearState: false
+- runFlow:
+    when:
+      visible: "ДНЕВНИК"
+    commands:
+      - tapOn:
+          point: "10%,8%"
+- assertVisible: "Начать молитву"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- tapOn: "Найти молитву…"
+- inputText: "END-004"
+- hideKeyboard
+- assertVisible: ".*END-004 second prayer.*"
+- tapOn: "END-004"
+- eraseText
+- inputText: "надежда"
+- hideKeyboard
+- assertVisible: ".*END-003 double finish.*"
+- tapOn: "надежда"
+- eraseText
+- inputText: "тревожит"
+- hideKeyboard
+- assertVisible: ".*END-003 double finish.*"
+- tapOn: "тревожит"
+- eraseText
+- inputText: "кириллица"
+- hideKeyboard
+- assertVisible: ".*END-003 double finish.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-003-004-search-cyrillic

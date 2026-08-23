@@ -1,0 +1,31 @@
+appId: com.marianovikov.lampada
+---
+# JRN-002: a prayer abandoned with no answers and no takeaway never reaches the journal.
+- launchApp:
+    stopApp: true
+    clearState: false
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "JRN-002 брошенная сессия"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-002-session-started
+# kill the app mid-prayer: nothing was answered, nothing was concluded
+- stopApp
+- launchApp:
+    stopApp: false
+    clearState: false
+- assertVisible: "Начать молитву"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: "Здесь появятся твои молитвы"
+- assertNotVisible: "JRN-002 брошенная сессия"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-002-journal-after-abandon

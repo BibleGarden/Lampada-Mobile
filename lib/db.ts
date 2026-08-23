@@ -1,5 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { File, Paths } from 'expo-file-system';
+import { dayKey, getWeekIndicators } from './streak';
+import { resolveRecordingUri, toStoredRecordingUri } from './recordingUri';
 
 // Все данные — только на устройстве.
 
@@ -90,6 +92,7 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
       day TEXT PRIMARY KEY
     );
   `);
+  await migrateRecordingUris(db);
   // дозаполнить prayed_days из старого стрика: count дней, заканчивая last_day.
   // Идемпотентно (OR IGNORE), так что можно гнать при каждом открытии
   const last = await db.getFirstAsync<{ value: string }>(
@@ -108,6 +111,16 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
     }
   }
   return db;
+}
+
+async function migrateRecordingUris(db: SQLite.SQLiteDatabase) {
+  const rows = await db.getAllAsync<{ id: number; uri: string }>('SELECT id, uri FROM recordings');
+  for (const row of rows) {
+    const storedUri = toStoredRecordingUri(row.uri, Paths.document.uri);
+    if (storedUri !== row.uri) {
+      await db.runAsync('UPDATE recordings SET uri = ? WHERE id = ? AND uri = ?', storedUri, row.id, row.uri);
+    }
+  }
 }
 
 export async function createSession(topic: string, plannedMinutes: number): Promise<number> {
@@ -150,6 +163,10 @@ export async function replaceRecordings(
   recordings: { uri: string; durationSec: number }[],
 ) {
   const d = await getDb();
+  const storedRecordings = recordings.map((r) => ({
+    uri: toStoredRecordingUri(r.uri, Paths.document.uri),
+    durationSec: r.durationSec,
+  }));
   const previous = await d.getAllAsync<{ uri: string }>(
     'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
     sessionId,
@@ -161,7 +178,7 @@ export async function replaceRecordings(
       sessionId,
       questionIndex,
     );
-    for (const r of recordings) {
+    for (const r of storedRecordings) {
       await d.runAsync(
         'INSERT INTO recordings (session_id, question_index, uri, duration_sec) VALUES (?, ?, ?, ?)',
         sessionId,
@@ -172,7 +189,7 @@ export async function replaceRecordings(
     }
   });
 
-  const retained = new Set(recordings.map((r) => r.uri));
+  const retained = new Set(storedRecordings.map((r) => r.uri));
   deleteRecordingFiles(previous.map((r) => r.uri).filter((uri) => !retained.has(uri)));
 }
 
@@ -255,7 +272,11 @@ export async function getJournalDetail(sessionId: number): Promise<JournalDetail
   );
   return {
     answers: answers.map((a) => ({ questionIndex: a.question_index, question: a.question, text: a.text })),
-    recordings: recordings.map((r) => ({ questionIndex: r.question_index, uri: r.uri, durationSec: r.duration_sec })),
+    recordings: recordings.map((r) => ({
+      questionIndex: r.question_index,
+      uri: resolveRecordingUri(r.uri, Paths.document.uri),
+      durationSec: r.duration_sec,
+    })),
   };
 }
 
@@ -277,7 +298,7 @@ export async function deleteSession(sessionId: number) {
 function deleteRecordingFiles(uris: string[]) {
   for (const uri of uris) {
     try {
-      const file = new File(uri);
+      const file = new File(resolveRecordingUri(uri, Paths.document.uri));
       if (file.exists) file.delete();
     } catch {
       // The database deletion must still succeed if iOS already removed a file.
@@ -304,26 +325,17 @@ export async function getFavorites(): Promise<string[]> {
 
 // ---- стрик: день засчитывается по календарной дате завершённой сессии ----
 
-const dayKey = (date: Date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
 export type Streak = { count: number; prayedToday: boolean; week: boolean[] };
 
-/** Последние 7 дней: [0] — 6 дней назад, [6] — сегодня; true = молился */
 async function getWeek(): Promise<boolean[]> {
   const d = await getDb();
-  const rows = await d.getAllAsync<{ day: string }>(
-    'SELECT day FROM prayed_days ORDER BY day DESC LIMIT 7',
-  );
-  const prayed = new Set(rows.map((r) => r.day));
-  return Array.from({ length: 7 }, (_, i) => {
-    const dt = new Date();
-    dt.setDate(dt.getDate() - (6 - i));
-    return prayed.has(dayKey(dt));
+  return getWeekIndicators(async (firstDay, lastDay) => {
+    const rows = await d.getAllAsync<{ day: string }>(
+      'SELECT day FROM prayed_days WHERE day BETWEEN ? AND ?',
+      firstDay,
+      lastDay,
+    );
+    return rows.map((row) => row.day);
   });
 }
 

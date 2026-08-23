@@ -1,0 +1,46 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-stage06-scr-002-favorite-relaunch
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-002 favorite relaunch... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Tap on point (84%,70%)... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Tap on "В избранное"... COMPLETED
+Assert that "В избранном" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-before-relaunch... COMPLETED
+Stop com.marianovikov.lampada... COMPLETED
+Launch app "com.marianovikov.lampada" without stopping app... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-002 favorite restored... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Tap on point (84%,70%)... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Assert that "В избранном" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-after-relaunch... COMPLETED
+Tap on "В избранном"... COMPLETED
+Assert that "В избранное" is visible... COMPLETED
+Stop com.marianovikov.lampada... COMPLETED
+Launch app "com.marianovikov.lampada" without stopping app... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-002 favorite removed... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Tap on point (84%,70%)... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Assert that "В избранное" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-removed-after-relaunch... COMPLETED

@@ -21,6 +21,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { File } from 'expo-file-system';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   AudioModule,
   RecordingPresets,
@@ -63,6 +65,7 @@ export default function AnswerSheet({
   onEditingChange,
   timeExpired = false,
 }: Props) {
+  const insets = useSafeAreaInsets();
   // подписка только на нужное — не ререндерим шторку от тика таймера
   const questions = useSession((st) => st.questions);
   const qIndex = useSession((st) => st.qIndex);
@@ -76,6 +79,11 @@ export default function AnswerSheet({
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
   const savingRef = useRef(false);
+  // Не даём keyboardDidHide вернуть шторку на 62% после старта записи.
+  const recordingOverlayActiveRef = useRef(false);
+  // Только эти файлы принадлежат текущему несохранённому черновику. Записи,
+  // загруженные из сохранённого ответа, нельзя удалять при отмене редактирования.
+  const unsavedRecordingUris = useRef(new Set<string>());
   // qIndex фиксируется при открытии шторки: пока человек пишет, индекс в store
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
@@ -132,7 +140,7 @@ export default function AnswerSheet({
       if (openSheetRef.current) sheetRef.current?.snapToIndex(1);
     });
     const hide = Keyboard.addListener('keyboardDidHide', () => {
-      if (openSheetRef.current) sheetRef.current?.snapToIndex(0);
+      if (openSheetRef.current && !recordingOverlayActiveRef.current) sheetRef.current?.snapToIndex(0);
     });
     return () => {
       show.remove();
@@ -141,6 +149,8 @@ export default function AnswerSheet({
   }, [sheetRef]);
 
   const startRecording = async () => {
+    // Оверлей записи не должен остаться под открытой клавиатурой.
+    Keyboard.dismiss();
     const perm = await AudioModule.requestRecordingPermissionsAsync();
     if (!perm.granted) return;
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -148,6 +158,10 @@ export default function AnswerSheet({
     // и каждая новая запись затирает файл предыдущей
     await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
     recorder.record();
+    recordingOverlayActiveRef.current = true;
+    // Оверлей измеряется по максимальной высоте BottomSheet: на нижнем
+    // snap-point его stop-контрол попадает за область клипа.
+    sheetRef.current?.snapToIndex(1);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
@@ -155,6 +169,7 @@ export default function AnswerSheet({
     // длительность читаем до stop(): recorderState обновляется раз в 500 мс и занижает
     const durationMillis = recorder.getStatus().durationMillis ?? 0;
     await recorder.stop();
+    recordingOverlayActiveRef.current = false;
     await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
     const uri = recorder.uri;
     if (!uri) return null;
@@ -164,6 +179,7 @@ export default function AnswerSheet({
       durationSec: Math.max(1, Math.round(durationMillis / 1000)),
       transcript: null,
     };
+    unsavedRecordingUris.current.add(uri);
     setRecs((prev) => [...prev, draft]);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     return draft;
@@ -180,6 +196,18 @@ export default function AnswerSheet({
     setPlayingId(r.id);
   };
 
+  const discardUnsavedRecordings = () => {
+    for (const uri of unsavedRecordingUris.current) {
+      try {
+        const file = new File(uri);
+        if (file.exists) file.delete();
+      } catch {
+        // Отмена ответа не должна ломаться, если iOS уже очистила файл.
+      }
+    }
+    unsavedRecordingUris.current.clear();
+  };
+
   const askOrConfirmDelete = (id: number) => {
     if (confirmDeleteId === id) {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
@@ -187,6 +215,15 @@ export default function AnswerSheet({
       if (playingId === id) {
         player.pause();
         setPlayingId(null);
+      }
+      const removed = recs.find((r) => r.id === id);
+      if (removed && unsavedRecordingUris.current.delete(removed.uri)) {
+        try {
+          const file = new File(removed.uri);
+          if (file.exists) file.delete();
+        } catch {
+          // Удаление из списка должно сработать, даже если файл уже недоступен.
+        }
       }
       setRecs((prev) => prev.filter((r) => r.id !== id));
       return;
@@ -207,6 +244,8 @@ export default function AnswerSheet({
         if (draft) finalRecs = [...recs, draft];
       }
       saveAnswerToStore(answerIndexRef.current, text, finalRecs);
+      // После сохранения файлы принадлежат ответу и больше не являются черновиком.
+      unsavedRecordingUris.current.clear();
       // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
       // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
       openSheetRef.current = false;
@@ -225,6 +264,7 @@ export default function AnswerSheet({
     if (!hasContent || confirmCancel) {
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       setConfirmCancel(false);
+      discardUnsavedRecordings();
       openSheetRef.current = false; // см. комментарий в save()
       Keyboard.dismiss();
       sheetRef.current?.close();
@@ -248,11 +288,21 @@ export default function AnswerSheet({
     };
   });
 
+  // Пока в шторке есть черновик, жест и тап по фону не должны обходить
+  // двухшаговое подтверждение кнопкой «Отмена».
+  const hasUnsavedContent = text.length > 0 || recs.length > 0;
+
   const renderBackdrop = useCallback(
     (props: any) => (
-      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.7} />
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        opacity={0.7}
+        pressBehavior={hasUnsavedContent || timeExpired ? 'none' : 'close'}
+      />
     ),
-    [],
+    [hasUnsavedContent, timeExpired],
   );
 
   const recording = recorderState.isRecording;
@@ -269,18 +319,23 @@ export default function AnswerSheet({
       snapPoints={snapPoints}
       // без этого v5 подмешивает snap-точку «по контенту», и индексы съезжают
       enableDynamicSizing={false}
-      enablePanDownToClose={!timeExpired}
-      onChange={(i) => {
+      // Свайп доступен только для пустой шторки. Иначе закрытие возможно
+      // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
+      enablePanDownToClose={!timeExpired && !hasUnsavedContent}
+      onChange={async (i) => {
         const editing = i >= 0;
         openSheetRef.current = editing;
         onEditingChange?.(editing);
         // закрыли (свайпом/кнопкой) во время записи — остановить микрофон
-        if (i < 0 && recorder.isRecording) stopRecording();
+        if (i < 0 && recorder.isRecording) await stopRecording();
         if (i < 0 && playingId !== null) {
           player.pause();
           setPlayingId(null);
         }
-        if (i < 0) setConfirmCancel(false);
+        if (i < 0) {
+          setConfirmCancel(false);
+          discardUnsavedRecordings();
+        }
       }}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.sheetBg}
@@ -364,14 +419,16 @@ export default function AnswerSheet({
 
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
-        <View style={styles.recOverlay}>
-          <Text style={styles.recOverlayKicker}>идёт запись…</Text>
-          <View style={styles.waveRow}>
-            {WAVE_BARS.map((b, i) => (
-              <WaveBar key={i} color={b.color} delay={b.delay} />
-            ))}
+        <View style={[styles.recOverlay, { paddingBottom: insets.bottom + sc(70) }]}>
+          <View style={styles.recOverlayContent}>
+            <Text style={styles.recOverlayKicker}>идёт запись…</Text>
+            <View style={styles.waveRow}>
+              {WAVE_BARS.map((b, i) => (
+                <WaveBar key={i} color={b.color} delay={b.delay} />
+              ))}
+            </View>
+            <Text style={styles.recOverlayHint}>говори — я запишу твои слова</Text>
           </View>
-          <Text style={styles.recOverlayHint}>говори — я запишу твои слова</Text>
           <Pressable
             onPress={stopRecording}
             style={({ pressed }) => [styles.recDoneBtn, pressed && { transform: [{ scale: 0.97 }] }]}
@@ -566,7 +623,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: 'rgba(18,12,7,.97)',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingTop: sc(28),
+  },
+  recOverlayContent: {
+    alignItems: 'center',
     gap: sc(24),
   },
   recOverlayKicker: {

@@ -1,0 +1,18 @@
+END-003 / END-004 — SQLite после двойного завершения и двух молитв за день
+
+sessions
+--------
+2
+
+prayed_days
+-----------
+1
+
+id  topic                  elapsed_sec  takeaway
+--  ---------------------  -----------  --------
+1   END-003 double finish  13
+2   END-004 second prayer  13
+
+day
+----------
+2026-08-22

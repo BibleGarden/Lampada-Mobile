@@ -1,0 +1,41 @@
+appId: com.marianovikov.lampada
+---
+# END-001: finishing without a takeaway completes the session and shows no empty takeaway card.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Поддержи огонёк"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-before
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "END-001 без вывода"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+# накопить elapsed_sec > 0, иначе сессия не попадёт в дневник (lib/db.ts:223)
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input
+- assertVisible: "Завершить"
+- tapOn: "Завершить"
+- assertVisible: "Огонёк горит"
+# пустая карточка вывода не должна появляться
+- assertNotVisible: "ТЫ ВЫНЕС ИЗ МОЛИТВЫ"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-done-no-takeaway-card
+- tapOn: "На главную"
+- assertVisible: "Лампада горит"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: ".*END-001 без вывода.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-journal

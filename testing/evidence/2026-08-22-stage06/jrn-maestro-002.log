@@ -1,0 +1,20 @@
+Running on iPhone 17 - iOS 26.5 - 8ED60129-5BE6-4D38-8394-312D6FD18447
+ > Flow ios-stage06-jrn-002-abandoned-session
+Launch app "com.marianovikov.lampada"... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text JRN-002 брошенная сессия... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Take screenshot JRN-002-session-started... COMPLETED
+Stop com.marianovikov.lampada... COMPLETED
+Launch app "com.marianovikov.lampada" without stopping app... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Assert that "Здесь появятся твои молитвы" is visible... COMPLETED
+Assert that "JRN-002 брошенная сессия" is not visible... COMPLETED
+Take screenshot JRN-002-journal-after-abandon... COMPLETED

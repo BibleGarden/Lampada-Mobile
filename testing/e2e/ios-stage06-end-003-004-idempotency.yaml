@@ -1,0 +1,50 @@
+appId: com.marianovikov.lampada
+---
+# END-003/004: double completion is idempotent; two prayers share one prayed day.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "END-003 double finish"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn: "Завершить"
+- tapOn:
+    point: "50%,79%"
+- assertVisible: "Огонёк горит"
+- tapOn: "На главную"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "END-004 second prayer"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    point: "10%,11%"
+- tapOn: "Завершить"
+- assertVisible: "Огонёк горит"
+- tapOn: "На главную"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: ".*END-003 double finish.*"
+- assertVisible: ".*END-004 second prayer.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-003-004-two-prayers-one-day

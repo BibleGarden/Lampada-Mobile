@@ -1,0 +1,20 @@
+### label=001-after  at=2026-08-22 16:08:11 MSK
+### db=/Users/maria/Library/Developer/CoreSimulator/Devices/60C18F4D-BC26-4889-953A-DE847BD872DC/data/Containers/Data/Application/6DBBCABB-82E8-492D-8837-C3BD14E55380/Documents/SQLite/lampada.db
+0|0|0
+-- sessions --
+id  started_at                topic               planned_minutes  elapsed_sec  takeaway
+--  ------------------------  ------------------  ---------------  -----------  --------
+1   2026-08-22T13:06:38.571Z  END-001 без вывода  5                14
+-- prayed_days --
+day
+----------
+2026-08-22
+-- counts --
+sessions  days  answers  recs
+--------  ----  -------  ----
+1         1     0        0
+-- journal-visible sessions (условие getJournal lib/db.ts:223) --
+id  started_at                topic               elapsed_sec  takeaway
+--  ------------------------  ------------------  -----------  --------
+1   2026-08-22T13:06:38.571Z  END-001 без вывода  14
+-- meta --

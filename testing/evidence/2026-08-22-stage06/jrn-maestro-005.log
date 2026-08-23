@@ -1,0 +1,41 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-stage06-jrn-005-prayer-a
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Тревога перед разговором с отцом... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Tap on point (92%,95%)... COMPLETED
+Tap on "Ответить"... COMPLETED
+Tap on point (50%,62%)... COMPLETED
+Input text Первый ответ молитвы А про страх и надежду... COMPLETED
+Tap on point (50%,43%)... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on point (50%,73%)... COMPLETED
+Run flow when "OK" is visible...
+Run flow when "OK" is visible... SKIPPED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-overlay-a... COMPLETED
+Wait for animation to end within 4000 ms... COMPLETED
+Tap on point (50%,92%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-saved-a... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on point (64%,61%)... COMPLETED
+Assert that "Изменить" is visible... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ" is visible... COMPLETED
+Tap on "Завершить"... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
+Tap on "На главную"... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Assert that ".*Тревога перед разговором с отцом.*" is visible... COMPLETED
+Tap on ".*Тревога перед разговором с отцом.*"... COMPLETED
+Assert that ".*Первый ответ молитвы А про страх и надежду.*" is visible... COMPLETED
+Assert that ".*Аудиозапись.*" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-005-journal-detail-text-audio... COMPLETED

@@ -1,0 +1,14 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: false
+- assertVisible: "Начать молитву"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: ".*JRN-008 upgrade retest.*"
+- tapOn: ".*JRN-008 upgrade retest.*"
+- assertVisible: ".*Аудиозапись.*"
+- tapOn: ".*Аудиозапись.*"
+- assertVisible: "ДНЕВНИК"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-008-after-install-over-playback

@@ -1,0 +1,85 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-stage06-scr-001-navigation
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-001 navigation... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Tap on point (84%,70%)... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-00-initial-scripture... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Assert that "Притчи 16:3" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A1-next... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A2-next... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A3-next... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A4-next... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A5-next... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A6-prev-after-noop-forward... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Assert that "В избранном" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B00-favorited... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B01-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B02-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B03-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B04-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B05-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B06-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B07-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B08-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B09-next... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B10-next-catalog-exhausted... COMPLETED
+Tap on point (50%,86%)... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B11-next-past-exhausted... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C01-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C02-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C03-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C04-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C05-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C06-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C07-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C08-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C09-prev... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C10-prev-at-start... COMPLETED
+Tap on point (18%,86%)... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C11-prev-boundary-noop... COMPLETED

@@ -1,0 +1,25 @@
+appId: com.marianovikov.lampada
+---
+# JRN-007: delete a prayer after opening its details and confirming twice.
+- launchApp:
+    stopApp: true
+    clearState: false
+- runFlow:
+    when:
+      visible: "ДНЕВНИК"
+    commands:
+      - tapOn:
+          point: "10%,8%"
+- assertVisible: "Начать молитву"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: ".*END-003 double finish.*"
+- tapOn: ".*END-003 double finish.*"
+- assertVisible: ".*Ответ Кириллица про доверие.*"
+- assertVisible: ".*Аудиозапись.*"
+- tapOn: "Удалить молитву"
+- assertVisible: "Точно удалить? Это навсегда"
+- tapOn: "Точно удалить? Это навсегда"
+- assertNotVisible: ".*END-003 double finish.*"
+- assertVisible: ".*END-004 second prayer.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-007-after-delete

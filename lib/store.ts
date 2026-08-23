@@ -4,6 +4,7 @@ import { scriptures } from './scriptures';
 import * as db from './db';
 import { shareAnswersNow } from './settings';
 import { createOneAheadPool } from './oneAheadPool';
+import { favoriteIndexesFromRefs } from './favorites';
 
 // Логика сессии, перенесённая из прототипа.
 //
@@ -232,7 +233,10 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         : { topic, promise: ai.generateFirstQuestion(topic) };
     firstQuestionFetch = fetch;
     const firstQuestion = fetch.result;
-    const sessionId = await db.createSession(topic, minutes);
+    const [sessionId, favoriteRefs] = await Promise.all([
+      db.createSession(topic, minutes),
+      db.getFavorites(),
+    ]);
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
     firstQuestionFetch = null;
@@ -248,7 +252,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       generating: !firstQuestion,
       scrList: [0],
       scrIndex: 0,
-      scrFav: [],
+      scrFav: favoriteIndexesFromRefs(favoriteRefs, scriptures),
       scrNext: pickScripture([0]),
       dockMode: 'question',
       musicOn: false,

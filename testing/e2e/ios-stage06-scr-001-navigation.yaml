@@ -1,0 +1,115 @@
+appId: com.marianovikov.lampada
+---
+# SCR-001: open reader (companion dock, scripture mode) and page forward/backward;
+# navigation must stay stable at list boundaries.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "SCR-001 navigation"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- assertVisible: "Колоссянам 3:23"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-00-initial-scripture
+# Part A: page forward WITHOUT favoriting anything (frontier should just swap content)
+- tapOn:
+    point: "82%,86%"
+- assertVisible: "Притчи 16:3"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A1-next
+- tapOn:
+    point: "82%,86%"
+- assertVisible: "Колоссянам 3:23"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "82%,86%"
+# Part A: try prev after non-favorited forward paging (index should still be 0 -> disabled)
+- tapOn:
+    point: "18%,86%"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-A6-prev-after-noop-forward
+# Part B: favorite each item while paging forward to grow the trail, up to 10+ taps
+- tapOn:
+    point: "50%,86%"
+- assertVisible: "В избранном"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B00-favorited
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B10-next-catalog-exhausted
+- tapOn:
+    point: "50%,86%"
+- tapOn:
+    point: "82%,86%"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-B11-next-past-exhausted
+# Part B: now walk back to the start via prev, checking boundary at index 0
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- tapOn:
+    point: "18%,86%"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C10-prev-at-start
+- tapOn:
+    point: "18%,86%"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-001-C11-prev-boundary-noop

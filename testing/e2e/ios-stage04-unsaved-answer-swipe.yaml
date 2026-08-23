@@ -1,0 +1,35 @@
+appId: com.marianovikov.lampada
+---
+# ANS-003: a downward swipe must not discard a non-empty draft. Discarding it
+# remains possible only through the explicit two-step "Отмена" confirmation.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "ANS-003 swipe draft"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- tapOn:
+    point: "50%,62%"
+- inputText: "ANS-003 несохранённый текст"
+# Tap the static question (not an input) to dismiss the iOS keyboard.
+- tapOn:
+    point: "50%,27%"
+- swipe:
+    start: "50%,42%"
+    end: "50%,92%"
+    duration: 500
+- assertVisible: "ANS-003"
+- tapOn: "Отмена"
+- assertVisible: "Точно закрыть?"
+- tapOn: "Точно закрыть?"
+- assertVisible: "МОЛИТВА"

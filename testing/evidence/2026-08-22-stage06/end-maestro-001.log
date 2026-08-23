@@ -1,0 +1,29 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-stage06-end-001-finish-without-takeaway
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Assert that "Поддержи огонёк" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-before... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text END-001 без вывода... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input... COMPLETED
+Assert that "Завершить" is visible... COMPLETED
+Tap on "Завершить"... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
+Assert that "ТЫ ВЫНЕС ИЗ МОЛИТВЫ" is not visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-done-no-takeaway-card... COMPLETED
+Tap on "На главную"... COMPLETED
+Assert that "Лампада горит" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-after... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Assert that ".*END-001 без вывода.*" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-journal... COMPLETED

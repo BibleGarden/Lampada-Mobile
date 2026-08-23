@@ -1,0 +1,60 @@
+appId: com.marianovikov.lampada
+---
+# SCR-003 on iPhone SE, entered through the app's registered deep-link scheme.
+- launchApp:
+    stopApp: true
+    clearState: true
+- runFlow:
+    when:
+      visible: "Open in.*"
+    commands:
+      - tapOn: "Open"
+- runFlow:
+    when:
+      visible: "Open in.*"
+    commands:
+      - tapOn: "Cancel"
+- tapOn:
+    point: "92%,93%"
+- runFlow:
+    when:
+      visible: "Начать молитву"
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - tapOn: "Начать молитву"
+- runFlow:
+    when:
+      visible: "Начать молитву"
+    commands:
+      - tapOn: "Начать молитву"
+- assertVisible: "ПЕРЕД МОЛИТВОЙ"
+- tapOn: "?"
+- tapOn:
+    point: "50%,34%"
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- tapOn:
+    point: "87%,63%"
+- tapOn: "В избранное"
+- tapOn:
+    point: "82%,86%"
+- tapOn: "В избранное"
+- tapOn:
+    point: "82%,86%"
+- tapOn: "В избранное"
+- tapOn:
+    point: "82%,86%"
+- assertVisible: ".*Луки.*15:11.*24.*"
+- assertVisible: "Читать целиком"
+- tapOn: "Читать целиком"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-top
+- swipe:
+    start: "50%,78%"
+    end: "50%,30%"
+    duration: 800
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-bottom

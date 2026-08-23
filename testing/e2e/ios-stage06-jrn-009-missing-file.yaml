@@ -1,0 +1,21 @@
+appId: com.marianovikov.lampada
+---
+# JRN-009: a missing recording file must not crash journal details or playback attempt.
+- launchApp:
+    stopApp: true
+    clearState: false
+- runFlow:
+    when:
+      visible: "ДНЕВНИК"
+    commands:
+      - tapOn:
+          point: "10%,8%"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: ".*JRN-009 missing file.*"
+- tapOn: ".*JRN-009 missing file.*"
+- assertVisible: ".*Аудиозапись.*"
+- tapOn: ".*Аудиозапись.*"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: ".*JRN-009 missing file.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-009-missing-file-handled

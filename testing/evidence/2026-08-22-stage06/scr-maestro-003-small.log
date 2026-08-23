@@ -1,0 +1,33 @@
+Running on Pray Stage06 iPhone SE - iOS 26.5 - D53373EA-0D2B-4419-BCD8-0F0CA1080D60
+ > Flow ios-stage06-scr-003-small-reader
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Run flow when "Open in.*" is visible...
+Run flow when "Open in.*" is visible... SKIPPED
+Run flow when "Open in.*" is visible...
+Run flow when "Open in.*" is visible... SKIPPED
+Tap on point (92%,93%)... COMPLETED
+Run flow when "Начать молитву" is visible...
+  Wait for animation to end within 5000 ms... COMPLETED
+  Tap on "Начать молитву"... COMPLETED
+Run flow when "Начать молитву" is visible... COMPLETED
+Run flow when "Начать молитву" is visible...
+Run flow when "Начать молитву" is visible... SKIPPED
+Assert that "ПЕРЕД МОЛИТВОЙ" is visible... COMPLETED
+Tap on "?"... COMPLETED
+Tap on point (50%,34%)... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Tap on point (87%,63%)... COMPLETED
+Tap on "В избранное"... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Tap on "В избранное"... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Tap on "В избранное"... COMPLETED
+Tap on point (82%,86%)... COMPLETED
+Assert that ".*Луки.*15:11.*24.*" is visible... COMPLETED
+Assert that "Читать целиком" is visible... COMPLETED
+Tap on "Читать целиком"... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-top... COMPLETED
+Swipe from (50%,78%) to (50%,30%) in 800 ms... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-bottom... COMPLETED

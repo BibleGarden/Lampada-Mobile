@@ -1,0 +1,65 @@
+appId: com.marianovikov.lampada
+---
+# JRN-005 (data setup A): a finished prayer that has both a text answer and a real voice recording.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Тревога перед разговором с отцом"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "92%,95%"
+- tapOn: "Ответить"
+- tapOn:
+    point: "50%,62%"
+- inputText: "Первый ответ молитвы А про страх и надежду"
+- tapOn:
+    point: "50%,43%"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    point: "50%,73%"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-overlay-a
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    point: "50%,92%"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-saved-a
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    point: "64%,61%"
+- assertVisible: "Изменить"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn: "Завершить"
+- assertVisible: "Огонёк горит"
+- tapOn: "На главную"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: ".*Тревога перед разговором с отцом.*"
+- tapOn: ".*Тревога перед разговором с отцом.*"
+- assertVisible: ".*Первый ответ молитвы А про страх и надежду.*"
+- assertVisible: ".*Аудиозапись.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-005-journal-detail-text-audio

@@ -1,0 +1,28 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-stage06-jrn-003-004-search
+Launch app "com.marianovikov.lampada"... COMPLETED
+Run flow when "ДНЕВНИК" is visible...
+Run flow when "ДНЕВНИК" is visible... SKIPPED
+Assert that "Начать молитву" is visible... COMPLETED
+Tap on point (76%,12%)... COMPLETED
+Assert that "ДНЕВНИК" is visible... COMPLETED
+Tap on "Найти молитву…"... COMPLETED
+Input text END-004... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that ".*END-004 second prayer.*" is visible... COMPLETED
+Tap on "END-004"... COMPLETED
+Erase text... COMPLETED
+Input text надежда... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that ".*END-003 double finish.*" is visible... COMPLETED
+Tap on "надежда"... COMPLETED
+Erase text... COMPLETED
+Input text тревожит... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that ".*END-003 double finish.*" is visible... COMPLETED
+Tap on "тревожит"... COMPLETED
+Erase text... COMPLETED
+Input text кириллица... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that ".*END-003 double finish.*" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-003-004-search-cyrillic... COMPLETED

@@ -1,0 +1,19 @@
+JRN-007 — SQLite и файл после каскадного удаления
+
+session_1
+---------
+0
+
+answers_1
+---------
+0
+
+recordings_1
+------------
+0
+
+prayed_days
+-----------
+1
+
+recording_file_exists=no

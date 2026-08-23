@@ -1,0 +1,44 @@
+== date: Sat Aug 22 13:04:20 UTC 2026
+== tables
+answers      favorites    meta         prayed_days  recordings   sessions
+== schema
+CREATE TABLE sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      started_at TEXT NOT NULL,
+      topic TEXT NOT NULL DEFAULT '',
+      planned_minutes INTEGER NOT NULL,
+      elapsed_sec INTEGER NOT NULL DEFAULT 0,
+      takeaway TEXT NOT NULL DEFAULT ''
+    );
+CREATE TABLE sqlite_sequence(name,seq);
+CREATE TABLE answers (
+      session_id INTEGER NOT NULL REFERENCES sessions(id),
+      question_index INTEGER NOT NULL,
+      question TEXT NOT NULL,
+      text TEXT NOT NULL DEFAULT '',
+      PRIMARY KEY (session_id, question_index)
+    );
+CREATE TABLE recordings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL,
+      question_index INTEGER NOT NULL,
+      uri TEXT NOT NULL,
+      duration_sec INTEGER NOT NULL DEFAULT 0,
+      transcript TEXT NOT NULL DEFAULT ''
+    );
+CREATE TABLE favorites (
+      ref TEXT PRIMARY KEY,
+      added_at TEXT NOT NULL
+    );
+CREATE TABLE meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+CREATE TABLE prayed_days (
+      day TEXT PRIMARY KEY
+    );
+== sessions
+== answers
+== recordings
+== prayed_days
+== meta

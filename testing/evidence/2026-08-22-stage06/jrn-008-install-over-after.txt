@@ -1,0 +1,10 @@
+install_exit=0
+launch_exit=0
+after_data=/Users/maria/Library/Developer/CoreSimulator/Devices/60C18F4D-BC26-4889-953A-DE847BD872DC/data/Containers/Data/Application/7D681F91-4CE6-43C6-825B-DE41C0DD92C5
+7fc122dba3ceca4ba9f0bd7bd88c8f16ef8056ce586021beaaf6b8c6ad131783  /Users/maria/Library/Developer/CoreSimulator/Devices/60C18F4D-BC26-4889-953A-DE847BD872DC/data/Containers/Data/Application/7D681F91-4CE6-43C6-825B-DE41C0DD92C5/Documents/JRN-008-upgrade-retest.m4a
+uri                                                                                                                                                                                                   topic
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  ----------------------
+/Users/maria/Library/Developer/CoreSimulator/Devices/60C18F4D-BC26-4889-953A-DE847BD872DC/data/Containers/Data/Application/1E635788-F6A3-4CDA-9E77-AEB835556EE7/Documents/JRN-008-upgrade-retest.m4a  JRN-008 upgrade retest
+audio_exists=yes
+File type ID:   m4af
+Data format:     1 ch,  22050 Hz, aac  (0x00000000) 0 bits/channel, 0 bytes/packet, 1024 frames/packet, 0 bytes/frame

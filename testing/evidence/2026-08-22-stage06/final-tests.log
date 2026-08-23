@@ -1,0 +1,25 @@
+
+> pray@1.0.0 test
+> node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs
+
+✔ восстанавливает избранное по ссылкам и игнорирует отсутствующие в каталоге (2.202333ms)
+✔ готовое значение забирается синхронно и очищает слот (1.957292ms)
+✔ повторный prepare с тем же ключом не запускает второй запрос (0.481917ms)
+✔ wait возвращает уже запущенный pending-запрос (0.192625ms)
+✔ поздний результат устаревшего запроса не заменяет новый слот (0.127417ms)
+✔ после показа готового значения refill остаётся фоновым (0.123416ms)
+✔ legacy iOS URI resolves against the current Documents container (1.23875ms)
+✔ plain simulator app-container path migrates to the current Documents URI (0.244542ms)
+✔ new Documents URI is stored without the changeable container path (0.27325ms)
+✔ already migrated URI remains idempotent (0.254459ms)
+✔ cache and external URIs are not incorrectly moved into Documents (0.46425ms)
+✔ unsafe or malformed relative values are never rebased (0.151833ms)
+✔ неделя не теряет реальные дни из-за будущих prayed_days (4.465542ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 207.151625

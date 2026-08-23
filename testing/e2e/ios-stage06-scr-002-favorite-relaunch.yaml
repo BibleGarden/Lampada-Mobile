@@ -1,0 +1,68 @@
+appId: com.marianovikov.lampada
+---
+# SCR-002: favorite state must be restored from SQLite after app relaunch.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "SCR-002 favorite relaunch"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- assertVisible: "Колоссянам 3:23"
+- tapOn: "В избранное"
+- assertVisible: "В избранном"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-before-relaunch
+- stopApp
+- launchApp:
+    stopApp: false
+    clearState: false
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "SCR-002 favorite restored"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- assertVisible: "Колоссянам 3:23"
+- assertVisible: "В избранном"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-after-relaunch
+- tapOn: "В избранном"
+- assertVisible: "В избранное"
+- stopApp
+- launchApp:
+    stopApp: false
+    clearState: false
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "SCR-002 favorite removed"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- assertVisible: "Колоссянам 3:23"
+- assertVisible: "В избранное"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-removed-after-relaunch
