@@ -13,14 +13,6 @@ export type GeneratedQuestion = { text: string; source: QuestionSource };
 const fromAi = (text: string): GeneratedQuestion => ({ text, source: 'ai' });
 const fromFallback = (text: string): GeneratedQuestion => ({ text, source: 'fallback' });
 
-const PERSONA =
-  'Ты — «Спутник» в приложении для личной христианской молитвы Twinkler. ' +
-  'Твои вопросы помогают человеку молиться своими словами: честно, глубоко, без клише. ' +
-  'Пиши по-русски, обращайся на «ты». Тон тёплый и тихий, без пафоса и без морализаторства. ' +
-  'Каждый вопрос — одна простая мысль, живой разговорный русский без сложных подчинений и канцелярита. ' +
-  'Следи за грамматикой, особенно за предлогами и падежами. ' +
-  'Одна строка, до 120 знаков, каждый вопрос заканчивается знаком вопроса.';
-
 export const curatedQuestions: string[] = [
   'Что на самом деле тревожит тебя сейчас больше всего?',
   'Чего ты по-настоящему хочешь в этой ситуации?',
@@ -76,7 +68,6 @@ export async function generateFirstQuestion(topic: string): Promise<GeneratedQue
   if (!llmConfigured()) return fromFallback(pickRandom(curatedQuestions));
   try {
     const q = await complete(
-      PERSONA,
       (topic.trim()
         ? `Человек начинает молитву. Его цель: «${topic.trim()}».\n`
         : 'Человек начинает молитву без конкретной темы.\n') +
@@ -106,7 +97,6 @@ export async function generateQuestion(
   if (!llmConfigured()) return fallback();
   try {
     const q = await complete(
-      PERSONA,
       (topic.trim() ? `Цель молитвы: «${topic.trim()}».\n` : 'Молитва без конкретной темы.\n') +
         `Уже прозвучали вопросы:\n${asked.map((a) => `— ${a}`).join('\n')}\n` +
         (answers.length
@@ -132,7 +122,6 @@ export async function generateReflectQuestion(
   if (!llmConfigured()) return fromFallback(pickRandom(reflectPool));
   try {
     const q = await complete(
-      PERSONA,
       'Молитва закончилась, человек готов записать один вывод.\n' +
         (topic.trim() ? `Цель была: «${topic.trim()}».\n` : '') +
         (answers.length

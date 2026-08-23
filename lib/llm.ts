@@ -18,12 +18,13 @@ const TIMEOUT_MS = 25_000;
 export const llmConfigured = () => Boolean(PROXY_URL);
 
 /**
- * Один вызов модели: system + user → текст ответа.
- * Формат тела — внутренний контракт bible-api: { system, user } → { text }.
+ * Один вызов модели: user → текст ответа.
+ * Формат тела — внутренний контракт bible-api: { user } → { text }.
+ * System prompt хранится на сервере и не может переопределяться клиентом.
  * Бросает при любой проблеме: не настроено, таймаут, не-2xx, пустой ответ.
  *
  */
-export async function complete(system: string, user: string): Promise<string> {
+export async function complete(user: string): Promise<string> {
   if (!PROXY_URL) throw new Error('AI proxy is not configured');
 
   const controller = new AbortController();
@@ -36,10 +37,7 @@ export async function complete(system: string, user: string): Promise<string> {
         'content-type': 'application/json',
         ...(PROXY_KEY ? { 'x-api-key': PROXY_KEY } : {}),
       },
-      body: JSON.stringify({
-        system,
-        user,
-      }),
+      body: JSON.stringify({ user }),
     });
     if (!res.ok) throw new Error(`AI proxy: HTTP ${res.status}`);
 
@@ -56,8 +54,8 @@ export async function complete(system: string, user: string): Promise<string> {
  * Вызов, от которого ждём JSON. Модель иногда оборачивает ответ в
  * ```json-блок или добавляет фразу до/после — вырезаем первый JSON-фрагмент.
  */
-export async function completeJson<T>(system: string, user: string): Promise<T> {
-  const raw = await complete(system, user);
+export async function completeJson<T>(user: string): Promise<T> {
+  const raw = await complete(user);
   const start = raw.search(/[[{]/);
   if (start === -1) throw new Error('AI proxy: no JSON in response');
   const opener = raw[start];
