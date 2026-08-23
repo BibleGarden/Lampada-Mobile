@@ -3,11 +3,14 @@ import {
   BackHandler,
   ActivityIndicator,
   Keyboard,
+  LayoutAnimation,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type KeyboardEvent,
 } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,16 +31,51 @@ export default function Reflect() {
   return <ReflectScreen />;
 }
 
+function questionTypography(question: string) {
+  if (question.length > 110) return { fontSize: sc(18), lineHeight: sc(24) };
+  if (question.length > 75) return { fontSize: sc(20), lineHeight: sc(26) };
+  return { fontSize: sc(22), lineHeight: sc(29) };
+}
+
+function animateCompactLayout(event: KeyboardEvent) {
+  const duration = Math.max(event.duration ?? 0, 380);
+  LayoutAnimation.configureNext({
+    duration,
+    update: {
+      duration,
+      type: LayoutAnimation.Types.keyboard,
+    },
+  });
+}
+
 function ReflectScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const completing = useRef(false);
 
   // Android «назад» тут некуда вести — только явное завершение
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (event: KeyboardEvent) => {
+      animateCompactLayout(event);
+      setKeyboardOpen(true);
+    });
+    const hide = Keyboard.addListener(hideEvent, (event: KeyboardEvent) => {
+      animateCompactLayout(event);
+      setKeyboardOpen(false);
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
   }, []);
 
   const complete = async (saveText: string) => {
@@ -72,25 +110,26 @@ function ReflectScreen() {
         entering={FadeIn.duration(500)}
         style={[styles.body, { paddingTop: insets.top + sc(16), paddingBottom: insets.bottom + sc(24) }]}
       >
-        {/* элементы не двигаются под клавиатуру: она открывается поверх,
-            тап по пустому месту её прячет — как на «Настройке» */}
         <Pressable onPress={Keyboard.dismiss} accessible={false} style={{ flex: 1 }}>
-          {/* тёплый уголёк */}
-          <View style={styles.emberWrap}>
-            <Flame width={sc(104)} ember />
-          </View>
+          {!keyboardOpen && (
+            <View style={styles.emberWrap}>
+              <Flame width={sc(104)} ember />
+            </View>
+          )}
 
-          <View style={styles.questionBlock}>
-            <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
-              {s.reflectSource === 'fallback' ? 'резервный вопрос' : 'прежде чем закрыть'}
-            </Kicker>
+          <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
+            {!keyboardOpen && (
+              <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
+                {s.reflectSource === 'fallback' ? 'резервный вопрос' : 'прежде чем закрыть'}
+              </Kicker>
+            )}
             {s.reflectGenerating ? (
               <View style={styles.questionLoading}>
                 <ActivityIndicator color={colors.goldSoft} />
                 <Text style={styles.loadingText}>готовлю вопрос…</Text>
               </View>
             ) : (
-              <Text style={styles.question}>{s.reflectQ}</Text>
+              <Text style={[styles.question, questionTypography(s.reflectQ)]}>{s.reflectQ}</Text>
             )}
           </View>
 
@@ -138,10 +177,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: sc(6),
     marginTop: sc(4),
   },
+  questionBlockCompact: {
+    marginTop: 0,
+  },
   question: {
     fontFamily: fonts.serif,
-    fontSize: sc(22),
-    lineHeight: sc(29),
     color: colors.cream,
     textAlign: 'center',
   },
