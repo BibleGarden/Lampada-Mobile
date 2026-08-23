@@ -1,0 +1,24 @@
+appId: com.marianovikov.lampada
+---
+# Regression: explicit session finish must stop music before playlist release.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "MUS early finish regression"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "Включить тихую музыку"
+- tapOn: "Включить тихую музыку"
+- assertVisible: "Тихая музыка"
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- assertNotVisible: "Тихая музыка"

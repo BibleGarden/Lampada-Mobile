@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -15,6 +15,12 @@ import Animated, {
 import { Canvas, Circle, Group, RadialGradient, vec } from '@shopify/react-native-skia';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
+import {
+  setAudioModeAsync,
+  setIsAudioActiveAsync,
+  useAudioPlaylist,
+  useAudioPlaylistStatus,
+} from 'expo-audio';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ScreenBg from '../components/ScreenBg';
 import ProgressRing from '../components/ProgressRing';
@@ -22,8 +28,9 @@ import CompanionDock from '../components/CompanionDock';
 import AnswerSheet from '../components/AnswerSheet';
 import ScriptureReader from '../components/ScriptureReader';
 import { IconButton, Kicker } from '../components/ui';
-import { Close } from '../components/icons';
+import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
+import { PRAYER_TRACK_SOURCES } from '../lib/music';
 import { colors, fonts, radius, sc } from '../lib/theme';
 
 // Кольцо таймера. В прототипе 208 px, но при честном масштабе круг
@@ -47,6 +54,8 @@ function SessionScreen() {
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [answerOpen, setAnswerOpen] = useState(false);
+  const [transientAudioBusy, setTransientAudioBusy] = useState(false);
+  const [appState, setAppState] = useState(AppState.currentState);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
   const readerRef = useRef<BottomSheet>(null);
@@ -54,6 +63,83 @@ function SessionScreen() {
   const ringProgress = useSharedValue(0);
   const finished = useRef(false);
   const finishTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const musicSessionActive = useRef(false);
+  const musicPlaylist = useAudioPlaylist({
+    sources: PRAYER_TRACK_SOURCES,
+    loop: 'all',
+  });
+  const musicStatus = useAudioPlaylistStatus(musicPlaylist);
+
+  const releaseMusicSession = useCallback(() => {
+    // setIsAudioActiveAsync действует глобально, поэтому не трогаем сессию,
+    // если её не захватывал именно музыкальный плейлист.
+    if (!musicSessionActive.current) return Promise.resolve();
+    musicSessionActive.current = false;
+    return setIsAudioActiveAsync(false).catch((error) => {
+      musicSessionActive.current = true;
+      console.warn('Не удалось освободить аудиосессию', error);
+    });
+  }, []);
+
+  useEffect(() => {
+    // Фоновое сопровождение должно оставаться заметно тише речи и системных звуков.
+    musicPlaylist.volume = 0.28;
+  }, [musicPlaylist]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', setAppState);
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const shouldPlay = s.musicOn && appState === 'active' && !transientAudioBusy;
+    if (!shouldPlay) {
+      musicPlaylist.pause();
+      if (!transientAudioBusy) {
+        void releaseMusicSession();
+      }
+      return () => {
+        active = false;
+      };
+    }
+    void (async () => {
+      musicSessionActive.current = true;
+      await setIsAudioActiveAsync(true);
+      await setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true,
+        shouldPlayInBackground: false,
+        interruptionMode: 'doNotMix',
+      });
+      if (active) musicPlaylist.play();
+    })().catch((error) => {
+      console.warn('Не удалось включить музыкальное сопровождение', error);
+      if (active && useSession.getState().musicOn) {
+        useSession.getState().toggleMusic();
+      }
+      if (active) void releaseMusicSession();
+    });
+    return () => {
+      active = false;
+    };
+  }, [appState, musicPlaylist, releaseMusicSession, s.musicOn, transientAudioBusy]);
+
+  useEffect(
+    () => () => {
+      void releaseMusicSession();
+    },
+    [releaseMusicSession],
+  );
+
+  const handleTransientAudioChange = useCallback(
+    (busy: boolean) => {
+      // Эта остановка синхронна: запись не должна ждать React-effect.
+      if (busy) musicPlaylist.pause();
+      setTransientAudioBusy(busy);
+    },
+    [musicPlaylist],
+  );
 
   // секундный тик
   useEffect(() => {
@@ -73,7 +159,12 @@ function SessionScreen() {
   const goToReflect = async () => {
     // открытый черновик ответа дописывается, а не выбрасывается
     if (flushAnswerRef.current) await flushAnswerRef.current();
-    s.finish();
+    // Останавливаем плейлист до router.replace: useAudioPlaylist сам удалит
+    // native shared object при unmount, и обращаться к нему из cleanup уже нельзя.
+    musicPlaylist.pause();
+    await releaseMusicSession();
+    if (useSession.getState().musicOn) useSession.getState().toggleMusic();
+    void s.finish();
     router.replace('/reflect');
   };
 
@@ -144,10 +235,28 @@ function SessionScreen() {
           <Kicker numberOfLines={1} style={styles.topTitle}>
             Молитва
           </Kicker>
-          {/* симметричная заглушка вместо кнопки музыки: воспроизведение
-              ещё не реализовано, а неработающая кнопка хуже её отсутствия */}
-          <View style={{ width: sc(34) }} />
+          <IconButton
+            onPress={s.toggleMusic}
+            bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
+            border={s.musicOn ? 'rgba(230,162,60,.4)' : undefined}
+            accessibilityLabel={s.musicOn ? 'Выключить тихую музыку' : 'Включить тихую музыку'}
+            accessibilityState={{ selected: s.musicOn }}
+          >
+            <Music color={s.musicOn ? colors.amberBright : 'rgba(255,255,255,.5)'} />
+          </IconButton>
         </View>
+
+        {s.musicOn && !transientAudioBusy && musicStatus.playing && (
+          <Animated.View
+            entering={FadeIn.duration(250)}
+            style={[styles.musicChip, { top: insets.top + sc(40) }]}
+          >
+            <Music size={11} color={colors.amberBright} />
+            <Text style={styles.musicChipLabel} numberOfLines={1}>
+              Тихая музыка
+            </Text>
+          </Animated.View>
+        )}
 
         {/* таймер */}
         <View style={[styles.timerWrap, { marginTop: insets.top + sc(64) }]}>
@@ -205,6 +314,7 @@ function SessionScreen() {
         flushRef={flushAnswerRef}
         onEditingChange={setAnswerOpen}
         timeExpired={s.remaining === 0}
+        onAudioBusyChange={handleTransientAudioChange}
       />
       <ScriptureReader sheetRef={readerRef} />
     </View>
@@ -302,6 +412,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: sc(10),
     letterSpacing: sc(1.8),
+  },
+  musicChip: {
+    position: 'absolute',
+    left: '50%',
+    zIndex: 4,
+    width: sc(190),
+    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(6),
+    paddingHorizontal: sc(10),
+    paddingVertical: sc(4),
+    borderRadius: 999,
+    backgroundColor: 'rgba(230,162,60,.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(230,162,60,.24)',
+    transform: [{ translateX: -sc(95) }],
+  },
+  musicChipLabel: {
+    flexShrink: 1,
+    fontFamily: fonts.sans,
+    fontSize: sc(10.5),
+    color: 'rgba(240,213,170,.8)',
   },
   timerWrap: {
     alignSelf: 'center',

@@ -1,0 +1,25 @@
+appId: com.marianovikov.lampada
+---
+# MUS-001: local prayer music has an explicit, reversible session control.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "MUS-001 local music"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "Включить тихую музыку"
+- tapOn: "Включить тихую музыку"
+- assertVisible: "Тихая музыка"
+- assertVisible: "Выключить тихую музыку"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-23-music/MUS-001-music-on
+- tapOn: "Выключить тихую музыку"
+- assertNotVisible: "Тихая музыка"
+- assertVisible: "Включить тихую музыку"

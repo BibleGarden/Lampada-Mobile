@@ -7,6 +7,7 @@ import {
   View,
   ViewStyle,
   StyleProp,
+  type AccessibilityState,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -66,6 +67,8 @@ export function IconButton({
   bg = colors.white05,
   border,
   style,
+  accessibilityLabel,
+  accessibilityState,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -73,9 +76,14 @@ export function IconButton({
   bg?: string;
   border?: string;
   style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
+  accessibilityState?: AccessibilityState;
 }) {
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={accessibilityState}
       onPress={() => {
         Haptics.selectionAsync();
         onPress();

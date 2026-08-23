@@ -54,6 +54,8 @@ type Props = {
   onEditingChange?: (editing: boolean) => void;
   /** После нуля ответ завершается только явной кнопкой или подтверждённой отменой. */
   timeExpired?: boolean;
+  /** Музыка сессии уступает аудиофокус записи и прослушиванию черновика. */
+  onAudioBusyChange?: (busy: boolean) => void;
 };
 
 // Шторка ответа: текст + голосовые записи. Открывается на текущем вопросе,
@@ -64,6 +66,7 @@ export default function AnswerSheet({
   flushRef,
   onEditingChange,
   timeExpired = false,
+  onAudioBusyChange,
 }: Props) {
   const insets = useSafeAreaInsets();
   // подписка только на нужное — не ререндерим шторку от тика таймера
@@ -123,14 +126,18 @@ export default function AnswerSheet({
     () => () => {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
+      onAudioBusyChange?.(false);
     },
-    [],
+    [onAudioBusyChange],
   );
 
   // конец воспроизведения — вернуть иконку play
   useEffect(() => {
-    if (playerStatus.didJustFinish) setPlayingId(null);
-  }, [playerStatus.didJustFinish]);
+    if (playerStatus.didJustFinish) {
+      setPlayingId(null);
+      onAudioBusyChange?.(false);
+    }
+  }, [playerStatus.didJustFinish, onAudioBusyChange]);
 
   // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
   // и кнопки остались видны; спряталась — обратно на нижнюю.
@@ -151,46 +158,70 @@ export default function AnswerSheet({
   const startRecording = async () => {
     // Оверлей записи не должен остаться под открытой клавиатурой.
     Keyboard.dismiss();
-    const perm = await AudioModule.requestRecordingPermissionsAsync();
-    if (!perm.granted) return;
-    await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-    // пресет обязателен: без options рекордер переиспользует один URL
-    // и каждая новая запись затирает файл предыдущей
-    await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
-    recorder.record();
-    recordingOverlayActiveRef.current = true;
-    // Оверлей измеряется по максимальной высоте BottomSheet: на нижнем
-    // snap-point его stop-контрол попадает за область клипа.
-    sheetRef.current?.snapToIndex(1);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
+    // audio mode: иначе музыка может попасть в начало голосовой записи.
+    player.pause();
+    setPlayingId(null);
+    onAudioBusyChange?.(true);
+    try {
+      const perm = await AudioModule.requestRecordingPermissionsAsync();
+      if (!perm.granted) {
+        onAudioBusyChange?.(false);
+        return;
+      }
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      // пресет обязателен: без options рекордер переиспользует один URL
+      // и каждая новая запись затирает файл предыдущей
+      await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
+      recorder.record();
+      recordingOverlayActiveRef.current = true;
+      // Оверлей измеряется по максимальной высоте BottomSheet: на нижнем
+      // snap-point его stop-контрол попадает за область клипа.
+      sheetRef.current?.snapToIndex(1);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (error) {
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
+        (modeError) => console.warn('Не удалось восстановить аудиорежим', modeError),
+      );
+      onAudioBusyChange?.(false);
+      throw error;
+    }
   };
 
   const stopRecording = async (): Promise<RecordingDraft | null> => {
     // длительность читаем до stop(): recorderState обновляется раз в 500 мс и занижает
     const durationMillis = recorder.getStatus().durationMillis ?? 0;
-    await recorder.stop();
-    recordingOverlayActiveRef.current = false;
-    await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
-    const uri = recorder.uri;
-    if (!uri) return null;
-    const draft: RecordingDraft = {
-      id: Date.now(),
-      uri,
-      durationSec: Math.max(1, Math.round(durationMillis / 1000)),
-      transcript: null,
-    };
-    unsavedRecordingUris.current.add(uri);
-    setRecs((prev) => [...prev, draft]);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    return draft;
+    try {
+      await recorder.stop();
+      const uri = recorder.uri;
+      if (!uri) return null;
+      const draft: RecordingDraft = {
+        id: Date.now(),
+        uri,
+        durationSec: Math.max(1, Math.round(durationMillis / 1000)),
+        transcript: null,
+      };
+      unsavedRecordingUris.current.add(uri);
+      setRecs((prev) => [...prev, draft]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      return draft;
+    } finally {
+      recordingOverlayActiveRef.current = false;
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
+        (error) => console.warn('Не удалось восстановить аудиорежим', error),
+      );
+      onAudioBusyChange?.(false);
+    }
   };
 
   const togglePlay = (r: RecordingDraft) => {
     if (playingId === r.id) {
       player.pause();
       setPlayingId(null);
+      onAudioBusyChange?.(false);
       return;
     }
+    onAudioBusyChange?.(true);
     player.replace(r.uri);
     player.play();
     setPlayingId(r.id);
@@ -215,6 +246,7 @@ export default function AnswerSheet({
       if (playingId === id) {
         player.pause();
         setPlayingId(null);
+        onAudioBusyChange?.(false);
       }
       const removed = recs.find((r) => r.id === id);
       if (removed && unsavedRecordingUris.current.delete(removed.uri)) {
@@ -333,6 +365,7 @@ export default function AnswerSheet({
           setPlayingId(null);
         }
         if (i < 0) {
+          onAudioBusyChange?.(false);
           setConfirmCancel(false);
           discardUnsavedRecordings();
         }
