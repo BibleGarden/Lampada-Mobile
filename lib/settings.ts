@@ -4,8 +4,8 @@ import { getDb } from './db';
 // Настройки приложения; хранятся в таблице meta (key/value).
 //
 // shareAnswers — можно ли отправлять текст ответов на сервер вместе с
-// запросами к ИИ (подбор вопросов и мест Писания). По умолчанию выключено:
-// пока человек явно не разрешил, его записи не покидают устройство.
+// запросами к ИИ (подбор вопросов и мест Писания). По умолчанию включено;
+// пользователь может отключить передачу в настройках.
 
 type SettingsState = {
   shareAnswers: boolean;
@@ -14,14 +14,16 @@ type SettingsState = {
 };
 
 export const useSettings = create<SettingsState>((set) => ({
-  shareAnswers: false,
+  shareAnswers: true,
 
   load: async () => {
     const d = await getDb();
     const row = await d.getFirstAsync<{ value: string }>(
       "SELECT value FROM meta WHERE key = 'share_answers'",
     );
-    set({ shareAnswers: row?.value === '1' });
+    // Для новых установок записи ещё нет — используем включённое значение
+    // по умолчанию. Явно сохранённый "0" остаётся выбором пользователя.
+    set({ shareAnswers: row?.value !== '0' });
   },
 
   setShareAnswers: async (v) => {
