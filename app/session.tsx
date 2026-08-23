@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  AppState,
+  BackHandler,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -30,15 +38,13 @@ import ScriptureReader from '../components/ScriptureReader';
 import { IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
-import { PRAYER_TRACK_SOURCES } from '../lib/music';
+import { getPrayerTrackSources } from '../lib/music';
 import { colors, fonts, radius, sc } from '../lib/theme';
 
-// Кольцо таймера. В прототипе 208 px, но при честном масштабе круг
-// выходит на весь экран и «теряет» содержимое — держим компактнее,
-// цифры при том же кегле заполняют его гармоничнее.
-const RING = sc(172);
-// запас холста вокруг кольца под гало
-const HALO_PAD = sc(56);
+// Кольцо ограничиваем не только шириной, как остальные токены прототипа,
+// но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
+// пространство между шапкой и карточкой спутника.
+const ringSizeFor = (height: number) => Math.round(Math.min(sc(156), height * 0.235));
 
 export default function Session() {
   const sessionId = useSession((state) => state.sessionId);
@@ -51,6 +57,8 @@ export default function Session() {
 function SessionScreen() {
   useKeepAwake(); // экран не гаснет во время молитвы
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const ringSize = ringSizeFor(height);
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [answerOpen, setAnswerOpen] = useState(false);
@@ -64,8 +72,9 @@ function SessionScreen() {
   const finished = useRef(false);
   const finishTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musicSessionActive = useRef(false);
+  const [musicSources] = useState(getPrayerTrackSources);
   const musicPlaylist = useAudioPlaylist({
-    sources: PRAYER_TRACK_SOURCES,
+    sources: musicSources,
     loop: 'all',
   });
   const musicStatus = useAudioPlaylistStatus(musicPlaylist);
@@ -246,65 +255,91 @@ function SessionScreen() {
           </IconButton>
         </View>
 
-        {s.musicOn && !transientAudioBusy && musicStatus.playing && (
-          <Animated.View
-            entering={FadeIn.duration(250)}
-            style={[styles.musicChip, { top: insets.top + sc(40) }]}
-          >
-            <Music size={11} color={colors.amberBright} />
-            <Text style={styles.musicChipLabel} numberOfLines={1}>
-              Тихая музыка
-            </Text>
-          </Animated.View>
-        )}
-
-        {/* таймер */}
-        <View style={[styles.timerWrap, { marginTop: insets.top + sc(64) }]}>
-          <TimerHalo />
-          <ProgressRing size={RING} strokeWidth={3} progress={ringProgress} />
-          <View style={styles.timerContent}>
-            <Pressable
-              onPress={() => {
-                if (s.remaining === null) return;
-                Haptics.selectionAsync();
-                setAdjustOpen((v) => !v);
-              }}
-            >
-              <Text
-                style={[
-                  styles.timerText,
-                  s.remaining !== null && styles.timerTextAdjustable,
-                ]}
-              >
-                {timerLabel}
-              </Text>
-            </Pressable>
-            <Kicker style={{ fontSize: sc(10) }}>{timerSub}</Kicker>
+        <View
+          style={[
+            styles.sessionContent,
+            {
+              paddingTop: insets.top + sc(50),
+              paddingBottom: insets.bottom + sc(14),
+            },
+          ]}
+        >
+          <View style={styles.musicSlot}>
+            {s.musicOn && !transientAudioBusy && musicStatus.playing && (
+              <Animated.View entering={FadeIn.duration(250)} style={styles.musicChip}>
+                <Music size={11} color={colors.amberBright} />
+                <Text style={styles.musicChipLabel} numberOfLines={1}>
+                  Тихая музыка
+                </Text>
+              </Animated.View>
+            )}
           </View>
-          {adjustOpen && s.remaining !== null && (
-            <>
-              <AdjustBtn side="left" label={`−${adjStep}`} onPress={() => s.adjustTimer(-adjStep)} />
-              <AdjustBtn side="right" label={`+${adjStep}`} accent onPress={() => s.adjustTimer(adjStep)} />
-            </>
-          )}
-        </View>
 
-        {/* цель */}
-        <View style={styles.goalWrap}>
-          <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
-            цель
-          </Kicker>
-          <Text style={styles.goalText} numberOfLines={3}>
-            {s.topic.trim() || 'Свободная молитва — без конкретной темы'}
-          </Text>
-        </View>
+          {/* Таймер и цель делят свободную высоту поровну с отступами сверху и снизу. */}
+          <View style={styles.focusArea}>
+            <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
+              <TimerHalo size={ringSize} />
+              <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
+              <View style={styles.timerContent}>
+                <Pressable
+                  onPress={() => {
+                    if (s.remaining === null) return;
+                    Haptics.selectionAsync();
+                    setAdjustOpen((v) => !v);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.timerText,
+                      {
+                        fontSize: ringSize * 0.255,
+                        lineHeight: ringSize * 0.3,
+                      },
+                      s.remaining !== null && styles.timerTextAdjustable,
+                    ]}
+                  >
+                    {timerLabel}
+                  </Text>
+                </Pressable>
+                <Kicker style={{ fontSize: Math.min(sc(10), ringSize * 0.052) }}>
+                  {timerSub}
+                </Kicker>
+              </View>
+              {adjustOpen && s.remaining !== null && (
+                <>
+                  <AdjustBtn
+                    ringSize={ringSize}
+                    side="left"
+                    label={`−${adjStep}`}
+                    onPress={() => s.adjustTimer(-adjStep)}
+                  />
+                  <AdjustBtn
+                    ringSize={ringSize}
+                    side="right"
+                    label={`+${adjStep}`}
+                    accent
+                    onPress={() => s.adjustTimer(adjStep)}
+                  />
+                </>
+              )}
+            </View>
 
-        {/* карточка-спутник */}
-        <View style={[styles.dockWrap, { bottom: insets.bottom + sc(14) }]}>
-          <CompanionDock
-            onOpenAnswer={() => openAnswerRef.current?.()}
-            onOpenReader={() => readerRef.current?.snapToIndex(0)}
-          />
+            <View style={styles.goalWrap}>
+              <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
+                цель
+              </Kicker>
+              <Text style={styles.goalText} numberOfLines={3}>
+                {s.topic.trim() || 'Свободная молитва — без конкретной темы'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.dockWrap}>
+            <CompanionDock
+              onOpenAnswer={() => openAnswerRef.current?.()}
+              onOpenReader={() => readerRef.current?.snapToIndex(0)}
+            />
+          </View>
         </View>
       </Animated.View>
 
@@ -322,7 +357,7 @@ function SessionScreen() {
 }
 
 // тёплое дыхание за кольцом — halo 7s из прототипа
-function TimerHalo() {
+function TimerHalo({ size: ringSize }: { size: number }) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withRepeat(
@@ -332,7 +367,8 @@ function TimerHalo() {
     );
     return () => cancelAnimation(t);
   }, [t]);
-  const size = RING + HALO_PAD * 2;
+  const haloPad = Math.min(sc(48), ringSize * 0.28);
+  const size = ringSize + haloPad * 2;
   const r = size / 2;
   const transform = useDerivedValue(() => [{ scale: 1 + t.value * 0.16 }]);
   const opacity = useDerivedValue(() => 0.62 + t.value * 0.38);
@@ -342,8 +378,8 @@ function TimerHalo() {
       pointerEvents="none"
       style={{
         position: 'absolute',
-        top: -HALO_PAD,
-        left: -HALO_PAD,
+        top: -haloPad,
+        left: -haloPad,
         width: size,
         height: size,
       }}
@@ -363,11 +399,13 @@ function TimerHalo() {
 }
 
 function AdjustBtn({
+  ringSize,
   side,
   label,
   accent,
   onPress,
 }: {
+  ringSize: number;
   side: 'left' | 'right';
   label: string;
   accent?: boolean;
@@ -376,7 +414,11 @@ function AdjustBtn({
   return (
     <Animated.View
       entering={FadeInDown.duration(200)}
-      style={[styles.adjustBtnWrap, side === 'left' ? { left: -sc(68) } : { right: -sc(68) }]}
+      style={[
+        styles.adjustBtnWrap,
+        { top: ringSize / 2 - sc(22) },
+        side === 'left' ? { left: -sc(68) } : { right: -sc(68) },
+      ]}
     >
       <Pressable
         onPress={() => {
@@ -414,10 +456,7 @@ const styles = StyleSheet.create({
     letterSpacing: sc(1.8),
   },
   musicChip: {
-    position: 'absolute',
-    left: '50%',
-    zIndex: 4,
-    width: sc(190),
+    maxWidth: '88%',
     justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
@@ -428,7 +467,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(230,162,60,.1)',
     borderWidth: 1,
     borderColor: 'rgba(230,162,60,.24)',
-    transform: [{ translateX: -sc(95) }],
   },
   musicChipLabel: {
     flexShrink: 1,
@@ -436,10 +474,27 @@ const styles = StyleSheet.create({
     fontSize: sc(10.5),
     color: 'rgba(240,213,170,.8)',
   },
+  sessionContent: {
+    flex: 1,
+    width: '100%',
+    maxWidth: sc(360),
+    alignSelf: 'center',
+    paddingHorizontal: sc(18),
+  },
+  musicSlot: {
+    minHeight: sc(28),
+    marginBottom: -sc(30),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  focusArea: {
+    flex: 1,
+    minHeight: 0,
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+  },
   timerWrap: {
     alignSelf: 'center',
-    width: RING,
-    height: RING,
   },
   timerContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -449,8 +504,6 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontFamily: fonts.serif,
-    fontSize: sc(48),
-    lineHeight: sc(54),
     color: colors.creamBright,
   },
   timerTextAdjustable: {
@@ -461,7 +514,6 @@ const styles = StyleSheet.create({
   },
   adjustBtnWrap: {
     position: 'absolute',
-    top: RING / 2 - sc(22), // по вертикальному центру кольца
   },
   adjustBtn: {
     width: sc(44),
@@ -483,8 +535,8 @@ const styles = StyleSheet.create({
     color: colors.goldSoft,
   },
   goalWrap: {
-    marginTop: sc(16),
-    paddingHorizontal: sc(24),
+    width: '100%',
+    paddingHorizontal: sc(12),
     alignItems: 'center',
   },
   goalText: {
@@ -495,8 +547,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   dockWrap: {
-    position: 'absolute',
-    left: sc(18),
-    right: sc(18),
+    width: '100%',
   },
 });

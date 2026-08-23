@@ -39,3 +39,22 @@ export const PRAYER_TRACKS: readonly PrayerTrack[] = [
 export const PRAYER_TRACK_SOURCES: AudioSource[] = PRAYER_TRACKS.map(
   (track) => track.source,
 );
+
+let previousStartingTrack: number | null = null;
+
+/**
+ * Начинает каждую новую молитву со случайного трека, не повторяя стартовый
+ * трек предыдущей сессии. Остальные композиции продолжают играть по кругу.
+ */
+export function getPrayerTrackSources(): AudioSource[] {
+  const candidates = PRAYER_TRACK_SOURCES.map((_, index) => index).filter(
+    (index) => index !== previousStartingTrack,
+  );
+  const startIndex = candidates[Math.floor(Math.random() * candidates.length)] ?? 0;
+  previousStartingTrack = startIndex;
+
+  return [
+    ...PRAYER_TRACK_SOURCES.slice(startIndex),
+    ...PRAYER_TRACK_SOURCES.slice(0, startIndex),
+  ];
+}
