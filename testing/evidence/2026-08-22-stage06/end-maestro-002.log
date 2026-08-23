@@ -23,7 +23,7 @@ Assert that "ТЫ ВЫНЕС ИЗ МОЛИТВЫ" is visible... COMPLETED
 Assert that ".*END-002 вывод молитвы.*" is visible... COMPLETED
 Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-002-done-takeaway-card... COMPLETED
 Tap on "На главную"... COMPLETED
-Assert that "Лампада горит" is visible... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
 Tap on point (76%,12%)... COMPLETED
 Assert that "ДНЕВНИК" is visible... COMPLETED
 Assert that ".*END-002 с выводом.*" is visible... COMPLETED

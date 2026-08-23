@@ -10,8 +10,8 @@ cd "$(dirname "$0")/.."
 
 TEAM="${TEAM:-4SC2JCE37N}"                 # Maria Novikov (платная)
 BUNDLE="${BUNDLE:-com.marianovikov.lampada}"
-WS="ios/Lampada.xcworkspace"
-APP="ios/build/Build/Products/Release-iphoneos/Lampada.app"
+WS="ios/Twinkler.xcworkspace"
+APP="ios/build/Build/Products/Release-iphoneos/Twinkler.app"
 
 # --- нативная папка ------------------------------------------------------
 if [ ! -d ios ]; then
@@ -29,7 +29,7 @@ npx pod-install ios
 # и берём физический iOS-девайс (не Mac, не симулятор, не placeholder).
 DEVICE="${DEVICE:-}"
 if [ -z "$DEVICE" ]; then
-  DEVICE=$(xcrun xcodebuild -workspace "$WS" -scheme Lampada -showdestinations 2>/dev/null \
+  DEVICE=$(xcrun xcodebuild -workspace "$WS" -scheme Twinkler -showdestinations 2>/dev/null \
     | grep 'platform:iOS,' | grep -v placeholder \
     | grep -Eo 'id:[0-9A-Fa-f-]+' | head -1 | cut -d: -f2-)
 fi
@@ -41,14 +41,14 @@ fi
 echo "▶︎ Устройство: $DEVICE"
 
 # prebuild иногда сбрасывает DEVELOPMENT_TEAM — принудительно ставим нужную
-if [ -f ios/Lampada.xcodeproj/project.pbxproj ]; then
+if [ -f ios/Twinkler.xcodeproj/project.pbxproj ]; then
   sed -i '' "s/DEVELOPMENT_TEAM = \"[A-Z0-9]*\"/DEVELOPMENT_TEAM = \"$TEAM\"/g" \
-    ios/Lampada.xcodeproj/project.pbxproj
+    ios/Twinkler.xcodeproj/project.pbxproj
 fi
 
 # --- сборка + установка --------------------------------------------------
 echo "▶︎ Сборка Release…"
-xcrun xcodebuild -workspace "$WS" -scheme Lampada \
+xcrun xcodebuild -workspace "$WS" -scheme Twinkler \
   -configuration Release -destination "id=$DEVICE" \
   -allowProvisioningUpdates -derivedDataPath ios/build \
   DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic build

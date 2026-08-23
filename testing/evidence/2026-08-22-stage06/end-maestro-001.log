@@ -21,7 +21,7 @@ Assert that "Огонёк горит" is visible... COMPLETED
 Assert that "ТЫ ВЫНЕС ИЗ МОЛИТВЫ" is not visible... COMPLETED
 Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-done-no-takeaway-card... COMPLETED
 Tap on "На главную"... COMPLETED
-Assert that "Лампада горит" is visible... COMPLETED
+Assert that "Огонёк горит" is visible... COMPLETED
 Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-after... COMPLETED
 Tap on point (76%,12%)... COMPLETED
 Assert that "ДНЕВНИК" is visible... COMPLETED
