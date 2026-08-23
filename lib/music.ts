@@ -1,4 +1,5 @@
 import type { AudioSource } from 'expo-audio';
+import { prayerTrackOrder } from './musicOrder';
 
 export type PrayerTrack = {
   id: string;
@@ -34,6 +35,72 @@ export const PRAYER_TRACKS: readonly PrayerTrack[] = [
     artist: 'The Cynic Project',
     source: require('../assets/audio/another-august.mp3'),
   },
+  {
+    id: 'calm-relax',
+    title: 'Calm Relax 1',
+    artist: 'The Cynic Project',
+    source: require('../assets/audio/calm-relax.mp3'),
+  },
+  {
+    id: 'calm-piano',
+    title: 'Calm Piano 1',
+    artist: 'The Cynic Project',
+    source: require('../assets/audio/calm-piano.mp3'),
+  },
+  {
+    id: 'calm-ambient-3',
+    title: 'Calm Ambient 3',
+    artist: 'The Cynic Project',
+    source: require('../assets/audio/calm-ambient-3.mp3'),
+  },
+  {
+    id: 'calm-ambient-1',
+    title: 'Calm Ambient 1',
+    artist: 'The Cynic Project',
+    source: require('../assets/audio/calm-ambient-1.mp3'),
+  },
+  {
+    id: 'up-in-the-sky',
+    title: 'Up in the Sky',
+    artist: 'Memoraphile',
+    source: require('../assets/audio/up-in-the-sky.mp3'),
+  },
+  {
+    id: 'aquaria',
+    title: 'Aquaria',
+    artist: 'The Cynic Project',
+    source: require('../assets/audio/aquaria.mp3'),
+  },
+  {
+    id: 'birds-and-wind',
+    title: 'Birds and Wind',
+    artist: 'Spring Spring',
+    source: require('../assets/audio/birds-and-wind.mp3'),
+  },
+  {
+    id: 'first-light-particles',
+    title: 'First Light Particles',
+    artist: 'Yoiyami',
+    source: require('../assets/audio/first-light-particles.mp3'),
+  },
+  {
+    id: 'budding-consciousness',
+    title: 'The Budding of Consciousness',
+    artist: 'Yoiyami',
+    source: require('../assets/audio/budding-consciousness.mp3'),
+  },
+  {
+    id: 'slow-piano-intermission',
+    title: 'Slow Piano Intermission',
+    artist: 'Spring Spring',
+    source: require('../assets/audio/slow-piano-intermission.mp3'),
+  },
+  {
+    id: 'egyptian-meditation',
+    title: 'Egyptian Meditation Music',
+    artist: 'brandon75689',
+    source: require('../assets/audio/egyptian-meditation.mp3'),
+  },
 ];
 
 export const PRAYER_TRACK_SOURCES: AudioSource[] = PRAYER_TRACKS.map(
@@ -47,14 +114,7 @@ let previousStartingTrack: number | null = null;
  * трек предыдущей сессии. Остальные композиции продолжают играть по кругу.
  */
 export function getPrayerTrackSources(): AudioSource[] {
-  const candidates = PRAYER_TRACK_SOURCES.map((_, index) => index).filter(
-    (index) => index !== previousStartingTrack,
-  );
-  const startIndex = candidates[Math.floor(Math.random() * candidates.length)] ?? 0;
-  previousStartingTrack = startIndex;
-
-  return [
-    ...PRAYER_TRACK_SOURCES.slice(startIndex),
-    ...PRAYER_TRACK_SOURCES.slice(0, startIndex),
-  ];
+  const order = prayerTrackOrder(PRAYER_TRACK_SOURCES.length, previousStartingTrack);
+  previousStartingTrack = order[0] ?? null;
+  return order.map((index) => PRAYER_TRACK_SOURCES[index]);
 }
