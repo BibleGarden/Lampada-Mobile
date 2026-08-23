@@ -10,7 +10,7 @@
       "bundleIdentifier": "com.marianovikov.lampada",
       "supportsTablet": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Микрофон нужен, чтобы записывать голосовые молитвенные ответы. Записи хранятся только на этом устройстве.",
+        "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и отправляется в Gemini для расшифровки.",
         "UIBackgroundModes": [
           "audio"
         ]

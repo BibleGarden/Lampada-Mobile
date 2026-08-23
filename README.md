@@ -18,6 +18,9 @@ npx expo start        # дев-сервер + Metro
 Gemini; Google key и системные инструкции в приложение не встраиваются. Для включения ИИ скопируй
 `.env.example` в `.env.local` и укажи клиентский `X-API-Key` сервера. Этот
 клиентский ключ виден в собранном приложении и не заменяет серверные лимиты.
+Голосовые ответы отправляются отдельным запросом на
+`/api/lampada/v1/transcribe`; URL задаётся через
+`EXPO_PUBLIC_AI_TRANSCRIBE_URL` либо выводится из URL `/complete`.
 
 > Приложение использует нативные модули, которых нет в Expo Go
 > (`@shopify/react-native-skia`, `react-native-reanimated` 4).

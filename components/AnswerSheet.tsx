@@ -33,6 +33,7 @@ import {
   useAudioRecorderState,
 } from 'expo-audio';
 import { useSession, RecordingDraft, fmtTime } from '../lib/store';
+import { transcribeRecording } from '../lib/transcription';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
 import { GoldButton } from './ui';
@@ -78,10 +79,15 @@ export default function AnswerSheet({
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
   const savingRef = useRef(false);
+  const recsRef = useRef<RecordingDraft[]>([]);
+  const pendingTranscriptions = useRef(
+    new Map<number, { controller: AbortController; promise: Promise<void> }>(),
+  );
   // Не даём keyboardDidHide вернуть шторку на 62% после старта записи.
   const recordingOverlayActiveRef = useRef(false);
   // Только эти файлы принадлежат текущему несохранённому черновику. Записи,
@@ -100,20 +106,85 @@ export default function AnswerSheet({
   // поднимает шторку до верхней, и поле ввода с кнопками остаются видны
   const snapPoints = useMemo(() => ['62%', '92%'], []);
 
+  const updateRecs = useCallback(
+    (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
+      const next = updater(recsRef.current);
+      recsRef.current = next;
+      setRecs(next);
+    },
+    [],
+  );
+
+  const abortAllTranscriptions = useCallback(() => {
+    for (const pending of pendingTranscriptions.current.values()) {
+      pending.controller.abort();
+    }
+    pendingTranscriptions.current.clear();
+  }, []);
+
+  const startTranscription = useCallback(
+    (recording: RecordingDraft) => {
+      pendingTranscriptions.current.get(recording.id)?.controller.abort();
+      const controller = new AbortController();
+      updateRecs((current) =>
+        current.map((item) =>
+          item.id === recording.id ? { ...item, transcriptState: 'loading' } : item,
+        ),
+      );
+
+      const promise = transcribeRecording(recording.uri, controller.signal)
+        .then((transcript) => {
+          if (pendingTranscriptions.current.get(recording.id)?.controller !== controller) return;
+          updateRecs((current) =>
+            current.map((item) =>
+              item.id === recording.id
+                ? { ...item, transcript, transcriptState: 'idle' }
+                : item,
+            ),
+          );
+        })
+        .catch((error) => {
+          if (controller.signal.aborted) return;
+          console.warn(
+            'Не удалось расшифровать аудиозапись',
+            error instanceof Error ? error.message : 'unknown error',
+          );
+          updateRecs((current) =>
+            current.map((item) =>
+              item.id === recording.id ? { ...item, transcriptState: 'error' } : item,
+            ),
+          );
+        })
+        .finally(() => {
+          if (pendingTranscriptions.current.get(recording.id)?.controller === controller) {
+            pendingTranscriptions.current.delete(recording.id);
+          }
+        });
+
+      pendingTranscriptions.current.set(recording.id, { controller, promise });
+    },
+    [updateRecs],
+  );
+
   // черновик текущего вопроса подтягивается ДО показа шторки: если делать
   // это в onChange, на открытии успевает мелькнуть контент прошлого вопроса
   const handleOpen = useCallback(() => {
+    abortAllTranscriptions();
     const st = useSession.getState();
     answerIndexRef.current = st.qIndex;
     const a = st.answers[st.qIndex];
     setText(a?.text ?? '');
-    setRecs(a?.recordings ? a.recordings.map((r) => ({ ...r })) : []);
+    const restored = a?.recordings
+      ? a.recordings.map((r) => ({ ...r, transcriptState: 'idle' as const }))
+      : [];
+    recsRef.current = restored;
+    setRecs(restored);
     setConfirmDeleteId(null);
     setConfirmCancel(false);
     setPlayingId(null);
     onEditingChange?.(true);
     sheetRef.current?.snapToIndex(0);
-  }, [sheetRef, onEditingChange]);
+  }, [abortAllTranscriptions, sheetRef, onEditingChange]);
 
   useEffect(() => {
     openRef.current = handleOpen;
@@ -126,9 +197,10 @@ export default function AnswerSheet({
     () => () => {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
+      abortAllTranscriptions();
       onAudioBusyChange?.(false);
     },
-    [onAudioBusyChange],
+    [abortAllTranscriptions, onAudioBusyChange],
   );
 
   // конец воспроизведения — вернуть иконку play
@@ -200,9 +272,11 @@ export default function AnswerSheet({
         uri,
         durationSec: Math.max(1, Math.round(durationMillis / 1000)),
         transcript: null,
+        transcriptState: 'loading',
       };
       unsavedRecordingUris.current.add(uri);
-      setRecs((prev) => [...prev, draft]);
+      updateRecs((current) => [...current, draft]);
+      startTranscription(draft);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       return draft;
     } finally {
@@ -248,7 +322,9 @@ export default function AnswerSheet({
         setPlayingId(null);
         onAudioBusyChange?.(false);
       }
-      const removed = recs.find((r) => r.id === id);
+      pendingTranscriptions.current.get(id)?.controller.abort();
+      pendingTranscriptions.current.delete(id);
+      const removed = recsRef.current.find((r) => r.id === id);
       if (removed && unsavedRecordingUris.current.delete(removed.uri)) {
         try {
           const file = new File(removed.uri);
@@ -257,7 +333,7 @@ export default function AnswerSheet({
           // Удаление из списка должно сработать, даже если файл уже недоступен.
         }
       }
-      setRecs((prev) => prev.filter((r) => r.id !== id));
+      updateRecs((current) => current.filter((r) => r.id !== id));
       return;
     }
     setConfirmDeleteId(id);
@@ -268,14 +344,16 @@ export default function AnswerSheet({
   const save = async () => {
     if (savingRef.current) return;
     savingRef.current = true;
-    let finalRecs = recs;
+    setSaving(true);
     try {
       // активная запись не должна молча продолжаться после сохранения
       if (recorderState.isRecording) {
-        const draft = await stopRecording();
-        if (draft) finalRecs = [...recs, draft];
+        await stopRecording();
       }
-      saveAnswerToStore(answerIndexRef.current, text, finalRecs);
+      await Promise.allSettled(
+        [...pendingTranscriptions.current.values()].map((pending) => pending.promise),
+      );
+      saveAnswerToStore(answerIndexRef.current, text, recsRef.current);
       // После сохранения файлы принадлежат ответу и больше не являются черновиком.
       unsavedRecordingUris.current.clear();
       // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
@@ -286,6 +364,7 @@ export default function AnswerSheet({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } finally {
       savingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -296,6 +375,7 @@ export default function AnswerSheet({
     if (!hasContent || confirmCancel) {
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       setConfirmCancel(false);
+      abortAllTranscriptions();
       discardUnsavedRecordings();
       openSheetRef.current = false; // см. комментарий в save()
       Keyboard.dismiss();
@@ -365,6 +445,7 @@ export default function AnswerSheet({
           setPlayingId(null);
         }
         if (i < 0) {
+          abortAllTranscriptions();
           onAudioBusyChange?.(false);
           setConfirmCancel(false);
           discardUnsavedRecordings();
@@ -401,30 +482,59 @@ export default function AnswerSheet({
           <Mic color={colors.greenSoft} />
           <Text style={styles.micLabel}>Записать аудио</Text>
         </Pressable>
+        <Text style={styles.transcriptionPrivacy}>
+          Для расшифровки запись отправляется в Gemini. Сервер приложения её не сохраняет.
+        </Text>
 
         {recs.map((r, i) => {
           const playing = playingId === r.id;
           return (
-            <View key={r.id} style={styles.recRow}>
-              <Pressable onPress={() => togglePlay(r)} style={styles.recPlay}>
-                {playing ? <PauseIcon size={12} color="#f0c074" /> : <PlayIcon size={13} color="#f0c074" />}
-              </Pressable>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <View style={styles.recTrack}>
-                  <View
-                    style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
-                  />
+            <View key={r.id} style={styles.recCard}>
+              <View style={styles.recRow}>
+                <Pressable onPress={() => togglePlay(r)} style={styles.recPlay}>
+                  {playing ? <PauseIcon size={12} color="#f0c074" /> : <PlayIcon size={13} color="#f0c074" />}
+                </Pressable>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={styles.recTrack}>
+                    <View
+                      style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
+                    />
+                  </View>
+                  <Text style={styles.recMeta}>
+                    Запись {i + 1} · {fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}
+                  </Text>
                 </View>
-                <Text style={styles.recMeta}>
-                  Запись {i + 1} · {fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}
-                </Text>
+                <Pressable
+                  onPress={() => askOrConfirmDelete(r.id)}
+                  style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
+                >
+                  <Trash color={confirmDeleteId === r.id ? '#ec8a7a' : 'rgba(255,255,255,.5)'} />
+                </Pressable>
               </View>
-              <Pressable
-                onPress={() => askOrConfirmDelete(r.id)}
-                style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
-              >
-                <Trash color={confirmDeleteId === r.id ? '#ec8a7a' : 'rgba(255,255,255,.5)'} />
-              </Pressable>
+
+              {r.transcriptState === 'loading' ? (
+                <Text style={styles.transcriptionState}>Расшифровываю…</Text>
+              ) : r.transcriptState === 'error' ? (
+                <View style={styles.transcriptionErrorRow}>
+                  <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
+                  <Pressable onPress={() => startTranscription(r)} hitSlop={8}>
+                    <Text style={styles.transcriptionRetry}>Повторить</Text>
+                  </Pressable>
+                </View>
+              ) : r.transcript !== null ? (
+                <BottomSheetTextInput
+                  value={r.transcript}
+                  onChangeText={(transcript) =>
+                    updateRecs((current) =>
+                      current.map((item) =>
+                        item.id === r.id ? { ...item, transcript } : item,
+                      ),
+                    )
+                  }
+                  multiline
+                  style={styles.transcriptInput}
+                />
+              ) : null}
             </View>
           );
         })}
@@ -443,7 +553,13 @@ export default function AnswerSheet({
             </Text>
           </Pressable>
           <GoldButton
-            label={timeExpired ? 'Сохранить и завершить' : 'Сохранить'}
+            label={
+              saving
+                ? 'Сохраняю…'
+                : timeExpired
+                  ? 'Сохранить и завершить'
+                  : 'Сохранить'
+            }
             onPress={save}
             style={{ flex: 1 }}
           />
@@ -574,16 +690,27 @@ const styles = StyleSheet.create({
     fontSize: sc(13),
     color: colors.greenSoft,
   },
-  recRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(8),
+  transcriptionPrivacy: {
+    marginTop: sc(6),
+    paddingHorizontal: sc(8),
+    fontFamily: fonts.sans,
+    fontSize: sc(9.5),
+    lineHeight: sc(13),
+    textAlign: 'center',
+    color: colors.warmHint,
+  },
+  recCard: {
     marginTop: sc(8),
     padding: sc(8),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.04)',
     borderWidth: 1,
     borderColor: colors.white08,
+  },
+  recRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(8),
   },
   recPlay: {
     width: sc(34),
@@ -625,6 +752,45 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(220,90,70,.18)',
     borderWidth: 1,
     borderColor: 'rgba(220,90,70,.45)',
+  },
+  transcriptionState: {
+    marginTop: sc(9),
+    fontFamily: fonts.sans,
+    fontSize: sc(12),
+    color: colors.warmHint,
+  },
+  transcriptionErrorRow: {
+    marginTop: sc(9),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: sc(12),
+  },
+  transcriptionError: {
+    flex: 1,
+    fontFamily: fonts.sans,
+    fontSize: sc(12),
+    color: '#ec9b8e',
+  },
+  transcriptionRetry: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(12),
+    color: colors.goldSoft,
+  },
+  transcriptInput: {
+    minHeight: sc(54),
+    maxHeight: sc(150),
+    marginTop: sc(9),
+    padding: sc(9),
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(255,255,255,.035)',
+    borderWidth: 1,
+    borderColor: 'rgba(214,182,120,.18)',
+    color: colors.parchment,
+    fontFamily: fonts.serifRegular,
+    fontSize: sc(13.5),
+    lineHeight: sc(19),
+    textAlignVertical: 'top',
   },
   actionsRow: {
     flexDirection: 'row',

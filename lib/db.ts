@@ -160,12 +160,13 @@ export async function saveAnswer(a: AnswerRow) {
 export async function replaceRecordings(
   sessionId: number,
   questionIndex: number,
-  recordings: { uri: string; durationSec: number }[],
+  recordings: { uri: string; durationSec: number; transcript: string | null }[],
 ) {
   const d = await getDb();
   const storedRecordings = recordings.map((r) => ({
     uri: toStoredRecordingUri(r.uri, Paths.document.uri),
     durationSec: r.durationSec,
+    transcript: r.transcript?.trim() ?? '',
   }));
   const previous = await d.getAllAsync<{ uri: string }>(
     'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
@@ -180,11 +181,14 @@ export async function replaceRecordings(
     );
     for (const r of storedRecordings) {
       await d.runAsync(
-        'INSERT INTO recordings (session_id, question_index, uri, duration_sec) VALUES (?, ?, ?, ?)',
+        `INSERT INTO recordings
+           (session_id, question_index, uri, duration_sec, transcript)
+         VALUES (?, ?, ?, ?, ?)`,
         sessionId,
         questionIndex,
         r.uri,
         r.durationSec,
+        r.transcript,
       );
     }
   });
@@ -206,7 +210,12 @@ export type JournalEntry = {
 
 export type JournalDetail = {
   answers: { questionIndex: number; question: string; text: string }[];
-  recordings: { questionIndex: number; uri: string; durationSec: number }[];
+  recordings: {
+    questionIndex: number;
+    uri: string;
+    durationSec: number;
+    transcript: string | null;
+  }[];
 };
 
 /**
@@ -230,12 +239,15 @@ export async function getJournal(query = ''): Promise<JournalEntry[]> {
     takeaway: string;
     answer_count: number;
     search_blob: string | null;
+    recording_search_blob: string | null;
   }>(
     `SELECT s.id, s.started_at, s.topic, s.elapsed_sec, s.takeaway,
             (SELECT COUNT(*) FROM answers a
               WHERE a.session_id = s.id AND TRIM(a.text) != '') AS answer_count,
             (SELECT GROUP_CONCAT(a.text || ' ' || a.question, ' ')
-               FROM answers a WHERE a.session_id = s.id) AS search_blob
+               FROM answers a WHERE a.session_id = s.id) AS search_blob,
+            (SELECT GROUP_CONCAT(r.transcript, ' ')
+               FROM recordings r WHERE r.session_id = s.id) AS recording_search_blob
        FROM sessions s
       WHERE s.elapsed_sec > 0 OR s.takeaway != ''
              OR EXISTS (SELECT 1 FROM answers a WHERE a.session_id = s.id AND TRIM(a.text) != '')
@@ -246,7 +258,9 @@ export async function getJournal(query = ''): Promise<JournalEntry[]> {
     .filter(
       (r) =>
         !q ||
-        `${r.topic} ${r.takeaway} ${r.search_blob ?? ''}`.toLowerCase().includes(q),
+        `${r.topic} ${r.takeaway} ${r.search_blob ?? ''} ${r.recording_search_blob ?? ''}`
+          .toLowerCase()
+          .includes(q),
     )
     .map((r) => ({
       id: r.id,
@@ -263,11 +277,23 @@ export async function getJournalDetail(sessionId: number): Promise<JournalDetail
   const d = await getDb();
   const answers = await d.getAllAsync<{ question_index: number; question: string; text: string }>(
     `SELECT question_index, question, text FROM answers
-      WHERE session_id = ? AND TRIM(text) != '' ORDER BY question_index`,
+      WHERE session_id = ?
+        AND (TRIM(text) != '' OR EXISTS (
+          SELECT 1 FROM recordings r
+           WHERE r.session_id = answers.session_id
+             AND r.question_index = answers.question_index
+        ))
+      ORDER BY question_index`,
     sessionId,
   );
-  const recordings = await d.getAllAsync<{ question_index: number; uri: string; duration_sec: number }>(
-    'SELECT question_index, uri, duration_sec FROM recordings WHERE session_id = ? ORDER BY question_index, id',
+  const recordings = await d.getAllAsync<{
+    question_index: number;
+    uri: string;
+    duration_sec: number;
+    transcript: string;
+  }>(
+    `SELECT question_index, uri, duration_sec, transcript
+       FROM recordings WHERE session_id = ? ORDER BY question_index, id`,
     sessionId,
   );
   return {
@@ -276,6 +302,7 @@ export async function getJournalDetail(sessionId: number): Promise<JournalDetail
       questionIndex: r.question_index,
       uri: resolveRecordingUri(r.uri, Paths.document.uri),
       durationSec: r.duration_sec,
+      transcript: r.transcript.trim() || null,
     })),
   };
 }

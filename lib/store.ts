@@ -21,6 +21,7 @@ export type RecordingDraft = {
   uri: string;
   durationSec: number;
   transcript: string | null;
+  transcriptState?: 'idle' | 'loading' | 'error';
 };
 
 export type Answer = { text: string; recordings: RecordingDraft[] };
@@ -403,7 +404,11 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       db.replaceRecordings(
         s.sessionId,
         questionIndex,
-        recordings.map((r) => ({ uri: r.uri, durationSec: r.durationSec })),
+        recordings.map((r) => ({
+          uri: r.uri,
+          durationSec: r.durationSec,
+          transcript: r.transcript,
+        })),
       );
     }
   },

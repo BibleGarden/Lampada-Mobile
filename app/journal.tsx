@@ -178,12 +178,13 @@ export default function Journal() {
                 return (
                   <View key={a.questionIndex} style={styles.qaBlock}>
                     <Text style={styles.qaQuestion}>{a.question}</Text>
-                    <Text style={styles.qaAnswer}>{a.text}</Text>
+                    {!!a.text.trim() && <Text style={styles.qaAnswer}>{a.text}</Text>}
                     {recs.map((r) => (
                       <RecordingRow
                         key={r.uri}
                         uri={r.uri}
                         durationSec={r.durationSec}
+                        transcript={r.transcript}
                         playing={playingUri === r.uri}
                         onToggle={() => togglePlay(r.uri)}
                       />
@@ -201,6 +202,7 @@ export default function Journal() {
                     key={r.uri}
                     uri={r.uri}
                     durationSec={r.durationSec}
+                    transcript={r.transcript}
                     playing={playingUri === r.uri}
                     onToggle={() => togglePlay(r.uri)}
                   />
@@ -279,21 +281,26 @@ export default function Journal() {
 function RecordingRow({
   uri,
   durationSec,
+  transcript,
   playing,
   onToggle,
 }: {
   uri: string;
   durationSec: number;
+  transcript: string | null;
   playing: boolean;
   onToggle: () => void;
 }) {
   return (
-    <Pressable onPress={onToggle} style={styles.recRow}>
-      <View style={styles.recPlay}>
-        {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
-      </View>
-      <Text style={styles.recLabel}>Аудиозапись · {fmtTime(durationSec)}</Text>
-    </Pressable>
+    <View style={styles.recBlock}>
+      <Pressable onPress={onToggle} style={styles.recRow}>
+        <View style={styles.recPlay}>
+          {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
+        </View>
+        <Text style={styles.recLabel}>Аудиозапись · {fmtTime(durationSec)}</Text>
+      </Pressable>
+      {!!transcript && <Text style={styles.recTranscript}>{transcript}</Text>}
+    </View>
   );
 }
 
@@ -399,6 +406,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
+  },
+  recBlock: {
     marginTop: sc(8),
   },
   recPlay: {
@@ -415,6 +424,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: sc(10.5),
     color: colors.labelGold,
+  },
+  recTranscript: {
+    marginTop: sc(6),
+    marginLeft: sc(36),
+    fontFamily: fonts.serifRegular,
+    fontSize: sc(13.5),
+    lineHeight: sc(19),
+    color: colors.body,
   },
   deleteBtn: {
     flexDirection: 'row',
