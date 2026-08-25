@@ -34,6 +34,7 @@ import {
 } from 'expo-audio';
 import { useSession, RecordingDraft, fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
+import { recordingFileIssue } from '../lib/recordingFile';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
 import { GoldButton } from './ui';
@@ -79,6 +80,7 @@ export default function AnswerSheet({
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,8 +98,16 @@ export default function AnswerSheet({
   // qIndex фиксируется при открытии шторки: пока человек пишет, индекс в store
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
+  const recorderErrorRef = useRef<string | null>(null);
 
-  const recorder = useAudioRecorder(RECORDING_OPTIONS);
+  const recorder = useAudioRecorder(RECORDING_OPTIONS, (status) => {
+    if (status.hasError || status.mediaServicesDidReset) {
+      recorderErrorRef.current = status.error || 'Audio recorder was interrupted';
+      recordingOverlayActiveRef.current = false;
+      setAudioError('Запись прервалась — попробуй ещё раз');
+      onAudioBusyChange?.(false);
+    }
+  });
   const recorderState = useAudioRecorderState(recorder);
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
@@ -133,7 +143,7 @@ export default function AnswerSheet({
         ),
       );
 
-      const promise = transcribeRecording(recording.uri, controller.signal)
+      const promise = transcribeRecording(recording.uri, recording.durationSec, controller.signal)
         .then((transcript) => {
           if (pendingTranscriptions.current.get(recording.id)?.controller !== controller) return;
           updateRecs((current) =>
@@ -183,6 +193,8 @@ export default function AnswerSheet({
     setConfirmDeleteId(null);
     setConfirmCancel(false);
     setPlayingId(null);
+    setAudioError(null);
+    recorderErrorRef.current = null;
     onEditingChange?.(true);
     sheetRef.current?.snapToIndex(0);
   }, [abortAllTranscriptions, sheetRef, onEditingChange]);
@@ -206,11 +218,17 @@ export default function AnswerSheet({
 
   // конец воспроизведения — вернуть иконку play
   useEffect(() => {
+    if (playerStatus.error) {
+      setPlayingId(null);
+      setAudioError('Не удалось воспроизвести запись');
+      onAudioBusyChange?.(false);
+      return;
+    }
     if (playerStatus.didJustFinish) {
       setPlayingId(null);
       onAudioBusyChange?.(false);
     }
-  }, [playerStatus.didJustFinish, onAudioBusyChange]);
+  }, [playerStatus.didJustFinish, playerStatus.error, onAudioBusyChange]);
 
   // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
   // и кнопки остались видны; спряталась — обратно на нижнюю.
@@ -236,6 +254,8 @@ export default function AnswerSheet({
     player.pause();
     setPlayingId(null);
     onAudioBusyChange?.(true);
+    recorderErrorRef.current = null;
+    setAudioError(null);
     try {
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) {
@@ -253,11 +273,15 @@ export default function AnswerSheet({
       sheetRef.current?.snapToIndex(1);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
+      console.warn(
+        'Не удалось начать аудиозапись',
+        error instanceof Error ? error.message : 'unknown error',
+      );
+      setAudioError('Не удалось начать запись — попробуй ещё раз');
       await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
         (modeError) => console.warn('Не удалось восстановить аудиорежим', modeError),
       );
       onAudioBusyChange?.(false);
-      throw error;
     }
   };
 
@@ -267,7 +291,20 @@ export default function AnswerSheet({
     try {
       await recorder.stop();
       const uri = recorder.uri;
-      if (!uri) return null;
+      if (!uri) {
+        setAudioError('Запись не сохранилась — попробуй ещё раз');
+        return null;
+      }
+      const file = new File(uri);
+      const issue = recorderErrorRef.current
+        ? 'incomplete'
+        : recordingFileIssue(file, durationMillis);
+      if (issue) {
+        if (file.exists) file.delete();
+        console.warn('Аудиозапись не была завершена', recorderErrorRef.current ?? issue);
+        setAudioError('Запись не сохранилась — попробуй ещё раз');
+        return null;
+      }
       const draft: RecordingDraft = {
         id: Date.now(),
         uri,
@@ -279,6 +316,22 @@ export default function AnswerSheet({
       updateRecs((current) => [...current, draft]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       return draft;
+    } catch (error) {
+      const failedUri = recorder.uri;
+      if (failedUri) {
+        try {
+          const failedFile = new File(failedUri);
+          if (failedFile.exists) failedFile.delete();
+        } catch {
+          // Ошибка очистки не должна скрывать исходную ошибку рекордера.
+        }
+      }
+      console.warn(
+        'Не удалось завершить аудиозапись',
+        error instanceof Error ? error.message : 'unknown error',
+      );
+      setAudioError('Запись не сохранилась — попробуй ещё раз');
+      return null;
     } finally {
       recordingOverlayActiveRef.current = false;
       await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
@@ -485,6 +538,7 @@ export default function AnswerSheet({
         <Text style={styles.transcriptionPrivacy}>
           Аудио отправится в Gemini, только если нажмёшь «Расшифровать».
         </Text>
+        {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
 
         {recs.map((r, i) => {
           const playing = playingId === r.id;
@@ -708,6 +762,15 @@ const styles = StyleSheet.create({
     lineHeight: sc(13),
     textAlign: 'center',
     color: colors.warmHint,
+  },
+  audioError: {
+    marginTop: sc(7),
+    paddingHorizontal: sc(8),
+    fontFamily: fonts.sans,
+    fontSize: sc(11),
+    lineHeight: sc(15),
+    textAlign: 'center',
+    color: '#ec9b8e',
   },
   recCard: {
     marginTop: sc(8),

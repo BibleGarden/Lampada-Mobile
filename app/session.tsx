@@ -72,6 +72,9 @@ function SessionScreen() {
   const finished = useRef(false);
   const finishTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musicSessionActive = useRef(false);
+  // React-effect cleanup happens later than the press handler. The ref lets an
+  // already running music activation see recording/playback immediately.
+  const transientAudioBusyRef = useRef(false);
   const [musicSources] = useState(getPrayerTrackSources);
   const musicPlaylist = useAudioPlaylist({
     sources: musicSources,
@@ -105,9 +108,8 @@ function SessionScreen() {
     const shouldPlay = s.musicOn && appState === 'active' && !transientAudioBusy;
     if (!shouldPlay) {
       musicPlaylist.pause();
-      if (!transientAudioBusy) {
-        void releaseMusicSession();
-      }
+      // Keep the global session active while this screen is mounted. A late
+      // async deactivation can otherwise race with a newly started recorder.
       return () => {
         active = false;
       };
@@ -115,19 +117,22 @@ function SessionScreen() {
     void (async () => {
       musicSessionActive.current = true;
       await setIsAudioActiveAsync(true);
+      // Starting a recording invalidates this async activation. Without this
+      // guard its late allowsRecording:false stops the native iOS recorder.
+      if (!active || transientAudioBusyRef.current) return;
       await setAudioModeAsync({
         allowsRecording: false,
         playsInSilentMode: true,
         shouldPlayInBackground: false,
         interruptionMode: 'doNotMix',
       });
-      if (active) musicPlaylist.play();
+      if (active && !transientAudioBusyRef.current) musicPlaylist.play();
     })().catch((error) => {
       console.warn('Не удалось включить музыкальное сопровождение', error);
-      if (active && useSession.getState().musicOn) {
+      if (active && !transientAudioBusyRef.current && useSession.getState().musicOn) {
         useSession.getState().toggleMusic();
       }
-      if (active) void releaseMusicSession();
+      if (active && !transientAudioBusyRef.current) void releaseMusicSession();
     });
     return () => {
       active = false;
@@ -144,6 +149,7 @@ function SessionScreen() {
   const handleTransientAudioChange = useCallback(
     (busy: boolean) => {
       // Эта остановка синхронна: запись не должна ждать React-effect.
+      transientAudioBusyRef.current = busy;
       if (busy) musicPlaylist.pause();
       setTransientAudioBusy(busy);
     },

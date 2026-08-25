@@ -127,7 +127,11 @@ export default function Journal() {
     setTranscriptionStates((current) => ({ ...current, [recording.id]: 'loading' }));
 
     try {
-      const transcript = await transcribeRecording(recording.uri, controller.signal);
+      const transcript = await transcribeRecording(
+        recording.uri,
+        recording.durationSec,
+        controller.signal,
+      );
       if (transcriptionControllers.current.get(recording.id) !== controller) return;
       await db.updateRecordingTranscript(recording.id, transcript);
       if (transcriptionControllers.current.get(recording.id) !== controller) return;

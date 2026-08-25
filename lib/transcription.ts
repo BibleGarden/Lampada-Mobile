@@ -1,6 +1,7 @@
 import { fetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 import { deviceLocale, resolveTranscriptionUrl } from './transcriptionConfig';
+import { recordingFileIssue } from './recordingFile';
 
 const TRANSCRIPTION_URL = process.env.EXPO_PUBLIC_AI_TRANSCRIBE_URL;
 const COMPLETE_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
@@ -9,6 +10,7 @@ const TIMEOUT_MS = 60_000;
 
 export async function transcribeRecording(
   uri: string,
+  durationSec?: number,
   signal?: AbortSignal,
 ): Promise<string> {
   const url = resolveTranscriptionUrl(TRANSCRIPTION_URL, COMPLETE_URL);
@@ -21,6 +23,8 @@ export async function transcribeRecording(
 
   try {
     const audio = new File(uri);
+    const issue = recordingFileIssue(audio, Math.max(0, durationSec ?? 0) * 1_000);
+    if (issue) throw new Error(`Recording file is ${issue}`);
     const form = new FormData();
     form.append('file', audio, audio.name || 'recording.m4a');
     const locale = deviceLocale();
