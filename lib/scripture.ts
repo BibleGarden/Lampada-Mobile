@@ -106,7 +106,7 @@ export function buildScriptureRequest(input: {
   const validNewestFirst = [...input.shownCanonicalIds]
     .reverse()
     .filter((id) => CANONICAL_ID_PATTERN.test(id));
-  const exclusions = [...new Set(validNewestFirst)].slice(0, 200);
+  const exclusions = [...new Set(validNewestFirst)].slice(0, 30);
   if (exclusions.length) request.exclude_canonical_ids = exclusions;
   return request;
 }
