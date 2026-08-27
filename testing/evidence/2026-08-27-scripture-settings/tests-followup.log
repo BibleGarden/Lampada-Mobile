@@ -1,0 +1,73 @@
+
+> pray@1.0.0 test
+> node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs
+
+✔ AI proxy request sends only the user field (36.017583ms)
+✔ возвращает все 15 треков один раз, начиная с выбранной позиции (0.867084ms)
+✔ не повторяет старт предыдущей молитвы (0.097ms)
+✔ корректно обрабатывает пустой каталог и единственный трек (0.076125ms)
+✔ готовое значение забирается синхронно и очищает слот (0.570958ms)
+✔ повторный prepare с тем же ключом не запускает второй запрос (0.087ms)
+✔ wait возвращает уже запущенный pending-запрос (0.170167ms)
+✔ поздний результат устаревшего запроса не заменяет новый слот (0.101833ms)
+✔ после показа готового значения refill остаётся фоновым (0.147791ms)
+✔ rejects a missing or header-only recording (0.547084ms)
+✔ rejects a file whose bytes do not match the recorded duration (0.152042ms)
+✔ accepts complete high-quality recordings (0.079375ms)
+✔ legacy iOS URI resolves against the current Documents container (0.709333ms)
+✔ plain simulator app-container path migrates to the current Documents URI (0.089166ms)
+✔ new Documents URI is stored without the changeable container path (0.084208ms)
+✔ already migrated URI remains idempotent (0.0725ms)
+✔ cache and external URIs are not incorrectly moved into Documents (0.078334ms)
+✔ unsafe or malformed relative values are never rebased (0.070958ms)
+✔ privacy boundary omits replies from the serialized request (0.560917ms)
+✔ request uses the language and translation chosen in settings (0.101375ms)
+✔ request builder applies server limits and keeps 30 newest valid unique ids (0.348625ms)
+✔ displayed reference uses translated passage coordinates, not canonical coordinates (5.714208ms)
+✔ parser accepts nullable title, missing fallback reason and unknown future source (0.501375ms)
+✔ parser rejects malformed canonical ids and incomplete passages (0.127584ms)
+✔ language catalog keeps API order and national labels (1.07225ms)
+✔ translation catalog exposes only active translations and voices (0.199625ms)
+✔ catalog parser rejects a broken contract instead of saving invalid ids (0.0705ms)
+✔ uses an explicit URL or derives scripture endpoint from the complete endpoint (0.682958ms)
+✔ loads and validates translation book names for exact passage references (37.399584ms)
+✔ book catalog fetch is bounded by the same 25 second timeout (0.251ms)
+✔ single request sends the configured public key and accepts an unknown source (0.737959ms)
+▶ 403 and 422 are discriminated and never retried
+  ✔ 403 (0.290875ms)
+  ✔ 422 (0.3095ms)
+✔ 403 and 422 are discriminated and never retried (1.489208ms)
+✔ 429 reads Retry-After case-insensitively and performs one delayed retry (1.48175ms)
+✔ 429 uses the 30 second default and stops after the single retry (0.313792ms)
+✔ 503 is retried at most twice and requests remain sequential (0.456667ms)
+✔ network failure gets one retry without exposing the request body (0.164292ms)
+✔ timeout aborts at 25 seconds and gets one retry without real waiting (0.224875ms)
+✔ malformed success response is rejected without retry (0.184541ms)
+✔ external session cancellation aborts transport and suppresses further retries (0.156417ms)
+✔ migrates a known legacy favorite with its local text and exact legacy payload (0.845583ms)
+✔ retains an unknown legacy favorite instead of dropping or inventing data (0.104666ms)
+✔ migration planning is idempotent and de-duplicates duplicate legacy rows (0.119334ms)
+✔ empty legacy storage produces no migration writes (0.064625ms)
+✔ missing storage remains distinguishable from a saved user selection (0.473125ms)
+✔ stored dependent selection is parsed as one atomic value (0.676334ms)
+✔ catalog selection rejects a voice from another translation (0.067166ms)
+✔ malformed persisted settings are treated as an absent selection (0.110083ms)
+✔ primary device language is matched against server aliases before English fallback (0.135458ms)
+✔ default selection prefers known translation and voice codes (0.107625ms)
+✔ English remains deterministic when the server catalog cannot confirm a device language (0.059542ms)
+✔ a completed Next is deferred when the user navigated back while waiting (0.447375ms)
+✔ offline fallback preserves the current trail and appends older cached snapshots (0.4935ms)
+✔ different scripture loads never overlap and retain their own results (0.857334ms)
+✔ a rejected request releases the next queued request (0.311ms)
+✔ неделя не теряет реальные дни из-за будущих prayed_days (2.163166ms)
+✔ uses an explicit transcription endpoint when configured (0.467917ms)
+✔ derives transcription endpoint from the companion endpoint (0.167458ms)
+✔ reports missing transcription configuration (0.070583ms)
+ℹ tests 60
+ℹ suites 0
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 217.934375

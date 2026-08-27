@@ -1,0 +1,23 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "scripture-language-picker"
+- tapOn:
+    id: "scripture-language-ru"
+- tapOn:
+    id: "scripture-translation-1"
+- tapOn:
+    id: "scripture-voice-1"
+- tapOn:
+    id: "scripture-settings-save"
+- stopApp
+- launchApp
+- tapOn:
+    id: "settings-button"
+- assertVisible: ".*Русский.*"
+- assertVisible: ".*SYNO.*"
+- assertVisible: ".*Александр Бондаренко.*"

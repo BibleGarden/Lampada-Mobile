@@ -58,7 +58,12 @@ export default function Home() {
             <IconButton onPress={() => router.push('/journal')} size={sc(30)}>
               <Book size={15} color={colors.labelGold} />
             </IconButton>
-            <IconButton onPress={() => router.push('/settings')} size={sc(30)}>
+            <IconButton
+              onPress={() => router.push('/settings')}
+              size={sc(30)}
+              accessibilityLabel="Настройки"
+              testID="settings-button"
+            >
               <Gear color={colors.labelGold} />
             </IconButton>
           </View>

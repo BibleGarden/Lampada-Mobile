@@ -45,8 +45,39 @@ const json = (response, status, body, headers = {}) => {
 };
 
 const server = http.createServer((request, response) => {
+  const url = new URL(request.url, `http://${request.headers.host ?? 'localhost'}`);
   if (request.method === 'GET' && request.url === '/__status') {
     json(response, 200, { requestCount, privacySafe });
+    return;
+  }
+  if (request.method === 'GET' && url.pathname === '/api/languages') {
+    json(response, 200, [
+      { alias: 'ru', name_en: 'Russian', name_national: 'Русский' },
+      { alias: 'en', name_en: 'English', name_national: 'English' },
+    ]);
+    return;
+  }
+  if (request.method === 'GET' && url.pathname === '/api/translations') {
+    const language = url.searchParams.get('language');
+    json(response, 200, language === 'en' ? [
+      {
+        code: 16, alias: 'bsb', name: 'BSB', description: 'Berean Standard Bible',
+        language: 'en', active: true,
+        voices: [{
+          code: 151, alias: 'bob', name: 'Bob Souer', description: 'Narrator',
+          is_music: false, active: true,
+        }],
+      },
+    ] : [
+      {
+        code: 1, alias: 'syn', name: 'SYNO', description: 'Синодальный перевод',
+        language: 'ru', active: true,
+        voices: [{
+          code: 1, alias: 'alexander', name: 'Alexander Bondarenko', description: 'Диктор',
+          is_music: false, active: true,
+        }],
+      },
+    ]);
     return;
   }
   if (request.method === 'GET' && request.url === '/api/translations/1/books') {

@@ -1,0 +1,16 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-scripture-user-choice-overrides-locale
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: scripture-language-picker... COMPLETED
+Tap on id: scripture-language-ru... COMPLETED
+Tap on id: scripture-translation-1... COMPLETED
+Tap on id: scripture-voice-1... COMPLETED
+Tap on id: scripture-settings-save... COMPLETED
+Stop com.marianovikov.lampada... COMPLETED
+Launch app "com.marianovikov.lampada"... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that ".*Русский.*" is visible... COMPLETED
+Assert that ".*syn.*" is visible... COMPLETED
+Assert that ".*Александр Бондаренко.*" is visible... COMPLETED
+MAESTRO_EXIT=0

@@ -74,6 +74,7 @@ export function IconButton({
   style,
   accessibilityLabel,
   accessibilityState,
+  testID,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -83,11 +84,13 @@ export function IconButton({
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
   accessibilityState?: AccessibilityState;
+  testID?: string;
 }) {
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      testID={testID}
       accessibilityState={accessibilityState}
       onPress={() => {
         Haptics.selectionAsync();

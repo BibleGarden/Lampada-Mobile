@@ -1,4 +1,5 @@
-export type ScriptureLanguage = 'ru' | 'en' | 'uk';
+/** BCP-47-like alias returned by the Bible catalog (for example ru, en or uk). */
+export type ScriptureLanguage = string;
 
 export type ScriptureSource = 'rerank' | 'retrieval_fallback' | 'safe_pool';
 
@@ -122,7 +123,8 @@ export function parseScriptureSelection(value: unknown): ScriptureSelection | nu
   const canonical = value.canonical;
   const passage = value.passage;
   if (
-    (value.language !== 'ru' && value.language !== 'en' && value.language !== 'uk') ||
+    typeof value.language !== 'string' ||
+    !/^[a-z]{2,3}(?:-[a-z0-9]+)*$/i.test(value.language) ||
     typeof canonical.canonical_id !== 'string' ||
     !CANONICAL_ID_PATTERN.test(canonical.canonical_id) ||
     !isNumber(canonical.book_number) ||

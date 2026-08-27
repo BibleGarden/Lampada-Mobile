@@ -1,0 +1,9 @@
+appId: com.marianovikov.lampada
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: "settings-button"
+- assertVisible: ".*English.*"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"

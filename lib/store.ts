@@ -2,7 +2,12 @@ import { create } from 'zustand';
 import * as Network from 'expo-network';
 import * as ai from './ai';
 import * as db from './db';
-import { ensureSettingsLoaded, shareAnswersNow } from './settings';
+import {
+  ensureSettingsLoaded,
+  scripturePreferencesNow,
+  shareAnswersNow,
+} from './settings';
+import type { ScriptureLanguage } from './scripture';
 import { createOneAheadPool } from './oneAheadPool';
 import {
   buildScriptureRequest,
@@ -56,6 +61,8 @@ type SessionState = {
   scrList: ScriptureDisplay[]; // фактически показанный след текущей сессии
   scrIndex: number; // позиция в scrList
   scrFav: string[]; // canonical ID серверных записей в избранном
+  scriptureLanguage: ScriptureLanguage; // snapshot выбора на входе в сессию
+  scriptureTranslation: number;
   scrStatus: 'idle' | 'loading' | 'ready' | 'retrying' | 'error' | 'offline_fallback';
   scrError: 'not_configured' | 'unavailable' | null;
 
@@ -215,8 +222,8 @@ const loadScriptureForState = async (
   if (await explicitlyOffline()) return { ok: false, error: { kind: 'offline' } };
   const shownCanonicalIds = await scriptureRepository.getScriptureHistory();
   const request = buildScriptureRequest({
-    language: 'ru',
-    translation: 1,
+    language: s.scriptureLanguage,
+    translation: s.scriptureTranslation,
     topic: s.topic,
     replies: writtenReplies(s.answers),
     shareReplies: shareAnswersNow(),
@@ -248,6 +255,8 @@ const initial: SessionState = {
   scrList: [],
   scrIndex: 0,
   scrFav: [],
+  scriptureLanguage: 'ru',
+  scriptureTranslation: 1,
   scrStatus: 'idle',
   scrError: null,
   dockMode: 'question',
@@ -323,6 +332,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       db.createSession(topic, minutes),
       ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
+    const scripturePreferences = scripturePreferencesNow();
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
     firstQuestionFetch = null;
@@ -341,6 +351,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       scrFav: favoriteScriptures.flatMap((favorite) =>
         favorite.canonicalId ? [favorite.canonicalId] : [],
       ),
+      scriptureLanguage: scripturePreferences.language,
+      scriptureTranslation: scripturePreferences.translationCode,
       scrStatus: 'loading',
       scrError: null,
       dockMode: 'question',
@@ -619,7 +631,11 @@ const sessionIsCurrent = (sessionId: number, token: number) => {
 
 const applyOfflineFallback = async (sessionId: number, token: number) => {
   if (!sessionIsCurrent(sessionId, token)) return;
-  const cached = await scriptureRepository.getShownScriptureCache();
+  const state = useSession.getState();
+  const cached = await scriptureRepository.getShownScriptureCache(
+    state.scriptureLanguage,
+    state.scriptureTranslation,
+  );
   if (!sessionIsCurrent(sessionId, token)) return;
   const current = useSession.getState();
   if (current.scrList.length) {

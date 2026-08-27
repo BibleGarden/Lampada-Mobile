@@ -1,0 +1,13 @@
+appId: com.marianovikov.lampada
+---
+- launchApp
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "scripture-translation-picker"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Berean Standard Bible.*"
+- assertVisible: ".*WEBUS.*"
+- assertVisible: ".*World English Bible – US Edition.*"
+- assertVisible: ".*WEBBE.*"
+- assertVisible: ".*World English Bible – British Edition.*"

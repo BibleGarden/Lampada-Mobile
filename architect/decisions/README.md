@@ -8,7 +8,9 @@ ADR (Architecture Decision Record) фиксирует одно существе�
 | --- | --- | --- |
 | [0001](0001-architecture-documentation.md) | Принято | Хранить обзор архитектуры и ADR в репозитории |
 | [0002](0002-server-audio-transcription.md) | Принято | Расшифровывать голосовые ответы через серверный Gemini-прокси |
-| [0003](0003-contextual-scripture-selection.md) | Принято | Подбирать Писание сервером с single-flight prefetch, canonical history и offline snapshots |
+| [0003](0003-contextual-scripture-selection.md) | Частично заменено ADR-0004 | Подбирать Писание сервером с single-flight prefetch, canonical history и offline snapshots |
+| [0004](0004-user-scripture-preferences.md) | Частично заменено ADR-0005 | Выбирать язык, перевод и озвучку из Bible API и фиксировать выбор на сессию |
+| [0005](0005-device-scripture-language-default.md) | Принято | Выбирать первый язык Писания по локали устройства с fallback на английский |
 
 ## Правила
 

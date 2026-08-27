@@ -36,7 +36,7 @@ export type ScriptureBook = {
 };
 
 const isLanguage = (value: string): value is ScriptureLanguage =>
-  value === 'ru' || value === 'en' || value === 'uk';
+  /^[a-z]{2,3}(?:-[a-z0-9]+)*$/i.test(value);
 
 const parseJson = (value: string | null): unknown => {
   if (value === null) return undefined;
@@ -149,7 +149,11 @@ export async function resetScriptureHistory(
 }
 
 /** Only actually shown rows are eligible for offline fallback. */
-export async function getShownScriptureCache(limit?: number): Promise<ScriptureDisplay[]> {
+export async function getShownScriptureCache(
+  language?: ScriptureLanguage,
+  translation?: number,
+  limit?: number,
+): Promise<ScriptureDisplay[]> {
   const db = await getDb();
   const safeLimit = limit === undefined ? null : Math.max(0, Math.floor(limit));
   const rows = safeLimit === null
@@ -166,7 +170,12 @@ export async function getShownScriptureCache(limit?: number): Promise<ScriptureD
       );
   return rows.flatMap((row) => {
     const display = displayFromCacheRow(row);
-    return display ? [{ ...display, offline: true }] : [];
+    if (
+      !display ||
+      (language !== undefined && display.selection.language !== language) ||
+      (translation !== undefined && display.selection.passage.translation !== translation)
+    ) return [];
+    return [{ ...display, offline: true }];
   });
 }
 
