@@ -1,0 +1,16 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-scripture-context-fallback
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Fallback сценарий... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "МОЛИТВА" is visible... COMPLETED
+Tap on point (84%,70%)... COMPLETED
+Assert that "Псалом 22:1–6" is visible... COMPLETED
+Assert that "temporarily unavailable" is not visible... COMPLETED
+Assert that "Scripture selection request limit exceeded" is not visible... COMPLETED
+exit=0

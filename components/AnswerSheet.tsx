@@ -626,6 +626,7 @@ export default function AnswerSheet({
             }
             onPress={save}
             style={{ flex: 1 }}
+            testID="answer-save-button"
           />
         </View>
       </BottomSheetScrollView>

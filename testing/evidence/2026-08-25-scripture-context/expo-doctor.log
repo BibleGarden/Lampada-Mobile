@@ -1,0 +1,5 @@
+env: load .env.local
+env: export EXPO_PUBLIC_AI_PROXY_KEY EXPO_PUBLIC_AI_PROXY_URL EXPO_PUBLIC_AI_TRANSCRIBE_URL
+Running 21 checks on your project...
+21/21 checks passed. No issues detected!
+exit=0

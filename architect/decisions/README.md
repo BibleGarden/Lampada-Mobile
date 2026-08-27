@@ -8,6 +8,7 @@ ADR (Architecture Decision Record) фиксирует одно существе�
 | --- | --- | --- |
 | [0001](0001-architecture-documentation.md) | Принято | Хранить обзор архитектуры и ADR в репозитории |
 | [0002](0002-server-audio-transcription.md) | Принято | Расшифровывать голосовые ответы через серверный Gemini-прокси |
+| [0003](0003-contextual-scripture-selection.md) | Принято | Подбирать Писание сервером с single-flight prefetch, canonical history и offline snapshots |
 
 ## Правила
 

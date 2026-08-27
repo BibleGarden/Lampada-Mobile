@@ -1,0 +1,45 @@
+appId: com.marianovikov.lampada
+---
+# Run against scripts/scripture-stub.mjs with EXPO_PUBLIC_SCRIPTURE_SELECT_URL.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Нужна мудрость"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- extendedWaitUntil:
+    visible: "Псалом 22:1–6"
+    timeout: 10000
+- assertVisible: "Господь — Пастырь мой.*"
+- assertVisible: "Читать целиком"
+- tapOn: "Читать целиком"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-25-scripture-context/reader-short-wrapped
+- tapOn: "Bottom sheet backdrop"
+- tapOn: "В избранное"
+- assertVisible: "В избранном"
+- tapOn:
+    point: "82%,86%"
+- assertVisible: "Послание Иакова 1:5–8"
+- assertVisible: "Читать целиком"
+- tapOn: "Читать целиком"
+- swipe:
+    start: "50%,13%"
+    end: "50%,3%"
+    duration: 700
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-25-scripture-context/reader-safe-area-max
+- tapOn:
+    point: "89%,18%"
+- tapOn:
+    point: "18%,86%"
+- assertVisible: "Псалом 22:1–6"

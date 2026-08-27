@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
-import { scriptures } from '../lib/scriptures';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { Heart, Close } from './icons';
 import { IconButton } from './ui';
@@ -13,13 +13,14 @@ type Props = {
 
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
 export default function ScriptureReader({ sheetRef }: Props) {
+  const insets = useSafeAreaInsets();
   // точечные подписки — читалка не ререндерится от тика таймера
   const scrList = useSession((st) => st.scrList);
   const scrIndex = useSession((st) => st.scrIndex);
   const scrFav = useSession((st) => st.scrFav);
   const toggleFav = useSession((st) => st.toggleFav);
-  const cur = scriptures[scrList[scrIndex]];
-  const fav = scrFav.includes(scrList[scrIndex]);
+  const cur = scrList[scrIndex];
+  const fav = !!cur && scrFav.includes(cur.canonicalId);
   const snapPoints = useMemo(() => ['88%'], []);
 
   const renderBackdrop = useCallback(
@@ -34,18 +35,31 @@ export default function ScriptureReader({ sheetRef }: Props) {
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
+      topInset={insets.top}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
       handleIndicatorStyle={styles.handle}
     >
       <View style={styles.header}>
-        <Text style={styles.ref}>{cur.ref}</Text>
+        <View style={styles.referenceWrap}>
+          <Text style={styles.ref}>{cur?.reference ?? 'Писание'}</Text>
+          {cur?.translationAlias ? (
+            <Text style={styles.translation}>{cur.translationAlias}</Text>
+          ) : null}
+        </View>
         <View style={styles.headerBtns}>
-          <IconButton size={sc(32)} bg="rgba(255,255,255,.04)" border={colors.white08} onPress={toggleFav}>
+          <IconButton
+            accessibilityLabel={fav ? 'Удалить из избранного' : 'Добавить в избранное'}
+            size={sc(32)}
+            bg="rgba(255,255,255,.04)"
+            border={colors.white08}
+            onPress={toggleFav}
+          >
             <Heart size={16} fill={fav ? '#e7cf95' : 'none'} />
           </IconButton>
           <IconButton
+            accessibilityLabel="Закрыть чтение"
             size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}
@@ -56,7 +70,8 @@ export default function ScriptureReader({ sheetRef }: Props) {
         </View>
       </View>
       <BottomSheetScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.text}>{cur.text}</Text>
+        {cur?.title ? <Text style={styles.title}>{cur.title}</Text> : null}
+        <Text style={styles.text}>{cur?.text ?? ''}</Text>
       </BottomSheetScrollView>
     </BottomSheet>
   );
@@ -84,11 +99,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: sc(8),
   },
+  referenceWrap: {
+    flex: 1,
+    marginRight: sc(10),
+  },
   ref: {
     fontFamily: fonts.mono,
     fontSize: sc(11),
     letterSpacing: sc(1.4),
     color: colors.labelGold,
+  },
+  translation: {
+    marginTop: sc(3),
+    fontFamily: fonts.mono,
+    fontSize: sc(9),
+    textTransform: 'uppercase',
+    color: colors.white50,
   },
   content: {
     paddingHorizontal: sc(18),
@@ -99,5 +125,11 @@ const styles = StyleSheet.create({
     fontSize: sc(16),
     lineHeight: sc(27),
     color: '#eef0e6',
+  },
+  title: {
+    marginBottom: sc(12),
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(14),
+    color: colors.goldSoft,
   },
 });

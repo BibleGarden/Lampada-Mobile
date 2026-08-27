@@ -14,6 +14,10 @@ import { colors, fonts, radius, sc } from '../lib/theme';
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <Pressable
+      accessibilityLabel="Учитывать мои ответы"
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      testID="share-answers-toggle"
       onPress={() => {
         Haptics.selectionAsync();
         onChange(!value);
@@ -69,11 +73,20 @@ export default function Settings() {
 
             <Text style={styles.disclaimer}>
               {shareAnswers
-                ? 'Текст письменных ответов отправляется на сервер вместе с запросами к ИИ — только ради подбора вопросов.'
-                : 'Текст письменных ответов не используется при подборе вопросов.'}
+                ? 'Текст письменных ответов отправляется на сервер вместе с запросами к ИИ — только ради подбора вопросов и Писания.'
+                : 'Текст письменных ответов не используется при подборе вопросов и Писания.'}
               {'\n\n'}Голосовая запись отправляется в Gemini только после нажатия «Расшифровать». На сервере приложения аудио и расшифровка не сохраняются.
             </Text>
           </View>
+
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Писание</Kicker>
+          <Pressable
+            onPress={() => router.push('/favorites')}
+            style={({ pressed }) => [styles.card, styles.linkCard, pressed && { opacity: 0.75 }]}
+          >
+            <Text style={styles.rowTitle}>Избранные отрывки</Text>
+            <Text style={styles.linkHint}>Открываются без сети, включая сохранённые до обновления</Text>
+          </Pressable>
         </ScrollView>
       </Animated.View>
     </View>
@@ -117,6 +130,15 @@ const styles = StyleSheet.create({
     marginVertical: sc(12),
   },
   disclaimer: {
+    fontFamily: fonts.sans,
+    fontSize: sc(10.5),
+    lineHeight: sc(15),
+    color: colors.warmHint,
+  },
+  linkCard: {
+    gap: sc(5),
+  },
+  linkHint: {
     fontFamily: fonts.sans,
     fontSize: sc(10.5),
     lineHeight: sc(15),

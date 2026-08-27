@@ -1,10 +1,23 @@
 import { create } from 'zustand';
+import * as Network from 'expo-network';
 import * as ai from './ai';
-import { scriptures } from './scriptures';
 import * as db from './db';
-import { shareAnswersNow } from './settings';
+import { ensureSettingsLoaded, shareAnswersNow } from './settings';
 import { createOneAheadPool } from './oneAheadPool';
-import { favoriteIndexesFromRefs } from './favorites';
+import {
+  buildScriptureRequest,
+  toScriptureDisplay,
+  type ScriptureDisplay,
+} from './scripture';
+import {
+  fetchScriptureBooks,
+  selectScripture,
+  selectScriptureOnce,
+  type ScriptureSelectError,
+} from './scriptureClient';
+import * as scriptureRepository from './scriptureRepository';
+import { createSingleFlight } from './singleFlight';
+import { mergeOfflineTrail, shouldDeferLoadedNext } from './scriptureSessionState';
 
 // Логика сессии, перенесённая из прототипа.
 //
@@ -40,10 +53,11 @@ type SessionState = {
   answers: Record<number, Answer>;
   generating: boolean;
 
-  scrList: number[]; // индексы каталога в следе
+  scrList: ScriptureDisplay[]; // фактически показанный след текущей сессии
   scrIndex: number; // позиция в scrList
-  scrFav: number[]; // каталожные индексы в избранном
-  scrNext: number; // готовый запасной индекс для ротации
+  scrFav: string[]; // canonical ID серверных записей в избранном
+  scrStatus: 'idle' | 'loading' | 'ready' | 'retrying' | 'error' | 'offline_fallback';
+  scrError: 'not_configured' | 'unavailable' | null;
 
   dockMode: 'question' | 'scripture';
   musicOn: boolean;
@@ -78,9 +92,10 @@ type SessionActions = {
   saveAnswer: (questionIndex: number, text: string, recordings: RecordingDraft[]) => void;
 
   prevScripture: () => void;
-  nextScripture: () => void;
+  nextScripture: () => Promise<void>;
   jumpScripture: (pos: number) => void;
   toggleFav: () => void;
+  retryScripture: () => Promise<void>;
 
   setDockMode: (m: 'question' | 'scripture') => void;
   toggleMusic: () => void;
@@ -103,14 +118,10 @@ const answersForAi = (answers: Record<number, Answer>) =>
         .filter(Boolean)
     : [];
 
-const pickScripture = (used: number[]): number => {
-  const set = new Set(used);
-  for (let i = 0; i < scriptures.length; i++) if (!set.has(i)) return i;
-  return (used[used.length - 1] + 1) % scriptures.length; // каталог исчерпан — по кругу
-};
-
 let prepareToken = 0;
 let reflectToken = 0;
+let scriptureToken = 0;
+let scriptureAbortController: AbortController | null = null;
 let firstQuestionFetch: {
   topic: string;
   promise: Promise<ai.GeneratedQuestion>;
@@ -121,6 +132,21 @@ let firstQuestionFetch: {
 // именно уже запущенный запрос; новый refill стартует только после показа.
 const questionPool = createOneAheadPool<ai.GeneratedQuestion>();
 const reflectPool = createOneAheadPool<ai.GeneratedQuestion>();
+
+type ScriptureLoadError = ScriptureSelectError | { kind: 'offline' };
+
+type ScriptureLoadResult =
+  | { ok: true; display: ScriptureDisplay }
+  | { ok: false; error: ScriptureLoadError };
+
+const scriptureSingleFlight = createSingleFlight();
+let scripturePrefetch: {
+  sessionId: number;
+  promise: Promise<ScriptureLoadResult>;
+} | null = null;
+
+const runScriptureExclusive = (load: () => Promise<ScriptureLoadResult>) =>
+  scriptureSingleFlight.run(load);
 
 const poolKey = (
   s: SessionState,
@@ -151,6 +177,64 @@ const prepareReflectQuestion = (s: SessionState) => {
   );
 };
 
+const writtenReplies = (answers: Record<number, Answer>) =>
+  Object.values(answers)
+    .map((answer) => answer.text.trim())
+    .filter(Boolean);
+
+const explicitlyOffline = async () => {
+  try {
+    const network = await Network.getNetworkStateAsync();
+    return network.isConnected === false || network.isInternetReachable === false;
+  } catch {
+    // Unknown network state is not proof of offline: let fetch decide.
+    return false;
+  }
+};
+
+const ensureBookNames = async (
+  translation: number,
+  signal: AbortSignal,
+): Promise<Record<number, string> | null> => {
+  let names = await scriptureRepository.getScriptureBookNames(translation);
+  if (Object.keys(names).length) return names;
+  const books = await fetchScriptureBooks(translation, { signal });
+  if (books?.length) {
+    await scriptureRepository.replaceScriptureBooks(translation, books);
+    names = Object.fromEntries(books.map((book) => [book.bookNumber, book.name]));
+  }
+  return Object.keys(names).length ? names : null;
+};
+
+const loadScriptureForState = async (
+  s: SessionState,
+  foreground: boolean,
+  signal: AbortSignal,
+): Promise<ScriptureLoadResult> => {
+  if (signal.aborted) return { ok: false, error: { kind: 'cancelled' } };
+  if (await explicitlyOffline()) return { ok: false, error: { kind: 'offline' } };
+  const shownCanonicalIds = await scriptureRepository.getScriptureHistory();
+  const request = buildScriptureRequest({
+    language: 'ru',
+    translation: 1,
+    topic: s.topic,
+    replies: writtenReplies(s.answers),
+    shareReplies: shareAnswersNow(),
+    shownCanonicalIds,
+  });
+  const result = foreground
+    ? await selectScripture(request, { signal })
+    : await selectScriptureOnce(request, { signal });
+  if (!result.ok) return result;
+  const bookNames = await ensureBookNames(result.data.passage.translation, signal);
+  if (!bookNames?.[result.data.passage.book_number]) {
+    return { ok: false, error: { kind: signal.aborted ? 'cancelled' : 'unavailable', status: 503 } };
+  }
+  const display = toScriptureDisplay(result.data, bookNames);
+  await scriptureRepository.cacheScripture(display);
+  return { ok: true, display };
+};
+
 const initial: SessionState = {
   topic: '',
   minutes: 10,
@@ -161,10 +245,11 @@ const initial: SessionState = {
   answeredCount: 0,
   answers: {},
   generating: false,
-  scrList: [0],
+  scrList: [],
   scrIndex: 0,
   scrFav: [],
-  scrNext: pickScripture([0]),
+  scrStatus: 'idle',
+  scrError: null,
   dockMode: 'question',
   musicOn: false,
   remaining: 600,
@@ -234,9 +319,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         : { topic, promise: ai.generateFirstQuestion(topic) };
     firstQuestionFetch = fetch;
     const firstQuestion = fetch.result;
-    const [sessionId, favoriteRefs] = await Promise.all([
+    const [sessionId, favoriteScriptures] = await Promise.all([
       db.createSession(topic, minutes),
-      db.getFavorites(),
+      ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
@@ -251,10 +336,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       answeredCount: 0,
       answers: {},
       generating: !firstQuestion,
-      scrList: [0],
+      scrList: [],
       scrIndex: 0,
-      scrFav: favoriteIndexesFromRefs(favoriteRefs, scriptures),
-      scrNext: pickScripture([0]),
+      scrFav: favoriteScriptures.flatMap((favorite) =>
+        favorite.canonicalId ? [favorite.canonicalId] : [],
+      ),
+      scrStatus: 'loading',
+      scrError: null,
       dockMode: 'question',
       musicOn: false,
       remaining: minutes === 0 ? null : minutes * 60,
@@ -263,6 +351,11 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       reflectSource: null,
       reflectGenerating: false,
     });
+    scriptureAbortController?.abort();
+    scriptureAbortController = new AbortController();
+    const currentScriptureToken = ++scriptureToken;
+    scripturePrefetch = null;
+    void loadFirstScripture(sessionId, currentScriptureToken);
     if (firstQuestion) {
       // Первый запасной вопрос начинает готовиться сразу после входа.
       prepareQuestion(get(), 0);
@@ -415,31 +508,41 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   prevScripture: () => set((s) => (s.scrIndex > 0 ? { scrIndex: s.scrIndex - 1 } : s)),
 
-  nextScripture: () =>
-    set((s) => {
-      if (s.scrIndex < s.scrList.length - 1) return { scrIndex: s.scrIndex + 1 };
-      const fav = s.scrFav.includes(s.scrList[s.scrIndex]);
-      const scrList = s.scrList.slice();
-      if (fav) {
-        scrList.push(s.scrNext);
-        return {
-          scrList,
-          scrIndex: s.scrIndex + 1,
-          scrNext: pickScripture(scrList),
-        };
-      }
-      scrList[s.scrIndex] = s.scrNext;
-      return { scrList, scrNext: pickScripture(scrList) };
-    }),
+  nextScripture: async () => {
+    const s = get();
+    if (s.scrIndex < s.scrList.length - 1) {
+      set({ scrIndex: s.scrIndex + 1 });
+      return;
+    }
+    if (s.sessionId === null || s.scrStatus === 'loading' || s.scrStatus === 'retrying') return;
+    await showNextScripture(s.sessionId, scriptureToken);
+  },
 
-  jumpScripture: (pos) => set({ scrIndex: pos }),
+  jumpScripture: (pos) =>
+    set((s) => ({ scrIndex: Math.max(0, Math.min(pos, s.scrList.length - 1)) })),
 
   toggleFav: () => {
     const s = get();
-    const cat = s.scrList[s.scrIndex];
-    const has = s.scrFav.includes(cat);
-    set({ scrFav: has ? s.scrFav.filter((x) => x !== cat) : [...s.scrFav, cat] });
-    db.toggleFavorite(scriptures[cat].ref);
+    const current = s.scrList[s.scrIndex];
+    if (!current) return;
+    const has = s.scrFav.includes(current.canonicalId);
+    set({
+      scrFav: has
+        ? s.scrFav.filter((id) => id !== current.canonicalId)
+        : [...s.scrFav, current.canonicalId],
+    });
+    if (has) {
+      void scriptureRepository.removeFavoriteByCanonicalId(current.canonicalId);
+    } else {
+      void scriptureRepository.addFavoriteScripture(current);
+    }
+  },
+
+  retryScripture: async () => {
+    const s = get();
+    if (s.sessionId === null || s.scrStatus === 'loading' || s.scrStatus === 'retrying') return;
+    set({ scrStatus: 'loading', scrError: null });
+    await loadFirstScripture(s.sessionId, scriptureToken);
   },
 
   setDockMode: (dockMode) => set({ dockMode }),
@@ -488,6 +591,10 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   reset: () => {
     prepareToken++; // висящие prepareThreshold-промисы больше не применятся
     reflectToken++;
+    scriptureToken++;
+    scriptureAbortController?.abort();
+    scriptureAbortController = null;
+    scripturePrefetch = null;
     firstQuestionFetch = null;
     questionPool.invalidate();
     reflectPool.invalidate();
@@ -504,6 +611,135 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     set({ streak });
   },
 }));
+
+const sessionIsCurrent = (sessionId: number, token: number) => {
+  const state = useSession.getState();
+  return state.sessionId === sessionId && scriptureToken === token;
+};
+
+const applyOfflineFallback = async (sessionId: number, token: number) => {
+  if (!sessionIsCurrent(sessionId, token)) return;
+  const cached = await scriptureRepository.getShownScriptureCache();
+  if (!sessionIsCurrent(sessionId, token)) return;
+  const current = useSession.getState();
+  if (current.scrList.length) {
+    useSession.setState({
+      scrList: mergeOfflineTrail(current.scrList, cached, current.scrIndex),
+      scrStatus: 'offline_fallback',
+      scrError: null,
+    });
+  } else if (cached.length) {
+    useSession.setState({
+      scrList: cached,
+      scrIndex: 0,
+      scrStatus: 'offline_fallback',
+      scrError: null,
+    });
+  } else {
+    useSession.setState({ scrStatus: 'error', scrError: 'unavailable' });
+  }
+};
+
+const showScripture = async (
+  sessionId: number,
+  token: number,
+  display: ScriptureDisplay,
+) => {
+  if (!sessionIsCurrent(sessionId, token)) return;
+  if (display.selection.history_reset) await scriptureRepository.resetScriptureHistory();
+  await scriptureRepository.recordScriptureShown(display);
+  if (!sessionIsCurrent(sessionId, token)) return;
+  useSession.setState((state) => ({
+    scrList: [...state.scrList.slice(0, state.scrIndex + 1), display],
+    scrIndex: state.scrList.length ? state.scrIndex + 1 : 0,
+    scrStatus: 'ready',
+    scrError: null,
+  }));
+  startScripturePrefetch(sessionId, token);
+};
+
+const handleScriptureFailure = async (
+  sessionId: number,
+  token: number,
+  error: ScriptureLoadError,
+) => {
+  if (!sessionIsCurrent(sessionId, token)) return;
+  if (error.kind === 'cancelled') return;
+  await applyOfflineFallback(sessionId, token);
+  if (
+    sessionIsCurrent(sessionId, token) &&
+    useSession.getState().scrStatus === 'error' &&
+    error.kind === 'not_configured'
+  ) useSession.setState({ scrError: 'not_configured' });
+};
+
+async function loadFirstScripture(sessionId: number, token: number) {
+  if (!sessionIsCurrent(sessionId, token)) return;
+  const controller = scriptureAbortController;
+  if (!controller) return;
+  const result = await runScriptureExclusive(() =>
+    loadScriptureForState(useSession.getState(), true, controller.signal),
+  );
+  if (!sessionIsCurrent(sessionId, token)) return;
+  if (!result.ok) {
+    await handleScriptureFailure(sessionId, token, result.error);
+    return;
+  }
+  await showScripture(sessionId, token, result.display);
+}
+
+function startScripturePrefetch(sessionId: number, token: number) {
+  if (!sessionIsCurrent(sessionId, token)) return;
+  const state = useSession.getState();
+  const controller = scriptureAbortController;
+  if (!controller) return;
+  if (state.scrStatus !== 'ready' || scripturePrefetch?.sessionId === sessionId) return;
+  const promise = runScriptureExclusive(() =>
+    loadScriptureForState(state, false, controller.signal),
+  );
+  const slot = { sessionId, promise };
+  scripturePrefetch = slot;
+  void promise.then((result) => {
+    if (scripturePrefetch !== slot || !sessionIsCurrent(sessionId, token)) return;
+    // Successful results stay in the one-ahead slot until the user asks for them.
+    // Failed background requests are discarded silently; an explicit Next retries.
+    if (!result.ok) scripturePrefetch = null;
+  });
+}
+
+async function showNextScripture(sessionId: number, token: number) {
+  if (!sessionIsCurrent(sessionId, token)) return;
+  const controller = scriptureAbortController;
+  if (!controller) return;
+  const startedAtIndex = useSession.getState().scrIndex;
+  const prefetched = scripturePrefetch?.sessionId === sessionId ? scripturePrefetch : null;
+  useSession.setState({ scrStatus: prefetched ? 'loading' : 'retrying', scrError: null });
+  let result = prefetched
+    ? await prefetched.promise
+    : await runScriptureExclusive(() =>
+        loadScriptureForState(useSession.getState(), true, controller.signal)
+      );
+  if (scripturePrefetch === prefetched) scripturePrefetch = null;
+  if (!sessionIsCurrent(sessionId, token)) return;
+
+  if (!result.ok && prefetched) {
+    useSession.setState({ scrStatus: 'retrying' });
+    result = await runScriptureExclusive(() =>
+      loadScriptureForState(useSession.getState(), true, controller.signal)
+    );
+  }
+  if (!sessionIsCurrent(sessionId, token)) return;
+  if (!result.ok) {
+    await handleScriptureFailure(sessionId, token, result.error);
+    return;
+  }
+  if (shouldDeferLoadedNext(startedAtIndex, useSession.getState().scrIndex)) {
+    scripturePrefetch = { sessionId, promise: Promise.resolve(result) };
+    useSession.setState({ scrStatus: 'ready', scrError: null });
+    return;
+  }
+  await showScripture(sessionId, token, result.display);
+}
 
 export const fmtTime = (sec: number) => {
   const m = Math.floor(sec / 60);

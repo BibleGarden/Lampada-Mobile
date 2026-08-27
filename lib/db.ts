@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { File, Paths } from 'expo-file-system';
 import { dayKey, getWeekIndicators } from './streak';
 import { resolveRecordingUri, toStoredRecordingUri } from './recordingUri';
+import { migrateScriptureStorage } from './scriptureSchema';
 
 // Все данные — только на устройстве.
 
@@ -92,6 +93,7 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
       day TEXT PRIMARY KEY
     );
   `);
+  await migrateScriptureStorage(db);
   await migrateRecordingUris(db);
   // дозаполнить prayed_days из старого стрика: count дней, заканчивая last_day.
   // Идемпотентно (OR IGNORE), так что можно гнать при каждом открытии

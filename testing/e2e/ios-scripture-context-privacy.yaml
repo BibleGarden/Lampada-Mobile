@@ -1,0 +1,28 @@
+appId: com.marianovikov.lampada
+---
+# Run stub with SCRIPTURE_STUB_MODE=privacy. It returns 422 if any reply leaks.
+- launchApp:
+    stopApp: true
+    clearState: true
+- openLink: "lampada://settings"
+- tapOn:
+    id: "share-answers-toggle"
+- openLink: "lampada://"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Приватная молитва"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- extendedWaitUntil:
+    visible: "Псалом 22:1–6"
+    timeout: 10000
+- assertNotVisible: "Сейчас не удалось подобрать отрывок."

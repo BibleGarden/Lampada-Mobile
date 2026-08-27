@@ -9,21 +9,34 @@ import { getDb } from './db';
 
 type SettingsState = {
   shareAnswers: boolean;
+  loaded: boolean;
   load: () => Promise<void>;
   setShareAnswers: (v: boolean) => Promise<void>;
 };
 
+let loadPromise: Promise<void> | null = null;
+
 export const useSettings = create<SettingsState>((set) => ({
   shareAnswers: true,
+  loaded: false,
 
   load: async () => {
-    const d = await getDb();
-    const row = await d.getFirstAsync<{ value: string }>(
-      "SELECT value FROM meta WHERE key = 'share_answers'",
-    );
-    // Для новых установок записи ещё нет — используем включённое значение
-    // по умолчанию. Явно сохранённый "0" остаётся выбором пользователя.
-    set({ shareAnswers: row?.value !== '0' });
+    if (useSettings.getState().loaded) return;
+    if (!loadPromise) {
+      loadPromise = (async () => {
+        const d = await getDb();
+        const row = await d.getFirstAsync<{ value: string }>(
+          "SELECT value FROM meta WHERE key = 'share_answers'",
+        );
+        // Для новых установок записи ещё нет — используем включённое значение
+        // по умолчанию. Явно сохранённый "0" остаётся выбором пользователя.
+        set({ shareAnswers: row?.value !== '0', loaded: true });
+      })().catch((error) => {
+        loadPromise = null;
+        throw error;
+      });
+    }
+    await loadPromise;
   },
 
   setShareAnswers: async (v) => {
@@ -39,3 +52,8 @@ export const useSettings = create<SettingsState>((set) => ({
 
 /** Текущее значение для не-React кода (store), без подписки */
 export const shareAnswersNow = () => useSettings.getState().shareAnswers;
+
+/** Privacy barrier for non-React code: persisted opt-out is loaded before networking. */
+export const ensureSettingsLoaded = async () => {
+  if (!useSettings.getState().loaded) await useSettings.getState().load();
+};

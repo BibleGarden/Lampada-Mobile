@@ -1,0 +1,25 @@
+appId: com.marianovikov.lampada
+---
+# Run stub with SCRIPTURE_STUB_MODE=fallback: 503 -> 429 Retry-After:1 -> success.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Fallback сценарий"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- extendedWaitUntil:
+    visible: "Псалом 22:1–6"
+    timeout: 20000
+- assertNotVisible: "temporarily unavailable"
+- assertNotVisible: "Scripture selection request limit exceeded"

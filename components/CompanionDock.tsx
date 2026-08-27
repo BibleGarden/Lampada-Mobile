@@ -4,7 +4,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
-import { scriptures, isLong } from '../lib/scriptures';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { WindowDots } from './ui';
 import {
@@ -27,6 +26,10 @@ type Props = {
 // Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
 // Механика следа/фронтира живёт в store; здесь только отображение.
 export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
+  const [measuredScripture, setMeasuredScripture] = React.useState<{
+    key: string;
+    truncated: boolean;
+  } | null>(null);
   // селектор без remaining/elapsed: карточка не должна ререндериться
   // каждую секунду от тика таймера
   const s = useSession(
@@ -41,6 +44,8 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
       scrList: st.scrList,
       scrIndex: st.scrIndex,
       scrFav: st.scrFav,
+      scrStatus: st.scrStatus,
+      scrError: st.scrError,
       setDockMode: st.setDockMode,
       prevQuestion: st.prevQuestion,
       nextQuestion: st.nextQuestion,
@@ -49,6 +54,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
       nextScripture: st.nextScripture,
       jumpScripture: st.jumpScripture,
       toggleFav: st.toggleFav,
+      retryScripture: st.retryScripture,
     })),
   );
   const isQ = s.dockMode === 'question';
@@ -58,10 +64,15 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
     return !!(a && (a.text.trim() || a.recordings.length));
   })();
 
-  const curScripture = scriptures[s.scrList[s.scrIndex]];
-  const curFav = s.scrFav.includes(s.scrList[s.scrIndex]);
+  const curScripture = s.scrList[s.scrIndex];
+  const scriptureMeasureKey = curScripture
+    ? `${curScripture.canonicalId}:${curScripture.receivedAt}`
+    : null;
+  const scriptureIsTruncated = !!scriptureMeasureKey
+    && measuredScripture?.key === scriptureMeasureKey
+    && measuredScripture.truncated;
+  const curFav = !!curScripture && s.scrFav.includes(curScripture.canonicalId);
   const onFrontier = s.qIndex === s.answeredCount;
-  const scrOnFrontier = s.scrIndex === s.scrList.length - 1;
 
   const tap = (fn: () => void) => () => {
     Haptics.selectionAsync();
@@ -72,12 +83,12 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
     <View style={styles.card}>
       {/* заголовок + переключатель */}
       <View style={styles.header}>
-        <Text style={styles.label} numberOfLines={1}>
+        <Text style={styles.label} numberOfLines={isQ ? 1 : undefined}>
           {isQ
             ? s.questionSources[s.qIndex] === 'fallback'
               ? 'Резервный вопрос'
               : 'Спутник спрашивает'
-            : curScripture.ref}
+            : curScripture?.reference ?? 'Писание'}
         </Text>
         <View style={styles.switcher}>
           <Pressable
@@ -147,35 +158,82 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
           </View>
         </Animated.View>
       ) : (
-        <Animated.View key={`scr-${s.scrIndex}-${s.scrList[s.scrIndex]}`} entering={FadeInDown.duration(350)}>
+        <Animated.View
+          key={`scr-${s.scrIndex}-${curScripture?.canonicalId ?? s.scrStatus}`}
+          entering={FadeInDown.duration(350)}
+        >
           <View style={styles.textWrap}>
-            <Text style={styles.cardText} numberOfLines={3}>
-              {curScripture.text}
-            </Text>
+            {s.scrStatus === 'loading' || s.scrStatus === 'retrying' ? (
+              <ActivityIndicator accessibilityLabel="Подбираю Писание" color={colors.goldSoft} />
+            ) : curScripture ? (
+              <>
+                {curScripture.title ? (
+                  <Text style={styles.scriptureTitle} numberOfLines={1}>{curScripture.title}</Text>
+                ) : null}
+                <View style={styles.scripturePreview}>
+                  <Text style={styles.cardText} numberOfLines={3}>{curScripture.text}</Text>
+                  <Text
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                    pointerEvents="none"
+                    style={[styles.cardText, styles.scriptureMeasureText]}
+                    onTextLayout={({ nativeEvent }) => {
+                      const truncated = nativeEvent.lines.length > 3;
+                      setMeasuredScripture((current) =>
+                        current?.key === scriptureMeasureKey && current.truncated === truncated
+                          ? current
+                          : { key: scriptureMeasureKey as string, truncated },
+                      );
+                    }}
+                  >
+                    {curScripture.text}
+                  </Text>
+                </View>
+                {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
+                  <Text style={styles.offlineLabel}>Офлайн · из сохранённых</Text>
+                )}
+              </>
+            ) : (
+              <Pressable onPress={tap(() => void s.retryScripture())} style={styles.retryWrap}>
+                <Text style={styles.cardText}>Сейчас не удалось подобрать отрывок.</Text>
+                <Text style={styles.retryLabel}>
+                  {s.scrError === 'not_configured' ? 'Проверить настройки' : 'Попробовать ещё раз'}
+                </Text>
+              </Pressable>
+            )}
           </View>
-          {isLong(curScripture) && (
+          {curScripture && scriptureIsTruncated && (
             <Pressable onPress={tap(onOpenReader)} style={styles.readMore}>
               <Text style={styles.readMoreLabel}>Читать целиком</Text>
               <ChevronRight size={13} />
             </Pressable>
           )}
           <View style={styles.actionsRow}>
-            <SquareBtn disabled={s.scrIndex === 0} onPress={tap(s.prevScripture)} dim>
+            <SquareBtn disabled={!curScripture || s.scrIndex === 0} onPress={tap(s.prevScripture)} dim>
               <ChevronLeft />
             </SquareBtn>
             <Pressable
+              disabled={!curScripture}
               onPress={tap(s.toggleFav)}
-              style={({ pressed }) => [styles.mainBtn, pressed && { transform: [{ scale: 0.98 }] }]}
+              style={({ pressed }) => [
+                styles.mainBtn,
+                !curScripture && { opacity: 0.35 },
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]}
             >
               <Heart fill={curFav ? '#e7cf95' : 'none'} />
               <Text style={styles.mainBtnLabel}>{curFav ? 'В избранном' : 'В избранное'}</Text>
             </Pressable>
-            <SquareBtn onPress={tap(s.nextScripture)}>
-              {!scrOnFrontier ? <ChevronRight /> : curFav ? <Plus /> : <Regen />}
+            <SquareBtn
+              disabled={!curScripture || s.scrStatus === 'loading' || s.scrStatus === 'retrying'}
+              onPress={tap(() => void s.nextScripture())}
+            >
+              <ChevronRight />
             </SquareBtn>
           </View>
           <View style={styles.dotsWrap}>
-            <WindowDots total={s.scrList.length} current={s.scrIndex} onSet={s.jumpScripture} />
+            <WindowDots total={Math.max(1, s.scrList.length)} current={s.scrIndex} onSet={s.jumpScripture} />
           </View>
         </Animated.View>
       )}
@@ -228,6 +286,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.mono,
     fontSize: sc(10),
+    lineHeight: sc(14),
     letterSpacing: sc(1.4),
     textTransform: 'uppercase',
     color: colors.labelGold,
@@ -272,6 +331,40 @@ const styles = StyleSheet.create({
     lineHeight: sc(22),
     color: colors.cardText,
     textAlign: 'center',
+  },
+  scriptureTitle: {
+    marginBottom: sc(4),
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(12),
+    color: colors.goldSoft,
+    textAlign: 'center',
+  },
+  scripturePreview: {
+    alignSelf: 'stretch',
+  },
+  scriptureMeasureText: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    opacity: 0,
+  },
+  offlineLabel: {
+    marginTop: sc(5),
+    fontFamily: fonts.mono,
+    fontSize: sc(9),
+    letterSpacing: sc(0.8),
+    textTransform: 'uppercase',
+    color: colors.white50,
+  },
+  retryWrap: {
+    alignItems: 'center',
+    gap: sc(7),
+  },
+  retryLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(12),
+    color: colors.goldSoft,
   },
   readMore: {
     flexDirection: 'row',

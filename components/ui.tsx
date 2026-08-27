@@ -36,13 +36,18 @@ export function GoldButton({
   label,
   onPress,
   style,
+  testID,
 }: {
   label: string;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 }) {
   return (
     <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      testID={testID}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         onPress();

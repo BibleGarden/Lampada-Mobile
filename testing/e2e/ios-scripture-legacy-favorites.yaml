@@ -1,0 +1,15 @@
+appId: com.marianovikov.lampada
+---
+# Precondition: legacy `favorites` contains known and unknown refs; migration marker is absent.
+- launchApp:
+    stopApp: true
+- openLink: "lampada://favorites"
+- extendedWaitUntil:
+    visible: "Колоссянам 3:23"
+    timeout: 10000
+- assertVisible: "И всё, что делаете.*"
+- scrollUntilVisible:
+    element:
+      text: "Неизвестная старая ссылка"
+    direction: DOWN
+- assertVisible: "Сохранено ранее"
