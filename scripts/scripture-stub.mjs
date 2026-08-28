@@ -17,10 +17,21 @@ const fixtures = [
       verse_start: 1,
       verse_end: 6,
       title: null,
-      // Намеренно короче прежнего порога 160 символов, но длиннее трёх строк.
-      text: 'Господь — Пастырь мой.\n\nОн покоит меня.\n\nОн ведёт меня.\n\nИ я пребуду с Ним.',
+      verses: [
+        { number: 1, text: 'Господь — Пастырь мой.', paragraph_start: true },
+        { number: 2, text: 'Он покоит меня.', paragraph_start: true },
+        { number: 3, text: 'Он ведёт меня.', paragraph_start: true },
+        { number: 4, text: 'Не убоюсь зла, потому что Ты со мной.', paragraph_start: true },
+        { number: 5, text: 'Ты приготовил предо мною трапезу.', paragraph_start: true },
+        { number: 6, text: 'И я пребуду с Ним.', paragraph_start: true },
+      ],
+      text: 'Господь — Пастырь мой.\n\nОн покоит меня.\n\nОн ведёт меня.\n\nНе убоюсь зла, потому что Ты со мной.\n\nТы приготовил предо мною трапезу.\n\nИ я пребуду с Ним.',
     },
-    source: 'safe_pool', fallback_reason: 'empty_topic', history_reset: false,
+    highlight: {
+      canonical: { book_number: 19, chapter_number: 23, verse_start: 3, verse_end: 3 },
+      passage: { chapter_number: 22, verse_start: 2, verse_end: 2 },
+    },
+    source: 'rerank', fallback_reason: null, history_reset: false,
   },
   {
     language: 'ru',

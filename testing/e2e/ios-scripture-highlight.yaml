@@ -1,0 +1,31 @@
+appId: twinkler
+---
+# Run against scripts/scripture-stub.mjs with EXPO_PUBLIC_SCRIPTURE_SELECT_URL.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    text: "Open"
+    optional: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Нужна поддержка"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,70%"
+- extendedWaitUntil:
+    visible: "Псалом 22:1–6"
+    timeout: 10000
+- assertVisible:
+    id: "scripture-preview-highlight-2"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-28-scripture-highlight/preview-highlight
+- tapOn: "Читать целиком"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-28-scripture-highlight/reader-highlight

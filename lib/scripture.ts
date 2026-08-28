@@ -8,7 +8,8 @@ export type ScriptureFallbackReason =
   | 'no_reranker'
   | 'deadline'
   | 'empty_topic'
-  | 'ai_unavailable';
+  | 'ai_unavailable'
+  | 'coverage_empty';
 
 export type CanonicalPassage = {
   canonical_id: string;
@@ -27,12 +28,34 @@ export type TranslatedPassage = {
   verse_end: number;
   title: string | null;
   text: string;
+  verses?: ScriptureVerse[];
+};
+
+export type ScriptureVerse = {
+  number: number;
+  text: string;
+  paragraph_start: boolean;
+};
+
+export type ScriptureHighlight = {
+  canonical: {
+    book_number: number;
+    chapter_number: number;
+    verse_start: number;
+    verse_end: number;
+  };
+  passage: {
+    chapter_number: number;
+    verse_start: number;
+    verse_end: number;
+  };
 };
 
 export type ScriptureSelection = {
   language: ScriptureLanguage;
   canonical: CanonicalPassage;
   passage: TranslatedPassage;
+  highlight?: ScriptureHighlight;
   source: ScriptureSource | (string & {});
   fallback_reason?: ScriptureFallbackReason | null;
   history_reset: boolean;
@@ -118,6 +141,30 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
+const isInteger = (value: unknown): value is number =>
+  isNumber(value) && Number.isInteger(value);
+
+const isScriptureVerse = (value: unknown): value is ScriptureVerse =>
+  isObject(value) &&
+  isInteger(value.number) &&
+  typeof value.text === 'string' &&
+  typeof value.paragraph_start === 'boolean';
+
+const isScriptureHighlight = (value: unknown): value is ScriptureHighlight => {
+  if (!isObject(value) || !isObject(value.canonical) || !isObject(value.passage)) {
+    return false;
+  }
+  return (
+    isInteger(value.canonical.book_number) &&
+    isInteger(value.canonical.chapter_number) &&
+    isInteger(value.canonical.verse_start) &&
+    isInteger(value.canonical.verse_end) &&
+    isInteger(value.passage.chapter_number) &&
+    isInteger(value.passage.verse_start) &&
+    isInteger(value.passage.verse_end)
+  );
+};
+
 export function parseScriptureSelection(value: unknown): ScriptureSelection | null {
   if (!isObject(value) || !isObject(value.canonical) || !isObject(value.passage)) return null;
   const canonical = value.canonical;
@@ -139,12 +186,50 @@ export function parseScriptureSelection(value: unknown): ScriptureSelection | nu
     !isNumber(passage.verse_end) ||
     (passage.title !== null && typeof passage.title !== 'string') ||
     typeof passage.text !== 'string' ||
+    (passage.verses !== undefined &&
+      (!Array.isArray(passage.verses) ||
+        passage.verses.length === 0 ||
+        !passage.verses.every(isScriptureVerse))) ||
+    (value.highlight !== undefined && !isScriptureHighlight(value.highlight)) ||
     typeof value.source !== 'string' ||
     typeof value.history_reset !== 'boolean'
   ) {
     return null;
   }
   return value as ScriptureSelection;
+}
+
+export type ScriptureTextSegment = {
+  number: number;
+  prefix: string;
+  text: string;
+  highlighted: boolean;
+};
+
+/**
+ * Builds renderable verse spans only when they reconstruct passage.text exactly.
+ * A malformed or older response therefore degrades to the unchanged plain text.
+ */
+export function buildScriptureTextSegments(
+  selection: ScriptureSelection,
+): ScriptureTextSegment[] | null {
+  const verses = selection.passage.verses;
+  if (!verses?.length) return null;
+
+  const range = selection.highlight?.passage;
+  const canHighlight = range?.chapter_number === selection.passage.chapter_number;
+  const segments = verses.map((verse, index) => ({
+    number: verse.number,
+    prefix: index === 0 ? '' : verse.paragraph_start ? '\n\n' : ' ',
+    text: verse.text,
+    highlighted: !!canHighlight &&
+      verse.number >= range!.verse_start &&
+      verse.number <= range!.verse_end,
+  }));
+
+  return segments.map((segment) => segment.prefix + segment.text).join('') === selection.passage.text
+    ? segments
+    : null;
 }
 
 export function formatScriptureReference(

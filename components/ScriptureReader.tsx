@@ -6,6 +6,7 @@ import { useSession } from '../lib/store';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { Heart, Close } from './icons';
 import { IconButton } from './ui';
+import ScripturePassageText from './ScripturePassageText';
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
@@ -71,7 +72,13 @@ export default function ScriptureReader({ sheetRef }: Props) {
       </View>
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {cur?.title ? <Text style={styles.title}>{cur.title}</Text> : null}
-        <Text style={styles.text}>{cur?.text ?? ''}</Text>
+        {cur ? (
+          <ScripturePassageText
+            scripture={cur}
+            style={styles.text}
+            testIDPrefix="scripture-reader-highlight"
+          />
+        ) : null}
       </BottomSheetScrollView>
     </BottomSheet>
   );

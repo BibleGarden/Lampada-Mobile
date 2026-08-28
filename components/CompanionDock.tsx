@@ -17,6 +17,7 @@ import {
   QuestionMark,
   Regen,
 } from './icons';
+import ScripturePassageText from './ScripturePassageText';
 
 type Props = {
   onOpenAnswer: () => void;
@@ -171,7 +172,12 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
                   <Text style={styles.scriptureTitle} numberOfLines={1}>{curScripture.title}</Text>
                 ) : null}
                 <View style={styles.scripturePreview}>
-                  <Text style={styles.cardText} numberOfLines={3}>{curScripture.text}</Text>
+                  <ScripturePassageText
+                    scripture={curScripture}
+                    style={styles.cardText}
+                    numberOfLines={3}
+                    testIDPrefix="scripture-preview-highlight"
+                  />
                   <Text
                     accessible={false}
                     accessibilityElementsHidden
