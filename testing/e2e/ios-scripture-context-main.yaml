@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # Run against scripts/scripture-stub.mjs with EXPO_PUBLIC_SCRIPTURE_SELECT_URL.
 - launchApp:

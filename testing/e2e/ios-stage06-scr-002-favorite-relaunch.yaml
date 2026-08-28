@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # SCR-002: favorite state must be restored from SQLite after app relaunch.
 - launchApp:

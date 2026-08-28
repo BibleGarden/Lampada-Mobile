@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TEAM="${TEAM:-4SC2JCE37N}"                 # Maria Novikov (платная)
-BUNDLE="${BUNDLE:-com.marianovikov.lampada}"
+BUNDLE="${BUNDLE:-twinkler}"
 WS="ios/Twinkler.xcworkspace"
 APP="ios/build/Build/Products/Release-iphoneos/Twinkler.app"
 

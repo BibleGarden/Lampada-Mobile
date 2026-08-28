@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # Regression: explicit session finish must stop music before playlist release.
 - launchApp:

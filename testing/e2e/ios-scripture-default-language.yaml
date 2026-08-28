@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 - launchApp:
     clearState: true

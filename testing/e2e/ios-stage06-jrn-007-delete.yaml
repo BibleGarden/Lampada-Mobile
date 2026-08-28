@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # JRN-007: delete a prayer after opening its details and confirming twice.
 - launchApp:

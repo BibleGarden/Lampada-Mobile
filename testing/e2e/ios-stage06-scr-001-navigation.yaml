@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # SCR-001: open reader (companion dock, scripture mode) and page forward/backward;
 # navigation must stay stable at list boundaries.

@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # END-002: a saved takeaway is shown on the final screen and in the journal.
 - launchApp:

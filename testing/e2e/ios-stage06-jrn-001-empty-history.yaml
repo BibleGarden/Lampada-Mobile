@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # JRN-001: an empty journal shows a clear empty state and no error.
 - launchApp:

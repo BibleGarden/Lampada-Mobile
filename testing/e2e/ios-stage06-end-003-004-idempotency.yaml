@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # END-003/004: double completion is idempotent; two prayers share one prayed day.
 - launchApp:

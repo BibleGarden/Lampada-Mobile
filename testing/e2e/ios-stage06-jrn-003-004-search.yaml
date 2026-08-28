@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # JRN-003/004: search covers topic, takeaway, question and answer; Cyrillic is case-insensitive.
 - launchApp:

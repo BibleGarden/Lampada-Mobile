@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # Precondition: legacy `favorites` contains known and unknown refs; migration marker is absent.
 - launchApp:

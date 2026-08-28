@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # SCR-003 on iPhone SE, entered through the app's registered deep-link scheme.
 - launchApp:

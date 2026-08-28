@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # JRN-005 (data setup A): a finished prayer that has both a text answer and a real voice recording.
 - launchApp:

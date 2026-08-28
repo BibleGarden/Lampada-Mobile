@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # SCR-003: long scripture opens in a scrollable reader without losing controls.
 - launchApp:

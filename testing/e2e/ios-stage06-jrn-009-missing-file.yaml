@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # JRN-009: a missing recording file must not crash journal details or playback attempt.
 - launchApp:

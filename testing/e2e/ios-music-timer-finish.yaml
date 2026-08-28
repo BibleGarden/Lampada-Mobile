@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # Regression: timer completion must not call pause() after AudioPlaylist release.
 - launchApp:

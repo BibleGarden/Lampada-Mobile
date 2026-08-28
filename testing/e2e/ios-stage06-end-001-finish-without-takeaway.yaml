@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # END-001: finishing without a takeaway completes the session and shows no empty takeaway card.
 - launchApp:

@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # ANS-001: a saved text answer is restored when the same question is reopened.
 - launchApp:

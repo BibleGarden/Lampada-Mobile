@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # MUS-001: local prayer music has an explicit, reversible session control.
 - launchApp:

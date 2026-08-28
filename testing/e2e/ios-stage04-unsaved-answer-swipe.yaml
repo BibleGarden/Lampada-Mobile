@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # ANS-003: a downward swipe must not discard a non-empty draft. Discarding it
 # remains possible only through the explicit two-step "Отмена" confirmation.

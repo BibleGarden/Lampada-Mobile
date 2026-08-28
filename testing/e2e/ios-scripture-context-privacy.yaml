@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # Run stub with SCRIPTURE_STUB_MODE=privacy. It returns 422 if any reply leaks.
 - launchApp:

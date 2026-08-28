@@ -7,13 +7,16 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
-      "bundleIdentifier": "com.marianovikov.lampada",
+      "bundleIdentifier": "twinkler",
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена в Gemini для расшифровки только по вашему запросу.",
         "UIBackgroundModes": [
           "audio"
         ]
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -39,6 +42,13 @@
       "expo-localization"
     ],
     "scheme": "lampada",
-    "backgroundColor": "#0e0a07"
+    "backgroundColor": "#0e0a07",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e62a017e-2102-46fd-bee1-bb27168ed549"
+      }
+    },
+    "owner": "nf404"
   }
 }

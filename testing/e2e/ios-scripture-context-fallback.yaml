@@ -1,4 +1,4 @@
-appId: com.marianovikov.lampada
+appId: twinkler
 ---
 # Run stub with SCRIPTURE_STUB_MODE=fallback: 503 -> 429 Retry-After:1 -> success.
 - launchApp:
