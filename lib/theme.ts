@@ -68,6 +68,7 @@ export const colors = {
 export const fonts = {
   serif: 'Spectral_300Light',
   serifRegular: 'Spectral_400Regular',
+  serifSemiBold: 'Spectral_600SemiBold',
   serifItalic: 'Spectral_300Light_Italic',
   sans: 'HankenGrotesk_400Regular',
   sansMedium: 'HankenGrotesk_500Medium',

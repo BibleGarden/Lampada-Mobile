@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
@@ -15,6 +15,9 @@ type Props = {
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
 export default function ScriptureReader({ sheetRef }: Props) {
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   // точечные подписки — читалка не ререндерится от тика таймера
   const scrList = useSession((st) => st.scrList);
   const scrIndex = useSession((st) => st.scrIndex);
@@ -22,7 +25,10 @@ export default function ScriptureReader({ sheetRef }: Props) {
   const toggleFav = useSession((st) => st.toggleFav);
   const cur = scrList[scrIndex];
   const fav = !!cur && scrFav.includes(cur.canonicalId);
-  const snapPoints = useMemo(() => ['88%'], []);
+  const snapPoints = useMemo(() => {
+    const measuredHeight = headerHeight + contentHeight + sc(24);
+    return [Math.min(windowHeight * 0.88, Math.max(sc(240), measuredHeight))];
+  }, [contentHeight, headerHeight, windowHeight]);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -36,13 +42,17 @@ export default function ScriptureReader({ sheetRef }: Props) {
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       topInset={insets.top}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
       handleIndicatorStyle={styles.handle}
     >
-      <View style={styles.header}>
+      <View
+        style={styles.header}
+        onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
+      >
         <View style={styles.referenceWrap}>
           <Text style={styles.ref}>{cur?.reference ?? 'Писание'}</Text>
           {cur?.translationAlias ? (
@@ -70,7 +80,10 @@ export default function ScriptureReader({ sheetRef }: Props) {
           </IconButton>
         </View>
       </View>
-      <BottomSheetScrollView contentContainerStyle={styles.content}>
+      <BottomSheetScrollView
+        contentContainerStyle={styles.content}
+        onContentSizeChange={(_, height) => setContentHeight(height)}
+      >
         {cur?.title ? <Text style={styles.title}>{cur.title}</Text> : null}
         {cur ? (
           <ScripturePassageText
@@ -130,7 +143,7 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: fonts.serif,
     fontSize: sc(16),
-    lineHeight: sc(27),
+    lineHeight: sc(24),
     color: '#eef0e6',
   },
   title: {

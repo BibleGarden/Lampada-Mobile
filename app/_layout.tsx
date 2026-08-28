@@ -9,6 +9,7 @@ import {
   Spectral_300Light,
   Spectral_300Light_Italic,
   Spectral_400Regular,
+  Spectral_600SemiBold,
 } from '@expo-google-fonts/spectral';
 import {
   HankenGrotesk_400Regular,
@@ -31,6 +32,7 @@ export default function RootLayout() {
     Spectral_300Light,
     Spectral_300Light_Italic,
     Spectral_400Regular,
+    Spectral_600SemiBold,
     HankenGrotesk_400Regular,
     HankenGrotesk_500Medium,
     HankenGrotesk_600SemiBold,

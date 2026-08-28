@@ -4,7 +4,7 @@ import {
   buildScriptureTextSegments,
   type ScriptureDisplay,
 } from '../lib/scripture';
-import { colors, fonts } from '../lib/theme';
+import { colors, fonts, sc } from '../lib/theme';
 
 type Props = {
   scripture: ScriptureDisplay;
@@ -37,7 +37,11 @@ export default function ScripturePassageText({
       {segments.map((segment) => (
         <React.Fragment key={segment.number}>
           {segment.prefix ? (
-            <Text style={styles.separator}>{segment.prefix}</Text>
+            <Text
+              style={segment.prefix === '\n\n' ? styles.paragraphGap : styles.separator}
+            >
+              {segment.prefix === '\n\n' ? '\n\u200B\n' : segment.prefix}
+            </Text>
           ) : null}
           <Text style={segment.highlighted ? styles.highlightedVerse : undefined}>
             {segment.text}
@@ -52,9 +56,13 @@ const styles = StyleSheet.create({
   separator: {
     backgroundColor: 'transparent',
   },
+  paragraphGap: {
+    backgroundColor: 'transparent',
+    fontSize: sc(1),
+    lineHeight: sc(7),
+  },
   highlightedVerse: {
-    backgroundColor: 'rgba(231,207,149,.2)',
-    color: colors.creamBright,
-    fontFamily: fonts.serifRegular,
+    color: colors.amberBright,
+    fontFamily: fonts.serifSemiBold,
   },
 });

@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   cardText: {
     fontFamily: fonts.serif,
     fontSize: sc(15),
-    lineHeight: sc(22),
+    lineHeight: sc(20),
     color: colors.cardText,
     textAlign: 'center',
   },

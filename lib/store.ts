@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import * as Network from 'expo-network';
 import * as ai from './ai';
 import * as db from './db';
 import {
@@ -140,7 +139,7 @@ let firstQuestionFetch: {
 const questionPool = createOneAheadPool<ai.GeneratedQuestion>();
 const reflectPool = createOneAheadPool<ai.GeneratedQuestion>();
 
-type ScriptureLoadError = ScriptureSelectError | { kind: 'offline' };
+type ScriptureLoadError = ScriptureSelectError;
 
 type ScriptureLoadResult =
   | { ok: true; display: ScriptureDisplay }
@@ -189,16 +188,6 @@ const writtenReplies = (answers: Record<number, Answer>) =>
     .map((answer) => answer.text.trim())
     .filter(Boolean);
 
-const explicitlyOffline = async () => {
-  try {
-    const network = await Network.getNetworkStateAsync();
-    return network.isConnected === false || network.isInternetReachable === false;
-  } catch {
-    // Unknown network state is not proof of offline: let fetch decide.
-    return false;
-  }
-};
-
 const ensureBookNames = async (
   translation: number,
   signal: AbortSignal,
@@ -219,7 +208,6 @@ const loadScriptureForState = async (
   signal: AbortSignal,
 ): Promise<ScriptureLoadResult> => {
   if (signal.aborted) return { ok: false, error: { kind: 'cancelled' } };
-  if (await explicitlyOffline()) return { ok: false, error: { kind: 'offline' } };
   const shownCanonicalIds = await scriptureRepository.getScriptureHistory();
   const request = buildScriptureRequest({
     language: s.scriptureLanguage,
