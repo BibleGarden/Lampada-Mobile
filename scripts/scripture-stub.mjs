@@ -98,7 +98,7 @@ const server = http.createServer((request, response) => {
     ]);
     return;
   }
-  if (request.method !== 'POST' || request.url !== '/api/scripture/v1/select') {
+  if (request.method !== 'POST' || request.url !== '/api/ai/scripture') {
     json(response, 404, { detail: 'Not Found' });
     return;
   }

@@ -13,14 +13,14 @@ npx expo start        # дев-сервер + Metro
 
 ## ИИ
 
-ИИ-запросы идут через `https://api.bible.garden/api/lampada/v1/complete` в
+ИИ-запросы идут через `https://api.bible.garden/api/ai/question` в
 существующий FastAPI-сервис. Он хранит ключ Google AI Studio и вызывает
 Gemini; Google key и системные инструкции в приложение не встраиваются. Для включения ИИ скопируй
 `.env.example` в `.env.local` и укажи клиентский `X-API-Key` сервера. Этот
 клиентский ключ виден в собранном приложении и не заменяет серверные лимиты.
 Голосовые ответы отправляются только в случае нажатия «Расшифровать» отдельным запросом на
-`/api/lampada/v1/transcribe`; URL задаётся через
-`EXPO_PUBLIC_AI_TRANSCRIBE_URL` либо выводится из URL `/complete`.
+`/api/ai/transcribe`; URL задаётся через
+`EXPO_PUBLIC_AI_TRANSCRIBE_URL` либо выводится из URL `/api/ai/question`.
 
 > Приложение использует нативные модули, которых нет в Expo Go
 > (`@shopify/react-native-skia`, `react-native-reanimated` 4).

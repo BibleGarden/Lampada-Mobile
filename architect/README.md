@@ -86,7 +86,7 @@ Twinkler — мобильное приложение для личной хри�
                   ↘ lib/ai.ts → lib/llm.ts → bible-api → Gemini
                               ↘ локальный курируемый fallback
                   ↘ lib/transcription.ts → bible-api → Gemini
-                  ↘ lib/scriptureClient.ts → bible-api /api/scripture/v1/select
+                  ↘ lib/scriptureClient.ts → bible-api /api/ai/scripture
                                            ↘ lib/scriptureRepository.ts → SQLite
                   ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
                                                 ↘ /api/audio/...mp3

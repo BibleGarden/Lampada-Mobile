@@ -6,7 +6,7 @@ export const SCRIPTURE_REQUEST_TIMEOUT_MS = 25_000;
 export const DEFAULT_RETRY_AFTER_SECONDS = 30;
 
 const EXPLICIT_SCRIPTURE_URL = process.env.EXPO_PUBLIC_SCRIPTURE_SELECT_URL;
-const COMPLETE_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
+const QUESTION_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
 const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 export type ScriptureSelectError =
@@ -49,17 +49,17 @@ const defaultSleep = (milliseconds: number) =>
 
 export function resolveScriptureUrl(
   explicitUrl: string | undefined,
-  completeUrl: string | undefined,
+  questionUrl: string | undefined,
 ): string | null {
   const explicit = explicitUrl?.trim();
   if (explicit) return explicit;
-  if (!completeUrl?.trim()) return null;
+  if (!questionUrl?.trim()) return null;
 
   try {
-    const url = new URL(completeUrl);
+    const url = new URL(questionUrl);
     const derivedPath = url.pathname.replace(
-      /\/api\/[^/]+\/v1\/complete\/?$/,
-      '/api/scripture/v1/select',
+      /\/api\/ai\/question\/?$/,
+      '/api/ai/scripture',
     );
     if (derivedPath === url.pathname) return null;
     url.pathname = derivedPath;
@@ -72,7 +72,7 @@ export function resolveScriptureUrl(
 }
 
 export const scriptureConfigured = () =>
-  resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, COMPLETE_URL) !== null;
+  resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL) !== null;
 
 export function resolveScriptureBooksUrl(
   selectUrl: string | null,
@@ -120,7 +120,7 @@ export async function selectScriptureOnce(
   dependencies: ScriptureClientDependencies = {},
 ): Promise<ScriptureSelectResult> {
   const url = dependencies.url === undefined
-    ? resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, COMPLETE_URL)
+    ? resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL)
     : dependencies.url;
   if (!url) return { ok: false, error: { kind: 'not_configured' } };
 
@@ -266,7 +266,7 @@ export async function fetchScriptureBooks(
   dependencies: ScriptureClientDependencies = {},
 ): Promise<ScriptureBookResponse[] | null> {
   const selectUrl = dependencies.url === undefined
-    ? resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, COMPLETE_URL)
+    ? resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL)
     : dependencies.url;
   const url = resolveScriptureBooksUrl(selectUrl, translation);
   if (!url) return null;

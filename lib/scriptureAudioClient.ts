@@ -5,7 +5,7 @@ import type { ScriptureDisplay } from './scripture.ts';
 import { resolveScriptureUrl, SCRIPTURE_REQUEST_TIMEOUT_MS } from './scriptureClient.ts';
 
 const EXPLICIT_SCRIPTURE_URL = process.env.EXPO_PUBLIC_SCRIPTURE_SELECT_URL;
-const COMPLETE_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
+const QUESTION_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
 const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 export type ScriptureAudioClip = {
@@ -28,7 +28,7 @@ const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
 const resolveApiUrl = (path: string): URL | null => {
-  const selectUrl = resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, COMPLETE_URL);
+  const selectUrl = resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL);
   if (!selectUrl) return null;
   try {
     const url = new URL(selectUrl);

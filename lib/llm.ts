@@ -2,7 +2,7 @@
 // Ключ Google AI Studio хранится только на сервере.
 //
 // Конфигурация — через .env.local (не коммитится, см. .gitignore):
-//   EXPO_PUBLIC_AI_PROXY_URL=https://api.bible.garden/api/lampada/v1/complete
+//   EXPO_PUBLIC_AI_PROXY_URL=https://api.bible.garden/api/ai/question
 //   EXPO_PUBLIC_AI_PROXY_KEY=… — отдельный ограниченный ключ прокси
 //
 // EXPO_PUBLIC_* зашиваются в бандл при сборке: после правки .env.local

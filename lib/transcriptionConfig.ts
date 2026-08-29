@@ -1,11 +1,11 @@
 export function resolveTranscriptionUrl(
   explicitUrl: string | undefined,
-  completeUrl: string | undefined,
+  questionUrl: string | undefined,
 ): string | null {
   if (explicitUrl) return explicitUrl;
-  if (!completeUrl) return null;
-  const derived = completeUrl.replace(/\/complete\/?$/, '/transcribe');
-  return derived === completeUrl ? null : derived;
+  if (!questionUrl) return null;
+  const derived = questionUrl.replace(/\/question\/?$/, '/transcribe');
+  return derived === questionUrl ? null : derived;
 }
 
 export function deviceLocale(): string | null {
