@@ -40,6 +40,7 @@ import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTrackSources } from '../lib/music';
 import { colors, fonts, radius, sc } from '../lib/theme';
+import { useScriptureAudio } from '../lib/useScriptureAudio';
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
 // но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
@@ -155,6 +156,13 @@ function SessionScreen() {
     },
     [musicPlaylist],
   );
+  const currentScripture = s.scrList[s.scrIndex];
+  const scriptureAudio = useScriptureAudio({
+    scripture: currentScripture,
+    voice: s.scriptureVoice,
+    enabled: s.dockMode === 'scripture' && appState === 'active',
+    onAudioBusyChange: handleTransientAudioChange,
+  });
 
   // секундный тик
   useEffect(() => {
@@ -344,6 +352,7 @@ function SessionScreen() {
             <CompanionDock
               onOpenAnswer={() => openAnswerRef.current?.()}
               onOpenReader={() => readerRef.current?.snapToIndex(0)}
+              scriptureAudio={scriptureAudio}
             />
           </View>
         </View>
@@ -357,7 +366,7 @@ function SessionScreen() {
         timeExpired={s.remaining === 0}
         onAudioBusyChange={handleTransientAudioChange}
       />
-      <ScriptureReader sheetRef={readerRef} />
+      <ScriptureReader sheetRef={readerRef} scriptureAudio={scriptureAudio} />
     </View>
   );
 }

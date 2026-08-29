@@ -16,17 +16,21 @@ import {
   Plus,
   QuestionMark,
   Regen,
+  PauseIcon,
+  PlayIcon,
 } from './icons';
 import ScripturePassageText from './ScripturePassageText';
+import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
 
 type Props = {
   onOpenAnswer: () => void;
   onOpenReader: () => void;
+  scriptureAudio: ScriptureAudioControl;
 };
 
 // Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
 // Механика следа/фронтира живёт в store; здесь только отображение.
-export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
+export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAudio }: Props) {
   const [measuredScripture, setMeasuredScripture] = React.useState<{
     key: string;
     truncated: boolean;
@@ -209,11 +213,42 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader }: Props) {
               </Pressable>
             )}
           </View>
-          {curScripture && scriptureIsTruncated && (
-            <Pressable onPress={tap(onOpenReader)} style={styles.readMore}>
-              <Text style={styles.readMoreLabel}>Читать целиком</Text>
-              <ChevronRight size={13} />
-            </Pressable>
+          {curScripture && (
+            <View style={styles.scriptureTools}>
+              {!curScripture.offline && (
+                <Pressable
+                  onPress={tap(scriptureAudio.toggle)}
+                  disabled={scriptureAudio.phase === 'loading'}
+                  style={styles.listenButton}
+                  accessibilityLabel={scriptureAudio.phase === 'playing' ? 'Пауза' : 'Слушать отрывок'}
+                >
+                  {scriptureAudio.phase === 'loading' ? (
+                    <ActivityIndicator size="small" color={colors.goldSoft} />
+                  ) : scriptureAudio.phase === 'playing' ? (
+                    <PauseIcon size={12} />
+                  ) : (
+                    <PlayIcon size={12} />
+                  )}
+                  <Text style={styles.readMoreLabel}>
+                    {scriptureAudio.phase === 'loading'
+                      ? 'Загрузка'
+                      : scriptureAudio.phase === 'playing'
+                        ? 'Пауза'
+                        : scriptureAudio.phase === 'paused'
+                          ? 'Продолжить'
+                          : scriptureAudio.phase === 'error'
+                            ? 'Повторить'
+                            : 'Слушать'}
+                  </Text>
+                </Pressable>
+              )}
+              {scriptureIsTruncated && (
+                <Pressable onPress={tap(onOpenReader)} style={styles.readMore}>
+                  <Text style={styles.readMoreLabel}>Читать целиком</Text>
+                  <ChevronRight size={13} />
+                </Pressable>
+              )}
+            </View>
           )}
           <View style={styles.actionsRow}>
             <SquareBtn disabled={!curScripture || s.scrIndex === 0} onPress={tap(s.prevScripture)} dim>
@@ -297,6 +332,21 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.labelGold,
   },
+  scriptureTools: {
+    minHeight: sc(26),
+    marginTop: sc(2),
+    marginBottom: sc(6),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: sc(10),
+  },
+  listenButton: {
+    minHeight: sc(26),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(6),
+  },
   switcher: {
     flexDirection: 'row',
     gap: 3,
@@ -377,7 +427,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: sc(5),
-    marginTop: sc(8),
   },
   readMoreLabel: {
     fontFamily: fonts.sansMedium,

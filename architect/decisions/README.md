@@ -13,6 +13,7 @@ ADR (Architecture Decision Record) фиксирует одно существе�
 | [0005](0005-device-scripture-language-default.md) | Принято | Выбирать первый язык Писания по локали устройства с fallback на английский |
 | [0006](0006-structured-scripture-verses.md) | Принято | Рендерить и подсвечивать Писание по структурированным стихам выбранного перевода |
 | [0007](0007-http-result-as-network-truth.md) | Принято | Определять доступность Bible API по результату HTTP-запроса без сетевого preflight |
+| [0008](0008-scripture-verse-audio-alignment.md) | Принято | Воспроизводить отрывок по таймингам стихов внутри аудио главы |
 
 ## Правила
 

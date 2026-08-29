@@ -62,6 +62,7 @@ type SessionState = {
   scrFav: string[]; // canonical ID серверных записей в избранном
   scriptureLanguage: ScriptureLanguage; // snapshot выбора на входе в сессию
   scriptureTranslation: number;
+  scriptureVoice: number;
   scrStatus: 'idle' | 'loading' | 'ready' | 'retrying' | 'error' | 'offline_fallback';
   scrError: 'not_configured' | 'unavailable' | null;
 
@@ -245,6 +246,7 @@ const initial: SessionState = {
   scrFav: [],
   scriptureLanguage: 'ru',
   scriptureTranslation: 1,
+  scriptureVoice: 1,
   scrStatus: 'idle',
   scrError: null,
   dockMode: 'question',
@@ -341,6 +343,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       ),
       scriptureLanguage: scripturePreferences.language,
       scriptureTranslation: scripturePreferences.translationCode,
+      scriptureVoice: scripturePreferences.voiceCode,
       scrStatus: 'loading',
       scrError: null,
       dockMode: 'question',

@@ -1,19 +1,21 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
 import { colors, fonts, radius, sc } from '../lib/theme';
-import { Heart, Close } from './icons';
+import { Heart, Close, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
 import ScripturePassageText from './ScripturePassageText';
+import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
+  scriptureAudio: ScriptureAudioControl;
 };
 
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
-export default function ScriptureReader({ sheetRef }: Props) {
+export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -60,6 +62,23 @@ export default function ScriptureReader({ sheetRef }: Props) {
           ) : null}
         </View>
         <View style={styles.headerBtns}>
+          {cur && !cur.offline ? (
+            <IconButton
+              accessibilityLabel={scriptureAudio.phase === 'playing' ? 'Пауза' : 'Слушать отрывок'}
+              size={sc(32)}
+              bg="rgba(255,255,255,.04)"
+              border={colors.white08}
+              onPress={scriptureAudio.toggle}
+            >
+              {scriptureAudio.phase === 'loading' ? (
+                <ActivityIndicator size="small" color={colors.goldSoft} />
+              ) : scriptureAudio.phase === 'playing' ? (
+                <PauseIcon size={13} />
+              ) : (
+                <PlayIcon size={13} />
+              )}
+            </IconButton>
+          ) : null}
           <IconButton
             accessibilityLabel={fav ? 'Удалить из избранного' : 'Добавить в избранное'}
             size={sc(32)}
