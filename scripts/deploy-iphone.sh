@@ -13,6 +13,9 @@ BUNDLE="${BUNDLE:-twinkler}"
 WS="ios/Twinkler.xcworkspace"
 APP="ios/build/Build/Products/Release-iphoneos/Twinkler.app"
 
+echo "▶︎ Проверяю runtime-переменные для локальной Release-сборки…"
+bash scripts/check-runtime-env.sh local
+
 # --- нативная папка ------------------------------------------------------
 if [ ! -d ios ]; then
   echo "▶︎ ios/ отсутствует — генерирую (expo prebuild)…"

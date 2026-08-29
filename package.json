@@ -51,6 +51,9 @@
     "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "scripture:stub": "node scripts/scripture-stub.mjs",
+    "env:check:local": "bash scripts/check-runtime-env.sh local",
+    "env:check:preview": "bash scripts/check-runtime-env.sh eas preview",
+    "eas:preview": "bash scripts/build-preview.sh",
     "iphone": "bash scripts/deploy-iphone.sh"
   },
   "private": true
