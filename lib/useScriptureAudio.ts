@@ -11,6 +11,8 @@ export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'e
 
 export type ScriptureAudioControl = {
   phase: ScriptureAudioPhase;
+  activeVerseNumber: number | null;
+  stop: () => void;
   toggle: () => void;
 };
 
@@ -68,10 +70,8 @@ export function useScriptureAudio({
   useEffect(
     () => () => {
       requestRef.current?.abort();
-      player.pause();
-      onAudioBusyChange(false);
     },
-    [onAudioBusyChange, player],
+    [],
   );
 
   const toggle = useCallback(() => {
@@ -127,5 +127,27 @@ export function useScriptureAudio({
     })();
   }, [enabled, onAudioBusyChange, phase, player, scripture, voice]);
 
-  return { phase, toggle };
+  let activeVerseNumber: number | null = null;
+  const clip = clipRef.current;
+  const currentScriptureKey = scripture
+    ? `${scripture.canonicalId}:${scripture.receivedAt}`
+    : null;
+  if (
+    (phase === 'playing' || phase === 'paused') &&
+    clip?.verses.length &&
+    scriptureKeyRef.current === currentScriptureKey
+  ) {
+    // Между стихами не оставляем пустой кадр: отметка переходит на следующий
+    // стих один раз, в середине паузы между end предыдущего и begin следующего.
+    activeVerseNumber = clip.verses[0].number;
+    for (let index = 1; index < clip.verses.length; index++) {
+      const previous = clip.verses[index - 1];
+      const current = clip.verses[index];
+      const switchTime = (previous.endSeconds + current.startSeconds) / 2;
+      if (status.currentTime + 0.03 < switchTime) break;
+      activeVerseNumber = current.number;
+    }
+  }
+
+  return { phase, activeVerseNumber, stop, toggle };
 }

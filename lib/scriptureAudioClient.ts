@@ -12,6 +12,13 @@ export type ScriptureAudioClip = {
   url: string;
   startSeconds: number;
   endSeconds: number;
+  verses: ScriptureAudioVerseTiming[];
+};
+
+export type ScriptureAudioVerseTiming = {
+  number: number;
+  startSeconds: number;
+  endSeconds: number;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -130,25 +137,34 @@ export async function fetchScriptureAudioClip(
   if (!isObject(part) || typeof part.audio_link !== 'string' || !Array.isArray(part.verses)) {
     throw new Error('invalid_response');
   }
-  const verses = part.verses.filter(
-    (verse) =>
-      isObject(verse) &&
-      typeof verse.number === 'number' &&
-      verse.number >= passage.verse_start &&
-      verse.number <= passage.verse_end &&
-      isFiniteNumber(verse.begin) &&
-      isFiniteNumber(verse.end),
-  );
+  const verses: ScriptureAudioVerseTiming[] = [];
+  for (const verse of part.verses) {
+    if (
+      !isObject(verse) ||
+      typeof verse.number !== 'number' ||
+      verse.number < passage.verse_start ||
+      verse.number > passage.verse_end ||
+      !isFiniteNumber(verse.begin) ||
+      !isFiniteNumber(verse.end)
+    ) continue;
+    verses.push({
+      number: verse.number,
+      startSeconds: verse.begin,
+      endSeconds: verse.end,
+    });
+  }
+  verses.sort((left, right) => left.startSeconds - right.startSeconds);
   const first = verses[0];
   const last = verses.at(-1);
-  if (!first || !last || !isFiniteNumber(first.begin) || !isFiniteNumber(last.end)) {
+  if (!first || !last) {
     throw new Error('audio_unavailable');
   }
-  const startSeconds = Math.max(0, first.begin - 0.2);
-  if (last.end <= startSeconds) throw new Error('invalid_response');
+  const startSeconds = Math.max(0, first.startSeconds - 0.2);
+  if (last.endSeconds <= startSeconds) throw new Error('invalid_response');
   return {
     url: publicAudioUrl(part.audio_link),
     startSeconds,
-    endSeconds: last.end,
+    endSeconds: last.endSeconds,
+    verses,
   };
 }

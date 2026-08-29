@@ -109,6 +109,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
             scripture={cur}
             style={styles.text}
             testIDPrefix="scripture-reader-highlight"
+            activeVerseNumber={scriptureAudio.activeVerseNumber}
           />
         ) : null}
       </BottomSheetScrollView>

@@ -11,6 +11,7 @@ type Props = {
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
   testIDPrefix: string;
+  activeVerseNumber?: number | null;
 };
 
 export default function ScripturePassageText({
@@ -18,6 +19,7 @@ export default function ScripturePassageText({
   style,
   numberOfLines,
   testIDPrefix,
+  activeVerseNumber,
 }: Props) {
   const segments = buildScriptureTextSegments(scripture.selection);
 
@@ -43,7 +45,12 @@ export default function ScripturePassageText({
               {segment.prefix === '\n\n' ? '\n\u200B\n' : segment.prefix}
             </Text>
           ) : null}
-          <Text style={segment.highlighted ? styles.highlightedVerse : undefined}>
+          <Text
+            style={[
+              segment.highlighted && styles.highlightedVerse,
+              segment.number === activeVerseNumber && styles.activeVerse,
+            ]}
+          >
             {segment.text}
           </Text>
         </React.Fragment>
@@ -64,5 +71,10 @@ const styles = StyleSheet.create({
   highlightedVerse: {
     color: colors.amberBright,
     fontFamily: fonts.serifSemiBold,
+  },
+  activeVerse: {
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'dotted',
+    textDecorationColor: 'rgba(231,207,149,.56)',
   },
 });

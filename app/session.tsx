@@ -182,6 +182,9 @@ function SessionScreen() {
   const goToReflect = async () => {
     // открытый черновик ответа дописывается, а не выбрасывается
     if (flushAnswerRef.current) await flushAnswerRef.current();
+    // useAudioPlayer освобождает native shared object при unmount, поэтому
+    // останавливаем озвучку Писания синхронно до router.replace.
+    scriptureAudio.stop();
     // Останавливаем плейлист до router.replace: useAudioPlaylist сам удалит
     // native shared object при unmount, и обращаться к нему из cleanup уже нельзя.
     musicPlaylist.pause();
