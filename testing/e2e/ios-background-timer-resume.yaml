@@ -1,0 +1,8 @@
+appId: twinkler
+---
+# Resume without stopping the process: wall-clock catch-up must complete the timer.
+- launchApp:
+    stopApp: false
+- assertVisible: "Завершить"
+- assertVisible: "Вернуться к молитве"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-TIMER-resumed-at-zero

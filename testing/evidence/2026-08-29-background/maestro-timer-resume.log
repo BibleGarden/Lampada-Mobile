@@ -1,0 +1,6 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-background-timer-resume
+Launch app "twinkler" without stopping app... COMPLETED
+Assert that "Завершить" is visible... COMPLETED
+Assert that "Вернуться к молитве" is visible... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-TIMER-resumed-at-zero... COMPLETED

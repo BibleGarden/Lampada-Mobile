@@ -1,0 +1,25 @@
+appId: twinkler
+---
+# Background music: playback registers a native media session before the app is backgrounded.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Background music smoke"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- tapOn: "Включить тихую музыку"
+- assertVisible: "Тихая музыка"
+- pressKey: HOME
+- swipe:
+    start: "94%,1%"
+    end: "94%,48%"
+    duration: 700
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-MUSIC-control-center

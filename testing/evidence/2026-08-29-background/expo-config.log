@@ -1,0 +1,68 @@
+env: load .env.local
+env: export EXPO_PUBLIC_AI_PROXY_KEY EXPO_PUBLIC_AI_PROXY_URL EXPO_PUBLIC_AI_TRANSCRIBE_URL
+
+{
+  name: [32m'Twinkler'[39m,
+  slug: [32m'pray'[39m,
+  version: [32m'1.0.0'[39m,
+  orientation: [32m'portrait'[39m,
+  icon: [32m'./assets/icon.png'[39m,
+  userInterfaceStyle: [32m'dark'[39m,
+  plugins: [
+    [32m'expo-router'[39m,
+    [32m'expo-font'[39m,
+    [32m'expo-sqlite'[39m,
+    [
+      [32m'expo-audio'[39m,
+      {
+        enableBackgroundPlayback: [33mtrue[39m
+      }
+    ],
+    [32m'expo-status-bar'[39m,
+    [32m'expo-asset'[39m,
+    [32m'expo-localization'[39m
+  ],
+  scheme: [32m'lampada'[39m,
+  backgroundColor: [32m'#0e0a07'[39m,
+  owner: [32m'nf404'[39m,
+  description: [90mundefined[39m,
+  sdkVersion: [32m'57.0.0'[39m,
+  platforms: [
+    [32m'ios'[39m,
+    [32m'android'[39m,
+    [32m'web'[39m
+  ],
+  ios: {
+    bundleIdentifier: [32m'twinkler'[39m,
+    supportsTablet: [33mtrue[39m,
+    infoPlist: {
+      NSMicrophoneUsageDescription: [32m'Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена в Gemini для расшифровки только по вашему запросу.'[39m,
+      UIBackgroundModes: [
+        [32m'audio'[39m
+      ]
+    }
+  },
+  android: {
+    predictiveBackGestureEnabled: [33mfalse[39m,
+    permissions: [
+      [32m'RECORD_AUDIO'[39m,
+      [32m'android.permission.RECORD_AUDIO'[39m,
+      [32m'android.permission.MODIFY_AUDIO_SETTINGS'[39m,
+      [32m'android.permission.FOREGROUND_SERVICE'[39m,
+      [32m'android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK'[39m
+    ],
+    adaptiveIcon: {
+      backgroundColor: [32m'#0e0a07'[39m,
+      foregroundImage: [32m'./assets/icon.png'[39m
+    }
+  },
+  web: {
+    favicon: [32m'./assets/favicon.png'[39m
+  },
+  extra: {
+    router: {},
+    eas: {
+      projectId: [32m'e62a017e-2102-46fd-bee1-bb27168ed549'[39m
+    }
+  }
+}

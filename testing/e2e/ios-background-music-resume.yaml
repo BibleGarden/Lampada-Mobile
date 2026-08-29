@@ -1,0 +1,8 @@
+appId: twinkler
+---
+# Resume the existing process: the native player must still report active playback.
+- launchApp:
+    stopApp: false
+- assertVisible: "Тихая музыка"
+- assertVisible: "Выключить тихую музыку"
+- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-MUSIC-resumed-playing

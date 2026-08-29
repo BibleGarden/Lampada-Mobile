@@ -26,8 +26,8 @@ import { useKeepAwake } from 'expo-keep-awake';
 import {
   setAudioModeAsync,
   setIsAudioActiveAsync,
-  useAudioPlaylist,
-  useAudioPlaylistStatus,
+  useAudioPlayer,
+  useAudioPlayerStatus,
 } from 'expo-audio';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ScreenBg from '../components/ScreenBg';
@@ -38,9 +38,10 @@ import ScriptureReader from '../components/ScriptureReader';
 import { IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
-import { getPrayerTrackSources } from '../lib/music';
+import { getPrayerTracks } from '../lib/music';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
+import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
 // но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
@@ -76,39 +77,54 @@ function SessionScreen() {
   // React-effect cleanup happens later than the press handler. The ref lets an
   // already running music activation see recording/playback immediately.
   const transientAudioBusyRef = useRef(false);
-  const [musicSources] = useState(getPrayerTrackSources);
-  const musicPlaylist = useAudioPlaylist({
-    sources: musicSources,
-    loop: 'all',
+  const [musicTracks] = useState(getPrayerTracks);
+  const musicTrackIndex = useRef(0);
+  const musicPlayer = useAudioPlayer(musicTracks[0]?.source ?? null, {
+    keepAudioSessionActive: true,
   });
-  const musicStatus = useAudioPlaylistStatus(musicPlaylist);
+  const musicStatus = useAudioPlayerStatus(musicPlayer);
+
+  const setMusicLockScreen = useCallback(() => {
+    const track = musicTracks[musicTrackIndex.current];
+    if (!track) return;
+    musicPlayer.setActiveForLockScreen(true, {
+      title: track.title,
+      artist: track.artist,
+      albumTitle: 'Twinkler · тихая музыка',
+    });
+  }, [musicPlayer, musicTracks]);
 
   const releaseMusicSession = useCallback(() => {
     // setIsAudioActiveAsync действует глобально, поэтому не трогаем сессию,
-    // если её не захватывал именно музыкальный плейлист.
+    // если её не захватывал именно музыкальный плеер.
     if (!musicSessionActive.current) return Promise.resolve();
     musicSessionActive.current = false;
+    musicPlayer.clearLockScreenControls();
     return setIsAudioActiveAsync(false).catch((error) => {
       musicSessionActive.current = true;
       console.warn('Не удалось освободить аудиосессию', error);
     });
-  }, []);
+  }, [musicPlayer]);
 
   useEffect(() => {
     // Фоновое сопровождение должно оставаться заметно тише речи и системных звуков.
-    musicPlaylist.volume = 0.28;
-  }, [musicPlaylist]);
+    musicPlayer.volume = 0.28;
+  }, [musicPlayer]);
 
   useEffect(() => {
-    const sub = AppState.addEventListener('change', setAppState);
+    const sub = AppState.addEventListener('change', (nextState) => {
+      setAppState(nextState);
+      if (nextState === 'active') useSession.getState().tick();
+    });
     return () => sub.remove();
   }, []);
 
   useEffect(() => {
     let active = true;
-    const shouldPlay = s.musicOn && appState === 'active' && !transientAudioBusy;
+    const shouldPlay = s.musicOn && !transientAudioBusy;
     if (!shouldPlay) {
-      musicPlaylist.pause();
+      musicPlayer.pause();
+      musicPlayer.clearLockScreenControls();
       // Keep the global session active while this screen is mounted. A late
       // async deactivation can otherwise race with a newly started recorder.
       return () => {
@@ -124,10 +140,13 @@ function SessionScreen() {
       await setAudioModeAsync({
         allowsRecording: false,
         playsInSilentMode: true,
-        shouldPlayInBackground: false,
+        shouldPlayInBackground: true,
         interruptionMode: 'doNotMix',
       });
-      if (active && !transientAudioBusyRef.current) musicPlaylist.play();
+      if (active && !transientAudioBusyRef.current) {
+        setMusicLockScreen();
+        musicPlayer.play();
+      }
     })().catch((error) => {
       console.warn('Не удалось включить музыкальное сопровождение', error);
       if (active && !transientAudioBusyRef.current && useSession.getState().musicOn) {
@@ -138,7 +157,18 @@ function SessionScreen() {
     return () => {
       active = false;
     };
-  }, [appState, musicPlaylist, releaseMusicSession, s.musicOn, transientAudioBusy]);
+  }, [musicPlayer, releaseMusicSession, s.musicOn, setMusicLockScreen, transientAudioBusy]);
+
+  useEffect(() => {
+    if (!musicStatus.didJustFinish || musicTracks.length === 0) return;
+    musicTrackIndex.current = (musicTrackIndex.current + 1) % musicTracks.length;
+    const track = musicTracks[musicTrackIndex.current];
+    musicPlayer.replace(track.source);
+    if (useSession.getState().musicOn && !transientAudioBusyRef.current) {
+      setMusicLockScreen();
+      musicPlayer.play();
+    }
+  }, [musicPlayer, musicStatus.didJustFinish, musicTracks, setMusicLockScreen]);
 
   useEffect(
     () => () => {
@@ -151,10 +181,13 @@ function SessionScreen() {
     (busy: boolean) => {
       // Эта остановка синхронна: запись не должна ждать React-effect.
       transientAudioBusyRef.current = busy;
-      if (busy) musicPlaylist.pause();
+      if (busy) {
+        musicPlayer.pause();
+        musicPlayer.clearLockScreenControls();
+      }
       setTransientAudioBusy(busy);
     },
-    [musicPlaylist],
+    [musicPlayer],
   );
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
@@ -185,9 +218,13 @@ function SessionScreen() {
     // useAudioPlayer освобождает native shared object при unmount, поэтому
     // останавливаем озвучку Писания синхронно до router.replace.
     scriptureAudio.stop();
-    // Останавливаем плейлист до router.replace: useAudioPlaylist сам удалит
+    // Останавливаем плеер до router.replace: useAudioPlayer сам удалит
     // native shared object при unmount, и обращаться к нему из cleanup уже нельзя.
-    musicPlaylist.pause();
+    musicPlayer.pause();
+    musicPlayer.clearLockScreenControls();
+    await stopPrayerSystemTimer().catch((error) => {
+      console.warn('Не удалось остановить системный таймер молитвы', error);
+    });
     await releaseMusicSession();
     if (useSession.getState().musicOn) useSession.getState().toggleMusic();
     void s.finish();

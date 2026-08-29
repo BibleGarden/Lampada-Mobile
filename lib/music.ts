@@ -113,8 +113,8 @@ let previousStartingTrack: number | null = null;
  * Начинает каждую новую молитву со случайного трека, не повторяя стартовый
  * трек предыдущей сессии. Остальные композиции продолжают играть по кругу.
  */
-export function getPrayerTrackSources(): AudioSource[] {
+export function getPrayerTracks(): PrayerTrack[] {
   const order = prayerTrackOrder(PRAYER_TRACK_SOURCES.length, previousStartingTrack);
   previousStartingTrack = order[0] ?? null;
-  return order.map((index) => PRAYER_TRACK_SOURCES[index]);
+  return order.map((index) => PRAYER_TRACKS[index]);
 }

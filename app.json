@@ -8,6 +8,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "bundleIdentifier": "twinkler",
+      "deploymentTarget": "16.4",
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена в Gemini для расшифровки только по вашему запросу.",
@@ -20,13 +21,15 @@
       }
     },
     "android": {
+      "package": "com.nf404.twinkler",
       "adaptiveIcon": {
         "backgroundColor": "#0e0a07",
         "foregroundImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -36,10 +39,25 @@
       "expo-router",
       "expo-font",
       "expo-sqlite",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ],
       "expo-status-bar",
       "expo-asset",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "twinkler.ExpoWidgetsTarget",
+          "groupIdentifier": "group.twinkler",
+          "enablePushNotifications": false,
+          "frequentUpdates": false,
+          "widgets": []
+        }
+      ]
     ],
     "scheme": "lampada",
     "backgroundColor": "#0e0a07",

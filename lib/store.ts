@@ -22,6 +22,12 @@ import {
 import * as scriptureRepository from './scriptureRepository';
 import { createSingleFlight } from './singleFlight';
 import { mergeOfflineTrail, shouldDeferLoadedNext } from './scriptureSessionState';
+import { adjustSessionTimer, sessionTimerSnapshot } from './sessionTimer';
+import {
+  startPrayerSystemTimer,
+  stopPrayerSystemTimer,
+  updatePrayerSystemTimer,
+} from './prayerSystemTimer';
 
 // Логика сессии, перенесённая из прототипа.
 //
@@ -71,6 +77,8 @@ type SessionState = {
 
   remaining: number | null; // сек; null = без таймера
   elapsed: number;
+  startedAtMs: number | null;
+  endsAtMs: number | null;
 
   // reflect
   reflectQ: string;
@@ -90,7 +98,7 @@ type SessionActions = {
   prepareThreshold: () => void;
   prepareReflect: () => void;
   enterSession: () => Promise<void>;
-  tick: () => void;
+  tick: (nowMs?: number) => void;
   adjustTimer: (deltaMin: number) => void;
 
   prevQuestion: () => void;
@@ -115,6 +123,13 @@ type SessionActions = {
 
 const isAnswered = (a: Answer | undefined) =>
   !!(a && (a.text.trim() || a.recordings.length));
+
+const reportSystemTimerError = (action: string, error: unknown) => {
+  console.warn(
+    `Не удалось ${action} системный таймер молитвы`,
+    error instanceof Error ? error.message : error,
+  );
+};
 
 // тексты ответов для промпта — только с разрешения из настроек
 // («Использовать ответы для цитат и вопросов»); без него ответы не покидают устройство
@@ -253,6 +268,8 @@ const initial: SessionState = {
   musicOn: false,
   remaining: 600,
   elapsed: 0,
+  startedAtMs: null,
+  endsAtMs: null,
   reflectQ: '',
   reflectSource: null,
   reflectGenerating: false,
@@ -323,6 +340,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
     const scripturePreferences = scripturePreferencesNow();
+    const startedAtMs = Date.now();
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
     firstQuestionFetch = null;
@@ -350,10 +368,20 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       musicOn: false,
       remaining: minutes === 0 ? null : minutes * 60,
       elapsed: 0,
+      startedAtMs,
+      endsAtMs: minutes === 0 ? null : startedAtMs + minutes * 60_000,
       reflectQ: '',
       reflectSource: null,
       reflectGenerating: false,
     });
+    const systemTimer =
+      minutes === 0
+        ? null
+        : { startedAtMs, endsAtMs: startedAtMs + minutes * 60_000 };
+    void (systemTimer
+      ? startPrayerSystemTimer(systemTimer)
+      : stopPrayerSystemTimer()
+    ).catch((error) => reportSystemTimerError('запустить', error));
     scriptureAbortController?.abort();
     scriptureAbortController = new AbortController();
     const currentScriptureToken = ++scriptureToken;
@@ -376,11 +404,14 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     });
   },
 
-  tick: () => {
+  tick: (nowMs = Date.now()) => {
     set((s) => {
-      const elapsed = s.elapsed + 1;
-      if (s.remaining === null) return { elapsed };
-      return { elapsed, remaining: Math.max(0, s.remaining - 1) };
+      if (s.startedAtMs === null) return s;
+      const snapshot = sessionTimerSnapshot(s.startedAtMs, s.endsAtMs, nowMs);
+      return {
+        elapsed: Math.max(s.elapsed, snapshot.elapsed),
+        remaining: snapshot.remaining,
+      };
     });
     const current = get();
     // Итоговый вопрос готовится заранее. Повторные тики с тем же ключом
@@ -390,16 +421,33 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     }
   },
 
-  adjustTimer: (deltaMin) =>
+  adjustTimer: (deltaMin) => {
     set((s) => {
-      if (s.remaining === null) return s;
-      const remaining = Math.max(s.remaining + deltaMin * 60, 5);
+      if (s.remaining === null || s.endsAtMs === null || s.startedAtMs === null) return s;
+      const nowMs = Date.now();
+      const snapshot = sessionTimerSnapshot(s.startedAtMs, s.endsAtMs, nowMs);
+      const adjusted = adjustSessionTimer(s.endsAtMs, nowMs, deltaMin * 60);
       // minutes двигаем на фактическое изменение remaining, а не на deltaMin:
       // у нижней границы (5 сек) иначе разъезжаются total и кольцо прогресса
-      const actualDeltaSec = remaining - s.remaining;
-      const minutes = Math.max(1, Math.round(s.minutes + actualDeltaSec / 60));
-      return { remaining, minutes };
-    }),
+      const minutes = Math.max(
+        1,
+        Math.round(s.minutes + adjusted.actualDeltaSeconds / 60),
+      );
+      return {
+        elapsed: Math.max(s.elapsed, snapshot.elapsed),
+        remaining: adjusted.remaining,
+        endsAtMs: adjusted.endsAtMs,
+        minutes,
+      };
+    });
+    const current = get();
+    if (current.startedAtMs !== null && current.endsAtMs !== null) {
+      void updatePrayerSystemTimer({
+        startedAtMs: current.startedAtMs,
+        endsAtMs: current.endsAtMs,
+      }).catch((error) => reportSystemTimerError('обновить', error));
+    }
+  },
 
   prevQuestion: () =>
     set((s) => (!s.generating && s.qIndex > 0 ? { qIndex: s.qIndex - 1 } : s)),
@@ -586,12 +634,18 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   complete: async (takeaway) => {
     const s = get();
+    await stopPrayerSystemTimer().catch((error) =>
+      reportSystemTimerError('остановить', error),
+    );
     if (s.sessionId !== null) await db.finishSession(s.sessionId, s.elapsed, takeaway);
     const streak = await db.markPrayedToday();
     set({ takeaway, streak });
   },
 
   reset: () => {
+    void stopPrayerSystemTimer().catch((error) =>
+      reportSystemTimerError('остановить', error),
+    );
     prepareToken++; // висящие prepareThreshold-промисы больше не применятся
     reflectToken++;
     scriptureToken++;

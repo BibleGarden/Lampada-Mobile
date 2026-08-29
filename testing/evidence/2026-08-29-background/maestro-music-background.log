@@ -1,0 +1,15 @@
+Running on iPhone 17 Pro - iOS 26.5 - 60C18F4D-BC26-4889-953A-DE847BD872DC
+ > Flow ios-background-music
+Launch app "twinkler" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Background music smoke... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Tap on "Включить тихую музыку"... COMPLETED
+Assert that "Тихая музыка" is visible... COMPLETED
+Press Home key... COMPLETED
+Swipe from (94%,1%) to (94%,48%) in 700 ms... COMPLETED
+Take screenshot /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-MUSIC-control-center... COMPLETED

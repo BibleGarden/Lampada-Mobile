@@ -1,0 +1,25 @@
+appId: twinkler
+---
+# Put a five-second finite prayer in background before it reaches zero.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Background timer smoke"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- tapOn:
+    point: "50%,29%"
+- tapOn: "−1"
+- tapOn: "−1"
+- tapOn: "−1"
+- tapOn: "−1"
+- tapOn: "−1"
+- pressKey: HOME
