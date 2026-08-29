@@ -178,8 +178,18 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             ) : curScripture ? (
               <>
                 {/* Заголовок отрывка живёт только в полной читалке: в карточке
-                    он читался как ключевой стих */}
-                <View style={styles.scripturePreview}>
+                    он читался как ключевой стих. Сам текст открывает читалку —
+                    тянуться ради этого к отдельной ссылке неинтуитивно */}
+                <Pressable
+                  onPress={canReadInFull ? tap(onOpenReader) : undefined}
+                  disabled={!canReadInFull}
+                  accessibilityRole={canReadInFull ? 'button' : undefined}
+                  accessibilityLabel={canReadInFull ? 'Читать отрывок целиком' : undefined}
+                  style={({ pressed }) => [
+                    styles.scripturePreview,
+                    pressed && canReadInFull && styles.scripturePreviewPressed,
+                  ]}
+                >
                   <ScripturePassageText
                     scripture={curScripture}
                     style={styles.cardText}
@@ -204,7 +214,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   >
                     {compactScripture?.text ?? curScripture.text}
                   </Text>
-                </View>
+                </Pressable>
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
                   <Text style={styles.offlineLabel}>Офлайн · из сохранённых</Text>
                 )}
@@ -392,6 +402,9 @@ const styles = StyleSheet.create({
     lineHeight: sc(20),
     color: colors.cardText,
     textAlign: 'center',
+  },
+  scripturePreviewPressed: {
+    opacity: 0.7,
   },
   scripturePreview: {
     alignSelf: 'stretch',
