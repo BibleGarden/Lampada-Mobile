@@ -116,7 +116,7 @@ const isAnswered = (a: Answer | undefined) =>
   !!(a && (a.text.trim() || a.recordings.length));
 
 // тексты ответов для промпта — только с разрешения из настроек
-// («Учитывать мои ответы»); без него ответы не покидают устройство
+// («Использовать ответы для цитат и вопросов»); без него ответы не покидают устройство
 const answersForAi = (answers: Record<number, Answer>) =>
   shareAnswersNow()
     ? Object.values(answers)

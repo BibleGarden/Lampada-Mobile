@@ -4,12 +4,12 @@ appId: twinkler
     stopApp: true
     clearState: true
 - openLink: "lampada://settings"
-- assertVisible: "Учитывать мои ответы"
-- assertVisible: "Сейчас твои ответы не покидают устройство.*"
+- assertVisible: "Использовать ответы для цитат и вопросов"
+- assertVisible: "Текст ваших ответов будет отправляться.*"
 - tapOn:
-    point: "86%,32%"
-- assertVisible: "Текст твоих ответов будет отправляться на сервер.*"
+    id: "share-answers-toggle"
+- assertVisible: "Текст ваших ответов не будет передаваться.*"
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
-- assertVisible: "Текст твоих ответов будет отправляться на сервер.*"
+- assertVisible: "Текст ваших ответов не будет передаваться.*"

@@ -25,7 +25,7 @@ type OpenPicker = 'language' | 'translation' | 'voice' | null;
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <Pressable
-      accessibilityLabel="Учитывать мои ответы"
+      accessibilityLabel="Использовать ответы для цитат и вопросов"
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       testID="share-answers-toggle"
@@ -122,8 +122,8 @@ export default function Settings() {
   const [open, setOpen] = useState<OpenPicker>(null);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
-  const [saving, setSaving] = useState(false);
   const translationRequest = useRef(0);
+  const preferenceSave = useRef<Promise<void>>(Promise.resolve());
 
   const hydrate = async () => {
     setLoadingCatalog(true);
@@ -191,24 +191,15 @@ export default function Settings() {
     void Haptics.selectionAsync();
     setVoice(next);
     setOpen(null);
-  };
-
-  const nextPreferences = language && translation && voice
-    ? preferencesFromCatalog(language, translation, voice)
-    : null;
-  const dirty = nextPreferences !== null
-    && JSON.stringify(nextPreferences) !== JSON.stringify(scripturePreferences);
-
-  const save = async () => {
-    if (!nextPreferences || saving) return;
-    setSaving(true);
-    try {
-      await setScripturePreferences(nextPreferences);
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.canGoBack() ? router.back() : router.replace('/');
-    } finally {
-      setSaving(false);
-    }
+    if (!language || !translation) return;
+    const preferences = preferencesFromCatalog(language, translation, next);
+    if (!preferences) return;
+    // Записи идут последовательно: при быстром выборе нескольких голосов
+    // последним в SQLite гарантированно останется последний выбор пользователя.
+    preferenceSave.current = preferenceSave.current
+      .catch(() => undefined)
+      .then(() => setScripturePreferences(preferences))
+      .catch(() => undefined);
   };
 
   const togglePicker = (id: Exclude<OpenPicker, null>) => {
@@ -220,32 +211,20 @@ export default function Settings() {
     <View style={styles.root}>
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
-        <View style={[styles.top, { top: insets.top + sc(10) }]}>
+        <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
           <Kicker>Настройки</Kicker>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !dirty || saving }}
-            testID="scripture-settings-save"
-            disabled={!dirty || saving}
-            onPress={() => void save()}
-            hitSlop={8}
-            style={styles.saveButton}
-          >
-            <Text style={[styles.saveText, (!dirty || saving) && styles.saveTextDisabled]}>
-              {saving ? 'Сохранение' : 'Сохранить'}
-            </Text>
-          </Pressable>
+          <View style={styles.topSpacer} />
         </View>
 
         <ScrollView
           style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
-            paddingTop: insets.top + sc(64),
-            paddingHorizontal: sc(18),
+            paddingTop: sc(20),
+            paddingHorizontal: sc(12),
             paddingBottom: insets.bottom + sc(24),
           }}
         >
@@ -328,28 +307,32 @@ export default function Settings() {
 
           <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Спутник</Kicker>
           <View style={styles.card}>
-            <View style={styles.row}>
-              <View style={{ flex: 1, paddingRight: sc(12) }}>
-                <Text style={styles.rowTitle}>Учитывать мои ответы</Text>
-              </View>
+            <View style={styles.shareAnswersHeader}>
+              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>
+                Использовать ответы для цитат и вопросов
+              </Text>
               <Toggle value={shareAnswers} onChange={setShareAnswers} />
             </View>
-            <View style={styles.divider} />
-            <Text style={styles.disclaimer}>
+            <Text style={[styles.settingHint, styles.shareAnswersHint]}>
               {shareAnswers
-                ? 'Текст письменных ответов отправляется на сервер вместе с запросами к ИИ — только ради подбора вопросов и Писания.'
-                : 'Текст письменных ответов не используется при подборе вопросов и Писания.'}
-              {'\n\n'}Голосовая запись отправляется в Gemini только после нажатия «Расшифровать». На сервере приложения аудио и расшифровка не сохраняются.
+                ? 'Текст ваших ответов будет отправляться на сервер приложения и передаваться провайдеру ИИ, чтобы вопросы и отрывки Писания учитывали контекст вашей молитвы. На сервере приложения ваши ответы не сохраняются.'
+                : 'Текст ваших ответов не будет передаваться для подбора вопросов и отрывков Писания.'}
             </Text>
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Писание</Kicker>
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Приложение</Kicker>
           <Pressable
-            onPress={() => router.push('/favorites')}
-            style={({ pressed }) => [styles.card, styles.linkCard, pressed && { opacity: 0.75 }]}
+            accessibilityRole="button"
+            accessibilityLabel="О приложении"
+            testID="about-button"
+            onPress={() => router.push('/about')}
+            style={({ pressed }) => [styles.card, styles.aboutLink, pressed && { opacity: 0.75 }]}
           >
-            <Text style={styles.rowTitle}>Избранные отрывки</Text>
-            <Text style={styles.linkHint}>Открываются без сети, включая сохранённые до обновления</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowTitle}>О приложении</Text>
+              <Text style={styles.linkHint}>Смысл, конфиденциальность и версия</Text>
+            </View>
+            <ChevronRight size={16} color={colors.labelGold} />
           </Pressable>
         </ScrollView>
       </Animated.View>
@@ -360,12 +343,10 @@ export default function Settings() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
-    position: 'absolute', left: sc(12), right: sc(12), zIndex: 2,
+    paddingHorizontal: sc(12),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  saveButton: { width: sc(78), alignItems: 'flex-end', paddingVertical: sc(8) },
-  saveText: { fontFamily: fonts.sansMedium, fontSize: sc(11.5), color: colors.amberBright },
-  saveTextDisabled: { color: 'rgba(230,162,60,.35)' },
+  topSpacer: { width: sc(34), height: sc(34) },
   sectionKicker: { marginBottom: sc(8), marginLeft: sc(4) },
   pickerStack: { gap: sc(6) },
   pickerCard: {
@@ -400,14 +381,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardBg, borderWidth: 1, borderColor: 'rgba(214,182,120,.22)',
     borderRadius: radius.md, padding: sc(14),
   },
-  row: { flexDirection: 'row', alignItems: 'center' },
   rowTitle: { fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment },
-  divider: { height: 1, backgroundColor: 'rgba(214,182,120,.16)', marginVertical: sc(12) },
-  disclaimer: { fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint },
-  linkCard: { gap: sc(5) },
+  shareAnswersHeader: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
+  shareAnswersTitle: { flex: 1, fontSize: sc(12), lineHeight: sc(16) },
+  settingHint: {
+    marginTop: sc(4), fontFamily: fonts.sans, fontSize: sc(10.5),
+    lineHeight: sc(15), color: colors.warmHint,
+  },
+  shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
+  aboutLink: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
   linkHint: { fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint },
   toggle: {
-    width: sc(40), height: sc(24), borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)',
+    flexShrink: 0, width: sc(40), height: sc(24), borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)',
     borderWidth: 1, borderColor: 'rgba(214,182,120,.26)', padding: sc(3), justifyContent: 'center',
   },
   toggleOn: { backgroundColor: 'rgba(230,162,60,.32)', borderColor: 'rgba(230,162,60,.6)' },
