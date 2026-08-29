@@ -2,10 +2,10 @@ import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NotebookText, Settings2 } from 'lucide-react-native';
 import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
-import { Book, Gear } from '../components/icons';
 import { useSession } from '../lib/store';
 import { colors, fonts, sc } from '../lib/theme';
 
@@ -55,16 +55,23 @@ export default function Home() {
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
           <View style={styles.topBtns}>
-            <IconButton onPress={() => router.push('/journal')} size={sc(30)}>
-              <Book size={15} color={colors.labelGold} />
+            <IconButton
+              onPress={() => router.push('/journal')}
+              size={sc(30)}
+              bg="transparent"
+              accessibilityLabel="История молитв"
+              testID="journal-button"
+            >
+              <NotebookText size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
             </IconButton>
             <IconButton
               onPress={() => router.push('/settings')}
               size={sc(30)}
+              bg="transparent"
               accessibilityLabel="Настройки"
               testID="settings-button"
             >
-              <Gear color={colors.labelGold} />
+              <Settings2 size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
             </IconButton>
           </View>
         </View>
