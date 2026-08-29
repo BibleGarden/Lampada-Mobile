@@ -232,6 +232,29 @@ export function buildScriptureTextSegments(
     : null;
 }
 
+export type ScriptureCompactText = {
+  text: string;
+  highlightedNumbers: number[];
+  /** True when the shown text is shorter than the whole passage. */
+  partial: boolean;
+};
+
+/**
+ * Text for the compact card: only the verses the server marked in
+ * `highlight.passage`, and the whole passage when there is no such marking.
+ */
+export function buildScriptureCompactText(scripture: ScriptureDisplay): ScriptureCompactText {
+  const segments = buildScriptureTextSegments(scripture.selection);
+  const highlighted = segments?.filter((segment) => segment.highlighted) ?? [];
+  const partial = !!segments && highlighted.length > 0 && highlighted.length < segments.length;
+
+  return {
+    text: partial ? highlighted.map((segment) => segment.text).join(' ') : scripture.text,
+    highlightedNumbers: highlighted.map((segment) => segment.number),
+    partial,
+  };
+}
+
 export function formatScriptureReference(
   passage: TranslatedPassage,
   bookNames: Readonly<Record<number, string>>,

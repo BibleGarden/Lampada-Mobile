@@ -4,6 +4,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
+import { buildScriptureCompactText } from '../lib/scripture';
 import { colors, fonts, radius, sc } from '../lib/theme';
 import { WindowDots } from './ui';
 import {
@@ -70,12 +71,16 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
   })();
 
   const curScripture = s.scrList[s.scrIndex];
+  // В карточке показываем только выделенные сервером стихи; целиком — в читалке
+  const compactScripture = curScripture ? buildScriptureCompactText(curScripture) : null;
   const scriptureMeasureKey = curScripture
     ? `${curScripture.canonicalId}:${curScripture.receivedAt}`
     : null;
   const scriptureIsTruncated = !!scriptureMeasureKey
     && measuredScripture?.key === scriptureMeasureKey
     && measuredScripture.truncated;
+  const canReadInFull = !!compactScripture
+    && (scriptureIsTruncated || compactScripture.partial);
   const curFav = !!curScripture && s.scrFav.includes(curScripture.canonicalId);
   const onFrontier = s.qIndex === s.answeredCount;
 
@@ -172,15 +177,15 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               <ActivityIndicator accessibilityLabel="Подбираю Писание" color={colors.goldSoft} />
             ) : curScripture ? (
               <>
-                {curScripture.title ? (
-                  <Text style={styles.scriptureTitle} numberOfLines={1}>{curScripture.title}</Text>
-                ) : null}
+                {/* Заголовок отрывка живёт только в полной читалке: в карточке
+                    он читался как ключевой стих */}
                 <View style={styles.scripturePreview}>
                   <ScripturePassageText
                     scripture={curScripture}
                     style={styles.cardText}
                     numberOfLines={3}
                     testIDPrefix="scripture-preview-highlight"
+                    variant="compact"
                   />
                   <Text
                     accessible={false}
@@ -197,7 +202,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                       );
                     }}
                   >
-                    {curScripture.text}
+                    {compactScripture?.text ?? curScripture.text}
                   </Text>
                 </View>
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
@@ -242,7 +247,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   </Text>
                 </Pressable>
               )}
-              {scriptureIsTruncated && (
+              {canReadInFull && (
                 <Pressable onPress={tap(onOpenReader)} style={styles.readMore}>
                   <Text style={styles.readMoreLabel}>Читать целиком</Text>
                   <ChevronRight size={13} />
@@ -386,13 +391,6 @@ const styles = StyleSheet.create({
     fontSize: sc(15),
     lineHeight: sc(20),
     color: colors.cardText,
-    textAlign: 'center',
-  },
-  scriptureTitle: {
-    marginBottom: sc(4),
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(12),
-    color: colors.goldSoft,
     textAlign: 'center',
   },
   scripturePreview: {

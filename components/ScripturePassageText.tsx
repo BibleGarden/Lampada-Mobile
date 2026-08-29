@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, type StyleProp, type TextStyle } from 'react-native';
 import {
+  buildScriptureCompactText,
   buildScriptureTextSegments,
   type ScriptureDisplay,
 } from '../lib/scripture';
@@ -12,6 +13,11 @@ type Props = {
   numberOfLines?: number;
   testIDPrefix: string;
   activeVerseNumber?: number | null;
+  /**
+   * `compact` — карточка: только выделенные сервером стихи и один цвет шрифта.
+   * `full` — читалка: весь отрывок с подсветкой ключевых стихов.
+   */
+  variant?: 'full' | 'compact';
 };
 
 export default function ScripturePassageText({
@@ -20,7 +26,20 @@ export default function ScripturePassageText({
   numberOfLines,
   testIDPrefix,
   activeVerseNumber,
+  variant = 'full',
 }: Props) {
+  if (variant === 'compact') {
+    const compact = buildScriptureCompactText(scripture);
+    const compactTestID = compact.highlightedNumbers.length
+      ? `${testIDPrefix}-${compact.highlightedNumbers.join('-')}`
+      : undefined;
+    return (
+      <Text style={style} numberOfLines={numberOfLines} testID={compactTestID}>
+        {compact.text}
+      </Text>
+    );
+  }
+
   const segments = buildScriptureTextSegments(scripture.selection);
 
   if (!segments) {
