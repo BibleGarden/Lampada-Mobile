@@ -169,7 +169,11 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: sc(12),
     fontFamily: fonts.sansMedium,
-    fontSize: sc(14),
-    color: colors.goldSoft,
+    fontSize: sc(13),
+    textTransform: 'uppercase',
+    // тот же базовый цвет, что и у текста отрывка; прозрачность гасит его
+    // до серовато-зелёного на тёмном фоне читалки
+    color: '#eef0e6',
+    opacity: 0.6,
   },
 });
