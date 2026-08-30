@@ -1,0 +1,104 @@
+appId: twinkler
+---
+# LOCK-006: «Забыли пин-код?» — единственный выход из забытого кода, и он стоит
+# всех данных. Проверяется, что оба подтверждения действительно защищают от
+# случайного нажатия, и что после стирания уходит и дневник, и сама защита.
+#
+# Предусловие: ios-lock-006-forgot-pin-prepare (запись «LOCK-006 запись», пин 4321).
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+
+# Отмена на первом подтверждении ничего не стирает.
+#
+# Повторный тап — обход того же поведения, что и на главной: первый тап после
+# холодного старта, пока идёт появление экрана, до обработчика не доходит.
+- tapOn:
+    id: "forgot-pin"
+- runFlow:
+    when:
+      notVisible: "Стереть данные"
+    commands:
+      - tapOn:
+          id: "forgot-pin"
+- assertVisible: "Стереть данные"
+- tapOn: "Отмена"
+- assertVisible:
+    id: "lock-screen"
+
+# Отмена на втором подтверждении тоже ничего не стирает.
+- tapOn:
+    id: "forgot-pin"
+- tapOn: "Стереть данные"
+- assertVisible: "Точно стереть всё?"
+- tapOn: "Отмена"
+- assertVisible:
+    id: "lock-screen"
+
+# Данные на месте: код всё ещё тот же.
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-1"
+- assertVisible: "Начать молитву"
+- tapOn:
+    id: "journal-button"
+- assertVisible: ".*LOCK-006 запись.*"
+- tapOn:
+    point: "10%,11%"
+
+# Полный путь: два подтверждения — и приложение стёрто.
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+- tapOn:
+    id: "forgot-pin"
+- runFlow:
+    when:
+      notVisible: "Стереть данные"
+    commands:
+      - tapOn:
+          id: "forgot-pin"
+- tapOn: "Стереть данные"
+- assertVisible: "Точно стереть всё?"
+- tapOn: "Да, стереть"
+
+# Защита снята вместе с данными: экран блокировки уходит без ввода кода.
+- extendedWaitUntil:
+    notVisible:
+      id: "lock-screen"
+    timeout: 15000
+- assertVisible: "Начать молитву"
+
+# Дневник пуст.
+- tapOn:
+    id: "journal-button"
+- assertVisible: "ДНЕВНИК"
+- assertVisible: "Здесь появятся твои молитвы"
+- assertNotVisible: ".*LOCK-006 запись.*"
+- tapOn:
+    point: "10%,11%"
+
+# Настройки снова показывают выключенную защиту.
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- assertNotVisible:
+    id: "change-pin-button"
+- assertVisible: ".*не восстанавливается.*"
+
+# Холодный старт больше не спрашивает код.
+- launchApp:
+    stopApp: true
+- assertVisible: "Начать молитву"
+- assertNotVisible:
+    id: "lock-screen"

@@ -1,0 +1,111 @@
+appId: twinkler
+---
+# LOCK-004: смена пина 123456 → 9876. Новый код короче старого, поэтому заодно
+# проверяется, что экран разблокировки перечитал длину: после смены он ждёт
+# четыре цифры, а не шесть.
+#
+# Предусловие: включён пин 123456 (состояние после ios-lock-002).
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- assertVisible: "Начать молитву"
+
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "change-pin-button"
+    direction: DOWN
+- tapOn:
+    id: "change-pin-button"
+
+# Текущий код: длина известна, подтверждение не требуется.
+- assertVisible: "Текущий пин-код"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+
+# Новый код из четырёх цифр — минимально допустимая длина.
+- assertVisible: "Новый пин-код"
+- tapOn:
+    id: "pin-key-9"
+- tapOn:
+    id: "pin-key-8"
+- tapOn:
+    id: "pin-key-7"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-key-confirm"
+
+- assertVisible: "Повторите пин-код"
+- tapOn:
+    id: "pin-key-9"
+- tapOn:
+    id: "pin-key-8"
+- tapOn:
+    id: "pin-key-7"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-key-confirm"
+- assertNotVisible:
+    id: "pin-prompt"
+- assertVisible:
+    id: "change-pin-button"
+
+# После перезапуска старый код не подходит, новый впускает. Целиком старый код
+# набрать уже нельзя: поле ждёт четыре цифры и проверяет ввод на четвёртой.
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- extendedWaitUntil:
+    visible: "Неверный пин-код"
+    timeout: 5000
+- assertVisible:
+    id: "lock-screen"
+
+- tapOn:
+    id: "pin-key-9"
+- tapOn:
+    id: "pin-key-8"
+- tapOn:
+    id: "pin-key-7"
+- tapOn:
+    id: "pin-key-6"
+- extendedWaitUntil:
+    notVisible:
+      id: "lock-screen"
+    timeout: 5000
+- assertVisible: "Начать молитву"

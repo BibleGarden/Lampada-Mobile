@@ -1,0 +1,27 @@
+appId: twinkler
+---
+# LOCK-001: пока пользователь не включил защиту, ни один экран не ведёт себя
+# иначе. Проверяется холодный старт и состояние секции «Защита» в настройках.
+#
+# Ключи защиты лежат в Keychain, а не в контейнере приложения, и `clearState`
+# их не стирает. Сценарий рассчитан на установку, где пин ещё не включали, либо
+# на запуск после ios-lock-005 (отключение защиты).
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+- assertNotVisible:
+    id: "lock-screen"
+- assertNotVisible:
+    id: "privacy-curtain"
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- assertVisible: ".*не восстанавливается.*"
+- assertNotVisible:
+    id: "change-pin-button"
+- assertNotVisible:
+    id: "pin-prompt"

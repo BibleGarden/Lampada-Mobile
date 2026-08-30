@@ -1,0 +1,68 @@
+appId: twinkler
+---
+# LOCK-002: включение защиты пином из шести цифр и блокировка на холодном старте.
+# Шесть цифр выбраны намеренно: при свободном вводе завершает набор только сам
+# пользователь галочкой, и четырёхзначный автосабмит не должен срабатывать.
+#
+# Предусловие: защита выключена (состояние после ios-lock-001).
+- launchApp:
+    stopApp: true
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Придумайте пин-код"
+- assertVisible:
+    id: "pin-prompt"
+
+# Придумать 123456: после четвёртой цифры экран не должен уйти сам.
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- assertVisible: "Придумайте пин-код"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-key-confirm"
+
+- assertVisible: "Повторите пин-код"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-key-confirm"
+
+# Ввод закрылся, защита включена: появилась строка смены кода.
+- assertNotVisible:
+    id: "pin-prompt"
+- assertVisible:
+    id: "change-pin-button"
+- assertVisible: ".*после минуты в фоне.*"
+
+# Холодный старт упирается в экран блокировки.
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+- assertVisible: "Введите пин-код"
+- assertVisible: "Забыли пин-код?"

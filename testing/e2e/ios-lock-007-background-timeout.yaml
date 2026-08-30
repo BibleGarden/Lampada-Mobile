@@ -1,0 +1,138 @@
+appId: twinkler
+---
+# LOCK-007: код спрашивается после минуты в фоне, но не после короткого
+# переключения на другое приложение.
+#
+# Возврат делается тапом по иконке на спрингборде, а не `launchApp`: launchApp
+# поднимает процесс заново, и экран блокировки появился бы просто как на
+# холодном старте — проверка стала бы бессмысленной. Признак того, что процесс
+# действительно выжил: после возврата приложение остаётся на дневнике, а не на
+# главной.
+#
+# Пауза сделана заведомо ложным ожиданием с `optional: true`: собственной
+# команды сна у Maestro нет.
+#
+# Предусловие: защита выключена. Шторка приватности в переключателе приложений
+# автоматизации не поддаётся и проверяется вручную — см. отчёт.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+# Явная проверка предусловия. Оверлеи блокировки модальны для дерева
+# доступности (accessibilityViewIsModal), поэтому проверка ловит и регресс
+# самой модальности, а не только состояние защиты.
+- assertNotVisible:
+    id: "lock-screen"
+
+# Включить пин 4321.
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Придумайте пин-код"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-confirm"
+- assertVisible: "Повторите пин-код"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-confirm"
+- assertVisible:
+    id: "change-pin-button"
+
+# Уйти на экран, который холодный старт не восстановил бы.
+- tapOn:
+    point: "10%,11%"
+- tapOn:
+    id: "journal-button"
+- runFlow:
+    when:
+      notVisible: "ДНЕВНИК"
+    commands:
+      - tapOn:
+          id: "journal-button"
+- assertVisible: "ДНЕВНИК"
+
+# Короткое переключение код не запрашивает.
+- pressKey: Home
+- extendedWaitUntil:
+    visible: "ЗАВЕДОМО-ЛОЖНЫЙ-МАРКЕР-ПАУЗЫ"
+    timeout: 10000
+    optional: true
+- tapOn: "Twinkler"
+- assertVisible: "ДНЕВНИК"
+- assertNotVisible:
+    id: "lock-screen"
+
+# Больше минуты в фоне — код запрашивается.
+- pressKey: Home
+- extendedWaitUntil:
+    visible: "ЗАВЕДОМО-ЛОЖНЫЙ-МАРКЕР-ПАУЗЫ"
+    timeout: 70000
+    optional: true
+- tapOn: "Twinkler"
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
+- assertVisible: "Введите пин-код"
+
+# Процесс тот же: после ввода кода приложение осталось на дневнике.
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-1"
+- extendedWaitUntil:
+    notVisible:
+      id: "lock-screen"
+    timeout: 5000
+- assertVisible: "ДНЕВНИК"
+
+# Уборка: вернуть приложение в состояние без защиты.
+- tapOn:
+    point: "10%,11%"
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Введите пин-код"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-1"
+- extendedWaitUntil:
+    notVisible:
+      id: "pin-prompt"
+    timeout: 5000
+- assertNotVisible:
+    id: "change-pin-button"

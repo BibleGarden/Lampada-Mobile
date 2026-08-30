@@ -1,0 +1,92 @@
+appId: twinkler
+---
+# LOCK-005: выключить защиту можно только тем, кто знает текущий код. Отмена и
+# неверный ввод защиту не снимают; после успешного снятия холодный старт
+# открывает приложение сразу.
+#
+# Предусловие: включён пин 9876 (состояние после ios-lock-004).
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+- tapOn:
+    id: "pin-key-9"
+- tapOn:
+    id: "pin-key-8"
+- tapOn:
+    id: "pin-key-7"
+- tapOn:
+    id: "pin-key-6"
+- assertVisible: "Начать молитву"
+
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+
+# Отмена на запросе кода оставляет защиту включённой.
+#
+# Повторный тап по «Отмене» — обход того же поведения, что и на главной: тап,
+# пришедшийся на появление оверлея, до обработчика не доходит.
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Введите пин-код"
+- assertVisible: "Подтвердите, что защиту выключаете вы"
+- tapOn:
+    id: "pin-prompt-cancel"
+- runFlow:
+    when:
+      visible:
+        id: "pin-prompt"
+    commands:
+      - tapOn:
+          id: "pin-prompt-cancel"
+- assertNotVisible:
+    id: "pin-prompt"
+- assertVisible:
+    id: "change-pin-button"
+
+# Неверный код защиту не снимает.
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Введите пин-код"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-1"
+- extendedWaitUntil:
+    visible: "Неверный пин-код"
+    timeout: 5000
+- assertVisible:
+    id: "pin-prompt"
+
+# Верный код снимает защиту: строка смены кода исчезает, подсказка снова про
+# то, что код можно завести.
+- tapOn:
+    id: "pin-key-9"
+- tapOn:
+    id: "pin-key-8"
+- tapOn:
+    id: "pin-key-7"
+- tapOn:
+    id: "pin-key-6"
+- extendedWaitUntil:
+    notVisible:
+      id: "pin-prompt"
+    timeout: 5000
+- assertNotVisible:
+    id: "change-pin-button"
+- assertVisible: ".*не восстанавливается.*"
+
+# Холодный старт больше не спрашивает код.
+- launchApp:
+    stopApp: true
+- assertVisible: "Начать молитву"
+- assertNotVisible:
+    id: "lock-screen"

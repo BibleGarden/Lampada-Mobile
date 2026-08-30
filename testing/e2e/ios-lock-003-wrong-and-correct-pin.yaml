@@ -1,0 +1,50 @@
+appId: twinkler
+---
+# LOCK-003: неверный пин оставляет на экране блокировки с ошибкой, верный —
+# впускает. Длина пина известна из хранилища, поэтому проверка запускается сама
+# на последней цифре: отдельного подтверждения на разблокировке нет.
+#
+# Предусловие: включён пин 123456 (состояние после ios-lock-002).
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: "lock-screen"
+
+# Неверный код той же длины.
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-1"
+- extendedWaitUntil:
+    visible: "Неверный пин-код"
+    timeout: 5000
+- assertVisible:
+    id: "lock-screen"
+- assertNotVisible: "Начать молитву.*Поддержи огонёк"
+
+# Верный код впускает без дополнительного подтверждения.
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- extendedWaitUntil:
+    notVisible:
+      id: "lock-screen"
+    timeout: 5000
+- assertVisible: "Начать молитву"
