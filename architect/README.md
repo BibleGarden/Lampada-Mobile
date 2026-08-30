@@ -54,7 +54,7 @@ Twinkler — мобильное приложение для личной хри�
 | `lib/prayerSystemTimer.*.ts` | Платформенный жизненный цикл таймера на заблокированном экране |
 | `widgets/PrayerLiveActivity.tsx` | iOS Live Activity и Dynamic Island с системным countdown |
 | `modules/prayer-timer-notification/` | Android ongoing notification с системным chronometer |
-| `lib/theme.ts` | Визуальные токены и `useStyles` — пересборка стилей при смене геометрии окна (ADR-0011) |
+| `lib/theme.ts` | Визуальные токены, `useStyles` — пересборка стилей при смене геометрии окна (ADR-0011), `column()` — колонка контента одной раскладки (ADR-0012) |
 | `assets/audio/` | Локальные музыкальные файлы и сведения об их происхождении и лицензиях |
 | `testing/` | Сценарии, Maestro-flow, отчёты и финальные evidence |
 

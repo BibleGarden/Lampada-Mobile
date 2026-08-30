@@ -40,7 +40,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
-import { colors, fonts, isTablet, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 
@@ -558,11 +558,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   sessionContent: {
     flex: 1,
-    width: '100%',
-    // На телефоне колонка не растягивается на «плюсовых» моделях; на планшете
-    // идёт во всю ширину — меру строки держит уже сам кегль.
-    maxWidth: isTablet() ? undefined : sc(360),
-    alignSelf: 'center',
+    ...column(),
     paddingHorizontal: sc(18),
     // Один зазор на все стыки: шапка → кольцо → цель → карточка. На телефоне
     // остатка нет — его целиком забирает карточка. На планшете карточка

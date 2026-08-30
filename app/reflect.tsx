@@ -21,7 +21,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function Reflect() {
   const sessionId = useSession((state) => state.sessionId);
@@ -170,7 +170,7 @@ function ReflectScreen() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  body: { flex: 1, paddingHorizontal: sc(18) },
+  body: { flex: 1, paddingHorizontal: sc(18), ...column() },
   emberWrap: {
     alignItems: 'center',
   },

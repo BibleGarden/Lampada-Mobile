@@ -11,7 +11,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { plMinutes, useSession } from '../lib/store';
 import { recordDiagnostic } from '../lib/db';
-import { colors, fonts, durations, sc, useStyles } from '../lib/theme';
+import { colors, column, durations, fonts, sc, useStyles } from '../lib/theme';
 
 // «15 минут» / «час» / «1:30» — как timeAmount в прототипе
 const timeAmount = (minutes: number) => {
@@ -191,6 +191,7 @@ const stylesFactory = () => StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: sc(16),
+    ...column(),
     justifyContent: 'space-between',
   },
   headerRow: {

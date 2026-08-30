@@ -7,7 +7,7 @@ import ScreenBg from '../components/ScreenBg';
 import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function Done() {
   const sessionId = useSession((state) => state.sessionId);
@@ -60,6 +60,7 @@ const stylesFactory = () => StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: sc(18),
+    ...column(),
     justifyContent: 'space-between',
   },
   center: {

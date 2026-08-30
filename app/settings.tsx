@@ -18,7 +18,7 @@ import {
   type ScriptureTranslation,
   type ScriptureVoice,
 } from '../lib/scripturePreferences';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
 
@@ -214,7 +214,7 @@ export default function Settings() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
@@ -346,6 +346,7 @@ export default function Settings() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
+  screen: { flex: 1, ...column() },
   top: {
     paddingHorizontal: sc(12),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

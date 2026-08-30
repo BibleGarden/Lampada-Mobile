@@ -15,6 +15,15 @@ const PROTO_WIDTH = 294;
 const SCALE_CAP_PHONE = 460;
 const SCALE_CAP_TABLET = 620;
 
+// Вторая опора масштаба — высота окна. Экраны вертикальные, поэтому кадр
+// прототипа сжимается по высоте лучше, чем разворачивается: 500 вместо
+// исходных 654 — это самый низкий кадр, на котором вёрстка ещё дышит
+// (iPhone SE, 667 pt при масштабе от ширины). Масштаб от ширины остаётся
+// ведущим на всех портретных экранах, а в альбомной ориентации, где ширина
+// втрое больше нужной высоты, ограничение берёт на себя высота: композиция
+// та же, просто уменьшенная, вместо раздутой и обрезанной снизу.
+const PROTO_MIN_HEIGHT = 500;
+
 type Geometry = { scale: number; isTablet: boolean };
 
 const geometryFor = (width: number, height: number): Geometry => {
@@ -22,7 +31,10 @@ const geometryFor = (width: number, height: number): Geometry => {
   // поэтому тип раскладки остаётся тем же в портрете и в альбоме.
   const tablet = Math.min(width, height) >= 600;
   return {
-    scale: Math.min(width, tablet ? SCALE_CAP_TABLET : SCALE_CAP_PHONE) / PROTO_WIDTH,
+    scale: Math.min(
+      Math.min(width, tablet ? SCALE_CAP_TABLET : SCALE_CAP_PHONE) / PROTO_WIDTH,
+      height / PROTO_MIN_HEIGHT,
+    ),
     isTablet: tablet,
   };
 };
@@ -53,6 +65,18 @@ export function useStyles<T>(factory: () => T): T {
     return factory();
   }, [width, height, factory]);
 }
+
+/**
+ * Колонка контента. Ширину задаём в единицах прототипа, а не экрана: на
+ * телефоне этот потолок недостижим и ничего не меняет, а на планшете держит
+ * меру строки — иначе в альбомной ориентации текст и кнопки растягиваются на
+ * всю ширину окна. Функция, а не константа: зависит от текущей геометрии.
+ */
+export const column = () => ({
+  width: '100%' as const,
+  maxWidth: sc(360),
+  alignSelf: 'center' as const,
+});
 
 export const colors = {
   // фоны

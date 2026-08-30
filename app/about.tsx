@@ -9,7 +9,7 @@ import { ExternalLink } from 'lucide-react-native';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Book, ChevronLeft, Shield } from '../components/icons';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = Constants.expoConfig?.version ?? '—';
@@ -21,7 +21,7 @@ export default function About() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
@@ -98,6 +98,7 @@ export default function About() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
+  screen: { flex: 1, ...column() },
   top: {
     paddingHorizontal: sc(12),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

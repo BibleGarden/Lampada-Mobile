@@ -16,7 +16,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const EXAMPLES = [
   'Привести мысли в порядок',
@@ -194,7 +194,7 @@ const plUnit = (n: number) => {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  body: { flex: 1, paddingHorizontal: sc(18) },
+  body: { flex: 1, paddingHorizontal: sc(18), ...column() },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',

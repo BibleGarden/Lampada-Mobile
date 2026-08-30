@@ -8,7 +8,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft } from '../components/icons';
 import { getFavoriteScriptures } from '../lib/scriptureRepository';
 import type { FavoriteScripture } from '../lib/scripture';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function Favorites() {
   const styles = useStyles(stylesFactory);
@@ -24,7 +24,7 @@ export default function Favorites() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/settings'))}>
             <ChevronLeft color={colors.goldSoft} />
@@ -60,6 +60,7 @@ export default function Favorites() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
+  screen: { flex: 1, ...column() },
   top: {
     paddingHorizontal: sc(12), paddingBottom: sc(8),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

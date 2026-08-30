@@ -7,7 +7,7 @@ import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
 import { useSession } from '../lib/store';
-import { colors, fonts, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, sc, useStyles } from '../lib/theme';
 
 const greetingByHour = () => {
   const h = new Date().getHours();
@@ -52,7 +52,7 @@ export default function Home() {
       {/* без entering-анимации: на холодном старте, пока JS-поток занят
           загрузкой бандла, FadeIn замирает на полупрозрачности — весь экран
           остаётся «бледным». Home — первый экран, ему проявление не нужно */}
-      <View style={{ flex: 1 }}>
+      <View style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour()}</Text>
           <View style={styles.topBtns}>
@@ -109,6 +109,7 @@ export default function Home() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
+  screen: { flex: 1, ...column() },
   top: {
     position: 'absolute',
     left: sc(18),

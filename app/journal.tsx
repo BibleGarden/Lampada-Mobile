@@ -19,7 +19,7 @@ import { ChevronLeft, Close, PauseIcon, PlayIcon, Trash } from '../components/ic
 import * as db from '../lib/db';
 import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 // «5 июля», «5 июля 2025» — год только если не текущий
 const MONTHS = [
@@ -288,7 +288,7 @@ export default function Journal() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
@@ -387,6 +387,7 @@ function RecordingRow({
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
+  screen: { flex: 1, ...column() },
   top: {
     position: 'absolute',
     left: sc(12),
