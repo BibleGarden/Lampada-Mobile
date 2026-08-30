@@ -194,7 +194,7 @@ export default function PinPad({
         <Text
           style={[styles.hint, error ? styles.hintError : null]}
           testID="pin-hint"
-          numberOfLines={2}
+          numberOfLines={3}
         >
           {hint ?? ' '}
         </Text>
@@ -304,7 +304,9 @@ const stylesFactory = () => StyleSheet.create({
   dotFilled: { backgroundColor: colors.goldSoft, borderColor: colors.goldSoft },
   hint: {
     marginTop: sc(14),
-    minHeight: sc(30),
+    // Три строки: столько занимает предупреждение о невосстановимости кода
+    // при установке; резерв фиксированный, чтобы клавиатура не прыгала.
+    minHeight: sc(45),
     fontFamily: fonts.sans,
     fontSize: sc(10.5),
     lineHeight: sc(15),

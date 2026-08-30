@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import { HintReveal, IconButton, Kicker } from '../components/ui';
+import { IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
 import { useSettings } from '../lib/settings';
 import {
@@ -410,7 +410,12 @@ export default function Settings() {
     if (pinFlow.step === 'create') {
       return {
         title: pinFlow.kind === 'change' ? 'Новый пин-код' : 'Придумайте пин-код',
-        subtitle: `От ${PIN_MIN_LENGTH} до ${PIN_MAX_LENGTH} цифр.\nНажмите галочку, когда закончите.`,
+        // Предупреждение о невосстановимости показывается именно в момент
+        // установки кода — на экране настроек его больше нет.
+        subtitle:
+          pinFlow.kind === 'change'
+            ? `От ${PIN_MIN_LENGTH} до ${PIN_MAX_LENGTH} цифр.\nНажмите галочку, когда закончите.`
+            : `От ${PIN_MIN_LENGTH} до ${PIN_MAX_LENGTH} цифр.\nЗабытый код не восстановить — войти получится, лишь стерев все данные.`,
         expectedLength: undefined,
       };
     }
@@ -689,11 +694,13 @@ export default function Settings() {
               />
             </View>
 
-            <Text style={[styles.settingHint, styles.shareAnswersHint]} testID="reminders-summary">
-              {reminderSchedule.enabled && reminderSummary
-                ? reminderSummary
-                : 'Тихое напоминание в выбранное время. Уведомления локальные: интернет для них не нужен.'}
-            </Text>
+            {/* Пояснение не нужно — заголовок говорит сам за себя; при
+                включённых напоминаниях вместо него сводка расписания. */}
+            {reminderSchedule.enabled && reminderSummary ? (
+              <Text style={[styles.settingHint, styles.shareAnswersHint]} testID="reminders-summary">
+                {reminderSummary}
+              </Text>
+            ) : null}
 
             {reminderPermission === 'denied' ? (
               <Text
@@ -760,7 +767,7 @@ export default function Settings() {
             ) : null}
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Спутник</Kicker>
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Конфиденциальность</Kicker>
           <View style={styles.card}>
             <View style={styles.shareAnswersHeader}>
               <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>
@@ -773,23 +780,15 @@ export default function Settings() {
                 onChange={setShareAnswers}
               />
             </View>
-            {shareAnswers ? (
-              <HintReveal
-                testID="share-answers-hint-help"
-                style={[styles.settingHint, styles.shareAnswersHint]}
-                summary="Текст ваших ответов будет отправляться на сервер приложения и провайдеру ИИ."
-                details="Это нужно, чтобы вопросы и отрывки Писания учитывали контекст вашей молитвы. На сервере приложения ответы не сохраняются."
-              />
-            ) : (
-              <Text style={[styles.settingHint, styles.shareAnswersHint]}>
-                Текст ваших ответов не будет передаваться для подбора вопросов и отрывков Писания.
-              </Text>
-            )}
-          </View>
+            <Text style={[styles.settingHint, styles.shareAnswersHint]}>
+              {shareAnswers
+                ? 'Текст ваших ответов будет отправляться на сервер приложения и провайдеру ИИ, '
+                  + 'чтобы вопросы и отрывки Писания учитывали контекст вашей молитвы. '
+                  + 'На сервере приложения ответы не сохраняются.'
+                : 'Текст ваших ответов не будет передаваться для подбора вопросов и отрывков Писания.'}
+            </Text>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Защита</Kicker>
-          <View style={styles.card}>
-            <View style={styles.shareAnswersHeader}>
+            <View style={[styles.shareAnswersHeader, styles.lockRow]}>
               <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>Пин-код</Text>
               <Toggle
                 value={lockEnabled}
@@ -798,21 +797,6 @@ export default function Settings() {
                 onChange={(next) => (next ? startEnableLock() : startDisableLock())}
               />
             </View>
-            <HintReveal
-              testID="lock-hint-help"
-              style={[styles.settingHint, styles.shareAnswersHint]}
-              summary={
-                lockEnabled
-                  ? 'Код спрашивается при открытии приложения.'
-                  : 'Забытый код не восстановить — только стереть все данные приложения.'
-              }
-              details={
-                lockEnabled
-                  ? 'И после минуты в фоне. Короткое переключение на другое приложение код не запрашивает.'
-                  : `Код из ${PIN_MIN_LENGTH}–${PIN_MAX_LENGTH} цифр закроет дневник, ответы и записи от посторонних глаз. Хранится только на этом устройстве.`
-              }
-            />
-
             {lockEnabled ? (
               <Pressable
                 accessibilityRole="button"
@@ -856,7 +840,6 @@ export default function Settings() {
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.rowTitle}>О приложении</Text>
-              <Text style={styles.linkHint}>Смысл, конфиденциальность и версия</Text>
             </View>
             <ChevronRight size={16} color={colors.labelGold} />
           </Pressable>
@@ -965,7 +948,6 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(10),
   },
   aboutLink: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
-  linkHint: { fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint },
   toggle: {
     flexShrink: 0, width: sc(40), height: sc(24), borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)',
     borderWidth: 1, borderColor: 'rgba(214,182,120,.26)', padding: sc(3), justifyContent: 'center',

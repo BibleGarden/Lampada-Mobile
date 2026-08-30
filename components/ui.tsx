@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  LayoutAnimation,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextStyle,
-  UIManager,
   View,
   ViewStyle,
   StyleProp,
@@ -14,17 +11,8 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CircleHelp } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
-
-// Старая архитектура Android не анимирует layout-переходы без явного флага;
-// на iOS и на Fabric вызов безвреден. Метод не описан в типах RN, хотя
-// существует в рантайме — отсюда каст.
-const legacyUIManager = UIManager as unknown as { setLayoutAnimationEnabled?: (v: boolean) => void };
-if (Platform.OS === 'android' && legacyUIManager.setLayoutAnimationEnabled) {
-  legacyUIManager.setLayoutAnimationEnabled(true);
-}
 
 /** Подпись капсом моноширинным — фирменный элемент прототипа */
 export function Kicker({
@@ -148,51 +136,6 @@ export function CardIn({
   );
 }
 
-/**
- * Короткая ключевая фраза видна всегда, полный текст подсказки — по тапу на
- * «?». Убирает длинные серые подсказки с экрана, не пряча смысл: развернуть
- * можно в любой момент. `style` задаёт типографику (обычно settingHint) и
- * применяется и к видимой фразе, и к развёрнутому тексту.
- */
-export function HintReveal({
-  summary,
-  details,
-  testID,
-  style,
-}: {
-  summary: string;
-  details: string;
-  testID: string;
-  style?: StyleProp<TextStyle>;
-}) {
-  const styles = useStyles(stylesFactory);
-  const [open, setOpen] = useState(false);
-  const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    void Haptics.selectionAsync();
-    setOpen((v) => !v);
-  };
-  return (
-    <View>
-      <View style={styles.hintRow}>
-        <Text style={[style, styles.hintSummary]}>{summary}</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={open ? 'Скрыть подробности' : 'Подробнее'}
-          accessibilityState={{ expanded: open }}
-          testID={testID}
-          hitSlop={10}
-          onPress={toggle}
-          style={styles.hintToggle}
-        >
-          <CircleHelp size={sc(15)} color={colors.labelGold} />
-        </Pressable>
-      </View>
-      {open ? <Text style={style}>{details}</Text> : null}
-    </View>
-  );
-}
-
 /** Точки-индикатор с «окном» из 7, как _winDots в прототипе */
 export function WindowDots({
   total,
@@ -269,7 +212,4 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'center',
     minHeight: sc(8),
   },
-  hintRow: { flexDirection: 'row', alignItems: 'flex-start', gap: sc(6) },
-  hintSummary: { flex: 1 },
-  hintToggle: { padding: sc(3), marginTop: sc(1) },
 });
