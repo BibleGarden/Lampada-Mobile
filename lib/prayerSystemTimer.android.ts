@@ -1,9 +1,9 @@
 import { PermissionsAndroid, Platform } from 'react-native';
+import type { Permission } from 'react-native';
 import PrayerTimerNotification from '../modules/prayer-timer-notification/src/PrayerTimerNotificationModule';
 import type { PrayerSystemTimerState } from './prayerSystemTimer';
 
-const notificationPermission =
-  'android.permission.POST_NOTIFICATIONS' as PermissionsAndroid.Permission;
+const notificationPermission = 'android.permission.POST_NOTIFICATIONS' as Permission;
 let operation: Promise<void> = Promise.resolve();
 
 const enqueue = (work: () => Promise<void>) => {
@@ -12,7 +12,9 @@ const enqueue = (work: () => Promise<void>) => {
 };
 
 const hasNotificationPermission = async (request: boolean) => {
-  if (Platform.Version < 33) return true;
+  // Platform.Version в типах кроссплатформенный (string | number); на Android
+  // это всегда число API level.
+  if (Number(Platform.Version) < 33) return true;
   if (await PermissionsAndroid.check(notificationPermission)) return true;
   if (!request) return false;
   return (
