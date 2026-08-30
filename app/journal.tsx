@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   Keyboard,
+  Modal,
+  ScrollView,
   Pressable,
   StyleSheet,
   Text,
@@ -15,8 +17,11 @@ import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Close, PauseIcon, PlayIcon, Trash } from '../components/icons';
+import { ChevronLeft, Close, Heart, PauseIcon, Pen, PlayIcon, Trash } from '../components/icons';
+import ScripturePassageText from '../components/ScripturePassageText';
 import * as db from '../lib/db';
+import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
+import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
@@ -48,6 +53,15 @@ const fmtAnswers = (count: number) => {
   return `${count} ответов`;
 };
 
+const fmtQuotes = (count: number) => {
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  if (mod100 >= 11 && mod100 <= 14) return `${count} цитат`;
+  if (mod10 === 1) return `${count} цитата`;
+  if (mod10 >= 2 && mod10 <= 4) return `${count} цитаты`;
+  return `${count} цитат`;
+};
+
 export default function Journal() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
@@ -57,6 +71,9 @@ export default function Journal() {
   // раскрытая молитва и её содержимое (грузится по требованию)
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<db.JournalDetail | null>(null);
+  // цитаты раскрытой молитвы и та, что читают во всплывающем окне
+  const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
+  const [openQuote, setOpenQuote] = useState<FavoriteScripture | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const detailRequest = useRef(0);
@@ -113,12 +130,20 @@ export default function Journal() {
     if (openId === id) {
       setOpenId(null);
       setDetail(null);
+      setFavorites([]);
       return;
     }
     setOpenId(id);
     setDetail(null);
-    const nextDetail = await db.getJournalDetail(id);
-    if (detailRequest.current === request) setDetail(nextDetail);
+    setFavorites([]);
+    const [nextDetail, nextFavorites] = await Promise.all([
+      db.getJournalDetail(id),
+      getFavoriteScripturesBySession(id),
+    ]);
+    if (detailRequest.current === request) {
+      setDetail(nextDetail);
+      setFavorites(nextFavorites);
+    }
   }, [openId, playingUri, player]);
 
   const startJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
@@ -211,10 +236,21 @@ export default function Journal() {
         <Pressable onPress={() => toggleOpen(item.id)}>
           <View style={styles.cardHead}>
             <Text style={styles.cardDate}>{fmtDate(item.startedAt)}</Text>
-            <Text style={styles.cardMeta}>
-              {fmtDuration(item.elapsedSec)}
-              {item.answerCount > 0 && ` · ${fmtAnswers(item.answerCount)}`}
-            </Text>
+            <View style={styles.cardMetaRow}>
+              <Text style={styles.cardMeta}>{fmtDuration(item.elapsedSec)}</Text>
+              {item.answerCount > 0 && (
+                <View style={styles.metaChip} accessibilityLabel={fmtAnswers(item.answerCount)}>
+                  <Pen size={10} color={colors.goldSoft} />
+                  <Text style={styles.cardMeta}>{item.answerCount}</Text>
+                </View>
+              )}
+              {item.favoriteCount > 0 && (
+                <View style={styles.metaChip} accessibilityLabel={fmtQuotes(item.favoriteCount)}>
+                  <Heart size={11} color={colors.goldSoft} />
+                  <Text style={styles.cardMeta}>{item.favoriteCount}</Text>
+                </View>
+              )}
+            </View>
           </View>
           <Text style={styles.cardTopic} numberOfLines={open ? undefined : 2}>
             {item.topic.trim() || 'Свободная молитва'}
@@ -228,7 +264,8 @@ export default function Journal() {
 
         {open && (
           <Animated.View entering={FadeIn.duration(250)}>
-            {detail === null ? null : detail.answers.length === 0 && detail.recordings.length === 0 ? (
+            {detail === null ? null : detail.answers.length === 0
+              && detail.recordings.length === 0 && favorites.length === 0 ? (
               <Text style={styles.emptyDetail}>Молитва прошла без записей</Text>
             ) : (
               detail.answers.map((a) => {
@@ -270,13 +307,34 @@ export default function Journal() {
                   />
                 ))}
 
+            {favorites.length > 0 && (
+              <View style={styles.quotesBlock}>
+                <Text style={styles.quotesLabel}>{fmtQuotes(favorites.length)}</Text>
+                {favorites.map((favorite) => (
+                  <Pressable
+                    key={favorite.id}
+                    onPress={() => setOpenQuote(favorite)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Открыть цитату ${favorite.reference}`}
+                    testID={`journal-quote-${favorite.id}`}
+                    style={({ pressed }) => [styles.quoteRow, pressed && { opacity: 0.7 }]}
+                  >
+                    <Text style={styles.quoteRef}>{favorite.reference}</Text>
+                    <Text style={styles.quoteText} numberOfLines={2}>
+                      {favorite.text}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
             <Pressable
               onPress={() => askOrConfirmDelete(item.id)}
               style={[styles.deleteBtn, confirming && styles.deleteBtnConfirming]}
             >
               <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
               <Text style={[styles.deleteLabel, confirming && { color: '#ec8a7a' }]}>
-                {confirming ? 'Точно удалить? Это навсегда' : 'Удалить молитву'}
+                {confirming ? 'Точно удалить? Это навсегда' : 'Удалить запись'}
               </Text>
             </Pressable>
           </Animated.View>
@@ -336,6 +394,51 @@ export default function Journal() {
           }
         />
       </Animated.View>
+
+      {/* Цитата целиком: то же оформление, что и на экране сохранённых цитат,
+          с подсветкой ключевых стихов, когда сервер их отметил */}
+      <Modal
+        visible={openQuote !== null}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setOpenQuote(null)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setOpenQuote(null)}>
+          <Pressable
+            style={[styles.modalCard, { maxHeight: '78%' }]}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View style={styles.modalHead}>
+              <Text style={styles.quoteRef}>{openQuote?.reference}</Text>
+              <IconButton
+                onPress={() => setOpenQuote(null)}
+                accessibilityLabel="Закрыть цитату"
+                testID="journal-quote-close"
+              >
+                <Close />
+              </IconButton>
+            </View>
+            <ScrollView contentContainerStyle={{ paddingBottom: sc(6) }}>
+              {!!openQuote?.title && <Text style={styles.modalTitle}>{openQuote.title}</Text>}
+              {openQuote ? (
+                (() => {
+                  const display = favoriteToScriptureDisplay(openQuote);
+                  return display ? (
+                    <ScripturePassageText
+                      scripture={display}
+                      style={styles.modalText}
+                      testIDPrefix={`journal-quote-highlight-${openQuote.id}`}
+                    />
+                  ) : (
+                    <Text style={styles.modalText}>{openQuote.text}</Text>
+                  );
+                })()
+              ) : null}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -435,11 +538,27 @@ const stylesFactory = () => StyleSheet.create({
     marginBottom: sc(6),
   },
   cardDate: {
+    flexShrink: 0,
     fontFamily: fonts.mono,
     fontSize: sc(10),
     letterSpacing: sc(1.2),
     textTransform: 'uppercase',
     color: colors.labelGold,
+  },
+  // счётчики ответов и цитат словами не помещались в строку, поэтому
+  // числа стоят при иконках; словесная форма осталась для VoiceOver.
+  // Иконки — сплошным золотом: в цвет соседнего текста они сливались.
+  // Размер им передаётся сырым числом: sc() применяется внутри компонента
+  cardMetaRow: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(15),
+  },
+  metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(7),
   },
   cardMeta: {
     fontFamily: fonts.mono,
@@ -554,6 +673,73 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sansMedium,
     fontSize: sc(11.5),
     color: colors.goldSoft,
+  },
+  quotesBlock: {
+    marginTop: sc(12),
+    paddingTop: sc(10),
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(214,182,120,.12)',
+    gap: sc(8),
+  },
+  quotesLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(11.5),
+    lineHeight: sc(16),
+    color: colors.labelGold,
+  },
+  quoteRow: {
+    gap: sc(3),
+    paddingVertical: sc(6),
+    paddingHorizontal: sc(10),
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(255,255,255,.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(214,182,120,.14)',
+  },
+  quoteRef: {
+    fontFamily: fonts.mono,
+    fontSize: sc(9.5),
+    letterSpacing: sc(1),
+    textTransform: 'uppercase',
+    color: colors.labelGold,
+  },
+  quoteText: {
+    fontFamily: fonts.serifRegular,
+    fontSize: sc(13),
+    lineHeight: sc(19),
+    color: colors.body,
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: sc(18),
+    backgroundColor: 'rgba(8,6,4,.82)',
+  },
+  modalCard: {
+    padding: sc(16),
+    borderRadius: radius.md,
+    backgroundColor: '#141009',
+    borderWidth: 1,
+    borderColor: 'rgba(214,182,120,.24)',
+  },
+  modalHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: sc(10),
+    marginBottom: sc(10),
+  },
+  modalTitle: {
+    marginBottom: sc(8),
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(14),
+    color: colors.goldSoft,
+  },
+  modalText: {
+    fontFamily: fonts.serif,
+    fontSize: sc(15),
+    lineHeight: sc(24),
+    color: colors.cardText,
   },
   deleteBtn: {
     flexDirection: 'row',

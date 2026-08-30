@@ -30,6 +30,7 @@ export function migrateLegacyFavorite(
     text: scripture?.text ?? '',
     translationAlias: scripture ? 'syn' : null,
     language: scripture ? 'ru' : null,
+    selection: null,
     createdAt: row.added_at,
     legacyRef: row.ref,
     legacy: {

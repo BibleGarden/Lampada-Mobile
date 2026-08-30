@@ -88,6 +88,8 @@ export type FavoriteScripture = {
   text: string;
   translationAlias: string | null;
   language: ScriptureLanguage | null;
+  /** Полный ответ сервера: ключевые стихи и разбивка отрывка. NULL у legacy-записей. */
+  selection: ScriptureSelection | null;
   createdAt: string;
   legacy?: unknown;
 };
@@ -279,5 +281,26 @@ export function toScriptureDisplay(
     translationAlias: selection.passage.translation_alias,
     selection,
     receivedAt,
+  };
+}
+
+/**
+ * Восстанавливает отображаемый отрывок из сохранённой записи, чтобы избранное
+ * рисовалось тем же компонентом, что и карточка во время молитвы. Возвращает
+ * null для legacy-записей: у них нет ответа сервера, только плоский текст.
+ */
+export function favoriteToScriptureDisplay(
+  favorite: FavoriteScripture,
+): ScriptureDisplay | null {
+  const selection = favorite.selection;
+  if (!selection) return null;
+  return {
+    canonicalId: selection.canonical.canonical_id,
+    reference: favorite.reference,
+    title: selection.passage.title,
+    text: selection.passage.text,
+    translationAlias: selection.passage.translation_alias,
+    selection,
+    receivedAt: favorite.createdAt,
   };
 }

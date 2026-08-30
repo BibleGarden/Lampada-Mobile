@@ -24,6 +24,7 @@ type FavoriteRow = {
   text: string;
   translation_alias: string | null;
   language: string | null;
+  selection_json: string | null;
   legacy_json: string | null;
   created_at: string;
 };
@@ -181,21 +182,23 @@ export async function getShownScriptureCache(
 
 export async function addFavoriteScripture(
   display: ScriptureDisplay,
+  sessionId: number | null = null,
   createdAt = new Date().toISOString(),
 ): Promise<void> {
   const db = await getDb();
   await db.runAsync(
     `INSERT INTO scripture_favorites
        (canonical_id, reference, title, text, translation_alias, language,
-        selection_json, legacy_ref, legacy_json, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        selection_json, legacy_ref, legacy_json, session_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(canonical_id) DO UPDATE SET
        reference = excluded.reference,
        title = excluded.title,
        text = excluded.text,
        translation_alias = excluded.translation_alias,
        language = excluded.language,
-       selection_json = excluded.selection_json`,
+       selection_json = excluded.selection_json,
+       session_id = excluded.session_id`,
     display.canonicalId,
     display.reference,
     display.title,
@@ -205,6 +208,7 @@ export async function addFavoriteScripture(
     JSON.stringify(display.selection),
     null,
     null,
+    sessionId,
     createdAt,
   );
 }
@@ -219,14 +223,35 @@ export async function removeFavoriteByCanonicalId(canonicalId: string): Promise<
   await db.runAsync('DELETE FROM scripture_favorites WHERE canonical_id = ?', canonicalId);
 }
 
+const FAVORITE_COLUMNS =
+  `id, canonical_id, reference, title, text, translation_alias, language,
+   selection_json, legacy_json, created_at`;
+
 export async function getFavoriteScriptures(): Promise<FavoriteScripture[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<FavoriteRow>(
-    `SELECT id, canonical_id, reference, title, text, translation_alias, language,
-            legacy_json, created_at
+    `SELECT ${FAVORITE_COLUMNS}
        FROM scripture_favorites ORDER BY created_at DESC, id DESC`,
   );
-  return rows.map((row) => ({
+  return rows.map(favoriteFromRow);
+}
+
+/** Цитаты, сохранённые во время конкретной молитвы, — в порядке сохранения. */
+export async function getFavoriteScripturesBySession(
+  sessionId: number,
+): Promise<FavoriteScripture[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<FavoriteRow>(
+    `SELECT ${FAVORITE_COLUMNS}
+       FROM scripture_favorites WHERE session_id = ?
+      ORDER BY created_at, id`,
+    sessionId,
+  );
+  return rows.map(favoriteFromRow);
+}
+
+function favoriteFromRow(row: FavoriteRow): FavoriteScripture {
+  return ({
     id: String(row.id),
     canonicalId: row.canonical_id,
     reference: row.reference,
@@ -234,9 +259,10 @@ export async function getFavoriteScriptures(): Promise<FavoriteScripture[]> {
     text: row.text,
     translationAlias: row.translation_alias,
     language: row.language !== null && isLanguage(row.language) ? row.language : null,
+    selection: parseScriptureSelection(parseJson(row.selection_json)),
     createdAt: row.created_at,
     legacy: parseJson(row.legacy_json),
-  }));
+  });
 }
 
 export async function replaceScriptureBooks(

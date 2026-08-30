@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NotebookText, Settings2 } from 'lucide-react-native';
+import { Heart, NotebookText, Settings2 } from 'lucide-react-native';
 import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
@@ -64,6 +64,15 @@ export default function Home() {
               testID="journal-button"
             >
               <NotebookText size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
+            </IconButton>
+            <IconButton
+              onPress={() => router.push('/favorites')}
+              size={sc(30)}
+              bg="transparent"
+              accessibilityLabel="Сохранённые цитаты"
+              testID="favorites-button"
+            >
+              <Heart size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
             </IconButton>
             <IconButton
               onPress={() => router.push('/settings')}

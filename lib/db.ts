@@ -208,6 +208,7 @@ export type JournalEntry = {
   elapsedSec: number;
   takeaway: string;
   answerCount: number;
+  favoriteCount: number;
 };
 
 export type JournalDetail = {
@@ -241,12 +242,15 @@ export async function getJournal(query = ''): Promise<JournalEntry[]> {
     elapsed_sec: number;
     takeaway: string;
     answer_count: number;
+    favorite_count: number;
     search_blob: string | null;
     recording_search_blob: string | null;
   }>(
     `SELECT s.id, s.started_at, s.topic, s.elapsed_sec, s.takeaway,
             (SELECT COUNT(*) FROM answers a
               WHERE a.session_id = s.id AND TRIM(a.text) != '') AS answer_count,
+            (SELECT COUNT(*) FROM scripture_favorites f
+              WHERE f.session_id = s.id) AS favorite_count,
             (SELECT GROUP_CONCAT(a.text || ' ' || a.question, ' ')
                FROM answers a WHERE a.session_id = s.id) AS search_blob,
             (SELECT GROUP_CONCAT(r.transcript, ' ')
@@ -272,6 +276,7 @@ export async function getJournal(query = ''): Promise<JournalEntry[]> {
       elapsedSec: r.elapsed_sec,
       takeaway: r.takeaway,
       answerCount: r.answer_count,
+      favoriteCount: r.favorite_count,
     }));
 }
 

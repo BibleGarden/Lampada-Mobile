@@ -41,6 +41,7 @@ export async function migrateScriptureStorage(db: SQLite.SQLiteDatabase) {
       selection_json TEXT,
       legacy_ref TEXT UNIQUE,
       legacy_json TEXT,
+      session_id INTEGER,
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS scripture_favorites_created_idx
@@ -61,6 +62,8 @@ export async function migrateScriptureStorage(db: SQLite.SQLiteDatabase) {
       backed_up_at TEXT NOT NULL
     );
   `);
+
+  await addFavoriteSessionColumn(db);
 
   const versionRow = await db.getFirstAsync<{ value: string }>(
     'SELECT value FROM meta WHERE key = ?',
@@ -118,4 +121,51 @@ export async function migrateScriptureStorage(db: SQLite.SQLiteDatabase) {
       String(SCRIPTURE_SCHEMA_VERSION),
     );
   });
+}
+
+const FAVORITE_SESSION_BACKFILL_KEY = 'scripture_favorites_session_backfill';
+
+/** SQLite-время: created_at и started_at лежат как ISO-8601 в UTC. */
+const EPOCH = (column: string) =>
+  `CAST(strftime('%s', replace(replace(${column}, 'T', ' '), 'Z', '')) AS INTEGER)`;
+
+/**
+ * Добавляет привязку сохранённой цитаты к молитве. Колонка появилась позже
+ * самой таблицы, поэтому для старых баз её доливаем через ALTER, а связь
+ * восстанавливаем один раз по времени: цитата принадлежит той молитве, в чьё
+ * время она сохранена. Для записей, не попавших ни в одну молитву, остаётся
+ * NULL — выдумывать связь там нечем.
+ */
+async function addFavoriteSessionColumn(db: SQLite.SQLiteDatabase) {
+  const columns = await db.getAllAsync<{ name: string }>(
+    'PRAGMA table_info(scripture_favorites)',
+  );
+  if (!columns.some((column) => column.name === 'session_id')) {
+    await db.execAsync('ALTER TABLE scripture_favorites ADD COLUMN session_id INTEGER');
+  }
+
+  const done = await db.getFirstAsync<{ value: string }>(
+    'SELECT value FROM meta WHERE key = ?',
+    FAVORITE_SESSION_BACKFILL_KEY,
+  );
+  if (done?.value) return;
+
+  await db.runAsync(
+    `UPDATE scripture_favorites
+        SET session_id = (
+          SELECT s.id FROM sessions s
+           WHERE ${EPOCH('scripture_favorites.created_at')} >= ${EPOCH('s.started_at')}
+             AND ${EPOCH('scripture_favorites.created_at')}
+                 <= ${EPOCH('s.started_at')} + s.elapsed_sec
+           ORDER BY s.started_at DESC
+           LIMIT 1
+        )
+      WHERE session_id IS NULL`,
+  );
+  await db.runAsync(
+    `INSERT INTO meta (key, value) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    FAVORITE_SESSION_BACKFILL_KEY,
+    'done',
+  );
 }

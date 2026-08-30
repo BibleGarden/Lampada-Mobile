@@ -585,7 +585,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     if (has) {
       void scriptureRepository.removeFavoriteByCanonicalId(current.canonicalId);
     } else {
-      void scriptureRepository.addFavoriteScripture(current);
+      void scriptureRepository.addFavoriteScripture(current, s.sessionId);
     }
   },
 
