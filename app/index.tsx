@@ -99,7 +99,7 @@ export default function Home() {
           {!!streakLine && <Text style={styles.streakLabel}>{streakLine}</Text>}
         </View>
 
-        <View style={[styles.bottom, { bottom: insets.bottom + sc(24) }]}>
+        <View style={[styles.bottom, { paddingBottom: insets.bottom + sc(24) }]}>
           <GoldButton label="Начать молитву" onPress={() => router.push('/setup')} />
         </View>
       </View>
@@ -174,9 +174,10 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.labelGold,
     marginTop: sc(4),
   },
+  // Кнопка стоит в потоке, а не поверх экрана: центральный блок должен
+  // получать оставшуюся высоту, иначе на низком окне огонёк с подписями
+  // центрируется по всему экрану и наезжает на кнопку.
   bottom: {
-    position: 'absolute',
-    left: sc(18),
-    right: sc(18),
+    paddingHorizontal: sc(18),
   },
 });
