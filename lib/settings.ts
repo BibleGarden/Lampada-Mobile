@@ -134,6 +134,22 @@ export const useSettings = create<SettingsState>((set) => ({
   },
 }));
 
+/**
+ * Вернуть настройки к состоянию новой установки. Нужен только полному стиранию
+ * данных: база к этому моменту удалена, поэтому в памяти не должно остаться ни
+ * значений из неё, ни закэшированного промиса загрузки — иначе `load()` решил
+ * бы, что настройки уже прочитаны.
+ */
+export const resetSettingsStore = () => {
+  loadPromise = null;
+  useSettings.setState({
+    shareAnswers: true,
+    scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
+    reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
+    loaded: false,
+  });
+};
+
 /** Текущее значение для не-React кода (store), без подписки */
 export const shareAnswersNow = () => useSettings.getState().shareAnswers;
 

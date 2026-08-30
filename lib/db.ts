@@ -348,6 +348,40 @@ function deleteRecordingFiles(uris: string[]) {
   }
 }
 
+/**
+ * Полное стирание локальных данных: дневник, ответы, аудиозаписи, избранное,
+ * кэш Писания, streak и настройки. Используется только сбросом забытого
+ * пин-кода (ADR-0014), где безвозвратность подтверждена пользователем дважды.
+ *
+ * База удаляется файлом целиком, а не через DELETE по таблицам: так не
+ * остаётся ни забытой таблицы, ни содержимого WAL. Следующий `getDb()`
+ * пересоздаёт пустую схему обычной миграцией.
+ */
+export async function wipeLocalData(): Promise<void> {
+  // Пути к аудиофайлам живут в базе, поэтому собираем их до её удаления.
+  let recordingUris: string[] = [];
+  try {
+    const d = await getDb();
+    const rows = await d.getAllAsync<{ uri: string }>('SELECT uri FROM recordings');
+    recordingUris = rows.map((r) => r.uri);
+    await d.closeAsync();
+  } catch {
+    // Повреждённую или незакрытую базу всё равно нужно удалить: файлы записей
+    // в этом случае останутся только если их не удалось перечислить.
+  }
+  // Кэш промиса сбрасывается до удаления файла: параллельный getDb() не должен
+  // вернуть handle уже удалённой базы.
+  dbPromise = null;
+  await SQLite.deleteDatabaseAsync('lampada.db');
+  deleteRecordingFiles(recordingUris);
+  try {
+    if (diagnosticLog.exists) diagnosticLog.delete();
+  } catch {
+    // Диагностический лог не содержит пользовательских данных: его отсутствие
+    // или ошибка удаления не должны срывать стирание.
+  }
+}
+
 export async function toggleFavorite(ref: string): Promise<boolean> {
   const d = await getDb();
   const row = await d.getFirstAsync<{ ref: string }>('SELECT ref FROM favorites WHERE ref = ?', ref);

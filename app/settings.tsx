@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import { IconButton, Kicker } from '../components/ui';
+import { HintReveal, IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
 import { useSettings } from '../lib/settings';
 import {
@@ -35,9 +35,36 @@ import {
   type ScriptureTranslation,
   type ScriptureVoice,
 } from '../lib/scripturePreferences';
+import PinPrompt from '../components/PinPrompt';
+import { screenReaderHiddenProps } from '../lib/a11y';
+import {
+  PIN_MAX_LENGTH,
+  PIN_MIN_LENGTH,
+  authenticateWithBiometrics,
+  biometryInfo,
+  changePin,
+  disableLock,
+  enableLock,
+  setBiometrics,
+  useLock,
+  verifyPin,
+  type BiometryInfo,
+} from '../lib/lock';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
+
+/**
+ * Шаг сценария ввода пина. `current` подтверждает право менять защиту,
+ * `create` — придумать новый код, `repeat` — сверить его с повтором.
+ * `current` хранит подтверждённый код только до конца смены пина.
+ */
+type PinFlow = {
+  kind: 'enable' | 'disable' | 'change';
+  step: 'current' | 'create' | 'repeat';
+  current?: string;
+  first?: string;
+} | null;
 
 function Toggle({ value, label, testID, onChange }: {
   value: boolean;
@@ -200,6 +227,11 @@ export default function Settings() {
     shareAnswers, scripturePreferences, reminderSchedule,
     load, setShareAnswers, setScripturePreferences, setReminderSchedule,
   } = useSettings();
+  const lockEnabled = useLock((s) => s.enabled);
+  const biometricsEnabled = useLock((s) => s.biometrics);
+  const lockPinLength = useLock((s) => s.pinLength);
+  const [biometry, setBiometry] = useState<BiometryInfo | null>(null);
+  const [pinFlow, setPinFlow] = useState<PinFlow>(null);
   const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
   const reminderSave = useRef<Promise<void>>(Promise.resolve());
   const [languages, setLanguages] = useState<ScriptureLanguageOption[]>([]);
@@ -269,6 +301,125 @@ export default function Settings() {
       sub.remove();
     };
   }, []);
+
+  // Биометрию могли зарегистрировать или удалить в системных настройках, пока
+  // приложение было в фоне: тумблер должен появляться и исчезать вслед за этим.
+  useEffect(() => {
+    let alive = true;
+    const refresh = () => {
+      void biometryInfo().then((info) => {
+        if (alive) setBiometry(info);
+      });
+    };
+    refresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, []);
+
+  const startEnableLock = () => setPinFlow({ kind: 'enable', step: 'create' });
+  const startDisableLock = () => setPinFlow({ kind: 'disable', step: 'current' });
+  const startChangePin = () => {
+    void Haptics.selectionAsync();
+    setPinFlow({ kind: 'change', step: 'current' });
+  };
+
+  /**
+   * Один обработчик на все шаги ввода. Возвращает `null`, когда ввод принят, и
+   * текст ошибки, когда нет: поле само трясётся и очищается.
+   */
+  const submitPinFlow = async (pin: string): Promise<string | null> => {
+    const flow = pinFlow;
+    if (!flow) return 'Не удалось продолжить';
+
+    if (flow.step === 'current') {
+      if (!(await verifyPin(pin))) return 'Неверный пин-код';
+      if (flow.kind === 'disable') {
+        await disableLock();
+        setPinFlow(null);
+        return null;
+      }
+      setPinFlow({ kind: 'change', step: 'create', current: pin });
+      return null;
+    }
+
+    if (flow.step === 'create') {
+      setPinFlow({ ...flow, step: 'repeat', first: pin });
+      return null;
+    }
+
+    if (pin !== flow.first) {
+      // Не совпало — возвращаемся к придумыванию кода: заставлять человека
+      // вслепую повторять код, который он мог набрать с опечаткой, бессмысленно.
+      setPinFlow({ ...flow, step: 'create', first: undefined });
+      return 'Коды не совпали. Придумайте код заново.';
+    }
+
+    if (flow.kind === 'change') {
+      if (!(await changePin(flow.current ?? '', pin))) {
+        setPinFlow({ kind: 'change', step: 'current' });
+        return 'Не удалось сменить пин-код';
+      }
+    } else {
+      await enableLock(pin);
+    }
+    setPinFlow(null);
+    return null;
+  };
+
+  const toggleBiometrics = async (next: boolean) => {
+    if (!next) {
+      await setBiometrics(false);
+      return;
+    }
+    const info = await biometryInfo();
+    setBiometry(info);
+    if (!info.available) return;
+    // Включаем только после успешной проверки: человек сразу видит, что способ
+    // работает, а не обнаруживает это на заблокированном экране.
+    const result = await authenticateWithBiometrics(`Подтвердите включение ${info.label}`);
+    if (result.ok) {
+      await setBiometrics(true);
+      return;
+    }
+    // Отмену пользователем не комментируем — тумблер просто остаётся
+    // выключенным, как если бы его и не трогали. А вот настоящую ошибку
+    // молчать нельзя: до этой правки человек не видел, почему включение
+    // не сработало.
+    if (result.reason === 'error') {
+      Alert.alert('Не удалось включить Face ID / Touch ID', result.message);
+    }
+  };
+
+  const pinPrompt = (() => {
+    if (!pinFlow) return null;
+    if (pinFlow.step === 'current') {
+      return {
+        title: pinFlow.kind === 'disable' ? 'Введите пин-код' : 'Текущий пин-код',
+        subtitle:
+          pinFlow.kind === 'disable'
+            ? 'Подтвердите, что защиту выключаете вы'
+            : 'Подтвердите, что код меняете вы',
+        expectedLength: lockPinLength,
+      };
+    }
+    if (pinFlow.step === 'create') {
+      return {
+        title: pinFlow.kind === 'change' ? 'Новый пин-код' : 'Придумайте пин-код',
+        subtitle: `От ${PIN_MIN_LENGTH} до ${PIN_MAX_LENGTH} цифр.\nНажмите галочку, когда закончите.`,
+        expectedLength: undefined,
+      };
+    }
+    return {
+      title: 'Повторите пин-код',
+      subtitle: 'Наберите тот же код ещё раз',
+      expectedLength: undefined,
+    };
+  })();
 
   // Правило, которое редактирует этот экран. Модель допускает несколько правил
   // (их принесёт разбор фразы на этапе 2), простой выбор дней и времени —
@@ -420,7 +571,16 @@ export default function Settings() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
+      {/* Пометка для TalkBack: пока сверху висит ввод пина, настроек под ним
+          для программы чтения с экрана не существует. На iOS то же делает сам
+          PinPrompt флагом accessibilityViewIsModal (см. lib/a11y).
+          ScreenBg остаётся непомеченным намеренно: это декоративный холст
+          Skia, узлов доступности он не создаёт. */}
+      <Animated.View
+        entering={FadeIn.duration(500)}
+        style={styles.screen}
+        {...screenReaderHiddenProps(!!pinPrompt)}
+      >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
@@ -613,11 +773,77 @@ export default function Settings() {
                 onChange={setShareAnswers}
               />
             </View>
-            <Text style={[styles.settingHint, styles.shareAnswersHint]}>
-              {shareAnswers
-                ? 'Текст ваших ответов будет отправляться на сервер приложения и передаваться провайдеру ИИ, чтобы вопросы и отрывки Писания учитывали контекст вашей молитвы. На сервере приложения ваши ответы не сохраняются.'
-                : 'Текст ваших ответов не будет передаваться для подбора вопросов и отрывков Писания.'}
-            </Text>
+            {shareAnswers ? (
+              <HintReveal
+                testID="share-answers-hint-help"
+                style={[styles.settingHint, styles.shareAnswersHint]}
+                summary="Текст ваших ответов будет отправляться на сервер приложения и провайдеру ИИ."
+                details="Это нужно, чтобы вопросы и отрывки Писания учитывали контекст вашей молитвы. На сервере приложения ответы не сохраняются."
+              />
+            ) : (
+              <Text style={[styles.settingHint, styles.shareAnswersHint]}>
+                Текст ваших ответов не будет передаваться для подбора вопросов и отрывков Писания.
+              </Text>
+            )}
+          </View>
+
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Защита</Kicker>
+          <View style={styles.card}>
+            <View style={styles.shareAnswersHeader}>
+              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>Пин-код</Text>
+              <Toggle
+                value={lockEnabled}
+                label="Пин-код"
+                testID="lock-toggle"
+                onChange={(next) => (next ? startEnableLock() : startDisableLock())}
+              />
+            </View>
+            <HintReveal
+              testID="lock-hint-help"
+              style={[styles.settingHint, styles.shareAnswersHint]}
+              summary={
+                lockEnabled
+                  ? 'Код спрашивается при открытии приложения.'
+                  : 'Забытый код не восстановить — только стереть все данные приложения.'
+              }
+              details={
+                lockEnabled
+                  ? 'И после минуты в фоне. Короткое переключение на другое приложение код не запрашивает.'
+                  : `Код из ${PIN_MIN_LENGTH}–${PIN_MAX_LENGTH} цифр закроет дневник, ответы и записи от посторонних глаз. Хранится только на этом устройстве.`
+              }
+            />
+
+            {lockEnabled ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Сменить пин-код"
+                testID="change-pin-button"
+                onPress={startChangePin}
+                style={({ pressed }) => [styles.lockRow, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[styles.rowTitle, { flex: 1 }]}>Сменить пин-код</Text>
+                <ChevronRight size={16} color={colors.labelGold} />
+              </Pressable>
+            ) : null}
+
+            {/* Биометрия существует только поверх пина: без кода не осталось бы
+                запасного входа, если Face ID перестанет узнавать. */}
+            {lockEnabled && biometry?.available ? (
+              <View style={styles.lockRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle}>{biometry.label}</Text>
+                  <Text style={[styles.settingHint, styles.shareAnswersHint]}>
+                    Пин-код остаётся запасным способом.
+                  </Text>
+                </View>
+                <Toggle
+                  value={biometricsEnabled}
+                  label={biometry.label}
+                  testID="biometrics-toggle"
+                  onChange={(next) => void toggleBiometrics(next)}
+                />
+              </View>
+            ) : null}
           </View>
 
           <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Приложение</Kicker>
@@ -636,6 +862,18 @@ export default function Settings() {
           </Pressable>
         </ScrollView>
       </Animated.View>
+
+      {/* Поверх экрана, а не системным Modal: иначе окно ввода закрыло бы собой
+          шторку приватности и экран блокировки при сворачивании приложения. */}
+      {pinPrompt ? (
+        <PinPrompt
+          title={pinPrompt.title}
+          subtitle={pinPrompt.subtitle}
+          expectedLength={pinPrompt.expectedLength}
+          onSubmit={submitPinFlow}
+          onCancel={() => setPinFlow(null)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -717,6 +955,15 @@ const stylesFactory = () => StyleSheet.create({
   timeColon: { fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.labelGold },
   addTime: { paddingVertical: sc(6) },
   addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(11.5), color: colors.goldSoft },
+  lockRow: {
+    marginTop: sc(12),
+    paddingTop: sc(12),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(214,182,120,.16)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(10),
+  },
   aboutLink: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
   linkHint: { fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint },
   toggle: {

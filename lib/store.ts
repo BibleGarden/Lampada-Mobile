@@ -802,6 +802,16 @@ async function showNextScripture(sessionId: number, token: number) {
   await showScripture(sessionId, token, result.display);
 }
 
+/**
+ * Полный сброс сессии вместе со streak. Обычный `reset()` сохраняет streak: он
+ * отражает историю в базе и не должен теряться при выходе из молитвы. После
+ * стирания данных истории больше нет, поэтому обнуляется и он.
+ */
+export const resetSessionStore = () => {
+  useSession.getState().reset();
+  useSession.setState({ streak: { count: 0, prayedToday: false, week: Array(7).fill(false) } });
+};
+
 export const fmtTime = (sec: number) => {
   const m = Math.floor(sec / 60);
   const s = sec % 60;

@@ -15,6 +15,7 @@
           "UIInterfaceOrientationPortrait"
         ],
         "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена в Gemini для расшифровки только по вашему запросу.",
+        "NSFaceIDUsageDescription": "Face ID используется для разблокировки приложения.",
         "UIBackgroundModes": [
           "audio"
         ]
@@ -67,6 +68,13 @@
           "enablePushNotifications": false,
           "frequentUpdates": false,
           "widgets": []
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Face ID используется для разблокировки приложения."
         }
       ]
     ],

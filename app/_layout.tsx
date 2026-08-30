@@ -22,6 +22,9 @@ import {
   JetBrainsMono_500Medium,
 } from '@expo-google-fonts/jetbrains-mono';
 import { useSettings } from '../lib/settings';
+import { useLock } from '../lib/lock';
+import LockGate from '../components/LockGate';
+import { screenReaderHiddenProps } from '../lib/a11y';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
@@ -57,6 +60,20 @@ export default function RootLayout() {
     })().catch(() => undefined);
   }, []);
 
+  // Состояние блокировки читается отдельно от настроек и раньше них: пока оно
+  // неизвестно, LockGate держит шторку и не показывает содержимое экранов.
+  useEffect(() => {
+    void useLock.getState().load().catch(() => undefined);
+  }, []);
+
+  // Тот же признак «сверху висит оверлей», по которому LockGate решает, что
+  // показывать. Он нужен и здесь: пометку для TalkBack ставит не оверлей, а
+  // скрываемый под ним контент (см. lib/a11y).
+  const lockReady = useLock((s) => s.ready);
+  const locked = useLock((s) => s.locked);
+  const obscured = useLock((s) => s.obscured);
+  const covered = !lockReady || locked || obscured;
+
   const [fontsLoaded] = useFonts({
     Spectral_300Light,
     Spectral_300Light_Italic,
@@ -77,20 +94,29 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <StatusBar style="light" />
       <ReminderRouting />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#0e0a07' },
-          animation: 'fade',
-          animationDuration: 350,
-        }}
-      >
-        {/* из сессии и рефлексии нельзя выпасть случайным жестом:
-            выход — только явными кнопками (finishEarly / завершение) */}
-        <Stack.Screen name="session" options={{ gestureEnabled: false }} />
-        <Stack.Screen name="reflect" options={{ gestureEnabled: false }} />
-        <Stack.Screen name="done" options={{ gestureEnabled: false }} />
-      </Stack>
+      {/* Обёртка нужна только как адресат пометки для TalkBack: оверлеи —
+          сиблинги навигации, а не её родитель, и пометить содержимое под ними
+          больше неоткуда. Раскладку она не трогает: flex: 1 и никаких стилей
+          сверх него. */}
+      <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered)}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#0e0a07' },
+            animation: 'fade',
+            animationDuration: 350,
+          }}
+        >
+          {/* из сессии и рефлексии нельзя выпасть случайным жестом:
+              выход — только явными кнопками (finishEarly / завершение) */}
+          <Stack.Screen name="session" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="reflect" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="done" options={{ gestureEnabled: false }} />
+        </Stack>
+      </View>
+      {/* Последним элементом, поверх всей навигации: экран блокировки и шторку
+          приватности нельзя обойти ни переходом, ни диплинком. */}
+      <LockGate />
     </GestureHandlerRootView>
   );
 }
