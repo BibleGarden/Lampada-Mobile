@@ -7,7 +7,7 @@ import ScreenBg from '../components/ScreenBg';
 import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function Done() {
   const sessionId = useSession((state) => state.sessionId);
@@ -18,6 +18,7 @@ export default function Done() {
 }
 
 function DoneScreen() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
 
@@ -54,7 +55,7 @@ function DoneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   body: {
     flex: 1,

@@ -15,6 +15,7 @@ import Animated, {
   FadeIn,
   FadeInDown,
   cancelAnimation,
+  useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withRepeat,
@@ -39,14 +40,19 @@ import { IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
 // но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
 // пространство между шапкой и карточкой спутника.
-const ringSizeFor = (height: number) => Math.round(Math.min(sc(156), height * 0.235));
+// На планшете доля высоты больше: там кольцу есть куда расти, и в телефонном
+// размере оно теряется посреди экрана.
+const ringSizeFor = (height: number) =>
+  Math.round(
+    isTablet() ? Math.min(sc(230), height * 0.27) : Math.min(sc(146), height * 0.215),
+  );
 
 export default function Session() {
   const sessionId = useSession((state) => state.sessionId);
@@ -57,6 +63,7 @@ export default function Session() {
 }
 
 function SessionScreen() {
+  const styles = useStyles(stylesFactory);
   useKeepAwake(); // экран не гаснет во время молитвы
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -285,107 +292,100 @@ function SessionScreen() {
         : 'осталось';
   // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
+  // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
+  // над таймером и прилипал к кольцу.
+  const musicPlaying = s.musicOn && !transientAudioBusy && musicStatus.playing;
 
   return (
     <View style={styles.root}>
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
-        {/* top bar */}
-        <View style={[styles.topBar, { top: insets.top + sc(8) }]}>
-          <IconButton onPress={finishEarly}>
-            <Close />
-          </IconButton>
-          <Kicker numberOfLines={1} style={styles.topTitle}>
-            Молитва
-          </Kicker>
-          <IconButton
-            onPress={s.toggleMusic}
-            bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
-            border={s.musicOn ? 'rgba(230,162,60,.4)' : undefined}
-            accessibilityLabel={s.musicOn ? 'Выключить тихую музыку' : 'Включить тихую музыку'}
-            accessibilityState={{ selected: s.musicOn }}
-          >
-            <Music color={s.musicOn ? colors.amberBright : 'rgba(255,255,255,.5)'} />
-          </IconButton>
-        </View>
-
+        {/* Шапка, кольцо, цель и карточка стоят одной колонкой с общим
+            зазором; остаток высоты забирает карточка. */}
         <View
           style={[
             styles.sessionContent,
             {
-              paddingTop: insets.top + sc(50),
+              paddingTop: insets.top + sc(8),
               paddingBottom: insets.bottom + sc(14),
             },
           ]}
         >
-          <View style={styles.musicSlot}>
-            {s.musicOn && !transientAudioBusy && musicStatus.playing && (
-              <Animated.View entering={FadeIn.duration(250)} style={styles.musicChip}>
-                <Music size={11} color={colors.amberBright} />
-                <Text style={styles.musicChipLabel} numberOfLines={1}>
-                  Тихая музыка
+          <View style={styles.topBar}>
+            <IconButton onPress={finishEarly}>
+              <Close />
+            </IconButton>
+            <Kicker numberOfLines={1} style={styles.topTitle}>
+              Молитва
+            </Kicker>
+            <View style={styles.musicBtnWrap}>
+              {musicPlaying && <MusicPulse size={sc(34)} />}
+              <IconButton
+                onPress={s.toggleMusic}
+                bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
+                border={s.musicOn ? 'rgba(230,162,60,.4)' : undefined}
+                accessibilityLabel={s.musicOn ? 'Выключить тихую музыку' : 'Включить тихую музыку'}
+                accessibilityState={{ selected: s.musicOn }}
+              >
+                <Music color={s.musicOn ? colors.amberBright : 'rgba(255,255,255,.5)'} />
+              </IconButton>
+            </View>
+          </View>
+
+          <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
+            <TimerHalo size={ringSize} />
+            <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
+            <View style={styles.timerContent}>
+              <Pressable
+                onPress={() => {
+                  if (s.remaining === null) return;
+                  Haptics.selectionAsync();
+                  setAdjustOpen((v) => !v);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.timerText,
+                    {
+                      fontSize: ringSize * 0.255,
+                      lineHeight: ringSize * 0.3,
+                    },
+                    s.remaining !== null && styles.timerTextAdjustable,
+                  ]}
+                >
+                  {timerLabel}
                 </Text>
-              </Animated.View>
+              </Pressable>
+              <Kicker style={{ fontSize: Math.min(sc(10), ringSize * 0.052) }}>
+                {timerSub}
+              </Kicker>
+            </View>
+            {adjustOpen && s.remaining !== null && (
+              <>
+                <AdjustBtn
+                  ringSize={ringSize}
+                  side="left"
+                  label={`−${adjStep}`}
+                  onPress={() => s.adjustTimer(-adjStep)}
+                />
+                <AdjustBtn
+                  ringSize={ringSize}
+                  side="right"
+                  label={`+${adjStep}`}
+                  accent
+                  onPress={() => s.adjustTimer(adjStep)}
+                />
+              </>
             )}
           </View>
 
-          {/* Таймер и цель делят свободную высоту поровну с отступами сверху и снизу. */}
-          <View style={styles.focusArea}>
-            <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
-              <TimerHalo size={ringSize} />
-              <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
-              <View style={styles.timerContent}>
-                <Pressable
-                  onPress={() => {
-                    if (s.remaining === null) return;
-                    Haptics.selectionAsync();
-                    setAdjustOpen((v) => !v);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.timerText,
-                      {
-                        fontSize: ringSize * 0.255,
-                        lineHeight: ringSize * 0.3,
-                      },
-                      s.remaining !== null && styles.timerTextAdjustable,
-                    ]}
-                  >
-                    {timerLabel}
-                  </Text>
-                </Pressable>
-                <Kicker style={{ fontSize: Math.min(sc(10), ringSize * 0.052) }}>
-                  {timerSub}
-                </Kicker>
-              </View>
-              {adjustOpen && s.remaining !== null && (
-                <>
-                  <AdjustBtn
-                    ringSize={ringSize}
-                    side="left"
-                    label={`−${adjStep}`}
-                    onPress={() => s.adjustTimer(-adjStep)}
-                  />
-                  <AdjustBtn
-                    ringSize={ringSize}
-                    side="right"
-                    label={`+${adjStep}`}
-                    accent
-                    onPress={() => s.adjustTimer(adjStep)}
-                  />
-                </>
-              )}
-            </View>
-
-            <View style={styles.goalWrap}>
-              <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
-                цель
-              </Kicker>
-              <Text style={styles.goalText} numberOfLines={3}>
-                {s.topic.trim() || 'Свободная молитва — без конкретной темы'}
-              </Text>
-            </View>
+          <View style={styles.goalWrap}>
+            <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
+              цель
+            </Kicker>
+            <Text style={styles.goalText} numberOfLines={3}>
+              {s.topic.trim() || 'Свободная молитва — без конкретной темы'}
+            </Text>
           </View>
 
           <View style={styles.dockWrap}>
@@ -408,6 +408,47 @@ function SessionScreen() {
       />
       <ScriptureReader sheetRef={readerRef} scriptureAudio={scriptureAudio} />
     </View>
+  );
+}
+
+// Пока музыка звучит, кнопка тихо «дышит» тёплым ореолом — это и есть
+// индикатор вместо отдельного бейджа под шапкой.
+function MusicPulse({ size }: { size: number }) {
+  const styles = useStyles(stylesFactory);
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withRepeat(
+      withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
+    return () => cancelAnimation(t);
+  }, [t]);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + t.value * 0.36 }],
+    opacity: 0.4 - t.value * 0.3,
+  }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      // Ореол — единственный признак звучащей музыки, поэтому у него есть
+      // и голосовой эквивалент вместо снятого бейджа.
+      accessible
+      accessibilityLabel="Музыка звучит"
+      testID="music-playing"
+      style={[
+        {
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: 1,
+          borderColor: colors.amberBright,
+          backgroundColor: 'rgba(230,162,60,.2)',
+        },
+        style,
+      ]}
+    />
   );
 }
 
@@ -466,6 +507,7 @@ function AdjustBtn({
   accent?: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Animated.View
       entering={FadeInDown.duration(200)}
@@ -492,13 +534,13 @@ function AdjustBtn({
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   topBar: {
-    position: 'absolute',
-    left: sc(14),
-    right: sc(14),
-    zIndex: 5,
+    // Оптическая поправка к общему gap: зазор до кольца читается от строки
+    // «Молитва», а она сидит по центру ряда — до низа кнопок ещё половина их
+    // высоты, и геометрически равный отступ выглядит заметно больше.
+    marginBottom: -sc(9),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -510,43 +552,24 @@ const styles = StyleSheet.create({
     fontSize: sc(10),
     letterSpacing: sc(1.8),
   },
-  musicChip: {
-    maxWidth: '88%',
-    justifyContent: 'center',
-    flexDirection: 'row',
+  musicBtnWrap: {
     alignItems: 'center',
-    gap: sc(6),
-    paddingHorizontal: sc(10),
-    paddingVertical: sc(4),
-    borderRadius: 999,
-    backgroundColor: 'rgba(230,162,60,.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(230,162,60,.24)',
-  },
-  musicChipLabel: {
-    flexShrink: 1,
-    fontFamily: fonts.sans,
-    fontSize: sc(10.5),
-    color: 'rgba(240,213,170,.8)',
+    justifyContent: 'center',
   },
   sessionContent: {
     flex: 1,
     width: '100%',
-    maxWidth: sc(360),
+    // На телефоне колонка не растягивается на «плюсовых» моделях; на планшете
+    // идёт во всю ширину — меру строки держит уже сам кегль.
+    maxWidth: isTablet() ? undefined : sc(360),
     alignSelf: 'center',
     paddingHorizontal: sc(18),
-  },
-  musicSlot: {
-    minHeight: sc(28),
-    marginBottom: -sc(30),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  focusArea: {
-    flex: 1,
-    minHeight: 0,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
+    // Один зазор на все стыки: шапка → кольцо → цель → карточка. На телефоне
+    // остатка нет — его целиком забирает карточка. На планшете карточка
+    // ограничена, и space-between раздаёт остаток поровну между теми же
+    // стыками: лишняя высота становится воздухом, а не пустой карточкой.
+    justifyContent: 'space-between',
+    gap: sc(22),
   },
   timerWrap: {
     alignSelf: 'center',
@@ -593,6 +616,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: sc(12),
     alignItems: 'center',
+    // Та же поправка снизу: нижний leading строки цели съедает часть зазора.
+    marginBottom: -sc(3),
   },
   goalText: {
     fontFamily: fonts.serifItalic,
@@ -603,5 +628,14 @@ const styles = StyleSheet.create({
   },
   dockWrap: {
     width: '100%',
+    // Единственный растягивающийся блок: карточка добирает остаток высоты,
+    // поэтому её габарит одинаков в режиме вопроса и Писания.
+    // На планшете рост ограничен потолком — иначе под две строки вопроса
+    // уходит половина экрана; всё, что выше потолка, `space-between` раздаёт
+    // в зазоры. Сжиматься карточка обязана: в альбомной ориентации высоты
+    // меньше, чем нужно даже минимальному набору.
+    flexGrow: 1,
+    flexShrink: 1,
+    maxHeight: isTablet() ? sc(230) : undefined,
   },
 });

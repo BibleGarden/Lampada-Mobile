@@ -8,9 +8,10 @@ import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft } from '../components/icons';
 import { getFavoriteScriptures } from '../lib/scriptureRepository';
 import type { FavoriteScripture } from '../lib/scripture';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function Favorites() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
 
@@ -57,7 +58,7 @@ export default function Favorites() {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
     paddingHorizontal: sc(12), paddingBottom: sc(8),

@@ -18,11 +18,12 @@ import {
   type ScriptureTranslation,
   type ScriptureVoice,
 } from '../lib/scripturePreferences';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Pressable
       accessibilityLabel="Использовать ответы для цитат и вопросов"
@@ -52,6 +53,7 @@ function PickerCard({
   children: React.ReactNode;
   onToggle: (id: Exclude<OpenPicker, null>) => void;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <View style={[styles.pickerCard, open && styles.pickerCardOpen, disabled && styles.disabled]}>
       <Pressable
@@ -87,6 +89,7 @@ function OptionRow({ title, subtitle, selected, divided, onPress, testID }: {
   onPress: () => void;
   testID: string;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Pressable
       accessibilityRole="button"
@@ -110,6 +113,7 @@ function OptionRow({ title, subtitle, selected, divided, onPress, testID }: {
 }
 
 export default function Settings() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const {
     shareAnswers, scripturePreferences, load, setShareAnswers, setScripturePreferences,
@@ -340,7 +344,7 @@ export default function Settings() {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
     paddingHorizontal: sc(12),

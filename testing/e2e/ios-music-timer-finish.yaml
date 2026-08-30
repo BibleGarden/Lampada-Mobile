@@ -17,7 +17,8 @@ appId: twinkler
     duration: 1700
 - assertVisible: "Включить тихую музыку"
 - tapOn: "Включить тихую музыку"
-- assertVisible: "Тихая музыка"
+- assertVisible:
+    id: "music-playing"
 - tapOn:
     point: "50%,29%"
 - assertVisible: "−1"
@@ -27,4 +28,5 @@ appId: twinkler
 - tapOn: "−1"
 - tapOn: "−1"
 - assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- assertNotVisible: "Тихая музыка"
+- assertNotVisible:
+    id: "music-playing"

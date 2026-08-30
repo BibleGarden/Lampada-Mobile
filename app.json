@@ -11,6 +11,9 @@
       "deploymentTarget": "16.4",
       "supportsTablet": true,
       "infoPlist": {
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait"
+        ],
         "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена в Gemini для расшифровки только по вашему запросу.",
         "UIBackgroundModes": [
           "audio"

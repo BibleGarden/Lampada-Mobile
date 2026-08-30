@@ -12,7 +12,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 /** Подпись капсом моноширинным — фирменный элемент прототипа */
 export function Kicker({
@@ -24,6 +24,7 @@ export function Kicker({
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Text style={[styles.kicker, style]} numberOfLines={numberOfLines}>
       {children}
@@ -43,6 +44,7 @@ export function GoldButton({
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Pressable
       accessibilityLabel={label}
@@ -86,6 +88,7 @@ export function IconButton({
   accessibilityState?: AccessibilityState;
   testID?: string;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Pressable
       accessibilityLabel={accessibilityLabel}
@@ -125,6 +128,7 @@ export function CardIn({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <Animated.View entering={FadeInDown.duration(350)} style={style}>
       {children}
@@ -142,6 +146,7 @@ export function WindowDots({
   current: number;
   onSet: (i: number) => void;
 }) {
+  const styles = useStyles(stylesFactory);
   type Kind = 'cur' | 'edge' | 'norm';
   const dots: { i: number; kind: Kind }[] = [];
   if (total <= 7) {
@@ -177,7 +182,7 @@ export function WindowDots({
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   kicker: {
     fontFamily: fonts.mono,
     fontSize: sc(10),

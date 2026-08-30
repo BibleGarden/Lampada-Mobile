@@ -19,7 +19,7 @@ import { ChevronLeft, Close, PauseIcon, PlayIcon, Trash } from '../components/ic
 import * as db from '../lib/db';
 import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 // «5 июля», «5 июля 2025» — год только если не текущий
 const MONTHS = [
@@ -49,6 +49,7 @@ const fmtAnswers = (count: number) => {
 };
 
 export default function Journal() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState<db.JournalEntry[]>([]);
   const [query, setQuery] = useState('');
@@ -356,6 +357,7 @@ function RecordingRow({
   transcriptionState?: 'loading' | 'error';
   onTranscribe: () => void;
 }) {
+  const styles = useStyles(stylesFactory);
   return (
     <View style={styles.recBlock}>
       <Pressable onPress={onToggle} style={styles.recRow}>
@@ -383,7 +385,7 @@ function RecordingRow({
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
     position: 'absolute',

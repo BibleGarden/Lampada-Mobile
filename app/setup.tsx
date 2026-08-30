@@ -16,7 +16,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const EXAMPLES = [
   'Привести мысли в порядок',
@@ -34,6 +34,7 @@ const PRESETS = [
 ];
 
 export default function Setup() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
@@ -191,7 +192,7 @@ const plUnit = (n: number) => {
   return 'минут';
 };
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   body: { flex: 1, paddingHorizontal: sc(18) },
   headerRow: {

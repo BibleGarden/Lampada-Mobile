@@ -8,8 +8,16 @@
 
 ```bash
 npm install
-npx expo start        # дев-сервер + Metro
+npx expo start                                  # дев-сервер + Metro
+npx expo run:ios --device "iPhone 17 Pro"       # dev-клиент в симуляторе
 ```
+
+Симулятору нужен именно `expo run:ios`, а не Expo Go: приложение падает в Expo Go
+ещё на импорте (`Cannot find native module 'ExpoWidgets'` из `lib/store.ts` →
+`lib/prayerSystemTimer.ios.ts` → `widgets/PrayerLiveActivity.tsx`). Симптом
+обманчив — уже запущенный экземпляр продолжает жить на Fast Refresh и выглядит
+рабочим, падение видно только при холодном старте. Для Maestro-флоу
+`appId` собственного билда — `twinkler`, а не `host.exp.Exponent`.
 
 ## ИИ
 

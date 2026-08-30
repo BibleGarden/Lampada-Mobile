@@ -16,7 +16,8 @@ appId: twinkler
     end: "50%,78%"
     duration: 1700
 - tapOn: "Включить тихую музыку"
-- assertVisible: "Тихая музыка"
+- assertVisible:
+    id: "music-playing"
 - pressKey: HOME
 - swipe:
     start: "94%,1%"

@@ -17,9 +17,11 @@ appId: twinkler
     duration: 1700
 - assertVisible: "Включить тихую музыку"
 - tapOn: "Включить тихую музыку"
-- assertVisible: "Тихая музыка"
+- assertVisible:
+    id: "music-playing"
 - assertVisible: "Выключить тихую музыку"
 - takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-23-music/MUS-001-music-on
 - tapOn: "Выключить тихую музыку"
-- assertNotVisible: "Тихая музыка"
+- assertNotVisible:
+    id: "music-playing"
 - assertVisible: "Включить тихую музыку"

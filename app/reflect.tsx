@@ -21,7 +21,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function Reflect() {
   const sessionId = useSession((state) => state.sessionId);
@@ -49,6 +49,7 @@ function animateCompactLayout(event: KeyboardEvent) {
 }
 
 function ReflectScreen() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
@@ -167,7 +168,7 @@ function ReflectScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   body: { flex: 1, paddingHorizontal: sc(18) },
   emberWrap: {

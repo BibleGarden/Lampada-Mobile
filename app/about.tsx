@@ -9,12 +9,13 @@ import { ExternalLink } from 'lucide-react-native';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Book, ChevronLeft, Shield } from '../components/icons';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = Constants.expoConfig?.version ?? '—';
 
 export default function About() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
 
   return (
@@ -95,7 +96,7 @@ export default function About() {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
     paddingHorizontal: sc(12),

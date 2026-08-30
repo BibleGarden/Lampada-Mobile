@@ -5,7 +5,7 @@ import {
   buildScriptureTextSegments,
   type ScriptureDisplay,
 } from '../lib/scripture';
-import { colors, fonts, sc } from '../lib/theme';
+import { colors, fonts, sc, useStyles } from '../lib/theme';
 
 type Props = {
   scripture: ScriptureDisplay;
@@ -28,6 +28,7 @@ export default function ScripturePassageText({
   activeVerseNumber,
   variant = 'full',
 }: Props) {
+  const styles = useStyles(stylesFactory);
   if (variant === 'compact') {
     const compact = buildScriptureCompactText(scripture);
     const compactTestID = compact.highlightedNumbers.length
@@ -78,7 +79,7 @@ export default function ScripturePassageText({
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   separator: {
     backgroundColor: 'transparent',
   },

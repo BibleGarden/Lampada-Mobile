@@ -7,7 +7,7 @@ import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
 import { useSession } from '../lib/store';
-import { colors, fonts, sc } from '../lib/theme';
+import { colors, fonts, sc, useStyles } from '../lib/theme';
 
 const greetingByHour = () => {
   const h = new Date().getHours();
@@ -18,6 +18,7 @@ const greetingByHour = () => {
 };
 
 export default function Home() {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const { streak, loadStreak, reset } = useSession();
 
@@ -106,7 +107,7 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   top: {
     position: 'absolute',

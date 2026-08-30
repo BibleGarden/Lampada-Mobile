@@ -1,14 +1,58 @@
 // Дизайн-токены, перенесённые из прототипа (Прототип.dc.html)
 
-import { Dimensions } from 'react-native';
+import { useMemo } from 'react';
+import { Dimensions, useWindowDimensions } from 'react-native';
 
 // Прототип свёрстан в кадре 294×654 (экран «телефона» 320 минус рамка 13+13).
 // Реальные экраны шире, поэтому каждый размер из прототипа масштабируется
 // пропорционально ширине экрана; на планшетах рост ограничен.
 const PROTO_WIDTH = 294;
-export const scale = Math.min(Dimensions.get('window').width, 460) / PROTO_WIDTH;
+
+// Потолок роста токенов. На телефоне 460 не даёт кнопкам и кеглю раздуться на
+// «плюсовых» моделях. На планшете колонка идёт во всю ширину, и телефонный
+// потолок оставлял строку в 80+ символов — читать неудобно; более высокий
+// потолок тянет вместе со шрифтом отступы и кнопки, сохраняя пропорции макета.
+const SCALE_CAP_PHONE = 460;
+const SCALE_CAP_TABLET = 620;
+
+type Geometry = { scale: number; isTablet: boolean };
+
+const geometryFor = (width: number, height: number): Geometry => {
+  // Планшет определяем по короткой стороне — она не меняется при повороте,
+  // поэтому тип раскладки остаётся тем же в портрете и в альбоме.
+  const tablet = Math.min(width, height) >= 600;
+  return {
+    scale: Math.min(width, tablet ? SCALE_CAP_TABLET : SCALE_CAP_PHONE) / PROTO_WIDTH,
+    isTablet: tablet,
+  };
+};
+
+const initial = Dimensions.get('window');
+let geometry = geometryFor(initial.width, initial.height);
+
+// Слушатель поднимает геометрию до первого рендера после смены окна:
+// `useWindowDimensions` внутри компонентов сработает уже на свежих токенах.
+Dimensions.addEventListener('change', ({ window }) => {
+  geometry = geometryFor(window.width, window.height);
+});
+
 /** px из прототипа → pt на текущем экране (шаг 0.5 для чёткости линий) */
-export const sc = (v: number) => Math.round(v * scale * 2) / 2;
+export const sc = (v: number) => Math.round(v * geometry.scale * 2) / 2;
+/** Планшетная раскладка. Функция, а не константа: зависит от текущего окна. */
+export const isTablet = () => geometry.isTablet;
+
+/**
+ * Пересобирает стили при смене геометрии окна — поворот, Split View, Stage
+ * Manager. `StyleSheet.create` замораживает числа в момент вызова, поэтому
+ * фабрика стилей должна выполняться внутри рендера, а не на уровне модуля.
+ */
+export function useStyles<T>(factory: () => T): T {
+  const { width, height } = useWindowDimensions();
+  return useMemo(() => {
+    geometry = geometryFor(width, height);
+    return factory();
+  }, [width, height, factory]);
+}
 
 export const colors = {
   // фоны
@@ -77,13 +121,26 @@ export const fonts = {
   monoMedium: 'JetBrainsMono_500Medium',
 } as const;
 
-export const radius = { sm: sc(8), md: sc(14), pill: 999 } as const;
+// Геттеры, а не замороженные объекты: значения зависят от текущей геометрии.
+export const radius = {
+  get sm() {
+    return sc(8);
+  },
+  get md() {
+    return sc(14);
+  },
+  pill: 999,
+};
 
 // подпись капсом в стиле прототипа
 export const kicker = {
   fontFamily: fonts.mono,
-  fontSize: sc(10),
-  letterSpacing: sc(1.6),
+  get fontSize() {
+    return sc(10);
+  },
+  get letterSpacing() {
+    return sc(1.6);
+  },
   textTransform: 'uppercase' as const,
   color: colors.labelGold,
 };

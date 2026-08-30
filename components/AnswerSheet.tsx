@@ -35,7 +35,7 @@ import {
 import { useSession, RecordingDraft, fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { recordingFileIssue } from '../lib/recordingFile';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
 import { GoldButton } from './ui';
 
@@ -70,6 +70,7 @@ export default function AnswerSheet({
   timeExpired = false,
   onAudioBusyChange,
 }: Props) {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   // подписка только на нужное — не ререндерим шторку от тика таймера
   const questions = useSession((st) => st.questions);
@@ -666,6 +667,7 @@ const WAVE_BARS = [
 
 // столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
 function WaveBar({ color, delay }: { color: string; delay: number }) {
+  const styles = useStyles(stylesFactory);
   const k = useSharedValue(0.3);
   useEffect(() => {
     k.value = withDelay(
@@ -682,7 +684,7 @@ function WaveBar({ color, delay }: { color: string; delay: number }) {
   return <Animated.View style={[styles.waveBar, { backgroundColor: color }, style]} />;
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   sheetBg: {
     backgroundColor: '#1d1710',
     borderRadius: radius.md,

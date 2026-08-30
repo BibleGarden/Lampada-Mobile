@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from '
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
-import { colors, fonts, radius, sc } from '../lib/theme';
+import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import { Heart, Close, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
 import ScripturePassageText from './ScripturePassageText';
@@ -16,6 +16,7 @@ type Props = {
 
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
 export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
+  const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -117,7 +118,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const stylesFactory = () => StyleSheet.create({
   bg: {
     backgroundColor: '#131f1a',
     borderRadius: radius.md,
