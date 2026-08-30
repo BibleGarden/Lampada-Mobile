@@ -8,6 +8,7 @@ import { Heart, Close, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
 import ScripturePassageText from './ScripturePassageText';
 import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
+import { useSheetReflow } from '../lib/useSheetReflow';
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
@@ -28,6 +29,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
   const toggleFav = useSession((st) => st.toggleFav);
   const cur = scrList[scrIndex];
   const fav = !!cur && scrFav.includes(cur.canonicalId);
+  const trackSheetIndex = useSheetReflow(sheetRef);
   const snapPoints = useMemo(() => {
     const measuredHeight = headerHeight + contentHeight + sc(24);
     return [Math.min(windowHeight * 0.88, Math.max(sc(240), measuredHeight))];
@@ -48,6 +50,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
       enableDynamicSizing={false}
       topInset={insets.top}
       enablePanDownToClose
+      onChange={trackSheetIndex}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
       handleIndicatorStyle={styles.handle}

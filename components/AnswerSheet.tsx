@@ -36,6 +36,7 @@ import { useSession, RecordingDraft, fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { recordingFileIssue } from '../lib/recordingFile';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { useSheetReflow } from '../lib/useSheetReflow';
 import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
 import { GoldButton } from './ui';
 
@@ -115,6 +116,7 @@ export default function AnswerSheet({
 
   // вторая точка — для открытой клавиатуры: keyboardBehavior="extend"
   // поднимает шторку до верхней, и поле ввода с кнопками остаются видны
+  const trackSheetIndex = useSheetReflow(sheetRef);
   const snapPoints = useMemo(() => ['62%', '92%'], []);
 
   const updateRecs = useCallback(
@@ -489,6 +491,7 @@ export default function AnswerSheet({
       // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
       enablePanDownToClose={!timeExpired && !hasUnsavedContent}
       onChange={async (i) => {
+        trackSheetIndex(i);
         const editing = i >= 0;
         openSheetRef.current = editing;
         onEditingChange?.(editing);
