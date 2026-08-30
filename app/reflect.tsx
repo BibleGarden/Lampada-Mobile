@@ -199,7 +199,12 @@ const stylesFactory = () => StyleSheet.create({
   },
   input: {
     marginTop: sc(20),
-    height: sc(128),
+    // Поле — единственное, что здесь может уступить высоту: уголёк, вопрос и
+    // кнопки заданы жёстко. Без сжатия в альбомной ориентации на планшете
+    // «Вернуться к молитве» уходила за нижний край.
+    flexBasis: sc(128),
+    flexShrink: 1,
+    minHeight: sc(72),
     padding: sc(13),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.045)',
