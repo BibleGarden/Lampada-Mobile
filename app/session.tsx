@@ -51,7 +51,7 @@ import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 // размере оно теряется посреди экрана.
 const ringSizeFor = (height: number) =>
   Math.round(
-    isTablet() ? Math.min(sc(230), height * 0.27) : Math.min(sc(146), height * 0.215),
+    isTablet() ? Math.min(sc(230), height * 0.25) : Math.min(sc(146), height * 0.215),
   );
 
 export default function Session() {
@@ -306,8 +306,10 @@ function SessionScreen() {
           style={[
             styles.sessionContent,
             {
-              paddingTop: insets.top + sc(8),
-              paddingBottom: insets.bottom + sc(14),
+              // Только отбивка от безопасной зоны: в альбоме на планшете
+              // высота дефицитна, и каждая точка тут отнимается у карточки.
+              paddingTop: insets.top + sc(2),
+              paddingBottom: insets.bottom + sc(4),
             },
           ]}
         >

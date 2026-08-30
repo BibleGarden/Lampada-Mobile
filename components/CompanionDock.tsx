@@ -56,7 +56,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
   // высоте экрана, поэтому лимит считаем по замеренной области, а не фиксируем.
   const [textAreaHeight, setTextAreaHeight] = React.useState(0);
   const scriptureLineLimit = textAreaHeight
-    ? Math.max(3, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
+    ? Math.max(2, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
     : 3;
   // селектор без remaining/elapsed: карточка не должна ререндериться
   // каждую секунду от тика таймера
@@ -382,7 +382,7 @@ const stylesFactory = () => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: sc(8),
-    marginBottom: sc(10),
+    marginBottom: sc(8),
   },
   label: {
     flex: 1,
@@ -396,7 +396,7 @@ const stylesFactory = () => StyleSheet.create({
   scriptureTools: {
     minHeight: sc(26),
     marginTop: sc(2),
-    marginBottom: sc(6),
+    marginBottom: sc(2),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -434,7 +434,10 @@ const stylesFactory = () => StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
-    minHeight: sc(44),
+    // Пол текстовой области — он же нижняя граница карточки: всё остальное в
+    // ней фиксировано. Слишком высокий пол не давал карточке ужаться под
+    // доступную высоту, и ряды снизу вываливались за рамку.
+    minHeight: sc(28),
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: sc(4),
@@ -500,7 +503,7 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
-    marginTop: sc(12),
+    marginTop: sc(8),
   },
   squareBtn: {
     // Квадрат: ширина и высота идут от одного токена.
@@ -540,6 +543,6 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.goldSoft,
   },
   dotsWrap: {
-    marginTop: sc(12),
+    marginTop: sc(6),
   },
 });
