@@ -116,7 +116,7 @@ export default function AnswerSheet({
 
   // вторая точка — для открытой клавиатуры: keyboardBehavior="extend"
   // поднимает шторку до верхней, и поле ввода с кнопками остаются видны
-  const trackSheetIndex = useSheetReflow(sheetRef);
+  const { mountKey, onIndexChange } = useSheetReflow();
   const snapPoints = useMemo(() => ['62%', '92%'], []);
 
   const updateRecs = useCallback(
@@ -482,6 +482,7 @@ export default function AnswerSheet({
 
   return (
     <BottomSheet
+      key={mountKey}
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
@@ -491,7 +492,7 @@ export default function AnswerSheet({
       // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
       enablePanDownToClose={!timeExpired && !hasUnsavedContent}
       onChange={async (i) => {
-        trackSheetIndex(i);
+        onIndexChange(i);
         const editing = i >= 0;
         openSheetRef.current = editing;
         onEditingChange?.(editing);

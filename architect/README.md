@@ -45,7 +45,7 @@ Twinkler — мобильное приложение для личной хри�
 | `lib/scriptureClient.ts` | HTTP-клиент контекстного подбора и контролируемые retry |
 | `lib/scriptureAudioClient.ts` | Алиасы книг, verse-level тайминги и публичные URL аудио глав |
 | `lib/useScriptureAudio.ts` | Жизненный цикл плеера выбранного отрывка и временный аудиофокус |
-| `lib/useSheetReflow.ts` | Возврат шторки на место после смены геометрии окна |
+| `lib/useSheetReflow.ts` | Пересборка шторки под новую геометрию окна |
 | `lib/scriptureCatalogClient.ts` | HTTP-клиент языков, переводов и доступных озвучек |
 | `lib/scripturePreferences.ts` | Валидная зависимая тройка языка, перевода и озвучки |
 | `lib/scriptureRepository.ts` | История, кэш, названия книг и снимки избранного в SQLite |

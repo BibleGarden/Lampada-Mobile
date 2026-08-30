@@ -29,7 +29,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
   const toggleFav = useSession((st) => st.toggleFav);
   const cur = scrList[scrIndex];
   const fav = !!cur && scrFav.includes(cur.canonicalId);
-  const trackSheetIndex = useSheetReflow(sheetRef);
+  const { mountKey, onIndexChange } = useSheetReflow();
   const snapPoints = useMemo(() => {
     const measuredHeight = headerHeight + contentHeight + sc(24);
     return [Math.min(windowHeight * 0.88, Math.max(sc(240), measuredHeight))];
@@ -44,13 +44,14 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
 
   return (
     <BottomSheet
+      key={mountKey}
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       topInset={insets.top}
       enablePanDownToClose
-      onChange={trackSheetIndex}
+      onChange={onIndexChange}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
       handleIndicatorStyle={styles.handle}
