@@ -1,13 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
-import { Check, ChevronLeft, ChevronRight } from '../components/icons';
+import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
 import { useSettings } from '../lib/settings';
+import {
+  DEFAULT_REMINDER_SCHEDULE,
+  MAX_REMINDER_TIMES_PER_RULE,
+  WEEKDAY_SHORT_NAMES,
+  describeReminderSchedule,
+  formatReminderTime,
+  normalizeReminderSchedule,
+  type ReminderRule,
+  type ReminderSchedule,
+  type ReminderTime,
+} from '../lib/prayerReminders';
+import {
+  reminderPermissionAsync,
+  requestReminderPermissionAsync,
+  syncRemindersAsync,
+  type ReminderPermission,
+} from '../lib/prayerReminderScheduler';
 import {
   fetchScriptureLanguages,
   fetchScriptureTranslations,
@@ -22,14 +39,19 @@ import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
 
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ value, label, testID, onChange }: {
+  value: boolean;
+  label: string;
+  testID: string;
+  onChange: (v: boolean) => void;
+}) {
   const styles = useStyles(stylesFactory);
   return (
     <Pressable
-      accessibilityLabel="Использовать ответы для цитат и вопросов"
+      accessibilityLabel={label}
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
-      testID="share-answers-toggle"
+      testID={testID}
       onPress={() => {
         void Haptics.selectionAsync();
         onChange(!value);
@@ -112,12 +134,74 @@ function OptionRow({ title, subtitle, selected, divided, onPress, testID }: {
   );
 }
 
+function StepButton({ label, onPress, children }: {
+  label: string;
+  onPress: () => void;
+  children: React.ReactNode;
+}) {
+  const styles = useStyles(stylesFactory);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={6}
+      onPress={() => {
+        void Haptics.selectionAsync();
+        onPress();
+      }}
+      style={({ pressed }) => [styles.stepBtn, pressed && styles.optionPressed]}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+/** Час шагает по часу, минуты — по пять; значение закольцовано внутри суток. */
+function TimeRow({ time, canRemove, onShift, onRemove }: {
+  time: ReminderTime;
+  canRemove: boolean;
+  onShift: (deltaMinutes: number) => void;
+  onRemove: () => void;
+}) {
+  const styles = useStyles(stylesFactory);
+  const label = formatReminderTime(time);
+  const [hour, minute] = label.split(':');
+  return (
+    <View style={styles.timeRow} testID={`reminder-time-${label}`}>
+      <StepButton label={`${label}: час назад`} onPress={() => onShift(-60)}>
+        <Minus size={sc(14)} color={colors.white65} />
+      </StepButton>
+      <Text style={styles.timeUnit}>{hour}</Text>
+      <StepButton label={`${label}: час вперёд`} onPress={() => onShift(60)}>
+        <Plus size={sc(14)} color={colors.white65} />
+      </StepButton>
+      <Text style={styles.timeColon}>:</Text>
+      <StepButton label={`${label}: пять минут назад`} onPress={() => onShift(-5)}>
+        <Minus size={sc(14)} color={colors.white65} />
+      </StepButton>
+      <Text style={styles.timeUnit}>{minute}</Text>
+      <StepButton label={`${label}: пять минут вперёд`} onPress={() => onShift(5)}>
+        <Plus size={sc(14)} color={colors.white65} />
+      </StepButton>
+      <View style={{ flex: 1 }} />
+      {canRemove ? (
+        <StepButton label={`Убрать напоминание в ${label}`} onPress={onRemove}>
+          <Trash size={sc(14)} />
+        </StepButton>
+      ) : null}
+    </View>
+  );
+}
+
 export default function Settings() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const {
-    shareAnswers, scripturePreferences, load, setShareAnswers, setScripturePreferences,
+    shareAnswers, scripturePreferences, reminderSchedule,
+    load, setShareAnswers, setScripturePreferences, setReminderSchedule,
   } = useSettings();
+  const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
+  const reminderSave = useRef<Promise<void>>(Promise.resolve());
   const [languages, setLanguages] = useState<ScriptureLanguageOption[]>([]);
   const [translations, setTranslations] = useState<ScriptureTranslation[]>([]);
   const [language, setLanguage] = useState<ScriptureLanguageOption | null>(null);
@@ -159,6 +243,128 @@ export default function Settings() {
   useEffect(() => {
     void hydrate();
   }, []);
+
+  // Разрешение могло измениться в системных настройках, пока приложение было в
+  // фоне: перечитываем его при каждом возвращении на передний план.
+  useEffect(() => {
+    let alive = true;
+    let known: ReminderPermission | null = null;
+    const refresh = () => {
+      void reminderPermissionAsync().then((status) => {
+        if (!alive) return;
+        const changed = known !== null && known !== status;
+        known = status;
+        setReminderPermission(status);
+        // Разрешение могли вернуть в системных настройках — тогда расписание
+        // нужно снова уложить в систему. При запуске это уже сделал _layout.
+        if (changed) void syncRemindersAsync(useSettings.getState().reminderSchedule);
+      });
+    };
+    refresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, []);
+
+  // Правило, которое редактирует этот экран. Модель допускает несколько правил
+  // (их принесёт разбор фразы на этапе 2), простой выбор дней и времени —
+  // всегда одно.
+  const reminderRules = reminderSchedule.rules.length
+    ? reminderSchedule.rules
+    : DEFAULT_REMINDER_SCHEDULE.rules;
+  const reminderRule = reminderRules[0];
+
+  // Запись и переплан идут строго последовательно: при быстрых нажатиях в
+  // системе останется расписание, соответствующее последнему нажатию.
+  const applyReminderSchedule = (next: ReminderSchedule) => {
+    const normalized = normalizeReminderSchedule(next) ?? DEFAULT_REMINDER_SCHEDULE;
+    reminderSave.current = reminderSave.current
+      .catch(() => undefined)
+      .then(async () => {
+        await setReminderSchedule(normalized);
+        await syncRemindersAsync(normalized);
+      })
+      .catch(() => undefined);
+  };
+
+  const editReminderRule = (update: (rule: ReminderRule) => ReminderRule) => {
+    void Haptics.selectionAsync();
+    applyReminderSchedule({
+      enabled: reminderSchedule.enabled,
+      rules: [update(reminderRule), ...reminderRules.slice(1)],
+    });
+  };
+
+  const toggleReminders = async (next: boolean) => {
+    void Haptics.selectionAsync();
+    if (!next) {
+      applyReminderSchedule({ enabled: false, rules: reminderRules });
+      return;
+    }
+    // Разрешение спрашиваем ровно здесь — в момент, когда пользователь сам
+    // включает напоминания, а не при старте приложения.
+    const status = await requestReminderPermissionAsync();
+    setReminderPermission(status);
+    // Без разрешения включать нечего: тумблер честно остаётся выключенным.
+    if (status !== 'granted') return;
+    applyReminderSchedule({ enabled: true, rules: reminderRules });
+  };
+
+  const toggleReminderWeekday = (isoWeekday: number) => {
+    const selected = reminderRule.weekdays.includes(isoWeekday);
+    // Последний день снять нельзя: расписание без дней — это выключенные
+    // напоминания, а для этого есть тумблер.
+    if (selected && reminderRule.weekdays.length === 1) return;
+    editReminderRule((rule) => ({
+      ...rule,
+      weekdays: selected
+        ? rule.weekdays.filter((day) => day !== isoWeekday)
+        : [...rule.weekdays, isoWeekday],
+    }));
+  };
+
+  const timeAt = (minutes: number): ReminderTime => ({
+    hour: Math.floor(minutes / 60),
+    minute: minutes % 60,
+  });
+  const takenMinutes = new Set(reminderRule.times.map((time) => time.hour * 60 + time.minute));
+
+  const shiftReminderTime = (index: number, deltaMinutes: number) => {
+    const current = reminderRule.times[index];
+    const next = (current.hour * 60 + current.minute + deltaMinutes + 1440) % 1440;
+    // Наехать одним временем на другое нельзя: нормализация слила бы их, и одно
+    // напоминание молча исчезло бы после одного нажатия.
+    if (takenMinutes.has(next)) return;
+    editReminderRule((rule) => ({
+      ...rule,
+      times: rule.times.map((time, i) => (i === index ? timeAt(next) : time)),
+    }));
+  };
+
+  const addReminderTime = () => {
+    const last = reminderRule.times[reminderRule.times.length - 1];
+    const from = last ? last.hour * 60 + last.minute : 8 * 60;
+    let candidate = from;
+    for (let step = 1; step <= 24; step += 1) {
+      candidate = (from + step * 60) % 1440;
+      if (!takenMinutes.has(candidate)) break;
+    }
+    if (takenMinutes.has(candidate)) return;
+    editReminderRule((rule) => ({ ...rule, times: [...rule.times, timeAt(candidate)] }));
+  };
+
+  const removeReminderTime = (index: number) => {
+    editReminderRule((rule) => ({
+      ...rule,
+      times: rule.times.filter((_, i) => i !== index),
+    }));
+  };
+
+  const reminderSummary = describeReminderSchedule(reminderSchedule);
 
   const loadTranslations = async (nextLanguage: ScriptureLanguageOption) => {
     const request = ++translationRequest.current;
@@ -309,13 +515,103 @@ export default function Settings() {
             </Pressable>
           ) : null}
 
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Напоминания</Kicker>
+          <View style={styles.card}>
+            <View style={styles.shareAnswersHeader}>
+              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>
+                Напоминать о молитве
+              </Text>
+              <Toggle
+                value={reminderSchedule.enabled}
+                label="Напоминать о молитве"
+                testID="reminders-toggle"
+                onChange={(next) => void toggleReminders(next)}
+              />
+            </View>
+
+            <Text style={[styles.settingHint, styles.shareAnswersHint]} testID="reminders-summary">
+              {reminderSchedule.enabled && reminderSummary
+                ? reminderSummary
+                : 'Тихое напоминание в выбранное время. Уведомления локальные: интернет для них не нужен.'}
+            </Text>
+
+            {reminderPermission === 'denied' ? (
+              <Text
+                style={[styles.settingHint, styles.shareAnswersHint, styles.reminderWarning]}
+                testID="reminders-permission-warning"
+              >
+                Уведомления запрещены в настройках системы, поэтому напоминания не приходят.
+                Разрешите уведомления для Twinkler и вернитесь на этот экран.
+              </Text>
+            ) : null}
+
+            {reminderSchedule.enabled ? (
+              <View style={styles.reminderEditor}>
+                <Text style={styles.reminderLabel}>Дни недели</Text>
+                <View style={styles.dayRow}>
+                  {WEEKDAY_SHORT_NAMES.map((name, index) => {
+                    const isoWeekday = index + 1;
+                    const selected = reminderRule.weekdays.includes(isoWeekday);
+                    return (
+                      <Pressable
+                        key={name}
+                        accessibilityRole="button"
+                        accessibilityLabel={name}
+                        accessibilityState={{ selected }}
+                        testID={`reminder-day-${isoWeekday}`}
+                        onPress={() => toggleReminderWeekday(isoWeekday)}
+                        style={({ pressed }) => [
+                          styles.dayChip,
+                          selected && styles.dayChipOn,
+                          pressed && styles.optionPressed,
+                        ]}
+                      >
+                        <Text style={[styles.dayChipText, selected && styles.dayChipTextOn]}>
+                          {name}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.reminderLabel}>Время</Text>
+                {reminderRule.times.map((time, index) => (
+                  <TimeRow
+                    key={formatReminderTime(time)}
+                    time={time}
+                    canRemove={reminderRule.times.length > 1}
+                    onShift={(delta) => shiftReminderTime(index, delta)}
+                    onRemove={() => removeReminderTime(index)}
+                  />
+                ))}
+
+                {reminderRule.times.length < MAX_REMINDER_TIMES_PER_RULE ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Добавить время"
+                    testID="reminder-add-time"
+                    onPress={addReminderTime}
+                    style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
+                  >
+                    <Text style={styles.addTimeText}>+ Добавить время</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+
           <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Спутник</Kicker>
           <View style={styles.card}>
             <View style={styles.shareAnswersHeader}>
               <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>
                 Использовать ответы для цитат и вопросов
               </Text>
-              <Toggle value={shareAnswers} onChange={setShareAnswers} />
+              <Toggle
+                value={shareAnswers}
+                label="Использовать ответы для цитат и вопросов"
+                testID="share-answers-toggle"
+                onChange={setShareAnswers}
+              />
             </View>
             <Text style={[styles.settingHint, styles.shareAnswersHint]}>
               {shareAnswers
@@ -394,6 +690,33 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(15), color: colors.warmHint,
   },
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
+  reminderWarning: { color: 'rgba(240,170,120,.92)' },
+  reminderEditor: { marginTop: sc(12), gap: sc(6) },
+  reminderLabel: {
+    fontFamily: fonts.sans, fontSize: sc(9.25), color: colors.warmHint, marginTop: sc(4),
+  },
+  dayRow: { flexDirection: 'row', gap: sc(4) },
+  dayChip: {
+    flex: 1, minHeight: sc(30), alignItems: 'center', justifyContent: 'center',
+    borderRadius: radius.sm, backgroundColor: colors.white05,
+    borderWidth: 1, borderColor: 'rgba(214,182,120,.18)',
+  },
+  dayChipOn: { backgroundColor: 'rgba(230,162,60,.22)', borderColor: 'rgba(230,162,60,.6)' },
+  dayChipText: { fontFamily: fonts.sansMedium, fontSize: sc(11), color: colors.creamDim },
+  dayChipTextOn: { color: colors.amberBright },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: sc(4) },
+  stepBtn: {
+    width: sc(26), height: sc(26), alignItems: 'center', justifyContent: 'center',
+    borderRadius: radius.sm, backgroundColor: colors.white05,
+    borderWidth: 1, borderColor: 'rgba(214,182,120,.18)',
+  },
+  timeUnit: {
+    minWidth: sc(24), textAlign: 'center',
+    fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.parchment,
+  },
+  timeColon: { fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.labelGold },
+  addTime: { paddingVertical: sc(6) },
+  addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(11.5), color: colors.goldSoft },
   aboutLink: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
   linkHint: { fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint },
   toggle: {

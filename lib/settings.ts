@@ -12,6 +12,11 @@ import {
   fetchScriptureLanguages,
   fetchScriptureTranslations,
 } from './scriptureCatalogClient';
+import {
+  DEFAULT_REMINDER_SCHEDULE,
+  parseStoredReminderSchedule,
+  type ReminderSchedule,
+} from './prayerReminders';
 
 // Настройки приложения; хранятся в таблице meta (key/value).
 //
@@ -22,10 +27,12 @@ import {
 type SettingsState = {
   shareAnswers: boolean;
   scripturePreferences: ScripturePreferences;
+  reminderSchedule: ReminderSchedule;
   loaded: boolean;
   load: () => Promise<void>;
   setShareAnswers: (v: boolean) => Promise<void>;
   setScripturePreferences: (preferences: ScripturePreferences) => Promise<void>;
+  setReminderSchedule: (schedule: ReminderSchedule) => Promise<void>;
 };
 
 let loadPromise: Promise<void> | null = null;
@@ -33,6 +40,7 @@ let loadPromise: Promise<void> | null = null;
 export const useSettings = create<SettingsState>((set) => ({
   shareAnswers: true,
   scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
+  reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
   loaded: false,
 
   load: async () => {
@@ -40,12 +48,15 @@ export const useSettings = create<SettingsState>((set) => ({
     if (!loadPromise) {
       loadPromise = (async () => {
         const d = await getDb();
-        const [shareRow, scriptureRow] = await Promise.all([
+        const [shareRow, scriptureRow, remindersRow] = await Promise.all([
           d.getFirstAsync<{ value: string }>(
             "SELECT value FROM meta WHERE key = 'share_answers'",
           ),
           d.getFirstAsync<{ value: string }>(
             "SELECT value FROM meta WHERE key = 'scripture_preferences'",
+          ),
+          d.getFirstAsync<{ value: string }>(
+            "SELECT value FROM meta WHERE key = 'prayer_reminders'",
           ),
         ]);
         // Для новых установок записи ещё нет — используем включённое значение
@@ -74,6 +85,10 @@ export const useSettings = create<SettingsState>((set) => ({
         set({
           shareAnswers: shareRow?.value !== '0',
           scripturePreferences,
+          // Расписание по умолчанию статично, поэтому его отсутствие не нужно
+          // дописывать в meta: запись появится с первой правкой пользователя.
+          reminderSchedule:
+            parseStoredReminderSchedule(remindersRow?.value ?? null) ?? DEFAULT_REMINDER_SCHEDULE,
           loaded: true,
         });
       })().catch((error) => {
@@ -104,6 +119,18 @@ export const useSettings = create<SettingsState>((set) => ({
       JSON.stringify(preferences),
     );
     set({ scripturePreferences: preferences });
+  },
+
+  setReminderSchedule: async (schedule) => {
+    const d = await getDb();
+    // Флаг включения, дни и времена — одно зависимое значение: читатель не
+    // может увидеть включённые напоминания с полурасписанием.
+    await d.runAsync(
+      `INSERT INTO meta (key, value) VALUES ('prayer_reminders', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      JSON.stringify(schedule),
+    );
+    set({ reminderSchedule: schedule });
   },
 }));
 

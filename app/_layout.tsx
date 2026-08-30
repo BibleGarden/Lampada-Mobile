@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
-import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Stack, router, usePathname } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
@@ -21,11 +22,39 @@ import {
   JetBrainsMono_500Medium,
 } from '@expo-google-fonts/jetbrains-mono';
 import { useSettings } from '../lib/settings';
+import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
+
+// Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
+// завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
+// не выбрасывает пользователя из неё.
+const PRAYER_FLOW = new Set(['/session', '/reflect', '/done']);
+
+/** Тап по напоминанию открывает главную. */
+function ReminderRouting() {
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(() => {
+      if (PRAYER_FLOW.has(pathnameRef.current)) return;
+      router.replace('/');
+    });
+    return () => sub.remove();
+  }, []);
+
+  return null;
+}
 
 export default function RootLayout() {
   // настройки нужны до первой генерации вопросов — грузим при старте
   useEffect(() => {
-    useSettings.getState().load();
+    // Полный переплан при каждом запуске: текст уведомления уносится в систему
+    // в момент планирования, поэтому фразы обновляются только так.
+    (async () => {
+      await useSettings.getState().load();
+      await syncRemindersAsync(useSettings.getState().reminderSchedule);
+    })().catch(() => undefined);
   }, []);
 
   const [fontsLoaded] = useFonts({
@@ -47,6 +76,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <StatusBar style="light" />
+      <ReminderRouting />
       <Stack
         screenOptions={{
           headerShown: false,

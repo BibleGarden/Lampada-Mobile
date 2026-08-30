@@ -48,6 +48,14 @@
           "enableBackgroundPlayback": true
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "color": "#e6a23c",
+          "defaultChannel": "prayer_reminders",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
       "expo-status-bar",
       "expo-asset",
       "expo-localization",
