@@ -582,11 +582,11 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serif,
     color: colors.creamBright,
   },
+  // Подсказка, что по таймеру можно нажать, раньше рисовалась пунктирным
+  // подчёркиванием — от него отказались по фидбеку владельца. paddingBottom
+  // оставлен как есть, чтобы высота блока не менялась.
   timerTextAdjustable: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(214,182,120,.38)',
-    borderStyle: 'dashed',
-    paddingBottom: 3,
+    paddingBottom: 4,
   },
   adjustBtnWrap: {
     position: 'absolute',

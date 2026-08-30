@@ -118,30 +118,30 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     const ym = yt + hh * 0.45;
     const upper = tip * 0.55 + mid * 0.35;
 
-    const p = Skia.Path.Make();
-    p.moveTo(cx + tip, yt);
-    p.cubicTo(
+    const b = Skia.PathBuilder.Make();
+    b.moveTo(cx + tip, yt);
+    b.cubicTo(
       cx + flameRW * 0.8 + upper, yt + hh * 0.08,
       cx + flameRW + mid, yt + hh * 0.25,
       cx + flameRW + mid * 0.5, ym,
     );
-    p.cubicTo(
+    b.cubicTo(
       cx + flameRW, flameBase - hh * 0.2,
       cx + flameRW * 0.55, flameBase,
       cx, flameBase,
     );
-    p.cubicTo(
+    b.cubicTo(
       cx - flameRW * 0.55, flameBase,
       cx - flameRW, flameBase - hh * 0.2,
       cx - flameRW + mid * 0.5, ym,
     );
-    p.cubicTo(
+    b.cubicTo(
       cx - flameRW + mid, yt + hh * 0.25,
       cx - flameRW * 0.8 + upper, yt + hh * 0.08,
       cx + tip, yt,
     );
-    p.close();
-    return p;
+    b.close();
+    return b.detach();
   });
 
   // ядро у фитиля: маленькое, яркое, почти неподвижное
@@ -150,9 +150,9 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
     const sway = wave(t.value) * flameRW * (lit ? 0.5 : 0.38) * env * 0.18;
     const ch = flameH * 0.5 * (1 + env * 0.05 * (vnoise(t.value * 0.31 + 29.1) * 2 - 1));
     const crw = flameRW * 0.45;
-    const p = Skia.Path.Make();
-    p.addOval(Skia.XYWHRect(cx - crw + sway, flameBase - ch, crw * 2, ch));
-    return p;
+    const b = Skia.PathBuilder.Make();
+    b.addOval(Skia.XYWHRect(cx - crw + sway, flameBase - ch, crw * 2, ch));
+    return b.detach();
   });
   const coreOpacity = useDerivedValue(
     () => (lit ? 0.85 : 0.6) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
@@ -160,14 +160,14 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
 
   // чаша-плошка: плоский верх, полуэллипс снизу
   const bowlPath = useMemo(() => {
-    const p = Skia.Path.Make();
+    const b = Skia.PathBuilder.Make();
     const k = 0.5523; // множитель Безье для дуги эллипса
-    p.moveTo(cx - bowlHW, bowlTop);
-    p.lineTo(cx + bowlHW, bowlTop);
-    p.cubicTo(cx + bowlHW, bowlTop + bowlH * k, cx + bowlHW * k, bowlTop + bowlH, cx, bowlTop + bowlH);
-    p.cubicTo(cx - bowlHW * k, bowlTop + bowlH, cx - bowlHW, bowlTop + bowlH * k, cx - bowlHW, bowlTop);
-    p.close();
-    return p;
+    b.moveTo(cx - bowlHW, bowlTop);
+    b.lineTo(cx + bowlHW, bowlTop);
+    b.cubicTo(cx + bowlHW, bowlTop + bowlH * k, cx + bowlHW * k, bowlTop + bowlH, cx, bowlTop + bowlH);
+    b.cubicTo(cx - bowlHW * k, bowlTop + bowlH, cx - bowlHW, bowlTop + bowlH * k, cx - bowlHW, bowlTop);
+    b.close();
+    return b.detach();
   }, [cx, bowlTop, bowlH, bowlHW]);
 
   // тихий пульс 2.6 с; вытягиваясь вверх, пламя чуть сужается —
