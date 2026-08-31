@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as ai from './ai';
+import { replyTexts } from './answerContext';
 import * as db from './db';
 import {
   ensureSettingsLoaded,
@@ -131,14 +132,10 @@ const reportSystemTimerError = (action: string, error: unknown) => {
   );
 };
 
-// тексты ответов для промпта — только с разрешения из настроек
+// реплики для промпта — только с разрешения из настроек
 // («Использовать ответы для цитат и вопросов»); без него ответы не покидают устройство
 const answersForAi = (answers: Record<number, Answer>) =>
-  shareAnswersNow()
-    ? Object.values(answers)
-        .map((a) => a.text.trim())
-        .filter(Boolean)
-    : [];
+  shareAnswersNow() ? replyTexts(answers) : [];
 
 let prepareToken = 0;
 let reflectToken = 0;
@@ -199,11 +196,6 @@ const prepareReflectQuestion = (s: SessionState) => {
   );
 };
 
-const writtenReplies = (answers: Record<number, Answer>) =>
-  Object.values(answers)
-    .map((answer) => answer.text.trim())
-    .filter(Boolean);
-
 const ensureBookNames = async (
   translation: number,
   signal: AbortSignal,
@@ -229,7 +221,7 @@ const loadScriptureForState = async (
     language: s.scriptureLanguage,
     translation: s.scriptureTranslation,
     topic: s.topic,
-    replies: writtenReplies(s.answers),
+    replies: replyTexts(s.answers),
     shareReplies: shareAnswersNow(),
     shownCanonicalIds,
   });
