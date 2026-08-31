@@ -28,10 +28,10 @@ appId: twinkler
 - assertVisible: "Ответить"
 - tapOn: "Ответить"
 - tapOn:
-    point: "50%,62%"
+    id: "answer-input"
 - inputText: "QA private answer"
 - tapOn:
-    point: "65%,50%"
+    id: "answer-save-button"
 - assertVisible: "Изменить"
 - tapOn:
     point: "85%,77%"

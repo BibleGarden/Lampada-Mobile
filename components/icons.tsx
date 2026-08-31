@@ -111,6 +111,13 @@ export const PauseIcon = ({ size = 14, color = '#e7cf95' }: P) => (
   </Svg>
 );
 
+// «в текст» — расшифровка голосовой записи
+export const TextLines = ({ size = 15, color = '#a9d3bd', strokeWidth = 1.7 }: P) => (
+  <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M4 6h16M4 12h16M4 18h9" />
+  </Svg>
+);
+
 export const Trash = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth = 1.7 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
     <Path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />

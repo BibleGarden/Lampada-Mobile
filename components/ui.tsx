@@ -38,11 +38,14 @@ export function GoldButton({
   onPress,
   style,
   testID,
+  compact,
 }: {
   label: string;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Низкий вариант: высота как у кнопок карточки-спутника */
+  compact?: boolean;
 }) {
   const styles = useStyles(stylesFactory);
   return (
@@ -58,9 +61,9 @@ export function GoldButton({
     >
       <LinearGradient
         colors={[colors.amber, colors.amberDeep]}
-        style={styles.goldBtn}
+        style={[styles.goldBtn, compact && styles.goldBtnCompact]}
       >
-        <Text style={styles.goldBtnLabel}>{label}</Text>
+        <Text style={[styles.goldBtnLabel, compact && styles.goldBtnLabelCompact]}>{label}</Text>
       </LinearGradient>
     </Pressable>
   );
@@ -200,10 +203,20 @@ const stylesFactory = () => StyleSheet.create({
     shadowOffset: { width: 0, height: sc(8) },
     elevation: 6,
   },
+  goldBtnCompact: {
+    paddingVertical: 0,
+    height: sc(32),
+    justifyContent: 'center',
+  },
   goldBtnLabel: {
     fontFamily: fonts.sansSemiBold,
     fontSize: sc(14),
     color: colors.ink,
+  },
+  // низкий вариант — и шрифт как у кнопок карточки-спутника
+  goldBtnLabelCompact: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(12),
   },
   dotsRow: {
     flexDirection: 'row',

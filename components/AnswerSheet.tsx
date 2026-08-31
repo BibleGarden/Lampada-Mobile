@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import BottomSheet, {
@@ -37,7 +38,7 @@ import { transcribeRecording } from '../lib/transcription';
 import { recordingFileIssue } from '../lib/recordingFile';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
-import { Mic, PlayIcon, PauseIcon, Trash } from './icons';
+import { Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
 import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
@@ -60,6 +61,8 @@ type Props = {
   /** Музыка сессии уступает аудиофокус записи и прослушиванию черновика. */
   onAudioBusyChange?: (busy: boolean) => void;
 };
+
+const HANDLE_HEIGHT = sc(22);
 
 // Шторка ответа: текст + голосовые записи. Открывается на текущем вопросе,
 // черновик считывается из сохранённого ответа.
@@ -115,9 +118,24 @@ export default function AnswerSheet({
   const playerStatus = useAudioPlayerStatus(player);
 
   // вторая точка — для открытой клавиатуры: keyboardBehavior="extend"
-  // поднимает шторку до верхней, и поле ввода с кнопками остаются видны
+  // поднимает шторку до верхней, и поле ввода с кнопками остаются видны.
+  // Над клавиатурой места мало, поэтому верхняя точка — вся высота под
+  // статус-баром (topInset), а кикер «спутник спросил» на это время прячется.
   const { mountKey, onIndexChange } = useSheetReflow();
-  const snapPoints = useMemo(() => ['62%', '92%'], []);
+  const snapPoints = useMemo(() => ['62%', '100%'], []);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  // Контейнер контента у шторки всегда высотой в верхнюю точку, а ручка
+  // абсолютная — flex по ним не посчитать. Поэтому высоту тела считаем сами:
+  // видимая часть шторки = высота окна минус её позиция.
+  const windowHeight = useWindowDimensions().height;
+  const sheetPosition = useSharedValue(windowHeight);
+  const keyboardHeight = useSharedValue(0);
+  const bodyStyle = useAnimatedStyle(() => ({
+    height: Math.max(
+      0,
+      windowHeight - sheetPosition.value - HANDLE_HEIGHT - keyboardHeight.value,
+    ),
+  }));
 
   const updateRecs = useCallback(
     (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
@@ -237,17 +255,21 @@ export default function AnswerSheet({
   // и кнопки остались видны; спряталась — обратно на нижнюю.
   // Слушатель, а не onFocus: свой snap шторка перебивает при показе клавиатуры
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => {
+    const show = Keyboard.addListener('keyboardDidShow', (e) => {
+      keyboardHeight.value = e.endCoordinates.height;
+      setKeyboardOpen(true);
       if (openSheetRef.current) sheetRef.current?.snapToIndex(1);
     });
     const hide = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardHeight.value = 0;
+      setKeyboardOpen(false);
       if (openSheetRef.current && !recordingOverlayActiveRef.current) sheetRef.current?.snapToIndex(0);
     });
     return () => {
       show.remove();
       hide.remove();
     };
-  }, [sheetRef]);
+  }, [sheetRef, keyboardHeight]);
 
   const startRecording = async () => {
     // Оверлей записи не должен остаться под открытой клавиатурой.
@@ -473,7 +495,17 @@ export default function AnswerSheet({
     [hasUnsavedContent, timeExpired],
   );
 
+  const renderHandle = useCallback(
+    () => (
+      <View style={styles.handleWrap}>
+        <View style={styles.handle} />
+      </View>
+    ),
+    [styles],
+  );
+
   const recording = recorderState.isRecording;
+
   // прогресс воспроизведения активной записи (0..1)
   const playProgress =
     playingId !== null && playerStatus.duration > 0
@@ -509,22 +541,41 @@ export default function AnswerSheet({
           discardUnsavedRecordings();
         }
       }}
+      // По умолчанию контейнер контента шторки — единый элемент доступности,
+      // и всё внутри скрыто от VoiceOver и от Maestro. Раскрываем детей.
+      accessible={false}
       backdropComponent={renderBackdrop}
+      handleComponent={renderHandle}
+      animatedPosition={sheetPosition}
+      topInset={insets.top}
       backgroundStyle={styles.sheetBg}
-      handleIndicatorStyle={styles.handle}
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
     >
-      <BottomSheetScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.orbRow}>
-          <View style={styles.orb} />
-          <Text style={styles.orbLabel}>СПУТНИК СПРОСИЛ</Text>
-        </View>
-        <Text style={styles.question}>
+      {/* Тело шторки не прокручивается: его высота — ровно видимая часть шторки
+          (над клавиатурой в том числе). Поле ответа забирает всё, что осталось
+          от вопроса, списка записей и кнопок, и не растёт под длину текста. */}
+      <Animated.View
+        style={[styles.content, bodyStyle]}
+        // тап по пустому месту тела убирает клавиатуру — раньше это делал
+        // ScrollView, теперь тело не прокручивается
+        onStartShouldSetResponder={() => {
+          if (keyboardOpen) Keyboard.dismiss();
+          return false;
+        }}
+      >
+        {!keyboardOpen && (
+          <View style={styles.orbRow}>
+            <View style={styles.orb} />
+            <Text style={styles.orbLabel}>СПУТНИК СПРОСИЛ</Text>
+          </View>
+        )}
+        <Text style={styles.question} testID="answer-question">
           {questions[answerIndexRef.current] ?? questions[qIndex]}
         </Text>
 
         <BottomSheetTextInput
+          testID="answer-input"
           value={text}
           onChangeText={setText}
           multiline
@@ -533,18 +584,13 @@ export default function AnswerSheet({
           style={styles.input}
         />
 
-        <Pressable
-          onPress={startRecording}
-          style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.985 }] }]}
-        >
-          <Mic color={colors.greenSoft} />
-          <Text style={styles.micLabel}>Записать аудио</Text>
-        </Pressable>
-        <Text style={styles.transcriptionPrivacy}>
-          Аудио отправится в Gemini, только если нажмёшь «Расшифровать».
-        </Text>
         {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
 
+        <BottomSheetScrollView
+          style={styles.recsScroll}
+          contentContainerStyle={styles.recsContent}
+          keyboardShouldPersistTaps="handled"
+        >
         {recs.map((r, i) => {
           const playing = playingId === r.id;
           return (
@@ -559,10 +605,33 @@ export default function AnswerSheet({
                       style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
                     />
                   </View>
-                  <Text style={styles.recMeta}>
-                    Запись {i + 1} · {fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}
+                  <Text style={styles.recMeta} numberOfLines={1}>
+                    {r.transcriptState === 'loading'
+                      ? 'Расшифровываю…'
+                      : `Запись ${i + 1} · ${fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}`}
                   </Text>
                 </View>
+                {/* Расшифровка — иконка в той же строке, что плей и корзина:
+                    карточка остаётся в одну строку, как голосовое в телеграме.
+                    Ход и ошибка пишутся в строке метаданных под дорожкой. */}
+                {r.transcript === null ? (
+                  <Pressable
+                    accessibilityLabel={
+                      r.transcriptState === 'error' ? 'Повторить расшифровку' : 'Расшифровать'
+                    }
+                    accessibilityRole="button"
+                    disabled={r.transcriptState === 'loading'}
+                    onPress={() => startTranscription(r)}
+                    style={({ pressed }) => [
+                      styles.transcriptionAction,
+                      r.transcriptState === 'error' && styles.transcriptionActionError,
+                      r.transcriptState === 'loading' && styles.transcriptionActionLoading,
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <TextLines color={r.transcriptState === 'error' ? '#ec9b8e' : colors.greenSoft} />
+                  </Pressable>
+                ) : null}
                 <Pressable
                   onPress={() => askOrConfirmDelete(r.id)}
                   style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
@@ -571,16 +640,11 @@ export default function AnswerSheet({
                 </Pressable>
               </View>
 
-              {r.transcriptState === 'loading' ? (
-                <Text style={styles.transcriptionState}>Расшифровываю…</Text>
-              ) : r.transcriptState === 'error' ? (
-                <View style={styles.transcriptionErrorRow}>
-                  <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
-                  <Pressable onPress={() => startTranscription(r)} hitSlop={8}>
-                    <Text style={styles.transcriptionRetry}>Повторить</Text>
-                  </Pressable>
-                </View>
-              ) : r.transcript !== null ? (
+              {r.transcriptState === 'error' && (
+                <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
+              )}
+
+              {r.transcript !== null && (
                 <BottomSheetTextInput
                   value={r.transcript}
                   onChangeText={(transcript) =>
@@ -593,22 +657,24 @@ export default function AnswerSheet({
                   multiline
                   style={styles.transcriptInput}
                 />
-              ) : (
-                <Pressable
-                  onPress={() => startTranscription(r)}
-                  style={({ pressed }) => [
-                    styles.transcriptionAction,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                >
-                  <Text style={styles.transcriptionActionLabel}>Расшифровать</Text>
-                </Pressable>
               )}
             </View>
           );
         })}
+        </BottomSheetScrollView>
 
         <View style={styles.actionsRow}>
+          {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
+              карточки-спутника: подпись не нужна, иконка читается сама */}
+          <Pressable
+            accessibilityLabel="Записать аудио"
+            accessibilityRole="button"
+            testID="answer-record-button"
+            onPress={startRecording}
+            style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
+          >
+            <Mic color={colors.greenSoft} />
+          </Pressable>
           <Pressable
             onPress={requestClose}
             style={({ pressed }) => [
@@ -622,6 +688,7 @@ export default function AnswerSheet({
             </Text>
           </Pressable>
           <GoldButton
+            compact
             label={
               saving
                 ? 'Сохраняю…'
@@ -634,7 +701,7 @@ export default function AnswerSheet({
             testID="answer-save-button"
           />
         </View>
-      </BottomSheetScrollView>
+      </Animated.View>
 
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
@@ -695,13 +762,21 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.white08,
   },
+  // высота ручки задана явно: от неё считается высота тела шторки
+  handleWrap: {
+    height: HANDLE_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   handle: {
     backgroundColor: 'rgba(255,255,255,.13)',
     width: sc(36),
+    height: sc(4),
+    borderRadius: sc(2),
   },
   content: {
     paddingHorizontal: sc(16),
-    paddingBottom: sc(32),
+    paddingBottom: sc(16),
   },
   orbRow: {
     flexDirection: 'row',
@@ -731,8 +806,11 @@ const stylesFactory = () => StyleSheet.create({
     marginBottom: sc(12),
   },
   input: {
-    minHeight: sc(96),
-    maxHeight: sc(200),
+    // Растёт в свободное место, но не сжимается ниже basis: длина текста на
+    // высоту не влияет — он прокручивается внутри поля.
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: sc(96),
     padding: sc(12),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.045)',
@@ -745,30 +823,14 @@ const stylesFactory = () => StyleSheet.create({
     textAlignVertical: 'top',
   },
   micBtn: {
-    flexDirection: 'row',
+    width: sc(32),
+    height: sc(32),
     alignItems: 'center',
     justifyContent: 'center',
-    gap: sc(8),
-    marginTop: sc(8),
-    paddingVertical: sc(9),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(127,174,154,.12)',
     borderWidth: 1,
     borderColor: 'rgba(127,174,154,.28)',
-  },
-  micLabel: {
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(13),
-    color: colors.greenSoft,
-  },
-  transcriptionPrivacy: {
-    marginTop: sc(6),
-    paddingHorizontal: sc(8),
-    fontFamily: fonts.sans,
-    fontSize: sc(9.5),
-    lineHeight: sc(13),
-    textAlign: 'center',
-    color: colors.warmHint,
   },
   audioError: {
     marginTop: sc(7),
@@ -790,12 +852,12 @@ const stylesFactory = () => StyleSheet.create({
   recRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: sc(8),
+    gap: sc(6),
   },
   recPlay: {
-    width: sc(34),
-    height: sc(34),
-    borderRadius: sc(17),
+    width: sc(30),
+    height: sc(30),
+    borderRadius: sc(15),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(230,162,60,.14)',
@@ -819,13 +881,16 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(10),
     color: colors.labelGold,
   },
+  // тот же квадрат, что и у кнопки расшифровки — рядом они читаются как пара
   recDel: {
     width: sc(28),
     height: sc(28),
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
-    opacity: 0.45,
+    backgroundColor: 'rgba(255,255,255,.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,.12)',
   },
   recDelConfirming: {
     opacity: 1,
@@ -833,44 +898,28 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(220,90,70,.45)',
   },
-  transcriptionState: {
-    marginTop: sc(9),
-    fontFamily: fonts.sans,
-    fontSize: sc(12),
-    color: colors.warmHint,
-  },
   transcriptionAction: {
-    alignSelf: 'flex-start',
-    marginTop: sc(9),
-    paddingVertical: sc(6),
-    paddingHorizontal: sc(10),
-    borderRadius: radius.pill,
+    width: sc(28),
+    height: sc(28),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
     backgroundColor: 'rgba(127,174,154,.1)',
     borderWidth: 1,
     borderColor: 'rgba(127,174,154,.3)',
   },
-  transcriptionActionLabel: {
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(11.5),
-    color: colors.greenSoft,
+  transcriptionActionLoading: {
+    opacity: 0.4,
   },
-  transcriptionErrorRow: {
-    marginTop: sc(9),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: sc(12),
+  transcriptionActionError: {
+    backgroundColor: 'rgba(220,90,70,.14)',
+    borderColor: 'rgba(220,90,70,.4)',
   },
   transcriptionError: {
-    flex: 1,
+    marginTop: sc(6),
     fontFamily: fonts.sans,
-    fontSize: sc(12),
+    fontSize: sc(11.5),
     color: '#ec9b8e',
-  },
-  transcriptionRetry: {
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(12),
-    color: colors.goldSoft,
   },
   transcriptInput: {
     minHeight: sc(54),
@@ -887,15 +936,24 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(19),
     textAlignVertical: 'top',
   },
+  // Записи отдают своё место полю ответа: блок сжимается и прокручивается сам
+  recsScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  recsContent: {
+    paddingTop: sc(2),
+  },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
-    marginTop: sc(16),
+    marginTop: sc(14),
   },
   cancelBtn: {
+    // высота как у кнопок карточки-спутника (CompanionDock/cardBtnSize)
     paddingHorizontal: sc(14),
-    height: sc(44),
+    height: sc(32),
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,
@@ -908,8 +966,8 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: 'rgba(220,90,70,.45)',
   },
   cancelLabel: {
-    fontFamily: fonts.sans,
-    fontSize: sc(13),
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(12),
     color: colors.creamDim,
   },
   recOverlay: {

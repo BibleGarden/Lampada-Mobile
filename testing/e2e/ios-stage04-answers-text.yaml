@@ -18,10 +18,10 @@ appId: twinkler
 - assertVisible: "МОЛИТВА"
 - tapOn: "Ответить"
 - tapOn:
-    point: "50%,62%"
+    id: "answer-input"
 - inputText: "ANS-001 сохранённый текст"
 - tapOn:
-    point: "65%,50%"
+    id: "answer-save-button"
 - assertVisible: "Изменить"
 - tapOn: "Изменить"
 - takeScreenshot: ANS-001-restored-text

@@ -20,14 +20,14 @@ appId: twinkler
     point: "92%,95%"
 - tapOn: "Ответить"
 - tapOn:
-    point: "50%,62%"
+    id: "answer-input"
 - inputText: "Первый ответ молитвы А про страх и надежду"
 - tapOn:
-    point: "50%,43%"
+    id: "answer-question"
 - waitForAnimationToEnd:
     timeout: 3000
 - tapOn:
-    point: "50%,73%"
+    id: "answer-record-button"
 - runFlow:
     when:
       visible: "OK"
@@ -47,7 +47,7 @@ appId: twinkler
 - waitForAnimationToEnd:
     timeout: 3000
 - tapOn:
-    point: "64%,61%"
+    id: "answer-save-button"
 - assertVisible: "Изменить"
 - tapOn:
     point: "10%,11%"

@@ -19,16 +19,16 @@ appId: twinkler
 - assertVisible: "МОЛИТВА"
 - tapOn: "Ответить"
 - tapOn:
-    point: "50%,62%"
+    id: "answer-input"
 - inputText: "ANS-003 несохранённый текст"
 # Tap the static question (not an input) to dismiss the iOS keyboard.
 - tapOn:
-    point: "50%,27%"
+    id: "answer-question"
 - swipe:
     start: "50%,42%"
     end: "50%,92%"
     duration: 500
-- assertVisible: "ANS-003"
+- assertVisible: ".*ANS-003.*"
 - tapOn: "Отмена"
 - assertVisible: "Точно закрыть?"
 - tapOn: "Точно закрыть?"
