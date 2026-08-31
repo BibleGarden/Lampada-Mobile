@@ -63,7 +63,16 @@ export function GoldButton({
         colors={[colors.amber, colors.amberDeep]}
         style={[styles.goldBtn, compact && styles.goldBtnCompact]}
       >
-        <Text style={[styles.goldBtnLabel, compact && styles.goldBtnLabelCompact]}>{label}</Text>
+        {/* Длинная подпись («Сохранить и завершить») не должна распирать
+            кнопку до краёв: сжимаем кегль вместо переноса и обрезки. */}
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.82}
+          style={[styles.goldBtnLabel, compact && styles.goldBtnLabelCompact]}
+        >
+          {label}
+        </Text>
       </LinearGradient>
     </Pressable>
   );
@@ -195,6 +204,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   goldBtn: {
     paddingVertical: sc(13),
+    paddingHorizontal: sc(10),
     borderRadius: radius.sm,
     alignItems: 'center',
     shadowColor: 'rgba(220,150,50,1)',

@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
+  type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   Text,
+  type TextInputContentSizeChangeEventData,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -15,12 +17,15 @@ import BottomSheet, {
 import Animated, {
   Easing,
   cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { File } from 'expo-file-system';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,9 +41,9 @@ import {
 import { useSession, RecordingDraft, fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { recordingFileIssue } from '../lib/recordingFile';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
-import { Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
+import { Close, Mic, PlayIcon, PauseIcon, Regen, TextLines, Trash } from './icons';
 import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
@@ -63,6 +68,10 @@ type Props = {
 };
 
 const HANDLE_HEIGHT = sc(22);
+// Минимум поля ответа — примерно четыре строки. Пока контент помещается,
+// поле дотягивается до низа списка (flexGrow), дальше растёт под текст.
+const ANSWER_MIN_HEIGHT = () => sc(96);
+const TRANSCRIPT_MIN_HEIGHT = () => sc(54);
 
 // Шторка ответа: текст + голосовые записи. Открывается на текущем вопросе,
 // черновик считывается из сохранённого ответа.
@@ -104,6 +113,13 @@ export default function AnswerSheet({
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
   const recorderErrorRef = useRef<string | null>(null);
+  // Край-подсказка «список продолжается». Геометрию считаем на UI-потоке:
+  // высоту тела задаёт анимированная позиция шторки, и onLayout у детей после
+  // её изменения не приходит — замер обычным layout-событием врал бы.
+  const [overflowing, setOverflowing] = useState(false);
+  const headerHeight = useSharedValue(0);
+  const actionsHeight = useSharedValue(0);
+  const contentHeight = useSharedValue(0);
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS, (status) => {
     if (status.hasError || status.mediaServicesDidReset) {
@@ -117,10 +133,10 @@ export default function AnswerSheet({
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
 
-  // вторая точка — для открытой клавиатуры: keyboardBehavior="extend"
-  // поднимает шторку до верхней, и поле ввода с кнопками остаются видны.
-  // Над клавиатурой места мало, поэтому верхняя точка — вся высота под
-  // статус-баром (topInset), а кикер «спутник спросил» на это время прячется.
+  // вторая точка — для открытой клавиатуры и для контента, который перестал
+  // помещаться: keyboardBehavior="extend" поднимает шторку до верхней, и поле
+  // ввода с кнопками остаются видны. Верхняя точка — вся высота под
+  // статус-баром (topInset).
   const { mountKey, onIndexChange } = useSheetReflow();
   const snapPoints = useMemo(() => ['62%', '100%'], []);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -136,6 +152,21 @@ export default function AnswerSheet({
       windowHeight - sheetPosition.value - HANDLE_HEIGHT - keyboardHeight.value,
     ),
   }));
+
+  // Тело минус закреплённые шапка и панель кнопок = видимая высота списка.
+  useAnimatedReaction(
+    () => {
+      const body = Math.max(
+        0,
+        windowHeight - sheetPosition.value - HANDLE_HEIGHT - keyboardHeight.value,
+      );
+      const viewport = body - headerHeight.value - actionsHeight.value;
+      return viewport > 0 && contentHeight.value > viewport + 1;
+    },
+    (cut, previous) => {
+      if (cut !== previous) runOnJS(setOverflowing)(cut);
+    },
+  );
 
   const updateRecs = useCallback(
     (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
@@ -174,6 +205,9 @@ export default function AnswerSheet({
                 : item,
             ),
           );
+          // Расшифровка — крупный новый блок под своей записью. Раскрываем
+          // шторку, иначе результат появляется ниже видимой части списка.
+          sheetRef.current?.snapToIndex(1);
         })
         .catch((error) => {
           if (controller.signal.aborted) return;
@@ -194,6 +228,21 @@ export default function AnswerSheet({
         });
 
       pendingTranscriptions.current.set(recording.id, { controller, promise });
+    },
+    [updateRecs, sheetRef],
+  );
+
+  // Убрать расшифровку: карточка возвращается к одной строке, а кнопка
+  // «Расшифровать» — на место. Сама запись остаётся.
+  const removeTranscript = useCallback(
+    (id: number) => {
+      pendingTranscriptions.current.get(id)?.controller.abort();
+      pendingTranscriptions.current.delete(id);
+      updateRecs((current) =>
+        current.map((item) =>
+          item.id === id ? { ...item, transcript: null, transcriptState: 'idle' } : item,
+        ),
+      );
     },
     [updateRecs],
   );
@@ -263,7 +312,9 @@ export default function AnswerSheet({
     const hide = Keyboard.addListener('keyboardDidHide', () => {
       keyboardHeight.value = 0;
       setKeyboardOpen(false);
-      if (openSheetRef.current && !recordingOverlayActiveRef.current) sheetRef.current?.snapToIndex(0);
+      if (openSheetRef.current && !recordingOverlayActiveRef.current) {
+        sheetRef.current?.snapToIndex(0);
+      }
     });
     return () => {
       show.remove();
@@ -523,6 +574,11 @@ export default function AnswerSheet({
       // Свайп доступен только для пустой шторки. Иначе закрытие возможно
       // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
       enablePanDownToClose={!timeExpired && !hasUnsavedContent}
+      // Ключевое для раскладки: пока жест содержимого включён, библиотека
+      // разблокирует внутренний скролл только на верхней точке — на 62%
+      // список записей был обрезан и недостижим. Выключаем — список
+      // прокручивается на любой точке, а саму шторку тянут за ручку.
+      enableContentPanningGesture={false}
       onChange={async (i) => {
         onIndexChange(i);
         const editing = i >= 0;
@@ -552,118 +608,194 @@ export default function AnswerSheet({
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
     >
-      {/* Тело шторки не прокручивается: его высота — ровно видимая часть шторки
-          (над клавиатурой в том числе). Поле ответа забирает всё, что осталось
-          от вопроса, списка записей и кнопок, и не растёт под длину текста. */}
+      {/* Тело: закреплены только вопрос сверху и кнопки снизу. Всё между ними —
+          один скролл. Раньше поле ответа, список записей и вопрос делили
+          фиксированную высоту, поле забирало всё свободное место и не отдавало
+          обратно, а список срезало по живому — теперь ничто не обрезается. */}
       <Animated.View
         style={[styles.content, bodyStyle]}
-        // тап по пустому месту тела убирает клавиатуру — раньше это делал
-        // ScrollView, теперь тело не прокручивается
+        // тап по пустому месту шапки и панели кнопок убирает клавиатуру
         onStartShouldSetResponder={() => {
           if (keyboardOpen) Keyboard.dismiss();
           return false;
         }}
       >
-        {!keyboardOpen && (
+        <View
+          style={styles.header}
+          onLayout={(e) => {
+            headerHeight.value = e.nativeEvent.layout.height;
+          }}
+        >
           <View style={styles.orbRow}>
             <View style={styles.orb} />
             <Text style={styles.orbLabel}>СПУТНИК СПРОСИЛ</Text>
           </View>
-        )}
-        <Text style={styles.question} testID="answer-question">
-          {questions[answerIndexRef.current] ?? questions[qIndex]}
-        </Text>
+          <Text style={styles.question} testID="answer-question">
+            {questions[answerIndexRef.current] ?? questions[qIndex]}
+          </Text>
+        </View>
 
-        <BottomSheetTextInput
-          testID="answer-input"
-          value={text}
-          onChangeText={setText}
-          multiline
-          placeholder="Запиши, что откликается…"
-          placeholderTextColor="rgba(240,230,210,.35)"
-          style={styles.input}
-        />
-
-        {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
-
+        <View style={styles.scroll}>
         <BottomSheetScrollView
-          style={styles.recsScroll}
-          contentContainerStyle={styles.recsContent}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          onContentSizeChange={(_w, h) => {
+            contentHeight.value = h;
+          }}
         >
-        {recs.map((r, i) => {
-          const playing = playingId === r.id;
-          return (
-            <View key={r.id} style={styles.recCard}>
-              <View style={styles.recRow}>
-                <Pressable onPress={() => togglePlay(r)} style={styles.recPlay}>
-                  {playing ? <PauseIcon size={12} color="#f0c074" /> : <PlayIcon size={13} color="#f0c074" />}
-                </Pressable>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <View style={styles.recTrack}>
-                    <View
-                      style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
-                    />
+          {/* Пока контент помещается, поле дотягивается до низа (flexGrow) и
+              шторка выглядит как раньше; дальше растёт под текст, а лишнее
+              берёт на себя скролл тела. */}
+          <AutoGrowInput
+            testID="answer-input"
+            value={text}
+            onChangeText={setText}
+            placeholder="Запиши, что откликается…"
+            placeholderTextColor="rgba(240,230,210,.35)"
+            minHeight={ANSWER_MIN_HEIGHT()}
+            style={styles.input}
+          />
+
+          {!text && recs.length === 0 && (
+            <Text style={styles.voiceHint}>или ответь голосом</Text>
+          )}
+
+          {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
+
+          {recs.map((r, i) => {
+            const playing = playingId === r.id;
+            const loading = r.transcriptState === 'loading';
+            return (
+              <View key={r.id} style={styles.recCard}>
+                <View style={styles.recRow}>
+                  <Pressable
+                    accessibilityLabel={playing ? `Пауза, запись ${i + 1}` : `Прослушать запись ${i + 1}`}
+                    accessibilityRole="button"
+                    onPress={() => togglePlay(r)}
+                    style={styles.recPlay}
+                  >
+                    {playing ? <PauseIcon size={12} color="#f0c074" /> : <PlayIcon size={13} color="#f0c074" />}
+                  </Pressable>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={styles.recTrack}>
+                      <View
+                        style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
+                      />
+                    </View>
+                    {/* Ход расшифровки занимает всю строку метаданных: рядом
+                        с «Запись N · время» он не помещается и обрезается, а
+                        отдельной строкой под дорожкой уезжал за кромку списка. */}
+                    <Text
+                      style={[styles.recMeta, loading && styles.recMetaState]}
+                      numberOfLines={1}
+                    >
+                      {loading
+                        ? 'Расшифровываю…'
+                        : `Запись ${i + 1} · ${fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}`}
+                    </Text>
                   </View>
-                  <Text style={styles.recMeta} numberOfLines={1}>
-                    {r.transcriptState === 'loading'
-                      ? 'Расшифровываю…'
-                      : `Запись ${i + 1} · ${fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}`}
-                  </Text>
-                </View>
-                {/* Расшифровка — иконка в той же строке, что плей и корзина:
-                    карточка остаётся в одну строку, как голосовое в телеграме.
-                    Ход и ошибка пишутся в строке метаданных под дорожкой. */}
-                {r.transcript === null ? (
+                  {/* Кнопка расшифровки живёт в строке с плеем и корзиной, пока
+                      расшифровки нет. Когда она появилась, повтор и удаление
+                      уезжают в шапку самой расшифровки — там понятно, к чему
+                      они относятся, и строка записи не копит третью иконку. */}
+                  {r.transcript === null && (
+                    <Pressable
+                      accessibilityLabel={
+                        r.transcriptState === 'error' ? 'Повторить расшифровку' : 'Расшифровать'
+                      }
+                      accessibilityRole="button"
+                      disabled={loading}
+                      onPress={() => startTranscription(r)}
+                      style={({ pressed }) => [
+                        styles.transcriptionAction,
+                        r.transcriptState === 'error' && styles.transcriptionActionError,
+                        loading && styles.transcriptionActionLoading,
+                        pressed && { opacity: 0.7 },
+                      ]}
+                    >
+                      <TextLines color={r.transcriptState === 'error' ? '#ec9b8e' : colors.greenSoft} />
+                    </Pressable>
+                  )}
                   <Pressable
                     accessibilityLabel={
-                      r.transcriptState === 'error' ? 'Повторить расшифровку' : 'Расшифровать'
+                      confirmDeleteId === r.id ? `Подтвердить удаление записи ${i + 1}` : `Удалить запись ${i + 1}`
                     }
                     accessibilityRole="button"
-                    disabled={r.transcriptState === 'loading'}
-                    onPress={() => startTranscription(r)}
-                    style={({ pressed }) => [
-                      styles.transcriptionAction,
-                      r.transcriptState === 'error' && styles.transcriptionActionError,
-                      r.transcriptState === 'loading' && styles.transcriptionActionLoading,
-                      pressed && { opacity: 0.7 },
-                    ]}
+                    onPress={() => askOrConfirmDelete(r.id)}
+                    style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
                   >
-                    <TextLines color={r.transcriptState === 'error' ? '#ec9b8e' : colors.greenSoft} />
+                    <Trash color={confirmDeleteId === r.id ? '#ec8a7a' : 'rgba(255,255,255,.5)'} />
                   </Pressable>
-                ) : null}
-                <Pressable
-                  onPress={() => askOrConfirmDelete(r.id)}
-                  style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
-                >
-                  <Trash color={confirmDeleteId === r.id ? '#ec8a7a' : 'rgba(255,255,255,.5)'} />
-                </Pressable>
+                </View>
+
+                {r.transcriptState === 'error' && (
+                  <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
+                )}
+
+                {r.transcript !== null && (
+                  <View style={styles.transcriptBlock}>
+                    <View style={styles.transcriptHead}>
+                      <Text style={styles.transcriptLabel}>РАСШИФРОВКА</Text>
+                      <Pressable
+                        accessibilityLabel={`Расшифровать запись ${i + 1} заново`}
+                        accessibilityRole="button"
+                        disabled={loading}
+                        hitSlop={sc(8)}
+                        onPress={() => startTranscription(r)}
+                        style={({ pressed }) => [
+                          styles.transcriptHeadBtn,
+                          loading && styles.transcriptionActionLoading,
+                          pressed && { opacity: 0.7 },
+                        ]}
+                      >
+                        <Regen size={sc(12)} color={colors.greenSoft} />
+                      </Pressable>
+                      <Pressable
+                        accessibilityLabel={`Убрать расшифровку записи ${i + 1}`}
+                        accessibilityRole="button"
+                        hitSlop={sc(8)}
+                        onPress={() => removeTranscript(r.id)}
+                        style={({ pressed }) => [styles.transcriptHeadBtn, pressed && { opacity: 0.7 }]}
+                      >
+                        <Close size={sc(11)} color="rgba(255,255,255,.45)" />
+                      </Pressable>
+                    </View>
+                    <AutoGrowInput
+                      value={r.transcript}
+                      onChangeText={(transcript) =>
+                        updateRecs((current) =>
+                          current.map((item) =>
+                            item.id === r.id ? { ...item, transcript } : item,
+                          ),
+                        )
+                      }
+                      minHeight={TRANSCRIPT_MIN_HEIGHT()}
+                      style={styles.transcriptInput}
+                    />
+                  </View>
+                )}
               </View>
-
-              {r.transcriptState === 'error' && (
-                <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
-              )}
-
-              {r.transcript !== null && (
-                <BottomSheetTextInput
-                  value={r.transcript}
-                  onChangeText={(transcript) =>
-                    updateRecs((current) =>
-                      current.map((item) =>
-                        item.id === r.id ? { ...item, transcript } : item,
-                      ),
-                    )
-                  }
-                  multiline
-                  style={styles.transcriptInput}
-                />
-              )}
-            </View>
-          );
-        })}
+            );
+          })}
         </BottomSheetScrollView>
+        {/* Список длиннее экрана — подсказываем краем, что он продолжается:
+            ровный срез у нижней кромки читался как обрыв вёрстки. */}
+        {overflowing && (
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(29,23,16,0)', '#1d1710']}
+            style={styles.scrollFade}
+          />
+        )}
+        </View>
 
-        <View style={styles.actionsRow}>
+        <View
+          style={styles.actionsRow}
+          onLayout={(e) => {
+            actionsHeight.value = e.nativeEvent.layout.height;
+          }}
+        >
           {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
               карточки-спутника: подпись не нужна, иконка читается сама */}
           <Pressable
@@ -676,6 +808,7 @@ export default function AnswerSheet({
             <Mic color={colors.greenSoft} />
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             onPress={requestClose}
             style={({ pressed }) => [
               styles.cancelBtn,
@@ -727,6 +860,33 @@ export default function AnswerSheet({
   );
 }
 
+/**
+ * Поле, растущее под свой текст. Внутренний скролл выключен намеренно: тело
+ * шторки прокручивается целиком, а коробка фиксированной высоты прятала бы
+ * длинный ответ и держала пустоту при коротком. Задаём minHeight, а не height,
+ * чтобы поле ответа могло дотянуться до низа списка через flexGrow, пока
+ * контенту хватает места.
+ */
+function AutoGrowInput({
+  minHeight,
+  style,
+  ...props
+}: React.ComponentProps<typeof BottomSheetTextInput> & { minHeight: number }) {
+  const [measured, setMeasured] = useState(0);
+  const onContentSizeChange = (
+    e: NativeSyntheticEvent<TextInputContentSizeChangeEventData>,
+  ) => setMeasured(Math.ceil(e.nativeEvent.contentSize.height));
+  return (
+    <BottomSheetTextInput
+      {...props}
+      multiline
+      scrollEnabled={false}
+      onContentSizeChange={onContentSizeChange}
+      style={[style, { minHeight: Math.max(minHeight, measured) }]}
+    />
+  );
+}
+
 const WAVE_BARS = [
   { color: '#d68a2e', delay: 0 },
   { color: '#e6a23c', delay: 150 },
@@ -774,9 +934,45 @@ const stylesFactory = () => StyleSheet.create({
     height: sc(4),
     borderRadius: sc(2),
   },
+  // ADR-0012: колонка держит меру строки. Без неё на планшете строка ответа
+  // уходила на ~70 символов, а «Сохранить» растягивалась во всю ширину окна.
   content: {
+    ...column(),
     paddingHorizontal: sc(16),
     paddingBottom: sc(16),
+  },
+  // Шапка закреплена: вопрос — контекст ответа и не должен уезжать скроллом.
+  // flexShrink на крайний случай очень длинного вопроса на низком экране.
+  header: {
+    flexShrink: 1,
+  },
+  // Единственная прокручиваемая зона тела. Внешний View нужен для замера
+  // видимой высоты и для края-подсказки поверх списка.
+  scroll: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: sc(20),
+  },
+  // flexGrow растягивает контейнер до высоты вьюпорта, пока контент меньше:
+  // поле ответа дотягивается до низа и шторка не выглядит полупустой.
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: sc(2),
+  },
+  voiceHint: {
+    marginTop: sc(8),
+    fontFamily: fonts.serifItalic,
+    fontSize: sc(12),
+    textAlign: 'center',
+    color: 'rgba(240,225,195,.4)',
   },
   orbRow: {
     flexDirection: 'row',
@@ -806,11 +1002,10 @@ const stylesFactory = () => StyleSheet.create({
     marginBottom: sc(12),
   },
   input: {
-    // Растёт в свободное место, но не сжимается ниже basis: длина текста на
-    // высоту не влияет — он прокручивается внутри поля.
+    // Забирает свободное место, пока оно есть; дальше высоту задаёт текст
+    // (minHeight из AutoGrowInput), а лишнее уходит в скролл тела.
     flexGrow: 1,
     flexShrink: 0,
-    flexBasis: sc(96),
     padding: sc(12),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.045)',
@@ -909,7 +1104,7 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: 'rgba(127,174,154,.3)',
   },
   transcriptionActionLoading: {
-    opacity: 0.4,
+    opacity: 0.55,
   },
   transcriptionActionError: {
     backgroundColor: 'rgba(220,90,70,.14)',
@@ -921,10 +1116,36 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(11.5),
     color: '#ec9b8e',
   },
-  transcriptInput: {
-    minHeight: sc(54),
-    maxHeight: sc(150),
+  recMetaState: {
+    color: colors.greenSoft,
+  },
+  transcriptBlock: {
     marginTop: sc(9),
+  },
+  transcriptHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: sc(6),
+    paddingHorizontal: sc(2),
+    marginBottom: sc(5),
+  },
+  // Подпись занимает всю свободную ширину, кнопки прижаты вправо
+  transcriptLabel: {
+    flex: 1,
+    fontFamily: fonts.mono,
+    fontSize: sc(9),
+    letterSpacing: sc(1.2),
+    color: colors.labelGoldDim,
+  },
+  transcriptHeadBtn: {
+    width: sc(20),
+    height: sc(20),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(255,255,255,.05)',
+  },
+  transcriptInput: {
     padding: sc(9),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.035)',
@@ -935,14 +1156,6 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(13.5),
     lineHeight: sc(19),
     textAlignVertical: 'top',
-  },
-  // Записи отдают своё место полю ответа: блок сжимается и прокручивается сам
-  recsScroll: {
-    flexGrow: 0,
-    flexShrink: 1,
-  },
-  recsContent: {
-    paddingTop: sc(2),
   },
   actionsRow: {
     flexDirection: 'row',
@@ -978,8 +1191,12 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: sc(28),
   },
+  // Оверлей всегда во всю высоту шторки: блок с волной центрируем, иначе он
+  // висит у верхнего края, а до кнопки «готово» тянется пустая полоса.
   recOverlayContent: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: sc(24),
   },
   recOverlayKicker: {
