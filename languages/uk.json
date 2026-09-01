@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Лампада"
+  },
+  "android": {
+    "app_name": "Лампада"
+  }
+}

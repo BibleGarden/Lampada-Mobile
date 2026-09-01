@@ -1,16 +1,21 @@
 {
   "expo": {
-    "name": "Twinkler",
+    "name": "Lampada",
     "slug": "pray",
-    "version": "1.0.0",
+    "version": "1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "locales": {
+      "ru": "./languages/ru.json",
+      "uk": "./languages/uk.json"
+    },
     "ios": {
       "bundleIdentifier": "twinkler",
       "deploymentTarget": "16.4",
       "supportsTablet": true,
       "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
         "UISupportedInterfaceOrientations": [
           "UIInterfaceOrientationPortrait"
         ],
