@@ -15,6 +15,7 @@ import {
   WEEKDAY_SHORT_NAMES,
   describeReminderSchedule,
   formatReminderTime,
+  formatReminderWeekdays,
   normalizeReminderSchedule,
   type ReminderRule,
   type ReminderSchedule,
@@ -774,13 +775,18 @@ export default function Settings() {
                   onPress={() => setReminderEditorRuleIndex(ruleIndex)}
                   style={({ pressed }) => [styles.reminderSettingsRow, pressed && styles.optionPressed]}
                 >
-                  <View style={{ flex: 1 }}>
+                  <View
+                    style={styles.reminderSettingsCopy}
+                    testID={ruleIndex === 0 ? 'reminders-summary' : `reminders-summary-${ruleIndex}`}
+                  >
                     <Text
-                      style={styles.rowTitle}
-                      testID={ruleIndex === 0 ? 'reminders-summary' : `reminders-summary-${ruleIndex}`}
-                      numberOfLines={2}
+                      style={styles.reminderSettingsTitle}
+                      numberOfLines={1}
                     >
-                      {summary}
+                      {formatReminderWeekdays(rule.weekdays)}
+                    </Text>
+                    <Text style={styles.reminderSettingsSubtitle} numberOfLines={1}>
+                      {rule.times.map(formatReminderTime).join(', ')}
                     </Text>
                   </View>
                   <ChevronRight size={sc(15)} color={colors.labelGold} />
@@ -1080,6 +1086,13 @@ const stylesFactory = () => StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(214,182,120,.16)',
     flexDirection: 'row', alignItems: 'center', gap: sc(10),
+  },
+  reminderSettingsCopy: { flex: 1, gap: sc(2) },
+  reminderSettingsTitle: {
+    fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment,
+  },
+  reminderSettingsSubtitle: {
+    fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint,
   },
   addScheduleTitle: { flex: 1, color: colors.warmHint },
   reminderModalBackdrop: {
