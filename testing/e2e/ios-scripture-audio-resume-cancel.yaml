@@ -18,7 +18,7 @@ appId: twinkler
     duration: 1700
 - assertVisible: "МОЛИТВА"
 - tapOn:
-    point: "84%,54%"
+    id: "dock-scripture-tab"
 - extendedWaitUntil:
     visible: "Слушать отрывок"
     timeout: 15000
@@ -33,10 +33,10 @@ appId: twinkler
 - tapOn:
     id: "scripture-audio-button"
 - tapOn:
-    point: "72%,54%"
+    id: "dock-question-tab"
 - assertVisible: "СПУТНИК СПРАШИВАЕТ"
 - tapOn:
-    point: "84%,54%"
+    id: "dock-scripture-tab"
 - assertVisible: "Слушать отрывок"
 - tapOn:
     id: "scripture-audio-button"

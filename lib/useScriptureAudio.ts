@@ -6,7 +6,10 @@ import {
 } from 'expo-audio';
 import type { ScriptureDisplay } from './scripture';
 import { fetchScriptureAudioClip, type ScriptureAudioClip } from './scriptureAudioClient';
-import { audioModeCoordinator } from './audioModeCoordinator';
+import {
+  audioModeCoordinator,
+  TRANSIENT_AUDIO_PLAYER_OPTIONS,
+} from './audioModeCoordinator';
 import { createScriptureAudioOperation } from './scriptureAudioOperation';
 
 export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
@@ -36,7 +39,10 @@ export function useScriptureAudio({
   enabled: boolean;
   onAudioBusyChange: (busy: boolean) => void;
 }): ScriptureAudioControl {
-  const player = useAudioPlayer(null, { updateInterval: 200 });
+  const player = useAudioPlayer(null, {
+    ...TRANSIENT_AUDIO_PLAYER_OPTIONS,
+    updateInterval: 200,
+  });
   const status = useAudioPlayerStatus(player);
   const [phase, setPhase] = useState<ScriptureAudioPhase>('idle');
   const clipRef = useRef<ScriptureAudioClip | null>(null);

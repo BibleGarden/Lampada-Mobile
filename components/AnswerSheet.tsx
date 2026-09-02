@@ -22,18 +22,26 @@ import {
 } from 'expo-audio';
 import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
-import { recordingFileIssue } from '../lib/recordingFile';
+import {
+  recordingDurationMillis,
+  recordingFileIssue,
+  waitForRecordingFile,
+} from '../lib/recordingFile';
 import {
   createRecordingOperation,
-  recoverRecordingAfterMediaServicesReset,
+  recoverRecordingAfterTerminalError,
+  recorderStatusRequiresRecovery,
+  startPreparedRecording,
 } from '../lib/recordingOperation';
 import {
   audioModeCoordinator,
+  TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type RecordingAudioModeLease,
 } from '../lib/audioModeCoordinator';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
+import { waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import { GoldButton } from './ui';
@@ -61,6 +69,12 @@ type Props = {
 
 const HANDLE_HEIGHT = sc(22);
 const MIN_UI_RECORDING_MILLIS = 1_500;
+const DRAFT_PLAYBACK_MODE = {
+  allowsRecording: false,
+  playsInSilentMode: true,
+  shouldPlayInBackground: false,
+  interruptionMode: 'doNotMix' as const,
+};
 
 // Шторка ответа: текст ответа и счётчик голосовых записей. Сами записи живут
 // в отдельной шторке поверх (RecordingsSheet). Открывается на текущем вопросе,
@@ -113,6 +127,7 @@ export default function AnswerSheet({
   const recordingStartedAtRef = useRef<number | null>(null);
   const recordingAudioModeLeaseRef = useRef<RecordingAudioModeLease | null>(null);
   const recordingSheetOpenRef = useRef(false);
+  const draftPlaybackGenerationRef = useRef(0);
   // Нативный recorderState обновляется с задержкой и не подходит как mutex.
   // Pure coordinator синхронно держит фазу, state только отражает её в UI.
   const recordingOperationRef = useRef<ReturnType<typeof createRecordingOperation> | null>(null);
@@ -122,34 +137,35 @@ export default function AnswerSheet({
   const recordingOperation = recordingOperationRef.current;
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS, (status) => {
-    if (status.mediaServicesDidReset) {
-      const lease = recordingAudioModeLeaseRef.current;
-      if (recordingOperation.getPhase() === 'idle' && !lease) return;
-      recorderErrorRef.current = status.error || 'Audio recorder was interrupted';
-      recordingStartedAtRef.current = null;
-      recordingOverlayActiveRef.current = false;
-      recoverRecordingAfterMediaServicesReset(recordingOperation, lease);
-      if (recordingAudioModeLeaseRef.current === lease) {
-        recordingAudioModeLeaseRef.current = null;
-      }
-      setAudioError('Запись прервалась — попробуй ещё раз');
-      onAudioBusyChange?.(false);
-      void audioModeCoordinator
-        .requestPlayback(setAudioModeAsync, {
-          allowsRecording: false,
-          playsInSilentMode: true,
-        })
-        .catch((error) => console.warn('Не удалось восстановить аудиорежим', error));
+    const phase = recordingOperation.getPhase();
+    if (
+      status.isFinished &&
+      !status.hasError &&
+      !status.mediaServicesDidReset &&
+      recorder.isRecording
+    ) {
       return;
     }
-    if (status.hasError) {
-      recorderErrorRef.current = status.error || 'Audio recorder was interrupted';
-      recordingOverlayActiveRef.current = false;
-      setAudioError('Запись прервалась — попробуй ещё раз');
-      onAudioBusyChange?.(false);
+    if (!recorderStatusRequiresRecovery(phase, status)) return;
+    const lease = recordingAudioModeLeaseRef.current;
+    recorderErrorRef.current =
+      status.error || (status.isFinished ? 'Audio recorder finished unexpectedly' : 'Audio recorder was interrupted');
+    recordingStartedAtRef.current = null;
+    recordingOverlayActiveRef.current = false;
+    recoverRecordingAfterTerminalError(recordingOperation, lease);
+    if (recordingAudioModeLeaseRef.current === lease) {
+      recordingAudioModeLeaseRef.current = null;
     }
+    setAudioError('Запись прервалась — попробуй ещё раз');
+    onAudioBusyChange?.(false);
+    void audioModeCoordinator
+      .requestPlayback(setAudioModeAsync, {
+        allowsRecording: false,
+        playsInSilentMode: true,
+      })
+      .catch((error) => console.warn('Не удалось восстановить аудиорежим', error));
   });
-  const player = useAudioPlayer();
+  const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
 
   // вторая точка — для открытой клавиатуры и для контента, который перестал
@@ -300,6 +316,7 @@ export default function AnswerSheet({
   useEffect(
     () => () => {
       recordingSheetOpenRef.current = false;
+      draftPlaybackGenerationRef.current += 1;
       recordingOperation.cancelStart();
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
@@ -380,6 +397,7 @@ export default function AnswerSheet({
 
     const attempt = recordingOperation.beginStart();
     if (!attempt) return;
+    draftPlaybackGenerationRef.current += 1;
     // Оверлей записи не должен остаться под открытой клавиатурой.
     Keyboard.dismiss();
     // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
@@ -431,27 +449,10 @@ export default function AnswerSheet({
         discardPreparedFile();
         return;
       }
-      recorder.record();
-      if (!recorder.isRecording) {
-        // AVAudioRecorder can sporadically refuse an immediate second start
-        // while expo-audio still advances its JS state/timer. Re-prepare once
-        // and verify the native flag instead of saving a header-only M4A.
-        const failedUri = recorder.uri;
-        await new Promise<void>((resolve) => setTimeout(resolve, 100));
-        await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
-        if (failedUri) {
-          try {
-            const failedFile = new File(failedUri);
-            if (failedFile.exists) failedFile.delete();
-          } catch {
-            // Retry correctness does not depend on best-effort orphan cleanup.
-          }
-        }
-        recorder.record();
-        if (!recorder.isRecording) {
-          throw new Error('Native audio recorder did not enter recording state');
-        }
-      }
+      // Do not re-prepare this native recorder in-place after a failed start.
+      // On iOS a late delegate callback from the replaced AVAudioRecorder can
+      // reset the state/duration of the new recording and corrupt its stop.
+      startPreparedRecording(recorder);
       recordingStartedAtRef.current = Date.now();
       // Шторку могли программно закрыть между последним await и record().
       // Тогда немедленно гасим нативную запись и не создаём черновик.
@@ -542,31 +543,40 @@ export default function AnswerSheet({
   const performStopRecording = async (
     confirmNativeStop: () => void,
   ): Promise<RecordingDraft | null> => {
-    // длительность читаем до stop(): recorderState обновляется раз в 500 мс и занижает
-    const durationMillis = recorder.getStatus().durationMillis ?? 0;
+    const nativeDurationMillis = recorder.getStatus().durationMillis ?? 0;
+    const startedAtMillis = recordingStartedAtRef.current;
+    const stoppedAtMillis = Date.now();
+    const uriBeforeStop = recorder.uri;
     let nativeStopped = false;
     try {
       await recorder.stop();
       nativeStopped = true;
       confirmNativeStop();
-      const uri = recorder.uri;
+      const uri = recorder.uri ?? uriBeforeStop;
       if (!uri) {
         setAudioError('Запись не сохранилась — попробуй ещё раз');
         return null;
       }
       const file = new File(uri);
-      const issue = recorderErrorRef.current
-        ? 'incomplete'
-        : recordingFileIssue(file, durationMillis);
+      const metadata = await waitForRecordingFile(() => ({
+        exists: file.exists,
+        size: file.size,
+      }));
+      const durationMillis = recordingDurationMillis(
+        nativeDurationMillis,
+        startedAtMillis,
+        stoppedAtMillis,
+      );
+      const issue = nativeDurationMillis > 0 ? recordingFileIssue(metadata) : 'incomplete';
       if (issue) {
-        const fileSize = file.size;
-        if (file.exists) file.delete();
+        // Never destroy a candidate stopped recording from a heuristic. It may
+        // still be a recoverable M4A whose metadata was late on physical iOS.
         console.warn(
           'Аудиозапись не была завершена',
           JSON.stringify({
             issue,
             durationMillis,
-            fileSize,
+            fileSize: metadata.size,
             recorderError: recorderErrorRef.current,
           }),
         );
@@ -633,18 +643,47 @@ export default function AnswerSheet({
 
   const togglePlay = (r: RecordingDraft) => {
     if (playingId === r.id) {
+      draftPlaybackGenerationRef.current += 1;
       player.pause();
       setPlayingId(null);
       onAudioBusyChange?.(false);
       return;
     }
+    const generation = ++draftPlaybackGenerationRef.current;
     onAudioBusyChange?.(true);
-    player.replace(r.uri);
-    player.play();
-    setPlayingId(r.id);
+    void audioModeCoordinator
+      .requestPlayback(setAudioModeAsync, DRAFT_PLAYBACK_MODE)
+      .then(async (grant) => {
+        const isCurrent = () =>
+          generation === draftPlaybackGenerationRef.current &&
+          recordingSheetOpenRef.current &&
+          !!grant?.isCurrent();
+        if (generation !== draftPlaybackGenerationRef.current || !recordingSheetOpenRef.current) return;
+        if (!grant?.isCurrent()) {
+          onAudioBusyChange?.(false);
+          return;
+        }
+        player.replace(r.uri);
+        const ready = await waitForAudioPlayerReady(
+          () => player.currentStatus,
+          isCurrent,
+        );
+        if (!ready || !isCurrent()) return;
+        await player.seekTo(0, 0, 0);
+        if (!isCurrent()) return;
+        player.play();
+        setPlayingId(r.id);
+      })
+      .catch((error) => {
+        if (generation !== draftPlaybackGenerationRef.current) return;
+        console.warn('Не удалось включить аудиозапись', error);
+        setAudioError('Не удалось воспроизвести запись');
+        onAudioBusyChange?.(false);
+      });
   };
 
   const handleRecordingsDismiss = () => {
+    draftPlaybackGenerationRef.current += 1;
     setRecordingsSheetOpen(false);
     recordingSheetOpenRef.current = false;
     // Незавершённый start после следующего await увидит новый token и не

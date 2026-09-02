@@ -14,6 +14,33 @@ export type RecordingLeaseRelease = {
   release: () => boolean;
 };
 
+export type PreparedRecorder = {
+  record: () => void;
+  readonly isRecording: boolean;
+};
+
+export type RecorderTerminalStatus = {
+  isFinished: boolean;
+  hasError: boolean;
+  mediaServicesDidReset?: boolean;
+};
+
+export function recorderStatusRequiresRecovery(
+  phase: RecordingOperationPhase,
+  status: RecorderTerminalStatus,
+) {
+  if (status.mediaServicesDidReset || status.hasError) return phase !== 'idle';
+  return status.isFinished && phase === 'recording';
+}
+
+/** Starts once; a failed native start is cleaned up before the user retries. */
+export function startPreparedRecording(recorder: PreparedRecorder) {
+  recorder.record();
+  if (!recorder.isRecording) {
+    throw new Error('Native audio recorder did not enter recording state');
+  }
+}
+
 /**
  * Coordinates recorder lifecycle operations without relying on delayed native
  * status updates. A pending start is dropped rather than queued, while every
@@ -120,8 +147,8 @@ export function createRecordingOperation(
   };
 }
 
-/** Ends the JS lifecycle and recording lease after a terminal native reset. */
-export function recoverRecordingAfterMediaServicesReset(
+/** Ends the JS lifecycle and recording lease after a terminal native error/reset. */
+export function recoverRecordingAfterTerminalError(
   operation: Pick<RecordingOperation, 'interrupt'>,
   lease: RecordingLeaseRelease | null,
 ) {

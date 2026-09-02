@@ -20,6 +20,13 @@ export type PlaybackAudioModeGrant = {
   isCurrent: () => boolean;
 };
 
+// Transient players share AVAudioSession with the recorder. Expo's default
+// schedules a global session deactivation 100 ms after pause/completion, which
+// can terminate a recorder that started in that window on physical iOS.
+export const TRANSIENT_AUDIO_PLAYER_OPTIONS = {
+  keepAudioSessionActive: true,
+} as const;
+
 /**
  * Serializes changes to Expo's process-wide audio mode.
  *
@@ -95,6 +102,16 @@ export function createAudioModeCoordinator() {
           isCurrent: () =>
             recordingLease === null && generation === playbackGeneration,
         };
+      });
+    },
+
+    requestDeactivation(deactivate: () => Promise<void>): Promise<boolean> {
+      const generation = ++playbackGeneration;
+      if (recordingLease) return Promise.resolve(false);
+      return enqueue(async () => {
+        if (recordingLease || generation !== playbackGeneration) return false;
+        await deactivate();
+        return true;
       });
     },
 
