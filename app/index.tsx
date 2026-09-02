@@ -37,14 +37,12 @@ export default function Home() {
     return i === 6 ? 'today' : 'empty';
   });
 
-  // подпись согласована с точками: горит — серия, ждёт — итог недели
+  // Подпись мягко суммирует неделю и не обнуляет достижение после пропуска.
   const weekDays = streak.week.filter(Boolean).length;
   const dayWord = (n: number) => (n === 1 ? 'день' : n < 5 ? 'дня' : 'дней');
-  const streakLine = streak.prayedToday
-    ? `${streak.count}-й день подряд`
-    : weekDays > 0
-      ? `${weekDays} ${dayWord(weekDays)} за неделю`
-      : '';
+  const streakLine = weekDays > 0
+    ? `${weekDays} ${dayWord(weekDays)} с молитвой на этой неделе`
+    : '';
 
   return (
     <View style={styles.root}>
@@ -158,21 +156,17 @@ const stylesFactory = () => StyleSheet.create({
   },
   // потухший день: пепельный, без золота
   dot: {
-    width: sc(6),
-    height: sc(6),
-    borderRadius: sc(3),
+    width: sc(8),
+    height: sc(8),
+    borderRadius: sc(4),
     backgroundColor: 'rgba(200,185,160,.16)',
   },
   dotFilled: {
     width: sc(7),
     height: sc(7),
-    borderRadius: sc(4),
     backgroundColor: colors.gold,
   },
   dotToday: {
-    width: sc(9),
-    height: sc(9),
-    borderRadius: sc(5),
     backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderColor: 'rgba(255,200,90,.55)',
