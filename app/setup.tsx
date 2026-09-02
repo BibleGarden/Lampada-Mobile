@@ -19,10 +19,10 @@ import { useSession } from '../lib/store';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const EXAMPLES = [
+  'Поблагодарить Бога',
   'Привести мысли в порядок',
   'Принять важное решение',
   'Подготовиться к разговору',
-  'Подготовиться к проповеди',
 ];
 
 const PRESETS = [
