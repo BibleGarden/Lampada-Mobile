@@ -989,12 +989,12 @@ class Component extends DCLogic {
       const today = i === cap - 1;
       // сегодня юзер ещё не молился — последний кружок пустой (контур), ждёт заполнения
       streakDots.push({
-        size: today ? '9px' : '7px',
+        size: today ? '8px' : '7px',
         bg: today ? 'transparent' : '#d9a94e',
         glow: today ? 'inset 0 0 0 1.5px rgba(255,200,90,.55)' : 'none'
       });
     }
-    for (let i = cap; i < 7; i++) streakDots.push({ size: '6px', bg: 'rgba(217,169,78,.25)', glow: 'none' });
+    for (let i = cap; i < 7; i++) streakDots.push({ size: '8px', bg: 'rgba(217,169,78,.25)', glow: 'none' });
 
     // time options
     const opts = [{ label: '5', v: 5 }, { label: '15', v: 15 }, { label: '30', v: 30 }, { label: 'час', v: 60 }, { label: '∞', v: 0 }];
