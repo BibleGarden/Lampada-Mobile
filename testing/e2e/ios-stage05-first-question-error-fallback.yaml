@@ -15,4 +15,4 @@ appId: twinkler
     end: "50%,78%"
     duration: 1700
 - assertVisible: "МОЛИТВА"
-- assertVisible: "Резервный вопрос"
+- assertVisible: "Ответить"
