@@ -381,28 +381,32 @@ function SessionScreen() {
           <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
             <TimerHalo size={ringSize} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
-            <View style={styles.timerContent}>
-              <Pressable
-                onPress={() => {
-                  if (s.remaining === null) return;
-                  Haptics.selectionAsync();
-                  setAdjustOpen((v) => !v);
-                }}
+            <Pressable
+              accessibilityLabel="Изменить время молитвы"
+              accessibilityRole="button"
+              accessibilityState={{ expanded: adjustOpen }}
+              disabled={s.remaining === null}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setAdjustOpen((v) => !v);
+              }}
+              style={StyleSheet.absoluteFill}
+              testID="session-timer-button"
+            />
+            <View pointerEvents="none" style={styles.timerContent}>
+              <Text
+                style={[
+                  styles.timerText,
+                  {
+                    fontSize: ringSize * 0.255,
+                    lineHeight: ringSize * 0.3,
+                  },
+                  s.remaining !== null && styles.timerTextAdjustable,
+                ]}
               >
-                <Text
-                  style={[
-                    styles.timerText,
-                    {
-                      fontSize: ringSize * 0.255,
-                      lineHeight: ringSize * 0.3,
-                    },
-                    s.remaining !== null && styles.timerTextAdjustable,
-                  ]}
-                >
-                  {timerLabel}
-                </Text>
-              </Pressable>
-              <Kicker style={{ fontSize: Math.min(sc(10), ringSize * 0.052) }}>
+                {timerLabel}
+              </Text>
+              <Kicker style={{ fontSize: Math.min(sc(11), ringSize * 0.062) }}>
                 {timerSub}
               </Kicker>
             </View>
@@ -412,6 +416,7 @@ function SessionScreen() {
                   ringSize={ringSize}
                   side="left"
                   label={`−${adjStep}`}
+                  accent
                   onPress={() => s.adjustTimer(-adjStep)}
                 />
                 <AdjustBtn
@@ -620,7 +625,7 @@ const stylesFactory = () => StyleSheet.create({
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: sc(4),
+    gap: 0,
   },
   timerText: {
     fontFamily: fonts.serif,
