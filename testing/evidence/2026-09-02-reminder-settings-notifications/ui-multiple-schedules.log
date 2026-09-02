@@ -1,0 +1,15 @@
+Running on Pray SE - iOS 26.5 - 18FBF907-60BB-48EF-9BE8-1DB2767465F5
+ > Flow pray-reminders-ui-flow
+Launch app "twinkler"... COMPLETED
+Open lampada://settings... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Assert that id: reminders-settings-button-0 is visible... COMPLETED
+Assert that id: reminders-settings-button-1 is visible... COMPLETED
+Assert that id: reminders-add-rule is visible... COMPLETED
+Tap on id: reminders-add-rule... COMPLETED
+Assert that "Когда напоминать" is visible... COMPLETED
+Tap on id: reminder-rule-1-day-4... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Assert that id: reminders-settings-button-0 is visible... COMPLETED
+Assert that id: reminders-settings-button-1 is visible... COMPLETED
+Assert that id: reminders-settings-button-2 is visible... COMPLETED
