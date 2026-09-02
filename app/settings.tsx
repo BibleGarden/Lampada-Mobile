@@ -1,19 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import { Check, ChevronLeft, ChevronRight, Close, Minus, Plus, Trash } from '../components/icons';
 import { useSettings } from '../lib/settings';
 import {
   DEFAULT_REMINDER_SCHEDULE,
+  MAX_REMINDER_RULES,
   MAX_REMINDER_TIMES_PER_RULE,
   WEEKDAY_SHORT_NAMES,
   describeReminderSchedule,
   formatReminderTime,
+  formatReminderWeekdays,
   normalizeReminderSchedule,
   type ReminderRule,
   type ReminderSchedule,
@@ -184,8 +186,9 @@ function StepButton({ label, onPress, children }: {
 }
 
 /** Час шагает по часу, минуты — по пять; значение закольцовано внутри суток. */
-function TimeRow({ time, canRemove, onShift, onRemove }: {
+function TimeRow({ time, ruleIndex, canRemove, onShift, onRemove }: {
   time: ReminderTime;
+  ruleIndex: number;
   canRemove: boolean;
   onShift: (deltaMinutes: number) => void;
   onRemove: () => void;
@@ -194,7 +197,7 @@ function TimeRow({ time, canRemove, onShift, onRemove }: {
   const label = formatReminderTime(time);
   const [hour, minute] = label.split(':');
   return (
-    <View style={styles.timeRow} testID={`reminder-time-${label}`}>
+    <View style={styles.timeRow} testID={`reminder-rule-${ruleIndex}-time-${label}`}>
       <StepButton label={`${label}: час назад`} onPress={() => onShift(-60)}>
         <Minus size={sc(14)} color={colors.white65} />
       </StepButton>
@@ -233,6 +236,7 @@ export default function Settings() {
   const [biometry, setBiometry] = useState<BiometryInfo | null>(null);
   const [pinFlow, setPinFlow] = useState<PinFlow>(null);
   const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
+  const [reminderEditorRuleIndex, setReminderEditorRuleIndex] = useState<number | null>(null);
   const reminderSave = useRef<Promise<void>>(Promise.resolve());
   const [languages, setLanguages] = useState<ScriptureLanguageOption[]>([]);
   const [translations, setTranslations] = useState<ScriptureTranslation[]>([]);
@@ -271,6 +275,15 @@ export default function Settings() {
       setLoadingCatalog(false);
     }
   };
+
+  useEffect(() => {
+    if (reminderEditorRuleIndex === null) return undefined;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setReminderEditorRuleIndex(null);
+      return true;
+    });
+    return () => subscription.remove();
+  }, [reminderEditorRuleIndex]);
 
   useEffect(() => {
     void hydrate();
@@ -426,13 +439,11 @@ export default function Settings() {
     };
   })();
 
-  // Правило, которое редактирует этот экран. Модель допускает несколько правил
-  // (их принесёт разбор фразы на этапе 2), простой выбор дней и времени —
-  // всегда одно.
+  // Экран редактирует тот же массив правил, который модель разворачивает в
+  // WEEKLY-триггеры: у каждого набора дней может быть собственный список времён.
   const reminderRules = reminderSchedule.rules.length
     ? reminderSchedule.rules
     : DEFAULT_REMINDER_SCHEDULE.rules;
-  const reminderRule = reminderRules[0];
 
   // Запись и переплан идут строго последовательно: при быстрых нажатиях в
   // системе останется расписание, соответствующее последнему нажатию.
@@ -447,12 +458,19 @@ export default function Settings() {
       .catch(() => undefined);
   };
 
-  const editReminderRule = (update: (rule: ReminderRule) => ReminderRule) => {
+  const editReminderRule = (ruleIndex: number, update: (rule: ReminderRule) => ReminderRule) => {
     void Haptics.selectionAsync();
-    applyReminderSchedule({
+    const updatedRule = update(reminderRules[ruleIndex]);
+    const next = normalizeReminderSchedule({
       enabled: reminderSchedule.enabled,
-      rules: [update(reminderRule), ...reminderRules.slice(1)],
-    });
+      rules: reminderRules.map((rule, index) => index === ruleIndex ? updatedRule : rule),
+    }) ?? DEFAULT_REMINDER_SCHEDULE;
+    applyReminderSchedule(next);
+    if (reminderEditorRuleIndex === ruleIndex) {
+      const weekdayKey = [...updatedRule.weekdays].sort((a, b) => a - b).join(',');
+      const nextIndex = next.rules.findIndex((rule) => rule.weekdays.join(',') === weekdayKey);
+      setReminderEditorRuleIndex(nextIndex >= 0 ? nextIndex : null);
+    }
   };
 
   const toggleReminders = async (next: boolean) => {
@@ -470,12 +488,13 @@ export default function Settings() {
     applyReminderSchedule({ enabled: true, rules: reminderRules });
   };
 
-  const toggleReminderWeekday = (isoWeekday: number) => {
+  const toggleReminderWeekday = (ruleIndex: number, isoWeekday: number) => {
+    const reminderRule = reminderRules[ruleIndex];
     const selected = reminderRule.weekdays.includes(isoWeekday);
     // Последний день снять нельзя: расписание без дней — это выключенные
     // напоминания, а для этого есть тумблер.
     if (selected && reminderRule.weekdays.length === 1) return;
-    editReminderRule((rule) => ({
+    editReminderRule(ruleIndex, (rule) => ({
       ...rule,
       weekdays: selected
         ? rule.weekdays.filter((day) => day !== isoWeekday)
@@ -487,21 +506,23 @@ export default function Settings() {
     hour: Math.floor(minutes / 60),
     minute: minutes % 60,
   });
-  const takenMinutes = new Set(reminderRule.times.map((time) => time.hour * 60 + time.minute));
-
-  const shiftReminderTime = (index: number, deltaMinutes: number) => {
-    const current = reminderRule.times[index];
+  const shiftReminderTime = (ruleIndex: number, timeIndex: number, deltaMinutes: number) => {
+    const reminderRule = reminderRules[ruleIndex];
+    const takenMinutes = new Set(reminderRule.times.map((time) => time.hour * 60 + time.minute));
+    const current = reminderRule.times[timeIndex];
     const next = (current.hour * 60 + current.minute + deltaMinutes + 1440) % 1440;
     // Наехать одним временем на другое нельзя: нормализация слила бы их, и одно
     // напоминание молча исчезло бы после одного нажатия.
     if (takenMinutes.has(next)) return;
-    editReminderRule((rule) => ({
+    editReminderRule(ruleIndex, (rule) => ({
       ...rule,
-      times: rule.times.map((time, i) => (i === index ? timeAt(next) : time)),
+      times: rule.times.map((time, index) => (index === timeIndex ? timeAt(next) : time)),
     }));
   };
 
-  const addReminderTime = () => {
+  const addReminderTime = (ruleIndex: number) => {
+    const reminderRule = reminderRules[ruleIndex];
+    const takenMinutes = new Set(reminderRule.times.map((time) => time.hour * 60 + time.minute));
     const last = reminderRule.times[reminderRule.times.length - 1];
     const from = last ? last.hour * 60 + last.minute : 8 * 60;
     let candidate = from;
@@ -510,17 +531,56 @@ export default function Settings() {
       if (!takenMinutes.has(candidate)) break;
     }
     if (takenMinutes.has(candidate)) return;
-    editReminderRule((rule) => ({ ...rule, times: [...rule.times, timeAt(candidate)] }));
+    editReminderRule(ruleIndex, (rule) => ({ ...rule, times: [...rule.times, timeAt(candidate)] }));
   };
 
-  const removeReminderTime = (index: number) => {
-    editReminderRule((rule) => ({
+  const removeReminderTime = (ruleIndex: number, timeIndex: number) => {
+    editReminderRule(ruleIndex, (rule) => ({
       ...rule,
-      times: rule.times.filter((_, i) => i !== index),
+      times: rule.times.filter((_, index) => index !== timeIndex),
     }));
   };
 
-  const reminderSummary = describeReminderSchedule(reminderSchedule);
+  const addReminderRule = () => {
+    if (reminderRules.length >= MAX_REMINDER_RULES) return null;
+    void Haptics.selectionAsync();
+    const existingWeekdays = new Set(reminderRules.map((rule) => rule.weekdays.join(',')));
+    const weekdayCandidates = [
+      [6, 7],
+      [1, 2, 3, 4, 5],
+      ...Array.from({ length: 7 }, (_, index) => [index + 1]),
+    ];
+    const weekdays = weekdayCandidates.find((days) => !existingWeekdays.has(days.join(',')))
+      ?? [1, 2, 3, 4, 5, 6, 7];
+    const latestMinutes = reminderRules.reduce(
+      (latest, rule) => Math.max(latest, ...rule.times.map((time) => time.hour * 60 + time.minute)),
+      8 * 60,
+    );
+    const newRule = { weekdays, times: [timeAt((latestMinutes + 60) % 1440)] };
+    const next = normalizeReminderSchedule({
+      enabled: reminderSchedule.enabled,
+      rules: [...reminderRules, newRule],
+    }) ?? DEFAULT_REMINDER_SCHEDULE;
+    applyReminderSchedule(next);
+    return next.rules.findIndex((rule) => rule.weekdays.join(',') === weekdays.join(','));
+  };
+
+  const removeReminderRule = (ruleIndex: number) => {
+    if (reminderRules.length <= 1) return;
+    void Haptics.selectionAsync();
+    applyReminderSchedule({
+      enabled: reminderSchedule.enabled,
+      rules: reminderRules.filter((_, index) => index !== ruleIndex),
+    });
+    if (reminderEditorRuleIndex === ruleIndex) setReminderEditorRuleIndex(null);
+  };
+
+  const activeReminderRule = reminderEditorRuleIndex === null
+    ? null
+    : reminderRules[reminderEditorRuleIndex] ?? null;
+  const activeReminderSummary = activeReminderRule
+    ? describeReminderSchedule({ enabled: true, rules: [activeReminderRule] })
+    : '';
 
   const loadTranslations = async (nextLanguage: ScriptureLanguageOption) => {
     const request = ++translationRequest.current;
@@ -584,7 +644,7 @@ export default function Settings() {
       <Animated.View
         entering={FadeIn.duration(500)}
         style={styles.screen}
-        {...screenReaderHiddenProps(!!pinPrompt)}
+        {...screenReaderHiddenProps(!!pinPrompt || reminderEditorRuleIndex !== null)}
       >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
@@ -683,9 +743,19 @@ export default function Settings() {
           <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Напоминания</Kicker>
           <View style={styles.card}>
             <View style={styles.shareAnswersHeader}>
-              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>
-                Напоминать о молитве
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle}>
+                  Напоминать о молитве
+                </Text>
+                {reminderPermission === 'denied' ? (
+                  <Text
+                    style={[styles.settingHint, styles.shareAnswersHint, styles.reminderWarning]}
+                    testID="reminders-permission-warning"
+                  >
+                    Уведомления запрещены в настройках системы.
+                  </Text>
+                ) : null}
+              </View>
               <Toggle
                 value={reminderSchedule.enabled}
                 label="Напоминать о молитве"
@@ -694,77 +764,54 @@ export default function Settings() {
               />
             </View>
 
-            {/* Пояснение не нужно — заголовок говорит сам за себя; при
-                включённых напоминаниях вместо него сводка расписания. */}
-            {reminderSchedule.enabled && reminderSummary ? (
-              <Text style={[styles.settingHint, styles.shareAnswersHint]} testID="reminders-summary">
-                {reminderSummary}
-              </Text>
-            ) : null}
-
-            {reminderPermission === 'denied' ? (
-              <Text
-                style={[styles.settingHint, styles.shareAnswersHint, styles.reminderWarning]}
-                testID="reminders-permission-warning"
-              >
-                Уведомления запрещены в настройках системы, поэтому напоминания не приходят.
-                Разрешите уведомления для Twinkler и вернитесь на этот экран.
-              </Text>
-            ) : null}
-
-            {reminderSchedule.enabled ? (
-              <View style={styles.reminderEditor}>
-                <Text style={styles.reminderLabel}>Дни недели</Text>
-                <View style={styles.dayRow}>
-                  {WEEKDAY_SHORT_NAMES.map((name, index) => {
-                    const isoWeekday = index + 1;
-                    const selected = reminderRule.weekdays.includes(isoWeekday);
-                    return (
-                      <Pressable
-                        key={name}
-                        accessibilityRole="button"
-                        accessibilityLabel={name}
-                        accessibilityState={{ selected }}
-                        testID={`reminder-day-${isoWeekday}`}
-                        onPress={() => toggleReminderWeekday(isoWeekday)}
-                        style={({ pressed }) => [
-                          styles.dayChip,
-                          selected && styles.dayChipOn,
-                          pressed && styles.optionPressed,
-                        ]}
-                      >
-                        <Text style={[styles.dayChipText, selected && styles.dayChipTextOn]}>
-                          {name}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-
-                <Text style={styles.reminderLabel}>Время</Text>
-                {reminderRule.times.map((time, index) => (
-                  <TimeRow
-                    key={formatReminderTime(time)}
-                    time={time}
-                    canRemove={reminderRule.times.length > 1}
-                    onShift={(delta) => shiftReminderTime(index, delta)}
-                    onRemove={() => removeReminderTime(index)}
-                  />
-                ))}
-
-                {reminderRule.times.length < MAX_REMINDER_TIMES_PER_RULE ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Добавить время"
-                    testID="reminder-add-time"
-                    onPress={addReminderTime}
-                    style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
+            {reminderRules.map((rule, ruleIndex) => {
+              const summary = describeReminderSchedule({ enabled: true, rules: [rule] });
+              return (
+                <Pressable
+                  key={ruleIndex}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Настроить расписание ${ruleIndex + 1}: ${summary}`}
+                  testID={`reminders-settings-button-${ruleIndex}`}
+                  onPress={() => setReminderEditorRuleIndex(ruleIndex)}
+                  style={({ pressed }) => [styles.reminderSettingsRow, pressed && styles.optionPressed]}
+                >
+                  <View
+                    style={styles.reminderSettingsCopy}
+                    testID={ruleIndex === 0 ? 'reminders-summary' : `reminders-summary-${ruleIndex}`}
                   >
-                    <Text style={styles.addTimeText}>+ Добавить время</Text>
-                  </Pressable>
-                ) : null}
-              </View>
+                    <Text
+                      style={styles.reminderSettingsTitle}
+                      numberOfLines={1}
+                    >
+                      {formatReminderWeekdays(rule.weekdays)}
+                    </Text>
+                    <Text style={styles.reminderSettingsSubtitle} numberOfLines={1}>
+                      {rule.times.map(formatReminderTime).join(', ')}
+                    </Text>
+                  </View>
+                  <ChevronRight size={sc(15)} color={colors.labelGold} />
+                </Pressable>
+              );
+            })}
+
+            {reminderRules.length < MAX_REMINDER_RULES ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Добавить расписание"
+                testID="reminders-add-rule"
+                onPress={() => {
+                  const newRuleIndex = addReminderRule();
+                  if (newRuleIndex !== null && newRuleIndex >= 0) {
+                    setReminderEditorRuleIndex(newRuleIndex);
+                  }
+                }}
+                style={({ pressed }) => [styles.reminderSettingsRow, pressed && styles.optionPressed]}
+              >
+                <Text style={[styles.rowTitle, styles.addScheduleTitle]}>Добавить расписание</Text>
+                <Plus size={sc(15)} color={colors.labelGold} />
+              </Pressable>
             ) : null}
+
           </View>
 
           <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Конфиденциальность</Kicker>
@@ -847,6 +894,127 @@ export default function Settings() {
         </ScrollView>
       </Animated.View>
 
+      {activeReminderRule && reminderEditorRuleIndex !== null ? (
+        <View style={styles.reminderModalBackdrop} accessibilityViewIsModal>
+          <Pressable
+            accessibilityLabel="Закрыть настройку напоминаний"
+            style={StyleSheet.absoluteFill}
+            onPress={() => setReminderEditorRuleIndex(null)}
+          />
+          <View
+            testID="reminders-editor-modal"
+            style={[
+              styles.reminderModal,
+              { paddingBottom: Math.max(insets.bottom, sc(14)) },
+            ]}
+          >
+            <View style={styles.reminderModalHandle} />
+            <View style={styles.reminderModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.reminderModalKicker}>НАПОМИНАНИЯ</Text>
+                <Text style={styles.reminderModalTitle}>Когда напоминать</Text>
+              </View>
+              {reminderRules.length > 1 ? (
+                <IconButton
+                  accessibilityLabel={`Удалить расписание ${reminderEditorRuleIndex + 1}`}
+                  onPress={() => removeReminderRule(reminderEditorRuleIndex)}
+                >
+                  <Trash size={sc(14)} color={colors.white65} />
+                </IconButton>
+              ) : null}
+              <IconButton
+                accessibilityLabel="Закрыть настройку напоминаний"
+                onPress={() => setReminderEditorRuleIndex(null)}
+              >
+                <Close size={sc(14)} />
+              </IconButton>
+            </View>
+
+            {activeReminderSummary ? (
+              <View style={styles.reminderModalSummaryPill}>
+                <View style={styles.reminderModalSummaryDot} />
+                <Text style={styles.reminderModalSummary}>{activeReminderSummary}</Text>
+              </View>
+            ) : null}
+
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={styles.reminderModalContent}
+            >
+              <View style={styles.reminderEditor}>
+                <View
+                  style={styles.reminderRuleCard}
+                  testID={`reminder-rule-${reminderEditorRuleIndex}`}
+                >
+                    <Text style={styles.reminderLabel}>ДНИ НЕДЕЛИ</Text>
+                    <View style={styles.dayRow}>
+                      {WEEKDAY_SHORT_NAMES.map((name, dayIndex) => {
+                        const isoWeekday = dayIndex + 1;
+                        const selected = activeReminderRule.weekdays.includes(isoWeekday);
+                        return (
+                          <Pressable
+                            key={name}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${name}, расписание ${reminderEditorRuleIndex + 1}`}
+                            accessibilityState={{ selected }}
+                            testID={`reminder-rule-${reminderEditorRuleIndex}-day-${isoWeekday}`}
+                            onPress={() => toggleReminderWeekday(reminderEditorRuleIndex, isoWeekday)}
+                            style={({ pressed }) => [
+                              styles.dayChip,
+                              selected && styles.dayChipOn,
+                              pressed && styles.optionPressed,
+                            ]}
+                          >
+                            <Text style={[styles.dayChipText, selected && styles.dayChipTextOn]}>
+                              {name}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+
+                    <Text style={[styles.reminderLabel, styles.reminderTimeLabel]}>ВРЕМЯ</Text>
+                    <View style={styles.reminderTimes}>
+                      {activeReminderRule.times.map((time, timeIndex) => (
+                        <TimeRow
+                          key={formatReminderTime(time)}
+                          time={time}
+                          ruleIndex={reminderEditorRuleIndex}
+                          canRemove={activeReminderRule.times.length > 1}
+                          onShift={(delta) => shiftReminderTime(reminderEditorRuleIndex, timeIndex, delta)}
+                          onRemove={() => removeReminderTime(reminderEditorRuleIndex, timeIndex)}
+                        />
+                      ))}
+                    </View>
+
+                    {activeReminderRule.times.length < MAX_REMINDER_TIMES_PER_RULE ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Добавить время в расписание ${reminderEditorRuleIndex + 1}`}
+                        testID={`reminder-add-time-${reminderEditorRuleIndex}`}
+                        onPress={() => addReminderTime(reminderEditorRuleIndex)}
+                        style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
+                      >
+                        <Plus size={sc(13)} color={colors.white65} />
+                        <Text style={styles.addTimeText}>Добавить время</Text>
+                      </Pressable>
+                    ) : null}
+                </View>
+              </View>
+            </ScrollView>
+
+            <Pressable
+              accessibilityRole="button"
+              testID="reminders-editor-done"
+              onPress={() => setReminderEditorRuleIndex(null)}
+              style={({ pressed }) => [styles.reminderDone, pressed && styles.optionPressed]}
+            >
+              <Text style={styles.reminderDoneText}>Готово</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
       {/* Поверх экрана, а не системным Modal: иначе окно ввода закрыло бы собой
           шторку приватности и экран блокировки при сворачивании приложения. */}
       {pinPrompt ? (
@@ -913,32 +1081,112 @@ const stylesFactory = () => StyleSheet.create({
   },
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
   reminderWarning: { color: 'rgba(240,170,120,.92)' },
-  reminderEditor: { marginTop: sc(12), gap: sc(6) },
+  reminderSettingsRow: {
+    marginTop: sc(12), paddingTop: sc(12),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(214,182,120,.16)',
+    flexDirection: 'row', alignItems: 'center', gap: sc(10),
+  },
+  reminderSettingsCopy: { flex: 1, gap: sc(2) },
+  reminderSettingsTitle: {
+    fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment,
+  },
+  reminderSettingsSubtitle: {
+    fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint,
+  },
+  addScheduleTitle: { flex: 1, color: colors.warmHint },
+  reminderModalBackdrop: {
+    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+    justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.78)',
+  },
+  reminderModal: {
+    maxHeight: '82%', paddingTop: sc(7), paddingHorizontal: sc(14),
+    backgroundColor: '#171109', borderTopLeftRadius: sc(22), borderTopRightRadius: sc(22),
+    borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(214,182,120,.2)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: -8 }, shadowOpacity: 0.42,
+    shadowRadius: sc(18), elevation: 20,
+  },
+  reminderModalHandle: {
+    alignSelf: 'center', width: sc(34), height: sc(3), borderRadius: 99,
+    marginBottom: sc(8), backgroundColor: 'rgba(255,255,255,.16)',
+  },
+  reminderModalHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: sc(10), paddingBottom: sc(8),
+  },
+  reminderModalKicker: {
+    fontFamily: fonts.sansMedium, fontSize: sc(8), letterSpacing: sc(1.8),
+    color: colors.warmHint,
+  },
+  reminderModalTitle: {
+    marginTop: sc(2), fontFamily: fonts.serifRegular, fontSize: sc(19),
+    lineHeight: sc(23), color: colors.parchment,
+  },
+  reminderModalSummaryPill: {
+    flexDirection: 'row', alignItems: 'center', gap: sc(8),
+    paddingVertical: sc(8), paddingHorizontal: sc(10), marginBottom: sc(2),
+    borderRadius: radius.sm, backgroundColor: 'rgba(255,255,255,.035)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.07)',
+  },
+  reminderModalSummaryDot: {
+    width: sc(6), height: sc(6), borderRadius: 99, backgroundColor: 'rgba(214,182,120,.55)',
+  },
+  reminderModalSummary: {
+    flex: 1, fontFamily: fonts.sansMedium, fontSize: sc(9.5),
+    lineHeight: sc(13), color: colors.creamDim,
+  },
+  reminderModalContent: { paddingTop: sc(8), paddingBottom: sc(8) },
+  reminderEditor: { gap: sc(8) },
+  reminderRuleCard: {
+    padding: sc(11), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,.025)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.065)',
+  },
   reminderLabel: {
-    fontFamily: fonts.sans, fontSize: sc(9.25), color: colors.warmHint, marginTop: sc(4),
+    fontFamily: fonts.sansMedium, fontSize: sc(8.5), letterSpacing: sc(1.15),
+    color: colors.warmHint, marginBottom: sc(8),
   },
-  dayRow: { flexDirection: 'row', gap: sc(4) },
+  reminderTimeLabel: { marginTop: sc(12) },
+  dayRow: { flexDirection: 'row', gap: sc(5) },
   dayChip: {
-    flex: 1, minHeight: sc(30), alignItems: 'center', justifyContent: 'center',
-    borderRadius: radius.sm, backgroundColor: colors.white05,
-    borderWidth: 1, borderColor: 'rgba(214,182,120,.18)',
+    flex: 1, minHeight: sc(34), alignItems: 'center', justifyContent: 'center',
+    borderRadius: sc(10), backgroundColor: 'rgba(255,255,255,.035)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.075)',
   },
-  dayChipOn: { backgroundColor: 'rgba(230,162,60,.22)', borderColor: 'rgba(230,162,60,.6)' },
-  dayChipText: { fontFamily: fonts.sansMedium, fontSize: sc(11), color: colors.creamDim },
-  dayChipTextOn: { color: colors.amberBright },
-  timeRow: { flexDirection: 'row', alignItems: 'center', gap: sc(4) },
+  dayChipOn: {
+    backgroundColor: 'rgba(214,182,120,.11)', borderColor: 'rgba(214,182,120,.3)',
+  },
+  dayChipText: { fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.creamDim },
+  dayChipTextOn: { color: colors.parchment },
+  reminderTimes: { gap: sc(6) },
+  timeRow: {
+    flexDirection: 'row', alignItems: 'center', gap: sc(4), minHeight: sc(44),
+    paddingHorizontal: sc(7), borderRadius: sc(11), backgroundColor: 'rgba(0,0,0,.16)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.055)',
+  },
   stepBtn: {
-    width: sc(26), height: sc(26), alignItems: 'center', justifyContent: 'center',
-    borderRadius: radius.sm, backgroundColor: colors.white05,
-    borderWidth: 1, borderColor: 'rgba(214,182,120,.18)',
+    width: sc(28), height: sc(28), alignItems: 'center', justifyContent: 'center',
+    borderRadius: sc(9), backgroundColor: 'rgba(255,255,255,.04)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.07)',
   },
   timeUnit: {
     minWidth: sc(24), textAlign: 'center',
     fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.parchment,
   },
-  timeColon: { fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.labelGold },
-  addTime: { paddingVertical: sc(6) },
-  addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(11.5), color: colors.goldSoft },
+  timeColon: { fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.warmHint },
+  addTime: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: sc(5),
+    minHeight: sc(35), marginTop: sc(7), borderRadius: sc(10),
+    backgroundColor: 'rgba(255,255,255,.025)', borderWidth: 1,
+    borderColor: 'rgba(255,255,255,.07)',
+  },
+  addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.creamDim },
+  reminderDone: {
+    minHeight: sc(42), alignItems: 'center', justifyContent: 'center',
+    marginTop: sc(2), borderRadius: sc(12), backgroundColor: 'rgba(214,182,120,.12)',
+    borderWidth: 1, borderColor: 'rgba(214,182,120,.25)',
+  },
+  reminderDoneText: {
+    fontFamily: fonts.sansMedium, fontSize: sc(12), color: colors.goldSoft,
+  },
   lockRow: {
     marginTop: sc(12),
     paddingTop: sc(12),
