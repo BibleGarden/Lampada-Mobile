@@ -125,12 +125,13 @@ function SessionScreen() {
     // setIsAudioActiveAsync действует глобально, поэтому не трогаем сессию,
     // если её не захватывал именно музыкальный плеер.
     if (!musicSessionActive.current) return Promise.resolve();
-    musicSessionActive.current = false;
     musicPlayer.clearLockScreenControls();
-    return setIsAudioActiveAsync(false).catch((error) => {
-      musicSessionActive.current = true;
-      console.warn('Не удалось освободить аудиосессию', error);
-    });
+    return audioModeCoordinator
+      .requestDeactivation(() => setIsAudioActiveAsync(false))
+      .then((deactivated) => {
+        if (deactivated) musicSessionActive.current = false;
+      })
+      .catch((error) => console.warn('Не удалось освободить аудиосессию', error));
   }, [musicPlayer]);
 
   useEffect(() => {
@@ -239,6 +240,13 @@ function SessionScreen() {
     enabled: s.dockMode === 'scripture' && appState === 'active',
     onAudioBusyChange: handleTransientAudioChange,
   });
+  const handleAnswerAudioChange = useCallback(
+    (busy: boolean) => {
+      if (busy) scriptureAudio.stop();
+      handleTransientAudioChange(busy);
+    },
+    [handleTransientAudioChange, scriptureAudio.stop],
+  );
 
   // секундный тик
   useEffect(() => {
@@ -442,7 +450,7 @@ function SessionScreen() {
         flushRef={flushAnswerRef}
         onEditingChange={setAnswerOpen}
         timeExpired={s.remaining === 0}
-        onAudioBusyChange={handleTransientAudioChange}
+        onAudioBusyChange={handleAnswerAudioChange}
       />
       <ScriptureReader sheetRef={readerRef} scriptureAudio={scriptureAudio} />
     </View>

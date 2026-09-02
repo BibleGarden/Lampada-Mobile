@@ -148,6 +148,7 @@ export default function RecordingsSheet({
           <Pressable
             accessibilityLabel="Закрыть записи"
             accessibilityRole="button"
+            testID="recordings-close-button"
             disabled={recordingBusy}
             hitSlop={sc(10)}
             onPress={() => sheetRef.current?.close()}
@@ -180,6 +181,7 @@ export default function RecordingsSheet({
                       playing ? `Пауза, запись ${i + 1}` : `Прослушать запись ${i + 1}`
                     }
                     accessibilityRole="button"
+                    testID={`recording-play-${i}`}
                     onPress={() => onTogglePlay(r)}
                     style={styles.recPlay}
                   >
@@ -215,6 +217,7 @@ export default function RecordingsSheet({
                         r.transcriptState === 'error' ? 'Повторить расшифровку' : 'Расшифровать'
                       }
                       accessibilityRole="button"
+                      testID={`recording-transcribe-${i}`}
                       disabled={loading}
                       onPress={() => onTranscribe(r)}
                       style={({ pressed }) => [
@@ -234,6 +237,7 @@ export default function RecordingsSheet({
                         : `Удалить запись ${i + 1}`
                     }
                     accessibilityRole="button"
+                    testID={`recording-delete-${i}`}
                     onPress={() => onDelete(r.id)}
                     style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
                   >

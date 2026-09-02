@@ -1,30 +1,50 @@
 const MIN_RECORDING_BYTES = 1_024;
-// A tap that starts recording can be retargeted to the stop overlay when it
-// appears under the finger. Such an M4A can contain a valid-looking container
-// header, but no useful audio frames, so file size alone is not enough.
-const MIN_RECORDING_DURATION_MILLIS = 500;
-// HIGH_QUALITY targets 128 kbit/s. Half of that rate leaves enough margin for
-// platform/container differences while still detecting a recorder that was
-// stopped natively but whose JS timer continued to run.
-const MIN_RECORDING_BYTES_PER_MILLISECOND = 8;
+const FILE_READY_POLL_MILLIS = 50;
+const FILE_READY_ATTEMPTS = 10;
 
 export type RecordingFileMetadata = {
   exists: boolean;
-  size: number;
+  size: number | null;
 };
 
 export function recordingFileIssue(
   file: RecordingFileMetadata,
-  durationMillis: number,
 ): 'missing' | 'incomplete' | null {
-  // This is intentionally a cheap client-side completeness heuristic, not a
-  // media-container parser. The transcription service remains responsible for
-  // validating the M4A container before passing it to the model.
   if (!file.exists) return 'missing';
-  if (durationMillis < MIN_RECORDING_DURATION_MILLIS) return 'incomplete';
-  const minimumSize = Math.max(
-    MIN_RECORDING_BYTES,
-    Math.floor(Math.max(0, durationMillis) * MIN_RECORDING_BYTES_PER_MILLISECOND),
-  );
-  return file.size < minimumSize ? 'incomplete' : null;
+  // AAC bitrate is a target, not a guaranteed minimum. A duration-proportional
+  // threshold deleted valid quiet recordings on physical iOS devices.
+  return file.size === null || file.size < MIN_RECORDING_BYTES ? 'incomplete' : null;
+}
+
+export function recordingDurationMillis(
+  nativeDurationMillis: number,
+  startedAtMillis: number | null,
+  stoppedAtMillis: number,
+) {
+  if (Number.isFinite(nativeDurationMillis) && nativeDurationMillis > 0) {
+    return Math.round(nativeDurationMillis);
+  }
+  if (startedAtMillis === null) return 0;
+  return Math.max(0, Math.round(stoppedAtMillis - startedAtMillis));
+}
+
+/** Waits for AVAudioRecorder to finish publishing stable file metadata. */
+export async function waitForRecordingFile(
+  readMetadata: () => RecordingFileMetadata,
+  wait: (millis: number) => Promise<void> = (millis) =>
+    new Promise((resolve) => setTimeout(resolve, millis)),
+  attempts = FILE_READY_ATTEMPTS,
+) {
+  let metadata: RecordingFileMetadata = { exists: false, size: null };
+  let previousReadySize: number | null = null;
+  for (let attempt = 0; attempt < Math.max(1, attempts); attempt += 1) {
+    metadata = readMetadata();
+    const readySize = metadata.exists && metadata.size !== null && metadata.size >= MIN_RECORDING_BYTES
+      ? metadata.size
+      : null;
+    if (readySize !== null && readySize === previousReadySize) return metadata;
+    previousReadySize = readySize;
+    if (attempt + 1 < attempts) await wait(FILE_READY_POLL_MILLIS);
+  }
+  return metadata;
 }

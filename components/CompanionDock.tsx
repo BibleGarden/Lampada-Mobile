@@ -130,12 +130,14 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
         <View style={styles.switcher}>
           <Pressable
             onPress={tap(() => s.setDockMode('question'))}
+            testID="dock-question-tab"
             style={[styles.switchBtn, isQ && styles.switchBtnActive]}
           >
             <QuestionMark color={isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'} />
           </Pressable>
           <Pressable
             onPress={tap(() => s.setDockMode('scripture'))}
+            testID="dock-scripture-tab"
             style={[styles.switchBtn, !isQ && styles.switchBtnActive]}
           >
             <Book color={!isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'} />

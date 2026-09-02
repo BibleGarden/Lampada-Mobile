@@ -1,0 +1,100 @@
+appId: twinkler
+---
+# ANS-005/006/008/028: player controls, persistence after reopening, deletion,
+# and ownership by different questions. Audio content is verified separately on
+# the physical iPad; this flow checks deterministic UI/store behavior.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Persistence голосовых записей"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible: "Пауза, запись 1"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible: "Прослушать запись 1"
+- tapOn:
+    id: "recordings-record-button"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-1"
+- tapOn:
+    id: "recordings-close-button"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "answer-save-button"
+- tapOn: "Изменить"
+- tapOn:
+    id: "answer-record-button"
+- assertVisible:
+    id: "recording-card-0"
+- assertVisible:
+    id: "recording-card-1"
+- doubleTapOn:
+    id: "recording-delete-0"
+- assertNotVisible:
+    id: "recording-card-1"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible: "Пауза, запись 1"
+- tapOn:
+    id: "recording-play-0"
+- tapOn:
+    id: "recordings-close-button"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "answer-save-button"
+- assertVisible: "Изменить"
+- tapOn:
+    point: "84%,91%"
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recordings-close-button"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "answer-save-button"
+- tapOn:
+    point: "16%,91%"
+- tapOn: "Изменить"
+- tapOn:
+    id: "answer-record-button"
+- assertVisible:
+    id: "recording-card-0"
+- assertNotVisible:
+    id: "recording-card-1"

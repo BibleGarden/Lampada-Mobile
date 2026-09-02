@@ -55,6 +55,7 @@ Twinkler — мобильное приложение для личной хри�
 | `lib/scriptureAudioClient.ts` | Алиасы книг, verse-level тайминги и публичные URL аудио глав |
 | `lib/useScriptureAudio.ts` | Жизненный цикл плеера выбранного отрывка и временный аудиофокус |
 | `lib/audioModeCoordinator.ts` | Единая очередь глобального Expo audio mode и приоритетный recording lease |
+| `lib/audioPlayerOperation.ts` | Ожидание готовности заменённого локального AVPlayerItem и отмена устаревшего play |
 | `lib/recordingOperation.ts` | Single-flight lifecycle запуска, остановки и прерывания голосовой записи |
 | `lib/scriptureAudioOperation.ts` | Инвалидация поздних продолжений озвучки при stop и смене контекста Писания |
 | `lib/useSheetReflow.ts` | Пересборка шторки под новую геометрию окна |

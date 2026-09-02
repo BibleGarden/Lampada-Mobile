@@ -10,7 +10,7 @@ const TIMEOUT_MS = 60_000;
 
 export async function transcribeRecording(
   uri: string,
-  durationSec?: number,
+  _durationSec?: number,
   signal?: AbortSignal,
 ): Promise<string> {
   const url = resolveTranscriptionUrl(TRANSCRIPTION_URL, QUESTION_URL);
@@ -23,7 +23,7 @@ export async function transcribeRecording(
 
   try {
     const audio = new File(uri);
-    const issue = recordingFileIssue(audio, Math.max(0, durationSec ?? 0) * 1_000);
+    const issue = recordingFileIssue(audio);
     if (issue) throw new Error(`Recording file is ${issue}`);
     const form = new FormData();
     form.append('file', audio, audio.name || 'recording.m4a');
