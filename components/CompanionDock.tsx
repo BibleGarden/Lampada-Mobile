@@ -271,7 +271,14 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   onPress={tap(scriptureAudio.toggle)}
                   disabled={scriptureAudio.phase === 'loading'}
                   style={styles.listenButton}
-                  accessibilityLabel={scriptureAudio.phase === 'playing' ? 'Пауза' : 'Слушать отрывок'}
+                  accessibilityLabel={
+                    scriptureAudio.phase === 'playing'
+                      ? 'Пауза'
+                      : scriptureAudio.phase === 'paused'
+                        ? 'Продолжить'
+                        : 'Слушать отрывок'
+                  }
+                  testID="scripture-audio-button"
                 >
                   {scriptureAudio.phase === 'loading' ? (
                     <ActivityIndicator size="small" color={colors.goldSoft} />

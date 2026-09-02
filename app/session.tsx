@@ -43,6 +43,17 @@ import { getPrayerTracks } from '../lib/music';
 import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
+import {
+  audioModeCoordinator,
+  type AudioModeRequest,
+} from '../lib/audioModeCoordinator';
+
+const MUSIC_PLAYBACK_MODE = {
+  allowsRecording: false,
+  playsInSilentMode: true,
+  shouldPlayInBackground: true,
+  interruptionMode: 'doNotMix' as const,
+};
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
 // но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
@@ -101,6 +112,15 @@ function SessionScreen() {
     });
   }, [musicPlayer, musicTracks]);
 
+  const applyMusicAudioMode = useCallback(async (mode: AudioModeRequest) => {
+    // AVAudioSession activation is process-wide too. Keep it in the same queue
+    // as mode changes so a quick next recording cannot call record() while a
+    // late music activation is still reconfiguring the native session.
+    musicSessionActive.current = true;
+    await setIsAudioActiveAsync(true);
+    await setAudioModeAsync(mode);
+  }, []);
+
   const releaseMusicSession = useCallback(() => {
     // setIsAudioActiveAsync действует глобально, поэтому не трогаем сессию,
     // если её не захватывал именно музыкальный плеер.
@@ -139,18 +159,12 @@ function SessionScreen() {
       };
     }
     void (async () => {
-      musicSessionActive.current = true;
-      await setIsAudioActiveAsync(true);
-      // Starting a recording invalidates this async activation. Without this
-      // guard its late allowsRecording:false stops the native iOS recorder.
-      if (!active || transientAudioBusyRef.current) return;
-      await setAudioModeAsync({
-        allowsRecording: false,
-        playsInSilentMode: true,
-        shouldPlayInBackground: true,
-        interruptionMode: 'doNotMix',
-      });
-      if (active && !transientAudioBusyRef.current) {
+      const modeGrant = await audioModeCoordinator.requestPlayback(
+        applyMusicAudioMode,
+        MUSIC_PLAYBACK_MODE,
+      );
+      if (!modeGrant?.isCurrent()) return;
+      if (active && !transientAudioBusyRef.current && modeGrant.isCurrent()) {
         setMusicLockScreen();
         musicPlayer.play();
       }
@@ -164,7 +178,14 @@ function SessionScreen() {
     return () => {
       active = false;
     };
-  }, [musicPlayer, releaseMusicSession, s.musicOn, setMusicLockScreen, transientAudioBusy]);
+  }, [
+    applyMusicAudioMode,
+    musicPlayer,
+    releaseMusicSession,
+    s.musicOn,
+    setMusicLockScreen,
+    transientAudioBusy,
+  ]);
 
   useEffect(() => {
     if (!musicStatus.didJustFinish || musicTracks.length === 0) return;
@@ -172,10 +193,22 @@ function SessionScreen() {
     const track = musicTracks[musicTrackIndex.current];
     musicPlayer.replace(track.source);
     if (useSession.getState().musicOn && !transientAudioBusyRef.current) {
-      setMusicLockScreen();
-      musicPlayer.play();
+      void audioModeCoordinator
+        .requestPlayback(applyMusicAudioMode, MUSIC_PLAYBACK_MODE)
+        .then((grant) => {
+          if (
+            !grant?.isCurrent() ||
+            transientAudioBusyRef.current ||
+            !useSession.getState().musicOn
+          ) {
+            return;
+          }
+          setMusicLockScreen();
+          musicPlayer.play();
+        })
+        .catch((error) => console.warn('Не удалось продолжить музыкальное сопровождение', error));
     }
-  }, [musicPlayer, musicStatus.didJustFinish, musicTracks, setMusicLockScreen]);
+  }, [applyMusicAudioMode, musicPlayer, musicStatus.didJustFinish, musicTracks, setMusicLockScreen]);
 
   useEffect(
     () => () => {
@@ -186,6 +219,9 @@ function SessionScreen() {
 
   const handleTransientAudioChange = useCallback(
     (busy: boolean) => {
+      // Playback completions can arrive after recording started. They do not
+      // own the recording lease and must not clear its synchronous busy guard.
+      if (!busy && audioModeCoordinator.hasRecordingLease()) return;
       // Эта остановка синхронна: запись не должна ждать React-effect.
       transientAudioBusyRef.current = busy;
       if (busy) {

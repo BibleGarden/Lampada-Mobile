@@ -1,0 +1,75 @@
+appId: twinkler
+---
+# ANS-019/021/022/024: keyboard dismissal, double-tap guard, and two
+# consecutive recordings owned by different questions.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Регрессия голосовых ответов"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn: "Закрыть записи"
+- tapOn:
+    id: "answer-input"
+- inputText: "Клавиатура должна закрыться"
+- tapOn:
+    id: "answer-record-button"
+- assertVisible:
+    id: "recordings-record-button"
+- doubleTapOn:
+    id: "recordings-record-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+- assertVisible:
+    id: "recordings-stop-button"
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-1"
+- tapOn: "Закрыть записи"
+- tapOn:
+    id: "answer-save-button"
+- assertVisible: "Изменить"
+- tapOn:
+    point: "84%,91%"
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn: "Закрыть записи"
+- tapOn:
+    id: "answer-save-button"
+- assertVisible: "Изменить"

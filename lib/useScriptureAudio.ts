@@ -6,8 +6,17 @@ import {
 } from 'expo-audio';
 import type { ScriptureDisplay } from './scripture';
 import { fetchScriptureAudioClip, type ScriptureAudioClip } from './scriptureAudioClient';
+import { audioModeCoordinator } from './audioModeCoordinator';
+import { createScriptureAudioOperation } from './scriptureAudioOperation';
 
 export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+
+const SCRIPTURE_PLAYBACK_MODE = {
+  allowsRecording: false,
+  playsInSilentMode: true,
+  shouldPlayInBackground: false,
+  interruptionMode: 'doNotMix' as const,
+};
 
 export type ScriptureAudioControl = {
   phase: ScriptureAudioPhase;
@@ -33,8 +42,18 @@ export function useScriptureAudio({
   const clipRef = useRef<ScriptureAudioClip | null>(null);
   const scriptureKeyRef = useRef<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const playbackOperationRef = useRef<ReturnType<typeof createScriptureAudioOperation> | null>(null);
+  if (!playbackOperationRef.current) {
+    playbackOperationRef.current = createScriptureAudioOperation();
+  }
+  const playbackOperation = playbackOperationRef.current;
+  const scriptureKey = scripture
+    ? `${scripture.canonicalId}:${scripture.receivedAt}:${voice}`
+    : null;
+  playbackOperation.setContext(enabled && !scripture?.offline ? scriptureKey : null);
 
   const stop = useCallback((nextPhase: ScriptureAudioPhase = 'idle') => {
+    playbackOperation.invalidate();
     requestRef.current?.abort();
     requestRef.current = null;
     player.pause();
@@ -42,16 +61,15 @@ export function useScriptureAudio({
     scriptureKeyRef.current = null;
     setPhase(nextPhase);
     onAudioBusyChange(false);
-  }, [onAudioBusyChange, player]);
+  }, [onAudioBusyChange, playbackOperation, player]);
 
   useEffect(() => {
     if (!enabled) stop();
   }, [enabled, stop]);
 
   useEffect(() => {
-    const key = scripture ? `${scripture.canonicalId}:${scripture.receivedAt}` : null;
-    if (scriptureKeyRef.current && scriptureKeyRef.current !== key) stop();
-  }, [scripture, stop]);
+    if (scriptureKeyRef.current && scriptureKeyRef.current !== scriptureKey) stop();
+  }, [scriptureKey, stop]);
 
   useEffect(() => {
     const clip = clipRef.current;
@@ -84,33 +102,59 @@ export function useScriptureAudio({
       return;
     }
     if ((phase === 'paused' || phase === 'idle') && clipRef.current) {
+      const continuation = playbackOperation.begin();
+      if (!continuation) return;
       onAudioBusyChange(true);
-      player.play();
-      setPhase('playing');
+      void audioModeCoordinator
+        .requestPlayback(setAudioModeAsync, SCRIPTURE_PLAYBACK_MODE)
+        .then((grant) => {
+          if (!continuation.isCurrent()) return;
+          if (!grant?.isCurrent()) {
+            onAudioBusyChange(false);
+            return;
+          }
+          player.play();
+          setPhase('playing');
+        })
+        .catch((error) => {
+          if (!continuation.isCurrent()) return;
+          console.warn('Не удалось восстановить аудиорежим Писания', error);
+          setPhase('error');
+          onAudioBusyChange(false);
+        });
       return;
     }
 
     const controller = new AbortController();
     requestRef.current?.abort();
     requestRef.current = controller;
-    scriptureKeyRef.current = `${scripture.canonicalId}:${scripture.receivedAt}`;
+    scriptureKeyRef.current = scriptureKey;
     setPhase('loading');
     onAudioBusyChange(true);
     void (async () => {
       try {
         const clip = await fetchScriptureAudioClip(scripture, voice, controller.signal);
         if (requestRef.current !== controller) return;
-        await setAudioModeAsync({
-          allowsRecording: false,
-          playsInSilentMode: true,
-          shouldPlayInBackground: false,
-          interruptionMode: 'doNotMix',
-        });
+        const modeGrant = await audioModeCoordinator.requestPlayback(
+          setAudioModeAsync,
+          SCRIPTURE_PLAYBACK_MODE,
+        );
+        if (requestRef.current !== controller) return;
+        if (!modeGrant?.isCurrent()) {
+          setPhase('idle');
+          onAudioBusyChange(false);
+          return;
+        }
         player.replace(clip.url);
         await player.seekTo(clip.startSeconds, 0, 0);
         if (requestRef.current !== controller) return;
+        if (!modeGrant.isCurrent()) {
+          setPhase('idle');
+          onAudioBusyChange(false);
+          return;
+        }
         clipRef.current = clip;
-        scriptureKeyRef.current = `${scripture.canonicalId}:${scripture.receivedAt}`;
+        scriptureKeyRef.current = scriptureKey;
         player.play();
         setPhase('playing');
       } catch (error) {
@@ -125,13 +169,11 @@ export function useScriptureAudio({
         if (requestRef.current === controller) requestRef.current = null;
       }
     })();
-  }, [enabled, onAudioBusyChange, phase, player, scripture, voice]);
+  }, [enabled, onAudioBusyChange, phase, playbackOperation, player, scripture, scriptureKey, voice]);
 
   let activeVerseNumber: number | null = null;
   const clip = clipRef.current;
-  const currentScriptureKey = scripture
-    ? `${scripture.canonicalId}:${scripture.receivedAt}`
-    : null;
+  const currentScriptureKey = scriptureKey;
   if (
     (phase === 'playing' || phase === 'paused') &&
     clip?.verses.length &&

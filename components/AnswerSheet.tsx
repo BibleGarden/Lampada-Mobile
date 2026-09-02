@@ -1,31 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
-  type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   Text,
-  type TextInputContentSizeChangeEventData,
   useWindowDimensions,
   View,
 } from 'react-native';
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-  BottomSheetTextInput,
-} from '@gorhom/bottom-sheet';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  runOnJS,
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { File } from 'expo-file-system';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,14 +19,23 @@ import {
   useAudioPlayer,
   useAudioPlayerStatus,
   useAudioRecorder,
-  useAudioRecorderState,
 } from 'expo-audio';
-import { useSession, RecordingDraft, fmtTime } from '../lib/store';
+import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { recordingFileIssue } from '../lib/recordingFile';
+import {
+  createRecordingOperation,
+  recoverRecordingAfterMediaServicesReset,
+} from '../lib/recordingOperation';
+import {
+  audioModeCoordinator,
+  type RecordingAudioModeLease,
+} from '../lib/audioModeCoordinator';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
-import { Close, Mic, PlayIcon, PauseIcon, Regen, TextLines, Trash } from './icons';
+import { screenReaderHiddenProps } from '../lib/a11y';
+import { Mic } from './icons';
+import RecordingsSheet from './RecordingsSheet';
 import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
@@ -68,12 +60,10 @@ type Props = {
 };
 
 const HANDLE_HEIGHT = sc(22);
-// Минимум поля ответа — примерно четыре строки. Пока контент помещается,
-// поле дотягивается до низа списка (flexGrow), дальше растёт под текст.
-const ANSWER_MIN_HEIGHT = () => sc(96);
-const TRANSCRIPT_MIN_HEIGHT = () => sc(54);
+const MIN_UI_RECORDING_MILLIS = 1_500;
 
-// Шторка ответа: текст + голосовые записи. Открывается на текущем вопросе,
+// Шторка ответа: текст ответа и счётчик голосовых записей. Сами записи живут
+// в отдельной шторке поверх (RecordingsSheet). Открывается на текущем вопросе,
 // черновик считывается из сохранённого ответа.
 export default function AnswerSheet({
   sheetRef,
@@ -92,9 +82,16 @@ export default function AnswerSheet({
   const [text, setText] = useState('');
   const [recs, setRecs] = useState<RecordingDraft[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  // Расшифровка показывается свёрнутой — три строки; раскрытая читается целиком.
+  const [expandedTranscripts, setExpandedTranscripts] = useState<Record<number, boolean>>({});
+  const [recordingsSheetOpen, setRecordingsSheetOpen] = useState(false);
+  const recSheetRef = useRef<BottomSheet | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [recordingPhase, setRecordingPhase] = useState<
+    'idle' | 'starting' | 'recording' | 'stopping'
+  >('idle');
   const [saving, setSaving] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -113,23 +110,45 @@ export default function AnswerSheet({
   // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
   const answerIndexRef = useRef(0);
   const recorderErrorRef = useRef<string | null>(null);
-  // Край-подсказка «список продолжается». Геометрию считаем на UI-потоке:
-  // высоту тела задаёт анимированная позиция шторки, и onLayout у детей после
-  // её изменения не приходит — замер обычным layout-событием врал бы.
-  const [overflowing, setOverflowing] = useState(false);
-  const headerHeight = useSharedValue(0);
-  const actionsHeight = useSharedValue(0);
-  const contentHeight = useSharedValue(0);
+  const recordingStartedAtRef = useRef<number | null>(null);
+  const recordingAudioModeLeaseRef = useRef<RecordingAudioModeLease | null>(null);
+  const recordingSheetOpenRef = useRef(false);
+  // Нативный recorderState обновляется с задержкой и не подходит как mutex.
+  // Pure coordinator синхронно держит фазу, state только отражает её в UI.
+  const recordingOperationRef = useRef<ReturnType<typeof createRecordingOperation> | null>(null);
+  if (!recordingOperationRef.current) {
+    recordingOperationRef.current = createRecordingOperation(setRecordingPhase);
+  }
+  const recordingOperation = recordingOperationRef.current;
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS, (status) => {
-    if (status.hasError || status.mediaServicesDidReset) {
+    if (status.mediaServicesDidReset) {
+      const lease = recordingAudioModeLeaseRef.current;
+      if (recordingOperation.getPhase() === 'idle' && !lease) return;
+      recorderErrorRef.current = status.error || 'Audio recorder was interrupted';
+      recordingStartedAtRef.current = null;
+      recordingOverlayActiveRef.current = false;
+      recoverRecordingAfterMediaServicesReset(recordingOperation, lease);
+      if (recordingAudioModeLeaseRef.current === lease) {
+        recordingAudioModeLeaseRef.current = null;
+      }
+      setAudioError('Запись прервалась — попробуй ещё раз');
+      onAudioBusyChange?.(false);
+      void audioModeCoordinator
+        .requestPlayback(setAudioModeAsync, {
+          allowsRecording: false,
+          playsInSilentMode: true,
+        })
+        .catch((error) => console.warn('Не удалось восстановить аудиорежим', error));
+      return;
+    }
+    if (status.hasError) {
       recorderErrorRef.current = status.error || 'Audio recorder was interrupted';
       recordingOverlayActiveRef.current = false;
       setAudioError('Запись прервалась — попробуй ещё раз');
       onAudioBusyChange?.(false);
     }
   });
-  const recorderState = useAudioRecorderState(recorder);
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
 
@@ -152,21 +171,6 @@ export default function AnswerSheet({
       windowHeight - sheetPosition.value - HANDLE_HEIGHT - keyboardHeight.value,
     ),
   }));
-
-  // Тело минус закреплённые шапка и панель кнопок = видимая высота списка.
-  useAnimatedReaction(
-    () => {
-      const body = Math.max(
-        0,
-        windowHeight - sheetPosition.value - HANDLE_HEIGHT - keyboardHeight.value,
-      );
-      const viewport = body - headerHeight.value - actionsHeight.value;
-      return viewport > 0 && contentHeight.value > viewport + 1;
-    },
-    (cut, previous) => {
-      if (cut !== previous) runOnJS(setOverflowing)(cut);
-    },
-  );
 
   const updateRecs = useCallback(
     (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
@@ -205,9 +209,6 @@ export default function AnswerSheet({
                 : item,
             ),
           );
-          // Расшифровка — крупный новый блок под своей записью. Раскрываем
-          // шторку, иначе результат появляется ниже видимой части списка.
-          sheetRef.current?.snapToIndex(1);
         })
         .catch((error) => {
           if (controller.signal.aborted) return;
@@ -243,9 +244,28 @@ export default function AnswerSheet({
           item.id === id ? { ...item, transcript: null, transcriptState: 'idle' } : item,
         ),
       );
+      setExpandedTranscripts((current) => {
+        const { [id]: _removed, ...rest } = current;
+        return rest;
+      });
     },
     [updateRecs],
   );
+
+  const toggleTranscript = useCallback((id: number) => {
+    setExpandedTranscripts((current) => ({ ...current, [id]: !current[id] }));
+  }, []);
+
+  // Единственный способ поправить распознанное: перенести в ответ и править там.
+  // Шторку записей при этом закрываем — иначе текст ложится в поле за ней и
+  // непонятно, сработало ли действие.
+  const appendTranscriptToAnswer = useCallback((transcript: string) => {
+    const addition = transcript.trim();
+    if (!addition) return;
+    setText((current) => (current.trim() ? `${current.trim()}\n\n${addition}` : addition));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    recSheetRef.current?.close();
+  }, []);
 
   // черновик текущего вопроса подтягивается ДО показа шторки: если делать
   // это в onChange, на открытии успевает мелькнуть контент прошлого вопроса
@@ -261,6 +281,7 @@ export default function AnswerSheet({
     recsRef.current = restored;
     setRecs(restored);
     setConfirmDeleteId(null);
+    setExpandedTranscripts({});
     setConfirmCancel(false);
     setPlayingId(null);
     setAudioError(null);
@@ -278,12 +299,44 @@ export default function AnswerSheet({
 
   useEffect(
     () => () => {
+      recordingSheetOpenRef.current = false;
+      recordingOperation.cancelStart();
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       abortAllTranscriptions();
-      onAudioBusyChange?.(false);
+      const phase = recordingOperation.getPhase();
+      if (phase === 'recording') {
+        // Hard navigation can unmount the sheet without onChange(-1). Stop the
+        // owned recorder explicitly; after unmount its native object is disposed,
+        // so the process-wide lease must not leak into the next Session.
+        void recorder
+          .stop()
+          .catch((error) => console.warn('Не удалось остановить запись при выходе', error))
+          .finally(() => {
+            recordingAudioModeLeaseRef.current?.release();
+            recordingAudioModeLeaseRef.current = null;
+            onAudioBusyChange?.(false);
+          });
+      } else if (phase === 'stopping') {
+        // The in-flight stop owns the native call. After hard unmount the hook
+        // disposes its recorder, so release the singleton lease on either
+        // settlement path; otherwise a rejected stop poisons the next Session.
+        const pendingStop = recordingOperation.getPendingStop();
+        const releaseAfterUnmount = () => {
+          recordingAudioModeLeaseRef.current?.release();
+          recordingAudioModeLeaseRef.current = null;
+          onAudioBusyChange?.(false);
+        };
+        if (pendingStop) {
+          void pendingStop.then(releaseAfterUnmount, releaseAfterUnmount);
+        } else {
+          releaseAfterUnmount();
+        }
+      } else {
+        onAudioBusyChange?.(false);
+      }
     },
-    [abortAllTranscriptions, onAudioBusyChange],
+    [abortAllTranscriptions, onAudioBusyChange, recorder, recordingOperation],
   );
 
   // конец воспроизведения — вернуть иконку play
@@ -323,6 +376,10 @@ export default function AnswerSheet({
   }, [sheetRef, keyboardHeight]);
 
   const startRecording = async () => {
+    if (!recordingSheetOpenRef.current) return;
+
+    const attempt = recordingOperation.beginStart();
+    if (!attempt) return;
     // Оверлей записи не должен остаться под открытой клавиатурой.
     Keyboard.dismiss();
     // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
@@ -332,21 +389,89 @@ export default function AnswerSheet({
     onAudioBusyChange?.(true);
     recorderErrorRef.current = null;
     setAudioError(null);
+    let audioModeEnabled = false;
+    let prepared = false;
+    let started = false;
+    let nativeStopConfirmed = false;
+    let nativeCleanupUncertain = false;
+    let audioModeLease: RecordingAudioModeLease | null = null;
+    const discardPreparedFile = () => {
+      const uri = recorder.uri;
+      if (!uri) return;
+      try {
+        const file = new File(uri);
+        if (file.exists) file.delete();
+      } catch {
+        // Отмена старта важнее best-effort очистки пустого файла.
+      }
+    };
+    const startIsCurrent = () =>
+      attempt.isCurrent() && recordingSheetOpenRef.current;
     try {
       const perm = await AudioModule.requestRecordingPermissionsAsync();
-      if (!perm.granted) {
-        onAudioBusyChange?.(false);
-        return;
-      }
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      if (!perm.granted) return;
+      if (!startIsCurrent()) return;
+      audioModeLease = audioModeCoordinator.acquireRecording(setAudioModeAsync, {
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+      await audioModeLease.ready;
+      recordingAudioModeLeaseRef.current = audioModeLease;
+      audioModeEnabled = true;
+      if (!startIsCurrent()) return;
       // пресет обязателен: без options рекордер переиспользует один URL
       // и каждая новая запись затирает файл предыдущей
       await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
+      prepared = true;
+      if (!startIsCurrent()) {
+        // Android не разрешает повторный prepare, пока предыдущий MediaRecorder
+        // не reset. stop() после prepare освобождает его даже без record().
+        await recorder.stop();
+        nativeStopConfirmed = true;
+        discardPreparedFile();
+        return;
+      }
       recorder.record();
+      if (!recorder.isRecording) {
+        // AVAudioRecorder can sporadically refuse an immediate second start
+        // while expo-audio still advances its JS state/timer. Re-prepare once
+        // and verify the native flag instead of saving a header-only M4A.
+        const failedUri = recorder.uri;
+        await new Promise<void>((resolve) => setTimeout(resolve, 100));
+        await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
+        if (failedUri) {
+          try {
+            const failedFile = new File(failedUri);
+            if (failedFile.exists) failedFile.delete();
+          } catch {
+            // Retry correctness does not depend on best-effort orphan cleanup.
+          }
+        }
+        recorder.record();
+        if (!recorder.isRecording) {
+          throw new Error('Native audio recorder did not enter recording state');
+        }
+      }
+      recordingStartedAtRef.current = Date.now();
+      // Шторку могли программно закрыть между последним await и record().
+      // Тогда немедленно гасим нативную запись и не создаём черновик.
+      if (!startIsCurrent()) {
+        await recorder.stop();
+        nativeStopConfirmed = true;
+        const cancelledUri = recorder.uri;
+        if (cancelledUri) {
+          try {
+            const cancelledFile = new File(cancelledUri);
+            if (cancelledFile.exists) cancelledFile.delete();
+          } catch {
+            // Отмена старта важнее best-effort очистки временного файла.
+          }
+        }
+        return;
+      }
+      started = attempt.commit();
+      if (!started) return;
       recordingOverlayActiveRef.current = true;
-      // Оверлей измеряется по максимальной высоте BottomSheet: на нижнем
-      // snap-point его stop-контрол попадает за область клипа.
-      sheetRef.current?.snapToIndex(1);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
       console.warn(
@@ -354,18 +479,76 @@ export default function AnswerSheet({
         error instanceof Error ? error.message : 'unknown error',
       );
       setAudioError('Не удалось начать запись — попробуй ещё раз');
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
-        (modeError) => console.warn('Не удалось восстановить аудиорежим', modeError),
-      );
-      onAudioBusyChange?.(false);
+    } finally {
+      // После успешного старта режим вернёт stopRecording. Во всех остальных
+      // исходах (отказ, ошибка, dismiss) восстанавливаем его здесь.
+      if (!started) {
+        // Ошибка могла случиться после успешного prepare, но до record().
+        // Освобождаем подготовленный Android-recorder для следующей попытки.
+        if (prepared && !nativeStopConfirmed) {
+          try {
+            await recorder.stop();
+            nativeStopConfirmed = true;
+            discardPreparedFile();
+          } catch {
+            // Без подтверждённого stop lease остаётся активным: playback mode
+            // на iOS мог бы оборвать всё ещё живой нативный recorder.
+            nativeCleanupUncertain = true;
+          }
+        }
+        if (nativeCleanupUncertain && attempt.recoverAsRecording()) {
+          // Не возвращаем idle при неизвестном нативном состоянии. Показываем
+          // управление stop снова и удерживаем recording lease/audio busy.
+          started = true;
+          recordingSheetOpenRef.current = true;
+          recordingOverlayActiveRef.current = true;
+          recSheetRef.current?.snapToIndex(0);
+          setAudioError('Не удалось отменить запись — нажми «Готово» ещё раз');
+        }
+        if (audioModeEnabled) {
+          if (!prepared || nativeStopConfirmed) {
+            audioModeLease?.release();
+            if (recordingAudioModeLeaseRef.current === audioModeLease) {
+              recordingAudioModeLeaseRef.current = null;
+            }
+            await audioModeCoordinator
+              .requestPlayback(setAudioModeAsync, {
+                allowsRecording: false,
+                playsInSilentMode: true,
+              })
+              .catch((modeError) =>
+                console.warn('Не удалось восстановить аудиорежим', modeError),
+              );
+          }
+        }
+        if (!started) onAudioBusyChange?.(false);
+      }
+      // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
+      attempt.finish();
     }
   };
 
-  const stopRecording = async (): Promise<RecordingDraft | null> => {
+  // Микрофон в шторке ответа ведёт в записи. Пустой список — сразу пишем:
+  // человек нажал микрофон, чтобы говорить, а не чтобы смотреть на пустоту.
+  const openRecordings = () => {
+    Keyboard.dismiss();
+    setConfirmDeleteId(null);
+    setRecordingsSheetOpen(true);
+    recordingSheetOpenRef.current = true;
+    recSheetRef.current?.snapToIndex(0);
+    if (recsRef.current.length === 0) void startRecording();
+  };
+
+  const performStopRecording = async (
+    confirmNativeStop: () => void,
+  ): Promise<RecordingDraft | null> => {
     // длительность читаем до stop(): recorderState обновляется раз в 500 мс и занижает
     const durationMillis = recorder.getStatus().durationMillis ?? 0;
+    let nativeStopped = false;
     try {
       await recorder.stop();
+      nativeStopped = true;
+      confirmNativeStop();
       const uri = recorder.uri;
       if (!uri) {
         setAudioError('Запись не сохранилась — попробуй ещё раз');
@@ -376,8 +559,17 @@ export default function AnswerSheet({
         ? 'incomplete'
         : recordingFileIssue(file, durationMillis);
       if (issue) {
+        const fileSize = file.size;
         if (file.exists) file.delete();
-        console.warn('Аудиозапись не была завершена', recorderErrorRef.current ?? issue);
+        console.warn(
+          'Аудиозапись не была завершена',
+          JSON.stringify({
+            issue,
+            durationMillis,
+            fileSize,
+            recorderError: recorderErrorRef.current,
+          }),
+        );
         setAudioError('Запись не сохранилась — попробуй ещё раз');
         return null;
       }
@@ -393,28 +585,50 @@ export default function AnswerSheet({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       return draft;
     } catch (error) {
-      const failedUri = recorder.uri;
-      if (failedUri) {
-        try {
-          const failedFile = new File(failedUri);
-          if (failedFile.exists) failedFile.delete();
-        } catch {
-          // Ошибка очистки не должна скрывать исходную ошибку рекордера.
-        }
-      }
       console.warn(
         'Не удалось завершить аудиозапись',
         error instanceof Error ? error.message : 'unknown error',
       );
       setAudioError('Запись не сохранилась — попробуй ещё раз');
-      return null;
+      // Исключение stop не доказывает, что нативный recorder остановился.
+      // Не удаляем его URI и оставляем фазу recording для видимого retry.
+      throw error;
     } finally {
-      recordingOverlayActiveRef.current = false;
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
-        (error) => console.warn('Не удалось восстановить аудиорежим', error),
-      );
-      onAudioBusyChange?.(false);
+      // Ошибка native stop не подтверждает остановку. В таком случае сохраняем
+      // аудиофокус и оверлей до успешной повторной попытки, чтобы музыка не
+      // возобновилась поверх потенциально продолжающейся записи.
+      if (nativeStopped) {
+        recordingStartedAtRef.current = null;
+        recordingOverlayActiveRef.current = false;
+        recordingAudioModeLeaseRef.current?.release();
+        recordingAudioModeLeaseRef.current = null;
+        await audioModeCoordinator
+          .requestPlayback(setAudioModeAsync, {
+            allowsRecording: false,
+            playsInSilentMode: true,
+          })
+          .catch((error) => console.warn('Не удалось восстановить аудиорежим', error));
+        onAudioBusyChange?.(false);
+      }
     }
+  };
+
+  const stopRecording = (): Promise<RecordingDraft | null> => {
+    // Все конкурирующие вызовы получают одну операцию. Поэтому второй catch
+    // не может удалить файл, уже сохранённый первым stop.
+    return recordingOperation.runStop(performStopRecording).catch(() => null);
+  };
+
+  const stopRecordingFromUi = (): Promise<RecordingDraft | null> => {
+    const startedAt = recordingStartedAtRef.current;
+    if (
+      recordingOperation.getPhase() === 'recording' &&
+      startedAt !== null &&
+      Date.now() - startedAt < MIN_UI_RECORDING_MILLIS
+    ) {
+      return Promise.resolve(null);
+    }
+    return stopRecording();
   };
 
   const togglePlay = (r: RecordingDraft) => {
@@ -428,6 +642,30 @@ export default function AnswerSheet({
     player.replace(r.uri);
     player.play();
     setPlayingId(r.id);
+  };
+
+  const handleRecordingsDismiss = () => {
+    setRecordingsSheetOpen(false);
+    recordingSheetOpenRef.current = false;
+    // Незавершённый start после следующего await увидит новый token и не
+    // сможет включить микрофон за закрытой шторкой.
+    recordingOperation.cancelStart();
+    setConfirmDeleteId(null);
+    if (recordingOperation.getPhase() === 'recording') {
+      void stopRecording().then(() => {
+        if (recordingOperation.getPhase() !== 'recording') return;
+        // Нативный stop не подтвердился: возвращаем управление микрофоном,
+        // чтобы запись не осталась скрытой за закрытой шторкой.
+        recordingSheetOpenRef.current = true;
+        setRecordingsSheetOpen(true);
+        recSheetRef.current?.snapToIndex(0);
+      });
+    }
+    if (playingId !== null) {
+      player.pause();
+      setPlayingId(null);
+      onAudioBusyChange?.(false);
+    }
   };
 
   const discardUnsavedRecordings = () => {
@@ -476,7 +714,10 @@ export default function AnswerSheet({
     setSaving(true);
     try {
       // активная запись не должна молча продолжаться после сохранения
-      if (recorderState.isRecording) {
+      if (
+        recordingOperation.getPhase() === 'recording' ||
+        recordingOperation.getPhase() === 'stopping'
+      ) {
         await stopRecording();
       }
       await Promise.allSettled(
@@ -555,7 +796,7 @@ export default function AnswerSheet({
     [styles],
   );
 
-  const recording = recorderState.isRecording;
+  const recording = recordingPhase === 'recording' || recordingPhase === 'stopping';
 
   // прогресс воспроизведения активной записи (0..1)
   const playProgress =
@@ -564,6 +805,7 @@ export default function AnswerSheet({
       : 0;
 
   return (
+    <>
     <BottomSheet
       key={mountKey}
       ref={sheetRef}
@@ -574,23 +816,45 @@ export default function AnswerSheet({
       // Свайп доступен только для пустой шторки. Иначе закрытие возможно
       // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
       enablePanDownToClose={!timeExpired && !hasUnsavedContent}
-      // Ключевое для раскладки: пока жест содержимого включён, библиотека
-      // разблокирует внутренний скролл только на верхней точке — на 62%
-      // список записей был обрезан и недостижим. Выключаем — список
-      // прокручивается на любой точке, а саму шторку тянут за ручку.
+      // Жест содержимого выключен: иначе вертикальное протягивание внутри
+      // поля ответа двигает шторку вместо прокрутки текста. Шторку тянут
+      // за ручку.
       enableContentPanningGesture={false}
       onChange={async (i) => {
         onIndexChange(i);
         const editing = i >= 0;
         openSheetRef.current = editing;
         onEditingChange?.(editing);
-        // закрыли (свайпом/кнопкой) во время записи — остановить микрофон
-        if (i < 0 && recorder.isRecording) await stopRecording();
+        if (i < 0) {
+          // Отменяем start до первого await: запись не сможет включиться уже
+          // после начала закрытия родительской шторки.
+          recordingSheetOpenRef.current = false;
+          setRecordingsSheetOpen(false);
+          recordingOperation.cancelStart();
+        }
+        // Закрыли (свайпом/кнопкой) во время записи — дождаться единого stop.
+        if (
+          i < 0 &&
+          (recordingOperation.getPhase() === 'recording' ||
+            recordingOperation.getPhase() === 'stopping')
+        ) {
+          await stopRecording();
+          if (recordingOperation.getPhase() === 'recording') {
+            // Если native stop упал, закрытие небезопасно: возвращаем обе
+            // шторки и оставляем видимую кнопку повторной остановки.
+            openSheetRef.current = true;
+            recordingSheetOpenRef.current = true;
+            sheetRef.current?.snapToIndex(0);
+            recSheetRef.current?.snapToIndex(0);
+            return;
+          }
+        }
         if (i < 0 && playingId !== null) {
           player.pause();
           setPlayingId(null);
         }
         if (i < 0) {
+          recSheetRef.current?.close();
           abortAllTranscriptions();
           onAudioBusyChange?.(false);
           setConfirmCancel(false);
@@ -608,24 +872,19 @@ export default function AnswerSheet({
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
     >
-      {/* Тело: закреплены только вопрос сверху и кнопки снизу. Всё между ними —
-          один скролл. Раньше поле ответа, список записей и вопрос делили
-          фиксированную высоту, поле забирало всё свободное место и не отдавало
-          обратно, а список срезало по живому — теперь ничто не обрезается. */}
+      {/* Тело: вопрос сверху, поле ответа во всю оставшуюся высоту, кнопки
+          снизу. Список записей уехал в отдельную шторку, поэтому делить высоту
+          между полем и карточками больше не нужно и тело не прокручивается. */}
       <Animated.View
         style={[styles.content, bodyStyle]}
-        // тап по пустому месту шапки и панели кнопок убирает клавиатуру
+        {...screenReaderHiddenProps(recordingsSheetOpen)}
+        // тап по пустому месту тела убирает клавиатуру
         onStartShouldSetResponder={() => {
           if (keyboardOpen) Keyboard.dismiss();
           return false;
         }}
       >
-        <View
-          style={styles.header}
-          onLayout={(e) => {
-            headerHeight.value = e.nativeEvent.layout.height;
-          }}
-        >
+        <View style={styles.header}>
           <View style={styles.orbRow}>
             <View style={styles.orb} />
             <Text style={styles.orbLabel}>СПУТНИК СПРОСИЛ</Text>
@@ -635,177 +894,39 @@ export default function AnswerSheet({
           </Text>
         </View>
 
-        <View style={styles.scroll}>
-        <BottomSheetScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          onContentSizeChange={(_w, h) => {
-            contentHeight.value = h;
-          }}
-        >
-          {/* Пока контент помещается, поле дотягивается до низа (flexGrow) и
-              шторка выглядит как раньше; дальше растёт под текст, а лишнее
-              берёт на себя скролл тела. */}
-          <AutoGrowInput
-            testID="answer-input"
-            value={text}
-            onChangeText={setText}
-            placeholder="Запиши, что откликается…"
-            placeholderTextColor="rgba(240,230,210,.35)"
-            minHeight={ANSWER_MIN_HEIGHT()}
-            style={styles.input}
-          />
+        {/* Поле занимает всю оставшуюся высоту и прокручивается само:
+            курсор при наборе всегда остаётся в поле зрения. */}
+        <BottomSheetTextInput
+          testID="answer-input"
+          value={text}
+          onChangeText={setText}
+          multiline
+          placeholder="Запиши, что откликается…"
+          placeholderTextColor="rgba(240,230,210,.35)"
+          style={styles.input}
+        />
 
-          {!text && recs.length === 0 && (
-            <Text style={styles.voiceHint}>или ответь голосом</Text>
-          )}
+        {!text && recs.length === 0 && <Text style={styles.voiceHint}>или ответь голосом</Text>}
 
-          {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
-
-          {recs.map((r, i) => {
-            const playing = playingId === r.id;
-            const loading = r.transcriptState === 'loading';
-            return (
-              <View key={r.id} style={styles.recCard}>
-                <View style={styles.recRow}>
-                  <Pressable
-                    accessibilityLabel={playing ? `Пауза, запись ${i + 1}` : `Прослушать запись ${i + 1}`}
-                    accessibilityRole="button"
-                    onPress={() => togglePlay(r)}
-                    style={styles.recPlay}
-                  >
-                    {playing ? <PauseIcon size={12} color="#f0c074" /> : <PlayIcon size={13} color="#f0c074" />}
-                  </Pressable>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={styles.recTrack}>
-                      <View
-                        style={[styles.recTrackFill, { width: `${Math.round((playing ? playProgress : 0) * 100)}%` }]}
-                      />
-                    </View>
-                    {/* Ход расшифровки занимает всю строку метаданных: рядом
-                        с «Запись N · время» он не помещается и обрезается, а
-                        отдельной строкой под дорожкой уезжал за кромку списка. */}
-                    <Text
-                      style={[styles.recMeta, loading && styles.recMetaState]}
-                      numberOfLines={1}
-                    >
-                      {loading
-                        ? 'Расшифровываю…'
-                        : `Запись ${i + 1} · ${fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}`}
-                    </Text>
-                  </View>
-                  {/* Кнопка расшифровки живёт в строке с плеем и корзиной, пока
-                      расшифровки нет. Когда она появилась, повтор и удаление
-                      уезжают в шапку самой расшифровки — там понятно, к чему
-                      они относятся, и строка записи не копит третью иконку. */}
-                  {r.transcript === null && (
-                    <Pressable
-                      accessibilityLabel={
-                        r.transcriptState === 'error' ? 'Повторить расшифровку' : 'Расшифровать'
-                      }
-                      accessibilityRole="button"
-                      disabled={loading}
-                      onPress={() => startTranscription(r)}
-                      style={({ pressed }) => [
-                        styles.transcriptionAction,
-                        r.transcriptState === 'error' && styles.transcriptionActionError,
-                        loading && styles.transcriptionActionLoading,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                    >
-                      <TextLines color={r.transcriptState === 'error' ? '#ec9b8e' : colors.greenSoft} />
-                    </Pressable>
-                  )}
-                  <Pressable
-                    accessibilityLabel={
-                      confirmDeleteId === r.id ? `Подтвердить удаление записи ${i + 1}` : `Удалить запись ${i + 1}`
-                    }
-                    accessibilityRole="button"
-                    onPress={() => askOrConfirmDelete(r.id)}
-                    style={[styles.recDel, confirmDeleteId === r.id && styles.recDelConfirming]}
-                  >
-                    <Trash color={confirmDeleteId === r.id ? '#ec8a7a' : 'rgba(255,255,255,.5)'} />
-                  </Pressable>
-                </View>
-
-                {r.transcriptState === 'error' && (
-                  <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
-                )}
-
-                {r.transcript !== null && (
-                  <View style={styles.transcriptBlock}>
-                    <View style={styles.transcriptHead}>
-                      <Text style={styles.transcriptLabel}>РАСШИФРОВКА</Text>
-                      <Pressable
-                        accessibilityLabel={`Расшифровать запись ${i + 1} заново`}
-                        accessibilityRole="button"
-                        disabled={loading}
-                        hitSlop={sc(8)}
-                        onPress={() => startTranscription(r)}
-                        style={({ pressed }) => [
-                          styles.transcriptHeadBtn,
-                          loading && styles.transcriptionActionLoading,
-                          pressed && { opacity: 0.7 },
-                        ]}
-                      >
-                        <Regen size={sc(12)} color={colors.greenSoft} />
-                      </Pressable>
-                      <Pressable
-                        accessibilityLabel={`Убрать расшифровку записи ${i + 1}`}
-                        accessibilityRole="button"
-                        hitSlop={sc(8)}
-                        onPress={() => removeTranscript(r.id)}
-                        style={({ pressed }) => [styles.transcriptHeadBtn, pressed && { opacity: 0.7 }]}
-                      >
-                        <Close size={sc(11)} color="rgba(255,255,255,.45)" />
-                      </Pressable>
-                    </View>
-                    <AutoGrowInput
-                      value={r.transcript}
-                      onChangeText={(transcript) =>
-                        updateRecs((current) =>
-                          current.map((item) =>
-                            item.id === r.id ? { ...item, transcript } : item,
-                          ),
-                        )
-                      }
-                      minHeight={TRANSCRIPT_MIN_HEIGHT()}
-                      style={styles.transcriptInput}
-                    />
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </BottomSheetScrollView>
-        {/* Список длиннее экрана — подсказываем краем, что он продолжается:
-            ровный срез у нижней кромки читался как обрыв вёрстки. */}
-        {overflowing && (
-          <LinearGradient
-            pointerEvents="none"
-            colors={['rgba(29,23,16,0)', '#1d1710']}
-            style={styles.scrollFade}
-          />
-        )}
-        </View>
-
-        <View
-          style={styles.actionsRow}
-          onLayout={(e) => {
-            actionsHeight.value = e.nativeEvent.layout.height;
-          }}
-        >
+        <View style={styles.actionsRow}>
           {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
-              карточки-спутника: подпись не нужна, иконка читается сама */}
+              карточки-спутника. Бадж показывает, сколько записей уже есть:
+              сами они живут в отдельной шторке и из ответа не видны. */}
           <Pressable
-            accessibilityLabel="Записать аудио"
+            accessibilityLabel={
+              recs.length ? `Голосовые записи, ${recs.length}` : 'Записать аудио'
+            }
             accessibilityRole="button"
             testID="answer-record-button"
-            onPress={startRecording}
+            onPress={openRecordings}
             style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
           >
             <Mic color={colors.greenSoft} />
+            {recs.length > 0 && (
+              <View style={styles.micBadge} testID="answer-record-badge">
+                <Text style={styles.micBadgeText}>{recs.length}</Text>
+              </View>
+            )}
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -822,97 +943,38 @@ export default function AnswerSheet({
           </Pressable>
           <GoldButton
             compact
-            label={
-              saving
-                ? 'Сохраняю…'
-                : timeExpired
-                  ? 'Сохранить и завершить'
-                  : 'Сохранить'
-            }
+            label={saving ? 'Сохраняю…' : timeExpired ? 'Сохранить и завершить' : 'Сохранить'}
             onPress={save}
             style={{ flex: 1 }}
             testID="answer-save-button"
           />
         </View>
       </Animated.View>
-
-      {/* оверлей записи — как listening overlay в прототипе */}
-      {recording && (
-        <View style={[styles.recOverlay, { paddingBottom: insets.bottom + sc(70) }]}>
-          <View style={styles.recOverlayContent}>
-            <Text style={styles.recOverlayKicker}>идёт запись…</Text>
-            <View style={styles.waveRow}>
-              {WAVE_BARS.map((b, i) => (
-                <WaveBar key={i} color={b.color} delay={b.delay} />
-              ))}
-            </View>
-            <Text style={styles.recOverlayHint}>говори — я запишу твои слова</Text>
-          </View>
-          <Pressable
-            onPress={stopRecording}
-            style={({ pressed }) => [styles.recDoneBtn, pressed && { transform: [{ scale: 0.97 }] }]}
-          >
-            <Text style={styles.recDoneLabel}>готово</Text>
-          </Pressable>
-        </View>
-      )}
     </BottomSheet>
-  );
-}
 
-/**
- * Поле, растущее под свой текст. Внутренний скролл выключен намеренно: тело
- * шторки прокручивается целиком, а коробка фиксированной высоты прятала бы
- * длинный ответ и держала пустоту при коротком. Задаём minHeight, а не height,
- * чтобы поле ответа могло дотянуться до низа списка через flexGrow, пока
- * контенту хватает места.
- */
-function AutoGrowInput({
-  minHeight,
-  style,
-  ...props
-}: React.ComponentProps<typeof BottomSheetTextInput> & { minHeight: number }) {
-  const [measured, setMeasured] = useState(0);
-  const onContentSizeChange = (
-    e: NativeSyntheticEvent<TextInputContentSizeChangeEventData>,
-  ) => setMeasured(Math.ceil(e.nativeEvent.contentSize.height));
-  return (
-    <BottomSheetTextInput
-      {...props}
-      multiline
-      scrollEnabled={false}
-      onContentSizeChange={onContentSizeChange}
-      style={[style, { minHeight: Math.max(minHeight, measured) }]}
+    <RecordingsSheet
+      sheetRef={recSheetRef}
+      visible={recordingsSheetOpen}
+      recordings={recs}
+      recording={recording}
+      recordingPhase={recordingPhase}
+      playingId={playingId}
+      playProgress={playProgress}
+      audioError={audioError}
+      confirmDeleteId={confirmDeleteId}
+      expandedTranscripts={expandedTranscripts}
+      onStartRecording={startRecording}
+      onStopRecording={stopRecordingFromUi}
+      onTogglePlay={togglePlay}
+      onDelete={askOrConfirmDelete}
+      onTranscribe={startTranscription}
+      onRemoveTranscript={removeTranscript}
+      onToggleTranscript={toggleTranscript}
+      onAppendToAnswer={appendTranscriptToAnswer}
+      onDismiss={handleRecordingsDismiss}
     />
+    </>
   );
-}
-
-const WAVE_BARS = [
-  { color: '#d68a2e', delay: 0 },
-  { color: '#e6a23c', delay: 150 },
-  { color: '#f0c074', delay: 300 },
-  { color: '#e6a23c', delay: 450 },
-  { color: '#f0c074', delay: 600 },
-  { color: '#d68a2e', delay: 750 },
-];
-
-// столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
-function WaveBar({ color, delay }: { color: string; delay: number }) {
-  const styles = useStyles(stylesFactory);
-  const k = useSharedValue(0.3);
-  useEffect(() => {
-    k.value = withDelay(
-      delay,
-      withRepeat(
-        withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }),
-        -1,
-        true,
-      ),
-    );
-    return () => cancelAnimation(k);
-  }, [k, delay]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scaleY: k.value }] }));
-  return <Animated.View style={[styles.waveBar, { backgroundColor: color }, style]} />;
 }
 
 const stylesFactory = () => StyleSheet.create({
@@ -941,38 +1003,10 @@ const stylesFactory = () => StyleSheet.create({
     paddingHorizontal: sc(16),
     paddingBottom: sc(16),
   },
-  // Шапка закреплена: вопрос — контекст ответа и не должен уезжать скроллом.
+  // Шапка не сжимается скроллом: вопрос — контекст ответа и должен быть виден.
   // flexShrink на крайний случай очень длинного вопроса на низком экране.
   header: {
     flexShrink: 1,
-  },
-  // Единственная прокручиваемая зона тела. Внешний View нужен для замера
-  // видимой высоты и для края-подсказки поверх списка.
-  scroll: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: sc(20),
-  },
-  // flexGrow растягивает контейнер до высоты вьюпорта, пока контент меньше:
-  // поле ответа дотягивается до низа и шторка не выглядит полупустой.
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: sc(2),
-  },
-  voiceHint: {
-    marginTop: sc(8),
-    fontFamily: fonts.serifItalic,
-    fontSize: sc(12),
-    textAlign: 'center',
-    color: 'rgba(240,225,195,.4)',
   },
   orbRow: {
     flexDirection: 'row',
@@ -1002,10 +1036,9 @@ const stylesFactory = () => StyleSheet.create({
     marginBottom: sc(12),
   },
   input: {
-    // Забирает свободное место, пока оно есть; дальше высоту задаёт текст
-    // (minHeight из AutoGrowInput), а лишнее уходит в скролл тела.
-    flexGrow: 1,
-    flexShrink: 0,
+    // Всё тело шторки минус вопрос и кнопки. Длинный ответ прокручивается
+    // внутри поля, поэтому коробка не растёт и ничего не выталкивает.
+    flex: 1,
     padding: sc(12),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.045)',
@@ -1017,6 +1050,13 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
   },
+  voiceHint: {
+    marginTop: sc(8),
+    fontFamily: fonts.serifItalic,
+    fontSize: sc(12),
+    textAlign: 'center',
+    color: 'rgba(240,225,195,.4)',
+  },
   micBtn: {
     width: sc(32),
     height: sc(32),
@@ -1027,135 +1067,25 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(127,174,154,.28)',
   },
-  audioError: {
-    marginTop: sc(7),
-    paddingHorizontal: sc(8),
-    fontFamily: fonts.sans,
-    fontSize: sc(11),
-    lineHeight: sc(15),
-    textAlign: 'center',
-    color: '#ec9b8e',
-  },
-  recCard: {
-    marginTop: sc(8),
-    padding: sc(8),
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,.04)',
-    borderWidth: 1,
-    borderColor: colors.white08,
-  },
-  recRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(6),
-  },
-  recPlay: {
-    width: sc(30),
-    height: sc(30),
-    borderRadius: sc(15),
+  // Счётчик записей сидит на углу микрофона: сами карточки видны только
+  // в шторке записей, и без баджа непонятно, что там уже что-то есть.
+  micBadge: {
+    position: 'absolute',
+    top: -sc(6),
+    right: -sc(6),
+    minWidth: sc(16),
+    height: sc(16),
+    paddingHorizontal: sc(4),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(230,162,60,.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(230,162,60,.34)',
-  },
-  recTrack: {
-    height: sc(5),
-    borderRadius: sc(3),
-    backgroundColor: 'rgba(255,255,255,.1)',
-    overflow: 'hidden',
-  },
-  recTrackFill: {
-    height: '100%',
-    borderRadius: sc(3),
+    borderRadius: sc(8),
     backgroundColor: colors.amber,
   },
-  recMeta: {
-    marginTop: sc(5),
-    fontFamily: fonts.mono,
+  micBadgeText: {
+    fontFamily: fonts.sansMedium,
     fontSize: sc(10),
-    color: colors.labelGold,
-  },
-  // тот же квадрат, что и у кнопки расшифровки — рядом они читаются как пара
-  recDel: {
-    width: sc(28),
-    height: sc(28),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,.12)',
-  },
-  recDelConfirming: {
-    opacity: 1,
-    backgroundColor: 'rgba(220,90,70,.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(220,90,70,.45)',
-  },
-  transcriptionAction: {
-    width: sc(28),
-    height: sc(28),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(127,174,154,.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(127,174,154,.3)',
-  },
-  transcriptionActionLoading: {
-    opacity: 0.55,
-  },
-  transcriptionActionError: {
-    backgroundColor: 'rgba(220,90,70,.14)',
-    borderColor: 'rgba(220,90,70,.4)',
-  },
-  transcriptionError: {
-    marginTop: sc(6),
-    fontFamily: fonts.sans,
-    fontSize: sc(11.5),
-    color: '#ec9b8e',
-  },
-  recMetaState: {
-    color: colors.greenSoft,
-  },
-  transcriptBlock: {
-    marginTop: sc(9),
-  },
-  transcriptHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(6),
-    paddingHorizontal: sc(2),
-    marginBottom: sc(5),
-  },
-  // Подпись занимает всю свободную ширину, кнопки прижаты вправо
-  transcriptLabel: {
-    flex: 1,
-    fontFamily: fonts.mono,
-    fontSize: sc(9),
-    letterSpacing: sc(1.2),
-    color: colors.labelGoldDim,
-  },
-  transcriptHeadBtn: {
-    width: sc(20),
-    height: sc(20),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,.05)',
-  },
-  transcriptInput: {
-    padding: sc(9),
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,.035)',
-    borderWidth: 1,
-    borderColor: 'rgba(214,182,120,.18)',
-    color: colors.parchment,
-    fontFamily: fonts.serifRegular,
-    fontSize: sc(13.5),
-    lineHeight: sc(19),
-    textAlignVertical: 'top',
+    lineHeight: sc(12),
+    color: '#1d1710',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -1182,59 +1112,5 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sansMedium,
     fontSize: sc(12),
     color: colors.creamDim,
-  },
-  recOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(18,12,7,.97)',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: sc(28),
-  },
-  // Оверлей всегда во всю высоту шторки: блок с волной центрируем, иначе он
-  // висит у верхнего края, а до кнопки «готово» тянется пустая полоса.
-  recOverlayContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: sc(24),
-  },
-  recOverlayKicker: {
-    fontFamily: fonts.sans,
-    fontSize: sc(11),
-    letterSpacing: sc(2.2),
-    textTransform: 'uppercase',
-    color: colors.warmHint,
-  },
-  waveRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(4),
-    height: sc(48),
-  },
-  waveBar: {
-    width: sc(4),
-    height: sc(48),
-    borderRadius: sc(3),
-  },
-  recOverlayHint: {
-    fontFamily: fonts.serifItalic,
-    fontSize: sc(14),
-    color: colors.creamDim,
-    textAlign: 'center',
-    paddingHorizontal: sc(24),
-  },
-  recDoneBtn: {
-    paddingVertical: sc(12),
-    paddingHorizontal: sc(30),
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(230,162,60,.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(230,162,60,.42)',
-  },
-  recDoneLabel: {
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(14),
-    color: colors.creamBright,
   },
 });

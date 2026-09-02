@@ -1,0 +1,55 @@
+appId: twinkler
+---
+# SCR-015: a cached resume cannot publish playing state after the Scripture
+# context is disabled or replaced.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "Отмена продолжения аудио Писания"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn:
+    point: "84%,54%"
+- extendedWaitUntil:
+    visible: "Слушать отрывок"
+    timeout: 15000
+- tapOn:
+    id: "scripture-audio-button"
+- extendedWaitUntil:
+    visible: "Пауза"
+    timeout: 15000
+- tapOn:
+    id: "scripture-audio-button"
+- assertVisible: "Продолжить"
+- tapOn:
+    id: "scripture-audio-button"
+- tapOn:
+    point: "72%,54%"
+- assertVisible: "СПУТНИК СПРАШИВАЕТ"
+- tapOn:
+    point: "84%,54%"
+- assertVisible: "Слушать отрывок"
+- tapOn:
+    id: "scripture-audio-button"
+- extendedWaitUntil:
+    visible: "Пауза"
+    timeout: 15000
+- tapOn:
+    id: "scripture-audio-button"
+- assertVisible: "Продолжить"
+- tapOn:
+    id: "scripture-audio-button"
+- tapOn:
+    point: "84%,91%"
+- extendedWaitUntil:
+    visible: "Слушать отрывок"
+    timeout: 15000
