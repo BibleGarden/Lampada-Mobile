@@ -773,7 +773,12 @@ export default function Settings() {
                   accessibilityLabel={`Настроить расписание ${ruleIndex + 1}: ${summary}`}
                   testID={`reminders-settings-button-${ruleIndex}`}
                   onPress={() => setReminderEditorRuleIndex(ruleIndex)}
-                  style={({ pressed }) => [styles.reminderSettingsRow, pressed && styles.optionPressed]}
+                  style={({ pressed }) => [
+                    styles.reminderSettingsRow,
+                    styles.reminderRuleSettingsRow,
+                    ruleIndex === 0 && styles.firstReminderSettingsRow,
+                    pressed && styles.optionPressed,
+                  ]}
                 >
                   <View
                     style={styles.reminderSettingsCopy}
@@ -799,13 +804,18 @@ export default function Settings() {
                 accessibilityRole="button"
                 accessibilityLabel="Добавить расписание"
                 testID="reminders-add-rule"
+                hitSlop={8}
                 onPress={() => {
                   const newRuleIndex = addReminderRule();
                   if (newRuleIndex !== null && newRuleIndex >= 0) {
                     setReminderEditorRuleIndex(newRuleIndex);
                   }
                 }}
-                style={({ pressed }) => [styles.reminderSettingsRow, pressed && styles.optionPressed]}
+                style={({ pressed }) => [
+                  styles.reminderSettingsRow,
+                  styles.addScheduleRow,
+                  pressed && styles.optionPressed,
+                ]}
               >
                 <Text style={[styles.rowTitle, styles.addScheduleTitle]}>Добавить расписание</Text>
                 <Plus size={sc(15)} color={colors.labelGold} />
@@ -1070,7 +1080,7 @@ const stylesFactory = () => StyleSheet.create({
   retryButton: { paddingVertical: sc(4) },
   card: {
     backgroundColor: colors.cardBg, borderWidth: 1, borderColor: 'rgba(214,182,120,.22)',
-    borderRadius: radius.md, padding: sc(14),
+    borderRadius: radius.md, padding: sc(12),
   },
   rowTitle: { fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment },
   shareAnswersHeader: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
@@ -1082,18 +1092,21 @@ const stylesFactory = () => StyleSheet.create({
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
   reminderWarning: { color: 'rgba(240,170,120,.92)' },
   reminderSettingsRow: {
-    marginTop: sc(12), paddingTop: sc(12),
+    marginTop: sc(8), paddingTop: sc(8),
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(214,182,120,.16)',
     flexDirection: 'row', alignItems: 'center', gap: sc(10),
   },
-  reminderSettingsCopy: { flex: 1, gap: sc(2) },
+  reminderRuleSettingsRow: { minHeight: sc(44) },
+  firstReminderSettingsRow: { marginTop: sc(12) },
+  reminderSettingsCopy: { flex: 1, gap: 0 },
   reminderSettingsTitle: {
     fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment,
   },
   reminderSettingsSubtitle: {
     fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint,
   },
+  addScheduleRow: { paddingTop: sc(12) },
   addScheduleTitle: { flex: 1, color: colors.warmHint },
   reminderModalBackdrop: {
     position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
