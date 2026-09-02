@@ -13,6 +13,7 @@ type Props = {
   numberOfLines?: number;
   testIDPrefix: string;
   activeVerseNumber?: number | null;
+  continuation?: boolean;
   /**
    * `compact` — карточка: только выделенные сервером стихи и один цвет шрифта.
    * `full` — читалка: весь отрывок с подсветкой ключевых стихов.
@@ -26,6 +27,7 @@ export default function ScripturePassageText({
   numberOfLines,
   testIDPrefix,
   activeVerseNumber,
+  continuation = false,
   variant = 'full',
 }: Props) {
   const styles = useStyles(stylesFactory);
@@ -36,7 +38,7 @@ export default function ScripturePassageText({
       : undefined;
     return (
       <Text style={style} numberOfLines={numberOfLines} testID={compactTestID}>
-        {compact.text}
+        {compact.text}{continuation && compact.partial ? ' …' : ''}
       </Text>
     );
   }

@@ -34,7 +34,7 @@ appId: twinkler
     id: "scripture-audio-button"
 - tapOn:
     id: "dock-question-tab"
-- assertVisible: "СПУТНИК СПРАШИВАЕТ"
+- assertVisible: "Ответить"
 - tapOn:
     id: "dock-scripture-tab"
 - assertVisible: "Слушать отрывок"

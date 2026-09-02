@@ -10,20 +10,19 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { BookOpen, CircleQuestionMark } from 'lucide-react-native';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { buildScriptureCompactText } from '../lib/scripture';
 import { colors, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 import { WindowDots } from './ui';
 import {
-  Book,
   Check,
   ChevronLeft,
   ChevronRight,
   Heart,
   Pen,
   Plus,
-  QuestionMark,
   Regen,
   PauseIcon,
   PlayIcon,
@@ -64,7 +63,6 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
     useShallow((st) => ({
       dockMode: st.dockMode,
       questions: st.questions,
-      questionSources: st.questionSources,
       qIndex: st.qIndex,
       answeredCount: st.answeredCount,
       answers: st.answers,
@@ -118,29 +116,38 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
 
   return (
     <View style={styles.card}>
-      {/* заголовок + переключатель */}
+      {/* Подписи внутри переключателя делают отдельный заголовок избыточным. */}
       <View style={styles.header}>
-        <Text style={styles.label} numberOfLines={isQ ? 1 : undefined}>
-          {isQ
-            ? s.questionSources[s.qIndex] === 'fallback'
-              ? 'Резервный вопрос'
-              : 'Спутник спрашивает'
-            : curScripture?.reference ?? 'Писание'}
-        </Text>
         <View style={styles.switcher}>
           <Pressable
+            accessibilityRole="tab"
+            accessibilityLabel="Вопрос"
+            accessibilityState={{ selected: isQ }}
             onPress={tap(() => s.setDockMode('question'))}
             testID="dock-question-tab"
             style={[styles.switchBtn, isQ && styles.switchBtnActive]}
           >
-            <QuestionMark color={isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'} />
+            <CircleQuestionMark
+              size={17}
+              strokeWidth={1.7}
+              color={isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'}
+            />
+            <Text style={[styles.switchLabel, isQ && styles.switchLabelActive]}>Вопрос</Text>
           </Pressable>
           <Pressable
+            accessibilityRole="tab"
+            accessibilityLabel="Цитата"
+            accessibilityState={{ selected: !isQ }}
             onPress={tap(() => s.setDockMode('scripture'))}
             testID="dock-scripture-tab"
             style={[styles.switchBtn, !isQ && styles.switchBtnActive]}
           >
-            <Book color={!isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'} />
+            <BookOpen
+              size={17}
+              strokeWidth={1.7}
+              color={!isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'}
+            />
+            <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>Цитата</Text>
           </Pressable>
         </View>
       </View>
@@ -179,7 +186,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 pressed && { transform: [{ scale: 0.98 }] },
               ]}
             >
-              {answered ? <Check /> : <Pen />}
+              {answered ? <Check /> : <Pen size={13} />}
               <Text style={[styles.mainBtnLabel, answered && { color: colors.greenSoft }]}>
                 {answered ? 'Изменить' : 'Ответить'}
               </Text>
@@ -215,9 +222,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               <ActivityIndicator accessibilityLabel="Подбираю Писание" color={colors.goldSoft} />
             ) : curScripture ? (
               <>
-                {/* Заголовок отрывка живёт только в полной читалке: в карточке
-                    он читался как ключевой стих. Сам текст открывает читалку —
-                    тянуться ради этого к отдельной ссылке неинтуитивно */}
+                {/* Неполный текст отрывка открывает полную читалку. */}
                 <Pressable
                   onPress={canReadInFull ? tap(onOpenReader) : undefined}
                   disabled={!canReadInFull}
@@ -234,6 +239,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                     numberOfLines={scriptureLineLimit}
                     testIDPrefix="scripture-preview-highlight"
                     variant="compact"
+                    continuation={canReadInFull}
                   />
                   <Text
                     accessible={false}
@@ -302,12 +308,9 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   </Text>
                 </Pressable>
               )}
-              {canReadInFull && (
-                <Pressable onPress={tap(onOpenReader)} style={styles.readMore}>
-                  <Text style={styles.readMoreLabel}>Читать целиком</Text>
-                  <ChevronRight size={13} />
-                </Pressable>
-              )}
+              <Text style={styles.scriptureReference} numberOfLines={1}>
+                {curScripture.reference}
+              </Text>
             </View>
           )}
           <View style={styles.actionsRow}>
@@ -389,18 +392,8 @@ const stylesFactory = () => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: sc(8),
+    justifyContent: 'center',
     marginBottom: sc(8),
-  },
-  label: {
-    flex: 1,
-    fontFamily: fonts.mono,
-    fontSize: sc(10),
-    lineHeight: sc(14),
-    letterSpacing: sc(1.4),
-    textTransform: 'uppercase',
-    color: colors.labelGold,
   },
   scriptureTools: {
     minHeight: sc(26),
@@ -427,8 +420,10 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: colors.white08,
   },
   switchBtn: {
-    width: sc(30),
-    height: sc(24),
+    height: sc(32),
+    paddingHorizontal: sc(10),
+    flexDirection: 'row',
+    gap: sc(5),
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -436,6 +431,12 @@ const stylesFactory = () => StyleSheet.create({
   switchBtnActive: {
     backgroundColor: 'rgba(214,182,120,.22)',
   },
+  switchLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(11),
+    color: 'rgba(214,182,120,.55)',
+  },
+  switchLabelActive: { color: '#f0e6c8' },
   textWrap: {
     // flexBasis: 0 — высота области задаётся карточкой, а не длиной текста:
     // иначе лимит строк и высота тянули бы друг друга по кругу. Потолок роста
@@ -497,11 +498,14 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(12),
     color: colors.goldSoft,
   },
-  readMore: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: sc(5),
+  scriptureReference: {
+    minWidth: 0,
+    flexShrink: 1,
+    marginLeft: 'auto',
+    fontFamily: fonts.sans,
+    fontSize: sc(11),
+    color: colors.creamDim,
+    textAlign: 'right',
   },
   readMoreLabel: {
     fontFamily: fonts.sansMedium,

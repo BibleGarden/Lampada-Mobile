@@ -35,4 +35,4 @@ appId: twinkler
 - assertVisible: "Изменить"
 - tapOn:
     point: "85%,77%"
-- assertVisible: "Спутник спрашивает"
+- assertVisible: "Ответить"
