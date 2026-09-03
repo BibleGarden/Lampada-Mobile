@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Сборка Release + установка Twinkler на подключённый iPhone.
+# Сборка Release + установка Lampada на подключённый iPhone.
 # Использование: npm run iphone
 #   Переопределяемо через окружение:
 #     DEVICE=<udid>   — конкретное устройство (по умолчанию — первый подключённый iPhone)

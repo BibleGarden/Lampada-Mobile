@@ -132,7 +132,7 @@ function SessionScreen() {
     musicPlayerForSlot(slot).setActiveForLockScreen(true, {
       title: track.title,
       artist: track.artist,
-      albumTitle: 'Twinkler · тихая музыка',
+      albumTitle: 'Lampada · тихая музыка',
     });
   }, [musicPlayerForSlot, musicTracks]);
 
