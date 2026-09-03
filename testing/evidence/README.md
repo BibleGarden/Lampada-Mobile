@@ -1,18 +1,18 @@
-# Testing evidence
+# Доказательства тестирования
 
-`evidence/` holds only selected material tied to a dated report in `reports/`.
+`evidence/` содержит только отобранные материалы, связанные с датированным
+отчётом из `reports/`.
 
-What is kept:
+Сохраняются:
 
-- final screenshots of the states under test;
-- the decisive logs of a reproducible run;
-- snapshots of the data before and after important transitions;
-- a summary of commands and exit codes.
+- финальные скриншоты проверяемых состояний;
+- решающие логи воспроизводимого прогона;
+- снимки данных до и после важных переходов;
+- сводка команд и exit codes.
 
-Full Xcode and system logs, repeated attempts, duplicate crash reports and build
-artifacts stay in `/tmp`, in CI artifacts or in other external storage. They are
-not added to the repository without a separate reason.
+Полные Xcode/system-логи, повторные попытки, дубли crash reports и артефакты
+сборки остаются в `/tmp`, CI artifacts или другом внешнем хранилище. Они не
+добавляются в репозиторий без отдельной причины.
 
-The name of every stored file has to appear in the corresponding report.
-Material with no reference from a report counts as orphaned and is deleted
-during cleanup.
+Имя каждого сохранённого файла должно быть указано в соответствующем отчёте.
+Материал без ссылки из отчёта считается бесхозным и удаляется при уборке.

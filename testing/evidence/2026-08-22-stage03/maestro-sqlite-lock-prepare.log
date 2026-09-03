@@ -1,0 +1,10 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage03-start-sqlite-lock-prepare
+Launch app "com.marianovikov.lampada" with clear state... COMPLETED
+Tap on "Начать молитву"... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text START-004 SQLite lock... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "5"... COMPLETED
+Tap on "Далее"... COMPLETED
+Assert that "НАЖМИ И ДЕРЖИ" is visible... COMPLETED
