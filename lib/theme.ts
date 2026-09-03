@@ -1,4 +1,5 @@
-// Дизайн-токены, перенесённые из прототипа (Прототип.dc.html)
+// Дизайн-токены, перенесённые из первоначального прототипа Claude Design.
+// Сам файл прототипа удалён из репозитория: интерфейс давно ушёл от него.
 
 import { useMemo } from 'react';
 import { Dimensions, useWindowDimensions } from 'react-native';
