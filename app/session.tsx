@@ -27,8 +27,8 @@ import { useKeepAwake } from 'expo-keep-awake';
 import {
   setAudioModeAsync,
   setIsAudioActiveAsync,
+  type AudioStatus,
   useAudioPlayer,
-  useAudioPlayerStatus,
 } from 'expo-audio';
 import BottomSheet from '@gorhom/bottom-sheet';
 import ScreenBg from '../components/ScreenBg';
@@ -54,6 +54,12 @@ const MUSIC_PLAYBACK_MODE = {
   shouldPlayInBackground: true,
   interruptionMode: 'doNotMix' as const,
 };
+const MUSIC_VOLUME = 0.28;
+const MUSIC_CROSSFADE_MS = 2000;
+const MUSIC_CROSSFADE_TICK_MS = 50;
+const MUSIC_STATUS_UPDATE_MS = 200;
+const MUSIC_CROSSFADE_LEAD_SECONDS = 2.2;
+type MusicPlayerSlot = 0 | 1;
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
 // но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
@@ -83,6 +89,7 @@ function SessionScreen() {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [answerOpen, setAnswerOpen] = useState(false);
   const [transientAudioBusy, setTransientAudioBusy] = useState(false);
+  const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
   const [appState, setAppState] = useState(AppState.currentState);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
@@ -97,20 +104,62 @@ function SessionScreen() {
   const transientAudioBusyRef = useRef(false);
   const [musicTracks] = useState(getPrayerTracks);
   const musicTrackIndex = useRef(0);
-  const musicPlayer = useAudioPlayer(musicTracks[0]?.source ?? null, {
+  const activeMusicPlayerSlot = useRef<MusicPlayerSlot>(0);
+  const musicCrossfadeTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const musicCrossfadeRunning = useRef(false);
+  const musicPlayingBySlot = useRef<[boolean, boolean]>([false, false]);
+  const loadedMusicTrackIndexes = useRef<[number, number]>([
+    0,
+    musicTracks.length > 1 ? 1 : 0,
+  ]);
+  const musicPlayerA = useAudioPlayer(musicTracks[0]?.source ?? null, {
     keepAudioSessionActive: true,
+    updateInterval: MUSIC_STATUS_UPDATE_MS,
   });
-  const musicStatus = useAudioPlayerStatus(musicPlayer);
+  const musicPlayerB = useAudioPlayer(musicTracks[1]?.source ?? musicTracks[0]?.source ?? null, {
+    keepAudioSessionActive: true,
+    updateInterval: MUSIC_STATUS_UPDATE_MS,
+  });
 
-  const setMusicLockScreen = useCallback(() => {
-    const track = musicTracks[musicTrackIndex.current];
+  const musicPlayerForSlot = useCallback(
+    (slot: MusicPlayerSlot) => (slot === 0 ? musicPlayerA : musicPlayerB),
+    [musicPlayerA, musicPlayerB],
+  );
+
+  const setMusicLockScreen = useCallback((slot: MusicPlayerSlot, trackIndex: number) => {
+    const track = musicTracks[trackIndex];
     if (!track) return;
-    musicPlayer.setActiveForLockScreen(true, {
+    musicPlayerForSlot(slot).setActiveForLockScreen(true, {
       title: track.title,
       artist: track.artist,
       albumTitle: 'Twinkler · тихая музыка',
     });
-  }, [musicPlayer, musicTracks]);
+  }, [musicPlayerForSlot, musicTracks]);
+
+  const cancelMusicCrossfade = useCallback(() => {
+    if (musicCrossfadeTimer.current) {
+      clearInterval(musicCrossfadeTimer.current);
+      musicCrossfadeTimer.current = null;
+    }
+    musicCrossfadeRunning.current = false;
+    const activeSlot = activeMusicPlayerSlot.current;
+    const activePlayer = musicPlayerForSlot(activeSlot);
+    const standbyPlayer = musicPlayerForSlot(activeSlot === 0 ? 1 : 0);
+    activePlayer.volume = MUSIC_VOLUME;
+    standbyPlayer.pause();
+    standbyPlayer.volume = 0;
+    void standbyPlayer.seekTo(0).catch((error) => {
+      console.warn('Не удалось вернуть следующий музыкальный трек к началу', error);
+    });
+  }, [musicPlayerForSlot]);
+
+  const pauseMusicPlayers = useCallback(() => {
+    cancelMusicCrossfade();
+    musicPlayerA.pause();
+    musicPlayerB.pause();
+    musicPlayerA.clearLockScreenControls();
+    musicPlayerB.clearLockScreenControls();
+  }, [cancelMusicCrossfade, musicPlayerA, musicPlayerB]);
 
   const applyMusicAudioMode = useCallback(async (mode: AudioModeRequest) => {
     // AVAudioSession activation is process-wide too. Keep it in the same queue
@@ -125,19 +174,22 @@ function SessionScreen() {
     // setIsAudioActiveAsync действует глобально, поэтому не трогаем сессию,
     // если её не захватывал именно музыкальный плеер.
     if (!musicSessionActive.current) return Promise.resolve();
-    musicPlayer.clearLockScreenControls();
+    musicPlayerA.clearLockScreenControls();
+    musicPlayerB.clearLockScreenControls();
     return audioModeCoordinator
       .requestDeactivation(() => setIsAudioActiveAsync(false))
       .then((deactivated) => {
         if (deactivated) musicSessionActive.current = false;
       })
       .catch((error) => console.warn('Не удалось освободить аудиосессию', error));
-  }, [musicPlayer]);
+  }, [musicPlayerA, musicPlayerB]);
 
   useEffect(() => {
     // Фоновое сопровождение должно оставаться заметно тише речи и системных звуков.
-    musicPlayer.volume = 0.28;
-  }, [musicPlayer]);
+    musicPlayerA.volume = MUSIC_VOLUME;
+    musicPlayerB.volume = 0;
+    musicPlayerB.pause();
+  }, [musicPlayerA, musicPlayerB]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
@@ -151,8 +203,7 @@ function SessionScreen() {
     let active = true;
     const shouldPlay = s.musicOn && !transientAudioBusy;
     if (!shouldPlay) {
-      musicPlayer.pause();
-      musicPlayer.clearLockScreenControls();
+      pauseMusicPlayers();
       // Keep the global session active while this screen is mounted. A late
       // async deactivation can otherwise race with a newly started recorder.
       return () => {
@@ -166,8 +217,11 @@ function SessionScreen() {
       );
       if (!modeGrant?.isCurrent()) return;
       if (active && !transientAudioBusyRef.current && modeGrant.isCurrent()) {
-        setMusicLockScreen();
-        musicPlayer.play();
+        const activeSlot = activeMusicPlayerSlot.current;
+        const activePlayer = musicPlayerForSlot(activeSlot);
+        activePlayer.volume = MUSIC_VOLUME;
+        setMusicLockScreen(activeSlot, musicTrackIndex.current);
+        activePlayer.play();
       }
     })().catch((error) => {
       console.warn('Не удалось включить музыкальное сопровождение', error);
@@ -181,38 +235,120 @@ function SessionScreen() {
     };
   }, [
     applyMusicAudioMode,
-    musicPlayer,
+    musicPlayerForSlot,
+    pauseMusicPlayers,
     releaseMusicSession,
     s.musicOn,
     setMusicLockScreen,
     transientAudioBusy,
   ]);
 
-  useEffect(() => {
-    if (!musicStatus.didJustFinish || musicTracks.length === 0) return;
-    musicTrackIndex.current = (musicTrackIndex.current + 1) % musicTracks.length;
-    const track = musicTracks[musicTrackIndex.current];
-    musicPlayer.replace(track.source);
-    if (useSession.getState().musicOn && !transientAudioBusyRef.current) {
-      void audioModeCoordinator
-        .requestPlayback(applyMusicAudioMode, MUSIC_PLAYBACK_MODE)
-        .then((grant) => {
-          if (
-            !grant?.isCurrent() ||
-            transientAudioBusyRef.current ||
-            !useSession.getState().musicOn
-          ) {
-            return;
-          }
-          setMusicLockScreen();
-          musicPlayer.play();
-        })
-        .catch((error) => console.warn('Не удалось продолжить музыкальное сопровождение', error));
+  const startMusicCrossfade = useCallback((durationMs = MUSIC_CROSSFADE_MS) => {
+    if (
+      musicCrossfadeRunning.current ||
+      musicTracks.length === 0 ||
+      transientAudioBusyRef.current ||
+      !useSession.getState().musicOn
+    ) {
+      return;
     }
-  }, [applyMusicAudioMode, musicPlayer, musicStatus.didJustFinish, musicTracks, setMusicLockScreen]);
+
+    const fromSlot = activeMusicPlayerSlot.current;
+    const toSlot: MusicPlayerSlot = fromSlot === 0 ? 1 : 0;
+    const fromPlayer = musicPlayerForSlot(fromSlot);
+    const toPlayer = musicPlayerForSlot(toSlot);
+    const nextTrackIndex = (musicTrackIndex.current + 1) % musicTracks.length;
+    const nextTrack = musicTracks[nextTrackIndex];
+
+    if (loadedMusicTrackIndexes.current[toSlot] !== nextTrackIndex) {
+      toPlayer.replace(nextTrack.source);
+      loadedMusicTrackIndexes.current[toSlot] = nextTrackIndex;
+    }
+
+    musicCrossfadeRunning.current = true;
+    toPlayer.volume = 0;
+    fromPlayer.clearLockScreenControls();
+    setMusicLockScreen(toSlot, nextTrackIndex);
+    toPlayer.play();
+
+    const startedAt = Date.now();
+    musicCrossfadeTimer.current = setInterval(() => {
+      if (transientAudioBusyRef.current || !useSession.getState().musicOn) {
+        cancelMusicCrossfade();
+        return;
+      }
+
+      const progress = Math.min(1, (Date.now() - startedAt) / durationMs);
+      // Equal-power curve avoids a perceived volume dip in the middle.
+      fromPlayer.volume = MUSIC_VOLUME * Math.cos(progress * Math.PI / 2);
+      toPlayer.volume = MUSIC_VOLUME * Math.sin(progress * Math.PI / 2);
+      if (progress < 1) return;
+
+      if (musicCrossfadeTimer.current) clearInterval(musicCrossfadeTimer.current);
+      musicCrossfadeTimer.current = null;
+      musicCrossfadeRunning.current = false;
+      fromPlayer.pause();
+      fromPlayer.volume = 0;
+      toPlayer.volume = MUSIC_VOLUME;
+      activeMusicPlayerSlot.current = toSlot;
+      musicTrackIndex.current = nextTrackIndex;
+
+      const preloadTrackIndex = (nextTrackIndex + 1) % musicTracks.length;
+      fromPlayer.replace(musicTracks[preloadTrackIndex].source);
+      loadedMusicTrackIndexes.current[fromSlot] = preloadTrackIndex;
+    }, MUSIC_CROSSFADE_TICK_MS);
+  }, [cancelMusicCrossfade, musicPlayerForSlot, musicTracks, setMusicLockScreen]);
+
+  useEffect(() => {
+    const handleMusicStatus = (slot: MusicPlayerSlot, status: AudioStatus) => {
+      if (musicPlayingBySlot.current[slot] !== status.playing) {
+        musicPlayingBySlot.current[slot] = status.playing;
+        const anyPlayerIsPlaying = musicPlayingBySlot.current.some(Boolean);
+        setMusicPlayersPlaying((current) => (
+          current === anyPlayerIsPlaying ? current : anyPlayerIsPlaying
+        ));
+      }
+
+      if (
+        slot !== activeMusicPlayerSlot.current ||
+        musicCrossfadeRunning.current ||
+        musicTracks.length === 0
+      ) {
+        return;
+      }
+      if (status.didJustFinish) {
+        // Редкий запасной путь, если статус перед концом не успел прийти.
+        startMusicCrossfade(250);
+        return;
+      }
+      if (
+        status.playing &&
+        status.duration > 0 &&
+        status.duration - status.currentTime <= MUSIC_CROSSFADE_LEAD_SECONDS
+      ) {
+        startMusicCrossfade();
+      }
+    };
+
+    const playerASubscription = musicPlayerA.addListener(
+      'playbackStatusUpdate',
+      (status) => handleMusicStatus(0, status),
+    );
+    const playerBSubscription = musicPlayerB.addListener(
+      'playbackStatusUpdate',
+      (status) => handleMusicStatus(1, status),
+    );
+    return () => {
+      playerASubscription.remove();
+      playerBSubscription.remove();
+    };
+  }, [musicPlayerA, musicPlayerB, musicTracks.length, startMusicCrossfade]);
 
   useEffect(
     () => () => {
+      if (musicCrossfadeTimer.current) clearInterval(musicCrossfadeTimer.current);
+      musicCrossfadeTimer.current = null;
+      musicCrossfadeRunning.current = false;
       void releaseMusicSession();
     },
     [releaseMusicSession],
@@ -226,12 +362,11 @@ function SessionScreen() {
       // Эта остановка синхронна: запись не должна ждать React-effect.
       transientAudioBusyRef.current = busy;
       if (busy) {
-        musicPlayer.pause();
-        musicPlayer.clearLockScreenControls();
+        pauseMusicPlayers();
       }
       setTransientAudioBusy(busy);
     },
-    [musicPlayer],
+    [pauseMusicPlayers],
   );
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
@@ -269,10 +404,9 @@ function SessionScreen() {
     // useAudioPlayer освобождает native shared object при unmount, поэтому
     // останавливаем озвучку Писания синхронно до router.replace.
     scriptureAudio.stop();
-    // Останавливаем плеер до router.replace: useAudioPlayer сам удалит
-    // native shared object при unmount, и обращаться к нему из cleanup уже нельзя.
-    musicPlayer.pause();
-    musicPlayer.clearLockScreenControls();
+    // Останавливаем плееры до router.replace: useAudioPlayer сам удалит
+    // native shared objects при unmount, и обращаться к ним из cleanup уже нельзя.
+    pauseMusicPlayers();
     await stopPrayerSystemTimer().catch((error) => {
       console.warn('Не удалось остановить системный таймер молитвы', error);
     });
@@ -338,7 +472,7 @@ function SessionScreen() {
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
   // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
   // над таймером и прилипал к кольцу.
-  const musicPlaying = s.musicOn && !transientAudioBusy && musicStatus.playing;
+  const musicPlaying = s.musicOn && !transientAudioBusy && musicPlayersPlaying;
 
   return (
     <View style={styles.root}>
