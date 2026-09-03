@@ -1,32 +1,40 @@
-# Общие правила
+# General rules
 
-- Перед изменением приложения читать документацию именно Expo SDK 57:
+- Before changing the app, read the documentation for Expo SDK 57 specifically:
   https://docs.expo.dev/versions/v57.0.0/.
-- Сообщения коммитов писать по-английски, в Conventional Commits: `feat(session): add music crossfade`.
-  Русский остаётся языком общения, документации в `architect/` и комментариев в коде;
-  git-история репозитория ведётся только на английском.
-- ClickUp считать источником задач, статусов и багов. При постановке задач со слов пользователя НЕ проверять на дубли.
-- В `testing/` хранить только сценарии, Maestro-flow, отчёты и финальные evidence.
-- Держать код и архитектурную документацию в соответствии: при изменении фактической архитектуры в том же изменении обновлять `architect/README.md`, а новое существенное архитектурное решение фиксировать ADR в `architect/decisions/`.
-- Не надо оценивать дизайн за пользователя - это занимает огромное количество времени. Если запрос был на интерфейс - просто реализуй, тесты не запускай, открывай приложение в эмуляторе (желательно в уже открытом) и спрашивай нравится пользователю или нет.
+- Write commit messages in English, as Conventional Commits:
+  `feat(session): add music crossfade`. Russian stays the language of the
+  documentation in `architect/` and of the code comments; the git history of the
+  repository is kept in English only.
+- Keep `testing/` limited to scenarios, Maestro flows, reports and final
+  evidence.
+- Keep the code and the architecture documentation in sync: when the actual
+  architecture changes, update `architect/README.md` in the same change, and
+  record a new significant architectural decision as an ADR in
+  `architect/decisions/`.
 
-# Сборки и окружения
+# Builds and environments
 
-- Не подменять способ сборки молча. Если пользователь просит «поставить на мой iPhone», по умолчанию использовать `npm run iphone` — локальную автономную Release-сборку из `.env.local`.
-- `preview` — отдельная внутренняя Ad Hoc сборка EAS, а не синоним локального Release. Она получает переменные только из EAS environment `preview`; `.env.local` в облако не загружается.
-- Перед любой EAS preview-сборкой обязательно запускать `npm run env:check:preview`. Саму сборку запускать через `npm run eas:preview`, а не голой командой `eas build`.
-- Обязательные runtime-переменные: `EXPO_PUBLIC_AI_PROXY_URL`, `EXPO_PUBLIC_AI_PROXY_KEY`, `EXPO_PUBLIC_AI_TRANSCRIBE_URL`. `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` необязателен: Scripture URL выводится из `AI_PROXY_URL`.
-- Если preflight не прошёл, сборку не запускать. Сначала явно сообщить пользователю, каких имён не хватает, и настроить выбранное окружение; значения переменных не выводить в ответ или публичные логи.
-- `development` требует осознанно установленного `expo-dev-client`; не выбирать этот профиль автоматически. `production` предназначен для App Store и не используется для прямой установки на телефон.
-- Резервный вопрос вместе с цитатой «из сохранённых» в установленной сборке сначала диагностировать как возможное отсутствие build-time `EXPO_PUBLIC_*`, а не как другой API URL.
-- После изменения EAS variables обязательна новая EAS-сборка и повторная установка: уже собранный JS bundle переменные не подхватит.
-
-# Роль QA-куратор
-
-- Планирует работу, ведёт иерархию задач в ClickUp и делегирует исследования, правки и проверки субагентам.
-- Список задач по приложению ведётся в ClickUp; конкретный адрес списка держать в локальной памяти агента, а не в репозитории.
-- Лично валидируй результаты субагентов; при необходимости тестируй сам, или поручай другим субагентам.
-- Если ты Fable, то запускай субагентов на Opus или Sonnet (в завивимости от сложности и ответственности задачи). Если ты gpt-5.6-sol, запускай субагентов на gpt-5.6-sol или gpt-5.6-terra (в завивимости от сложности и ответственности задачи).
-- Различай ручные проверки и автотесты. Если ты не можешь что-то проверить - пиши пользователю явно, давай краткую понятную инструкцию что сделать.
-- Заводи баг под соответствующим этапом, ставь статус в процессе при делегации субагенту на исправление, закрывай только после ретеста.
-- Ты не принимаешь продуктовых решений, не меняешь по своему усмотрению логику работы приложения и архитектуру. Когда баг требует подобных решений - останавливайся и спрашивай пользователя.
+- Never substitute the build method silently. A request to install the app on a
+  physical iPhone means `npm run iphone` — a local standalone Release build that
+  takes its variables from `.env.local`.
+- `preview` is a separate internal Ad Hoc EAS build, not a synonym for the local
+  Release. It receives variables only from the EAS `preview` environment;
+  `.env.local` is never uploaded to the cloud.
+- Always run `npm run env:check:preview` before any EAS preview build. Start the
+  build itself through `npm run eas:preview`, not through a bare `eas build`.
+- Required runtime variables: `EXPO_PUBLIC_AI_PROXY_URL`,
+  `EXPO_PUBLIC_AI_PROXY_KEY`, `EXPO_PUBLIC_AI_TRANSCRIBE_URL`.
+  `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` is optional: the Scripture URL is derived
+  from `AI_PROXY_URL`.
+- If the preflight check fails, do not start the build. First state explicitly
+  which names are missing and configure the chosen environment; never print the
+  values of the variables into a response or a public log.
+- `development` requires `expo-dev-client` to be installed deliberately; do not
+  pick that profile automatically. `production` is meant for the App Store and
+  is not used for installing directly onto a phone.
+- A fallback question together with a quote "from the saved ones" in an
+  installed build should first be diagnosed as missing build-time
+  `EXPO_PUBLIC_*` variables, rather than as a different API URL.
+- After changing EAS variables, a new EAS build and a fresh install are
+  mandatory: an already built JS bundle will not pick the variables up.
