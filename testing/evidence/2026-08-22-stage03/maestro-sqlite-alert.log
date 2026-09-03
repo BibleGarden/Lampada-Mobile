@@ -1,5 +1,0 @@
-Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
- > Flow pray-stage03-start-sqlite-alert-only
-Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
-Assert that "Не удалось начать молитву" is visible... COMPLETED
-Assert that "Попробуй ещё раз." is visible... COMPLETED
