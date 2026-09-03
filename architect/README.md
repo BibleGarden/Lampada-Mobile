@@ -1,326 +1,384 @@
-# Архитектура Lampada
+# Lampada architecture
 
-Этот документ — краткий источник истины о текущем устройстве приложения. Он описывает только реализованное состояние. Причины существенных решений хранятся отдельно в [`decisions/`](decisions/README.md).
+This document is a short source of truth about the current shape of the app. It
+describes only what is implemented. The reasons behind significant decisions are
+kept separately in [`decisions/`](decisions/README.md).
 
-## Назначение
+## Purpose
 
-Lampada — мобильное приложение для личной христианской молитвы. Пользователь сам задаёт тему, а приложение помогает молиться целенаправленно и не терять фокус: задаёт наводящие вопросы и подбирает отрывки Писания по смыслу. Текстовые или голосовые ответы и итог можно сохранить, чтобы позже вернуться к ним в дневнике.
+Lampada is a mobile app for personal Christian prayer. The user sets the topic
+themselves, and the app helps them pray with intent and keep their focus: it asks
+guiding questions and picks scripture passages by meaning. Text or voice answers
+and the final takeaway can be saved, to come back to them later in the journal.
 
-Основной пользовательский поток:
+The main user flow:
 
-`Главная → Настройка → Порог → Сессия → Рефлексия → Завершение`
+`Home -> Setup -> Threshold -> Session -> Reflect -> Done`
 
-Дневник и настройки доступны как отдельные ветки от главной.
+The journal and the settings are separate branches off Home.
 
-## Технологический контур
+## Technology outline
 
-- Expo SDK 57, React Native 0.86 и React 19.
+- Expo SDK 57, React Native 0.86 and React 19.
 - TypeScript 6.
-- Expo Router с файловой маршрутизацией в `app/`.
-- Zustand для состояния сессии и настроек.
-- Expo SQLite для постоянных структурированных данных.
-- Expo File System и Expo Audio для локальных голосовых записей, встроенного
-  музыкального сопровождения и потоковой озвучки Писания.
-- Expo Widgets и Expo UI для системного countdown в iOS Live Activity.
-- Локальный Expo Module на Kotlin для системного countdown-уведомления Android.
-- Expo Notifications для локальных напоминаний о молитве по расписанию.
-- Expo Secure Store, Expo Local Authentication и Expo Crypto для опциональной
-  блокировки приложения пин-кодом и биометрией.
-- Expo Localization для одноразового выбора языка Писания на новой установке.
-- Reanimated, Gesture Handler и Skia для анимаций, жестов и графики.
-- Собственный нативный build: Expo Go не поддерживает все используемые нативные модули.
+- Expo Router with file-based routing in `app/`.
+- Zustand for the session state and the settings.
+- Expo SQLite for persistent structured data.
+- Expo File System and Expo Audio for local voice recordings, the bundled music
+  and the streamed scripture narration.
+- Expo Widgets and Expo UI for the system countdown in an iOS Live Activity.
+- A local Expo Module in Kotlin for the Android system countdown notification.
+- Expo Notifications for scheduled local prayer reminders.
+- Expo Secure Store, Expo Local Authentication and Expo Crypto for the optional
+  app lock with a PIN and biometrics.
+- Expo Localization for the one-off choice of the scripture language on a fresh
+  install.
+- Reanimated, Gesture Handler and Skia for animations, gestures and graphics.
+- A custom native build: Expo Go does not support all the native modules in use.
 
-При изменении приложения используется документация именно [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/).
+Changes to the app are made against the documentation of
+[Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
 
-## Структура приложения
+## Application structure
 
-| Область | Ответственность |
+| Area | Responsibility |
 | --- | --- |
-| `app/` | Экраны и навигация Expo Router |
-| `components/` | Переиспользуемые визуальные и интерактивные компоненты |
-| `components/AnswerSheet.tsx` | Шторка текстового ответа и координация жизненного цикла аудиозаписи |
-| `components/RecordingsSheet.tsx` | Отдельная шторка записей, плеера и расшифровок поверх ответа |
-| `lib/store.ts` | Состояние и сценарий молитвенной сессии |
-| `lib/db.ts` | SQLite, миграции, дневник, избранное и streak |
-| `lib/ai.ts` | Промпты, валидация ответа ИИ и локальная деградация |
-| `lib/answerContext.ts` | Состав реплик человека для ИИ: текст ответа и расшифровки его записей |
-| `lib/llm.ts` | HTTP-клиент серверного AI-прокси |
-| `lib/transcription.ts` | Отправка локальной аудиозаписи на серверную расшифровку |
-| `lib/settings.ts` | Настройки приватности, атомарное сохранение выбора Писания и расписания напоминаний |
-| `lib/lock.ts` | Соль и хэш пин-кода в SecureStore, биометрия, состояние блокировки и полное стирание данных |
-| `lib/prayerReminders.ts` | Чистая модель расписания напоминаний: валидация, WEEKLY-триггеры, человеческая строка, пул фраз |
-| `lib/prayerReminderScheduler.ts` | Канал, разрешение и полный переплан локальных напоминаний через expo-notifications |
-| `lib/scripture.ts` | Типы контракта Писания, request builder и отображаемая модель |
-| `lib/scriptureClient.ts` | HTTP-клиент контекстного подбора и контролируемые retry |
-| `lib/scriptureAudioClient.ts` | Алиасы книг, verse-level тайминги и публичные URL аудио глав |
-| `lib/useScriptureAudio.ts` | Жизненный цикл плеера выбранного отрывка и временный аудиофокус |
-| `lib/audioModeCoordinator.ts` | Единая очередь глобального Expo audio mode и приоритетный recording lease |
-| `lib/audioPlayerOperation.ts` | Ожидание готовности заменённого локального AVPlayerItem и отмена устаревшего play |
-| `lib/recordingOperation.ts` | Single-flight lifecycle запуска, остановки и прерывания голосовой записи |
-| `lib/scriptureAudioOperation.ts` | Инвалидация поздних продолжений озвучки при stop и смене контекста Писания |
-| `lib/useSheetReflow.ts` | Пересборка шторки под новую геометрию окна |
-| `lib/scriptureCatalogClient.ts` | HTTP-клиент языков, переводов и доступных озвучек |
-| `lib/scripturePreferences.ts` | Валидная зависимая тройка языка, перевода и озвучки |
-| `lib/scriptureRepository.ts` | История, кэш, названия книг и снимки избранного в SQLite |
-| `lib/scriptures.ts` | Старый каталог, используемый только lossless-миграцией избранного |
-| `lib/music.ts` | Каталог встроенных CC0-композиций и статических аудио-ассетов |
-| `lib/musicOrder.ts` | Чистая логика случайного стартового трека без повтора между сессиями |
-| `lib/prayerSystemTimer.*.ts` | Платформенный жизненный цикл таймера на заблокированном экране |
-| `widgets/PrayerLiveActivity.tsx` | iOS Live Activity и Dynamic Island с системным countdown |
-| `modules/prayer-timer-notification/` | Android ongoing notification с системным chronometer |
-| `lib/theme.ts` | Визуальные токены, `useStyles` — пересборка стилей при смене геометрии окна (ADR-0011), `column()` — колонка контента одной раскладки (ADR-0012) |
-| `assets/audio/` | Локальные музыкальные файлы и сведения об их происхождении и лицензиях |
-| `testing/` | Сценарии, Maestro-flow, отчёты и финальные evidence |
+| `app/` | Screens and Expo Router navigation |
+| `components/` | Reusable visual and interactive components |
+| `components/AnswerSheet.tsx` | The text answer sheet and the coordination of the audio recording lifecycle |
+| `components/RecordingsSheet.tsx` | A separate sheet for recordings, the player and transcripts, on top of the answer |
+| `lib/store.ts` | The state and the scenario of a prayer session |
+| `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
+| `lib/ai.ts` | Prompts, validation of the AI response and local degradation |
+| `lib/answerContext.ts` | The composition of the person's replies for the AI: the answer text and the transcripts of its recordings |
+| `lib/llm.ts` | The HTTP client of the server-side AI proxy |
+| `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
+| `lib/settings.ts` | Privacy settings, the atomic save of the scripture choice and the reminder schedule |
+| `lib/lock.ts` | The PIN salt and hash in SecureStore, biometrics, the lock state and the full data wipe |
+| `lib/prayerReminders.ts` | The pure model of the reminder schedule: validation, WEEKLY triggers, the human-readable line, the phrase pool |
+| `lib/prayerReminderScheduler.ts` | The channel, the permission and the full rescheduling of local reminders through expo-notifications |
+| `lib/scripture.ts` | The types of the scripture contract, the request builder and the display model |
+| `lib/scriptureClient.ts` | The HTTP client of the contextual selection and the controlled retries |
+| `lib/scriptureAudioClient.ts` | Book aliases, verse-level timings and the public URLs of chapter audio |
+| `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
+| `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode and the priority recording lease |
+| `lib/audioPlayerOperation.ts` | Waiting for a replaced local AVPlayerItem to be ready and cancelling a stale play |
+| `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
+| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
+| `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
+| `lib/scriptureCatalogClient.ts` | The HTTP client of languages, translations and available narrations |
+| `lib/scripturePreferences.ts` | The valid dependent triple of language, translation and narration |
+| `lib/scriptureRepository.ts` | History, the cache, book names and favourite snapshots in SQLite |
+| `lib/scriptures.ts` | The old catalogue, used only by the lossless migration of favourites |
+| `lib/music.ts` | The catalogue of the bundled CC0 pieces and the static audio assets |
+| `lib/musicOrder.ts` | The pure logic of a random starting track without repeats between sessions |
+| `lib/prayerSystemTimer.*.ts` | The platform lifecycle of the timer on the locked screen |
+| `widgets/PrayerLiveActivity.tsx` | The iOS Live Activity and Dynamic Island with the system countdown |
+| `modules/prayer-timer-notification/` | The Android ongoing notification with the system chronometer |
+| `lib/theme.ts` | Visual tokens, `useStyles` - rebuilding the styles when the window geometry changes (ADR-0011), `column()` - the content column of the single layout (ADR-0012) |
+| `assets/audio/` | The local music files and the record of their origin and licenses |
+| `testing/` | Scenarios, Maestro flows, reports and final evidence |
 
-## Экраны и навигация
+## Screens and navigation
 
-| Маршрут | Роль |
+| Route | Role |
 | --- | --- |
-| `/` | Главная, streak и вход в основные разделы |
-| `/setup` | Тема молитвы и длительность |
-| `/threshold` | Подготовка к началу сессии и предварительная генерация вопроса |
-| `/session` | Таймер, вопросы, ответы и Писание |
-| `/reflect` | Итоговый вопрос и формулировка вывода |
-| `/done` | Завершение и возврат на главную |
-| `/journal` | История молитв, поиск, прослушивание, сохранённые цитаты и удаление |
-| `/settings` | Настройки языка, перевода, озвучки, приватности, напоминаний и блокировки |
-| `/favorites` | Сохранённые цитаты: ключевые стихи с разворотом в полный отрывок |
-| `/about` | Смысл приложения, сведения о конфиденциальности, версия и другие проекты автора |
+| `/` | Home, the streak and the entry points into the main sections |
+| `/setup` | The prayer topic and the duration |
+| `/threshold` | Preparing to start the session and generating the question in advance |
+| `/session` | The timer, the questions, the answers and scripture |
+| `/reflect` | The closing question and the wording of the takeaway |
+| `/done` | Finishing and returning Home |
+| `/journal` | Prayer history, search, playback, saved quotes and deletion |
+| `/settings` | Settings for the language, the translation, the narration, privacy, reminders and the lock |
+| `/favorites` | Saved quotes: the key verses, expandable into the full passage |
+| `/about` | The point of the app, privacy information, the version and the author's other projects |
 
-Из `session`, `reflect` и `done` нельзя выйти случайным системным жестом: завершение сценария происходит через явные действия интерфейса.
+`session`, `reflect` and `done` cannot be left by an accidental system gesture:
+the scenario is finished through explicit interface actions.
 
-## Состояние и основной поток данных
+## State and the main data flow
 
-`useSession` в `lib/store.ts` — единая модель выполняющейся молитвенной сессии. Она хранит тему и таймер, текущие вопросы и ответы, состояние Писания, режим нижней панели, итог рефлексии и streak.
+`useSession` in `lib/store.ts` is the single model of a running prayer session.
+It holds the topic and the timer, the current questions and answers, the
+scripture state, the mode of the bottom panel, the reflection takeaway and the
+streak.
 
-Основные потоки:
+The main flows:
 
 ```text
-Экран → useSession → lib/db.ts → SQLite / локальные аудиофайлы
-                  ↘ lib/ai.ts → lib/llm.ts → bible-api → Gemini
-                              ↘ локальный курируемый fallback
-                  ↘ lib/transcription.ts → bible-api → Gemini
-                  ↘ lib/scriptureClient.ts → bible-api /api/ai/scripture
-                                           ↘ lib/scriptureRepository.ts → SQLite
-                  ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
-                                                ↘ /api/audio/...mp3
-                  ↘ lib/scriptureCatalogClient.ts → bible-api /api/languages
-                                                    ↘ /api/translations
+Screen → useSession → lib/db.ts → SQLite / local audio files
+                   ↘ lib/ai.ts → lib/llm.ts → bible-api → Gemini
+                               ↘ local curated fallback
+                   ↘ lib/transcription.ts → bible-api → Gemini
+                   ↘ lib/scriptureClient.ts → bible-api /api/ai/scripture
+                                            ↘ lib/scriptureRepository.ts → SQLite
+                   ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
+                                                 ↘ /api/audio/...mp3
+                   ↘ lib/scriptureCatalogClient.ts → bible-api /api/languages
+                                                     ↘ /api/translations
 ```
 
-ИИ не является обязательным для прохождения молитвы. При отсутствии конфигурации, ошибке сети, таймауте или некорректном ответе `lib/ai.ts` возвращает вопрос из локального пула. Для следующих вопросов используется буфер на один вопрос вперёд; устаревшие асинхронные результаты отсекаются ключами и токенами.
+The AI is not required to go through a prayer. When there is no configuration, or
+on a network error, a timeout or a malformed response, `lib/ai.ts` returns a
+question from the local pool. Later questions use a buffer one question ahead;
+stale asynchronous results are cut off by keys and tokens.
 
-Во время сессии пользователь может включить тихую локальную музыку. Пятнадцать
-встроенных CC0-треков воспроизводятся циклической очередью без сети и продолжают
-играть при сворачивании приложения и блокировке экрана. Плеер регистрируется как
-системная media-сессия, а нативный background playback включается config plugin
-`expo-audio`. Музыка останавливается при завершении молитвы. Голосовая
-запись, прослушивание черновика и озвучка Писания временно получают аудиофокус:
-музыка приостанавливается до завершения соответствующего действия, чтобы не
-попасть в запись и не смешиваться с пользовательским аудио.
+During a session the user can turn on quiet local music. Fifteen bundled CC0
+tracks play in a looping queue without a network and keep playing when the app is
+backgrounded and the screen is locked. The player registers as a system media
+session, and native background playback is enabled by the `expo-audio` config
+plugin. The music stops when the prayer ends. Voice recording, playback of a
+draft and scripture narration take the audio focus temporarily: the music is
+paused until the corresponding action finishes, so that it does not leak into a
+recording or mix with the user's audio.
 
-Таймер молитвы хранит абсолютные моменты начала и планового окончания в runtime-
-состоянии сессии. Секундный тик нужен только для обновления интерфейса: фактические
-`elapsed` и `remaining` каждый раз вычисляются по системному времени, поэтому после
-возврата из background таймер сразу догоняет прошедший интервал. Выгруженную ОС
-сессию приложение пока не восстанавливает, а переход к рефлексии выполняется после
-возврата JavaScript в активное состояние.
+The prayer timer keeps the absolute moments of the start and of the planned end
+in the runtime session state. The one-second tick is only needed to update the
+interface: the actual `elapsed` and `remaining` are computed from the system
+clock every time, so after coming back from the background the timer immediately
+catches up with the interval that passed. A session unloaded by the OS is not
+restored yet, and the transition to reflection happens once JavaScript is active
+again.
 
-Для конечной молитвы тот же `endsAtMs` передаётся системной поверхности: iOS
-показывает `expo-widgets` Live Activity на Lock Screen и Dynamic Island, Android —
-отдельное ongoing notification локального Expo Module. SwiftUI timer interval и
-Android notification chronometer обновляют секунды без фонового JavaScript.
-Изменение длительности заменяет системный дедлайн, а завершение и reset удаляют
-карточку. Бесконечная молитва системную карточку не создаёт. Media controls музыки
-остаются независимыми: пауза композиции не изменяет молитвенный дедлайн.
+For a finite prayer the same `endsAtMs` is handed to a system surface: iOS shows
+an `expo-widgets` Live Activity on the Lock Screen and in the Dynamic Island,
+Android shows a separate ongoing notification from a local Expo Module. The
+SwiftUI timer interval and the Android notification chronometer update the
+seconds without background JavaScript. Changing the duration replaces the system
+deadline, and finishing or resetting removes the card. An infinite prayer creates
+no system card. The media controls of the music stay independent: pausing a track
+does not change the prayer deadline.
 
-Основной подбор Писания выполняется сервером с помощью ИИ по смыслу темы молитвы
-и разрешённых настройкой реплик человека, а не по совпадению ключевых слов.
-Первый запрос запускается в фоне при входе в сессию, а после показа
-поддерживается ровно один prefetch. Одновременно выполняется не более одного
-запроса подбора. `source: retrieval_fallback` и `source: safe_pool` считаются
-успешными ответами. Навигационный след содержит только фактически показанные
-отрывки и живёт в пределах текущей сессии; назад по нему приложение ходит без
-сети. Стабильный `canonical_id` используется для исключений и избранного, но
-пользовательская ссылка всегда строится из координат `passage` выбранного перевода.
-При наличии `passage.verses` текст собирается из структурированных стихов, а
-диапазон `highlight.passage` задаёт ключевые стихи в нумерации выбранного
-перевода. Компактная карточка показывает только эти стихи и всегда одним цветом
-шрифта; весь отрывок с золотой подсветкой ключевых стихов остаётся в полной
-читалке, куда ведут нажатие на сам текст карточки и ссылка «Читать целиком» —
-оба доступны и когда карточка обрезает текст, и когда она показывает лишь
-выделенный фрагмент. Если выделения нет или оно
-покрывает весь отрывок, карточка показывает отрывок целиком. Клиент использует
-verse-level представление только когда оно точно восстанавливает `passage.text`;
-старые снимки без массива и неконсистентные ответы отображаются прежним сплошным
-текстом без эвристик.
+The main scripture selection is done by the server with AI, by the meaning of the
+prayer topic and of the person's replies that the setting allows, not by keyword
+match. The first request starts in the background on entering the session, and
+after the first display exactly one prefetch is kept alive. No more than one
+selection request runs at a time. `source: retrieval_fallback` and
+`source: safe_pool` count as successful responses. The navigation trail contains
+only the passages that were actually shown and lives within the current session;
+the app walks back along it without a network. The stable `canonical_id` is used
+for exclusions and favourites, but the user-facing reference is always built from
+the `passage` coordinates of the chosen translation. When `passage.verses` is
+present, the text is assembled from the structured verses, and the
+`highlight.passage` range defines the key verses in the numbering of the chosen
+translation. The compact card shows only those verses and always in a single font
+colour; the whole passage with the golden highlight of the key verses stays in
+the full reader, which is opened both by tapping the card text itself and by the
+"Read in full" link - both available when the card truncates the text and when it
+shows only the highlighted fragment. If there is no highlight, or it covers the
+whole passage, the card shows the passage in full. The client uses the
+verse-level representation only when it reconstructs `passage.text` exactly; old
+snapshots without the array and inconsistent responses are displayed as the
+previous solid text, without heuristics.
 
-Для озвучки клиент запрашивает серверные `begin`/`end` стихов, стримит
-Range-совместимый MP3 всей главы, начинает с первого стиха отрывка и
-останавливается на конце последнего. Текстовый подбор от этого дополнительного
-запроса не зависит; офлайн-снимок остаётся доступен без управления аудио. В
-полной читалке текущий стих определяется по тем же таймингам и отмечается лёгким
-точечным подчёркиванием; в межстиховой паузе отметка переключается один раз в её
-середине, а компактная карточка не показывает эту отметку.
+For narration the client requests the server `begin`/`end` of the verses, streams
+the Range-compatible MP3 of the whole chapter, starts at the first verse of the
+passage and stops at the end of the last one. The text selection does not depend
+on that extra request; the offline snapshot stays available without audio
+controls. In the full reader the current verse is determined by the same timings
+and marked with a light dotted underline; during the pause between verses the
+mark switches once, in the middle of it, and the compact card does not show this
+mark.
 
-Экран настроек загружает языки из `/api/languages`, а активные переводы и их
-озвучки — из `/api/translations`. Выбор каскадный: смена языка очищает перевод и
-озвучку, смена перевода очищает озвучку. Полная валидная тройка автоматически
-сохраняется после выбора озвучки одним JSON-значением
-`meta.scripture_preferences`. Язык, перевод и код озвучки фиксируются при входе
-в молитвенную сессию: язык и перевод используются для подбора, а код озвучки —
-для запроса выравнивания и аудио выбранного отрывка.
-На новой установке первичный `languageCode` устройства сопоставляется с каталогом
-языков сервера; если совпадения нет или каталог недоступен, используется английский.
-После первого сохранения системная локаль больше не переопределяет выбор.
+The settings screen loads the languages from `/api/languages`, and the active
+translations with their narrations from `/api/translations`. The choice is
+cascading: changing the language clears the translation and the narration,
+changing the translation clears the narration. A complete valid triple is saved
+automatically after the narration is chosen, as a single JSON value
+`meta.scripture_preferences`. The language, the translation and the narration
+code are frozen when a prayer session starts: the language and the translation
+are used for the selection, and the narration code for requesting the alignment
+and the audio of the chosen passage. On a fresh install the primary
+`languageCode` of the device is matched against the server language catalogue; if
+there is no match, or the catalogue is unavailable, English is used. After the
+first save the system locale no longer overrides the choice.
 
-## Напоминания о молитве
+## Prayer reminders
 
-Напоминания полностью локальные: push-токен не запрашивается, и в момент
-срабатывания сеть не нужна (ADR-0013). Расписание — набор правил
-«дни недели × времена»; несколько времён в один день допустимы. Модель и её
-разворачивание в WEEKLY-триггеры живут в `lib/prayerReminders.ts` отдельно от
-способа, которым расписание было задано: сейчас экран настроек позволяет собрать
-несколько правил с независимыми наборами дней и времён, и этот путь остаётся
-деградацией на случай недоступного ИИ. Внутри модели дни недели ISO
-(1 = понедельник), в нумерацию
-expo-notifications (1 = воскресенье) они переводятся ровно в одном месте.
+The reminders are entirely local: no push token is requested, and no network is
+needed at the moment they fire (ADR-0013). The schedule is a set of
+"weekdays x times" rules; several times on the same day are allowed. The model
+and its expansion into WEEKLY triggers live in `lib/prayerReminders.ts`,
+separately from the way the schedule was defined: right now the settings screen
+lets the user assemble several rules with independent sets of days and times, and
+this path remains the degradation for when the AI is unavailable. Inside the
+model the weekdays are ISO (1 = Monday); they are converted into the
+expo-notifications numbering (1 = Sunday) in exactly one place.
 
-Планирование выполняет `lib/prayerReminderScheduler.ts`: каждая пара
-«день × время» становится одним WEEKLY-триггером, а повторение держит система,
-поэтому расписание переживает выгрузку приложения и перезагрузку устройства.
-Частичного обновления нет — изменение расписания и каждый запуск приложения
-выполняют полный переплан. Переплан при запуске нужен для ротации: текст уходит
-в систему в момент планирования, поэтому пул коротких фраз перетасовывается при
-каждом планировании. Наличие молитвы в этот день на напоминания не влияет:
-`prayed_days` в расписании не участвует.
+The scheduling is done by `lib/prayerReminderScheduler.ts`: every "day x time"
+pair becomes a single WEEKLY trigger, and the repetition is held by the system,
+so the schedule survives the app being unloaded and the device rebooting. There
+is no partial update - changing the schedule and every app launch perform a full
+rescheduling. The rescheduling on launch is needed for rotation: the text is
+handed to the system at scheduling time, so the pool of short phrases is
+reshuffled on every scheduling. Whether the person prayed on a given day does not
+affect the reminders: `prayed_days` takes no part in the schedule.
 
-Разрешение на уведомления запрашивается в момент, когда пользователь сам
-включает напоминания. Отказ оставляет тумблер выключенным и показывается на
-экране настроек текстом; запланированное при этом снимается.
-`SCHEDULE_EXACT_ALARM` не запрашивается, поэтому время показа приблизительное.
-Напоминания используют собственный канал Android `prayer_reminders` и помечены
-`content.data.kind`: планировщик снимает только свои уведомления и не трогает
-ongoing-хронометр таймера молитвы в канале `twinkler_prayer_timer`. Тап по
-напоминанию открывает главную, кроме случая, когда пользователь находится
-внутри молитвенного сценария — оттуда его не выбрасывает.
+The notification permission is requested at the moment the user turns the
+reminders on themselves. A refusal leaves the toggle off and is shown on the
+settings screen as text; anything scheduled is removed. `SCHEDULE_EXACT_ALARM` is
+not requested, so the display time is approximate. The reminders use their own
+Android channel `prayer_reminders` and are marked with `content.data.kind`: the
+scheduler only cancels its own notifications and does not touch the ongoing
+chronometer of the prayer timer in the `twinkler_prayer_timer` channel. Tapping a
+reminder opens Home, except when the user is inside the prayer scenario - it does
+not throw them out of it.
 
-## Блокировка приложения
+## App lock
 
-Защита опциональна и по умолчанию выключена (ADR-0014): пока пользователь не
-включил её в настройках, поведение приложения не меняется. Базовый способ —
-пин-код из 4–8 цифр, длину выбирает пользователь. Face ID, Touch ID или
-отпечаток — отдельный тумблер строго поверх пина, доступный только когда датчик
-есть и образец зарегистрирован в системе; пин остаётся единственным запасным
-путём входа.
+The protection is optional and off by default (ADR-0014): until the user turns it
+on in the settings, the behaviour of the app does not change. The base method is
+a PIN of 4 to 8 digits, with the length chosen by the user. Face ID, Touch ID or
+a fingerprint is a separate toggle strictly on top of the PIN, available only
+when the sensor exists and a sample is enrolled in the system; the PIN stays the
+only fallback way in.
 
-Сам пин не хранится и не логируется. `lib/lock.ts` держит в SecureStore
-случайную соль, `SHA-256(соль + пин)`, флаг включения, флаг биометрии и длину
-пина; длина нужна экрану разблокировки, чтобы показать нужное число точек и
-проверить ввод на последней цифре. Ключи пишутся с
-`WHEN_UNLOCKED_THIS_DEVICE_ONLY` и исключены из Android Auto Backup. Неполная
-запись и ошибка чтения хранилища трактуются как выключенная защита: сбой
-SecureStore не должен отрезать доступ к собственным данным.
+The PIN itself is neither stored nor logged. `lib/lock.ts` keeps a random salt in
+SecureStore, `SHA-256(salt + pin)`, the enabled flag, the biometrics flag and the
+PIN length; the length is needed by the unlock screen to show the right number of
+dots and to validate the input on the last digit. The keys are written with
+`WHEN_UNLOCKED_THIS_DEVICE_ONLY` and excluded from Android Auto Backup. An
+incomplete record and a storage read error are treated as protection being off: a
+SecureStore failure must not cut the person off from their own data.
 
-Гейт — `components/LockGate.tsx`, условный оверлей поверх `Stack` в корневом
-`app/_layout.tsx`, а не отдельный маршрут: оверлей нельзя обойти ни переходом,
-ни диплинком, ни тапом по напоминанию. Он же держит подписку на `AppState`.
-Блокировка наступает при холодном старте и при возврате из фона, если в фоне
-провели не меньше 60 секунд; отсчёт ведётся от первого перехода в `background`.
-При `inactive` и `background` показывается шторка приватности — фон и название
-без содержимого, — чтобы снимок в переключателе приложений не сохранил дневник.
-Та же шторка стоит, пока конфигурация ещё не прочитана из SecureStore.
+The gate is `components/LockGate.tsx`, a conditional overlay above the `Stack` in
+the root `app/_layout.tsx` rather than a separate route: an overlay cannot be
+bypassed by navigation, by a deep link or by tapping a reminder. It also holds the
+`AppState` subscription. The lock engages on a cold start and on returning from
+the background, if at least 60 seconds were spent there; the countdown starts at
+the first transition to `background`. On `inactive` and `background` a privacy
+screen is shown - the background and the name without any content - so that the
+snapshot in the app switcher does not capture the journal. The same screen stands
+while the configuration has not been read from SecureStore yet.
 
-Ввод пина — `components/PinPad.tsx`: на разблокировке длина известна и проверка
-запускается автоматически на последней цифре, при установке и смене длину
-выбирает пользователь и подтверждает ввод кнопкой. Сценарии установки, смены и
-выключения показываются оверлеем `components/PinPrompt.tsx` поверх экрана
-настроек — не системным Modal, который закрыл бы собой шторку приватности.
+The PIN input is `components/PinPad.tsx`: on unlocking the length is known and the
+check runs automatically on the last digit, while during setup and change the
+user chooses the length and confirms the input with a button. The setup, change
+and disable scenarios are shown by the `components/PinPrompt.tsx` overlay above
+the settings screen - not by a system Modal, which would cover the privacy screen
+itself.
 
-Перекрытие пикселей прячет контент только от глаз и от касаний, поэтому оба
-оверлея дополнительно закрывают его от программ чтения с экрана — и делают это
-по-разному на двух платформах. На iOS хватает флага `accessibilityViewIsModal`
-на самом оверлее: VoiceOver перестаёт видеть всё вне модального узла. У Android
-такого флага нет, и пометку приходится ставить с обратной стороны — на самом
-скрываемом поддереве, — поэтому `Stack` в `app/_layout.tsx` обёрнут в
-layout-нейтральный `View`, подписанный на состояние блокировки, а содержимое
-настроек под вводом пина помечается там же, где рисуется. Общий хелпер —
-`lib/a11y.ts`: на iOS он не даёт ни одного пропа, на Android ставит
+Covering pixels hides the content only from the eyes and from touches, so both
+overlays additionally hide it from screen readers - and they do it differently on
+the two platforms. On iOS the `accessibilityViewIsModal` flag on the overlay
+itself is enough: VoiceOver stops seeing everything outside the modal node.
+Android has no such flag, and the mark has to be put from the other side - on the
+subtree being hidden - so the `Stack` in `app/_layout.tsx` is wrapped in a
+layout-neutral `View` subscribed to the lock state, and the settings content under
+the PIN input is marked where it is rendered. The shared helper is `lib/a11y.ts`:
+on iOS it yields no props at all, on Android it sets
 `importantForAccessibility="no-hide-descendants"`.
 
-Забытый пин восстановить нельзя. Ссылка «Забыли пин-код?» после двух явных
-подтверждений выполняет полное стирание: `wipeLocalData` в `lib/db.ts` удаляет
-файл базы целиком через `deleteDatabaseAsync` и удаляет аудиофайлы записей, а
-`wipeEverything` в `lib/lock.ts` дополнительно снимает запланированные
-напоминания, чистит ключи SecureStore и сбрасывает in-memory сторы. Схема
-пересоздаётся обычной миграцией при первом же обращении к базе. Шифрование
-данных на диске в скоуп не входит: блокировка защищает от чужого взгляда в
-разблокированный телефон, а не от чтения файлов в обход приложения.
+A forgotten PIN cannot be recovered. After two explicit confirmations the "Forgot
+your PIN?" link performs a full wipe: `wipeLocalData` in `lib/db.ts` deletes the
+whole database file through `deleteDatabaseAsync` and removes the audio files of
+the recordings, while `wipeEverything` in `lib/lock.ts` additionally cancels the
+scheduled reminders, clears the SecureStore keys and resets the in-memory stores.
+The schema is recreated by the ordinary migration on the very next access to the
+database. Encrypting the data on disk is out of scope: the lock protects against
+someone else's eyes in an unlocked phone, not against reading the files around
+the app.
 
-## Хранение данных
+## Data storage
 
-База `lampada.db` открывается через Expo SQLite в режиме WAL. Схема создаётся и дозаполняется при открытии.
+The `lampada.db` database is opened through Expo SQLite in WAL mode. The schema is
+created and filled in on open.
 
-| Таблица | Содержимое |
+| Table | Contents |
 | --- | --- |
-| `sessions` | Начало, тема, плановая и фактическая длительность, итог |
-| `answers` | Вопросы и текстовые ответы по сессии |
-| `recordings` | Ссылки на локальные аудиофайлы, длительность и расшифровка |
-| `favorites` | Избранные отрывки Писания |
-| `scripture_cache` | Полные серверные снимки отрывков и время последнего показа |
-| `scripture_history` | Персистентная последовательность показанных `canonical_id` |
-| `scripture_favorites` | Снимки избранного с nullable legacy `canonical_id` и `session_id` молитвы, в которую цитата сохранена |
-| `scripture_books` | Локальный справочник названий книг по переводу |
-| `favorites_legacy_backup` | Копия старого избранного до миграции |
-| `meta` | Настройки и служебные значения, включая `prayer_reminders` — расписание напоминаний одним JSON-значением |
-| `prayed_days` | Дни, использованные для расчёта streak |
+| `sessions` | The start, the topic, the planned and the actual duration, the takeaway |
+| `answers` | The questions and the text answers of a session |
+| `recordings` | References to local audio files, the duration and the transcript |
+| `favorites` | Favourite scripture passages |
+| `scripture_cache` | Full server snapshots of passages and the time they were last shown |
+| `scripture_history` | The persistent sequence of the `canonical_id`s that were shown |
+| `scripture_favorites` | Favourite snapshots with a nullable legacy `canonical_id` and the `session_id` of the prayer the quote was saved in |
+| `scripture_books` | A local directory of book names per translation |
+| `favorites_legacy_backup` | A copy of the old favourites from before the migration |
+| `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value |
+| `prayed_days` | The days used to compute the streak |
 
-Цитата привязана к молитве через `scripture_favorites.session_id`, который проставляется в момент сохранения. Для записей, сделанных до появления колонки, связь один раз восстанавливается по времени: цитата относится к той молитве, в чьём интервале `started_at … started_at + elapsed_sec` она сохранена. Не попавшие ни в один интервал остаются с `NULL` — восстанавливать связь там не из чего. Дневник показывает цитаты молитвы в конце раскрытой карточки, полный текст — во всплывающем окне.
+A quote is tied to a prayer through `scripture_favorites.session_id`, which is set
+at the moment it is saved. For records made before the column existed, the link is
+restored once by time: a quote belongs to the prayer in whose interval
+`started_at … started_at + elapsed_sec` it was saved. Those that fall into no
+interval stay `NULL` - there is nothing to restore the link from. The journal
+shows the quotes of a prayer at the end of the expanded card, with the full text
+in a popup.
 
-Аудиофайлы находятся в document directory приложения. В базе сохраняются переносимый URI и текст расшифровки; URI разрешается относительно текущей document directory. Расшифровка отображается в дневнике и участвует в локальном поиске. Удаление сессии удаляет её ответы и записи, но не меняет исторический день в streak.
+The audio files live in the document directory of the app. The database stores a
+portable URI and the text of the transcript; the URI is resolved against the
+current document directory. The transcript is shown in the journal and takes part
+in the local search. Deleting a session deletes its answers and recordings, but
+does not change the historical day in the streak.
 
-Во время ответа текст и голосовые записи разделены между двумя шторками
-(ADR-0016). `AnswerSheet` держит поле ответа, а `RecordingsSheet` — список
-аудиофайлов и их расшифровки. Асинхронные start/stop recorder сериализуются:
-pending-состояние сразу блокирует повторное действие и закрытие верхней шторки.
-Глобальный audio mode меняется только через `audioModeCoordinator`: пока
-recording lease активен, музыка и аудио Писания не могут применить playback-mode
-и нативно оборвать запись на iOS. Фоновая музыка использует два автоматически
-освобождаемых `AudioPlayer`: следующий локальный трек загружается заранее и за
-две секунды до конца текущего начинает звучать с перекрёстным изменением
-громкости. При записи, озвучке Писания, выключении музыки или завершении молитвы
-оба плеера синхронно приостанавливаются, а незавершённый crossfade сбрасывается.
+While answering, the text and the voice recordings are split between two sheets
+(ADR-0016). `AnswerSheet` holds the answer field, `RecordingsSheet` holds the
+audio files and their transcripts. The asynchronous recorder start/stop are
+serialized: a pending state immediately blocks a repeated action and the closing
+of the upper sheet. The global audio mode is changed only through
+`audioModeCoordinator`: while a recording lease is active, the music and the
+scripture audio cannot apply a playback mode and natively cut the recording short
+on iOS. The background music uses two automatically released `AudioPlayer`s: the
+next local track is loaded in advance and starts sounding two seconds before the
+end of the current one, with a crossfade of the volumes. During recording,
+scripture narration, when the music is turned off or when the prayer ends, both
+players are paused in sync and an unfinished crossfade is reset.
 
-Постоянной синхронизации пользовательских данных с сервером сейчас нет.
-Кэш Писания и избранное читаются полностью локально. Доступность Bible API
-определяется результатом самого HTTP-запроса, без отдельной preflight-проверки
-сетевого интерфейса. После сетевой ошибки, таймаута или исчерпанных retry
-приложение показывает ранее показанные снимки только выбранных языка и перевода; на
-первом offline-запуске с пустым кэшем предлагает повторить. Старый встроенный
-каталог не выдаётся как результат серверного подбора.
+There is no continuous synchronisation of user data with a server at the moment.
+The scripture cache and the favourites are read entirely locally. The
+availability of Bible API is determined by the result of the HTTP request itself,
+without a separate preflight check of the network interface. After a network
+error, a timeout or exhausted retries the app shows previously shown snapshots of
+the chosen language and translation only; on the first offline launch with an
+empty cache it offers to retry. The old bundled catalogue is never presented as
+the result of a server selection.
 
-## ИИ и приватность
+## AI and privacy
 
-Приложение обращается к серверному endpoint `bible-api`, который хранит ключ Google AI Studio, системный prompt и вызывает Gemini. Клиент отправляет только поле `user` с контекстом конкретного вопроса. В клиентский build могут быть встроены только публичные Expo-переменные URL и ограниченного ключа прокси; серверные секреты и системные инструкции в приложение не помещаются.
+The app talks to a `bible-api` server endpoint which holds the Google AI Studio
+key and the system prompt, and calls Gemini. The client sends only the `user`
+field with the context of the particular question. Only public Expo variables -
+the URL and the limited proxy key - may be embedded into a client build; server
+secrets and system instructions are not put into the app.
 
-По умолчанию реплики человека отправляются при генерации следующих вопросов, вопроса рефлексии и при подборе Писания. Реплика — это набранный текст ответа и расшифровка голосовой записи: для модели запись существует только расшифровкой, аудиофайл в этот контекст не попадает. Состав и порядок реплик определяет `lib/answerContext.ts`. Пользователь может отключить эту передачу настройкой «Использовать ответы для цитат и вопросов», сохранённой в `meta.share_answers`: отсутствие значения либо `1` означает передачу, `0` — запрет. Отдельно от неё голосовая запись отправляется через `bible-api` в Gemini только в случае явного нажатия «Расшифровать»; локаль устройства служит мягкой подсказкой для дословной расшифровки в исходном языке. `bible-api` не сохраняет письменные ответы, аудиофайл или текст расшифровки, а клиент сохраняет полученную расшифровку локально рядом с записью.
+By default the person's replies are sent when generating the next questions, the
+reflection question and when selecting scripture. A reply is the typed text of an
+answer and the transcript of a voice recording: for the model a recording exists
+only as its transcript, the audio file never reaches this context. The
+composition and the order of the replies are defined by `lib/answerContext.ts`.
+The user can turn this transfer off with the "Use answers for quotes and
+questions" setting, stored in `meta.share_answers`: a missing value or `1` means
+the transfer happens, `0` forbids it. Separately from it, a voice recording is
+sent through `bible-api` to Gemini only when "Transcribe" is pressed explicitly;
+the device locale serves as a soft hint for a verbatim transcript in the original
+language. `bible-api` does not store the written answers, the audio file or the
+text of the transcript, and the client saves the received transcript locally next
+to the recording.
 
-Перед первым Scripture-запросом настройка приватности обязательно загружается
-из SQLite. Решение о включении `user_replies` принимается в одном request builder;
-при opt-out поле отсутствует в сериализованном теле. Тема, ответы, текст,
-заголовок, ссылка и `canonical_id` не пишутся в аналитику или crash-логи.
+Before the first scripture request the privacy setting is always loaded from
+SQLite. The decision to include `user_replies` is made in a single request
+builder; on opt-out the field is absent from the serialized body. The topic, the
+answers, the text, the title, the reference and the `canonical_id` are not written
+into analytics or crash logs.
 
-## Проверки и эксплуатационные источники
+## Checks and operational sources
 
-- `npm test` — локальные модульные тесты библиотечной логики.
-- `npm run typecheck` — проверка TypeScript.
-- Maestro-flow и результаты ручных прогонов находятся в `testing/`.
-- ClickUp — источник задач, статусов и багов; архитектурные документы не дублируют управление работой.
-- `npm run iphone` — поддерживаемый проектом путь Release-сборки и установки на физический iPhone.
+- `npm test` - local unit tests of the library logic.
+- `npm run typecheck` - the TypeScript check.
+- The Maestro flows and the results of manual runs are in `testing/`.
+- ClickUp is the source of tasks, statuses and bugs; the architecture documents
+  do not duplicate work management.
+- `npm run iphone` - the path the project supports for a Release build and
+  installation onto a physical iPhone.
 
-## Как поддерживать документ
+## How to maintain this document
 
-- Обновлять этот файл в том же изменении, которое меняет фактические границы, зависимости или потоки данных.
-- Не записывать сюда планы как уже существующее поведение.
-- Существенное решение с альтернативами и последствиями оформлять отдельным ADR.
-- ADR после принятия не переписывать задним числом; новое решение заменяет старое новым ADR со ссылкой на него.
+- Update this file in the same change that alters the actual boundaries,
+  dependencies or data flows.
+- Do not write plans in here as if they were existing behaviour.
+- Record a significant decision with its alternatives and consequences as a
+  separate ADR.
+- Do not rewrite an ADR after it is accepted; a new decision supersedes the old
+  one through a new ADR that refers to it.
