@@ -1,149 +1,169 @@
-# ADR-0014: Закрывать приложение локальным пин-кодом с хэшем в Keychain, биометрия — поверх него
+# ADR-0014: Lock the app with a local PIN whose hash lives in the Keychain, with biometrics on top of it
 
-- Статус: Принято
-- Дата: 2026-08-30
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Accepted
+- Date: 2026-08-30
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-Дневник молитв — самое личное содержимое приложения: тема молитвы, письменные
-ответы, голосовые записи. Телефон нередко дают в руки другому человеку уже
-разблокированным, и в этот момент между ним и дневником нет ничего.
+The prayer journal is the most personal content in the app: the prayer topic, the
+written answers, the voice recordings. A phone is often handed to another person
+already unlocked, and at that moment there is nothing between them and the
+journal.
 
-Ограничения и факты, влияющие на решение:
+Constraints and facts that shape the decision:
 
-- Все данные приложения локальные: SQLite `lampada.db` и аудиофайлы в document
-  directory. Серверной учётной записи нет, восстанавливать код через почту или
-  SMS негде и незачем.
-- Приложение не должно менять поведение для тех, кому защита не нужна: молитва
-  начинается в один тап, и лишний экран на входе противоречит замыслу.
-- iOS сохраняет снимок экрана при уходе в фон и показывает его в переключателе
-  приложений. Без шторки открытый дневник виден всякому, кто листает задачи.
-- `expo-secure-store` кладёт значения в Keychain (iOS) и в Keystore-шифрованные
-  `SharedPreferences` (Android). `expo-local-authentication` даёт Face ID,
-  Touch ID и отпечаток, но не даёт никакого ключа: он возвращает лишь «да/нет».
-- Экран, до которого можно дойти навигацией, можно и обойти — диплинком по
-  `scheme: lampada`, возвратом назад или тапом по напоминанию (ADR-0013).
+- All the app data is local: the SQLite `lampada.db` and the audio files in the
+  document directory. There is no server account, so there is nowhere - and no
+  reason - to recover a code through email or SMS.
+- The app must not change its behaviour for those who do not need protection: a
+  prayer starts with a single tap, and an extra screen at the entrance
+  contradicts the idea.
+- iOS captures a screenshot when the app goes to the background and shows it in
+  the app switcher. Without a privacy screen an open journal is visible to
+  anyone flipping through the tasks.
+- `expo-secure-store` puts values into the Keychain (iOS) and into
+  Keystore-encrypted `SharedPreferences` (Android). `expo-local-authentication`
+  gives Face ID, Touch ID and fingerprint, but gives no key at all: it only
+  returns yes or no.
+- A screen that can be reached by navigation can also be bypassed - by a deep
+  link on `scheme: lampada`, by going back, or by tapping a reminder (ADR-0013).
 
-## Решение
+## Decision
 
-1. Защита опциональна и по умолчанию выключена. Пока пользователь не включил её
-   в настройках, ни один экран, ни один сценарий и ни один запуск не меняются.
-2. Базовый способ — пин-код из 4–8 цифр; длину выбирает пользователь. При
-   установке и смене ввод завершает сам пользователь кнопкой подтверждения:
-   автопроверка на четвёртой цифре не дала бы набрать более длинный код.
-3. Пин нигде не хранится и не логируется. В SecureStore лежат случайная соль
-   (16 байт из `expo-crypto`), `SHA-256(соль + пин)`, флаг включения, флаг
-   биометрии и длина пина. Проверка — сравнение хэшей. Длина хранится рядом,
-   потому что экран разблокировки обязан знать, сколько точек показать и на
-   какой цифре проверять ввод; сам код она не раскрывает.
-4. Ключи пишутся с `WHEN_UNLOCKED_THIS_DEVICE_ONLY`: блокировка — свойство
-   конкретной установки, она не должна переезжать в резервную копию и на другое
-   устройство. Config plugin `expo-secure-store` исключает записи из Android
-   Auto Backup, иначе восстановленные значения не расшифровались бы, а флаг
-   включения остался бы — и человек не вошёл бы в собственное приложение.
-5. Неполная запись равнозначна выключенной защите: без соли или хэша флаг
-   `enabled` ничего не значит. Ошибка чтения хранилища тоже трактуется как
-   «выключено» — иначе сбой SecureStore навсегда отрезал бы доступ к данным.
-6. Биометрия — отдельный тумблер строго поверх пина, доступный только когда
-   датчик есть и образец зарегистрирован. Она не заменяет пин, а ускоряет вход:
-   пин остаётся единственным запасным путём, если Face ID перестанет узнавать.
-   `disableDeviceFallback: true` — возврат к коду разблокировки телефона
-   отключён: этот код обычно знают те же домашние, от которых закрывают дневник.
-7. Блокировка наступает при холодном старте и при возврате из фона, если в фоне
-   провели не меньше 60 секунд. Отсчёт ведётся от первого перехода в
-   `background` и не сдвигается цепочкой `inactive → background`. Быстрое
-   «свернул — развернул» кода не требует.
-8. При `inactive` и `background` поверх приложения показывается шторка
-   приватности — фон и название, без содержимого, — чтобы снимок в
-   переключателе приложений не сохранил дневник.
-9. Гейт живёт в корневом `app/_layout.tsx` условным рендером оверлея поверх
-   `Stack`, а не отдельным маршрутом: оверлей поверх всей навигации нельзя
-   обойти ни переходом, ни диплинком, ни тапом по напоминанию.
-10. До того как конфигурация прочитана из SecureStore, показывается та же
-    шторка: иначе при включённой защите дневник мелькнул бы на первом кадре.
-11. Забытый пин восстановить нельзя. Единственный выход — полное стирание:
-    удаление файла базы через `deleteDatabaseAsync`, удаление аудиофайлов,
-    снятие запланированных напоминаний, очистка ключей SecureStore и сброс
-    in-memory сторов. Действие требует двух явных подтверждений подряд.
-12. Шифрование базы и аудиофайлов на диске в скоуп не входит.
+1. The protection is optional and off by default. Until the user turns it on in
+   the settings, not a single screen, scenario or launch changes.
+2. The base method is a PIN of 4 to 8 digits; the user chooses the length. During
+   setup and change the user finishes the input with a confirmation button:
+   auto-validating on the fourth digit would make a longer code impossible to
+   type.
+3. The PIN is neither stored nor logged anywhere. SecureStore holds a random salt
+   (16 bytes from `expo-crypto`), `SHA-256(salt + pin)`, the enabled flag, the
+   biometrics flag and the PIN length. Verification is a comparison of hashes.
+   The length is stored alongside because the unlock screen has to know how many
+   dots to show and on which digit to validate the input; it does not reveal the
+   code itself.
+4. The keys are written with `WHEN_UNLOCKED_THIS_DEVICE_ONLY`: the lock is a
+   property of a particular installation and must not travel into a backup or
+   onto another device. The `expo-secure-store` config plugin excludes the
+   records from Android Auto Backup, otherwise the restored values would fail to
+   decrypt while the enabled flag would survive - and the person would not get
+   into their own app.
+5. An incomplete record is equivalent to protection being off: without the salt
+   or the hash the `enabled` flag means nothing. A storage read error is treated
+   as "off" too - otherwise a SecureStore failure would cut access to the data
+   off forever.
+6. Biometrics is a separate toggle strictly on top of the PIN, available only
+   when the sensor exists and a sample is enrolled. It does not replace the PIN,
+   it speeds the entry up: the PIN stays the only fallback if Face ID stops
+   recognising the person. `disableDeviceFallback: true` - falling back to the
+   phone passcode is disabled: that code is usually known to the same household
+   the journal is being closed from.
+7. The lock engages on a cold start and on returning from the background, if at
+   least 60 seconds were spent there. The countdown starts at the first
+   transition to `background` and is not shifted by an `inactive → background`
+   chain. A quick "minimise and restore" needs no code.
+8. On `inactive` and `background` a privacy screen is shown over the app - the
+   background and the name, without any content - so that the snapshot in the app
+   switcher does not capture the journal.
+9. The gate lives in the root `app/_layout.tsx` as a conditional overlay above
+   the `Stack` rather than as a separate route: an overlay above the whole
+   navigation cannot be bypassed by a transition, by a deep link or by tapping a
+   reminder.
+10. Until the configuration has been read from SecureStore, the same screen is
+    shown: otherwise, with protection enabled, the journal would flash on the
+    first frame.
+11. A forgotten PIN cannot be recovered. The only way out is a full wipe:
+    deleting the database file through `deleteDatabaseAsync`, deleting the audio
+    files, cancelling the scheduled reminders, clearing the SecureStore keys and
+    resetting the in-memory stores. The action requires two explicit
+    confirmations in a row.
+12. Encrypting the database and the audio files on disk is out of scope.
 
-## Рассмотренные варианты
+## Options considered
 
-### Хранить сам пин в SecureStore и сравнивать строки
+### Store the PIN itself in SecureStore and compare strings
 
-Отклонено. Keychain и Keystore защищают значение, но хранить восстановимый
-секрет там, где достаточно хэша, незачем: при компрометации хранилища или
-резервной копии пин утёк бы в исходном виде, а люди переиспользуют коды.
+Rejected. The Keychain and the Keystore do protect a value, but there is no point
+storing a recoverable secret where a hash is enough: if the storage or a backup
+were compromised, the PIN would leak in its original form, and people reuse
+codes.
 
-### Биометрия как единственный способ входа, без пин-кода
+### Biometrics as the only way in, without a PIN
 
-Отклонено. Face ID перестаёт узнавать в маске, в темноте, после травмы и при
-смене образца в системе. Без пина единственным выходом остался бы сброс с
-полным стиранием данных — несоразмерная цена за неудачное распознавание.
+Rejected. Face ID stops recognising a person in a mask, in the dark, after an
+injury and when the enrolled sample changes. Without a PIN the only way out would
+be a reset with a full data wipe - a disproportionate price for a failed
+recognition.
 
-### `requireAuthentication: true` у самой записи SecureStore
+### `requireAuthentication: true` on the SecureStore record itself
 
-Отклонено. Опция привязывает запись к биометрии на уровне хранилища: смена
-набора образцов в системе инвалидирует ключ, и пин перестал бы проверяться —
-пользователь потерял бы доступ к данным из-за настройки лица, а не кода. Мы
-держим биометрию отдельным необязательным ускорителем над независимым хэшем.
+Rejected. The option ties the record to biometrics at the storage level: changing
+the set of enrolled samples in the system invalidates the key, and the PIN would
+stop being verifiable - the user would lose access to their data because of a
+face setting rather than a code. We keep biometrics as a separate optional
+accelerator above an independent hash.
 
-### Экран блокировки отдельным маршрутом expo-router
+### The lock screen as a separate expo-router route
 
-Отклонено. Маршрут — часть навигации, а значит достижим и в обход: диплинк по
-`lampada://`, `router.back()` из истории или тап по напоминанию вернули бы
-пользователя на защищаемый экран. Оверлей поверх `Stack` таких дыр не имеет.
+Rejected. A route is part of the navigation, which means it is reachable around
+as well: a deep link on `lampada://`, a `router.back()` from the history or a tap
+on a reminder would bring the user back to the protected screen. An overlay above
+the `Stack` has no such holes.
 
-### Фиксированные 4 цифры
+### A fixed 4 digits
 
-Отклонено владельцем продукта: четырёхзначный код перебирается за 10 000
-вариантов, и человеку, который хочет код длиннее, нечего предложить. Переменная
-длина 4–8 стоит одного хранимого числа и одной кнопки подтверждения.
+Rejected by the product owner: a four-digit code is brute-forced in 10,000
+attempts, and a person who wants a longer code has nothing to be offered. A
+variable length of 4 to 8 costs one stored number and one confirmation button.
 
-### Пароль вместо цифрового кода
+### A password instead of a numeric code
 
-Отклонено. Приложение открывают по несколько раз в день ради коротких молитв;
-буквенный пароль на входе стоит дороже, чем защищаемый им риск. Цифровая
-клавиатура остаётся быстрой и попадает в тон остального интерфейса.
+Rejected. The app is opened several times a day for short prayers; an alphabetic
+password at the entrance costs more than the risk it protects against. A numeric
+keypad stays fast and matches the tone of the rest of the interface.
 
-### Сброс пина без стирания данных
+### Resetting the PIN without wiping the data
 
-Отклонено. Любой такой путь — «секретный вопрос», код поддержки, обход по
-системной биометрии — это дверь в обход самой защиты, и открыта она будет ровно
-для того, от кого защищались. Раз пин нельзя восстановить, честная цена входа
-без него — потеря данных, о которой предупреждают дважды.
+Rejected. Any such path - a "secret question", a support code, a bypass through
+system biometrics - is a door around the protection itself, and it would be open
+to exactly the person it was protecting against. Since the PIN cannot be
+recovered, the honest price of getting in without it is the loss of the data,
+which is warned about twice.
 
-### Шифрование `lampada.db` ключом из пина
+### Encrypting `lampada.db` with a key derived from the PIN
 
-Отклонено как отдельный будущий скоуп. Это дало бы защиту от извлечения диска и
-чтения файла в обход приложения, но требует SQLCipher или ручного шифрования
-полей, перешифровки при смене пина и делает потерю пина безусловной потерей
-данных даже для сценариев, не связанных с блокировкой. Текущая угроза —
-разблокированный телефон в чужих руках, и от неё защищает гейт.
+Rejected as a separate future scope. It would protect against extracting the disk
+and reading the file around the app, but it requires SQLCipher or manual field
+encryption, re-encryption when the PIN changes, and it makes losing the PIN an
+unconditional loss of data even in scenarios unrelated to the lock. The current
+threat is an unlocked phone in someone else's hands, and the gate protects
+against it.
 
-## Последствия
+## Consequences
 
-- Пользователь, которому защита не нужна, не замечает её существования: путь до
-  молитвы не изменился.
-- Забытый пин означает потерю всех данных. Это принято сознательно и явно
-  сказано пользователю и в настройках, и в обоих подтверждениях сброса.
-- Данные на диске остаются незашифрованными: владелец разблокированного
-  компьютера с доступом к резервной копии или файловой системе устройства
-  прочитает дневник в обход приложения. Гейт от этого не защищает.
-- Шторка приватности показывается и на коротком `inactive` — при шторке
-  Control Center и баннере уведомления. Это цена за отсутствие дневника в
-  снимке переключателя приложений.
-- Добавлены нативные зависимости `expo-secure-store`, `expo-local-authentication`
-  и `expo-crypto`, поэтому проверка блокировки требует новой нативной сборки, а
-  не только обновления JS-бандла. Face ID не работает в Expo Go.
-- Полное стирание — единственное место в приложении, удаляющее файл базы
-  целиком. Схема пересоздаётся обычной миграцией при первом же обращении.
+- A user who does not need the protection never notices it exists: the path to a
+  prayer has not changed.
+- A forgotten PIN means the loss of all data. This is accepted deliberately and
+  stated to the user explicitly, both in the settings and in both confirmations
+  of the reset.
+- The data on disk stays unencrypted: the owner of an unlocked computer with
+  access to a backup or to the device file system will read the journal around
+  the app. The gate does not protect against that.
+- The privacy screen is shown on a short `inactive` too - with the Control Centre
+  shade and a notification banner. That is the price of keeping the journal out
+  of the app switcher snapshot.
+- The native dependencies `expo-secure-store`, `expo-local-authentication` and
+  `expo-crypto` were added, so verifying the lock requires a new native build
+  rather than only a JS bundle update. Face ID does not work in Expo Go.
+- The full wipe is the only place in the app that deletes the database file
+  outright. The schema is recreated by the ordinary migration on the very next
+  access.
 
-## Ссылки
+## References
 
-- [ADR-0013](0013-local-prayer-reminders.md) — напоминания, чей тап тоже не должен
-  проводить в обход экрана блокировки
+- [ADR-0013](0013-local-prayer-reminders.md) - the reminders, whose tap must not
+  lead around the lock screen either
 - [expo-secure-store, Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/securestore/)
 - [expo-local-authentication, Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/local-authentication/)
 - `lib/lock.ts`, `components/LockGate.tsx`, `components/PinPad.tsx`, `components/PinPrompt.tsx`

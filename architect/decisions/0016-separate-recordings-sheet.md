@@ -1,111 +1,119 @@
-# ADR-0016: Отделить голосовые записи от поля ответа
+# ADR-0016: Separate the voice recordings from the answer field
 
-- Статус: Принято
-- Дата: 2026-09-01
-- Участники: QA-куратор, владелец продукта
+- Status: Accepted
+- Date: 2026-09-01
+- Participants: QA lead, product owner
 
-## Контекст
+## Context
 
-ADR-0015 объединил поле ответа, карточки записей и расшифровки в одной
-прокручиваемой области. На длинной расшифровке эти элементы снова конкурируют
-за высоту: поле ответа теряется среди карточек, а раскрытый текст занимает почти
-весь экран. При открытой клавиатуре места остаётся ещё меньше.
+ADR-0015 merged the answer field, the recording cards and the transcripts into a
+single scrollable area. With a long transcript these elements compete for height
+again: the answer field is lost among the cards, and the expanded text takes up
+almost the whole screen. With the keyboard open there is even less room.
 
-Запуск и остановка записи асинхронны. Если интерфейс ориентируется только на
-опрос `useAudioRecorderState`, между нажатием и обновлением состояния остаётся
-окно для повторного `prepareToRecordAsync()` или `stop()`, а закрытие шторки
-может оставить незавершённый запуск без видимого управления.
+Starting and stopping a recording are asynchronous. If the interface relies only
+on polling `useAudioRecorderState`, a window remains between the press and the
+state update for a repeated `prepareToRecordAsync()` or `stop()`, and closing the
+sheet can leave an unfinished start with no visible controls.
 
-Audio mode в Expo общий для процесса. На iOS поздний
-`setAudioModeAsync({ allowsRecording: false })` от фоновой музыки или аудио
-Писания напрямую останавливает активный `AVAudioRecorder`. Поэтому локальной
-сериализации start/stop недостаточно: все смены глобального режима должны иметь
-единый порядок и знать, что запись владеет аудиосессией.
+The audio mode in Expo is shared across the process. On iOS a late
+`setAudioModeAsync({ allowsRecording: false })` from the background music or from
+the scripture audio stops an active `AVAudioRecorder` outright. Local
+serialization of start/stop is therefore not enough: every change of the global
+mode has to have a single order and to know that the recording owns the audio
+session.
 
-## Решение
+## Decision
 
-- `AnswerSheet` содержит вопрос, самостоятельно прокручиваемое поле ответа и
-  панель действий. Голосовые записи представлены счётчиком на кнопке микрофона.
-- Карточки записей, плеер, расшифровка и управление записью находятся в
-  отдельной `RecordingsSheet`, открываемой поверх шторки ответа.
-- Расшифровка в шторке записей показывается компактным блоком только для чтения.
-  Действие «Добавить в ответ» дописывает текст в поле ответа и закрывает верхнюю
-  шторку; правка выполняется уже в ответе. Это не меняет серверную границу и
-  локальное хранение, определённые ADR-0002.
-- Старт и остановка recorder выполняются по принципу single-flight. Любая busy-фаза
-  (`starting`, `recording`, `stopping`) блокирует закрытие верхней шторки, а
-  pending-фазы сразу блокируют повторное действие, не ожидая опроса native state.
-- Одна попытка старта выполняет ровно один `prepare` и один `record`. Неудачный
-  native start полностью очищается; повтор делает пользователь новой попыткой.
-  Повторный `prepare` того же iOS-recorder запрещён: поздний delegate старого
-  `AVAudioRecorder` способен сбросить состояние уже новой записи.
-- Закрытие шторки инвалидирует незавершённый старт. Если нативная запись успела
-  начаться после await, она немедленно останавливается и не остаётся скрытой.
-- После подтверждённого stop приложение ждёт стабилизации метаданных M4A.
-  Проверка целостности использует только наличие и минимальный размер контейнера:
-  AAC bitrate является целевым и зависит от устройства/содержимого. Подозрительный
-  файл не удаляется автоматически по эвристике.
-- Плееры черновиков и Писания создаются с `keepAudioSessionActive`: их pause
-  не имеет права планировать глобальную деактивацию `AVAudioSession` поверх
-  нового recorder. Явная деактивация музыкальной сессии проходит через ту же
-  очередь и пропускается, пока активен recording lease.
-- Уже звучащее Писание явно останавливается перед стартом голосовой записи;
-  playback черновика также получает grant координатора и не стартует после
-  начала записи или закрытия шторки.
-- После `player.replace()` воспроизведение черновика ждёт, пока новый локальный
-  `AVPlayerItem` станет `isLoaded` и сообщит ненулевую duration, затем явно
-  перематывается в начало. Это обязательно на физическом iOS, где немедленный
-  `play()` после replace может потеряться, хотя Simulator успевает загрузить файл.
-- Все `setAudioModeAsync` проходят через единый `audioModeCoordinator`.
-  Recording lease становится активным синхронно, дожидается уже начатых смен
-  режима и блокирует новые playback-запросы до подтверждённого native stop.
+- `AnswerSheet` holds the question, a self-scrolling answer field and the action
+  bar. The voice recordings are represented by a counter on the microphone
+  button.
+- The recording cards, the player, the transcript and the recording controls live
+  in a separate `RecordingsSheet`, opened on top of the answer sheet.
+- In the recordings sheet the transcript is shown as a compact read-only block.
+  The "Add to the answer" action appends the text to the answer field and closes
+  the upper sheet; editing then happens in the answer itself. This does not
+  change the server boundary or the local storage defined by ADR-0002.
+- Starting and stopping the recorder follow the single-flight principle. Any busy
+  phase (`starting`, `recording`, `stopping`) blocks closing the upper sheet, and
+  the pending phases block a repeated action immediately, without waiting for a
+  poll of the native state.
+- One start attempt performs exactly one `prepare` and one `record`. A failed
+  native start is cleaned up completely; the retry is up to the user as a new
+  attempt. A repeated `prepare` of the same iOS recorder is forbidden: a late
+  delegate of the old `AVAudioRecorder` can reset the state of an already new
+  recording.
+- Closing the sheet invalidates an unfinished start. If the native recording did
+  begin after the await, it is stopped immediately and never stays hidden.
+- After a confirmed stop the app waits for the M4A metadata to settle. The
+  integrity check uses only the presence and the minimum size of the container:
+  the AAC bitrate is a target and depends on the device and the content. A
+  suspicious file is not deleted automatically by a heuristic.
+- The draft and scripture players are created with `keepAudioSessionActive`:
+  their pause has no right to schedule a global deactivation of the
+  `AVAudioSession` over a new recorder. An explicit deactivation of the music
+  session goes through the same queue and is skipped while a recording lease is
+  active.
+- Scripture that is already sounding is stopped explicitly before a voice
+  recording starts; playback of a draft also takes a grant from the coordinator
+  and does not start after a recording has begun or after the sheet was closed.
+- After `player.replace()` the playback of a draft waits until the new local
+  `AVPlayerItem` becomes `isLoaded` and reports a non-zero duration, then seeks
+  to the beginning explicitly. This is mandatory on physical iOS, where an
+  immediate `play()` after a replace can be lost, even though the Simulator
+  manages to load the file in time.
+- Every `setAudioModeAsync` goes through the single `audioModeCoordinator`. The
+  recording lease becomes active synchronously, waits for the mode changes
+  already in flight and blocks new playback requests until a confirmed native
+  stop.
 
-## Рассмотренные варианты
+## Options considered
 
-### Оставить единую прокрутку ADR-0015
+### Keep the single scroll of ADR-0015
 
-Отклонено: поле ответа и карточки записей продолжают конкурировать за одну
-видимую область, а длинная расшифровка усложняет возврат к набранному тексту.
+Rejected: the answer field and the recording cards keep competing for one visible
+area, and a long transcript makes it harder to get back to the typed text.
 
-### Всегда раскрывать исходную шторку на 100%
+### Always open the original sheet to 100%
 
-Отклонено: теряется видимый контекст молитвы и таймера, а конкуренция элементов
-за высоту остаётся.
+Rejected: the visible context of the prayer and the timer is lost, and the
+competition of the elements for height remains.
 
-### Опираться только на `recorderState.isRecording`
+### Rely on `recorderState.isRecording` alone
 
-Отклонено: состояние обновляется с задержкой и не защищает промежутки
-permission → prepare → record и stop → завершение файла.
+Rejected: the state updates with a delay and does not protect the intervals
+permission → prepare → record and stop → the file being finished.
 
-### Защитить только музыкальный effect React-флагом
+### Guard only the music effect with a React flag
 
-Отклонено: флаг отменяет продолжение effect, но не может отменить уже начатый
-native `setAudioModeAsync`. Запоздалый playback-mode всё равно способен прийти
-после recording-mode и оборвать файл.
+Rejected: a flag cancels the continuation of the effect, but it cannot cancel a
+native `setAudioModeAsync` that already started. A belated playback mode can
+still arrive after the recording mode and cut the file short.
 
-## Последствия
+## Consequences
 
-- Поле ответа остаётся на месте независимо от количества записей и длины
-  расшифровки.
-- У записей появляется собственная прокрутка и отдельный жизненный цикл UI.
-- Повторные быстрые нажатия не создают параллельных native start/stop.
-- Музыка и аудио Писания не могут переключить audio mode во время записи.
-- Закрытие верхней шторки требует явной обработки pending-операции recorder.
-- Ошибка native `stop` не считается подтверждением остановки: управление
-  записью остаётся видимым и доступным для повторной попытки.
-- Ошибка/reset native recorder терминально снимает overlay и recording lease;
-  поздний callback не может оставить ложную активную запись.
-- Неожиданный `isFinished` текущего recorder во время фазы `recording`
-  считается прерыванием даже при `hasError: false`: Expo iOS не передаёт
-  `successfully=false` как ошибку. Ожидаемый finish во время `stopping` и
-  поздний callback старого recorder не прерывают новую запись.
-- ADR-0015 заменён этим решением; ADR-0002 продолжает определять серверную
-  расшифровку и хранение результата.
+- The answer field stays in place regardless of the number of recordings and the
+  length of a transcript.
+- The recordings get their own scroll and a separate UI lifecycle.
+- Repeated fast presses do not create parallel native starts and stops.
+- The music and the scripture audio cannot switch the audio mode during a
+  recording.
+- Closing the upper sheet requires handling a pending recorder operation
+  explicitly.
+- A failed native `stop` does not count as a confirmation that it stopped: the
+  recording controls stay visible and available for another attempt.
+- An error or a reset of the native recorder terminally removes the overlay and
+  the recording lease; a late callback cannot leave a false active recording.
+- An unexpected `isFinished` of the current recorder during the `recording` phase
+  counts as an interruption even with `hasError: false`: Expo iOS does not
+  surface `successfully=false` as an error. An expected finish during `stopping`
+  and a late callback of an old recorder do not interrupt a new recording.
+- ADR-0015 is superseded by this decision; ADR-0002 keeps defining the
+  server-side transcription and the storage of its result.
 
-## Ссылки
+## References
 
-- ClickUp: задача `86cbc6ywf`, баг `86cbcqmpa`
-- Код: `components/AnswerSheet.tsx`, `components/RecordingsSheet.tsx`,
+- Code: `components/AnswerSheet.tsx`, `components/RecordingsSheet.tsx`,
   `lib/audioModeCoordinator.ts`, `lib/recordingOperation.ts`,
   `lib/scriptureAudioOperation.ts`
 - Expo SDK 57: `expo-audio`
