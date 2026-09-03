@@ -1,34 +1,41 @@
-# Архитектурные решения
+# Architectural decisions
 
-ADR (Architecture Decision Record) фиксирует одно существенное решение: почему оно принято, какие варианты рассматривались и к каким последствиям привело.
+An ADR (Architecture Decision Record) captures a single significant decision: why
+it was made, which options were considered and what it led to.
 
-## Индекс
+## Index
 
-| ADR | Статус | Решение |
+| ADR | Status | Decision |
 | --- | --- | --- |
-| [0001](0001-architecture-documentation.md) | Принято | Хранить обзор архитектуры и ADR в репозитории |
-| [0002](0002-server-audio-transcription.md) | Принято | Расшифровывать голосовые ответы через серверный Gemini-прокси |
-| [0003](0003-contextual-scripture-selection.md) | Частично заменено ADR-0004 и ADR-0007 | Подбирать Писание сервером с single-flight prefetch, canonical history и offline snapshots |
-| [0004](0004-user-scripture-preferences.md) | Частично заменено ADR-0005 | Выбирать язык, перевод и озвучку из Bible API и фиксировать выбор на сессию |
-| [0005](0005-device-scripture-language-default.md) | Принято | Выбирать первый язык Писания по локали устройства с fallback на английский |
-| [0006](0006-structured-scripture-verses.md) | Принято | Рендерить и подсвечивать Писание по структурированным стихам выбранного перевода |
-| [0007](0007-http-result-as-network-truth.md) | Принято | Определять доступность Bible API по результату HTTP-запроса без сетевого preflight |
-| [0008](0008-scripture-verse-audio-alignment.md) | Принято | Воспроизводить отрывок по таймингам стихов внутри аудио главы |
-| [0009](0009-background-prayer-session.md) | Принято | Считать таймер по абсолютным часам и продолжать музыку в фоне |
-| [0010](0010-lock-screen-prayer-timer.md) | Принято | Показывать молитвенный дедлайн системным таймером iOS и Android |
-| [0011](0011-reactive-design-tokens.md) | Принято | Пересобирать визуальные токены и стили при смене геометрии окна |
-| [0012](0012-single-layout-fitted-to-window.md) | Принято | Вписывать кадр прототипа в окно: одна раскладка на все ориентации |
-| [0013](0013-local-prayer-reminders.md) | Принято | Напоминать о молитве локальными уведомлениями по расписанию «дни × времена» |
-| [0014](0014-app-lock-pin-and-biometrics.md) | Принято | Закрывать приложение локальным пин-кодом с хэшем в Keychain, биометрия — поверх него |
-| [0015](0015-answer-sheet-single-scroll.md) | Заменено ADR-0016 | Закрепить в шторке ответа вопрос и кнопки, остальное отдать одной прокрутке |
-| [0016](0016-separate-recordings-sheet.md) | Принято | Отделить голосовые записи от поля ответа и сериализовать start/stop recorder |
+| [0001](0001-architecture-documentation.md) | Accepted | Keep the architecture overview and the ADRs in the repository |
+| [0002](0002-server-audio-transcription.md) | Accepted | Transcribe voice answers through the server-side Gemini proxy |
+| [0003](0003-contextual-scripture-selection.md) | Partly superseded by ADR-0004 and ADR-0007 | Select scripture on the server with a single-flight prefetch, canonical history and offline snapshots |
+| [0004](0004-user-scripture-preferences.md) | Partly superseded by ADR-0005 | Pick the language, the translation and the narration from Bible API and freeze the choice for the session |
+| [0005](0005-device-scripture-language-default.md) | Accepted | Choose the first scripture language from the device locale, falling back to English |
+| [0006](0006-structured-scripture-verses.md) | Accepted | Render and highlight scripture by the structured verses of the chosen translation |
+| [0007](0007-http-result-as-network-truth.md) | Accepted | Judge Bible API availability by the result of the HTTP request, without a network preflight |
+| [0008](0008-scripture-verse-audio-alignment.md) | Accepted | Play a passage using the verse timings inside the chapter audio |
+| [0009](0009-background-prayer-session.md) | Accepted | Count the timer by the absolute clock and keep the music playing in the background |
+| [0010](0010-lock-screen-prayer-timer.md) | Accepted | Show the prayer deadline through the system timer on iOS and Android |
+| [0011](0011-reactive-design-tokens.md) | Accepted | Rebuild the visual tokens and styles when the window geometry changes |
+| [0012](0012-single-layout-fitted-to-window.md) | Accepted | Fit the prototype frame into the window: one layout for every orientation |
+| [0013](0013-local-prayer-reminders.md) | Accepted | Remind about prayer with local notifications on a "days x times" schedule |
+| [0014](0014-app-lock-pin-and-biometrics.md) | Accepted | Lock the app with a local PIN whose hash lives in the Keychain, with biometrics on top of it |
+| [0015](0015-answer-sheet-single-scroll.md) | Superseded by ADR-0016 | Pin the question and the buttons in the answer sheet and give the rest to a single scroll |
+| [0016](0016-separate-recordings-sheet.md) | Accepted | Separate voice recordings from the answer field and serialize recorder start/stop |
 
-## Правила
+## Rules
 
-1. Скопировать [`template.md`](template.md) в файл `NNNN-short-name.md`.
-2. Использовать следующий свободный четырёхзначный номер.
-3. На обсуждении держать статус `Предложено`, после согласования — `Принято` или `Отклонено`.
-4. Принятый ADR не менять по смыслу. Для пересмотра создать новый ADR, а старому поставить статус `Заменено ADR-NNNN`.
-5. Добавить решение в индекс этого файла и при необходимости обновить основной архитектурный обзор.
+1. Copy [`template.md`](template.md) into a file named `NNNN-short-name.md`.
+2. Use the next free four-digit number.
+3. Keep the status `Proposed` while it is under discussion; once agreed, set
+   `Accepted` or `Rejected`.
+4. Do not change the meaning of an accepted ADR. To revisit it, write a new ADR
+   and set the old one to `Superseded by ADR-NNNN`.
+5. Add the decision to the index in this file and update the main architecture
+   overview if needed.
 
-ADR нужен, когда решение меняет границы компонентов, хранение или движение данных, внешний контракт, ключевую зависимость, требования приватности либо способ сборки и поставки. Мелкие локальные детали реализации ADR не требуют.
+An ADR is needed when a decision changes component boundaries, the storage or
+the movement of data, an external contract, a key dependency, privacy
+requirements, or the way the app is built and delivered. Small local
+implementation details do not need one.

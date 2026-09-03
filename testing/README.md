@@ -1,47 +1,47 @@
-# Тестирование Lampada
+# Testing Lampada
 
-В репозитории лежит только то, что нужно, чтобы повторить проверку и убедиться
-в её результате. Планирование, статусы, исполнители и дефекты живут в ClickUp —
-здесь они не дублируются, иначе две картины расходятся.
+The repository holds only what is needed to repeat a check and to be sure of its
+result. Planning, statuses, assignees and defects live in ClickUp - they are not
+duplicated here, otherwise the two pictures drift apart.
 
-## Что где лежит
+## What lives where
 
-| Каталог | Содержимое | Меняется ли |
+| Path | Contents | Does it change |
 | --- | --- | --- |
-| [`TEST_PLAN.md`](./TEST_PLAN.md) | Идентификаторы сценариев (`SMK-*`, `REM-*`, `LOCK-*` и прочие) и ожидаемое поведение | Живой документ, растёт вместе с приложением |
-| `e2e/` | Исполняемые сценарии Maestro, 63 флоу | Живой |
-| `reports/` | Датированные результаты прогонов | Неизменяемые: новый прогон — новый файл |
-| `evidence/` | Доказательства к отчётам: финальные скриншоты, решающие логи, снимки данных | Неизменяемые, правила — в [`evidence/README.md`](./evidence/README.md) |
+| [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
+| `e2e/` | Executable Maestro scenarios, 63 flows | Living |
+| `reports/` | Dated results of runs | Immutable: a new run means a new file |
+| `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |
 
-Идентификатор сценария — общий ключ между тест-планом, флоу, отчётом и задачей
-в ClickUp. По нему всё и связывается.
+The scenario identifier is the shared key between the test plan, the flow, the
+report and the ClickUp task. Everything is tied together through it.
 
-## Запуск
+## Running
 
-Соберите и запустите приложение способом из корневого
-[`README.md`](../README.md). Expo Go не подходит: проект использует нативные
-модули, которых в нём нет.
+Build and launch the app the way the root [`README.md`](../README.md) describes.
+Expo Go is not suitable: the project uses native modules it does not have.
 
 ```bash
-maestro test testing/e2e/ios-smoke-full.yaml           # основной smoke
-maestro test testing/e2e/ios-smoke-full-relaunch.yaml  # сохранность после перезапуска
+maestro test testing/e2e/ios-smoke-full.yaml           # the main smoke
+maestro test testing/e2e/ios-smoke-full-relaunch.yaml  # persistence after a relaunch
 ```
 
-Отдельные сценарии запускаются так же — именем файла из `e2e/`.
+Individual scenarios are run the same way, by the file name from `e2e/`.
 
-## Что делать с результатом
+## What to do with the result
 
-Прогон, о котором стоит помнить, описывается файлом в `reports/` с датой в
-имени. Отчёт называет проверенные сценарии, их исход и файлы доказательств,
-на которые ссылается.
+A run worth remembering is described by a file in `reports/` with the date in its
+name. The report names the scenarios that were checked, their outcome and the
+evidence files it refers to.
 
-Найденный дефект заводится в ClickUp подзадачей типа `Bug` у того этапа, на
-котором он найден, и там же закрывается после ретеста. Отложенный или осознанно
-принятый дефект переносится в этап `99`. Локальных `BUG-*.md` в репозитории нет.
+A defect that is found is filed in ClickUp as a subtask of type `Bug` under the
+stage where it was found, and closed there after the retest. A postponed or
+deliberately accepted defect is moved to stage `99`. There are no local
+`BUG-*.md` files in the repository.
 
-## Доказательства
+## Evidence
 
-В `evidence/` попадают только отобранные материалы, и у каждого файла должна
-быть ссылка из отчёта — файл без ссылки считается бесхозным и удаляется при
-уборке. Повторные попытки, полные системные и Xcode-логи, дубли crash reports
-и артефакты сборки в репозиторий не добавляются.
+Only selected material goes into `evidence/`, and every file has to be referenced
+from a report - a file with no reference counts as orphaned and is deleted during
+cleanup. Repeated attempts, full system and Xcode logs, duplicate crash reports
+and build artifacts are not added to the repository.

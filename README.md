@@ -1,132 +1,144 @@
 # Lampada
 
-Молитвенное приложение на Expo (SDK 57) / React Native.
+A prayer app built with Expo (SDK 57) / React Native.
 
-Текущее устройство проекта описано в [`architect/README.md`](architect/README.md), история архитектурных решений — в [`architect/decisions/`](architect/decisions/README.md).
+The current shape of the project is described in
+[`architect/README.md`](architect/README.md); the history of architectural
+decisions lives in [`architect/decisions/`](architect/decisions/README.md).
 
-## Разработка
+## Development
 
 ```bash
 npm install
-npx expo start                                  # дев-сервер + Metro
-npx expo run:ios --device "iPhone 17 Pro"       # dev-клиент в симуляторе
+npx expo start                                  # dev server + Metro
+npx expo run:ios --device "iPhone 17 Pro"       # dev client in the simulator
 ```
 
-Симулятору нужен именно `expo run:ios`, а не Expo Go: приложение падает в Expo Go
-ещё на импорте (`Cannot find native module 'ExpoWidgets'` из `lib/store.ts` →
-`lib/prayerSystemTimer.ios.ts` → `widgets/PrayerLiveActivity.tsx`). Симптом
-обманчив — уже запущенный экземпляр продолжает жить на Fast Refresh и выглядит
-рабочим, падение видно только при холодном старте. Для Maestro-флоу
-`appId` собственного билда — `twinkler`, а не `host.exp.Exponent`.
+The simulator needs `expo run:ios` specifically, not Expo Go: in Expo Go the app
+crashes at import time (`Cannot find native module 'ExpoWidgets'` from
+`lib/store.ts` -> `lib/prayerSystemTimer.ios.ts` -> `widgets/PrayerLiveActivity.tsx`).
+The symptom is deceptive - an already running instance keeps living on Fast
+Refresh and looks healthy, so the crash is only visible on a cold start. For
+Maestro flows the `appId` of the custom build is `twinkler`, not
+`host.exp.Exponent`.
 
-## ИИ
+## AI
 
-ИИ-запросы идут через `https://api.bible.garden/api/ai/question` в
-существующий FastAPI-сервис. Он хранит ключ Google AI Studio и вызывает
-Gemini; Google key и системные инструкции в приложение не встраиваются. Для включения ИИ скопируй
-`.env.example` в `.env.local` и укажи клиентский `X-API-Key` сервера. Этот
-клиентский ключ виден в собранном приложении и не заменяет серверные лимиты.
-Голосовые ответы отправляются только в случае нажатия «Расшифровать» отдельным запросом на
-`/api/ai/transcribe`; URL задаётся через
-`EXPO_PUBLIC_AI_TRANSCRIBE_URL` либо выводится из URL `/api/ai/question`.
+AI requests go through `https://api.bible.garden/api/ai/question` to an existing
+FastAPI service. It holds the Google AI Studio key and calls Gemini; neither the
+Google key nor the system instructions are embedded into the app. To enable AI,
+copy `.env.example` to `.env.local` and set the client `X-API-Key` of the
+service. That client key is visible in the built app and does not replace the
+server-side limits. Voice answers are sent only when "Transcribe" is pressed, as
+a separate request to `/api/ai/transcribe`; the URL is set through
+`EXPO_PUBLIC_AI_TRANSCRIBE_URL` or derived from the `/api/ai/question` URL.
 
-> Приложение использует нативные модули, которых нет в Expo Go
-> (`@shopify/react-native-skia`, `react-native-reanimated` 4).
-> Поэтому для запуска на устройстве нужен собственный билд (см. ниже),
-> а не приложение Expo Go.
+> The app uses native modules that Expo Go does not have
+> (`@shopify/react-native-skia`, `react-native-reanimated` 4). Running it on a
+> device therefore requires a custom build (see below), not the Expo Go app.
 
-## Локальный запуск на iPhone
+## Running locally on an iPhone
 
-Проект запускается на физическом iPhone через собственную **Release**-сборку:
-она работает автономно, без Metro и Expo Go. Приложение подписывается платной
-командой **Maria Novikov** (`4SC2JCE37N`), поэтому живёт на телефоне около года.
+The project runs on a physical iPhone through a custom **Release** build: it
+works standalone, without Metro and without Expo Go. The app is signed with the
+paid team **Maria Novikov** (`4SC2JCE37N`), so it stays on the phone for about a
+year.
 
-### Способы сборки и переменные
+### Build methods and variables
 
-| Способ | Назначение | Источник `EXPO_PUBLIC_*` |
+| Method | Purpose | Source of `EXPO_PUBLIC_*` |
 | --- | --- | --- |
-| `npm run iphone` | Локальная Release-сборка и прямая установка на подключённый iPhone | `.env.local` |
-| `npm run eas:preview` | Внутренняя Ad Hoc сборка EAS для зарегистрированных устройств | EAS environment `preview` |
-| `eas build --profile production` | Публикация через App Store | EAS environment `production` |
+| `npm run iphone` | Local Release build installed directly onto a connected iPhone | `.env.local` |
+| `npm run eas:preview` | Internal Ad Hoc EAS build for registered devices | EAS environment `preview` |
+| `eas build --profile production` | Publishing through the App Store | EAS environment `production` |
 
-`preview` не читает `.env.local`: этот файл исключён из git и облачного архива.
-Перед preview-сборкой команда автоматически проверяет наличие обязательных
-переменных. Отдельный `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` не обязателен — адрес
-Scripture API выводится из `EXPO_PUBLIC_AI_PROXY_URL`.
+`preview` does not read `.env.local`: that file is excluded from git and from the
+cloud archive. Before a preview build the command checks automatically that the
+required variables are present. A separate `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` is
+not required - the Scripture API address is derived from
+`EXPO_PUBLIC_AI_PROXY_URL`.
 
 ```bash
-npm run env:check:local     # проверить локальную Release-сборку
-npm run env:check:preview   # проверить имена переменных в EAS preview
-npm run eas:preview         # preflight + внутренняя EAS-сборка
+npm run env:check:local     # check the local Release build
+npm run env:check:preview   # check the variable names in EAS preview
+npm run eas:preview         # preflight + internal EAS build
 ```
 
-Если в установленной сборке одновременно появился резервный вопрос и подпись
-«из сохранённых», сначала проверь build environment: это типичный признак того,
-что URL/ключ не были зашиты в JS bundle. После изменения EAS variables старый
-`.ipa` не исправится — его нужно пересобрать и установить повторно.
+If an installed build shows a fallback question together with an "from the saved
+ones" caption, check the build environment first: this is the typical sign that
+the URL or the key were not baked into the JS bundle. After changing EAS
+variables an old `.ipa` will not fix itself - it has to be rebuilt and
+reinstalled.
 
-### Требования
+### Requirements
 
-- **macOS + Xcode** (собрать под iOS можно только на маке).
-- В Xcode → Settings → Accounts залогинен Apple ID с доступом к команде `4SC2JCE37N`.
-- iPhone подключён **кабелем**, разблокирован, компьютеру «доверяет».
-  На iOS 16+ включи Режим разработчика: *Настройки → Конфиденциальность и безопасность → Режим разработчика*.
+- **macOS + Xcode** (an iOS build is only possible on a Mac).
+- An Apple ID with access to team `4SC2JCE37N` signed in under
+  Xcode -> Settings -> Accounts.
+- The iPhone connected **by cable**, unlocked, and trusting the computer.
+  On iOS 16+ enable Developer Mode:
+  *Settings -> Privacy & Security -> Developer Mode*.
 
-### Первый запуск
+### First run
 
 ```bash
 npm install
 npm run iphone
 ```
 
-Скрипт `scripts/deploy-iphone.sh` сам:
+The `scripts/deploy-iphone.sh` script does the rest by itself:
 
-1. проверяет обязательные переменные в `.env.local`;
-2. находит подключённый iPhone (UDID определяется автоматически);
-3. при отсутствии папки `ios/` генерирует её через `expo prebuild`;
-4. синхронизирует CocoaPods с установленными Expo-модулями;
-5. проставляет команду подписи;
-6. собирает Release, устанавливает и запускает приложение.
+1. checks the required variables in `.env.local`;
+2. finds the connected iPhone (the UDID is detected automatically);
+3. generates the `ios/` folder through `expo prebuild` if it is missing;
+4. syncs CocoaPods with the installed Expo modules;
+5. sets the signing team;
+6. builds Release, installs the app and launches it.
 
-Первая сборка долгая (5–20 мин: компиляция Skia, Hermes и пр.), повторные — быстрее.
-Телефон во время установки и первого запуска должен быть разблокирован.
+The first build is slow (5-20 min: compiling Skia, Hermes and so on), later ones
+are faster. The phone has to stay unlocked during the installation and the first
+launch.
 
-### Запуск после изменений
+### Running after changes
 
-После изменений в TypeScript, ресурсах или нативной конфигурации снова выполни:
+After changes to TypeScript, to assets or to the native configuration, run again:
 
 ```bash
 npm run iphone
 ```
 
-После смены `bundleIdentifier` на `twinkler` первая новая сборка установится как
-отдельное приложение и не получит локальные данные предыдущей установки. Следующие
-сборки с тем же идентификатором будут устанавливаться поверх неё с сохранением данных.
-Отдельно запускать `npm start` не нужно: он поднимает Metro, а установленная
-Release-сборка использует встроенный JS-бандл.
+After the `bundleIdentifier` was changed to `twinkler`, the first new build
+installs as a separate app and does not inherit the local data of the previous
+installation. Later builds with the same identifier install over it and keep the
+data. There is no need to run `npm start` separately: it brings up Metro, while
+an installed Release build uses its bundled JS.
 
-### Переопределение через окружение
+### Overriding through the environment
 
 ```bash
-DEVICE=<udid> npm run iphone                  # конкретный телефон
-TEAM=<teamId> BUNDLE=<id> npm run iphone       # другой аккаунт/приложение
+DEVICE=<udid> npm run iphone                   # a particular phone
+TEAM=<teamId> BUNDLE=<id> npm run iphone       # another account or app
 ```
 
-### Заметки
+### Notes
 
-- Установка только **по кабелю** (`devicectl` по воздуху в этой схеме не ставит).
-- Папка `ios/` в `.gitignore` — генерируется `expo prebuild`, в репозиторий не коммитится.
-- Если менял иконку/права/плагины в `app.json`, прогони `npx expo prebuild -p ios`
-  перед сборкой (скрипт после этого сам вернёт правильную команду подписи).
-- `npx expo run:ios` напрямую **не использовать**: он берёт первый попавшийся
-  сертификат и чужую команду подписи. Сборку делаем через `npm run iphone`.
+- Installation works **over a cable only** (`devicectl` over the air does not
+  install in this setup).
+- The `ios/` folder is in `.gitignore` - it is generated by `expo prebuild` and
+  is not committed.
+- If the icon, the permissions or the plugins in `app.json` were changed, run
+  `npx expo prebuild -p ios` before building (the script will then restore the
+  correct signing team itself).
+- Do **not** use `npx expo run:ios` directly: it picks the first certificate it
+  finds and someone else's signing team. Builds go through `npm run iphone`.
 
-### Если сборка не видит iPhone
+### If the build does not see the iPhone
 
-- Проверь кабель, разблокировку, доверие компьютеру и включённый Режим разработчика.
-- Посмотри доступные устройства командой `xcrun xctrace list devices`.
-- Ошибка `iOS <версия> is not installed` означает, что текущий Xcode не поддерживает
-  версию iOS на телефоне. Обнови Xcode или установи нужную платформу в
-  **Xcode → Settings → Components**, затем повтори `npm run iphone`.
-- Ошибка подписи обычно означает, что в **Xcode → Settings → Accounts** нет
-  аккаунта с доступом к команде `4SC2JCE37N` или сертификат истёк.
+- Check the cable, the unlocked screen, trust for the computer and that
+  Developer Mode is on.
+- List the available devices with `xcrun xctrace list devices`.
+- The error `iOS <version> is not installed` means the current Xcode does not
+  support the iOS version on the phone. Update Xcode or install the platform
+  under **Xcode -> Settings -> Components**, then repeat `npm run iphone`.
+- A signing error usually means that **Xcode -> Settings -> Accounts** has no
+  account with access to team `4SC2JCE37N`, or that the certificate has expired.

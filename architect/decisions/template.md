@@ -1,33 +1,34 @@
-# ADR-NNNN: Краткое название решения
+# ADR-NNNN: Short title of the decision
 
-- Статус: Предложено
-- Дата: YYYY-MM-DD
-- Участники: имя или роль
+- Status: Proposed
+- Date: YYYY-MM-DD
+- Participants: name or role
 
-## Контекст
+## Context
 
-Какую проблему или ограничение нужно учесть? Какие факты важны для решения?
+Which problem or constraint has to be taken into account? Which facts matter for
+the decision?
 
-## Решение
+## Decision
 
-Что именно решено сделать?
+What exactly was decided?
 
-## Рассмотренные варианты
+## Options considered
 
-### Вариант 1
+### Option 1
 
-Краткое описание и причина выбора или отказа.
+A short description and the reason it was chosen or rejected.
 
-### Вариант 2
+### Option 2
 
-Краткое описание и причина выбора или отказа.
+A short description and the reason it was chosen or rejected.
 
-## Последствия
+## Consequences
 
-- Положительные последствия.
-- Компромиссы, ограничения и дальнейшая работа.
+- Positive consequences.
+- Trade-offs, limitations and further work.
 
-## Ссылки
+## References
 
-- ClickUp: задача или обсуждение
-- Код, прототип или внешняя документация
+- ClickUp: the task or the discussion
+- Code, prototype or external documentation
