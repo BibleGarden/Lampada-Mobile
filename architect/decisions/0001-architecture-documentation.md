@@ -1,44 +1,57 @@
-# ADR-0001: Хранить архитектурную документацию в репозитории
+# ADR-0001: Keep the architecture documentation in the repository
 
-- Статус: Принято
-- Дата: 2026-08-23
-- Участники: владелец продукта, команда проекта
+- Status: Accepted
+- Date: 2026-08-23
+- Participants: product owner, project team
 
-## Контекст
+## Context
 
-У проекта не было единого краткого описания текущей архитектуры и постоянного места для фиксации причин архитектурных решений. Информация оставалась в коде, задачах и обсуждениях, из-за чего реализованное состояние и история решений могли смешиваться с планами.
+The project had no single short description of the current architecture and no
+permanent place to record the reasons behind architectural decisions. The
+information stayed in the code, in tasks and in discussions, so the implemented
+state and the history of decisions could get mixed up with plans.
 
-## Решение
+## Decision
 
-Создать каталог `architect/` с двумя разрезами документации:
+Create an `architect/` directory with two cuts of documentation:
 
-- `architect/README.md` кратко описывает только текущее реализованное устройство приложения;
-- `architect/decisions/` хранит неизменяемую историю отдельных архитектурных решений в формате ADR.
+- `architect/README.md` briefly describes only the currently implemented shape of
+  the app;
+- `architect/decisions/` keeps the immutable history of individual architectural
+  decisions in the ADR format.
 
-Документы версионируются вместе с кодом. ClickUp остаётся источником задач, статусов и багов; ADR может ссылаться на ClickUp, но не заменяет постановку работы.
+The documents are versioned together with the code. ClickUp remains the source of
+tasks, statuses and bugs; an ADR may refer to ClickUp, but it does not replace
+assigning the work.
 
-## Рассмотренные варианты
+## Options considered
 
-### Только один архитектурный документ
+### A single architecture document
 
-Проще начать, но причины решений быстро смешиваются с описанием текущего состояния, а история теряется при обновлении текста.
+Simpler to start with, but the reasons behind decisions quickly get mixed into
+the description of the current state, and the history is lost as the text is
+updated.
 
-### Внешняя wiki
+### An external wiki
 
-Удобна для обсуждения, но изменения документации могут расходиться с изменениями кода и жить в другом цикле ревью.
+Convenient for discussion, but changes to the documentation can drift away from
+changes to the code and live in a different review cycle.
 
-### Обзор и ADR рядом с кодом
+### The overview and the ADRs next to the code
 
-Разделяет текущее состояние и историю решений, а документация меняется и проверяется вместе с реализацией. Этот вариант выбран.
+Separates the current state from the history of decisions, and the documentation
+changes and is reviewed together with the implementation. This option was chosen.
 
-## Последствия
+## Consequences
 
-- У проекта появляется одно место для знакомства с текущей архитектурой.
-- Существенные решения получают явный контекст, альтернативы и последствия.
-- Изменения архитектуры требуют обновлять обзор и при необходимости добавлять ADR в том же наборе изменений.
-- Актуальность зависит от дисциплины команды и проверки документации на ревью.
+- The project gets one place to get acquainted with the current architecture.
+- Significant decisions get explicit context, alternatives and consequences.
+- A change to the architecture requires updating the overview and, if needed,
+  adding an ADR within the same set of changes.
+- Staying current depends on the discipline of the team and on checking the
+  documentation during review.
 
-## Ссылки
+## References
 
 - [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/)
 - [`architect/README.md`](../README.md)

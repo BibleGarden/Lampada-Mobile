@@ -1,63 +1,65 @@
-# ADR-0009: Считать таймер по часам и воспроизводить музыку в фоне
+# ADR-0009: Count the timer by the clock and play the music in the background
 
-- Статус: Принято
-- Дата: 2026-08-29
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Accepted
+- Date: 2026-08-29
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-Таймер молитвы уменьшался секундным JavaScript-интервалом, а музыка явно
-приостанавливалась при переходе приложения в background. Мобильная ОС может
-замедлить или полностью остановить JavaScript после сворачивания, поэтому таймер
-терял прошедшее время. Для устойчивого фонового аудио Expo SDK 57 требует
-активную аудиосессию, нативную конфигурацию background playback и на Android —
-регистрацию плеера как системной media-сессии.
+The prayer timer was decremented by a one-second JavaScript interval, and the
+music was paused explicitly when the app went into the background. A mobile OS
+can slow JavaScript down or stop it entirely after the app is backgrounded, so
+the timer lost the time that passed. For durable background audio Expo SDK 57
+requires an active audio session, native background playback configuration and,
+on Android, registering the player as a system media session.
 
-## Решение
+## Decision
 
-1. Хранить в runtime-состоянии абсолютные `startedAtMs` и `endsAtMs`, а
-   `elapsed` и `remaining` вычислять из `Date.now()`. Секундный interval остаётся
-   только механизмом обновления интерфейса; при возврате в `active` выполняется
-   немедленная синхронизация.
-2. Воспроизводить локальную очередь через `expo-audio` `AudioPlayer`, включать
-   `shouldPlayInBackground` и регистрировать активный трек для системной
-   media-сессии. После окончания трека JavaScript переводит плеер к следующему
-   элементу прежней случайной циклической очереди.
-3. Явно включить `enableBackgroundPlayback` в config plugin. Изменение требует
-   нового native build; Expo Go не является средой проверки.
-4. Сохранить временный аудиофокус записи и озвучки Писания: во время этих
-   действий музыка и её системные controls отключаются, после завершения
-   музыкальный background mode восстанавливается.
+1. Keep the absolute `startedAtMs` and `endsAtMs` in the runtime state, and
+   compute `elapsed` and `remaining` from `Date.now()`. The one-second interval
+   remains only a mechanism for updating the interface; on returning to `active`
+   an immediate synchronisation is performed.
+2. Play the local queue through an `expo-audio` `AudioPlayer`, enable
+   `shouldPlayInBackground` and register the active track for the system media
+   session. When a track ends, JavaScript moves the player to the next item of
+   the same random looping queue.
+3. Enable `enableBackgroundPlayback` explicitly in the config plugin. The change
+   requires a new native build; Expo Go is not a valid environment to verify it.
+4. Keep the temporary audio focus of recording and scripture narration: during
+   those actions the music and its system controls are turned off, and the music
+   background mode is restored afterwards.
 
-## Рассмотренные варианты
+## Options considered
 
-### Оставить секундный interval и догонять число пропущенных тиков
+### Keep the one-second interval and catch up on the missed ticks
 
-Отклонено: ОС не обязана сообщать количество пропущенных callback, а накопление
-ошибки остаётся зависимым от планировщика JavaScript.
+Rejected: the OS is not obliged to report how many callbacks were missed, and the
+accumulated error stays dependent on the JavaScript scheduler.
 
-### Оставить `AudioPlaylist` и только включить `shouldPlayInBackground`
+### Keep `AudioPlaylist` and only enable `shouldPlayInBackground`
 
-Отклонено: на Android Expo SDK 57 требует `setActiveForLockScreen` для устойчивого
-воспроизведения дольше примерно трёх минут, а `AudioPlaylist` этого API не имеет.
+Rejected: on Android, Expo SDK 57 requires `setActiveForLockScreen` for durable
+playback beyond roughly three minutes, and `AudioPlaylist` has no such API.
 
-### Добавить отдельную background task для таймера
+### Add a separate background task for the timer
 
-Отклонено: периодические фоновые задачи не гарантируют секундную частоту. Для
-видимого таймера достаточно пересчёта по абсолютным часам после возврата.
+Rejected: periodic background tasks do not guarantee a one-second cadence. For a
+visible timer, recomputing from the absolute clock after returning is enough.
 
-## Последствия
+## Consequences
 
-- Таймер корректно догоняет время после background, пока процесс приложения жив.
-- Музыка может продолжаться при блокировке экрана; Android показывает системное
-  media-уведомление, iOS — сведения Now Playing и controls.
-- Если ОС выгрузила процесс, активная сессия пока не восстанавливается.
-- Достижение нуля в фоне не запускает навигацию само: завершение обрабатывается
-  после возобновления JavaScript. Уведомление о конце остаётся отдельной задачей.
-- Фоновое аудио и переходы между треками требуют ручной проверки на native build.
+- The timer correctly catches up after the background, as long as the app process
+  is alive.
+- The music can continue while the screen is locked; Android shows a system media
+  notification, iOS the Now Playing information and controls.
+- If the OS unloaded the process, an active session is not restored yet.
+- Reaching zero in the background does not trigger navigation by itself: the
+  finish is handled after JavaScript resumes. A notification about the end
+  remains a separate task.
+- Background audio and the transitions between tracks require a manual check on a
+  native build.
 
-## Ссылки
+## References
 
-- ClickUp: https://app.clickup.com/t/86cbbm5xd
 - [Expo Audio SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/audio/)
 - [`architect/README.md`](../README.md)

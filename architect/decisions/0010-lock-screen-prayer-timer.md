@@ -1,79 +1,81 @@
-# ADR-0010: Показывать таймер молитвы на заблокированном экране
+# ADR-0010: Show the prayer timer on the locked screen
 
-- Статус: Принято
-- Дата: 2026-08-29
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Accepted
+- Date: 2026-08-29
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-После ADR-0009 музыка продолжает играть в фоне и предоставляет системные media
-controls, но молитвенный таймер виден только внутри приложения. Media pause
-семантически относится к композиции и не должен скрыто останавливать молитву.
-Секундные обновления из JavaScript ненадёжны после блокировки экрана, поэтому
-системная поверхность должна считать время от абсолютного дедлайна самостоятельно.
+After ADR-0009 the music keeps playing in the background and provides system
+media controls, but the prayer timer is visible only inside the app. A media
+pause belongs semantically to the track and must not silently stop the prayer.
+Per-second updates from JavaScript are unreliable once the screen is locked, so
+the system surface has to count the time from the absolute deadline on its own.
 
-## Решение
+## Decision
 
-1. Сохранить независимость музыки и молитвы: media play/pause управляет только
-   `AudioPlayer`; системный таймер использует `startedAtMs` и `endsAtMs` сессии.
-2. На iOS 16.4+ использовать официальный Expo SDK 57 `expo-widgets` и
-   `@expo/ui`: Live Activity отображает SwiftUI `Text(timerInterval:countsDown:)`
-   на Lock Screen и Dynamic Island. `staleDate` равен дедлайну, поэтому после
-   нуля система может показать завершённое состояние без запуска JavaScript.
-3. На Android использовать локальный Expo Module и отдельное low-importance
-   ongoing notification. `Notification.Builder` получает `setWhen(endsAtMs)`,
-   `setUsesChronometer(true)` и `setChronometerCountDown(true)`; отдельный
-   foreground service не создаётся.
-4. Стартовать системный таймер только для конечной молитвы, обновлять его после
-   ручной корректировки длительности и удалять при переходе к рефлексии,
-   завершении или reset.
-5. На Android запрашивать `POST_NOTIFICATIONS` при первом запуске конечной
-   молитвы. Отказ не блокирует саму молитву, но скрывает системную карточку.
+1. Keep the music and the prayer independent: media play/pause controls only the
+   `AudioPlayer`; the system timer uses the `startedAtMs` and `endsAtMs` of the
+   session.
+2. On iOS 16.4+ use the official Expo SDK 57 `expo-widgets` and `@expo/ui`: a
+   Live Activity displays a SwiftUI `Text(timerInterval:countsDown:)` on the Lock
+   Screen and in the Dynamic Island. `staleDate` equals the deadline, so after
+   zero the system can show a finished state without running JavaScript.
+3. On Android use a local Expo Module and a separate low-importance ongoing
+   notification. `Notification.Builder` gets `setWhen(endsAtMs)`,
+   `setUsesChronometer(true)` and `setChronometerCountDown(true)`; no separate
+   foreground service is created.
+4. Start the system timer only for a finite prayer, update it after a manual
+   change of the duration, and remove it on the transition to reflection, on
+   finishing or on reset.
+5. On Android request `POST_NOTIFICATIONS` at the first start of a finite
+   prayer. A refusal does not block the prayer itself, but hides the system card.
 
-## Рассмотренные варианты
+## Options considered
 
-### Показывать время в metadata композиции
+### Show the time in the track metadata
 
-Отклонено: название и прогресс Now Playing принадлежат аудиотреку, а не молитве;
-пауза музыки создавала бы двусмысленную связь с таймером.
+Rejected: the Now Playing title and progress belong to the audio track, not to
+the prayer; pausing the music would create an ambiguous link with the timer.
 
-### Обновлять текст раз в секунду из JavaScript
+### Update the text once a second from JavaScript
 
-Отклонено: iOS и Android могут приостановить JavaScript в background. Нативные
-timer interval и chronometer считают секунды на стороне системы.
+Rejected: iOS and Android may suspend JavaScript in the background. The native
+timer interval and chronometer count the seconds on the system side.
 
-### Запустить Android foreground service для таймера
+### Run an Android foreground service for the timer
 
-Отклонено: на Android 14+ foreground service обязан иметь разрешённый тип, а
-обычный молитвенный countdown не относится ни к одному подходящему типу. Media
-foreground service `expo-audio` остаётся ответственностью музыки.
+Rejected: on Android 14+ a foreground service must have an allowed type, and an
+ordinary prayer countdown fits none of the suitable ones. The `expo-audio` media
+foreground service remains the responsibility of the music.
 
-### Одна кроссплатформенная библиотека уведомлений
+### A single cross-platform notification library
 
-Отклонено: iOS Live Activity требует WidgetKit extension, а Android countdown —
-системных chronometer-флагов. Маленький платформенный слой сохраняет нативную
-семантику без секундного планировщика и лишнего внешнего runtime.
+Rejected: an iOS Live Activity requires a WidgetKit extension, while the Android
+countdown needs the system chronometer flags. A small platform layer preserves
+the native semantics without a per-second scheduler and an extra external
+runtime.
 
-## Последствия
+## Consequences
 
-- iOS deployment target повышается до 16.4; Expo Go больше не подходит для этой
-  функции, требуется новая native build.
-- `expo-widgets` создаёт WidgetKit extension, App Group `group.twinkler` и
-  дополнительный bundle `twinkler.ExpoWidgetsTarget`; signing этих целей нужно
-  проверять на физическом устройстве и в EAS.
-- Плагин Expo Widgets 57.0.15 добавляет `aps-environment` entitlement даже при
-  выключенных push updates; локальная реализация push-токены не использует.
-- Android package впервые фиксируется как `com.nf404.twinkler`. Его нельзя менять
-  после публикации в Google Play без создания нового приложения.
-- При принудительной выгрузке процесса приложение не восстанавливает активную
-  сессию. Системная карточка считает до дедлайна; окончательная очистка также
-  выполняется при следующем запуске/reset.
-- Физические iPhone и Android остаются обязательными для проверки Lock Screen,
-  Dynamic Island, permission denial и совместной работы с media controls.
+- The iOS deployment target is raised to 16.4; Expo Go no longer works for this
+  feature, a new native build is required.
+- `expo-widgets` creates a WidgetKit extension, the App Group `group.twinkler`
+  and an extra bundle `twinkler.ExpoWidgetsTarget`; the signing of those targets
+  has to be verified on a physical device and in EAS.
+- The Expo Widgets plugin 57.0.15 adds the `aps-environment` entitlement even
+  with push updates disabled; the local implementation uses no push tokens.
+- The Android package is fixed for the first time as `com.nf404.twinkler`. It
+  cannot be changed after publishing to Google Play without creating a new app.
+- If the process is force-unloaded, the app does not restore the active session.
+  The system card counts down to the deadline; the final cleanup also happens on
+  the next launch or reset.
+- Physical iPhone and Android devices remain mandatory for verifying the Lock
+  Screen, the Dynamic Island, a permission denial and the interplay with the
+  media controls.
 
-## Ссылки
+## References
 
-- ClickUp: https://app.clickup.com/t/86cb8uhct
 - [ADR-0009](0009-background-prayer-session.md)
 - [Expo Widgets SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/widgets/)
 - [Expo UI Text SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/ui/swift-ui/text/)

@@ -1,39 +1,39 @@
-# ADR-0005: Дефолт языка Писания по устройству
+# ADR-0005: The scripture language default from the device
 
-- Статус: Принято
-- Дата: 2026-08-27
-- Участники: владелец продукта, разработчик, QA-куратор
-- Частично заменяет: ADR-0004, пункт 4
+- Status: Accepted
+- Date: 2026-08-27
+- Participants: product owner, developer, QA lead
+- Partly supersedes: ADR-0004, item 4
 
-## Контекст
+## Context
 
-Первая версия настройки сохраняла прежний русский перевод как единый дефолт.
-Владелец продукта уточнил, что новая установка должна сначала использовать язык
-устройства, но только если он присутствует в серверном каталоге. Неподдерживаемая
-локаль не должна приводить к русскому тексту.
+The first version of the setting kept the previous Russian translation as the
+single default. The product owner clarified that a fresh installation should
+first use the language of the device, but only if it is present in the server
+catalogue. An unsupported locale must not lead to Russian text.
 
-## Решение
+## Decision
 
-1. На установке без валидного `meta.scripture_preferences` получить первичную
-   локаль через `expo-localization.getLocales()[0]`.
-2. Сопоставить сначала полный `languageTag`, затем `languageCode` без региона с
-   alias из `/api/languages`, без учёта регистра.
-3. Если совпадения нет, каталог недоступен или для языка нет полной тройки
-   translation/voice, использовать английский `en / 16 / 151`.
-4. Для известных `ru`, `uk`, `en` предпочитать стабильные пары из BibleGarden;
-   для остальных поддерживаемых языков брать первый перевод с активной озвучкой
-   в серверном порядке.
-5. Сохранить вычисленную тройку. Последующая смена локали устройства не меняет
-   явный или ранее вычисленный выбор пользователя.
+1. On an installation without a valid `meta.scripture_preferences`, take the
+   primary locale through `expo-localization.getLocales()[0]`.
+2. Match the full `languageTag` first, then the `languageCode` without the
+   region, against the aliases from `/api/languages`, case-insensitively.
+3. If there is no match, if the catalogue is unavailable, or if the language has
+   no complete translation/voice triple, use English `en / 16 / 151`.
+4. For the known `ru`, `uk` and `en`, prefer the stable pairs from BibleGarden;
+   for the other supported languages take the first translation with an active
+   narration in the server order.
+5. Save the computed triple. A later change of the device locale does not change
+   the explicit or previously computed choice of the user.
 
-## Последствия
+## Consequences
 
-- Первый запуск без сохранённого выбора обращается к серверному каталогу.
-- При недоступной сети приложение детерминированно начинает с английского и не
-  меняет язык неожиданно позже.
-- `expo-localization` добавляется как нативная зависимость SDK 57 и требует rebuild.
+- The first launch without a saved choice makes a call to the server catalogue.
+- With no network available the app starts deterministically in English and does
+  not change the language unexpectedly later.
+- `expo-localization` is added as a native SDK 57 dependency and requires a
+  rebuild.
 
-## Ссылки
+## References
 
-- ClickUp: https://app.clickup.com/t/86cbb10v4
 - Expo Localization SDK 57: https://docs.expo.dev/versions/v57.0.0/sdk/localization/

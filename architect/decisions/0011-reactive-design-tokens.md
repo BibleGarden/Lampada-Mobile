@@ -1,75 +1,82 @@
-# ADR-0011: Реактивные визуальные токены вместо констант уровня модуля
+# ADR-0011: Reactive visual tokens instead of module-level constants
 
-- Статус: Принято
-- Дата: 2026-08-30
-- Участники: QA-куратор, владелец продукта
+- Status: Accepted
+- Date: 2026-08-30
+- Participants: QA lead, product owner
 
-## Контекст
+## Context
 
-Токены прототипа масштабируются от ширины окна: `sc(v)` переводит пиксели макета
-294 pt в точки текущего экрана. Раньше `scale` вычислялся один раз при загрузке
-`lib/theme.ts`, а стили собирались через `StyleSheet.create` на уровне модуля —
-то есть числа замораживались до первого рендера.
+The prototype tokens scale from the window width: `sc(v)` converts the pixels of
+the 294 pt mock-up into the points of the current screen. Previously `scale` was
+computed once when `lib/theme.ts` was loaded, and the styles were assembled with
+`StyleSheet.create` at module level - that is, the numbers were frozen before the
+first render.
 
-Пока приложение жило только на телефоне в портрете, это не было заметно. Три
-обстоятельства сделали проблему реальной:
+While the app lived only on a phone in portrait this was not noticeable. Three
+circumstances made the problem real:
 
-1. Появилась планшетная раскладка со своим потолком масштаба и колонкой во всю
-   ширину — токены стали сильнее зависеть от геометрии.
-2. В iPadOS 26 Apple выкинула `UIRequiresFullScreen`: приложение обязано
-   поддерживать все ориентации и изменяемые окна. Запереть iPad в портрете
-   больше нельзя, значит смена геометрии в бою неизбежна.
-3. Split View и Stage Manager меняют ширину окна без всякого поворота.
+1. A tablet layout appeared with its own scale cap and a full-width column - the
+   tokens became far more dependent on the geometry.
+2. In iPadOS 26 Apple dropped `UIRequiresFullScreen`: an app must support every
+   orientation and resizable windows. An iPad can no longer be locked into
+   portrait, which makes a change of geometry in the field inevitable.
+3. Split View and Stage Manager change the window width without any rotation at
+   all.
 
-При смене геометрии ширина и высота меняются местами, а кегль, отступы, размеры
-кнопок и порог «планшет/телефон» остаются от стартовой ориентации — вёрстка
-молча становится неверной.
+When the geometry changes, the width and the height swap places, while the type
+sizes, the paddings, the button sizes and the "tablet/phone" threshold stay from
+the starting orientation - the layout silently becomes wrong.
 
-## Решение
+## Decision
 
-Геометрия хранится в изменяемой переменной модуля и пересчитывается при каждой
-смене окна; стили собираются внутри рендера.
+The geometry is kept in a mutable module variable and recomputed on every change
+of the window; the styles are assembled inside the render.
 
-- `sc()` читает текущую геометрию, `isTablet()` стала функцией.
-- `Dimensions.addEventListener('change', …)` поднимает геометрию до того, как
-  React начнёт перерисовку.
-- `useStyles(factory)` подписывается на `useWindowDimensions()`, синхронизирует
-  геометрию и пересобирает `StyleSheet.create` через `useMemo`.
-- Каждый экран и компонент объявляет `const stylesFactory = () => StyleSheet.create({…})`
-  и получает стили как `const styles = useStyles(stylesFactory)`.
-- Признак планшета считается по короткой стороне окна: она не меняется при
-  повороте, поэтому тип раскладки в портрете и альбоме один и тот же.
+- `sc()` reads the current geometry, and `isTablet()` became a function.
+- `Dimensions.addEventListener('change', …)` refreshes the geometry before React
+  starts re-rendering.
+- `useStyles(factory)` subscribes to `useWindowDimensions()`, synchronises the
+  geometry and rebuilds `StyleSheet.create` through `useMemo`.
+- Every screen and component declares
+  `const stylesFactory = () => StyleSheet.create({…})` and gets its styles as
+  `const styles = useStyles(stylesFactory)`.
+- Whether this is a tablet is judged by the short side of the window: it does not
+  change on rotation, so the layout type is the same in portrait and in
+  landscape.
 
-## Рассмотренные варианты
+## Options considered
 
-### Запереть ориентацию и оставить константы
+### Lock the orientation and keep the constants
 
-Самый дешёвый вариант, и для iPhone он применён (`app.json` фиксирует
-`UISupportedInterfaceOrientations` в один портрет). Но на iPad iPadOS 26
-игнорирует такое ограничение, а Split View ломает вёрстку и без поворота.
-Как единственная мера — не работает.
+The cheapest option, and it is applied for the iPhone (`app.json` fixes
+`UISupportedInterfaceOrientations` to a single portrait). But on an iPad, iPadOS
+26 ignores such a restriction, and Split View breaks the layout without any
+rotation. As the only measure it does not work.
 
-### Считать `scale` от короткой стороны экрана
+### Compute `scale` from the short side of the screen
 
-Тогда токены не меняются при повороте вообще. Не решает Split View и оставляет
-альбомную ориентацию свёрстанной под портретную ширину.
+Then the tokens do not change on rotation at all. It does not solve Split View
+and leaves landscape laid out for the portrait width.
 
-### Отказаться от планшета (`supportsTablet: false`)
+### Drop tablet support (`supportsTablet: false`)
 
-Снимает вопрос, но закрывает iPad как платформу. Продуктово не выбрано.
+Removes the question, but closes off the iPad as a platform. Not chosen as a
+product decision.
 
-## Последствия
+## Consequences
 
-- Экраны корректно перестраиваются на поворот, Split View и Stage Manager.
-- Любой новый экран обязан собирать стили через `useStyles`, иначе его размеры
-  снова замёрзнут. Константы уровня модуля, зависящие от `sc()`, недопустимы —
-  вместо них функции (см. `cardLineHeight()` в `components/CompanionDock.tsx`).
-- Стили пересобираются на каждую смену геометрии, а не однократно. Между сменами
-  `useMemo` отдаёт тот же объект, поэтому на рендер по тику таймера это не влияет.
-- Проверка поворота остаётся ручной: `simctl` не умеет вращать устройство.
+- The screens rebuild correctly for rotation, Split View and Stage Manager.
+- Every new screen has to assemble its styles through `useStyles`, otherwise its
+  sizes will freeze again. Module-level constants that depend on `sc()` are not
+  allowed - use functions instead (see `cardLineHeight()` in
+  `components/CompanionDock.tsx`).
+- The styles are rebuilt on every change of geometry rather than once. Between
+  changes `useMemo` returns the same object, so a render on a timer tick is
+  unaffected.
+- Verifying rotation stays manual: `simctl` cannot rotate a device.
 
-## Ссылки
+## References
 
 - `lib/theme.ts`, `useStyles`
 - [TN3192: Migrating your iPad app from the deprecated UIRequiresFullScreen key](https://developer.apple.com/documentation/technotes/tn3192-Migrating-your-app-from-the-deprecated-UIRequiresFullScreen-key)
-- ADR-0010 — Live Activity, из-за которой приложение не стартует в Expo Go
+- ADR-0010 - the Live Activity because of which the app does not start in Expo Go

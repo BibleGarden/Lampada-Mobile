@@ -1,61 +1,61 @@
-# ADR-0008: Воспроизводить отрывок по таймингам стихов внутри аудио главы
+# ADR-0008: Play a passage using the verse timings inside the chapter audio
 
-- Статус: Принято
-- Дата: 2026-08-29
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Accepted
+- Date: 2026-08-29
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-Bible API хранит озвучку целыми главами, а результат контекстного подбора
-содержит диапазон стихов внутри одной главы. Проигрывание файла целиком не
-соответствует выбранному отрывку, а вычислять позицию по длине текста нельзя:
-темп чтения, паузы и музыкальное сопровождение различаются.
+Bible API stores the narration as whole chapters, while the result of the
+contextual selection contains a range of verses inside a single chapter. Playing
+the file in full does not match the chosen passage, and computing the position
+from the length of the text is impossible: the reading pace, the pauses and the
+background music all differ.
 
-## Решение
+## Decision
 
-При входе в молитвенную сессию фиксировать вместе с языком и переводом код
-выбранной озвучки. По первому нажатию «Слушать» клиент получает алиас книги из
-`/api/translations/{translation}/books`, затем запрашивает
-`/api/excerpt_with_alignment` для точного диапазона. Ответ даёт URL MP3 целой
-главы и `begin`/`end` каждого стиха. Один управляемый `expo-audio` player делает
-seek к началу первого стиха, проверяет позицию каждые 200 мс и останавливается
-на конце последнего.
+When a prayer session starts, freeze the code of the chosen narration together
+with the language and the translation. On the first press of "Listen" the client
+gets the book alias from `/api/translations/{translation}/books`, then requests
+`/api/excerpt_with_alignment` for the exact range. The response gives the MP3 URL
+of the whole chapter and the `begin`/`end` of every verse. A single managed
+`expo-audio` player seeks to the start of the first verse, checks the position
+every 200 ms and stops at the end of the last one.
 
-Внутренний host из `audio_link` заменяется origin настроенного Bible API с
-сохранением серверного пути. Публичный ключ клиентского API добавляется в query,
-поскольку нативный URL-плеер не передаёт заголовок `X-API-Key` при стриминге.
-Во время загрузки и воспроизведения озвучка получает существующий временный
-аудиофокус сессии, поэтому тихая музыка приостанавливается.
+The internal host from `audio_link` is replaced with the origin of the configured
+Bible API, keeping the server path. The public client API key is added to the
+query, because the native URL player does not send the `X-API-Key` header while
+streaming. During loading and playback the narration takes the existing temporary
+audio focus of the session, so the quiet music is paused.
 
-## Рассмотренные варианты
+## Options considered
 
-### Получать отдельный MP3 каждого отрывка
+### Fetch a separate MP3 for every passage
 
-Отклонён: API уже оптимизирован для одного Range-совместимого файла главы и
-точных verse-level таймингов; нарезка добавила бы серверное хранение и задержку.
+Rejected: the API is already optimised for a single Range-compatible chapter file
+and exact verse-level timings; slicing would add server storage and latency.
 
-### Оценивать позицию по доле текста
+### Estimate the position from the share of the text
 
-Отклонён: такая эвристика режет слова и захватывает соседние стихи.
+Rejected: such a heuristic cuts words in half and catches neighbouring verses.
 
-### Сохранять тайминги в SQLite вместе с текстовым снимком
+### Store the timings in SQLite together with the text snapshot
 
-Отклонён: аудио используется только в активной онлайн-сессии, а сервер остаётся
-источником актуальных ссылок и выравнивания. Офлайн-снимки продолжают работать
-как текст и не показывают управление аудио.
+Rejected: the audio is used only in an active online session, and the server
+remains the source of current links and alignment. Offline snapshots keep working
+as text and show no audio controls.
 
-## Последствия
+## Consequences
 
-- Воспроизводится только диапазон `passage.verse_start..verse_end` выбранного
-  перевода и голоса.
-- Пауза продолжает тот же сегмент; после достижения конца повторный запуск
-  начинается с первого стиха.
-- Переключение отрывка, режима панели или уход приложения в фон останавливает
-  озвучку и освобождает временный аудиофокус.
-- Ошибка аудио не влияет на текстовый подбор, кэш или избранное.
+- Only the range `passage.verse_start..verse_end` of the chosen translation and
+  voice is played.
+- Pausing continues the same segment; after reaching the end, starting again
+  begins from the first verse.
+- Switching the passage, switching the panel mode or sending the app to the
+  background stops the narration and releases the temporary audio focus.
+- An audio error does not affect the text selection, the cache or the favourites.
 
-## Ссылки
+## References
 
-- ClickUp: https://app.clickup.com/t/86cbbkztb
 - Expo Audio SDK 57: https://docs.expo.dev/versions/v57.0.0/sdk/audio/
-- Референс: https://github.com/BibleGarden/iOS-App
+- Reference: https://github.com/BibleGarden/iOS-App

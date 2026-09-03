@@ -1,69 +1,78 @@
-# ADR-0003: Контекстный серверный подбор Писания
+# ADR-0003: Contextual server-side scripture selection
 
-- Статус: Частично заменено ADR-0004 (пункт 8 и связанное последствие)
-- Примечание 2026-08-30: путь метода переименован в `POST /api/ai/scripture`;
-  решение и контракт не изменились, исторический текст ниже сохранён
-- Дата: 2026-08-25
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Partly superseded by ADR-0004 (item 8 and the related consequence)
+- Note 2026-08-30: the path of the method was renamed to
+  `POST /api/ai/scripture`; the decision and the contract did not change, the
+  historical text below is kept as it was
+- Date: 2026-08-25
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-Приложение вращало десять встроенных русских отрывков по числовым индексам.
-Такой источник не учитывал тему молитвы, не имел стабильного межпереводного
-идентификатора и не позволял честно поддержать server fallback, offline-кэш и
-миграцию избранного. Новый Bible-API отвечает примерно за 5–7 секунд и ограничен
-тремя запросами в минуту на клиента, поэтому загрузка при каждом нажатии создала
-бы заметные паузы и риск параллельных запросов.
+The app rotated ten bundled Russian passages by numeric indices. Such a source
+did not take the prayer topic into account, had no stable cross-translation
+identifier and did not allow honest support for a server fallback, an offline
+cache and the migration of favourites. The new Bible-API answers in roughly 5-7
+seconds and is limited to three requests per minute per client, so loading on
+every press would have created noticeable pauses and a risk of parallel requests.
 
-## Решение
+## Decision
 
-1. Использовать `POST /api/scripture/v1/select` как основной источник. Значения
-   `source` описывают способ деградации сервера и не являются пользовательской ошибкой.
-2. Хранить `canonical_id` как ключ истории исключений и серверного избранного.
-   При `history_reset` очищать только историю исключений; след и избранное не
-   менять. Видимую ссылку строить исключительно по `passage`.
-3. После фактического показа запускать prefetch глубины один. Все запросы
-   сериализовать single-flight; повторное нажатие ждёт уже запущенный запрос.
-4. Историю хранить полностью, а request builder отправляет до 30 самых свежих
-   валидных уникальных ID.
-5. Кэшировать полный ответ и название книги в SQLite. Offline fallback использует
-   только ранее показанные серверные снимки и никогда не маскирует старый каталог.
-6. Мигрировать старое избранное lossless: сначала создать резервную таблицу,
-   затем сохранить каждую запись как snapshot с nullable `canonical_id`.
-7. Загружать настройку `share_answers` до первого запроса. `user_replies`
-   добавляет единый request builder; тела Scripture-запросов и ответов не логируются.
-8. Сохранить существующую жизнь навигационного следа в пределах сессии и
-   русскоязычный Синодальный перевод (`ru`, translation `1`) до появления
-   отдельного продуктового выбора языка/перевода.
+1. Use `POST /api/scripture/v1/select` as the main source. The values of `source`
+   describe the way the server degraded and are not a user-facing error.
+2. Keep `canonical_id` as the key of the exclusion history and of the server-side
+   favourites. On `history_reset` clear only the exclusion history; do not touch
+   the trail or the favourites. Build the visible reference exclusively from
+   `passage`.
+3. Start a prefetch of depth one after the passage is actually shown. Serialize
+   all requests single-flight; a repeated press waits for the request already in
+   flight.
+4. Store the history in full, while the request builder sends up to the 30 most
+   recent valid unique IDs.
+5. Cache the full response and the book name in SQLite. The offline fallback uses
+   only server snapshots that were shown before and never disguises the old
+   catalogue.
+6. Migrate the old favourites losslessly: create a backup table first, then store
+   every record as a snapshot with a nullable `canonical_id`.
+7. Load the `share_answers` setting before the first request. `user_replies` is
+   added by a single request builder; the bodies of scripture requests and
+   responses are not logged.
+8. Keep the existing lifetime of the navigation trail within a session and the
+   Russian Synodal translation (`ru`, translation `1`) until a separate product
+   choice of language and translation appears.
 
-## Рассмотренные варианты
+## Options considered
 
-### Оставить локальную ротацию fallback первого запуска
+### Keep the local rotation as the fallback of the first request
 
-Отклонено: пользователь видел бы нерелевантный локальный отрывок как результат
-контекстного выбора. При пустом offline-кэше показывается нейтральная ошибка и retry.
+Rejected: the user would see an irrelevant local passage as the result of a
+contextual choice. With an empty offline cache a neutral error and a retry are
+shown instead.
 
-### Загружать новый отрывок только по нажатию
+### Load a new passage only on a press
 
-Отклонено из-за измеренной задержки около шести секунд. Prefetch скрывает её после
-первого показа, а глубина один учитывает серверный rate limit.
+Rejected because of the measured delay of about six seconds. A prefetch hides it
+after the first display, and a depth of one respects the server rate limit.
 
-### Хранить избранное только по `canonical_id`
+### Store favourites by `canonical_id` only
 
-Отклонено: старые записи не имеют такого ID и были бы потеряны. Snapshot остаётся
-самодостаточным и открывается без сети.
+Rejected: old records have no such ID and would be lost. A snapshot stays
+self-sufficient and opens without a network.
 
-## Последствия
+## Consequences
 
-- Первый отрывок может показывать индикатор ожидания; последующие обычно готовы заранее.
-- Новая нативная зависимость `expo-network` требует собственного rebuild приложения.
-- SQLite хранит приватный текст локально, но сетевые и аналитические логи его не содержат.
-- Глобальный серверный лимит 10 запросов в минуту остаётся релизным ограничением.
-- Если выбор языка/перевода станет пользовательским, потребуется отдельное
-  продуктовое решение; текущая реализация намеренно сохраняет `ru/syn`.
+- The first passage may show a waiting indicator; the following ones are usually
+  ready in advance.
+- The new native dependency `expo-network` requires a custom rebuild of the app.
+- SQLite stores private text locally, but the network and analytics logs do not
+  contain it.
+- The global server limit of 10 requests per minute remains a release
+  constraint.
+- If the choice of language and translation becomes a user-facing one, it will
+  need a separate product decision; the current implementation deliberately keeps
+  `ru/syn`.
 
-## Ссылки
+## References
 
-- ClickUp: https://app.clickup.com/t/86cb8vw1p
 - Expo Network SDK 57: https://docs.expo.dev/versions/v57.0.0/sdk/network/
 - Expo SQLite SDK 57: https://docs.expo.dev/versions/v57.0.0/sdk/sqlite/

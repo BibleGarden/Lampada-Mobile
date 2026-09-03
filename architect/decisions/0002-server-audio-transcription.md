@@ -1,58 +1,62 @@
-# ADR-0002: Расшифровывать голосовые ответы через серверный Gemini-прокси
+# ADR-0002: Transcribe voice answers through the server-side Gemini proxy
 
-- Статус: Принято
-- Дата: 2026-08-23
-- Участники: владелец продукта, команда проекта
+- Status: Accepted
+- Date: 2026-08-23
+- Participants: product owner, project team
 
-## Контекст
+## Context
 
-Голосовые ответы сохранялись только как локальные аудиофайлы. Их нельзя было
-прочитать без прослушивания, показать текстом в дневнике или найти через поиск.
-Expo SDK 57 не предоставляет speech-to-text API, а отдельный нативный iOS-модуль
-увеличил бы сложность первой версии и не дал бы одинакового поведения будущим
-локализациям.
+Voice answers were stored only as local audio files. They could not be read
+without listening to them, shown as text in the journal, or found through search.
+Expo SDK 57 provides no speech-to-text API, and a separate native iOS module
+would have added complexity to the first version without giving future
+localisations the same behaviour.
 
-## Решение
+## Decision
 
-Клиент сохраняет завершённый M4A-файл локально и показывает рядом действие
-«Расшифровать». Только после явного нажатия файл отправляется в защищённый
-endpoint `Bible-API`. Сервер передаёт аудио в `gemini-3.5-flash-lite`, просит
-дословную расшифровку в исходном языке и возвращает только текст. Локаль
-устройства используется как мягкая подсказка, а не как ограничение или команда
-перевода.
+The client saves the finished M4A file locally and shows a "Transcribe" action
+next to it. Only after an explicit press is the file sent to a protected
+`Bible-API` endpoint. The server passes the audio to `gemini-3.5-flash-lite`,
+asks for a verbatim transcript in the original language and returns the text
+only. The device locale is used as a soft hint, not as a restriction or a command
+to translate.
 
-Без нажатия аудио не покидает устройство и токены Gemini не расходуются. Аудио
-и расшифровка не сохраняются на сервере приложения и не попадают в логи.
-Локальный аудиофайл сохраняется независимо от успеха запроса. Полученный текст
-можно исправить, после чего он хранится в SQLite, показывается в дневнике и
-участвует в локальном поиске.
+Without the press the audio never leaves the device and no Gemini tokens are
+spent. Neither the audio nor the transcript is stored on the app server or
+written into its logs. The local audio file is saved regardless of whether the
+request succeeds. The received text can be corrected, after which it is stored in
+SQLite, shown in the journal and included in the local search.
 
-## Рассмотренные варианты
+## Options considered
 
-### Локальный Apple Speech framework
+### The local Apple Speech framework
 
-Лучше сохраняет приватность, но требует собственного нативного Expo-модуля,
-отдельного разрешения и проверки доступности on-device модели для каждого языка.
+Better for privacy, but it requires a custom native Expo module, a separate
+permission and a check of the on-device model availability for every language.
 
-### Специализированный платный speech-to-text API
+### A dedicated paid speech-to-text API
 
-Предсказуемо решает задачу, но добавляет нового провайдера и оплату. В проекте
-уже есть серверный Gemini-прокси и подходящая мультимодальная модель.
+Solves the task predictably, but adds a new provider and a bill. The project
+already has a server-side Gemini proxy and a suitable multimodal model.
 
-### Серверный Gemini-прокси
+### The server-side Gemini proxy
 
-Даёт минимальную реализацию на существующей инфраструктуре и поддерживает разные
-языки без привязки к локали интерфейса. Этот вариант выбран.
+Gives a minimal implementation on the existing infrastructure and supports
+different languages without being tied to the interface locale. This option was
+chosen.
 
-## Последствия
+## Consequences
 
-- Для расшифровки нужны явное действие и сеть; при ошибке аудио остаётся доступным, а запрос можно повторить.
-- Голосовая запись пересекает внешнюю границу данных, поэтому интерфейс и системное разрешение явно сообщают об отправке.
-- Бесплатный tier Gemini может иметь отдельные условия обработки данных; режим эксплуатации и политика приватности должны им соответствовать.
-- Реальный M4A-upload требуется проверять на физическом iPhone после деплоя API.
+- Transcription needs an explicit action and a network; on an error the audio
+  stays available and the request can be repeated.
+- A voice recording crosses an external data boundary, so the interface and the
+  system permission state the sending explicitly.
+- The free Gemini tier may have its own data processing terms; the way the app is
+  operated and its privacy policy have to match them.
+- A real M4A upload has to be verified on a physical iPhone after the API is
+  deployed.
 
-## Ссылки
+## References
 
-- ClickUp: https://app.clickup.com/t/86cb8ugyx
 - [Expo Audio SDK 57](https://docs.expo.dev/versions/v57.0.0/sdk/audio/)
 - [Gemini Audio understanding](https://ai.google.dev/gemini-api/docs/audio)

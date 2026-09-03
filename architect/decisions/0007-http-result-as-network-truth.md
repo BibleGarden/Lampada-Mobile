@@ -1,51 +1,53 @@
-# ADR-0007: Определять доступность Bible API по HTTP-запросу
+# ADR-0007: Judge Bible API availability by the HTTP request
 
-- Статус: Принято
-- Дата: 2026-08-29
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Accepted
+- Date: 2026-08-29
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-Перед подбором Писания приложение вызывало `expo-network` и считало значения
-`isConnected: false` или `isInternetReachable: false` достаточным основанием не
-отправлять HTTP-запрос. На симуляторе активное соединение могло определяться как
-`UNKNOWN`, для которого Expo SDK 57 возвращает `isConnected: false`. В результате
-рабочий Bible API не вызывался, а пользователь видел сохранённый отрывок с ложной
-подписью «Офлайн». Запросы вопросов при этом работали, потому что не использовали
-этот preflight.
+Before selecting scripture the app called `expo-network` and treated
+`isConnected: false` or `isInternetReachable: false` as sufficient grounds not to
+send the HTTP request. In the simulator an active connection could be reported as
+`UNKNOWN`, for which Expo SDK 57 returns `isConnected: false`. As a result a
+working Bible API was never called, and the user saw a saved passage with a false
+"Offline" caption. The question requests worked meanwhile, because they did not
+use that preflight.
 
-## Решение
+## Decision
 
-1. Всегда пытаться выполнить запрос Bible API, если он настроен и сессия не отменена.
-2. Считать источником истины результат транспорта: HTTP-ответ, network error или
-   timeout из `scriptureClient`.
-3. Сохранить существующие retry, `AbortSignal`, single-flight и fallback на ранее
-   показанные снимки после фактической ошибки запроса.
-4. Удалить неиспользуемую зависимость `expo-network`.
+1. Always attempt the Bible API request if it is configured and the session was
+   not cancelled.
+2. Treat the transport result as the source of truth: the HTTP response, a
+   network error or a timeout from `scriptureClient`.
+3. Keep the existing retries, `AbortSignal`, single-flight and the fallback to
+   previously shown snapshots after an actual request failure.
+4. Remove the now unused `expo-network` dependency.
 
-## Рассмотренные варианты
+## Options considered
 
-### Оставить preflight и игнорировать только `isInternetReachable`
+### Keep the preflight and ignore `isInternetReachable` only
 
-Отклонено: `isConnected` также бывает ложным при типе соединения `UNKNOWN`, а
-наличие сетевого интерфейса всё равно не доказывает доступность конкретного API.
+Rejected: `isConnected` is also false for a connection type of `UNKNOWN`, and the
+presence of a network interface does not prove that a particular API is reachable
+anyway.
 
-### Использовать preflight только для ускорения настоящего offline
+### Use the preflight only to speed up a genuine offline case
 
-Отклонено: ускорение fallback не компенсирует ложный отказ от рабочего запроса.
-Транспортная ошибка обычно возвращается сразу; худший случай ограничен таймаутом
-и политикой retry клиента.
+Rejected: speeding up the fallback does not make up for falsely refusing a
+working request. A transport error usually comes back immediately; the worst case
+is bounded by the timeout and the retry policy of the client.
 
-## Последствия
+## Consequences
 
-- Рабочий Bible API вызывается даже при неточном системном network hint.
-- При настоящем offline fallback может появиться позже, если ОС не завершит
-  запрос немедленной сетевой ошибкой.
-- Дополнительный нативный модуль для определения сети больше не нужен.
-- Подпись «Офлайн · из сохранённых» по-прежнему означает транспортный или
-  серверный fallback; детализация причин в интерфейсе остаётся отдельной задачей.
+- A working Bible API is called even when the system network hint is inaccurate.
+- In a genuine offline case the fallback may appear later, if the OS does not
+  fail the request with an immediate network error.
+- An extra native module for network detection is no longer needed.
+- The "Offline - from the saved ones" caption still means a transport or server
+  fallback; spelling out the reasons in the interface remains a separate task.
 
-## Ссылки
+## References
 
 - [ADR-0003](0003-contextual-scripture-selection.md)
 - Expo Network SDK 57: https://docs.expo.dev/versions/v57.0.0/sdk/network/

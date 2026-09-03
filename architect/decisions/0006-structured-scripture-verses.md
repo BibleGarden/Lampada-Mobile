@@ -1,50 +1,50 @@
-# ADR-0006: Структурированные стихи для подсветки Писания
+# ADR-0006: Structured verses for scripture highlighting
 
-- Статус: Принято
-- Дата: 2026-08-28
-- Участники: владелец продукта, разработчик, QA-куратор
+- Status: Accepted
+- Date: 2026-08-28
+- Participants: product owner, developer, QA lead
 
-## Контекст
+## Context
 
-Bible-API выбирает внутри отрывка один–три ключевых стиха и возвращает их
-координаты в `highlight.passage`. Одного `passage.text` для точной подсветки
-недостаточно: сервер соединяет соседние стихи одного абзаца пробелами, поэтому
-клиент не может восстановить границы по предложениям или переносам строк.
+Bible-API picks one to three key verses inside a passage and returns their
+coordinates in `highlight.passage`. `passage.text` alone is not enough for exact
+highlighting: the server joins neighbouring verses of the same paragraph with
+spaces, so the client cannot reconstruct the boundaries from sentences or line
+breaks.
 
-## Решение
+## Decision
 
-Использовать аддитивный массив `passage.verses` с номером стиха, точным текстом
-и признаком начала абзаца. Клиент собирает видимый текст из массива только если
-результат байт-в-байт совпадает с `passage.text`, и накладывает подсветку по
-диапазону `highlight.passage`. Канонические координаты для рендера не
-используются. Если `verses` отсутствует или не совпадает с текстом, приложение
-показывает прежний `passage.text` без эвристической подсветки.
+Use the additive `passage.verses` array with the verse number, the exact text and
+a paragraph-start flag. The client assembles the visible text from the array only
+if the result matches `passage.text` byte for byte, and applies the highlight by
+the `highlight.passage` range. The canonical coordinates are not used for
+rendering. If `verses` is missing or does not match the text, the app shows the
+previous `passage.text` without heuristic highlighting.
 
-## Рассмотренные варианты
+## Options considered
 
-### Символьные диапазоны
+### Character ranges
 
-Отклонены: индексы Python и JavaScript по-разному считают Unicode, а
-нормализация текста делает такие офсеты хрупкими.
+Rejected: Python and JavaScript count Unicode differently, and text
+normalisation makes such offsets fragile.
 
-### Дополнительный запрос полного отрывка
+### An extra request for the full passage
 
-Отклонён: добавляет задержку и новую точку отказа после уже завершённого
-контекстного подбора.
+Rejected: it adds latency and a new point of failure after the contextual
+selection has already completed.
 
-### Эвристическое разбиение текста
+### Heuristic splitting of the text
 
-Отклонено: границы предложений и абзацев не совпадают с границами стихов.
+Rejected: sentence and paragraph boundaries do not coincide with verse
+boundaries.
 
-## Последствия
+## Consequences
 
-- Подсветка работает в нумерации выбранного перевода, включая Псалтирь.
-- Старые ответы и кэш без `verses` продолжают отображаться как раньше.
-- Снимок ответа в SQLite автоматически сохраняет verse-level данные без новой
-  миграции схемы.
-- До публикации серверного контракта функция проверяется на контрактном stub.
-
-## Ссылки
-
-- ClickUp: https://app.clickup.com/t/86cbb120a
-- Контрактный баг: https://app.clickup.com/t/86cbb1mq7
+- The highlighting works in the numbering of the chosen translation, the Psalms
+  included.
+- Old responses and cache entries without `verses` keep being displayed as
+  before.
+- The snapshot of the response in SQLite stores the verse-level data
+  automatically, with no new schema migration.
+- Until the server contract is published, the feature is verified against a
+  contract stub.
