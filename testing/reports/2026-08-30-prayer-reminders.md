@@ -1,71 +1,77 @@
-# Напоминания о молитве, этап 1 — отчёт проверки
+# Prayer reminders, stage 1 - verification report
 
-- Дата: 2026-08-30
-- Задача: [ClickUp 86cbbpt5w](https://app.clickup.com/t/86cbbpt5w), этап 1 задачи [86cbbm5c0](https://app.clickup.com/t/86cbbm5c0)
-- Среда ручной проверки: физический iPhone, локальная Release-сборка `npm run iphone`.
-  REM-002 и REM-003 проверены на симуляторе iPad, iOS 26.5, debug-сборка
+- Date: 2026-08-30
+- Task: ClickUp `86cbbpt5w`, stage 1 of task `86cbbm5c0`
+- Manual verification environment: a physical iPhone, the local Release build
+  from `npm run iphone`. REM-002 and REM-003 were verified on an iPad simulator,
+  iOS 26.5, a debug build
 - Expo: SDK 57, `expo-notifications` 57.0.15
-- Коммиты: `ad1183e` (напоминания), `999cac3` (сопутствующая правка типов таймера)
+- Commits: `ad1183e` (the reminders), `999cac3` (an accompanying fix to the timer
+  types)
 
-## Реализовано
+## What was implemented
 
-- Расписание — набор правил «дни недели × времена», хранится в `meta` одним
-  JSON-значением `prayer_reminders` атомарно.
-- Планирование системное: каждая пара «день × время» разворачивается в
-  WEEKLY-триггер `expo-notifications`, повторение держит ОС.
-- Полный переплан при каждом изменении расписания и при каждом запуске
-  приложения; пул из двенадцати коротких фраз перетасовывается при каждом
-  планировании.
-- Разрешение запрашивается в момент включения напоминаний, а не при старте.
-- Отдельный канал Android `prayer_reminders` и метка `content.data.kind`:
-  отмена не затрагивает ongoing-хронометр таймера молитвы (ADR-0010).
-- Тап по уведомлению открывает главную, кроме экранов идущего молитвенного
-  сценария.
+- The schedule is a set of "weekdays x times" rules, stored in `meta` atomically
+  as a single JSON value `prayer_reminders`.
+- The scheduling is system-side: every "day x time" pair expands into an
+  `expo-notifications` WEEKLY trigger, and the OS holds the repetition.
+- A full rescheduling on every change of the schedule and on every app launch; a
+  pool of twelve short phrases is reshuffled on every scheduling.
+- The permission is requested at the moment the reminders are turned on, not at
+  app start.
+- A separate Android channel `prayer_reminders` and the `content.data.kind`
+  mark: cancelling does not affect the ongoing chronometer of the prayer timer
+  (ADR-0010).
+- Tapping a notification opens Home, except on the screens of an ongoing prayer
+  scenario.
 
-Решение и отклонённые варианты — [ADR-0013](../../architect/decisions/0013-local-prayer-reminders.md).
+The decision and the rejected options are in
+[ADR-0013](../../architect/decisions/0013-local-prayer-reminders.md).
 
-## Автоматические проверки
+## Automated checks
 
-| Проверка | Результат | Evidence |
+| Check | Result | Evidence |
 | --- | --- | --- |
 | `npm run typecheck` | PASS, exit 0 | `testing/evidence/2026-08-30-reminders/typecheck.log` |
 | `npm test` | PASS, 86/86, exit 0 | `testing/evidence/2026-08-30-reminders/tests.log` |
 
-Шестнадцать новых unit-тестов покрывают валидацию расписания, разворачивание
-правил в триггеры, перевод дней недели в нумерацию expo-notifications, рендер
-расписания в человеческую строку и перетасовку пула фраз.
+Sixteen new unit tests cover the validation of the schedule, the expansion of the
+rules into triggers, the conversion of the weekdays into the expo-notifications
+numbering, the rendering of the schedule into a human-readable line and the
+reshuffling of the phrase pool.
 
-Автотестами покрыта только чистая логика: доставка уведомлений, поведение после
-перезагрузки устройства и маршрутизация по тапу проверяются вручную.
+The automated tests cover only the pure logic: the delivery of the notifications,
+the behaviour after a device reboot and the routing on a tap are verified
+manually.
 
-## Ручная проверка на iPhone
+## Manual verification on an iPhone
 
-| ID | Сценарий | Результат |
+| ID | Scenario | Result |
 | --- | --- | --- |
-| REM-001 | Запрос разрешения в момент включения напоминаний | PASS |
-| REM-002 | Отказ в разрешении: экран не ломается, показано объяснение | PASS |
-| REM-003 | Разрешение выдано в системных настройках, возврат в приложение | PASS, переукладка расписания без перезапуска |
-| REM-004 | Уведомление приходит в заданное время | PASS |
-| REM-005 | Несколько времён в один день | PASS |
-| REM-006 | Расписание переживает перезапуск приложения | PASS |
-| REM-007 | Расписание переживает перезагрузку устройства | PASS |
-| REM-008 | Выключение тумблера снимает запланированные уведомления | PASS |
-| REM-009 | Тап по уведомлению открывает главную | PASS |
-| REM-010 | Тап во время идущей молитвы не выбрасывает из сессии | PASS |
-| REM-011 | Показ при открытом приложении | PASS косвенно: подтверждён через REM-010 |
-| REM-012 | Напоминание не подменяет ongoing-хронометр таймера | PASS |
-| REM-013 | Напоминание приходит в день, когда уже помолился | PASS |
+| REM-001 | The permission is requested at the moment the reminders are turned on | PASS |
+| REM-002 | A refusal: the screen does not break, an explanation is shown | PASS |
+| REM-003 | The permission is granted in the system settings, then a return to the app | PASS, the schedule is laid out again without a restart |
+| REM-004 | The notification arrives at the set time | PASS |
+| REM-005 | Several times on the same day | PASS |
+| REM-006 | The schedule survives an app restart | PASS |
+| REM-007 | The schedule survives a device reboot | PASS |
+| REM-008 | Turning the toggle off cancels the scheduled notifications | PASS |
+| REM-009 | Tapping a notification opens Home | PASS |
+| REM-010 | A tap during an ongoing prayer does not throw the user out of the session | PASS |
+| REM-011 | The display while the app is open | PASS indirectly: confirmed through REM-010 |
+| REM-012 | A reminder does not replace the ongoing chronometer of the timer | PASS |
+| REM-013 | A reminder arrives on a day when the person already prayed | PASS |
 
-Двенадцать фраз ротации просмотрены и приняты владельцем продукта.
+The twelve rotation phrases were reviewed and accepted by the product owner.
 
-## Найденные дефекты
+## Defects found
 
-| Задача | Дефект | Статус |
+| Task | Defect | Status |
 | --- | --- | --- |
-| [86cbbpxn9](https://app.clickup.com/t/86cbbpxn9) | Фраза уходила в заголовок уведомления; iOS показывает заголовок одной строкой и обрезает его | Исправлен и ретестирован: фраза перенесена в тело, заголовок — имя приложения из конфигурации |
+| `86cbbpxn9` | The phrase went into the notification title; iOS shows the title on a single line and truncates it | Fixed and retested: the phrase moved into the body, the title is the app name from the configuration |
 
-## Не проверено
+## Not verified
 
-- **Android целиком** — вынесен отдельной задачей [86cbbph5j](https://app.clickup.com/t/86cbbph5j)
-  вместе с известным риском: `icon` в config plugin не задан, в трее иконка
-  может выглядеть белым квадратом.
+- **Android as a whole** - moved to a separate task `86cbbph5j` together with a
+  known risk: the `icon` is not set in the config plugin, so the tray icon may
+  look like a white square.

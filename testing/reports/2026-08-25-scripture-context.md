@@ -1,56 +1,59 @@
-# Контекстный подбор Писания — отчёт 2026-08-25
+# Contextual scripture selection - report of 2026-08-25
 
-## Объект
+## Subject
 
 - ClickUp: `86cb8vw1p`
 - Expo SDK 57 / React Native 0.86
 - iPhone 17 Pro Simulator, iOS 26.5
-- API: локальный Bible-API из `.env.local`, `http://192.168.127.133:9084`
+- API: the local Bible-API from `.env.local`, `http://192.168.127.133:9084`
 
-## Результат
+## Result
 
-Реализован серверный подбор `POST /api/scripture/v1/select`, single-flight prefetch
-глубины один, retry/fallback, persistent history/cache, canonical favorites,
-lossless-миграция старого избранного, точные ссылки по `passage` и privacy barrier.
+The server-side selection `POST /api/scripture/v1/select` was implemented, along
+with a single-flight prefetch of depth one, retry and fallback, a persistent
+history and cache, canonical favourites, a lossless migration of the old
+favourites, exact references built from `passage`, and the privacy barrier.
 
-## Автоматические проверки
+## Automated checks
 
-| Проверка | Результат |
+| Check | Result |
 | --- | --- |
 | `npm run typecheck` | PASS, exit 0 |
 | `npm test` | PASS, 49/49, exit 0 |
 | `npx expo-doctor` | PASS, 21/21, exit 0 |
-| Release iOS build/install | PASS, exit 0 |
-| Maestro main stub | PASS, exit 0 |
-| Maestro privacy stub | PASS, exit 0; `privacySafe: true` |
+| The Release iOS build and install | PASS, exit 0 |
+| The Maestro main stub | PASS, exit 0 |
+| The Maestro privacy stub | PASS, exit 0; `privacySafe: true` |
 | Maestro `503 → 429 → success` | PASS, exit 0 |
-| Maestro live API + favorite + next/back | PASS, exit 0 |
-| Maestro legacy favorites | PASS, exit 0 |
-| Maestro layout regression: wrapped CTA + max reader safe area | PASS, exit 0 |
+| Maestro with the live API plus favourite plus next/back | PASS, exit 0 |
+| Maestro legacy favourites | PASS, exit 0 |
+| The Maestro layout regression: a wrapped CTA and the maximum reader safe area | PASS, exit 0 |
 
-Полные логи и скриншоты: `testing/evidence/2026-08-25-scripture-context/`.
+The full logs and screenshots: `testing/evidence/2026-08-25-scripture-context/`.
 
-## Ретест замечаний ручного тестирования
+## Retest of the manual testing findings
 
-- Баг `86cb9x9uc`: CTA теперь зависит от фактического количества строк, а не от
-  порога в 160 символов. Fixture короче 160 символов с четырьмя абзацами
-  показывает «Читать целиком» и открывает reader.
-- Баг `86cb9x9ug`: `BottomSheet` получает верхний safe-area inset. На iPhone 17
-  Pro reader с длинным текстом после свайпа к максимальному snap point остаётся
-  ниже системной строки.
+- Bug `86cb9x9uc`: the CTA now depends on the actual number of lines rather than
+  on a threshold of 160 characters. A fixture shorter than 160 characters with
+  four paragraphs shows "Read in full" and opens the reader.
+- Bug `86cb9x9ug`: `BottomSheet` receives the top safe-area inset. On an iPhone
+  17 Pro the reader with a long text stays below the system bar after a swipe to
+  the maximum snap point.
 - Evidence: `reader-short-wrapped.png`, `reader-safe-area-max.png`.
 
-## Проверка SQLite
+## SQLite verification
 
-- history содержит только два фактически показанных canonical ID;
-- третий ответ находится в cache как prefetch с `shown = 0`;
-- favorite содержит полный snapshot и canonical ID;
-- схема миграции имеет версию `1`;
-- известная legacy-запись сохраняет локальный текст, неизвестная — ссылку и
-  пометку «Сохранено ранее»; обе открываются без сети.
+- the history contains only the two canonical IDs that were actually shown;
+- the third response sits in the cache as a prefetch with `shown = 0`;
+- the favourite contains the full snapshot and the canonical ID;
+- the migration schema is at version `1`;
+- a known legacy record keeps its local text, an unknown one keeps the reference
+  and the "Saved earlier" mark; both open without a network.
 
-## Не проверено человеком
+## Not verified by a human
 
-- физический iPhone и Android;
-- системное отключение сети во время открытой сессии (логика cache trail покрыта unit-тестом);
-- субъективная оценка нового состояния loading/offline и экрана избранного владельцем продукта.
+- a physical iPhone and Android;
+- disabling the network at the system level during an open session (the cache
+  trail logic is covered by a unit test);
+- the product owner's subjective assessment of the new loading/offline state and
+  of the favourites screen.

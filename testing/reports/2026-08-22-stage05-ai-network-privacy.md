@@ -1,43 +1,55 @@
-# Этап 05 — AI, сеть и приватность
+# Stage 05 - AI, network and privacy
 
-Дата: 2026-08-22
-Среда: iPhone 17 Pro Simulator, iOS 26.5; Expo SDK 57.
+Date: 2026-08-22
+Environment: iPhone 17 Pro Simulator, iOS 26.5; Expo SDK 57.
 
-## Результат
+## Result
 
-Пройдено после корректировки [[86cb8n4tg]]. При задержанном успешном AI-ответе приложение сразу открывает молитву, а в зоне вопроса показывает spinner до результата. Локальный fallback показывается только после явной ошибки AI. UI и сохранение opt-in, экспорт iOS-бандла, контролируемые HTTP/JSON/timeout-отказы низкоуровневого клиента и фактический payload проверены.
+Passed after the correction of `86cb8n4tg`. With a delayed successful AI response
+the app opens the prayer immediately and shows a spinner in the question area
+until the result arrives. The local fallback is shown only after an explicit AI
+error. The opt-in UI and its persistence, the iOS bundle export, the controlled
+HTTP/JSON/timeout failures of the low-level client and the actual payload were
+verified.
 
-## Выполненные проверки
+## Checks performed
 
-| Проверка | Результат | Evidence |
+| Check | Result | Evidence |
 |---|---|---|
-| Opt-in выключен по умолчанию | Pass | Maestro flow |
-| Текст предупреждения меняется при включении | Pass | Maestro flow |
-| Настройка сохраняется после перезапуска | Pass | Maestro flow |
+| The opt-in is off by default | Pass | Maestro flow |
+| The warning text changes when it is enabled | Pass | Maestro flow |
+| The setting survives a restart | Pass | Maestro flow |
 | `npm test` | Pass: 5/5 | `checks.log` |
 | `npm run typecheck` | Pass | `checks.log` |
-| Экспорт iOS Expo | Pass | `checks.log` |
-| Google/master key в экспортированном бандле | Не найден по сигнатурам | `checks.log` |
-| HTTP 502, malformed JSON, timeout в `lib/llm.ts` | Pass | `llm-controlled-mocks.log` |
-| Фактический payload без opt-in | Pass: текста ответа и аудио нет | `local-https-mock.log` |
-| Фактический payload с opt-in | Pass: текст ответа есть, аудио нет | `local-https-mock.log` |
-| Задержанный успешный AI-ответ | Pass: сессия открывается, в зоне вопроса spinner, затем AI-вопрос | `ios-stage05-first-question-spinner.yaml` |
-| HTTP 502 первого AI-вопроса | Pass: сессия открывается, затем показан fallback | `ios-stage05-first-question-error-fallback.yaml` |
-| Первый AI-вопрос без указанной темы | Pass: запрос отправлен, AI-вопрос показан | `ios-stage05-first-question-no-topic.yaml` |
+| The iOS Expo export | Pass | `checks.log` |
+| A Google/master key in the exported bundle | Not found by signature | `checks.log` |
+| HTTP 502, malformed JSON and a timeout in `lib/llm.ts` | Pass | `llm-controlled-mocks.log` |
+| The actual payload without the opt-in | Pass: no answer text and no audio | `local-https-mock.log` |
+| The actual payload with the opt-in | Pass: the answer text is there, the audio is not | `local-https-mock.log` |
+| A delayed successful AI response | Pass: the session opens, a spinner appears in the question area, then the AI question | `ios-stage05-first-question-spinner.yaml` |
+| HTTP 502 on the first AI question | Pass: the session opens, then the fallback is shown | `ios-stage05-first-question-error-fallback.yaml` |
+| The first AI question with no topic given | Pass: the request is sent, the AI question is shown | `ios-stage05-first-question-no-topic.yaml` |
 
-## Статический аудит
+## Static audit
 
-- `lib/settings.ts`: `shareAnswers` по умолчанию `false`; значение сохраняется в SQLite.
-- `lib/store.ts`: в AI передаётся только текст и только когда `shareAnswersNow()` возвращает `true`; URI и содержимое аудиозаписей не передаются.
-- `lib/llm.ts`: клиент использует прокси, прерывает запрос через 25 секунд и пробрасывает HTTP/JSON-ошибки в слой fallback. Это подтверждено контролируемыми моками.
-- `lib/ai.ts`: ошибки, пустой и некорректный ответ превращаются в локальный вопрос. `lib/store.ts` отсеивает поздние результаты по токену/ключу сессии.
+- `lib/settings.ts`: `shareAnswers` defaults to `false`; the value is stored in
+  SQLite.
+- `lib/store.ts`: only text is passed to the AI, and only when
+  `shareAnswersNow()` returns `true`; neither the URIs nor the contents of the
+  audio recordings are passed.
+- `lib/llm.ts`: the client uses the proxy, aborts the request after 25 seconds and
+  propagates HTTP and JSON errors into the fallback layer. This is confirmed by
+  controlled mocks.
+- `lib/ai.ts`: errors and an empty or malformed response turn into a local
+  question. `lib/store.ts` filters out late results by the session token and key.
 
-## Контролируемые моки `llm`
+## The controlled `llm` mocks
 
-Проверки запускались из корня репозитория с `node --experimental-strip-types`.
-В каждом сценарии подменён `globalThis.fetch`; в timeout дополнительно подменён
-таймер, чтобы `AbortController` сработал сразу. Во всех трёх случаях команда
-завершилась с кодом 0:
+The checks were run from the root of the repository with
+`node --experimental-strip-types`. In every scenario `globalThis.fetch` was
+replaced; in the timeout case the timer was replaced as well, so that
+`AbortController` would fire immediately. In all three cases the command exited
+with code 0:
 
 ```text
 HTTP 502: res = { ok: false, status: 502 }
@@ -45,10 +57,10 @@ Malformed JSON: res.json() throws Error('malformed JSON')
 Timeout: fetch waits for signal.abort, mocked setTimeout calls abort
 ```
 
-## Не покрыто / требуется ретест
+## Not covered / needs a retest
 
-Все проверки этапа выполнены.
+Every check of this stage was performed.
 
-## Добавленный ретест
+## The retest that was added
 
 `testing/e2e/ios-stage05-first-question-spinner.yaml`

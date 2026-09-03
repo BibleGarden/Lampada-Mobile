@@ -1,31 +1,31 @@
-# Настройки языка, перевода и озвучки — 2026-08-27
+# The language, translation and narration settings - 2026-08-27
 
-## Объём
+## Scope
 
-- три зависимых списка на экране настроек;
-- каталоги `/api/languages` и `/api/translations`;
-- атомарное сохранение языка, перевода и озвучки;
-- применение языка и перевода со следующей молитвенной сессии;
-- восстановление после перезапуска и фильтрация offline fallback.
+- three dependent lists on the settings screen;
+- the `/api/languages` and `/api/translations` catalogues;
+- the atomic saving of the language, the translation and the narration;
+- applying the language and the translation from the next prayer session;
+- restoration after a restart and the filtering of the offline fallback.
 
-## Автоматические проверки
+## Automated checks
 
-| Проверка | Результат |
+| Check | Result |
 | --- | --- |
 | `npm run typecheck` | exit 0 |
 | `npm test` | exit 0, 57/57 |
 | `node --check scripts/scripture-stub.mjs` | exit 0 |
-| iOS Debug build, iPhone 17 Pro / iOS 26.5 | exit 0, 0 errors, 1 Xcode warning о duplicate `-lc++` |
+| An iOS Debug build, iPhone 17 Pro / iOS 26.5 | exit 0, 0 errors, 1 Xcode warning about a duplicate `-lc++` |
 | `ios-scripture-settings.yaml` | exit 0 |
-| `npx expo-doctor` | exit 1: 10 зависимостей SDK 57 отстают на один patch |
+| `npx expo-doctor` | exit 1: 10 SDK 57 dependencies are one patch behind |
 
-## Ручной ретест
+## Manual retest
 
-1. Выбраны `English → bsb → Bob Souer`.
-2. Нажато «Сохранить».
-3. Приложение принудительно остановлено и запущено заново.
-4. Все три значения восстановлены на экране настроек.
-5. В SQLite `meta.scripture_preferences` сохранены `language=en`,
+1. `English → bsb → Bob Souer` were chosen.
+2. "Save" was pressed.
+3. The app was force-stopped and launched again.
+4. All three values were restored on the settings screen.
+5. In SQLite `meta.scripture_preferences` holds `language=en`,
    `translationCode=16`, `voiceCode=151`.
 
 ## Evidence
@@ -36,30 +36,32 @@
 - `testing/evidence/2026-08-27-scripture-settings/maestro.log`
 - `testing/evidence/2026-08-27-scripture-settings/expo-doctor.log`
 
-## Ограничения
+## Limitations
 
-- Воспроизведение выбранной озвучки не входит в эту задачу.
-- Дрейф patch-версий Expo существовал до изменения и требует отдельного обновления зависимостей.
+- Playing the chosen narration is not part of this task.
+- The drift of the Expo patch versions existed before this change and needs a
+  separate dependency update.
 
-## Follow-up после визуальной обратной связи
+## Follow-up after the visual feedback
 
-- Дефолт новой установки изменён: поддерживаемый сервером первичный язык устройства,
-  иначе английский.
-- Существующий сохранённый выбор имеет безусловный приоритет.
-- Закрытые строки трёх списков и строки вариантов умеренно уменьшены по высоте и
-  внутренним отступам; структура и размеры текста сохранены читаемыми.
+- The default of a fresh installation was changed: the primary device language if
+  the server supports it, English otherwise.
+- An existing saved choice takes unconditional priority.
+- The collapsed rows of the three lists and the option rows were moderately
+  reduced in height and inner padding; the structure and the text sizes stayed
+  readable.
 
-### Повторные проверки
+### Repeated checks
 
-| Проверка | Результат |
+| Check | Result |
 | --- | --- |
 | `npm run typecheck` | exit 0 |
 | `npm test` | exit 0, 60/60 |
-| iOS Debug rebuild с `expo-localization` | exit 0, 0 errors |
-| Чистая установка, primary locale `en-KZ` | автоматически выбрано `en / 16 / 151` |
-| Явно выбрать русский при locale `en-KZ`, перезапустить | `ru / 1 / 1` сохранено, локаль не переопределила выбор |
+| An iOS Debug rebuild with `expo-localization` | exit 0, 0 errors |
+| A clean installation with the primary locale `en-KZ` | `en / 16 / 151` was chosen automatically |
+| Choose Russian explicitly with the locale `en-KZ`, then restart | `ru / 1 / 1` was preserved, the locale did not override the choice |
 
-Дополнительные evidence:
+Additional evidence:
 
 - `testing/evidence/2026-08-27-scripture-settings/settings-compact-default.png`
 - `testing/evidence/2026-08-27-scripture-settings/maestro-default-language.log`
@@ -67,24 +69,25 @@
 - `testing/evidence/2026-08-27-scripture-settings/typecheck-followup.log`
 - `testing/evidence/2026-08-27-scripture-settings/tests-followup.log`
 
-## Follow-up по подписям переводов
+## Follow-up on the translation labels
 
-- Технический API alias больше не показывается пользователю как название.
-- Крупная строка берётся из `translation.name` (`BSB`, `WEBUS`, `WEBBE`).
-- Вторичная строка берётся из `translation.description` (`Berean Standard Bible`,
-  `World English Bible – US Edition`, `World English Bible – British Edition`).
-- Свернутое значение также использует `translation.name`; `alias` остаётся только
-  техническим полем и в этом UI не показывается.
-- Повторный `npm test`: 60/60, typecheck и Maestro-проверка всех шести подписей — exit 0.
+- The technical API alias is no longer shown to the user as a name.
+- The large line comes from `translation.name` (`BSB`, `WEBUS`, `WEBBE`).
+- The secondary line comes from `translation.description` (`Berean Standard
+  Bible`, `World English Bible - US Edition`, `World English Bible - British
+  Edition`).
+- The collapsed value uses `translation.name` as well; `alias` stays a technical
+  field and is not shown in this UI.
+- A repeated `npm test`: 60/60, the typecheck and the Maestro check of all six
+  labels - exit 0.
 
 Evidence:
 
 - `testing/evidence/2026-08-27-scripture-settings/translation-labels-corrected.png`
-- `testing/evidence/2026-08-27-scripture-settings/maestro-translation-labels.log`
 
-## Follow-up по разделителям вариантов
+## Follow-up on the option dividers
 
-- Между соседними вариантами добавлен `StyleSheet.hairlineWidth` с бледной
-  полупрозрачной линией; после последнего варианта разделителя нет.
-- Typecheck, 60/60 unit-тестов и Maestro UI-проверка — exit 0.
+- A `StyleSheet.hairlineWidth` pale semi-transparent line was added between
+  neighbouring options; there is no divider after the last one.
+- The typecheck, 60/60 unit tests and the Maestro UI check - exit 0.
 - Evidence: `testing/evidence/2026-08-27-scripture-settings/option-dividers.png`.

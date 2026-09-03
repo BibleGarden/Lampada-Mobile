@@ -1,32 +1,41 @@
-# Этап 04 — ответы и аудио
+# Stage 04 - answers and audio
 
-Дата: 2026-08-22
-Окружение: iOS Simulator 26.5, `Pray Smoke iPhone 17 Pro`, установленный custom build `com.marianovikov.lampada`.
+Date: 2026-08-22
+Environment: iOS Simulator 26.5, `Pray Smoke iPhone 17 Pro`, the installed custom
+build `com.marianovikov.lampada`.
 
-## Выполненные проверки
+## Checks performed
 
-| Сценарий | Метод | Результат |
+| Scenario | Method | Result |
 | --- | --- | --- |
-| ANS-001 | Maestro `ios-stage04-answers-text.yaml` | Пройден: сохранённый текст восстановлен при повторном открытии того же вопроса. |
-| ANS-002 | Анализ UI-логики | Требует ручной проверки: пустая шторка закрывается без подтверждения. |
-| ANS-003 | Анализ UI-логики | Не пройден: закрытие свайпом обходит подтверждение и теряет несохранённый текст. Создан дефект `86cb8m0wd`. |
-| ANS-004–ANS-009 | Физический iPhone | Не выполнены: Simulator не подтверждает системное разрешение, запись, воспроизведение и очистку sandbox-файлов. |
-| ANS-010–ANS-011 | Анализ UI-логики | Нужен отдельный ручной ретест гонки на нулевом таймере и переключения вопросов. |
+| ANS-001 | Maestro `ios-stage04-answers-text.yaml` | Passed: the saved text is restored when the same question is reopened. |
+| ANS-002 | Analysis of the UI logic | Needs a manual check: an empty sheet closes without a confirmation. |
+| ANS-003 | Analysis of the UI logic | Failed: closing by a swipe bypasses the confirmation and loses the unsaved text. A defect was filed. |
+| ANS-004 to ANS-009 | A physical iPhone | Not performed: the Simulator does not confirm the system permission, recording, playback and the cleanup of sandbox files. |
+| ANS-010 to ANS-011 | Analysis of the UI logic | A separate manual retest is needed for the race at zero on the timer and for switching between questions. |
 
-## Найденные дефекты и повторная проверка
+## Defects found and re-verified
 
-- [Исправить потерю несохранённого ответа при закрытии свайпом](https://app.clickup.com/t/86cb8m0wd): исправление отключает закрытие свайпом и фоном при непустом черновике. Статический ретест пройден; ожидает ручной проверки на iPhone.
-- [Удалять файл записи, удалённой до сохранения ответа](https://app.clickup.com/t/86cb8m0x5): ретест на физическом iPhone пройден. После «записать → удалить → сохранить» в `Documents/ExpoAudio` и SQLite не появилось новой записи; баг закрыт.
+- Fix the loss of an unsaved answer when closing by a swipe: the fix disables
+  closing by a swipe and by the background while the draft is non-empty. The
+  static retest passed; a manual check on an iPhone is pending.
+- Delete the file of a recording that was removed before the answer was saved:
+  the retest on a physical iPhone passed. After "record → delete → save" no new
+  entry appeared in `Documents/ExpoAudio` or in SQLite; the bug is closed.
 
-## Автоматические проверки
+## Automated checks
 
-Полные логи сохранены вне репозитория:
+The full logs are stored outside the repository:
 
-- `npm run typecheck` — exit code `0`;
-- `npm test` — exit code `0`, 5/5 тестов пройдены;
-- Maestro-flow `testing/e2e/ios-stage04-answers-text.yaml` — все шаги завершены успешно на Simulator.
-- После исправлений повторно выполнены `npm run typecheck` — exit code `0`; `npm test` — 5/5, exit code `0`; `git diff --check` — без замечаний.
+- `npm run typecheck` - exit code `0`;
+- `npm test` - exit code `0`, 5/5 tests passed;
+- the Maestro flow `testing/e2e/ios-stage04-answers-text.yaml` - every step
+  completed successfully on the Simulator.
+- After the fixes the checks were repeated: `npm run typecheck` - exit code `0`;
+  `npm test` - 5/5, exit code `0`; `git diff --check` - no complaints.
 
-Финальное подтверждение восстановления текста: `testing/evidence/2026-08-22-stage04/ANS-001-restored-text.png`.
+The final confirmation that the text is restored:
+`testing/evidence/2026-08-22-stage04/ANS-001-restored-text.png`.
 
-Этап переведён в «ручное тестирование»: требуется ретест обоих исправлений и прогон ANS-004–ANS-011 на физическом iPhone.
+The stage was moved to "manual testing": both fixes need a retest and ANS-004 to
+ANS-011 need a run on a physical iPhone.

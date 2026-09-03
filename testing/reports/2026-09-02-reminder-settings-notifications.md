@@ -1,47 +1,47 @@
-# Настройка расписаний и локальные уведомления — отчёт проверки
+# Schedule settings and local notifications - verification report
 
-Дата: 2026-09-02  
-Устройство: iOS Simulator `Pray SE`, iOS 26.5  
-Сборка: локальная Debug, Expo SDK 57
+Date: 2026-09-02  
+Device: the iOS Simulator `Pray SE`, iOS 26.5  
+Build: a local Debug build, Expo SDK 57
 
-## Результат
+## Result
 
-Настройка нескольких расписаний, сохранение в SQLite, включение/выключение,
-перепланирование и фактическая доставка локального уведомления работают.
+Setting up several schedules, saving them into SQLite, turning them on and off,
+rescheduling and the actual delivery of a local notification all work.
 
-Исходное расписание симулятора перед проверкой сохранено и после проверки
-восстановлено. После восстановления в системном архиве снова находятся ровно
-12 ожидаемых WEEKLY-запросов.
+The original schedule of the simulator was saved before the check and restored
+afterwards. After the restoration the system archive again holds exactly the 12
+expected WEEKLY requests.
 
-## Проверки
+## Checks
 
-| Проверка | Результат | Evidence |
+| Check | Result | Evidence |
 |---|---|---|
-| Полный `npm test` | PASS, exit 0, 128/128 | [`npm-test.log`](../evidence/2026-09-02-reminder-settings-notifications/npm-test.log) |
+| The full `npm test` | PASS, exit 0, 128/128 | [`npm-test.log`](../evidence/2026-09-02-reminder-settings-notifications/npm-test.log) |
 | TypeScript `npm run typecheck` | PASS, exit 0 | [`typecheck.log`](../evidence/2026-09-02-reminder-settings-notifications/typecheck.log) |
-| В UI видны два сохранённых расписания и пункт добавления | PASS | [`ui-multiple-schedules.log`](../evidence/2026-09-02-reminder-settings-notifications/ui-multiple-schedules.log) |
-| Добавление третьего расписания, изменение дня, сохранение в SQLite | PASS | [`ui-multiple-schedules.log`](../evidence/2026-09-02-reminder-settings-notifications/ui-multiple-schedules.log) |
-| Выключение: `enabled=false`, pending-запросов 0 | PASS | [`toggle-off.log`](../evidence/2026-09-02-reminder-settings-notifications/toggle-off.log) |
-| Повторное включение: `enabled=true`, pending-запрос восстановлен | PASS | [`toggle-on.log`](../evidence/2026-09-02-reminder-settings-notifications/toggle-on.log) |
-| Контрольное правило на среду 12:32 попало в iOS как WEEKLY (`weekday=4`) | PASS | [`controlled-pending.txt`](../evidence/2026-09-02-reminder-settings-notifications/controlled-pending.txt) |
-| Уведомление доставлено при завершённом приложении | PASS | [`delivered-after.txt`](../evidence/2026-09-02-reminder-settings-notifications/delivered-after.txt), [`notification-center.png`](../evidence/2026-09-02-reminder-settings-notifications/notification-center.png) |
-| Исходное расписание восстановлено, pending=12 | PASS | [`pending-after-restore.txt`](../evidence/2026-09-02-reminder-settings-notifications/pending-after-restore.txt) |
+| Two saved schedules and the add item are visible in the UI | PASS | [`ui-multiple-schedules.log`](../evidence/2026-09-02-reminder-settings-notifications/ui-multiple-schedules.log) |
+| Adding a third schedule, changing a day, saving into SQLite | PASS | [`ui-multiple-schedules.log`](../evidence/2026-09-02-reminder-settings-notifications/ui-multiple-schedules.log) |
+| Turning off: `enabled=false`, 0 pending requests | PASS | [`toggle-off.log`](../evidence/2026-09-02-reminder-settings-notifications/toggle-off.log) |
+| Turning back on: `enabled=true`, the pending request is restored | PASS | [`toggle-on.log`](../evidence/2026-09-02-reminder-settings-notifications/toggle-on.log) |
+| A control rule for Wednesday 12:32 reached iOS as WEEKLY (`weekday=4`) | PASS | [`controlled-pending.txt`](../evidence/2026-09-02-reminder-settings-notifications/controlled-pending.txt) |
+| The notification was delivered with the app terminated | PASS | [`delivered-after.txt`](../evidence/2026-09-02-reminder-settings-notifications/delivered-after.txt), [`notification-center.png`](../evidence/2026-09-02-reminder-settings-notifications/notification-center.png) |
+| The original schedule was restored, pending=12 | PASS | [`pending-after-restore.txt`](../evidence/2026-09-02-reminder-settings-notifications/pending-after-restore.txt) |
 
-## Не подтверждено
+## Not confirmed
 
-Переход в приложение по тапу на уже доставленное уведомление автоматически не
-подтверждён. Maestro дважды выполнил тап по карточке на экране Центра уведомлений,
-но iOS Simulator оставил экран заблокированным и приложение не открылось. Это не
-подтверждает дефект приложения: событие нажатия до приложения не дошло. Логи
-попыток: [`tap-notification-attempt.log`](../evidence/2026-09-02-reminder-settings-notifications/tap-notification-attempt.log),
+Opening the app by tapping an already delivered notification was not confirmed
+automatically. Maestro tapped the card on the Notification Centre screen twice,
+but the iOS Simulator left the screen locked and the app did not open. This does
+not confirm an app defect: the press event never reached the app. The logs of the
+attempts: [`tap-notification-attempt.log`](../evidence/2026-09-02-reminder-settings-notifications/tap-notification-attempt.log),
 [`tap-notification-coordinate-attempt.log`](../evidence/2026-09-02-reminder-settings-notifications/tap-notification-coordinate-attempt.log).
 
-Для окончательной проверки этого пункта нужно вручную нажать свежее уведомление
-на разблокированном симуляторе или физическом iPhone и убедиться, что открылась
-главная приложения.
+To settle this point one has to tap a fresh notification manually on an unlocked
+simulator or on a physical iPhone and check that the home screen of the app
+opens.
 
-## Ограничение среды
+## Environment limitation
 
-Simulator подтверждает создание системных запросов, показ и хранение
-уведомления. Надёжность доставки после длительного простоя и перезагрузки нужно
-отдельно проверять на физическом iPhone.
+The simulator confirms the creation of the system requests, the display and the
+storage of a notification. The reliability of delivery after a long idle period
+and after a reboot has to be verified separately on a physical iPhone.

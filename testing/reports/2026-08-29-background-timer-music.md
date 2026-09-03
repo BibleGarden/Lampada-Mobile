@@ -1,68 +1,73 @@
-# Таймер и музыка в фоне — отчёт проверки
+# The timer and the music in the background - verification report
 
-- Дата: 2026-08-29
-- Задача: [ClickUp 86cbbm5xd](https://app.clickup.com/t/86cbbm5xd)
-- Среда ручной проверки: iPhone 17 Pro Simulator, iOS 26.5, native development build
+- Date: 2026-08-29
+- Task: ClickUp `86cbbm5xd`
+- Manual verification environment: iPhone 17 Pro Simulator, iOS 26.5, a native
+  development build
 - Expo: SDK 57.0.0, `expo-audio` 57.0.4
 
-## Реализовано
+## What was implemented
 
-- Таймер вычисляет `elapsed` и `remaining` по абсолютным моментам начала и
-  окончания, а при возврате в `active` синхронизируется немедленно.
-- Музыка не ставится на паузу из-за `AppState.background`.
-- Музыкальная очередь использует `AudioPlayer`, регистрирует активный трек как
-  системную media-сессию и восстанавливает background audio mode после временного
-  аудиофокуса записи или озвучки Писания.
-- Config plugin явно включает native background playback.
+- The timer computes `elapsed` and `remaining` from the absolute moments of the
+  start and the end, and synchronises immediately on returning to `active`.
+- The music is no longer paused because of `AppState.background`.
+- The music queue uses an `AudioPlayer`, registers the active track as a system
+  media session and restores the background audio mode after the temporary audio
+  focus of a recording or of the scripture narration.
+- The config plugin enables native background playback explicitly.
 
-## Автоматические проверки
+## Automated checks
 
-| Проверка | Результат | Evidence |
+| Check | Result | Evidence |
 | --- | --- | --- |
 | `npm run typecheck` | PASS, exit 0 | `testing/evidence/2026-08-29-background/typecheck.log` |
 | `npm test` | PASS, 68/68, exit 0 | `testing/evidence/2026-08-29-background/tests.log` |
-| `npx expo config --type public` | PASS, background permissions присутствуют | `testing/evidence/2026-08-29-background/expo-config.log` |
+| `npx expo config --type public` | PASS, the background permissions are present | `testing/evidence/2026-08-29-background/expo-config.log` |
 
-Четыре новых unit-теста проверяют wall-clock расчёт, догон после background,
-режим без таймера и нижнюю границу ручной корректировки.
+Four new unit tests cover the wall-clock computation, catching up after the
+background, the mode without a timer and the lower bound of a manual correction.
 
-## Ручной smoke на iOS Simulator
+## Manual smoke on the iOS Simulator
 
-### Музыка
+### Music
 
-1. Запущена пятиминутная молитва и включена тихая музыка.
-2. Приложение свёрнуто кнопкой Home.
-3. После паузы тот же процесс возвращён через `launchApp.stopApp: false`.
-4. UI показывает активное воспроизведение (`Тихая музыка`) и выключатель музыки;
-   таймер догнал время, проведённое в фоне.
+1. A five-minute prayer was started and the quiet music turned on.
+2. The app was backgrounded with the Home button.
+3. After a pause the same process was brought back with
+   `launchApp.stopApp: false`.
+4. The UI shows active playback (`Тихая музыка`) and the music switch; the timer
+   caught up with the time spent in the background.
 
-Результат: PASS. Evidence:
+Result: PASS. Evidence:
 
 - `maestro-music-background.log`, `maestro-music-resume.log`;
 - `BG-MUSIC-resumed-playing.png`.
 
-### Таймер
+### The timer
 
-1. Конечный таймер уменьшен до пяти секунд.
-2. До достижения нуля приложение свёрнуто кнопкой Home.
-3. После паузы тот же процесс возвращён без перезапуска.
-4. Приложение уже перешло на рефлексию: видны `Завершить` и
-   `Вернуться к молитве`.
+1. The finite timer was reduced to five seconds.
+2. Before it reached zero the app was backgrounded with the Home button.
+3. After a pause the same process was brought back without a restart.
+4. The app had already moved to the reflection: `Завершить` and `Вернуться к
+   молитве` are visible.
 
-Результат: PASS. Evidence:
+Result: PASS. Evidence:
 
 - `maestro-timer-background.log`, `maestro-timer-resume.log`;
 - `BG-TIMER-resumed-at-zero.png`.
 
-## Что ещё нельзя считать проверенным
+## What still cannot count as verified
 
-- Симулятор не подтверждает, что звук физически слышен при заблокированном экране.
-- Нужен native release/dev build на физическом iPhone: музыка 5+ минут под lock,
-  возврат в приложение, пауза и завершение сессии.
-- Нужен отдельный Android-девайс: media notification, воспроизведение 5+ минут,
-  переход между треками и возврат после background.
-- В development build появлялся LogBox toast от существующего `console.warn`
-  при сетевом fallback вопросов. В нативном системном логе ошибок фонового аудио
-  не найдено; это не является проверкой release build.
+- The simulator does not confirm that the sound is physically audible with the
+  screen locked.
+- A native release or dev build on a physical iPhone is needed: music for 5+
+  minutes under the lock, returning to the app, pausing and finishing the
+  session.
+- A separate Android device is needed: the media notification, playback for 5+
+  minutes, the transition between tracks and the return after the background.
+- In the development build a LogBox toast appeared from an existing
+  `console.warn` during the network fallback of the questions. No background
+  audio errors were found in the native system log; this is not a verification of
+  a release build.
 
-До физического ретеста задача не переводится в `complete`.
+Until the physical retest the task is not moved to `complete`.

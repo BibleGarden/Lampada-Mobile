@@ -1,43 +1,45 @@
-# Подсветка ключевых стихов — отчёт 2026-08-28
+# Highlighting the key verses - report of 2026-08-28
 
-## Объект
+## Subject
 
 - ClickUp: `86cbb120a`
 - Expo SDK 57.0.17 / React Native 0.86.3
 - iPhone 17 Pro Simulator, iOS 26.5
-- API: локальный `scripts/scripture-stub.mjs`
+- API: the local `scripts/scripture-stub.mjs`
 
-## Результат
+## Result
 
-Клиент принимает опциональные `passage.verses` и `highlight`, собирает абзацы
-из структурированных стихов и выделяет диапазон только по
-`highlight.passage`. Ответы и старый кэш без `verses` отображаются прежним
-сплошным текстом; `coverage_empty` считается успешной серверной деградацией.
+The client accepts the optional `passage.verses` and `highlight`, assembles the
+paragraphs from the structured verses and highlights the range strictly by
+`highlight.passage`. Responses and old cache entries without `verses` are
+displayed as the previous solid text; `coverage_empty` counts as a successful
+server-side degradation.
 
-## Автоматические проверки
+## Automated checks
 
-| Проверка | Результат |
+| Check | Result |
 | --- | --- |
 | `npm test` | PASS, 64/64, exit 0 |
 | `npm run typecheck` | PASS, exit 0 |
 | `git diff --check` | PASS, exit 0 |
-| Release iOS build/install | PASS, exit 0 |
+| The Release iOS build and install | PASS, exit 0 |
 | Maestro `ios-scripture-highlight.yaml` | PASS, exit 0 |
 
-## Ретест найденного дефекта
+## Retest of the defect that was found
 
-Баг `86cbb2nwd`: фон подсветки захватывал перенос абзаца и создавал большой
-прямоугольник. Межстиховый префикс вынесен из стилизованного `Text`; повторный
-Maestro-прогон и визуальная проверка preview/reader подтверждают, что фон
-ограничен текстом ключевого стиха.
+Bug `86cbb2nwd`: the highlight background captured the paragraph break and
+produced a large rectangle. The inter-verse prefix was moved out of the styled
+`Text`; a repeated Maestro run and a visual check of the preview and the reader
+confirm that the background is limited to the text of the key verse.
 
 ## Evidence
 
 - `testing/evidence/2026-08-28-scripture-highlight/preview-highlight.png`
 - `testing/evidence/2026-08-28-scripture-highlight/reader-highlight.png`
 
-## Ограничения проверки
+## Limits of the check
 
-Live-ретест с новым Bible-API не выполнен: указанный в ClickUp коммит
-`dc9a6b4` отсутствует в доступном локальном репозитории и на `origin/master`.
-Контракт проверен по финальному комментарию ClickUp и локальному stub.
+The live retest against the new Bible-API was not performed: the commit `dc9a6b4`
+named in ClickUp is absent from the available local repository and from
+`origin/master`. The contract was verified against the final ClickUp comment and
+the local stub.
