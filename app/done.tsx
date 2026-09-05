@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
@@ -18,6 +19,7 @@ export default function Done() {
 }
 
 function DoneScreen() {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
@@ -32,13 +34,13 @@ function DoneScreen() {
         <View style={styles.center}>
           <Flame width={sc(220)} lit />
           <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.textBlock}>
-            <Text style={styles.title}>Огонёк горит</Text>
+            <Text style={styles.title}>{t('screens.home.lit')}</Text>
             <Text style={styles.streakLine}>
-              {s.streak.count}-й день, как ты возвращаешься
+              {t('screens.done.streak', { count: s.streak.count })}
             </Text>
             {!!s.takeaway && (
               <View style={styles.takeawayCard}>
-                <Kicker style={{ fontSize: sc(10), marginBottom: sc(8) }}>ты вынес из молитвы</Kicker>
+                <Kicker style={{ fontSize: sc(10), marginBottom: sc(8) }}>{t('screens.done.takeaway')}</Kicker>
                 <Text style={styles.takeawayText}>«{s.takeaway}»</Text>
               </View>
             )}
@@ -47,7 +49,7 @@ function DoneScreen() {
         {/* после хот-релоада или деп-линка стек может быть пуст —
             тогда dismissAll молча ничего не делает */}
         <GoldButton
-          label="На главную"
+          label={t('screens.done.home')}
           onPress={() => (router.canDismiss() ? router.dismissAll() : router.replace('/'))}
         />
       </Animated.View>

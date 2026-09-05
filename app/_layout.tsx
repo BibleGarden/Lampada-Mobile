@@ -52,15 +52,17 @@ function ReminderRouting() {
 
 export default function RootLayout() {
   const [updateVisible, setUpdateVisible] = useState(false);
-  // настройки нужны до первой генерации вопросов — грузим при старте
+  const uiLanguageReady = useSettings((state) => state.uiLanguageReady);
+  const settingsLoaded = useSettings((state) => state.loaded);
+  const uiLanguage = useSettings((state) => state.uiLanguage);
   useEffect(() => {
-    // Полный переплан при каждом запуске: текст уведомления уносится в систему
-    // в момент планирования, поэтому фразы обновляются только так.
-    (async () => {
-      await useSettings.getState().load();
-      await syncRemindersAsync(useSettings.getState().reminderSchedule);
-    })().catch(() => undefined);
+    void useSettings.getState().load().catch(() => undefined);
   }, []);
+
+  // При смене языка заменяем уже сохранённый в системе текст напоминаний.
+  useEffect(() => {
+    if (settingsLoaded) void syncRemindersAsync(useSettings.getState().reminderSchedule);
+  }, [settingsLoaded, uiLanguage]);
 
   // Состояние блокировки читается отдельно от настроек и раньше них: пока оно
   // неизвестно, LockGate держит шторку и не показывает содержимое экранов.
@@ -88,7 +90,7 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !uiLanguageReady) {
     return <View style={{ flex: 1, backgroundColor: '#0e0a07' }} />;
   }
 

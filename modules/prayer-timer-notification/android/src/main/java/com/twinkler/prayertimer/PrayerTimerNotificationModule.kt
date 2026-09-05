@@ -14,8 +14,8 @@ class PrayerTimerNotificationModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("PrayerTimerNotification")
 
-    AsyncFunction("startCountdownAsync") { endsAtMs: Double, title: String ->
-      showCountdown(endsAtMs.toLong(), title)
+    AsyncFunction("startCountdownAsync") { endsAtMs: Double, title: String, labels: Map<String, String> ->
+      showCountdown(endsAtMs.toLong(), title, labels)
     }
 
     AsyncFunction("stopCountdownAsync") {
@@ -29,14 +29,14 @@ class PrayerTimerNotificationModule : Module() {
   private fun notificationManager(): NotificationManager =
     context().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-  private fun ensureChannel(manager: NotificationManager) {
+  private fun ensureChannel(manager: NotificationManager, labels: Map<String, String>) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
     val channel = NotificationChannel(
       CHANNEL_ID,
-      "Таймер молитвы",
+      labels["channelName"] ?: "Prayer timer",
       NotificationManager.IMPORTANCE_LOW
     ).apply {
-      description = "Оставшееся время текущей молитвы"
+      description = labels["channelDescription"] ?: "Time remaining in the current prayer"
       enableVibration(false)
       setSound(null, null)
       setShowBadge(false)
@@ -46,10 +46,10 @@ class PrayerTimerNotificationModule : Module() {
   }
 
   @Suppress("DEPRECATION")
-  private fun showCountdown(endsAtMs: Long, title: String) {
+  private fun showCountdown(endsAtMs: Long, title: String, labels: Map<String, String>) {
     val context = context()
     val manager = notificationManager()
-    ensureChannel(manager)
+    ensureChannel(manager, labels)
 
     val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
     val contentIntent = launchIntent?.let {
@@ -69,7 +69,7 @@ class PrayerTimerNotificationModule : Module() {
     builder
       .setSmallIcon(R.drawable.ic_prayer_timer)
       .setContentTitle(title)
-      .setContentText("До завершения молитвы")
+      .setContentText(labels["body"] ?: "Until the end of prayer")
       .setCategory(Notification.CATEGORY_PROGRESS)
       .setVisibility(Notification.VISIBILITY_PUBLIC)
       .setWhen(endsAtMs)

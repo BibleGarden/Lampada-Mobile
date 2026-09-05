@@ -5,6 +5,9 @@ import { createLiveActivity, type LiveActivityEnvironment } from 'expo-widgets';
 export type PrayerLiveActivityProps = {
   startedAtMs: number;
   endsAtMs: number;
+  prayerLabel: string;
+  endedLabel: string;
+  musicHint: string;
 };
 
 const PrayerLiveActivityLayout = (
@@ -27,11 +30,11 @@ const PrayerLiveActivityLayout = (
           <Text
             modifiers={[font({ size: 13, weight: 'medium' }), foregroundStyle('#C9A96E')]}
           >
-            Молитва
+            {props.prayerLabel}
           </Text>
           {environment.isStale ? (
             <Text modifiers={[font({ size: 22, weight: 'semibold' }), foregroundStyle(timerColor)]}>
-              Время завершено
+              {props.endedLabel}
             </Text>
           ) : (
             <Text
@@ -59,7 +62,7 @@ const PrayerLiveActivityLayout = (
         <Text
           modifiers={[font({ size: 11, weight: 'medium' }), foregroundStyle('#C9A96E')]}
         >
-          Молитва
+          {props.prayerLabel}
         </Text>
       </VStack>
     ),
@@ -92,7 +95,7 @@ const PrayerLiveActivityLayout = (
           foregroundStyle('#B9AA91'),
         ]}
       >
-        Пауза музыки не останавливает таймер
+        {props.musicHint}
       </Text>
     ),
   };

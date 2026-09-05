@@ -1,3 +1,4 @@
+import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useState } from 'react';
 import {
   AppState,
@@ -21,22 +22,18 @@ import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
-const EXAMPLES = [
-  'Поблагодарить Бога',
-  'Привести мысли в порядок',
-  'Принять важное решение',
-  'Подготовиться к разговору',
-];
+const EXAMPLES = [0, 1, 2, 3] as const;
 
 const PRESETS = [
   { label: '5', v: 5 },
   { label: '15', v: 15 },
   { label: '30', v: 30 },
-  { label: 'час', v: 60 },
+  { label: 'hour', v: 60 },
   { label: '∞', v: 0 },
 ];
 
 export default function Setup() {
+  const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
@@ -81,12 +78,12 @@ export default function Setup() {
             <IconButton size={sc(30)} onPress={() => router.back()}>
               <ChevronLeft size={18} color={colors.white65} />
             </IconButton>
-            <Kicker style={{ fontSize: sc(11) }}>Перед молитвой</Kicker>
+            <Kicker style={{ fontSize: sc(11) }}>{t('screens.setup.before')}</Kicker>
           </View>
 
           <View>
             <View style={styles.goalHeader}>
-              <Text style={styles.goalTitle}>Цель молитвы</Text>
+              <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
               <Pressable
                 onPress={() => setExamplesOpen(true)}
                 hitSlop={8}
@@ -112,7 +109,7 @@ export default function Setup() {
 
           <View>
             <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
-              Длительность
+              {t('screens.setup.duration')}
             </Kicker>
             <View style={styles.stepper}>
               <Pressable
@@ -131,7 +128,7 @@ export default function Setup() {
               <View style={styles.stepValue}>
                 <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
                 <Text style={styles.stepUnit}>
-                  {s.minutes === 0 ? 'без таймера' : plUnit(s.minutes)}
+                  {s.minutes === 0 ? t('screens.setup.untimed') : t(`screens.minute.${pluralCategory(language, s.minutes)}`)}
                 </Text>
               </View>
               <Pressable
@@ -153,7 +150,7 @@ export default function Setup() {
                 const active = s.minutes === p.v;
                 return (
                   <Pressable
-                    key={p.label}
+                    key={p.v}
                     onPress={() => {
                       Haptics.selectionAsync();
                       s.setMinutes(p.v);
@@ -167,7 +164,7 @@ export default function Setup() {
                         active && { color: colors.amberBright },
                       ]}
                     >
-                      {p.label}
+                      {p.v === 60 ? t('screens.setup.hour') : p.label}
                     </Text>
                   </Pressable>
                 );
@@ -175,24 +172,24 @@ export default function Setup() {
             </View>
           </View>
 
-          <GoldButton label="Далее" onPress={() => void next()} />
+          <GoldButton label={t('screens.setup.next')} onPress={() => void next()} />
         </Pressable>
       </Animated.View>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
           <View style={[styles.examplesCard, { marginTop: insets.top + sc(92) }]}>
-            <Kicker style={{ marginBottom: sc(8) }}>Примеры целей · нажми, чтобы выбрать</Kicker>
-            {EXAMPLES.map((ex) => (
+            <Kicker style={{ marginBottom: sc(8) }}>{t('screens.setup.examples')}</Kicker>
+            {EXAMPLES.map((ex, index) => (
               <Pressable
                 key={ex}
                 onPress={() => {
-                  s.setTopic(ex);
+                  s.setTopic(t(`screens.setup.example${index}`));
                   setExamplesOpen(false);
                 }}
                 style={({ pressed }) => [styles.exampleRow, pressed && { opacity: 0.7 }]}
               >
-                <Text style={styles.exampleText}>{ex}</Text>
+                <Text style={styles.exampleText}>{t(`screens.setup.example${index}`)}</Text>
               </Pressable>
             ))}
           </View>
@@ -207,15 +204,6 @@ export default function Setup() {
     </View>
   );
 }
-
-const plUnit = (n: number) => {
-  const a = n % 100;
-  const b = a % 10;
-  if (a > 10 && a < 20) return 'минут';
-  if (b === 1) return 'минута';
-  if (b >= 2 && b <= 4) return 'минуты';
-  return 'минут';
-};
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },

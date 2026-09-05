@@ -8,7 +8,8 @@
     "userInterfaceStyle": "dark",
     "locales": {
       "ru": "./languages/ru.json",
-      "uk": "./languages/uk.json"
+      "uk": "./languages/uk.json",
+      "en": "./languages/en.json"
     },
     "ios": {
       "bundleIdentifier": "twinkler",
@@ -19,8 +20,8 @@
         "UISupportedInterfaceOrientations": [
           "UIInterfaceOrientationPortrait"
         ],
-        "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена провайдеру ИИ для расшифровки только по вашему запросу.",
-        "NSFaceIDUsageDescription": "Face ID используется для разблокировки приложения.",
+        "NSMicrophoneUsageDescription": "The microphone is used to record spoken prayer responses. Recordings stay on your device and are sent for AI transcription only when you request it.",
+        "NSFaceIDUsageDescription": "Face ID is used to unlock the app.",
         "UIBackgroundModes": [
           "audio"
         ]
@@ -79,7 +80,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Face ID используется для разблокировки приложения."
+          "faceIDPermission": "Face ID is used to unlock the app."
         }
       ]
     ],

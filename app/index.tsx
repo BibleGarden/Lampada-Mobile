@@ -1,3 +1,4 @@
+import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -9,15 +10,16 @@ import { GoldButton, IconButton } from '../components/ui';
 import { useSession } from '../lib/store';
 import { colors, column, fonts, sc, useStyles } from '../lib/theme';
 
-const greetingByHour = () => {
+const greetingByHour = (t: ReturnType<typeof useI18n>['t']) => {
   const h = new Date().getHours();
-  if (h < 5) return 'Тихой ночи';
-  if (h < 12) return 'Доброе утро';
-  if (h < 18) return 'Добрый день';
-  return 'Добрый вечер';
+  if (h < 5) return t('screens.home.night');
+  if (h < 12) return t('screens.home.morning');
+  if (h < 18) return t('screens.home.afternoon');
+  return t('screens.home.evening');
 };
 
 export default function Home() {
+  const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const { streak, loadStreak, reset } = useSession();
@@ -39,9 +41,8 @@ export default function Home() {
 
   // Подпись мягко суммирует неделю и не обнуляет достижение после пропуска.
   const weekDays = streak.week.filter(Boolean).length;
-  const dayWord = (n: number) => (n === 1 ? 'день' : n < 5 ? 'дня' : 'дней');
   const streakLine = weekDays > 0
-    ? `${weekDays} ${dayWord(weekDays)} с молитвой на этой неделе`
+    ? t(`screens.home.week.${pluralCategory(language, weekDays)}`, { count: weekDays })
     : '';
 
   return (
@@ -52,13 +53,13 @@ export default function Home() {
           остаётся «бледным». Home — первый экран, ему проявление не нужно */}
       <View style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
-          <Text style={styles.greeting}>{greetingByHour()}</Text>
+          <Text style={styles.greeting}>{greetingByHour(t)}</Text>
           <View style={styles.topBtns}>
             <IconButton
               onPress={() => router.push('/journal')}
               size={sc(30)}
               bg="transparent"
-              accessibilityLabel="История молитв"
+              accessibilityLabel={t('screens.home.journal')}
               testID="journal-button"
             >
               <NotebookText size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
@@ -67,7 +68,7 @@ export default function Home() {
               onPress={() => router.push('/favorites')}
               size={sc(30)}
               bg="transparent"
-              accessibilityLabel="Сохранённые цитаты"
+              accessibilityLabel={t('screens.favorites.title')}
               testID="favorites-button"
             >
               <Heart size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
@@ -76,7 +77,7 @@ export default function Home() {
               onPress={() => router.push('/settings')}
               size={sc(30)}
               bg="transparent"
-              accessibilityLabel="Настройки"
+              accessibilityLabel={t('screens.home.settings')}
               testID="settings-button"
             >
               <Settings2 size={sc(17)} color={colors.labelGold} strokeWidth={1.8} />
@@ -89,7 +90,7 @@ export default function Home() {
               после — в полную силу: «поддержи» обретает буквальный смысл */}
           <Flame width={sc(240)} lit={streak.prayedToday} />
           <Text style={styles.title}>
-            {streak.prayedToday ? 'Огонёк горит' : 'Поддержи огонёк'}
+            {streak.prayedToday ? t('screens.home.lit') : t('screens.home.keepFlame')}
           </Text>
           <View style={styles.dotsRow}>
             {dots.map((kind, i) => (
@@ -107,7 +108,7 @@ export default function Home() {
         </View>
 
         <View style={[styles.bottom, { paddingBottom: insets.bottom + sc(24) }]}>
-          <GoldButton label="Начать молитву" onPress={() => router.push('/setup')} />
+          <GoldButton label={t('screens.home.start')} onPress={() => router.push('/setup')} />
         </View>
       </View>
     </View>

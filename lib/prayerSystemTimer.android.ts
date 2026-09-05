@@ -1,3 +1,4 @@
+import { translate } from './i18n';
 import { PermissionsAndroid, Platform } from 'react-native';
 import type { Permission } from 'react-native';
 import PrayerTimerNotification from '../modules/prayer-timer-notification/src/PrayerTimerNotificationModule';
@@ -26,14 +27,22 @@ const hasNotificationPermission = async (request: boolean) => {
 export function startPrayerSystemTimer(timer: PrayerSystemTimerState): Promise<void> {
   return enqueue(async () => {
     if (!(await hasNotificationPermission(true))) return;
-    await PrayerTimerNotification.startCountdownAsync(timer.endsAtMs, 'Молитва');
+    await PrayerTimerNotification.startCountdownAsync(timer.endsAtMs, translate('system.prayer'), {
+      body: translate('system.timerBody'),
+      channelName: translate('system.timerChannel'),
+      channelDescription: translate('system.timerDescription'),
+    });
   });
 }
 
 export function updatePrayerSystemTimer(timer: PrayerSystemTimerState): Promise<void> {
   return enqueue(async () => {
     if (!(await hasNotificationPermission(false))) return;
-    await PrayerTimerNotification.startCountdownAsync(timer.endsAtMs, 'Молитва');
+    await PrayerTimerNotification.startCountdownAsync(timer.endsAtMs, translate('system.prayer'), {
+      body: translate('system.timerBody'),
+      channelName: translate('system.timerChannel'),
+      channelDescription: translate('system.timerDescription'),
+    });
   });
 }
 

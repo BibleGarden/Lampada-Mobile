@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getLocales } from 'expo-localization';
 import { getDb } from './db';
+import { initialUiLanguage, isUiLanguage, type UiLanguage } from './uiLanguage';
 import {
   ENGLISH_SCRIPTURE_PREFERENCES,
   defaultPreferencesFromCatalog,
@@ -37,6 +38,9 @@ const CONSENT_KEYS: Record<ConsentPurpose, string> = {
 };
 
 type SettingsState = {
+  uiLanguage: UiLanguage;
+  uiLanguageReady: boolean;
+  setUiLanguage: (language: UiLanguage) => Promise<void>;
   coreAiConsent: ConsentDecision;
   answerContextConsent: ConsentDecision;
   audioTranscriptionConsent: ConsentDecision;
@@ -49,10 +53,13 @@ type SettingsState = {
   setReminderSchedule: (schedule: ReminderSchedule) => Promise<void>;
 };
 
+let languageSavePromise: Promise<void> = Promise.resolve();
 let loadPromise: Promise<void> | null = null;
 let consentSavePromise: Promise<void> = Promise.resolve();
 
 export const useSettings = create<SettingsState>((set) => ({
+  uiLanguage: initialUiLanguage(getLocales()),
+  uiLanguageReady: false,
   coreAiConsent: 'undecided',
   answerContextConsent: 'undecided',
   audioTranscriptionConsent: 'undecided',
@@ -65,7 +72,7 @@ export const useSettings = create<SettingsState>((set) => ({
     if (!loadPromise) {
       loadPromise = (async () => {
         const d = await getDb();
-        const [coreRow, answerRow, audioRow, legacyShareRow, scriptureRow, remindersRow] = await Promise.all([
+        const [coreRow, answerRow, audioRow, legacyShareRow, scriptureRow, remindersRow, languageRow] = await Promise.all([
           d.getFirstAsync<{ value: string }>(
             `SELECT value FROM meta WHERE key = '${CONSENT_KEYS.core_prayer_ai}'`,
           ),
@@ -84,7 +91,9 @@ export const useSettings = create<SettingsState>((set) => ({
           d.getFirstAsync<{ value: string }>(
             "SELECT value FROM meta WHERE key = 'prayer_reminders'",
           ),
+          d.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'ui_language'"),
         ]);
+        set({ uiLanguage: isUiLanguage(languageRow?.value) ? languageRow.value : initialUiLanguage(getLocales()), uiLanguageReady: true });
         const coreAiConsent = resolveConsentDecision(coreRow?.value ?? null);
         const answerContextConsent = resolveConsentDecision(
           answerRow?.value ?? null,
@@ -146,11 +155,26 @@ export const useSettings = create<SettingsState>((set) => ({
           loaded: true,
         });
       })().catch((error) => {
+        set({ uiLanguageReady: true });
         loadPromise = null;
         throw error;
       });
     }
     await loadPromise;
+  },
+
+  setUiLanguage: async (language) => {
+    if (!isUiLanguage(language)) throw new Error('Unsupported interface language');
+    languageSavePromise = languageSavePromise.catch(() => undefined).then(async () => {
+      const d = await getDb();
+      await d.runAsync(
+        `INSERT INTO meta (key, value) VALUES ('ui_language', ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        language,
+      );
+      set({ uiLanguage: language });
+    });
+    await languageSavePromise;
   },
 
   setConsent: async (purpose, decision) => {
@@ -216,7 +240,10 @@ export const useSettings = create<SettingsState>((set) => ({
 export const resetSettingsStore = () => {
   loadPromise = null;
   consentSavePromise = Promise.resolve();
+  languageSavePromise = Promise.resolve();
   useSettings.setState({
+    uiLanguage: initialUiLanguage(getLocales()),
+    uiLanguageReady: true,
     coreAiConsent: 'undecided',
     answerContextConsent: 'undecided',
     audioTranscriptionConsent: 'undecided',

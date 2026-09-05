@@ -1,3 +1,4 @@
+import type { UiLanguage } from './uiLanguage';
 import { resolveScriptureCatalogUrl } from './scriptureCatalogClient';
 
 export type AboutContact = {
@@ -12,13 +13,21 @@ export type AboutContact = {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-export function parseAboutContacts(value: unknown): AboutContact[] {
+const localizedText = (value: Record<string, unknown>, language: UiLanguage): string => {
+  for (const key of [language, 'en', 'ru']) {
+    if (typeof value[key] === 'string' && value[key].trim()) return value[key];
+  }
+  if ([language, 'en', 'ru'].some((key) => typeof value[key] === 'string')) return '';
+  throw new Error('invalid_contact_translation');
+};
+
+export function parseAboutContacts(value: unknown, language: UiLanguage = 'ru'): AboutContact[] {
   if (!isObject(value) || !Array.isArray(value.contacts)) throw new Error('invalid_response');
   return value.contacts.map((item: unknown): AboutContact => {
     if (!isObject(item) || typeof item.id !== 'string' || typeof item.icon !== 'string'
       || typeof item.url !== 'string' || typeof item.sort_order !== 'number'
-      || !Number.isFinite(item.sort_order) || !isObject(item.label) || typeof item.label.ru !== 'string'
-      || !isObject(item.subtitle) || typeof item.subtitle.ru !== 'string') {
+      || !Number.isFinite(item.sort_order) || !isObject(item.label)
+      || !isObject(item.subtitle)) {
       throw new Error('invalid_contact');
     }
     if (!['https:', 'http:', 'mailto:', 'tg:'].includes(new URL(item.url).protocol)) {
@@ -26,12 +35,13 @@ export function parseAboutContacts(value: unknown): AboutContact[] {
     }
     return {
       id: item.id, icon: item.icon, url: item.url, sortOrder: item.sort_order,
-      label: item.label.ru, subtitle: item.subtitle.ru,
+      label: localizedText(item.label, language),
+      subtitle: localizedText(item.subtitle, language),
     };
   }).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-export async function fetchAboutContacts(signal: AbortSignal): Promise<AboutContact[]> {
+export async function fetchAboutContacts(signal: AbortSignal, language: UiLanguage = 'ru'): Promise<AboutContact[]> {
   const endpoint = resolveScriptureCatalogUrl('/api/about');
   if (!endpoint) throw new Error('not_configured');
   const url = new URL(endpoint);
@@ -48,7 +58,7 @@ export async function fetchAboutContacts(signal: AbortSignal): Promise<AboutCont
       signal: controller.signal,
     });
     if (!response.ok) throw new Error(`http_${response.status}`);
-    return parseAboutContacts(await response.json());
+    return parseAboutContacts(await response.json(), language);
   } finally {
     clearTimeout(timer);
     signal.removeEventListener('abort', cancel);

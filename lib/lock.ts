@@ -1,3 +1,4 @@
+import { translate } from './i18n';
 import { create } from 'zustand';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -119,7 +120,7 @@ export async function storedPinLength(): Promise<number> {
 /** Включить защиту с указанным пином. Сам пин никуда не сохраняется. */
 export async function enableLock(pin: string): Promise<void> {
   if (!isValidPin(pin)) {
-    throw new Error(`Пин-код должен состоять из ${PIN_MIN_LENGTH}–${PIN_MAX_LENGTH} цифр`);
+    throw new Error(translate('system.pinLength', { min: PIN_MIN_LENGTH, max: PIN_MAX_LENGTH }));
   }
   const salt = toHex(await Crypto.getRandomBytesAsync(16));
   const hash = await hashPin(salt, pin);
@@ -199,9 +200,9 @@ export async function biometryInfo(): Promise<BiometryInfo> {
     const finger = types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
     const ios = Platform.OS === 'ios';
     const label = face
-      ? ios ? 'Face ID' : 'Распознавание лица'
+      ? ios ? 'Face ID' : translate('system.face')
       : finger
-        ? ios ? 'Touch ID' : 'Отпечаток пальца'
+        ? ios ? 'Touch ID' : translate('system.finger')
         : DEFAULT_BIOMETRY_LABEL;
     return { available: hardware && enrolled, label };
   } catch {
@@ -226,19 +227,19 @@ const CANCELLED_BIOMETRIC_ERRORS = new Set<string>(['user_cancel', 'system_cance
 function describeBiometricError(error: string): string {
   switch (error) {
     case 'not_enrolled':
-      return 'В системе не сохранено ни одного лица или отпечатка. Добавьте его в настройках устройства.';
+      return translate('system.notEnrolled');
     case 'not_available':
-      return 'Биометрия недоступна на этом устройстве.';
+      return translate('system.notAvailable');
     case 'passcode_not_set':
-      return 'На устройстве не задан код блокировки, поэтому биометрия недоступна.';
+      return translate('system.noPasscode');
     case 'lockout':
-      return 'Слишком много неудачных попыток. Биометрия временно заблокирована — попробуйте позже или введите пин-код.';
+      return translate('system.lockout');
     case 'authentication_failed':
-      return 'Не удалось распознать лицо или отпечаток. Попробуйте ещё раз.';
+      return translate('system.authFailed');
     case 'timeout':
-      return 'Время ожидания истекло. Попробуйте ещё раз.';
+      return translate('system.timeout');
     default:
-      return 'Не удалось выполнить проверку биометрии на этом устройстве.';
+      return translate('system.authError');
   }
 }
 
@@ -257,7 +258,7 @@ export async function authenticateWithBiometrics(
   try {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage,
-      cancelLabel: 'Ввести пин-код',
+      cancelLabel: translate('system.enterPin'),
       fallbackLabel: '',
       disableDeviceFallback: true,
     });
@@ -270,8 +271,8 @@ export async function authenticateWithBiometrics(
     // системного запроса, и должно быть сказано словами, а не проглочено.
     const raw = error instanceof Error ? error.message : '';
     const message = /usage description/i.test(raw)
-      ? 'Приложению не хватает разрешения на использование Face ID. Обновите приложение и попробуйте снова.'
-      : 'Не удалось выполнить проверку биометрии на этом устройстве.';
+      ? translate('system.facePermission')
+      : translate('system.authError');
     return { ok: false, reason: 'error', message };
   }
 }

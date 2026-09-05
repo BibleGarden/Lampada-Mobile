@@ -1,3 +1,4 @@
+import { useI18n, localeTag, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -29,43 +30,24 @@ import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
-// «5 июля», «5 июля 2025» — год только если не текущий
-const MONTHS = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-];
-const fmtDate = (iso: string) => {
-  const d = new Date(iso);
-  const base = `${d.getDate()} ${MONTHS[d.getMonth()]}`;
-  return d.getFullYear() === new Date().getFullYear() ? base : `${base} ${d.getFullYear()}`;
-};
-
-const fmtDuration = (sec: number) => {
-  const min = Math.round(sec / 60);
-  if (min < 1) return 'меньше минуты';
-  if (min < 60) return `${min} мин`;
-  return `${Math.floor(min / 60)} ч ${min % 60} мин`;
-};
-
-const fmtAnswers = (count: number) => {
-  const mod100 = count % 100;
-  const mod10 = count % 10;
-  if (mod100 >= 11 && mod100 <= 14) return `${count} ответов`;
-  if (mod10 === 1) return `${count} ответ`;
-  if (mod10 >= 2 && mod10 <= 4) return `${count} ответа`;
-  return `${count} ответов`;
-};
-
-const fmtQuotes = (count: number) => {
-  const mod100 = count % 100;
-  const mod10 = count % 10;
-  if (mod100 >= 11 && mod100 <= 14) return `${count} цитат`;
-  if (mod10 === 1) return `${count} цитата`;
-  if (mod10 >= 2 && mod10 <= 4) return `${count} цитаты`;
-  return `${count} цитат`;
-};
-
 export default function Journal() {
+  const { t, language } = useI18n();
+  const fmtDate = (iso: string) => {
+    const date = new Date(iso);
+    return date.toLocaleDateString(localeTag(language), {
+      day: 'numeric', month: 'long',
+      ...(date.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' as const } : {}),
+    });
+  };
+  const fmtDuration = (seconds: number) => {
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 1) return t('screens.journal.lessMinute');
+    return minutes < 60 ? t('screens.duration.minutes', { count: minutes })
+      : t('screens.duration.hoursMinutes', { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
+  };
+  const fmtCount = (kind: string, count: number) => `${count} ${t(`screens.${kind}.${pluralCategory(language, count)}`)}`;
+  const fmtAnswers = (count: number) => fmtCount('answers', count);
+  const fmtQuotes = (count: number) => fmtCount('quotes', count);
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState<db.JournalEntry[]>([]);
@@ -205,8 +187,8 @@ export default function Journal() {
     }
     if (decision === 'denied') {
       Alert.alert(
-        'Расшифровка отключена',
-        'Разрешение можно изменить в настройках конфиденциальности.',
+        t('screens.journal.disabled'),
+        t('screens.journal.privacy'),
       );
       return;
     }
@@ -284,7 +266,7 @@ export default function Journal() {
             </View>
           </View>
           <Text style={styles.cardTopic} numberOfLines={open ? undefined : 2}>
-            {item.topic.trim() || 'Свободная молитва'}
+            {item.topic.trim() || t('screens.journal.free')}
           </Text>
           {!!item.takeaway && (
             <Text style={styles.cardTakeaway} numberOfLines={open ? undefined : 2}>
@@ -297,7 +279,7 @@ export default function Journal() {
           <Animated.View entering={FadeIn.duration(250)}>
             {detail === null ? null : detail.answers.length === 0
               && detail.recordings.length === 0 && favorites.length === 0 ? (
-              <Text style={styles.emptyDetail}>Молитва прошла без записей</Text>
+              <Text style={styles.emptyDetail}>{t('screens.journal.noNotes')}</Text>
             ) : (
               detail.answers.map((a) => {
                 const recs = detail.recordings.filter((r) => r.questionIndex === a.questionIndex);
@@ -346,7 +328,7 @@ export default function Journal() {
                     key={favorite.id}
                     onPress={() => setOpenQuote(favorite)}
                     accessibilityRole="button"
-                    accessibilityLabel={`Открыть цитату ${favorite.reference}`}
+                    accessibilityLabel={t('screens.journal.openQuote', { reference: favorite.reference })}
                     testID={`journal-quote-${favorite.id}`}
                     style={({ pressed }) => [styles.quoteRow, pressed && { opacity: 0.7 }]}
                   >
@@ -365,7 +347,7 @@ export default function Journal() {
             >
               <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
               <Text style={[styles.deleteLabel, confirming && { color: '#ec8a7a' }]}>
-                {confirming ? 'Точно удалить? Это навсегда' : 'Удалить запись'}
+                {confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
               </Text>
             </Pressable>
           </Animated.View>
@@ -382,7 +364,7 @@ export default function Journal() {
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
-          <Kicker>Дневник</Kicker>
+          <Kicker>{t('screens.journal.title')}</Kicker>
           <View style={{ width: sc(34) }} />
         </View>
 
@@ -390,7 +372,7 @@ export default function Journal() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Найти молитву…"
+            placeholder={t('screens.journal.search')}
             placeholderTextColor="rgba(240,230,210,.35)"
             style={styles.search}
             returnKeyType="search"
@@ -418,8 +400,8 @@ export default function Journal() {
             loaded ? (
               <Text style={styles.empty}>
                 {query.trim()
-                  ? 'Ничего не нашлось — попробуй другое слово'
-                  : 'Здесь появятся твои молитвы'}
+                  ? t('screens.journal.noResults')
+                  : t('screens.journal.empty')}
               </Text>
             ) : null
           }
@@ -444,7 +426,7 @@ export default function Journal() {
               <Text style={styles.quoteRef}>{openQuote?.reference}</Text>
               <IconButton
                 onPress={() => setOpenQuote(null)}
-                accessibilityLabel="Закрыть цитату"
+                accessibilityLabel={t('screens.journal.closeQuote')}
                 testID="journal-quote-close"
               >
                 <Close />
@@ -500,6 +482,7 @@ function RecordingRow({
   transcriptionState?: 'loading' | 'error';
   onTranscribe: () => void;
 }) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   return (
     <View style={styles.recBlock}>
@@ -507,21 +490,21 @@ function RecordingRow({
         <View style={styles.recPlay}>
           {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
         </View>
-        <Text style={styles.recLabel}>Аудиозапись · {fmtTime(durationSec)}</Text>
+        <Text style={styles.recLabel}>{t('screens.journal.recording', { duration: fmtTime(durationSec) })}</Text>
       </Pressable>
       {!!transcript && <Text style={styles.recTranscript}>{transcript}</Text>}
       {!transcript && transcriptionState === 'loading' ? (
-        <Text style={styles.recTranscriptionState}>Расшифровываю…</Text>
+        <Text style={styles.recTranscriptionState}>{t('screens.journal.transcribing')}</Text>
       ) : !transcript && transcriptionState === 'error' ? (
         <View style={styles.recTranscriptionErrorRow}>
-          <Text style={styles.recTranscriptionError}>Не удалось расшифровать</Text>
+          <Text style={styles.recTranscriptionError}>{t('screens.journal.transcriptionFailed')}</Text>
           <Pressable onPress={onTranscribe} hitSlop={8}>
-            <Text style={styles.recTranscriptionRetry}>Повторить</Text>
+            <Text style={styles.recTranscriptionRetry}>{t('screens.journal.retry')}</Text>
           </Pressable>
         </View>
       ) : !transcript ? (
         <Pressable onPress={onTranscribe} style={styles.recTranscriptionAction}>
-          <Text style={styles.recTranscriptionActionLabel}>Расшифровать</Text>
+          <Text style={styles.recTranscriptionActionLabel}>{t('screens.journal.transcribe')}</Text>
         </Pressable>
       ) : null}
     </View>

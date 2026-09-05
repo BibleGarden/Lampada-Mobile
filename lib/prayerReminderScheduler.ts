@@ -1,9 +1,11 @@
+import { translate } from './i18n';
+import { useSettings } from './settings';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 
 import {
-  REMINDER_PHRASES,
+  reminderPhrases,
   reminderWeeklyTriggers,
   shuffleReminderPhrases,
   type ReminderSchedule,
@@ -69,8 +71,8 @@ const readPermission = (settings: Notifications.NotificationPermissionsStatus): 
 export async function ensureReminderChannelAsync(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
-    name: 'Напоминания о молитве',
-    description: 'Тихое напоминание помолиться в выбранное время',
+    name: translate('system.reminderChannel'),
+    description: translate('system.reminderDescription'),
     importance: Notifications.AndroidImportance.HIGH,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     vibrationPattern: [0, 250, 250, 250],
@@ -133,7 +135,7 @@ export async function rescheduleRemindersAsync(
   if (triggers.length === 0) return 0;
 
   await ensureReminderChannelAsync();
-  const phrases = shuffleReminderPhrases(REMINDER_PHRASES, random);
+  const phrases = shuffleReminderPhrases(reminderPhrases(useSettings.getState().uiLanguage), random);
   const title = appName();
 
   for (let index = 0; index < triggers.length; index += 1) {
@@ -164,7 +166,7 @@ export async function rescheduleRemindersAsync(
  * Разрешение здесь не запрашивается: без выданного разрешения планировать
  * нечего, и запланированное снимается.
  */
-export async function syncRemindersAsync(
+async function synchronizeRemindersAsync(
   schedule: ReminderSchedule,
   random: () => number = Math.random,
 ): Promise<number> {
@@ -183,4 +185,16 @@ export async function syncRemindersAsync(
     // ломать запуск приложения или экран настроек.
     return 0;
   }
+}
+
+let syncOperation: Promise<number> = Promise.resolve(0);
+export function syncRemindersAsync(
+  schedule: ReminderSchedule,
+  random: () => number = Math.random,
+): Promise<number> {
+  syncOperation = syncOperation.then(
+    () => synchronizeRemindersAsync(schedule, random),
+    () => synchronizeRemindersAsync(schedule, random),
+  );
+  return syncOperation;
 }

@@ -1,0 +1,10 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Lampada",
+    "NSMicrophoneUsageDescription": "The microphone is used to record spoken prayer responses. Recordings stay on your device and are sent for AI transcription only when you request it.",
+    "NSFaceIDUsageDescription": "Face ID is used to unlock the app."
+  },
+  "android": {
+    "app_name": "Lampada"
+  }
+}

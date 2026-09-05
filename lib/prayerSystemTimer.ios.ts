@@ -1,3 +1,4 @@
+import { translate } from './i18n';
 import PrayerLiveActivity, {
   type PrayerLiveActivityProps,
 } from '../widgets/PrayerLiveActivity';
@@ -13,6 +14,9 @@ const enqueue = (work: () => Promise<void>) => {
 const propsFor = (timer: PrayerSystemTimerState): PrayerLiveActivityProps => ({
   startedAtMs: timer.startedAtMs,
   endsAtMs: timer.endsAtMs,
+  prayerLabel: translate('system.prayer'),
+  endedLabel: translate('system.timeEnded'),
+  musicHint: translate('system.musicHint'),
 });
 
 const endAll = async () => {

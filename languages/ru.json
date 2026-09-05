@@ -1,6 +1,8 @@
 {
   "ios": {
-    "CFBundleDisplayName": "Лампада"
+    "CFBundleDisplayName": "Лампада",
+    "NSMicrophoneUsageDescription": "Микрофон нужен для голосовых молитвенных ответов. Запись хранится на устройстве и может быть отправлена провайдеру ИИ для расшифровки только по вашему запросу.",
+    "NSFaceIDUsageDescription": "Face ID используется для разблокировки приложения."
   },
   "android": {
     "app_name": "Лампада"

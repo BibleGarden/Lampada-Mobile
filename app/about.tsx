@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -16,6 +17,7 @@ const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = Constants.expoConfig?.version ?? '—';
 
 export default function About() {
+  const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [contacts, setContacts] = useState<AboutContact[]>([]);
@@ -25,7 +27,7 @@ export default function About() {
   useEffect(() => {
     const controller = new AbortController();
     setContactsStatus('loading');
-    fetchAboutContacts(controller.signal).then((items) => {
+    fetchAboutContacts(controller.signal, language).then((items) => {
       if (controller.signal.aborted) return;
       setContacts(items);
       setContactsStatus('ready');
@@ -33,7 +35,7 @@ export default function About() {
       if (!controller.signal.aborted) setContactsStatus('error');
     });
     return () => controller.abort();
-  }, [attempt]);
+  }, [attempt, language]);
 
   return (
     <View style={styles.root}>
@@ -43,7 +45,7 @@ export default function About() {
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
-          <Kicker>О приложении</Kicker>
+          <Kicker>{t('screens.about.title')}</Kicker>
           <View style={styles.topSpacer} />
         </View>
 
@@ -55,29 +57,28 @@ export default function About() {
             paddingBottom: insets.bottom + sc(28),
           }}
         >
-          <Kicker style={styles.sectionKicker}>О Лампаде</Kicker>
+          <Kicker style={styles.sectionKicker}>{t('screens.about.lampada')}</Kicker>
           <View style={[styles.card, styles.purposeCard]}>
-            <Text style={styles.lead}>Время для молитвы</Text>
+            <Text style={styles.lead}>{t('screens.about.lead')}</Text>
             <Text style={styles.body}>
-              Задай тему и побудь в молитве. Лампада предложит вопросы для размышления и отрывки
-              из Писания, которые помогут сосредоточиться на важном.
+              {t('screens.about.description')}
             </Text>
             <Text style={styles.body}>
-              Сохраняй мысли в дневнике, чтобы возвращаться к ним позже.
+              {t('screens.about.journal')}
             </Text>
           </View>
 
-          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>Связаться с нами</Kicker>
-          {contactsStatus === 'loading' ? <Text style={styles.body}>Загружаем контакты…</Text> : null}
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('screens.about.contact')}</Kicker>
+          {contactsStatus === 'loading' ? <Text style={styles.body}>{t('screens.about.loading')}</Text> : null}
           {contactsStatus === 'error' ? (
             <View style={styles.card}>
-              <Text style={styles.body}>Не удалось загрузить контакты.</Text>
+              <Text style={styles.body}>{t('screens.about.failed')}</Text>
               <Pressable accessibilityRole="button" onPress={() => setAttempt((value) => value + 1)} style={styles.retryButton}>
-                <Text style={styles.cardTitle}>Попробовать снова</Text>
+                <Text style={styles.cardTitle}>{t('screens.about.retry')}</Text>
               </Pressable>
             </View>
           ) : null}
-          {contactsStatus === 'ready' && contacts.length === 0 ? <Text style={styles.body}>Контакты пока не добавлены.</Text> : null}
+          {contactsStatus === 'ready' && contacts.length === 0 ? <Text style={styles.body}>{t('screens.about.empty')}</Text> : null}
           {contactsStatus === 'ready' && contacts.length > 0 ? (
             <View style={[styles.card, styles.contactsCard]}>
               {contacts.map((contact, index) => {
@@ -90,7 +91,7 @@ export default function About() {
                 accessibilityRole="link"
                 accessibilityLabel={`${contact.label}, ${contact.subtitle}`}
                 testID={`contacts-${contact.id}`}
-                onPress={() => void Linking.openURL(contact.url).catch(() => Alert.alert('Не удалось открыть ссылку', 'Попробуй ещё раз позже.'))}
+                onPress={() => void Linking.openURL(contact.url).catch(() => Alert.alert(t('screens.about.linkFailed'), t('screens.about.later')))}
                 style={({ pressed }) => [styles.contactRow, index > 0 && styles.contactDivider, pressed && styles.contactPressed]}
               >
                 <View style={styles.iconCircle}><ContactIcon size={17} color={colors.amberBright} /></View>
@@ -105,10 +106,10 @@ export default function About() {
             </View>
           ) : null}
 
-          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>Другое приложение</Kicker>
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('screens.about.other')}</Kicker>
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="Открыть сайт Bible Garden"
+            accessibilityLabel={t('screens.about.openBible')}
             testID="bible-garden-link"
             onPress={() => void Linking.openURL(BIBLE_GARDEN_URL)}
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
@@ -124,12 +125,11 @@ export default function About() {
               <ExternalLink size={sc(16)} color={colors.labelGold} strokeWidth={1.7} />
             </View>
             <Text style={[styles.body, styles.projectBody]}>
-              Слушайте Библию стих за стихом в нескольких выбранных переводах и языках: каждый
-              стих последовательно звучит в каждом варианте.
+              {t('screens.about.bible')}
             </Text>
           </Pressable>
 
-          <Text style={styles.version}>Версия {appVersion}</Text>
+          <Text style={styles.version}>{t('screens.about.version', { version: appVersion })}</Text>
         </ScrollView>
       </Animated.View>
     </View>

@@ -1,3 +1,4 @@
+import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -9,20 +10,20 @@ import ScreenBg from '../components/ScreenBg';
 import ProgressRing from '../components/ProgressRing';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
-import { plMinutes, useSession } from '../lib/store';
+import { useSession } from '../lib/store';
 import { recordDiagnostic } from '../lib/db';
 import { colors, column, durations, fonts, sc, useStyles } from '../lib/theme';
 
-// «15 минут» / «час» / «1:30» — как timeAmount в прототипе
-const timeAmount = (minutes: number) => {
-  if (minutes < 60) return `${minutes} ${plMinutes(minutes)}`;
-  const hrs = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (mins === 0) return hrs === 1 ? 'час' : `${hrs} часа`;
-  return `${hrs}:${mins < 10 ? '0' : ''}${mins} ч`;
-};
-
 export default function Threshold() {
+  const { t, language } = useI18n();
+  const timeAmount = (minutes: number) => {
+    const plural = (unit: string, count: number) => t(`screens.${unit}.${pluralCategory(language, count)}`);
+    if (minutes < 60) return `${minutes} ${plural('minute', minutes)}`;
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder === 0 ? `${hours} ${plural('hour', hours)}`
+      : t('screens.duration.hoursMinutes', { hours, minutes: remainder });
+  };
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
@@ -34,11 +35,11 @@ export default function Threshold() {
   const goal = topicTrim.replace(/^[А-ЯA-ZЁ]/, (c) => c.toLowerCase());
   const timeText = topicTrim
     ? s.minutes === 0
-      ? 'У тебя столько времени, сколько нужно, чтобы достичь цели: '
-      : `У тебя ${timeAmount(s.minutes)}, чтобы достичь цели: `
+      ? t('screens.threshold.unlimitedGoal')
+      : t('screens.threshold.timedGoal', { duration: timeAmount(s.minutes) })
     : s.minutes === 0
-      ? 'Столько времени, сколько нужно — без таймера и спешки'
-      : `У тебя ${timeAmount(s.minutes)} наедине с Богом`;
+      ? t('screens.threshold.unlimited')
+      : t('screens.threshold.timed', { duration: timeAmount(s.minutes) });
   const brief = [
     {
       icon: <Clock size={16} color={colors.amberBright} />,
@@ -48,15 +49,15 @@ export default function Threshold() {
     {
       // размер здесь в px прототипа — sc() применяется внутри иконок
       icon: <QuestionMark size={16} color={colors.amberBright} />,
-      text: 'Спутник будет задавать наводящие вопросы — отвечай на те, что отзываются',
+      text: t('screens.threshold.questions'),
     },
     {
       icon: <Shield size={16} color={colors.amberBright} />,
-      text: 'Ответы и выводы сохранятся только на этом устройстве',
+      text: t('screens.threshold.local'),
     },
   ];
   const progress = useSharedValue(0);
-  const [hint, setHint] = useState('нажми и держи');
+  const [hint, setHint] = useState('screens.threshold.hold');
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const entering = useRef(false);
@@ -71,7 +72,7 @@ export default function Threshold() {
 
   const begin = () => {
     if (entering.current) return;
-    setHint('держи…');
+    setHint('screens.threshold.holding');
     progress.value = withTiming(1, {
       duration: durations.holdToStart,
       easing: Easing.out(Easing.quad),
@@ -88,12 +89,12 @@ export default function Threshold() {
     });
     holdTimer.current = setTimeout(async () => {
       entering.current = true;
-      setHint('готовлю вопрос…');
+      setHint('screens.questionLoading');
       try {
         await s.enterSession();
       } catch (error) {
         recordDiagnostic('session_start_failed', error);
-        Alert.alert('Не удалось начать молитву', 'Попробуй ещё раз.', [{ text: 'Понятно' }]);
+        Alert.alert(t('screens.threshold.error'), t('screens.retryMessage'), [{ text: t('screens.understood') }]);
         // при ошибке enterSession кнопка не должна остаться мёртвой
         entering.current = false;
         return;
@@ -106,7 +107,7 @@ export default function Threshold() {
   const cancel = () => {
     if (entering.current) return;
     clearTimers();
-    setHint('нажми и держи');
+    setHint('screens.threshold.hold');
     progress.value = withTiming(0, { duration: 250 });
   };
 
@@ -129,12 +130,12 @@ export default function Threshold() {
           <IconButton size={sc(30)} onPress={() => router.back()}>
             <ChevronLeft size={18} color={colors.white55} />
           </IconButton>
-          <Kicker style={{ fontSize: sc(11) }}>Прежде чем войти</Kicker>
+          <Kicker style={{ fontSize: sc(11) }}>{t('screens.threshold.before')}</Kicker>
         </View>
 
         {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
         <View style={styles.brief}>
-          <Text style={styles.title}>Отложи остальное — вот что впереди</Text>
+          <Text style={styles.title}>{t('screens.threshold.title')}</Text>
           {brief.map((b, i) => {
             // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
             // цель — часть той же строки, её длина тоже считается
@@ -175,8 +176,8 @@ export default function Threshold() {
               </View>
               <View style={styles.holdContent} pointerEvents="none">
                 <Lamp />
-                <Text style={styles.holdHint}>{hint}</Text>
-                <Text style={styles.holdLabel}>НАЧАТЬ</Text>
+                <Text style={styles.holdHint}>{t(hint)}</Text>
+                <Text style={styles.holdLabel}>{t('screens.threshold.start')}</Text>
               </View>
             </View>
           </GestureDetector>

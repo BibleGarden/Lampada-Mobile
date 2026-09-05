@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -33,6 +34,7 @@ export default function PinPrompt({
   onSubmit,
   onCancel,
 }: PinPromptProps) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   return (
     <View style={styles.overlay} accessibilityViewIsModal testID="pin-prompt">
@@ -46,13 +48,13 @@ export default function PinPrompt({
           footer={
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Отмена"
+              accessibilityLabel={t('components.security.cancel')}
               testID="pin-prompt-cancel"
               onPress={onCancel}
               hitSlop={8}
               style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             >
-              <Text style={styles.cancel}>Отмена</Text>
+              <Text style={styles.cancel}>{t('components.security.cancel')}</Text>
             </Pressable>
           }
         />

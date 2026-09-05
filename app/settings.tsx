@@ -8,11 +8,12 @@ import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Close, Minus, Plus, Trash } from '../components/icons';
 import { useSettings } from '../lib/settings';
+import { useI18n } from '../lib/i18n';
 import {
   DEFAULT_REMINDER_SCHEDULE,
   MAX_REMINDER_RULES,
   MAX_REMINDER_TIMES_PER_RULE,
-  WEEKDAY_SHORT_NAMES,
+  weekdayShortNames,
   describeReminderSchedule,
   formatReminderTime,
   formatReminderWeekdays,
@@ -108,14 +109,15 @@ function ConsentSetting({
   onChange: (purpose: ConsentPurpose, decision: 'allowed' | 'denied') => Promise<void>;
 }) {
   const styles = useStyles(stylesFactory);
+  const { t } = useI18n();
   return (
     <View style={styles.consentSetting} testID={`privacy-setting-${purpose}`}>
       <Text style={styles.rowTitle}>{title}</Text>
       <Text style={[styles.settingHint, styles.shareAnswersHint]}>{description}</Text>
       <View style={styles.consentActions}>
         {([
-          { decision: 'denied' as const, label: 'Не передавать' },
-          { decision: 'allowed' as const, label: 'Разрешить' },
+          { decision: 'denied' as const, label: t('settings.deny') },
+          { decision: 'allowed' as const, label: t('settings.allow') },
         ]).map((option) => {
           const selected = decision === option.decision;
           return (
@@ -142,7 +144,7 @@ function ConsentSetting({
         })}
       </View>
       {decision === 'undecided' ? (
-        <Text style={styles.consentUndecided}>Решение ещё не принято</Text>
+        <Text style={styles.consentUndecided}>{t('settings.undecided')}</Text>
       ) : null}
     </View>
   );
@@ -249,28 +251,29 @@ function TimeRow({ time, ruleIndex, canRemove, onShift, onRemove }: {
   onRemove: () => void;
 }) {
   const styles = useStyles(stylesFactory);
+  const { t } = useI18n();
   const label = formatReminderTime(time);
   const [hour, minute] = label.split(':');
   return (
     <View style={styles.timeRow} testID={`reminder-rule-${ruleIndex}-time-${label}`}>
-      <StepButton label={`${label}: час назад`} onPress={() => onShift(-60)}>
+      <StepButton label={t('settings.hourBack', { time: label })} onPress={() => onShift(-60)}>
         <Minus size={sc(14)} color={colors.white65} />
       </StepButton>
       <Text style={styles.timeUnit}>{hour}</Text>
-      <StepButton label={`${label}: час вперёд`} onPress={() => onShift(60)}>
+      <StepButton label={t('settings.hourForward', { time: label })} onPress={() => onShift(60)}>
         <Plus size={sc(14)} color={colors.white65} />
       </StepButton>
       <Text style={styles.timeColon}>:</Text>
-      <StepButton label={`${label}: пять минут назад`} onPress={() => onShift(-5)}>
+      <StepButton label={t('settings.minutesBack', { time: label })} onPress={() => onShift(-5)}>
         <Minus size={sc(14)} color={colors.white65} />
       </StepButton>
       <Text style={styles.timeUnit}>{minute}</Text>
-      <StepButton label={`${label}: пять минут вперёд`} onPress={() => onShift(5)}>
+      <StepButton label={t('settings.minutesForward', { time: label })} onPress={() => onShift(5)}>
         <Plus size={sc(14)} color={colors.white65} />
       </StepButton>
       <View style={{ flex: 1 }} />
       {canRemove ? (
-        <StepButton label={`Убрать напоминание в ${label}`} onPress={onRemove}>
+        <StepButton label={t('settings.removeTime', { time: label })} onPress={onRemove}>
           <Trash size={sc(14)} />
         </StepButton>
       ) : null}
@@ -279,13 +282,17 @@ function TimeRow({ time, ruleIndex, canRemove, onShift, onRemove }: {
 }
 
 export default function Settings() {
+  const { t, language: uiLanguage } = useI18n();
+  const [interfaceLanguageOpen, setInterfaceLanguageOpen] = useState(false);
+  const [languageSaveError, setLanguageSaveError] = useState(false);
+  const languageSave = useRef<Promise<void>>(Promise.resolve());
   const [privacyDetailsOpen, setPrivacyDetailsOpen] = useState(false);
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const {
     coreAiConsent, answerContextConsent, audioTranscriptionConsent,
     scripturePreferences, reminderSchedule,
-    load, setConsent, setScripturePreferences, setReminderSchedule,
+    load, setConsent, setScripturePreferences, setReminderSchedule, setUiLanguage,
   } = useSettings();
   const lockEnabled = useLock((s) => s.enabled);
   const biometricsEnabled = useLock((s) => s.biometrics);
@@ -389,7 +396,7 @@ export default function Settings() {
       alive = false;
       sub.remove();
     };
-  }, []);
+  }, [uiLanguage]);
 
   const startEnableLock = () => setPinFlow({ kind: 'enable', step: 'create' });
   const startDisableLock = () => setPinFlow({ kind: 'disable', step: 'current' });
@@ -404,10 +411,10 @@ export default function Settings() {
    */
   const submitPinFlow = async (pin: string): Promise<string | null> => {
     const flow = pinFlow;
-    if (!flow) return 'Не удалось продолжить';
+    if (!flow) return t('settings.continueError');
 
     if (flow.step === 'current') {
-      if (!(await verifyPin(pin))) return 'Неверный пин-код';
+      if (!(await verifyPin(pin))) return t('settings.incorrectPin');
       if (flow.kind === 'disable') {
         await disableLock();
         setPinFlow(null);
@@ -426,13 +433,13 @@ export default function Settings() {
       // Не совпало — возвращаемся к придумыванию кода: заставлять человека
       // вслепую повторять код, который он мог набрать с опечаткой, бессмысленно.
       setPinFlow({ ...flow, step: 'create', first: undefined });
-      return 'Коды не совпали. Придумайте код заново.';
+      return t('settings.pinMismatch');
     }
 
     if (flow.kind === 'change') {
       if (!(await changePin(flow.current ?? '', pin))) {
         setPinFlow({ kind: 'change', step: 'current' });
-        return 'Не удалось сменить пин-код';
+        return t('settings.pinChangeError');
       }
     } else {
       await enableLock(pin);
@@ -451,7 +458,7 @@ export default function Settings() {
     if (!info.available) return;
     // Включаем только после успешной проверки: человек сразу видит, что способ
     // работает, а не обнаруживает это на заблокированном экране.
-    const result = await authenticateWithBiometrics(`Подтвердите включение ${info.label}`);
+    const result = await authenticateWithBiometrics(t('settings.confirmBiometrics', { name: info.label }));
     if (result.ok) {
       await setBiometrics(true);
       return;
@@ -461,7 +468,7 @@ export default function Settings() {
     // молчать нельзя: до этой правки человек не видел, почему включение
     // не сработало.
     if (result.reason === 'error') {
-      Alert.alert('Не удалось включить Face ID / Touch ID', result.message);
+      Alert.alert(t('settings.biometricsError'), result.message);
     }
   };
 
@@ -469,29 +476,29 @@ export default function Settings() {
     if (!pinFlow) return null;
     if (pinFlow.step === 'current') {
       return {
-        title: pinFlow.kind === 'disable' ? 'Введите пин-код' : 'Текущий пин-код',
+        title: pinFlow.kind === 'disable' ? t('settings.enterPin') : t('settings.currentPin'),
         subtitle:
           pinFlow.kind === 'disable'
-            ? 'Подтвердите, что защиту выключаете вы'
-            : 'Подтвердите, что код меняете вы',
+            ? t('settings.confirmDisable')
+            : t('settings.confirmChange'),
         expectedLength: lockPinLength,
       };
     }
     if (pinFlow.step === 'create') {
       return {
-        title: pinFlow.kind === 'change' ? 'Новый пин-код' : 'Придумайте пин-код',
+        title: pinFlow.kind === 'change' ? t('settings.newPin') : t('settings.createPin'),
         // Предупреждение о невосстановимости показывается именно в момент
         // установки кода — на экране настроек его больше нет.
         subtitle:
           pinFlow.kind === 'change'
-            ? `От ${PIN_MIN_LENGTH} до ${PIN_MAX_LENGTH} цифр.\nНажмите галочку, когда закончите.`
-            : `От ${PIN_MIN_LENGTH} до ${PIN_MAX_LENGTH} цифр.\nЗабытый код не восстановить — войти получится, лишь стерев все данные.`,
+            ? t('settings.pinLengthHint', { min: PIN_MIN_LENGTH, max: PIN_MAX_LENGTH })
+            : t('settings.pinCreateHint', { min: PIN_MIN_LENGTH, max: PIN_MAX_LENGTH }),
         expectedLength: undefined,
       };
     }
     return {
-      title: 'Повторите пин-код',
-      subtitle: 'Наберите тот же код ещё раз',
+      title: t('settings.repeatPin'),
+      subtitle: t('settings.repeatPinHint'),
       expectedLength: undefined,
     };
   })();
@@ -636,7 +643,7 @@ export default function Settings() {
     ? null
     : reminderRules[reminderEditorRuleIndex] ?? null;
   const activeReminderSummary = activeReminderRule
-    ? describeReminderSchedule({ enabled: true, rules: [activeReminderRule] })
+    ? describeReminderSchedule({ enabled: true, rules: [activeReminderRule] }, uiLanguage)
     : '';
 
   const loadTranslations = async (nextLanguage: ScriptureLanguageOption) => {
@@ -704,10 +711,10 @@ export default function Settings() {
         {...screenReaderHiddenProps(!!pinPrompt || reminderEditorRuleIndex !== null)}
       >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+          <IconButton accessibilityLabel={t('settings.back')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
-          <Kicker>Настройки</Kicker>
+          <Kicker>{t('settings.title')}</Kicker>
           <View style={styles.topSpacer} />
         </View>
 
@@ -720,11 +727,64 @@ export default function Settings() {
             paddingBottom: insets.bottom + sc(24),
           }}
         >
-          <Kicker style={styles.sectionKicker}>Перевод и озвучка</Kicker>
+          <Kicker style={styles.sectionKicker}>{t('settings.interfaceLanguage')}</Kicker>
+          <View style={[styles.pickerCard, { marginBottom: sc(24) }]} testID="interface-language-selector">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${t('settings.interfaceLanguage')}: ${{ en: 'English', ru: 'Русский', uk: 'Українська' }[uiLanguage]}`}
+              accessibilityState={{ expanded: interfaceLanguageOpen }}
+              testID="interface-language-picker"
+              onPress={() => {
+                void Haptics.selectionAsync();
+                setInterfaceLanguageOpen((value) => !value);
+              }}
+              style={styles.pickerHeader}
+            >
+              <Text style={[styles.optionTitle, { flex: 1 }]}>
+                {{ en: 'English', ru: 'Русский', uk: 'Українська' }[uiLanguage]}
+              </Text>
+              <View style={styles.chevronCircle}>
+                <View style={{ transform: [{ rotate: interfaceLanguageOpen ? '-90deg' : '90deg' }] }}>
+                  <ChevronRight size={16} color={colors.parchment} />
+                </View>
+              </View>
+            </Pressable>
+            {interfaceLanguageOpen ? <View style={styles.options}>{([
+              { code: 'en', name: 'English' },
+              { code: 'ru', name: 'Русский' },
+              { code: 'uk', name: 'Українська' },
+            ] as const).map((item, index) => (
+              <OptionRow
+                key={item.code}
+                title={item.name}
+                selected={uiLanguage === item.code}
+                divided={index < 2}
+                testID={`interface-language-${item.code}`}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setLanguageSaveError(false);
+                  languageSave.current = languageSave.current
+                    .catch(() => undefined)
+                    .then(() => setUiLanguage(item.code))
+                    .then(() => {
+                      setLanguageSaveError(false);
+                      setInterfaceLanguageOpen(false);
+                    })
+                    .catch(() => setLanguageSaveError(true));
+                }}
+              />
+            ))}</View> : null}
+            {languageSaveError ? (
+              <Text accessibilityRole="alert" style={[styles.settingHint, styles.reminderWarning]}>
+                {t('settings.languageSaveError')}
+              </Text>
+            ) : null}
+          </View>
+          <Kicker style={styles.sectionKicker}>{t('settings.scripture')}</Kicker>
           <View style={styles.pickerStack}>
             <PickerCard
               id="language"
-              label="Язык Библии"
+              label={t('settings.bibleLanguage')}
               value={language?.nameNational ?? scripturePreferences.languageName}
               open={open === 'language'}
               disabled={loadingCatalog && languages.length === 0}
@@ -745,8 +805,8 @@ export default function Settings() {
 
             <PickerCard
               id="translation"
-              label="Перевод"
-              value={translation?.name.trim() ?? (language ? 'Выберите перевод' : scripturePreferences.translationName.trim())}
+              label={t('settings.translation')}
+              value={translation?.name.trim() ?? (language ? t('settings.chooseTranslation') : scripturePreferences.translationName.trim())}
               open={open === 'translation'}
               disabled={!language || loadingCatalog}
               onToggle={togglePicker}
@@ -770,8 +830,8 @@ export default function Settings() {
 
             <PickerCard
               id="voice"
-              label="Озвучка"
-              value={voice?.name ?? (translation ? 'Выберите озвучку' : scripturePreferences.voiceName)}
+              label={t('settings.voice')}
+              value={voice?.name ?? (translation ? t('settings.chooseVoice') : scripturePreferences.voiceName)}
               open={open === 'voice'}
               disabled={!translation}
               onToggle={togglePicker}
@@ -790,44 +850,44 @@ export default function Settings() {
             </PickerCard>
           </View>
 
-          {loadingCatalog ? <Text style={styles.catalogMessage}>Загружаем доступные варианты…</Text> : null}
+          {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
           {catalogError ? (
             <Pressable onPress={() => void hydrate()} style={styles.retryButton}>
-              <Text style={styles.catalogMessage}>Не удалось загрузить список. Нажмите, чтобы повторить.</Text>
+              <Text style={styles.catalogMessage}>{t('settings.catalogError')}</Text>
             </Pressable>
           ) : null}
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Напоминания</Kicker>
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>{t('settings.reminders')}</Kicker>
           <View style={styles.card}>
             <View style={styles.shareAnswersHeader}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowTitle}>
-                  Напоминать о молитве
+                  {t('settings.prayerReminders')}
                 </Text>
                 {reminderPermission === 'denied' ? (
                   <Text
                     style={[styles.settingHint, styles.shareAnswersHint, styles.reminderWarning]}
                     testID="reminders-permission-warning"
                   >
-                    Уведомления запрещены в настройках системы.
+                    {t('settings.notificationsDenied')}
                   </Text>
                 ) : null}
               </View>
               <Toggle
                 value={reminderSchedule.enabled}
-                label="Напоминать о молитве"
+                label={t('settings.prayerReminders')}
                 testID="reminders-toggle"
                 onChange={(next) => void toggleReminders(next)}
               />
             </View>
 
             {reminderRules.map((rule, ruleIndex) => {
-              const summary = describeReminderSchedule({ enabled: true, rules: [rule] });
+              const summary = describeReminderSchedule({ enabled: true, rules: [rule] }, uiLanguage);
               return (
                 <Pressable
                   key={ruleIndex}
                   accessibilityRole="button"
-                  accessibilityLabel={`Настроить расписание ${ruleIndex + 1}: ${summary}`}
+                  accessibilityLabel={t('settings.editSchedule', { number: ruleIndex + 1, summary })}
                   testID={`reminders-settings-button-${ruleIndex}`}
                   onPress={() => setReminderEditorRuleIndex(ruleIndex)}
                   style={({ pressed }) => [
@@ -845,7 +905,7 @@ export default function Settings() {
                       style={styles.reminderSettingsTitle}
                       numberOfLines={1}
                     >
-                      {formatReminderWeekdays(rule.weekdays)}
+                      {formatReminderWeekdays(rule.weekdays, uiLanguage)}
                     </Text>
                     <Text style={styles.reminderSettingsSubtitle} numberOfLines={1}>
                       {rule.times.map(formatReminderTime).join(', ')}
@@ -859,7 +919,7 @@ export default function Settings() {
             {reminderRules.length < MAX_REMINDER_RULES ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Добавить расписание"
+                accessibilityLabel={t('settings.addSchedule')}
                 testID="reminders-add-rule"
                 hitSlop={8}
                 onPress={() => {
@@ -874,35 +934,35 @@ export default function Settings() {
                   pressed && styles.optionPressed,
                 ]}
               >
-                <Text style={[styles.rowTitle, styles.addScheduleTitle]}>Добавить расписание</Text>
+                <Text style={[styles.rowTitle, styles.addScheduleTitle]}>{t('settings.addSchedule')}</Text>
                 <Plus size={sc(15)} color={colors.labelGold} />
               </Pressable>
             ) : null}
 
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Конфиденциальность</Kicker>
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>{t('settings.privacy')}</Kicker>
           <View style={styles.card}>
             <Text style={styles.settingHint}>
-              При разрешении выбранные данные отправляются на сервер приложения для обработки ИИ.
+              {t('settings.privacyHint')}
             </Text>
             <ConsentSetting
-              title="Тема молитвы"
-              description="Чтобы подбирать вопросы и отрывки из Писания по твоей теме."
+              title={t('settings.prayerTopic')}
+              description={t('settings.topicConsentHint')}
               decision={coreAiConsent}
               purpose="core_prayer_ai"
               onChange={setConsent}
             />
             <ConsentSetting
-              title="Ответы и расшифровки аудио"
-              description="Чтобы вопросы и отрывки из Писания учитывали твои ответы."
+              title={t('settings.answers')}
+              description={t('settings.answersConsentHint')}
               decision={answerContextConsent}
               purpose="answer_context"
               onChange={setConsent}
             />
             <ConsentSetting
-              title="Расшифровка аудио"
-              description="Чтобы превращать выбранную голосовую запись в текст."
+              title={t('settings.transcription')}
+              description={t('settings.transcriptionConsentHint')}
               decision={audioTranscriptionConsent}
               purpose="audio_transcription"
               onChange={setConsent}
@@ -920,7 +980,7 @@ export default function Settings() {
               ]}
             >
               <Text style={styles.privacyDetailsLabel}>
-                {privacyDetailsOpen ? 'Скрыть подробности' : 'Подробнее об обработке данных'}
+                {privacyDetailsOpen ? t('settings.hideDetails') : t('settings.privacyDetailsLink')}
               </Text>
               <View style={{ transform: [{ rotate: privacyDetailsOpen ? '-90deg' : '90deg' }] }}>
                 <ChevronRight size={sc(14)} color={colors.labelGold} />
@@ -928,20 +988,18 @@ export default function Settings() {
             </Pressable>
             {privacyDetailsOpen ? (
               <Text style={styles.settingHint} testID="privacy-details">
-                Данные обрабатывают модели на серверах компании. Сервер приложения не сохраняет
-                переданные тему, ответы и аудио. Сохранённые записи остаются на твоём устройстве.
-                Каждое разрешение можно изменить до следующего запроса.
+                {t('settings.privacyDetails')}
               </Text>
             ) : null}
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Защита приложения</Kicker>
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>{t('settings.protection')}</Kicker>
           <View style={styles.card}>
             <View style={styles.shareAnswersHeader}>
-              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>Пин-код</Text>
+              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>{t('settings.pin')}</Text>
               <Toggle
                 value={lockEnabled}
-                label="Пин-код"
+                label={t('settings.pin')}
                 testID="lock-toggle"
                 onChange={(next) => (next ? startEnableLock() : startDisableLock())}
               />
@@ -949,12 +1007,12 @@ export default function Settings() {
             {lockEnabled ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Сменить пин-код"
+                accessibilityLabel={t('settings.changePin')}
                 testID="change-pin-button"
                 onPress={startChangePin}
                 style={({ pressed }) => [styles.lockRow, pressed && { opacity: 0.7 }]}
               >
-                <Text style={[styles.rowTitle, { flex: 1 }]}>Сменить пин-код</Text>
+                <Text style={[styles.rowTitle, { flex: 1 }]}>{t('settings.changePin')}</Text>
                 <ChevronRight size={16} color={colors.labelGold} />
               </Pressable>
             ) : null}
@@ -966,7 +1024,7 @@ export default function Settings() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{biometry.label}</Text>
                   <Text style={[styles.settingHint, styles.shareAnswersHint]}>
-                    Пин-код остаётся запасным способом.
+                    {t('settings.pinBackup')}
                   </Text>
                 </View>
                 <Toggle
@@ -979,16 +1037,16 @@ export default function Settings() {
             ) : null}
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Приложение</Kicker>
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>{t('settings.app')}</Kicker>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="О приложении"
+            accessibilityLabel={t('settings.about')}
             testID="about-button"
             onPress={() => router.push('/about')}
             style={({ pressed }) => [styles.card, styles.aboutLink, pressed && { opacity: 0.75 }]}
           >
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowTitle}>О приложении</Text>
+              <Text style={styles.rowTitle}>{t('settings.about')}</Text>
             </View>
             <ChevronRight size={16} color={colors.labelGold} />
           </Pressable>
@@ -998,7 +1056,7 @@ export default function Settings() {
       {activeReminderRule && reminderEditorRuleIndex !== null ? (
         <View style={styles.reminderModalBackdrop} accessibilityViewIsModal>
           <Pressable
-            accessibilityLabel="Закрыть настройку напоминаний"
+            accessibilityLabel={t('settings.closeReminders')}
             style={StyleSheet.absoluteFill}
             onPress={() => setReminderEditorRuleIndex(null)}
           />
@@ -1012,19 +1070,19 @@ export default function Settings() {
             <View style={styles.reminderModalHandle} />
             <View style={styles.reminderModalHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.reminderModalKicker}>НАПОМИНАНИЯ</Text>
-                <Text style={styles.reminderModalTitle}>Когда напоминать</Text>
+                <Text style={styles.reminderModalKicker}>{t('settings.remindersHeading')}</Text>
+                <Text style={styles.reminderModalTitle}>{t('settings.whenToRemind')}</Text>
               </View>
               {reminderRules.length > 1 ? (
                 <IconButton
-                  accessibilityLabel={`Удалить расписание ${reminderEditorRuleIndex + 1}`}
+                  accessibilityLabel={t('settings.removeSchedule', { number: reminderEditorRuleIndex + 1 })}
                   onPress={() => removeReminderRule(reminderEditorRuleIndex)}
                 >
                   <Trash size={sc(14)} color={colors.white65} />
                 </IconButton>
               ) : null}
               <IconButton
-                accessibilityLabel="Закрыть настройку напоминаний"
+                accessibilityLabel={t('settings.closeReminders')}
                 onPress={() => setReminderEditorRuleIndex(null)}
               >
                 <Close size={sc(14)} />
@@ -1047,16 +1105,16 @@ export default function Settings() {
                   style={styles.reminderRuleCard}
                   testID={`reminder-rule-${reminderEditorRuleIndex}`}
                 >
-                    <Text style={styles.reminderLabel}>ДНИ НЕДЕЛИ</Text>
+                    <Text style={styles.reminderLabel}>{t('settings.weekdays')}</Text>
                     <View style={styles.dayRow}>
-                      {WEEKDAY_SHORT_NAMES.map((name, dayIndex) => {
+                      {weekdayShortNames(uiLanguage).map((name, dayIndex) => {
                         const isoWeekday = dayIndex + 1;
                         const selected = activeReminderRule.weekdays.includes(isoWeekday);
                         return (
                           <Pressable
                             key={name}
                             accessibilityRole="button"
-                            accessibilityLabel={`${name}, расписание ${reminderEditorRuleIndex + 1}`}
+                            accessibilityLabel={t('settings.scheduleDay', { name, number: reminderEditorRuleIndex + 1 })}
                             accessibilityState={{ selected }}
                             testID={`reminder-rule-${reminderEditorRuleIndex}-day-${isoWeekday}`}
                             onPress={() => toggleReminderWeekday(reminderEditorRuleIndex, isoWeekday)}
@@ -1074,7 +1132,7 @@ export default function Settings() {
                       })}
                     </View>
 
-                    <Text style={[styles.reminderLabel, styles.reminderTimeLabel]}>ВРЕМЯ</Text>
+                    <Text style={[styles.reminderLabel, styles.reminderTimeLabel]}>{t('settings.time')}</Text>
                     <View style={styles.reminderTimes}>
                       {activeReminderRule.times.map((time, timeIndex) => (
                         <TimeRow
@@ -1091,13 +1149,13 @@ export default function Settings() {
                     {activeReminderRule.times.length < MAX_REMINDER_TIMES_PER_RULE ? (
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={`Добавить время в расписание ${reminderEditorRuleIndex + 1}`}
+                        accessibilityLabel={t('settings.addScheduleTime', { number: reminderEditorRuleIndex + 1 })}
                         testID={`reminder-add-time-${reminderEditorRuleIndex}`}
                         onPress={() => addReminderTime(reminderEditorRuleIndex)}
                         style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
                       >
                         <Plus size={sc(13)} color={colors.white65} />
-                        <Text style={styles.addTimeText}>Добавить время</Text>
+                        <Text style={styles.addTimeText}>{t('settings.addTime')}</Text>
                       </Pressable>
                     ) : null}
                 </View>
@@ -1110,7 +1168,7 @@ export default function Settings() {
               onPress={() => setReminderEditorRuleIndex(null)}
               style={({ pressed }) => [styles.reminderDone, pressed && styles.optionPressed]}
             >
-              <Text style={styles.reminderDoneText}>Готово</Text>
+              <Text style={styles.reminderDoneText}>{t('settings.done')}</Text>
             </Pressable>
           </View>
         </View>

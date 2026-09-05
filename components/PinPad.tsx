@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -111,6 +112,7 @@ export default function PinPad({
   footer,
   testID,
 }: PinPadProps) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +154,7 @@ export default function PinPad({
         fail(message);
       }
     } catch {
-      fail('Не удалось проверить пин-код');
+      fail(t('components.security.checkPinError'));
     } finally {
       checking.current = false;
       setBusy(false);
@@ -229,7 +231,7 @@ export default function PinPad({
           )
         ) : (
           <KeyButton
-            accessibilityLabel="Стереть цифру"
+            accessibilityLabel={t('components.security.eraseDigit')}
             onPress={pressBackspace}
             disabled={busy || !pin.length}
             dim
@@ -243,7 +245,7 @@ export default function PinPad({
 
         {expectedLength !== undefined ? (
           <KeyButton
-            accessibilityLabel="Стереть цифру"
+            accessibilityLabel={t('components.security.eraseDigit')}
             onPress={pressBackspace}
             disabled={busy || !pin.length}
             dim
@@ -253,7 +255,7 @@ export default function PinPad({
           </KeyButton>
         ) : (
           <KeyButton
-            accessibilityLabel="Готово"
+            accessibilityLabel={t('components.security.done')}
             onPress={pressConfirm}
             disabled={busy || !canConfirm}
             emphasis={canConfirm}

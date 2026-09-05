@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
@@ -95,6 +96,7 @@ export default function AnswerSheet({
   timeExpired = false,
   onAudioBusyChange,
 }: Props) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   // подписка только на нужное — не ререндерим шторку от тика таймера
@@ -167,7 +169,7 @@ export default function AnswerSheet({
     if (recordingAudioModeLeaseRef.current === lease) {
       recordingAudioModeLeaseRef.current = null;
     }
-    setAudioError('Запись прервалась — попробуй ещё раз');
+    setAudioError('components.answers.interrupted');
     onAudioBusyChange?.(false);
     void audioModeCoordinator
       .requestPlayback(setAudioModeAsync, {
@@ -271,7 +273,7 @@ export default function AnswerSheet({
         return;
       }
       if (decision === 'denied') {
-        setAudioError('Расшифровка отключена в настройках конфиденциальности');
+        setAudioError('components.answers.transcriptionDisabled');
         return;
       }
       runTranscription(recording);
@@ -398,7 +400,7 @@ export default function AnswerSheet({
   useEffect(() => {
     if (playerStatus.error) {
       setPlayingId(null);
-      setAudioError('Не удалось воспроизвести запись');
+      setAudioError('components.answers.playbackFailed');
       onAudioBusyChange?.(false);
       return;
     }
@@ -517,7 +519,7 @@ export default function AnswerSheet({
         'Не удалось начать аудиозапись',
         error instanceof Error ? error.message : 'unknown error',
       );
-      setAudioError('Не удалось начать запись — попробуй ещё раз');
+      setAudioError('components.answers.startFailed');
     } finally {
       // После успешного старта режим вернёт stopRecording. Во всех остальных
       // исходах (отказ, ошибка, dismiss) восстанавливаем его здесь.
@@ -542,7 +544,7 @@ export default function AnswerSheet({
           recordingSheetOpenRef.current = true;
           recordingOverlayActiveRef.current = true;
           recSheetRef.current?.snapToIndex(0);
-          setAudioError('Не удалось отменить запись — нажми «Готово» ещё раз');
+          setAudioError('components.answers.cancelFailed');
         }
         if (audioModeEnabled) {
           if (!prepared || nativeStopConfirmed) {
@@ -592,7 +594,7 @@ export default function AnswerSheet({
       confirmNativeStop();
       const uri = recorder.uri ?? uriBeforeStop;
       if (!uri) {
-        setAudioError('Запись не сохранилась — попробуй ещё раз');
+        setAudioError('components.answers.saveFailed');
         return null;
       }
       const file = new File(uri);
@@ -618,7 +620,7 @@ export default function AnswerSheet({
             recorderError: recorderErrorRef.current,
           }),
         );
-        setAudioError('Запись не сохранилась — попробуй ещё раз');
+        setAudioError('components.answers.saveFailed');
         return null;
       }
       const draft: RecordingDraft = {
@@ -637,7 +639,7 @@ export default function AnswerSheet({
         'Не удалось завершить аудиозапись',
         error instanceof Error ? error.message : 'unknown error',
       );
-      setAudioError('Запись не сохранилась — попробуй ещё раз');
+      setAudioError('components.answers.saveFailed');
       // Исключение stop не доказывает, что нативный recorder остановился.
       // Не удаляем его URI и оставляем фазу recording для видимого retry.
       throw error;
@@ -715,7 +717,7 @@ export default function AnswerSheet({
       .catch((error) => {
         if (generation !== draftPlaybackGenerationRef.current) return;
         console.warn('Не удалось включить аудиозапись', error);
-        setAudioError('Не удалось воспроизвести запись');
+        setAudioError('components.answers.playbackFailed');
         onAudioBusyChange?.(false);
       });
   };
@@ -982,7 +984,7 @@ export default function AnswerSheet({
         <View style={styles.header}>
           <View style={styles.orbRow}>
             <View style={styles.orb} />
-            <Text style={styles.orbLabel}>СПУТНИК СПРОСИЛ</Text>
+            <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
           </View>
           <Text style={styles.question} testID="answer-question">
             {questions[answerIndexRef.current] ?? questions[qIndex]}
@@ -996,12 +998,12 @@ export default function AnswerSheet({
           value={text}
           onChangeText={setText}
           multiline
-          placeholder="Запиши, что откликается…"
+          placeholder={t('components.answers.placeholder')}
           placeholderTextColor="rgba(240,230,210,.35)"
           style={styles.input}
         />
 
-        {!text && recs.length === 0 && <Text style={styles.voiceHint}>или ответь голосом</Text>}
+        {!text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
 
         <View style={styles.actionsRow}>
           {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
@@ -1009,7 +1011,7 @@ export default function AnswerSheet({
               сами они живут в отдельной шторке и из ответа не видны. */}
           <Pressable
             accessibilityLabel={
-              recs.length ? `Голосовые записи, ${recs.length}` : 'Записать аудио'
+              recs.length ? t('components.answers.voiceCount', { count: recs.length }) : t('components.answers.recordAudio')
             }
             accessibilityRole="button"
             testID="answer-record-button"
@@ -1033,12 +1035,12 @@ export default function AnswerSheet({
             ]}
           >
             <Text style={[styles.cancelLabel, confirmCancel && { color: '#ec9b8e' }]}>
-              {confirmCancel ? 'Точно закрыть?' : 'Отмена'}
+              {confirmCancel ? t('components.answers.confirmClose') : t('components.answers.cancel')}
             </Text>
           </Pressable>
           <GoldButton
             compact
-            label={saving ? 'Сохраняю…' : timeExpired ? 'Сохранить и завершить' : 'Сохранить'}
+            label={saving ? t('components.answers.saving') : timeExpired ? t('components.answers.saveFinish') : t('components.answers.save')}
             onPress={save}
             style={{ flex: 1 }}
             testID="answer-save-button"
@@ -1055,7 +1057,7 @@ export default function AnswerSheet({
       recordingPhase={recordingPhase}
       playingId={playingId}
       playProgress={playProgress}
-      audioError={audioError}
+      audioError={audioError ? t(audioError) : null}
       confirmDeleteId={confirmDeleteId}
       expandedTranscripts={expandedTranscripts}
       onStartRecording={startRecording}

@@ -1,3 +1,6 @@
+import type { UiLanguage } from './uiLanguage';
+import { reminderCopy } from './locales/reminders.ts';
+
 // Чистая модель расписания локальных напоминаний о молитве.
 //
 // Модуль намеренно не знает, каким способом расписание было задано: сейчас его
@@ -34,7 +37,9 @@ export type ReminderWeeklyTrigger = {
   minute: number;
 };
 
-export const WEEKDAY_SHORT_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] as const;
+export const WEEKDAY_SHORT_NAMES = reminderCopy.ru.weekdays;
+export const weekdayShortNames = (language: UiLanguage): readonly string[] => reminderCopy[language].weekdays;
+export const reminderPhrases = (language: UiLanguage): readonly string[] => reminderCopy[language].phrases;
 
 /** Правил больше, чем дней в неделе, быть не может: они бы дублировали друг друга. */
 export const MAX_REMINDER_RULES = 7;
@@ -51,20 +56,7 @@ export const MAX_REMINDER_TRIGGERS = 64;
  * Тёплые короткие фразы для тела уведомления. Текст уносится в систему в момент
  * планирования, поэтому ротация возможна только за счёт перепланирования.
  */
-export const REMINDER_PHRASES: readonly string[] = [
-  'Побудь немного в тишине с Богом.',
-  'Самое время помолиться.',
-  'Отложи дела на несколько минут — Он ждёт.',
-  'Тихая минута молитвы уже здесь.',
-  'Что сегодня хочется сказать Богу?',
-  'Зажги лампаду: время молитвы.',
-  'Остановись и вздохни. Помолимся?',
-  'Он рядом. Побудь с Ним.',
-  'Пара минут тишины — и станет легче.',
-  'Время вернуться к главному разговору.',
-  'За что ты можешь поблагодарить сейчас?',
-  'Не спеши мимо: помолись.',
-];
+export const REMINDER_PHRASES: readonly string[] = reminderCopy.ru.phrases;
 
 /** Расписание новой установки: напоминания выключены, заготовка — каждый день в 9:00. */
 export const DEFAULT_REMINDER_SCHEDULE: ReminderSchedule = {
@@ -182,9 +174,10 @@ const pad = (value: number) => String(value).padStart(2, '0');
 export const formatReminderTime = (time: ReminderTime) => `${pad(time.hour)}:${pad(time.minute)}`;
 
 /** «Пн–Пт», «Сб–Вс», «Пн, Ср, Пт», «Каждый день». */
-export function formatReminderWeekdays(weekdays: readonly number[]): string {
+export function formatReminderWeekdays(weekdays: readonly number[], language: UiLanguage = 'ru'): string {
   if (weekdays.length === 0) return '';
-  if (weekdays.length === 7) return 'Каждый день';
+  if (weekdays.length === 7) return reminderCopy[language].everyDay;
+  const names = weekdayShortNames(language);
   const runs: number[][] = [];
   for (const day of weekdays) {
     const last = runs[runs.length - 1];
@@ -194,19 +187,19 @@ export function formatReminderWeekdays(weekdays: readonly number[]): string {
   return runs
     .map((run) =>
       run.length === 1
-        ? WEEKDAY_SHORT_NAMES[run[0] - 1]
-        : `${WEEKDAY_SHORT_NAMES[run[0] - 1]}–${WEEKDAY_SHORT_NAMES[run[run.length - 1] - 1]}`,
+        ? names[run[0] - 1]
+        : `${names[run[0] - 1]}–${names[run[run.length - 1] - 1]}`,
     )
     .join(', ');
 }
 
 /** Человеческая строка расписания: «Пн–Пт: 11:00, 19:00 · Сб–Вс: 22:00». */
-export function describeReminderSchedule(schedule: ReminderSchedule): string {
+export function describeReminderSchedule(schedule: ReminderSchedule, language: UiLanguage = 'ru'): string {
   return schedule.rules
     .filter((rule) => rule.weekdays.length > 0 && rule.times.length > 0)
     .map(
       (rule) =>
-        `${formatReminderWeekdays(rule.weekdays)}: ${rule.times.map(formatReminderTime).join(', ')}`,
+        `${formatReminderWeekdays(rule.weekdays, language)}: ${rule.times.map(formatReminderTime).join(', ')}`,
     )
     .join(' · ');
 }

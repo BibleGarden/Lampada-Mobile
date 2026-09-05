@@ -31,8 +31,7 @@ The journal and the settings are separate branches off Home.
 - Expo Notifications for scheduled local prayer reminders.
 - Expo Secure Store, Expo Local Authentication and Expo Crypto for the optional
   app lock with a PIN and biometrics.
-- Expo Localization for the one-off choice of the scripture language on a fresh
-  install.
+- Expo Localization for initial interface and scripture language selection.
 - Reanimated, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
@@ -56,7 +55,8 @@ Changes to the app are made against the documentation of
 | `lib/aboutClient.ts` | Contact cards from the shared Bible Garden `/api/about` endpoint, response validation and request cancellation |
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
-| `lib/settings.ts` | Privacy settings, the atomic save of the scripture choice and the reminder schedule |
+| `lib/settings.ts` | Privacy settings, interface language, atomic scripture choice and reminder schedule saves |
+| `lib/i18n.ts`, `lib/locales/` | Reactive English, Russian and Ukrainian interface translations |
 | `lib/privacyConsent.ts` | The versioned consent record, provider-contract identity and legacy migration rules |
 | `lib/lock.ts` | The PIN salt and hash in SecureStore, biometrics, the lock state and the full data wipe |
 | `lib/prayerReminders.ts` | The pure model of the reminder schedule: validation, WEEKLY triggers, the human-readable line, the phrase pool |
@@ -423,8 +423,27 @@ crash logs.
 ### About screen contacts
 
 The About screen loads contacts from `GET /api/about?app=lampada` on the existing Scripture
-API origin, using `EXPO_PUBLIC_AI_PROXY_KEY` as `x-api-key`. It displays Russian
-labels and subtitles in server-defined order and maps server SF Symbol names to
+API origin, using `EXPO_PUBLIC_AI_PROXY_KEY` as `x-api-key`. It selects labels and subtitles in the interface language, falling back to English
+and then Russian, in server-defined order and maps server SF Symbol names to
 local icons. The project description remains local. Requests time out after ten
 seconds and are cancelled when the screen unmounts. Loading, empty and retry
 states are visible; contact URLs are restricted to web, mail and Telegram schemes.
+
+## Interface language
+
+Settings expose English, Russian and Ukrainian independently of Scripture
+preferences (ADR-0021). The `ui_language` SQLite meta value publishes to Zustand
+after a successful serialized write. The initial choice follows the first
+supported device language, with English as fallback. React screens and overlays
+subscribe through `useI18n`; library messages use `translate`. Bundled catalogs
+include accessibility, privacy, errors, dates and reminder copy.
+
+Changing the interface language reschedules system-held reminder text without
+altering the saved schedule. Timer labels are passed into native rendering.
+OS-owned permission prompts use native locale files and therefore follow OS app
+language settings. AI requests, model language inference, stored journal content
+and the independent Scripture selection are unchanged.
+
+Plural selection uses the explicit English/Russian/Ukrainian cardinal rules in
+`lib/uiLanguage.ts`; it does not require `Intl.PluralRules`, which is unavailable
+in the installed iOS runtime.

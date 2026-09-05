@@ -1,29 +1,30 @@
+import { useI18n } from '../lib/i18n';
 import React, { useEffect, useState } from 'react';
 import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
-const copy: Record<ConsentPurpose, { kicker: string; title: string; body: string }> = {
+const consentCopy = (t: ReturnType<typeof useI18n>['t']): Record<ConsentPurpose, { kicker: string; title: string; body: string }> => ({
   core_prayer_ai: {
-    kicker: 'КОНФИДЕНЦИАЛЬНОСТЬ',
-    title: 'Разрешить помощь ИИ?',
+    kicker: t('components.reader.privacy'),
+    title: t('components.reader.aiTitle'),
     body:
-      'Тема молитвы будет отправлена на сервер приложения и обработана моделью ИИ, размещённой на управляемом компанией сервере, чтобы создавать наводящие вопросы и подбирать Писание. Сервер приложения не сохраняет тему.',
+      t('components.reader.aiBody'),
   },
   answer_context: {
-    kicker: 'ОТВЕТЫ И РАСШИФРОВКИ',
-    title: 'Учитывать твои ответы?',
+    kicker: t('components.reader.answerKicker'),
+    title: t('components.reader.answerTitle'),
     body:
-      'Текст ответов и готовые расшифровки будут отправляться на сервер приложения и обрабатываться моделью ИИ, размещённой на управляемом компанией сервере, чтобы следующие вопросы и Писание учитывали контекст. Сервер приложения не сохраняет этот текст.',
+      t('components.reader.answerBody'),
   },
   audio_transcription: {
-    kicker: 'РАСШИФРОВКА АУДИО',
-    title: 'Отправить запись на расшифровку?',
+    kicker: t('components.reader.audioKicker'),
+    title: t('components.reader.audioTitle'),
     body:
-      'Выбранный аудиофайл будет отправлен на сервер приложения и обработан моделью распознавания речи, размещённой на управляемом компанией сервере, только для дословной расшифровки. Сервер приложения не сохраняет запись.',
+      t('components.reader.audioBody'),
   },
-};
+});
 
 type Props = {
   visible: boolean;
@@ -33,9 +34,10 @@ type Props = {
 };
 
 export default function PrivacyConsentDialog({ visible, purpose, onDecision, onDismiss }: Props) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  const text = copy[purpose];
+  const text = consentCopy(t)[purpose];
   const [submitting, setSubmitting] = useState(false);
   useEffect(() => {
     if (visible) setSubmitting(false);
@@ -66,7 +68,7 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
           <Text style={styles.kicker}>{text.kicker}</Text>
           <Text style={styles.title}>{text.title}</Text>
           <Text style={styles.body}>{text.body}</Text>
-          <Text style={styles.note}>Решение можно изменить в настройках до следующего запроса.</Text>
+          <Text style={styles.note}>{t('components.reader.decisionNote')}</Text>
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
@@ -75,7 +77,7 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
               onPress={() => void decide('denied')}
               style={({ pressed }) => [styles.action, submitting && styles.disabled, pressed && styles.pressed]}
             >
-              <Text style={styles.actionText}>Не передавать</Text>
+              <Text style={styles.actionText}>{t('components.reader.deny')}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -84,7 +86,7 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
               onPress={() => void decide('allowed')}
               style={({ pressed }) => [styles.action, submitting && styles.disabled, pressed && styles.pressed]}
             >
-              <Text style={styles.actionText}>Разрешить</Text>
+              <Text style={styles.actionText}>{t('components.reader.allow')}</Text>
             </Pressable>
           </View>
         </View>

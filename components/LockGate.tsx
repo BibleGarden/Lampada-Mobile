@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -47,6 +48,7 @@ function PrivacyCurtain() {
 }
 
 function LockScreen() {
+  const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const pinLength = useLock((s) => s.pinLength);
   const biometricsOn = useLock((s) => s.biometrics);
@@ -64,7 +66,7 @@ function LockScreen() {
 
   const runBiometrics = async () => {
     setBiometryError(null);
-    const result = await authenticateWithBiometrics(`Разблокируйте ${APP_NAME}`);
+    const result = await authenticateWithBiometrics(t('components.security.unlockApp', { name: APP_NAME }));
     if (result.ok) {
       unlock();
       return;
@@ -89,12 +91,12 @@ function LockScreen() {
     return () => {
       alive = false;
     };
-  }, [biometricsOn]);
+  }, [biometricsOn, language]);
 
   const submitPin = async (pin: string) => {
     const ok = await verifyPin(pin);
     if (ok) unlock();
-    return ok ? null : 'Неверный пин-код';
+    return ok ? null : t('components.security.incorrectPin');
   };
 
   const runWipe = async () => {
@@ -109,8 +111,8 @@ function LockScreen() {
       // Стирание не удалось — защита остаётся включённой, и пользователь должен
       // это увидеть, а не остаться перед экраном, который «ничего не сделал».
       Alert.alert(
-        'Не удалось стереть данные',
-        'Попробуйте ещё раз. Если не поможет, удалите и установите приложение заново.',
+        t('components.security.wipeError'),
+        t('components.security.wipeErrorHint'),
       );
     } finally {
       setWiping(false);
@@ -121,25 +123,22 @@ function LockScreen() {
   // ссылку под клавиатурой не должно стоить человеку всего дневника.
   const askWipe = () => {
     Alert.alert(
-      'Забыли пин-код?',
-      'Пин-код не хранится ни на устройстве, ни на сервере, поэтому восстановить его нельзя. '
-        + 'Войти можно только стерев все данные приложения: дневник молитв, ответы, голосовые '
-        + 'записи, избранные отрывки и настройки.',
+      t('components.security.forgotPin'),
+      t('components.security.forgotPinDetails'),
       [
-        { text: 'Отмена', style: 'cancel' },
-        { text: 'Стереть данные', style: 'destructive', onPress: confirmWipe },
+        { text: t('components.security.cancel'), style: 'cancel' },
+        { text: t('components.security.eraseData'), style: 'destructive', onPress: confirmWipe },
       ],
     );
   };
 
   const confirmWipe = () => {
     Alert.alert(
-      'Точно стереть всё?',
-      'Все молитвы, ответы и записи будут удалены безвозвратно. Приложение откроется так же, '
-        + 'как после первой установки.',
+      t('components.security.confirmErase'),
+      t('components.security.eraseDetails'),
       [
-        { text: 'Отмена', style: 'cancel' },
-        { text: 'Да, стереть', style: 'destructive', onPress: () => void runWipe() },
+        { text: t('components.security.cancel'), style: 'cancel' },
+        { text: t('components.security.yesErase'), style: 'destructive', onPress: () => void runWipe() },
       ],
     );
   };
@@ -154,30 +153,30 @@ function LockScreen() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(320)} style={styles.lockScreen}>
         <PinPad
-          title="Введите пин-код"
+          title={t('components.security.enterPin')}
           subtitle={
             canUseBiometry
-              ? biometryError ?? `Или войдите через ${biometry?.label}`
-              : 'Приложение защищено пин-кодом'
+              ? biometryError ?? t('components.security.orBiometrics', { name: biometry?.label ?? '' })
+              : t('components.security.pinProtected')
           }
           expectedLength={pinLength}
           onSubmit={submitPin}
           biometry={
             canUseBiometry && biometry
-              ? { label: `Войти через ${biometry.label}`, onPress: () => void runBiometrics() }
+              ? { label: t('components.security.useBiometrics', { name: biometry.label }), onPress: () => void runBiometrics() }
               : null
           }
           footer={
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Забыли пин-код?"
+              accessibilityLabel={t('components.security.forgotPin')}
               testID="forgot-pin"
               disabled={wiping}
               onPress={askWipe}
               hitSlop={8}
               style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             >
-              <Text style={styles.forgot}>Забыли пин-код?</Text>
+              <Text style={styles.forgot}>{t('components.security.forgotPin')}</Text>
             </Pressable>
           }
         />

@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useEffect, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Application from 'expo-application';
@@ -10,6 +11,7 @@ import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 export default function UpdateGate({ covered, onVisibleChange }: {
   covered: boolean; onVisibleChange: (visible: boolean) => void;
 }) {
+  const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [data, setData] = useState<VersionCheck | null>(null);
@@ -31,20 +33,24 @@ export default function UpdateGate({ covered, onVisibleChange }: {
     return () => subscription.remove();
   }, [visible, covered]);
   if (!visible || covered || !data) return null;
+  const localizedMessage = data.message?.[language];
+  const message = typeof localizedMessage === 'string' && localizedMessage.trim()
+    ? localizedMessage
+    : t('components.security.updateFallback');
   return (
     <View style={[styles.overlay, { paddingTop: insets.top + sc(24), paddingBottom: insets.bottom + sc(24) }]}
       accessibilityViewIsModal testID={`update-${data.update_type}`}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{data.update_type === 'hard' ? 'Обнови Лампаду' : 'Доступно обновление'}</Text>
-        <Text style={styles.body}>{data.message?.ru}</Text>
+        <Text style={styles.title}>{data.update_type === 'hard' ? t('components.security.updateRequired') : t('components.security.updateAvailable')}</Text>
+        <Text style={styles.body}>{message}</Text>
         <Pressable accessibilityRole="button" testID="update-open" style={styles.button}
           onPress={() => { setLinkFailed(false); void Linking.openURL(data.store_url).catch(() => setLinkFailed(true)); }}>
-          <Text style={styles.buttonText}>Обновить</Text>
+          <Text style={styles.buttonText}>{t('components.security.update')}</Text>
         </Pressable>
-        {linkFailed ? <Text style={styles.body}>Не удалось открыть ссылку. Попробуй ещё раз.</Text> : null}
+        {linkFailed ? <Text style={styles.body}>{t('components.security.openLinkError')}</Text> : null}
         {data.update_type === 'soft' ? (
           <Pressable accessibilityRole="button" testID="update-later" style={styles.button} onPress={() => setData(null)}>
-            <Text style={styles.buttonText}>Позже</Text>
+            <Text style={styles.buttonText}>{t('components.security.later')}</Text>
           </Pressable>
         ) : null}
       </ScrollView>

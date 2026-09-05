@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -17,6 +18,7 @@ type Props = {
 
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
 export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -61,7 +63,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
         onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
       >
         <View style={styles.referenceWrap}>
-          <Text style={styles.ref}>{cur?.reference ?? 'Писание'}</Text>
+          <Text style={styles.ref}>{cur?.reference ?? t('components.reader.scripture')}</Text>
           {cur?.translationAlias ? (
             <Text style={styles.translation}>{cur.translationAlias}</Text>
           ) : null}
@@ -69,7 +71,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
         <View style={styles.headerBtns}>
           {cur && !cur.offline ? (
             <IconButton
-              accessibilityLabel={scriptureAudio.phase === 'playing' ? 'Пауза' : 'Слушать отрывок'}
+              accessibilityLabel={scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
               size={sc(32)}
               bg="rgba(255,255,255,.04)"
               border={colors.white08}
@@ -85,7 +87,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
             </IconButton>
           ) : null}
           <IconButton
-            accessibilityLabel={fav ? 'Удалить из избранного' : 'Добавить в избранное'}
+            accessibilityLabel={fav ? t('components.reader.removeFavorite') : t('components.reader.addFavorite')}
             size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}
@@ -94,7 +96,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
             <Heart size={16} fill={fav ? '#e7cf95' : 'none'} />
           </IconButton>
           <IconButton
-            accessibilityLabel="Закрыть чтение"
+            accessibilityLabel={t('components.reader.closeReader')}
             size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}

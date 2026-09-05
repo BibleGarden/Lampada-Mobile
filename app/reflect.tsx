@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
@@ -49,6 +50,7 @@ function animateCompactLayout(event: KeyboardEvent) {
 }
 
 function ReflectScreen() {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
@@ -121,13 +123,13 @@ function ReflectScreen() {
           <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
             {!keyboardOpen && (
               <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
-                {s.reflectSource === 'fallback' ? 'резервный вопрос' : 'прежде чем закрыть'}
+                {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
               </Kicker>
             )}
             {s.reflectGenerating ? (
               <View style={styles.questionLoading}>
                 <ActivityIndicator color={colors.goldSoft} />
-                <Text style={styles.loadingText}>готовлю вопрос…</Text>
+                <Text style={styles.loadingText}>{t('screens.questionLoading')}</Text>
               </View>
             ) : (
               <Text style={[styles.question, questionTypography(s.reflectQ)]}>{s.reflectQ}</Text>
@@ -138,7 +140,7 @@ function ReflectScreen() {
             value={takeaway}
             onChangeText={setTakeaway}
             multiline
-            placeholder="Одна-две строки…"
+            placeholder={t('screens.reflect.placeholder')}
             placeholderTextColor="rgba(240,230,210,.35)"
             style={styles.input}
             // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
@@ -151,7 +153,7 @@ function ReflectScreen() {
 
           <View style={{ gap: sc(12) }}>
             <GoldButton
-              label={takeaway.trim() ? 'Сохранить и завершить' : 'Завершить'}
+              label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
               onPress={() => complete(takeaway.trim())}
             />
             <Pressable
@@ -159,7 +161,7 @@ function ReflectScreen() {
               style={({ pressed }) => [styles.continueBtn, pressed && { transform: [{ scale: 0.985 }] }]}
             >
               <Regen size={16} color={colors.amberBright} strokeWidth={1.7} />
-              <Text style={styles.continueLabel}>Вернуться к молитве</Text>
+              <Text style={styles.continueLabel}>{t('screens.reflect.return')}</Text>
             </Pressable>
           </View>
         </Pressable>

@@ -44,3 +44,5 @@ requirements, or the way the app is built and delivered. Small local
 implementation details do not need one.
 
 - [0020: Application-specific update checks](0020-application-version-check.md)
+
+- [0021: Independent interface language](0021-interface-language.md)

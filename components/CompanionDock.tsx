@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -46,6 +47,7 @@ const cardBtnSize = () => sc(32);
 // Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
 // Механика следа/фронтира живёт в store; здесь только отображение.
 export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAudio }: Props) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const [measuredScripture, setMeasuredScripture] = React.useState<{
     key: string;
@@ -121,7 +123,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
         <View style={styles.switcher}>
           <Pressable
             accessibilityRole="tab"
-            accessibilityLabel="Вопрос"
+            accessibilityLabel={t('components.reader.question')}
             accessibilityState={{ selected: isQ }}
             onPress={tap(() => s.setDockMode('question'))}
             testID="dock-question-tab"
@@ -132,11 +134,11 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               strokeWidth={1.7}
               color={isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'}
             />
-            <Text style={[styles.switchLabel, isQ && styles.switchLabelActive]}>Вопрос</Text>
+            <Text style={[styles.switchLabel, isQ && styles.switchLabelActive]}>{t('components.reader.question')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="tab"
-            accessibilityLabel="Цитата"
+            accessibilityLabel={t('components.reader.quote')}
             accessibilityState={{ selected: !isQ }}
             onPress={tap(() => s.setDockMode('scripture'))}
             testID="dock-scripture-tab"
@@ -147,7 +149,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               strokeWidth={1.7}
               color={!isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'}
             />
-            <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>Цитата</Text>
+            <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>{t('components.reader.quote')}</Text>
           </Pressable>
         </View>
       </View>
@@ -156,7 +158,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
         <Animated.View key={`q-${s.qIndex}`} entering={FadeInDown.duration(350)} style={styles.body}>
           <View style={styles.textWrap} onLayout={onTextAreaLayout}>
             {s.generating ? (
-              <ActivityIndicator accessibilityLabel="Готовлю вопрос" color={colors.goldSoft} />
+              <ActivityIndicator accessibilityLabel={t('components.reader.preparing')} color={colors.goldSoft} />
             ) : (
               // maxHeight + прокрутка: длинный вопрос не выталкивает карточку
               // за экран, а листается внутри неё
@@ -188,7 +190,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             >
               {answered ? <Check /> : <Pen size={13} />}
               <Text style={[styles.mainBtnLabel, answered && { color: colors.greenSoft }]}>
-                {answered ? 'Изменить' : 'Ответить'}
+                {answered ? t('components.reader.edit') : t('components.reader.answer')}
               </Text>
             </Pressable>
             <SquareBtn onPress={tap(() => s.nextQuestion())}>
@@ -219,7 +221,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
         >
           <View style={styles.textWrap} onLayout={onTextAreaLayout}>
             {s.scrStatus === 'loading' || s.scrStatus === 'retrying' ? (
-              <ActivityIndicator accessibilityLabel="Подбираю Писание" color={colors.goldSoft} />
+              <ActivityIndicator accessibilityLabel={t('components.reader.selecting')} color={colors.goldSoft} />
             ) : curScripture ? (
               <>
                 {/* Неполный текст отрывка открывает полную читалку. */}
@@ -227,7 +229,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   onPress={canReadInFull ? tap(onOpenReader) : undefined}
                   disabled={!canReadInFull}
                   accessibilityRole={canReadInFull ? 'button' : undefined}
-                  accessibilityLabel={canReadInFull ? 'Читать отрывок целиком' : undefined}
+                  accessibilityLabel={canReadInFull ? t('components.reader.readFull') : undefined}
                   style={({ pressed }) => [
                     styles.scripturePreview,
                     pressed && canReadInFull && styles.scripturePreviewPressed,
@@ -260,14 +262,14 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   </Text>
                 </Pressable>
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
-                  <Text style={styles.offlineLabel}>Офлайн · из сохранённых</Text>
+                  <Text style={styles.offlineLabel}>{t('components.reader.offline')}</Text>
                 )}
               </>
             ) : (
               <Pressable onPress={tap(() => void s.retryScripture())} style={styles.retryWrap}>
-                <Text style={styles.cardText}>Сейчас не удалось подобрать отрывок.</Text>
+                <Text style={styles.cardText}>{t('components.reader.unavailable')}</Text>
                 <Text style={styles.retryLabel}>
-                  {s.scrError === 'not_configured' ? 'Проверить настройки' : 'Попробовать ещё раз'}
+                  {s.scrError === 'not_configured' ? t('components.reader.checkSettings') : t('components.reader.tryAgain')}
                 </Text>
               </Pressable>
             )}
@@ -281,10 +283,10 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   style={styles.listenButton}
                   accessibilityLabel={
                     scriptureAudio.phase === 'playing'
-                      ? 'Пауза'
+                      ? t('components.reader.pause')
                       : scriptureAudio.phase === 'paused'
-                        ? 'Продолжить'
-                        : 'Слушать отрывок'
+                        ? t('components.reader.resume')
+                        : t('components.reader.listenPassage')
                   }
                   testID="scripture-audio-button"
                 >
@@ -297,14 +299,14 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   )}
                   <Text style={styles.readMoreLabel}>
                     {scriptureAudio.phase === 'loading'
-                      ? 'Загрузка'
+                      ? t('components.reader.loading')
                       : scriptureAudio.phase === 'playing'
-                        ? 'Пауза'
+                        ? t('components.reader.pause')
                         : scriptureAudio.phase === 'paused'
-                          ? 'Продолжить'
+                          ? t('components.reader.resume')
                           : scriptureAudio.phase === 'error'
-                            ? 'Повторить'
-                            : 'Слушать'}
+                            ? t('components.reader.retry')
+                            : t('components.reader.listen')}
                   </Text>
                 </Pressable>
               )}
@@ -327,7 +329,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               ]}
             >
               <Heart fill={curFav ? '#e7cf95' : 'none'} />
-              <Text style={styles.mainBtnLabel}>{curFav ? 'В избранном' : 'В избранное'}</Text>
+              <Text style={styles.mainBtnLabel}>{curFav ? t('components.reader.saved') : t('components.reader.save')}</Text>
             </Pressable>
             <SquareBtn
               disabled={!curScripture || s.scrStatus === 'loading' || s.scrStatus === 'retrying'}

@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
@@ -80,6 +81,7 @@ export default function Session() {
 }
 
 function SessionScreen() {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   useKeepAwake(); // экран не гаснет во время молитвы
   const insets = useSafeAreaInsets();
@@ -132,9 +134,9 @@ function SessionScreen() {
     musicPlayerForSlot(slot).setActiveForLockScreen(true, {
       title: track.title,
       artist: track.artist,
-      albumTitle: 'Lampada · тихая музыка',
+      albumTitle: t('screens.session.album'),
     });
-  }, [musicPlayerForSlot, musicTracks]);
+  }, [musicPlayerForSlot, musicTracks, t]);
 
   const cancelMusicCrossfade = useCallback(() => {
     if (musicCrossfadeTimer.current) {
@@ -464,10 +466,10 @@ function SessionScreen() {
   const timerLabel = s.remaining === null ? fmtTime(s.elapsed) : fmtTime(s.remaining);
   const timerSub =
     s.remaining === 0 && answerOpen
-      ? 'закончи ответ'
+      ? t('screens.session.finishAnswer')
       : s.remaining === null
-        ? 'идёт'
-        : 'осталось';
+        ? t('screens.session.elapsed')
+        : t('screens.session.remaining');
   // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
   // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
@@ -496,7 +498,7 @@ function SessionScreen() {
               <Close />
             </IconButton>
             <Kicker numberOfLines={1} style={styles.topTitle}>
-              Молитва
+              {t('screens.session.title')}
             </Kicker>
             <View style={styles.musicBtnWrap}>
               {musicPlaying && <MusicPulse size={sc(34)} />}
@@ -504,7 +506,7 @@ function SessionScreen() {
                 onPress={s.toggleMusic}
                 bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
                 border={s.musicOn ? 'rgba(230,162,60,.4)' : undefined}
-                accessibilityLabel={s.musicOn ? 'Выключить тихую музыку' : 'Включить тихую музыку'}
+                accessibilityLabel={s.musicOn ? t('screens.session.musicOff') : t('screens.session.musicOn')}
                 accessibilityState={{ selected: s.musicOn }}
               >
                 <Music color={s.musicOn ? colors.amberBright : 'rgba(255,255,255,.5)'} />
@@ -516,7 +518,7 @@ function SessionScreen() {
             <TimerHalo size={ringSize} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
             <Pressable
-              accessibilityLabel="Изменить время молитвы"
+              accessibilityLabel={t('screens.session.adjust')}
               accessibilityRole="button"
               accessibilityState={{ expanded: adjustOpen }}
               disabled={s.remaining === null}
@@ -566,10 +568,10 @@ function SessionScreen() {
 
           <View style={styles.goalWrap}>
             <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
-              цель
+              {t('screens.session.goal')}
             </Kicker>
             <Text style={styles.goalText} numberOfLines={3}>
-              {s.topic.trim() || 'Свободная молитва — без конкретной темы'}
+              {s.topic.trim() || t('screens.session.free')}
             </Text>
           </View>
 
@@ -599,19 +601,20 @@ function SessionScreen() {
 // Пока музыка звучит, кнопка тихо «дышит» тёплым ореолом — это и есть
 // индикатор вместо отдельного бейджа под шапкой.
 function MusicPulse({ size }: { size: number }) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
-  const t = useSharedValue(0);
+  const pulse = useSharedValue(0);
   useEffect(() => {
-    t.value = withRepeat(
+    pulse.value = withRepeat(
       withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
-    return () => cancelAnimation(t);
-  }, [t]);
+    return () => cancelAnimation(pulse);
+  }, [pulse]);
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + t.value * 0.36 }],
-    opacity: 0.4 - t.value * 0.3,
+    transform: [{ scale: 1 + pulse.value * 0.36 }],
+    opacity: 0.4 - pulse.value * 0.3,
   }));
   return (
     <Animated.View
@@ -619,7 +622,7 @@ function MusicPulse({ size }: { size: number }) {
       // Ореол — единственный признак звучащей музыки, поэтому у него есть
       // и голосовой эквивалент вместо снятого бейджа.
       accessible
-      accessibilityLabel="Музыка звучит"
+      accessibilityLabel={t('screens.session.musicPlaying')}
       testID="music-playing"
       style={[
         {

@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -73,6 +74,7 @@ export default function RecordingsSheet({
   onAppendToAnswer,
   onDismiss,
 }: Props) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   // Expo safe-area padding can legitimately be zero on Home Button devices.
@@ -143,10 +145,10 @@ export default function RecordingsSheet({
       <View style={styles.content} {...screenReaderHiddenProps(recording)}>
         <View style={styles.header}>
           <Text style={styles.kicker}>
-            {recordings.length ? `ГОЛОСОВЫЕ ЗАПИСИ · ${recordings.length}` : 'ГОЛОСОВЫЕ ЗАПИСИ'}
+            {recordings.length ? t('components.answers.recordingsCount', { count: recordings.length }) : t('components.answers.recordingsTitle')}
           </Text>
           <Pressable
-            accessibilityLabel="Закрыть записи"
+            accessibilityLabel={t('components.answers.closeRecordings')}
             accessibilityRole="button"
             testID="recordings-close-button"
             disabled={recordingBusy}
@@ -166,7 +168,7 @@ export default function RecordingsSheet({
 
           {recordings.length === 0 && !recording && (
             <Text style={styles.emptyHint}>
-              Пока записей нет. Нажми «Записать» — и говори.
+              {t('components.answers.empty')}
             </Text>
           )}
 
@@ -178,7 +180,7 @@ export default function RecordingsSheet({
                 <View style={styles.recRow}>
                   <Pressable
                     accessibilityLabel={
-                      playing ? `Пауза, запись ${i + 1}` : `Прослушать запись ${i + 1}`
+                      playing ? t('components.answers.pauseIndex', { index: i + 1 }) : t('components.answers.playIndex', { index: i + 1 })
                     }
                     accessibilityRole="button"
                     testID={`recording-play-${i}`}
@@ -204,8 +206,8 @@ export default function RecordingsSheet({
                         с «Запись N · время» он не помещается и обрезается. */}
                     <Text style={[styles.recMeta, loading && styles.recMetaState]} numberOfLines={1}>
                       {loading
-                        ? 'Расшифровываю…'
-                        : `Запись ${i + 1} · ${fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec)}`}
+                        ? t('components.answers.transcribing')
+                        : t('components.answers.recordingIndex', { index: i + 1, duration: fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec) })}
                     </Text>
                   </View>
                   {/* Кнопка расшифровки живёт в строке с плеем и корзиной, пока
@@ -214,7 +216,7 @@ export default function RecordingsSheet({
                   {r.transcript === null && (
                     <Pressable
                       accessibilityLabel={
-                        r.transcriptState === 'error' ? 'Повторить расшифровку' : 'Расшифровать'
+                        r.transcriptState === 'error' ? t('components.answers.retryTranscription') : t('components.answers.transcribe')
                       }
                       accessibilityRole="button"
                       testID={`recording-transcribe-${i}`}
@@ -233,8 +235,8 @@ export default function RecordingsSheet({
                   <Pressable
                     accessibilityLabel={
                       confirmDeleteId === r.id
-                        ? `Подтвердить удаление записи ${i + 1}`
-                        : `Удалить запись ${i + 1}`
+                        ? t('components.answers.confirmDeleteIndex', { index: i + 1 })
+                        : t('components.answers.deleteIndex', { index: i + 1 })
                     }
                     accessibilityRole="button"
                     testID={`recording-delete-${i}`}
@@ -246,15 +248,15 @@ export default function RecordingsSheet({
                 </View>
 
                 {r.transcriptState === 'error' && (
-                  <Text style={styles.transcriptionError}>Не удалось расшифровать</Text>
+                  <Text style={styles.transcriptionError}>{t('components.answers.transcriptionFailed')}</Text>
                 )}
 
                 {r.transcript !== null && (
                   <View style={styles.transcriptBlock}>
                     <View style={styles.transcriptHead}>
-                      <Text style={styles.transcriptLabel}>РАСШИФРОВКА</Text>
+                      <Text style={styles.transcriptLabel}>{t('components.answers.transcriptTitle')}</Text>
                       <Pressable
-                        accessibilityLabel={`Убрать расшифровку записи ${i + 1}`}
+                        accessibilityLabel={t('components.answers.removeTranscriptIndex', { index: i + 1 })}
                         accessibilityRole="button"
                         hitSlop={sc(8)}
                         onPress={() => onRemoveTranscript(r.id)}
@@ -267,7 +269,7 @@ export default function RecordingsSheet({
                         читается, но не правится. Нужное переносят в поле ответа
                         кнопкой и правят уже там. */}
                     <Text
-                      accessibilityLabel={`Расшифровка записи ${i + 1}. ${r.transcript}`}
+                      accessibilityLabel={t('components.answers.transcriptIndex', { index: i + 1, transcript: r.transcript ?? '' })}
                       style={styles.transcriptPreview}
                       numberOfLines={expandedTranscripts[r.id] ? undefined : 3}
                     >
@@ -278,8 +280,8 @@ export default function RecordingsSheet({
                         <Pressable
                           accessibilityLabel={
                             expandedTranscripts[r.id]
-                              ? `Свернуть расшифровку записи ${i + 1}`
-                              : `Показать полностью расшифровку записи ${i + 1}`
+                              ? t('components.answers.collapseTranscriptIndex', { index: i + 1 })
+                              : t('components.answers.expandTranscriptIndex', { index: i + 1 })
                           }
                           accessibilityRole="button"
                           accessibilityState={{ expanded: !!expandedTranscripts[r.id] }}
@@ -288,19 +290,19 @@ export default function RecordingsSheet({
                           style={({ pressed }) => [styles.transcriptAction, pressed && { opacity: 0.7 }]}
                         >
                           <Text style={styles.transcriptActionText}>
-                            {expandedTranscripts[r.id] ? 'Свернуть' : 'Показать полностью'}
+                            {expandedTranscripts[r.id] ? t('components.answers.collapse') : t('components.answers.expand')}
                           </Text>
                         </Pressable>
                       )}
                       <Pressable
-                        accessibilityHint="Текст расшифровки допишется в конец ответа"
-                        accessibilityLabel={`Добавить расшифровку записи ${i + 1} в ответ`}
+                        accessibilityHint={t('components.answers.appendHint')}
+                        accessibilityLabel={t('components.answers.appendTranscriptIndex', { index: i + 1 })}
                         accessibilityRole="button"
                         hitSlop={sc(6)}
                         onPress={() => onAppendToAnswer(r.transcript ?? '')}
                         style={({ pressed }) => [styles.transcriptAction, pressed && { opacity: 0.7 }]}
                       >
-                        <Text style={styles.transcriptActionText}>Добавить в ответ</Text>
+                        <Text style={styles.transcriptActionText}>{t('components.answers.append')}</Text>
                       </Pressable>
                     </View>
                   </View>
@@ -312,7 +314,7 @@ export default function RecordingsSheet({
 
         <View style={[styles.actionsRow, { paddingBottom: bottomContentInset }]}>
           <Pressable
-            accessibilityLabel={recordings.length ? 'Записать ещё' : 'Записать'}
+            accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
             accessibilityRole="button"
             testID="recordings-record-button"
             disabled={recordingBusy}
@@ -331,10 +333,10 @@ export default function RecordingsSheet({
             <Mic size={sc(16)} color={colors.greenSoft} />
             <Text style={styles.recordLabel}>
               {recordingPhase === 'starting'
-                ? 'Подготовка…'
+                ? t('components.answers.preparing')
                 : recordings.length
-                  ? 'Записать ещё'
-                  : 'Записать'}
+                  ? t('components.answers.recordMore')
+                  : t('components.answers.record')}
             </Text>
           </Pressable>
         </View>
@@ -347,16 +349,16 @@ export default function RecordingsSheet({
           style={[styles.recOverlay, { paddingBottom: recordingBottomInset }]}
         >
           <View style={styles.recOverlayContent}>
-            <Text style={styles.recOverlayKicker}>идёт запись…</Text>
+            <Text style={styles.recOverlayKicker}>{t('components.answers.recording')}</Text>
             <View style={styles.waveRow}>
               {WAVE_BARS.map((b, i) => (
                 <WaveBar key={i} color={b.color} delay={b.delay} />
               ))}
             </View>
-            <Text style={styles.recOverlayHint}>говори — я запишу твои слова</Text>
+            <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
           </View>
           <Pressable
-            accessibilityLabel="Остановить запись"
+            accessibilityLabel={t('components.answers.stop')}
             accessibilityRole="button"
             testID="recordings-stop-button"
             disabled={stopDisabled}
@@ -368,7 +370,7 @@ export default function RecordingsSheet({
             ]}
           >
             <Text style={styles.recDoneLabel}>
-              {recordingPhase === 'stopping' ? 'сохраняю…' : 'готово'}
+              {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
             </Text>
           </Pressable>
         </View>

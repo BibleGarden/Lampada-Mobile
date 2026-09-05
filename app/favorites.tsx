@@ -1,3 +1,4 @@
+import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -22,6 +23,7 @@ import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 const COLLAPSED_LINES = 4;
 
 function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const [expanded, setExpanded] = useState(false);
   const [lines, setLines] = useState(0);
@@ -38,7 +40,7 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.reference}>{favorite.reference}</Text>
-        {favorite.canonicalId === null ? <Text style={styles.legacy}>Сохранено ранее</Text> : null}
+        {favorite.canonicalId === null ? <Text style={styles.legacy}>{t('screens.favorites.legacy')}</Text> : null}
       </View>
       {favorite.title ? <Text style={styles.title}>{favorite.title}</Text> : null}
       {collapsedText ? (
@@ -81,7 +83,7 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
           testID={`favorite-toggle-${favorite.id}`}
           style={({ pressed }) => [styles.readMore, pressed && { opacity: 0.7 }]}
         >
-          <Text style={styles.readMoreLabel}>{expanded ? 'Свернуть' : 'Читать целиком'}</Text>
+          <Text style={styles.readMoreLabel}>{expanded ? t('screens.favorites.collapse') : t('screens.favorites.read')}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -89,6 +91,7 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
 }
 
 export default function Favorites() {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
@@ -107,7 +110,7 @@ export default function Favorites() {
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
-          <Kicker>Сохранённые цитаты</Kicker>
+          <Kicker>{t('screens.favorites.title')}</Kicker>
           <View style={{ width: sc(34) }} />
         </View>
         <ScrollView
@@ -119,7 +122,7 @@ export default function Favorites() {
           }}
         >
           {favorites.length === 0 ? (
-            <Text style={styles.empty}>Здесь появятся сохранённые цитаты.</Text>
+            <Text style={styles.empty}>{t('screens.favorites.empty')}</Text>
           ) : favorites.map((favorite) => (
             <FavoriteCard key={favorite.id} favorite={favorite} />
           ))}
