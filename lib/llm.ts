@@ -1,3 +1,6 @@
+import { limitQuestionRequest } from './questionRequest';
+import type { QuestionRequest } from './questionRequest';
+
 // Низкоуровневый клиент AI-прокси на api.bible.garden.
 // Модель и системные инструкции выбираются и хранятся на сервере.
 //
@@ -18,15 +21,15 @@ const TIMEOUT_MS = 25_000;
 export const llmConfigured = () => Boolean(PROXY_URL);
 
 /**
- * Один вызов модели: user → текст ответа.
- * Формат тела — внутренний контракт bible-api: { user } → { text }.
+ * Один вызов модели: структурированный диалог → текст ответа.
  * System prompt хранится на сервере и не может переопределяться клиентом.
  * Бросает при любой проблеме: не настроено, таймаут, не-2xx, пустой ответ.
  *
  */
-export async function complete(user: string): Promise<string> {
+export async function complete(request: QuestionRequest): Promise<string> {
   if (!PROXY_URL) throw new Error('AI proxy is not configured');
 
+  const body = JSON.stringify(limitQuestionRequest(request));
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -37,7 +40,7 @@ export async function complete(user: string): Promise<string> {
         'content-type': 'application/json',
         ...(PROXY_KEY ? { 'x-api-key': PROXY_KEY } : {}),
       },
-      body: JSON.stringify({ user }),
+      body,
     });
     if (!res.ok) throw new Error(`AI proxy: HTTP ${res.status}`);
 
@@ -52,25 +55,24 @@ export async function complete(user: string): Promise<string> {
 
 /** Hard privacy barrier for prompts derived from a prayer session. */
 export async function completePrayerContent(
-  user: string,
-  includesAnswerContext = false,
+  request: QuestionRequest,
 ): Promise<string> {
   // Lazy import keeps the transport independently testable in Node while the
   // app path still checks the live persisted gate immediately before fetch.
   const { answerContextAllowedNow, coreAiAllowedNow } = await import('./settings');
   if (!coreAiAllowedNow()) throw new Error('Core prayer AI consent is not allowed');
-  if (includesAnswerContext && !answerContextAllowedNow()) {
+  if (request.messages.some((message) => message.role === 'user') && !answerContextAllowedNow()) {
     throw new Error('Answer context consent is not allowed');
   }
-  return complete(user);
+  return complete(request);
 }
 
 /**
  * Вызов, от которого ждём JSON. Модель иногда оборачивает ответ в
  * ```json-блок или добавляет фразу до/после — вырезаем первый JSON-фрагмент.
  */
-export async function completeJson<T>(user: string): Promise<T> {
-  const raw = await complete(user);
+export async function completeJson<T>(request: QuestionRequest): Promise<T> {
+  const raw = await complete(request);
   const start = raw.search(/[[{]/);
   if (start === -1) throw new Error('AI proxy: no JSON in response');
   const opener = raw[start];

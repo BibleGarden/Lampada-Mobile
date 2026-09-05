@@ -24,6 +24,8 @@ it was made, which options were considered and what it led to.
 | [0015](0015-answer-sheet-single-scroll.md) | Superseded by ADR-0016 | Pin the question and the buttons in the answer sheet and give the rest to a single scroll |
 | [0016](0016-separate-recordings-sheet.md) | Accepted | Separate voice recordings from the answer field and serialize recorder start/stop |
 | [0017](0017-versioned-ai-consent.md) | Accepted | Gate the three AI content transfers with independent versioned consent records |
+| [0018](0018-latest-human-reply.md) | Superseded by ADR-0019 | Send the latest human reply separately from AI generation context |
+| [0019](0019-structured-question-history.md) | Accepted | Send structured question history with separate topic and stage |
 
 ## Rules
 

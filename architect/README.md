@@ -52,6 +52,7 @@ Changes to the app are made against the documentation of
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
 | `lib/ai.ts` | Prompts, validation of the AI response and local degradation |
 | `lib/answerContext.ts` | The composition of the person's replies for the AI: the answer text and the transcripts of its recordings |
+| `lib/questionRequest.ts` | Structured question history, stage metadata and request limits |
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
 | `lib/settings.ts` | Privacy settings, the atomic save of the scripture choice and the reminder schedule |
@@ -342,8 +343,16 @@ the result of a server selection.
 The app talks to a `bible-api` server endpoint which owns model routing, model
 credentials and system prompts. Chat and speech models run on infrastructure
 managed by the company; changing a stage's model is a server configuration
-change and does not alter the client contract. The client sends only the `user`
-field with the context of the particular question. Only public Expo variables -
+change and does not alter the client contract. Question requests use
+`{ topic, stage, messages }` (ADR-0019). The topic is separate from conversation
+history; `stage` selects the server's first, next or reflection question prompt.
+`lib/questionRequest.ts` pairs each answered question with its human reply in
+ascending question-index order. One user message joins typed text and completed
+transcripts with newlines. Unanswered questions are omitted, and an empty history
+is valid. Nonempty history ends with a user message. Requests retain at most 40
+messages and 16,000 UTF-16 code units across the topic and message text, dropping
+oldest messages without truncating the latest reply. Core and answer consent are
+rechecked before transfer. Only public Expo variables -
 the URL and the limited proxy key - may be embedded into a client build; server
 secrets and system instructions are not put into the app.
 

@@ -25,7 +25,10 @@ Maestro flows the `appId` of the custom build is `twinkler`, not
 ## AI
 
 AI requests go through `https://api.bible.garden/api/ai/question` to an existing
-FastAPI service. It routes each stage to a company-hosted model; neither model
+FastAPI service. Requests contain `topic`, `stage` (`first`, `next`, `reflect`) and
+`messages` (chronological assistant/user turns); responses
+remain `{ "text": "..." }`. See [ADR-0019](architect/decisions/0019-structured-question-history.md).
+It routes each stage to a company-hosted model; neither model
 configuration nor system instructions are embedded into the app. To enable AI,
 copy `.env.example` to `.env.local` and set the client `X-API-Key` of the service.
 That client key is visible in the built app and does not replace the server-side

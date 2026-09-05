@@ -7,6 +7,8 @@
 
 import { completePrayerContent, llmConfigured } from './llm';
 import { coreAiAllowedNow } from './settings';
+import { buildQuestionRequest } from './questionRequest';
+import type { AnswerContext } from './answerContext';
 
 export type QuestionSource = 'ai' | 'fallback';
 export type GeneratedQuestion = { text: string; source: QuestionSource };
@@ -68,13 +70,7 @@ const isQuestion = (q: unknown): q is string =>
 export async function generateFirstQuestion(topic: string): Promise<GeneratedQuestion> {
   if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(curatedQuestions));
   try {
-    const q = await completePrayerContent(
-      (topic.trim()
-        ? `Человек начинает молитву. Его цель: «${topic.trim()}».\n`
-        : 'Человек начинает молитву без конкретной темы.\n') +
-        'Задай первый наводящий вопрос — про то, что сейчас происходит и что он чувствует. ' +
-        'Не пересказывай цель дословно. Ответь только текстом вопроса, без кавычек и пояснений.',
-    );
+    const q = await completePrayerContent(buildQuestionRequest('first', topic));
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('firstQuestion', `кривой ответ: «${q}»`);
     return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(curatedQuestions));
@@ -87,26 +83,18 @@ export async function generateFirstQuestion(topic: string): Promise<GeneratedQue
 /**
  * Один новый вопрос, не повторяющий уже заданные.
  * answers передаются только при отдельном answer-context consent — иначе
- * вызывающий обязан передать [], а transport повторно проверит gate.
+ * вызывающий обязан передать {}, а transport повторно проверит gate.
+ * Индекс ответа сохраняет связь с соответствующим вопросом.
  */
 export async function generateQuestion(
   topic: string,
   asked: string[],
-  answers: string[] = [],
+  answers: Record<number, AnswerContext> = {},
 ): Promise<GeneratedQuestion> {
   const fallback = () => fromFallback(pickFallbackQuestion(asked));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
-    const q = await completePrayerContent(
-      (topic.trim() ? `Цель молитвы: «${topic.trim()}».\n` : 'Молитва без конкретной темы.\n') +
-        `Уже прозвучали вопросы:\n${asked.map((a) => `— ${a}`).join('\n')}\n` +
-        (answers.length
-          ? `Что человек ответил (опирайся на это, но не цитируй дословно):\n${answers.map((a) => `— ${a}`).join('\n')}\n`
-          : '') +
-        'Задай один новый вопрос, который смотрит на ситуацию с другой стороны и не повторяет прозвучавшие. ' +
-        'Ответь только текстом вопроса, без кавычек и пояснений.',
-      answers.length > 0,
-    );
+    const q = await completePrayerContent(buildQuestionRequest('next', topic, asked, answers));
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('question', `кривой ответ: «${q}»`);
     return isQuestion(clean) ? fromAi(clean) : fallback();
@@ -119,20 +107,12 @@ export async function generateQuestion(
 /** Вопрос рефлексии по цели и ответам сессии */
 export async function generateReflectQuestion(
   topic: string,
-  answers: string[],
+  asked: string[],
+  answers: Record<number, AnswerContext>,
 ): Promise<GeneratedQuestion> {
   if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(reflectPool));
   try {
-    const q = await completePrayerContent(
-      'Молитва закончилась, человек готов записать один вывод.\n' +
-        (topic.trim() ? `Цель была: «${topic.trim()}».\n` : '') +
-        (answers.length
-          ? `Его ответы во время молитвы:\n${answers.map((a) => `— ${a}`).join('\n')}\n`
-          : 'Он молился молча, письменных ответов нет.\n') +
-        'Задай один тёплый итоговый вопрос, который поможет ему назвать главное из этой молитвы. ' +
-        'Не цитируй его ответы дословно. Ответь только текстом вопроса.',
-      answers.length > 0,
-    );
+    const q = await completePrayerContent(buildQuestionRequest('reflect', topic, asked, answers));
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('reflect', `кривой ответ: «${q}»`);
     return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(reflectPool));

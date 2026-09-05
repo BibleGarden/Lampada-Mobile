@@ -136,7 +136,7 @@ const reportSystemTimerError = (action: string, error: unknown) => {
 // Реплики для промпта — только с отдельным answer-context consent;
 // без него ответы и готовые расшифровки не покидают устройство.
 const answersForAi = (answers: Record<number, Answer>) =>
-  answerContextAllowedNow() ? replyTexts(answers) : [];
+  answerContextAllowedNow() ? answers : {};
 
 let prepareToken = 0;
 let reflectToken = 0;
@@ -187,13 +187,13 @@ const prepareQuestion = (
 };
 
 const reflectKey = (s: SessionState) =>
-  JSON.stringify([s.sessionId, s.topic, answersForAi(s.answers)]);
+  JSON.stringify([s.sessionId, s.topic, s.questions, answersForAi(s.answers)]);
 
 const prepareReflectQuestion = (s: SessionState) => {
   if (s.sessionId === null) return null;
   const key = reflectKey(s);
   return reflectPool.prepare(key, () =>
-    ai.generateReflectQuestion(s.topic, answersForAi(s.answers)),
+    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers)),
   );
 };
 
