@@ -339,6 +339,15 @@ the chosen language and translation only; on the first offline launch with an
 empty cache it offers to retry. The old bundled catalogue is never presented as
 the result of a server selection.
 
+## Application updates
+
+`components/UpdateGate.tsx` checks the installed native version once per root
+mount through `lib/versionCheck.ts`. The shared API receives `app=lampada`;
+only matching responses may trigger optional or mandatory update screens.
+The overlay sits above navigation and below `LockGate`, with accessible content
+isolation. Network errors leave the app usable. Lampada updates remain disabled
+server-side until its App Store listing is published. See ADR 0020.
+
 ## AI and privacy
 
 The app talks to a `bible-api` server endpoint which owns model routing, model

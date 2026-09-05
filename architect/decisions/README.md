@@ -42,3 +42,5 @@ An ADR is needed when a decision changes component boundaries, the storage or
 the movement of data, an external contract, a key dependency, privacy
 requirements, or the way the app is built and delivered. Small local
 implementation details do not need one.
+
+- [0020: Application-specific update checks](0020-application-version-check.md)

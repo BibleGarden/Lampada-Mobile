@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack, router, usePathname } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
@@ -24,6 +24,7 @@ import {
 import { useSettings } from '../lib/settings';
 import { useLock } from '../lib/lock';
 import LockGate from '../components/LockGate';
+import UpdateGate from '../components/UpdateGate';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 
@@ -50,6 +51,7 @@ function ReminderRouting() {
 }
 
 export default function RootLayout() {
+  const [updateVisible, setUpdateVisible] = useState(false);
   // настройки нужны до первой генерации вопросов — грузим при старте
   useEffect(() => {
     // Полный переплан при каждом запуске: текст уведомления уносится в систему
@@ -98,7 +100,7 @@ export default function RootLayout() {
           сиблинги навигации, а не её родитель, и пометить содержимое под ними
           больше неоткуда. Раскладку она не трогает: flex: 1 и никаких стилей
           сверх него. */}
-      <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered)}>
+      <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered || updateVisible)}>
         <Stack
           screenOptions={{
             headerShown: false,
@@ -116,6 +118,7 @@ export default function RootLayout() {
       </View>
       {/* Последним элементом, поверх всей навигации: экран блокировки и шторку
           приватности нельзя обойти ни переходом, ни диплинком. */}
+      <UpdateGate covered={covered} onVisibleChange={setUpdateVisible} />
       <LockGate />
     </GestureHandlerRootView>
   );

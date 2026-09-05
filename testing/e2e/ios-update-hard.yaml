@@ -1,0 +1,15 @@
+appId: twinkler
+---
+- tapOn:
+    text: Open
+    optional: true
+- assertVisible:
+    id: update-hard
+- assertNotVisible:
+    id: update-later
+- openLink: lampada://settings
+- tapOn:
+    text: Open
+    optional: true
+- assertVisible:
+    id: update-hard

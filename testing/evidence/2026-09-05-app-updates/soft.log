@@ -1,0 +1,15 @@
+Running on Lampada Update Checks - iOS 26.5 - 6074CCBD-7612-4B61-BAB5-1BD411DEE9D9
+ > Flow ios-update-soft
+Tap on (Optional) "Open"... WARNED
+
+
+ Warning: Element not found: Text matching regex: Open
+Assert that id: update-soft is visible... COMPLETED
+Tap on id: update-later... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Open lampada://settings... COMPLETED
+Tap on (Optional) "Open"... WARNED
+
+
+ Warning: Element not found: Text matching regex: Open
+Assert that id: update-soft is not visible... COMPLETED
