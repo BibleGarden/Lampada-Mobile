@@ -9,18 +9,25 @@ appId: twinkler
       visible: "Open"
     commands:
       - tapOn: "Open"
-- assertVisible: "Учитывать мои ответы"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-answer_context-allowed"
+    direction: DOWN
 - tapOn:
-    point: "86%,32%"
-- tapOn:
-    point: "10%,10%"
-- assertVisible: "Начать молитву"
-- tapOn: "Начать молитву"
+    id: "privacy-setting-answer_context-allowed"
+- openLink: "lampada://setup"
 - tapOn:
     point: "50%,37%"
 - inputText: "QA opt-in payload"
 - hideKeyboard
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - swipe:
     start: "50%,78%"
     end: "50%,78%"
@@ -32,6 +39,13 @@ appId: twinkler
 - inputText: "QA private answer"
 - tapOn:
     id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
 - assertVisible: "Изменить"
 - tapOn:
     point: "85%,77%"

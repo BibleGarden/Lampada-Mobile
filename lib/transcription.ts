@@ -2,6 +2,7 @@ import { fetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 import { deviceLocale, resolveTranscriptionUrl } from './transcriptionConfig';
 import { recordingFileIssue } from './recordingFile';
+import { audioTranscriptionAllowedNow } from './settings';
 
 const TRANSCRIPTION_URL = process.env.EXPO_PUBLIC_AI_TRANSCRIBE_URL;
 const QUESTION_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
@@ -13,6 +14,9 @@ export async function transcribeRecording(
   _durationSec?: number,
   signal?: AbortSignal,
 ): Promise<string> {
+  if (!audioTranscriptionAllowedNow()) {
+    throw new Error('Audio transcription consent is not allowed');
+  }
   const url = resolveTranscriptionUrl(TRANSCRIPTION_URL, QUESTION_URL);
   if (!url) throw new Error('Transcription proxy is not configured');
 

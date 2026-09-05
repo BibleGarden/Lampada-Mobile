@@ -47,6 +47,7 @@ Changes to the app are made against the documentation of
 | `components/` | Reusable visual and interactive components |
 | `components/AnswerSheet.tsx` | The text answer sheet and the coordination of the audio recording lifecycle |
 | `components/RecordingsSheet.tsx` | A separate sheet for recordings, the player and transcripts, on top of the answer |
+| `components/PrivacyConsentDialog.tsx` | The equal-weight first-use disclosure and allow/deny actions for an AI purpose |
 | `lib/store.ts` | The state and the scenario of a prayer session |
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
 | `lib/ai.ts` | Prompts, validation of the AI response and local degradation |
@@ -54,6 +55,7 @@ Changes to the app are made against the documentation of
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
 | `lib/settings.ts` | Privacy settings, the atomic save of the scripture choice and the reminder schedule |
+| `lib/privacyConsent.ts` | The versioned consent record, provider-contract identity and legacy migration rules |
 | `lib/lock.ts` | The PIN salt and hash in SecureStore, biometrics, the lock state and the full data wipe |
 | `lib/prayerReminders.ts` | The pure model of the reminder schedule: validation, WEEKLY triggers, the human-readable line, the phrase pool |
 | `lib/prayerReminderScheduler.ts` | The channel, the permission and the full rescheduling of local reminders through expo-notifications |
@@ -108,9 +110,9 @@ The main flows:
 
 ```text
 Screen → useSession → lib/db.ts → SQLite / local audio files
-                   ↘ lib/ai.ts → lib/llm.ts → bible-api → Gemini
+                   ↘ lib/ai.ts → lib/llm.ts → bible-api → company-hosted chat model
                                ↘ local curated fallback
-                   ↘ lib/transcription.ts → bible-api → Gemini
+                   ↘ lib/transcription.ts → bible-api → company-hosted speech model
                    ↘ lib/scriptureClient.ts → bible-api /api/ai/scripture
                                             ↘ lib/scriptureRepository.ts → SQLite
                    ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
@@ -337,31 +339,47 @@ the result of a server selection.
 
 ## AI and privacy
 
-The app talks to a `bible-api` server endpoint which holds the Google AI Studio
-key and the system prompt, and calls Gemini. The client sends only the `user`
+The app talks to a `bible-api` server endpoint which owns model routing, model
+credentials and system prompts. Chat and speech models run on infrastructure
+managed by the company; changing a stage's model is a server configuration
+change and does not alter the client contract. The client sends only the `user`
 field with the context of the particular question. Only public Expo variables -
 the URL and the limited proxy key - may be embedded into a client build; server
 secrets and system instructions are not put into the app.
 
-By default the person's replies are sent when generating the next questions, the
-reflection question and when selecting scripture. A reply is the typed text of an
-answer and the transcript of a voice recording: for the model a recording exists
-only as its transcript, the audio file never reaches this context. The
-composition and the order of the replies are defined by `lib/answerContext.ts`.
-The user can turn this transfer off with the "Use answers for quotes and
-questions" setting, stored in `meta.share_answers`: a missing value or `1` means
-the transfer happens, `0` forbids it. Separately from it, a voice recording is
-sent through `bible-api` to Gemini only when "Transcribe" is pressed explicitly;
-the device locale serves as a soft hint for a verbatim transcript in the original
-language. `bible-api` does not store the written answers, the audio file or the
-text of the transcript, and the client saves the received transcript locally next
-to the recording.
+Three independent SQLite records gate prayer-content transfers (ADR-0017): core
+prayer AI for the topic, answer context for typed answers and finished
+transcripts, and audio transcription for one selected M4A file. Every record has
+an `undecided`, `allowed` or `denied` decision, the disclosure version and the
+provider-contract identity. Missing, malformed, obsolete and legacy permissive
+values resolve to `undecided`; the old `share_answers=0` is retained as an
+answer-context denial. Settings expose every decision separately.
 
-Before the first scripture request the privacy setting is always loaded from
-SQLite. The decision to include `user_replies` is made in a single request
-builder; on opt-out the field is absent from the serialized body. The topic, the
-answers, the text, the title, the reference and the `canonical_id` are not written
-into analytics or crash logs.
+Before the first core AI use, the setup flow names the application server,
+company-managed model infrastructure and the purposes of sending the topic.
+Without an allowance, question
+generation uses the curated local pools and scripture selection sends neither
+`topic` nor `user_replies`, while the non-contextual server safe pool remains
+available. Core permission does not open the answer gate. The first saved answer
+that could affect another request gets its own disclosure; the request builder
+includes its text and completed transcripts only when both gates are open. The
+composition, limits and ordering are defined by `lib/answerContext.ts` and
+`lib/scripture.ts`.
+
+Pressing "Transcribe" requests the feature but is not consent. The first attempt
+explains that the selected audio file goes through Bible API to a speech model on
+company-managed infrastructure only for a verbatim transcript. The UI checks the decision before it starts, and
+`lib/transcription.ts` repeats the gate before opening or uploading the local
+file. The device locale remains a soft language hint. The returned transcript is
+local data and needs the separate answer-context consent before it can be sent in
+a later prompt.
+
+The settings store is loaded before a first-use decision or a session network
+request. Withdrawal closes the in-memory gate immediately and persists the new
+record before the settings action completes, so the next request observes it.
+`bible-api` does not store the topic, written answers, audio or transcript. Prayer
+content and derived identifiers are not written into analytics, diagnostics or
+crash logs.
 
 ## Checks and operational sources
 

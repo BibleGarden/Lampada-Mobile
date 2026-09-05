@@ -11,6 +11,13 @@ appId: twinkler
 - hideKeyboard
 - tapOn: "5"
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - swipe:
     start: "50%,78%"
     end: "50%,78%"
@@ -22,6 +29,13 @@ appId: twinkler
 - inputText: "ANS-001 сохранённый текст"
 - tapOn:
     id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
 - assertVisible: "Изменить"
 - tapOn: "Изменить"
 - takeScreenshot: ANS-001-restored-text

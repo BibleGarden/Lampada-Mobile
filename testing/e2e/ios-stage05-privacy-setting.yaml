@@ -4,12 +4,38 @@ appId: twinkler
     stopApp: true
     clearState: true
 - openLink: "lampada://settings"
-- assertVisible: "Использовать ответы для цитат и вопросов"
-- assertVisible: "Текст ваших ответов будет отправляться.*"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-core_prayer_ai"
+    direction: DOWN
+- assertVisible:
+    id: "privacy-setting-core_prayer_ai"
+- assertVisible:
+    id: "privacy-setting-answer_context"
 - tapOn:
-    id: "share-answers-toggle"
-- assertVisible: "Текст ваших ответов не будет передаваться.*"
+    id: "privacy-setting-core_prayer_ai-allowed"
+- tapOn:
+    id: "privacy-setting-answer_context-denied"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-audio_transcription"
+    direction: DOWN
+- tapOn:
+    id: "privacy-setting-audio_transcription-allowed"
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
-- assertVisible: "Текст ваших ответов не будет передаваться.*"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-core_prayer_ai-allowed"
+    direction: DOWN
+- assertVisible:
+    id: "privacy-setting-core_prayer_ai-allowed"
+- assertVisible:
+    id: "privacy-setting-answer_context-denied"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-audio_transcription-allowed"
+    direction: DOWN
+- assertVisible:
+    id: "privacy-setting-audio_transcription-allowed"

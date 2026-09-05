@@ -11,7 +11,9 @@ cd "$(dirname "$0")/.."
 TEAM="${TEAM:-4SC2JCE37N}"                 # Maria Novikov (платная)
 BUNDLE="${BUNDLE:-twinkler}"
 WS="ios/Twinkler.xcworkspace"
-APP="ios/build/Build/Products/Release-iphoneos/Twinkler.app"
+BUILD_DIR="$(pwd -P)/ios/build"
+MODULE_CACHE="$BUILD_DIR/ModuleCache.noindex"
+APP="$BUILD_DIR/Build/Products/Release-iphoneos/Twinkler.app"
 
 echo "▶︎ Проверяю runtime-переменные для локальной Release-сборки…"
 bash scripts/check-runtime-env.sh local
@@ -28,13 +30,24 @@ echo "▶︎ Синхронизирую CocoaPods…"
 npx pod-install ios
 
 # --- определяем телефон -------------------------------------------------
-# Спрашиваем у самого xcodebuild реально доступные для сборки устройства
-# и берём физический iOS-девайс (не Mac, не симулятор, не placeholder).
+# xcdevice отдаёт modelCode, поэтому iPad не попадёт под выбор,
+# даже если владелец переименовал iPhone.
 DEVICE="${DEVICE:-}"
 if [ -z "$DEVICE" ]; then
-  DEVICE=$(xcrun xcodebuild -workspace "$WS" -scheme Twinkler -showdestinations 2>/dev/null \
-    | grep 'platform:iOS,' | grep -v placeholder \
-    | grep -Eo 'id:[0-9A-Fa-f-]+' | head -1 | cut -d: -f2-)
+  DEVICE=$(xcrun xcdevice list 2>/dev/null | node -e '
+    let input = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => { input += chunk; });
+    process.stdin.on("end", () => {
+      const device = JSON.parse(input).find((candidate) =>
+        candidate.simulator === false &&
+        candidate.available === true &&
+        candidate.platform === "com.apple.platform.iphoneos" &&
+        candidate.modelCode?.startsWith("iPhone")
+      );
+      if (device) process.stdout.write(device.identifier);
+    });
+  ')
 fi
 if [ -z "$DEVICE" ]; then
   echo "✗ Не нашёл подключённый iPhone. Подключи кабелем, разблокируй, доверься компьютеру." >&2
@@ -42,6 +55,16 @@ if [ -z "$DEVICE" ]; then
   exit 1
 fi
 echo "▶︎ Устройство: $DEVICE"
+
+# PCM хранит абсолютный путь. После переноса репозитория Xcode не
+# может импортировать SwiftShims, пока старый module cache не удалён.
+if [ -d "$MODULE_CACHE" ]; then
+  PCM_SAMPLE=$(find "$MODULE_CACHE" -type f -name '*.pcm' -print -quit)
+  if [ -n "$PCM_SAMPLE" ] && ! strings "$PCM_SAMPLE" | grep -F "$MODULE_CACHE/" >/dev/null; then
+    echo "▶︎ Сбрасываю module cache от прежнего пути проекта…"
+    find "$MODULE_CACHE" -depth -delete
+  fi
+fi
 
 # prebuild иногда сбрасывает DEVELOPMENT_TEAM — принудительно ставим нужную
 if [ -f ios/Twinkler.xcodeproj/project.pbxproj ]; then
@@ -53,7 +76,7 @@ fi
 echo "▶︎ Сборка Release…"
 xcrun xcodebuild -workspace "$WS" -scheme Twinkler \
   -configuration Release -destination "id=$DEVICE" \
-  -allowProvisioningUpdates -derivedDataPath ios/build \
+  -allowProvisioningUpdates -derivedDataPath "$BUILD_DIR" \
   DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic build
 
 echo "▶︎ Установка на iPhone…"

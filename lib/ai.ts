@@ -5,7 +5,8 @@
 // откатывает на курируемые пулы из прототипа. Молитва важнее генерации —
 // экраны никогда не ждут ИИ дольше таймаута и никогда не видят ошибку.
 
-import { complete, completeJson, llmConfigured } from './llm';
+import { completePrayerContent, llmConfigured } from './llm';
+import { coreAiAllowedNow } from './settings';
 
 export type QuestionSource = 'ai' | 'fallback';
 export type GeneratedQuestion = { text: string; source: QuestionSource };
@@ -65,9 +66,9 @@ const isQuestion = (q: unknown): q is string =>
  * пополняется по ходу молитвы и пересобирается после нового ответа.
  */
 export async function generateFirstQuestion(topic: string): Promise<GeneratedQuestion> {
-  if (!llmConfigured()) return fromFallback(pickRandom(curatedQuestions));
+  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(curatedQuestions));
   try {
-    const q = await complete(
+    const q = await completePrayerContent(
       (topic.trim()
         ? `Человек начинает молитву. Его цель: «${topic.trim()}».\n`
         : 'Человек начинает молитву без конкретной темы.\n') +
@@ -85,8 +86,8 @@ export async function generateFirstQuestion(topic: string): Promise<GeneratedQue
 
 /**
  * Один новый вопрос, не повторяющий уже заданные.
- * answers передаются только если человек разрешил это в настройках
- * («Использовать ответы для цитат и вопросов») — иначе вызывающий обязан передать [].
+ * answers передаются только при отдельном answer-context consent — иначе
+ * вызывающий обязан передать [], а transport повторно проверит gate.
  */
 export async function generateQuestion(
   topic: string,
@@ -94,9 +95,9 @@ export async function generateQuestion(
   answers: string[] = [],
 ): Promise<GeneratedQuestion> {
   const fallback = () => fromFallback(pickFallbackQuestion(asked));
-  if (!llmConfigured()) return fallback();
+  if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
-    const q = await complete(
+    const q = await completePrayerContent(
       (topic.trim() ? `Цель молитвы: «${topic.trim()}».\n` : 'Молитва без конкретной темы.\n') +
         `Уже прозвучали вопросы:\n${asked.map((a) => `— ${a}`).join('\n')}\n` +
         (answers.length
@@ -104,6 +105,7 @@ export async function generateQuestion(
           : '') +
         'Задай один новый вопрос, который смотрит на ситуацию с другой стороны и не повторяет прозвучавшие. ' +
         'Ответь только текстом вопроса, без кавычек и пояснений.',
+      answers.length > 0,
     );
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('question', `кривой ответ: «${q}»`);
@@ -119,9 +121,9 @@ export async function generateReflectQuestion(
   topic: string,
   answers: string[],
 ): Promise<GeneratedQuestion> {
-  if (!llmConfigured()) return fromFallback(pickRandom(reflectPool));
+  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(reflectPool));
   try {
-    const q = await complete(
+    const q = await completePrayerContent(
       'Молитва закончилась, человек готов записать один вывод.\n' +
         (topic.trim() ? `Цель была: «${topic.trim()}».\n` : '') +
         (answers.length
@@ -129,6 +131,7 @@ export async function generateReflectQuestion(
           : 'Он молился молча, письменных ответов нет.\n') +
         'Задай один тёплый итоговый вопрос, который поможет ему назвать главное из этой молитвы. ' +
         'Не цитируй его ответы дословно. Ответь только текстом вопроса.',
+      answers.length > 0,
     );
     const clean = tidy(q);
     if (!isQuestion(clean)) warn('reflect', `кривой ответ: «${q}»`);

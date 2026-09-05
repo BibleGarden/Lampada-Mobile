@@ -1,6 +1,8 @@
 # ADR-0003: Contextual server-side scripture selection
 
-- Status: Partly superseded by ADR-0004 (item 8 and the related consequence)
+- Status: Partly superseded by ADR-0004, ADR-0007 and ADR-0017
+- Note 2026-09-03: ADR-0017 replaces item 7's permissive `share_answers`
+  setting with independent versioned core-AI and answer-context gates
 - Note 2026-08-30: the path of the method was renamed to
   `POST /api/ai/scripture`; the decision and the contract did not change, the
   historical text below is kept as it was

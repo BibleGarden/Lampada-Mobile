@@ -6,6 +6,13 @@ appId: twinkler
 - assertVisible: "Начать молитву"
 - tapOn: "Начать молитву"
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - swipe:
     start: "50%,78%"
     end: "50%,78%"

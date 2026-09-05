@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   FlatList,
   Keyboard,
   Modal,
@@ -24,7 +25,9 @@ import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
 import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
+import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 // «5 июля», «5 июля 2025» — год только если не текущий
 const MONTHS = [
@@ -78,6 +81,8 @@ export default function Journal() {
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const detailRequest = useRef(0);
   const transcriptionControllers = useRef(new Map<number, AbortController>());
+  const pendingConsentRecording = useRef<db.JournalDetail['recordings'][number] | null>(null);
+  const [audioConsentOpen, setAudioConsentOpen] = useState(false);
   const [transcriptionStates, setTranscriptionStates] = useState<
     Record<number, 'loading' | 'error'>
   >({});
@@ -146,7 +151,7 @@ export default function Journal() {
     }
   }, [openId, playingUri, player]);
 
-  const startJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
+  const runJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
     transcriptionControllers.current.get(recording.id)?.abort();
     const controller = new AbortController();
     transcriptionControllers.current.set(recording.id, controller);
@@ -188,6 +193,32 @@ export default function Journal() {
         transcriptionControllers.current.delete(recording.id);
       }
     }
+  };
+
+  const startJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
+    await ensureSettingsLoaded();
+    const decision = useSettings.getState().audioTranscriptionConsent;
+    if (decision === 'undecided') {
+      pendingConsentRecording.current = recording;
+      setAudioConsentOpen(true);
+      return;
+    }
+    if (decision === 'denied') {
+      Alert.alert(
+        'Расшифровка отключена',
+        'Разрешение можно изменить в настройках конфиденциальности.',
+      );
+      return;
+    }
+    await runJournalTranscription(recording);
+  };
+
+  const decideAudioConsent = async (decision: 'allowed' | 'denied') => {
+    await useSettings.getState().setConsent('audio_transcription', decision);
+    const recording = pendingConsentRecording.current;
+    pendingConsentRecording.current = null;
+    setAudioConsentOpen(false);
+    if (decision === 'allowed' && recording) await runJournalTranscription(recording);
   };
 
   const togglePlay = (uri: string) => {
@@ -439,6 +470,15 @@ export default function Journal() {
           </Pressable>
         </Pressable>
       </Modal>
+      <PrivacyConsentDialog
+        visible={audioConsentOpen}
+        purpose="audio_transcription"
+        onDismiss={() => {
+          pendingConsentRecording.current = null;
+          setAudioConsentOpen(false);
+        }}
+        onDecision={decideAudioConsent}
+      />
     </View>
   );
 }

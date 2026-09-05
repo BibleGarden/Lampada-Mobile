@@ -1,0 +1,28 @@
+appId: twinkler
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "PRV first use"
+- hideKeyboard
+- tapOn: "Далее"
+- assertVisible:
+    id: "privacy-consent-core_prayer_ai"
+- assertVisible: "Тема молитвы будет отправлена.*управляемом компанией сервере.*"
+- assertVisible:
+    id: "privacy-consent-core_prayer_ai-deny"
+- assertVisible:
+    id: "privacy-consent-core_prayer_ai-allow"
+- tapOn:
+    id: "privacy-consent-core_prayer_ai-deny"
+- assertVisible: "Прежде чем войти"
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-core_prayer_ai"
+    direction: DOWN
+- assertVisible:
+    id: "privacy-setting-core_prayer_ai-denied"

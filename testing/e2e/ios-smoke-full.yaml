@@ -16,6 +16,13 @@ appId: twinkler
 - assertVisible: "Финальный smoke"
 - tapOn: "5"
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - assertVisible: ".*5 минут.*финальный smoke.*"
 - swipe:
     start: "50%,78%"
@@ -47,6 +54,13 @@ appId: twinkler
 # Кнопки шторки видны и с открытой клавиатурой, гасить её отдельно не нужно.
 - tapOn:
     id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
 - assertVisible: "Изменить"
 - tapOn:
     point: "10%,11%"

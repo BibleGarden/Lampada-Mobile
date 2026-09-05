@@ -3,9 +3,10 @@ import * as ai from './ai';
 import { replyTexts } from './answerContext';
 import * as db from './db';
 import {
+  answerContextAllowedNow,
+  coreAiAllowedNow,
   ensureSettingsLoaded,
   scripturePreferencesNow,
-  shareAnswersNow,
 } from './settings';
 import type { ScriptureLanguage } from './scripture';
 import { createOneAheadPool } from './oneAheadPool';
@@ -132,10 +133,10 @@ const reportSystemTimerError = (action: string, error: unknown) => {
   );
 };
 
-// реплики для промпта — только с разрешения из настроек
-// («Использовать ответы для цитат и вопросов»); без него ответы не покидают устройство
+// Реплики для промпта — только с отдельным answer-context consent;
+// без него ответы и готовые расшифровки не покидают устройство.
 const answersForAi = (answers: Record<number, Answer>) =>
-  shareAnswersNow() ? replyTexts(answers) : [];
+  answerContextAllowedNow() ? replyTexts(answers) : [];
 
 let prepareToken = 0;
 let reflectToken = 0;
@@ -222,7 +223,8 @@ const loadScriptureForState = async (
     translation: s.scriptureTranslation,
     topic: s.topic,
     replies: replyTexts(s.answers),
-    shareReplies: shareAnswersNow(),
+    shareTopic: coreAiAllowedNow(),
+    shareReplies: coreAiAllowedNow() && answerContextAllowedNow(),
     shownCanonicalIds,
   });
   const result = foreground

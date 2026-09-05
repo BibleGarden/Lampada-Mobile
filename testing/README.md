@@ -9,7 +9,7 @@ duplicated here, otherwise the two pictures drift apart.
 | Path | Contents | Does it change |
 | --- | --- | --- |
 | [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
-| `e2e/` | Executable Maestro scenarios, 63 flows | Living |
+| `e2e/` | Executable Maestro scenarios, 65 flows | Living |
 | `reports/` | Dated results of runs | Immutable: a new run means a new file |
 | `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |
 

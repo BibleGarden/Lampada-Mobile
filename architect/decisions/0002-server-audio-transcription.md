@@ -1,6 +1,6 @@
 # ADR-0002: Transcribe voice answers through the server-side Gemini proxy
 
-- Status: Accepted
+- Status: Partly superseded by ADR-0017
 - Date: 2026-08-23
 - Participants: product owner, project team
 
@@ -22,10 +22,12 @@ only. The device locale is used as a soft hint, not as a restriction or a comman
 to translate.
 
 Without the press the audio never leaves the device and no Gemini tokens are
-spent. Neither the audio nor the transcript is stored on the app server or
-written into its logs. The local audio file is saved regardless of whether the
-request succeeds. The received text can be corrected, after which it is stored in
-SQLite, shown in the journal and included in the local search.
+spent. ADR-0017 additionally requires a separate current transcription consent:
+the press requests the feature but is not itself informed consent. Neither the
+audio nor the transcript is stored on the app server or written into its logs.
+The local audio file is saved regardless of whether the request succeeds. The
+received text is stored in SQLite, shown in the journal and included in the
+local search.
 
 ## Options considered
 

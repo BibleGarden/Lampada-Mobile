@@ -1,0 +1,54 @@
+appId: twinkler
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "PRV audio consent"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- tapOn:
+    id: "privacy-consent-core_prayer_ai-deny"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recording-transcribe-0"
+- assertVisible:
+    id: "privacy-consent-audio_transcription"
+- assertVisible: "Выбранный аудиофайл будет отправлен.*управляемом компанией сервере.*"
+- assertVisible:
+    id: "privacy-consent-audio_transcription-deny"
+- assertVisible:
+    id: "privacy-consent-audio_transcription-allow"
+- tapOn:
+    id: "privacy-consent-audio_transcription-deny"
+- assertVisible:
+    id: "recording-transcribe-0"
+- assertNotVisible: "Расшифровываю…"
+- tapOn:
+    id: "recording-transcribe-0"
+- assertVisible: "Расшифровка отключена в настройках конфиденциальности"

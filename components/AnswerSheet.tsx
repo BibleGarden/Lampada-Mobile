@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AppState,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -23,6 +24,12 @@ import {
 import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import {
+  answerContextAllowedNow,
+  coreAiAllowedNow,
+  ensureSettingsLoaded,
+  useSettings,
+} from '../lib/settings';
+import {
   recordingDurationMillis,
   recordingFileIssue,
   waitForRecordingFile,
@@ -44,6 +51,7 @@ import { screenReaderHiddenProps } from '../lib/a11y';
 import { waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
+import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
@@ -107,6 +115,8 @@ export default function AnswerSheet({
     'idle' | 'starting' | 'recording' | 'stopping'
   >('idle');
   const [saving, setSaving] = useState(false);
+  const [answerConsentOpen, setAnswerConsentOpen] = useState(false);
+  const [audioConsentOpen, setAudioConsentOpen] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
@@ -115,6 +125,7 @@ export default function AnswerSheet({
   const pendingTranscriptions = useRef(
     new Map<number, { controller: AbortController; promise: Promise<void> }>(),
   );
+  const pendingConsentRecording = useRef<RecordingDraft | null>(null);
   // Не даём keyboardDidHide вернуть шторку на 62% после старта записи.
   const recordingOverlayActiveRef = useRef(false);
   // Только эти файлы принадлежат текущему несохранённому черновику. Записи,
@@ -204,7 +215,7 @@ export default function AnswerSheet({
     pendingTranscriptions.current.clear();
   }, []);
 
-  const startTranscription = useCallback(
+  const runTranscription = useCallback(
     (recording: RecordingDraft) => {
       if (savingRef.current) return;
       pendingTranscriptions.current.get(recording.id)?.controller.abort();
@@ -246,8 +257,35 @@ export default function AnswerSheet({
 
       pendingTranscriptions.current.set(recording.id, { controller, promise });
     },
-    [updateRecs, sheetRef],
+    [updateRecs],
   );
+
+  const startTranscription = useCallback(
+    async (recording: RecordingDraft) => {
+      if (savingRef.current) return;
+      await ensureSettingsLoaded();
+      const decision = useSettings.getState().audioTranscriptionConsent;
+      if (decision === 'undecided') {
+        pendingConsentRecording.current = recording;
+        setAudioConsentOpen(true);
+        return;
+      }
+      if (decision === 'denied') {
+        setAudioError('Расшифровка отключена в настройках конфиденциальности');
+        return;
+      }
+      runTranscription(recording);
+    },
+    [runTranscription],
+  );
+
+  const decideAudioConsent = useCallback(async (decision: 'allowed' | 'denied') => {
+    await useSettings.getState().setConsent('audio_transcription', decision);
+    const recording = pendingConsentRecording.current;
+    pendingConsentRecording.current = null;
+    setAudioConsentOpen(false);
+    if (decision === 'allowed' && recording) runTranscription(recording);
+  }, [runTranscription]);
 
   // Убрать расшифровку: карточка возвращается к одной строке, а кнопка
   // «Расшифровать» — на место. Сама запись остаётся.
@@ -762,6 +800,18 @@ export default function AnswerSheet({
       await Promise.allSettled(
         [...pendingTranscriptions.current.values()].map((pending) => pending.promise),
       );
+      const hasAnswerContext = !!text.trim() || recsRef.current.some((recording) =>
+        !!recording.transcript?.trim(),
+      );
+      if (
+        hasAnswerContext &&
+        coreAiAllowedNow() &&
+        !answerContextAllowedNow() &&
+        useSettings.getState().answerContextConsent === 'undecided'
+      ) {
+        setAnswerConsentOpen(true);
+        return;
+      }
       saveAnswerToStore(answerIndexRef.current, text, recsRef.current);
       // После сохранения файлы принадлежат ответу и больше не являются черновиком.
       unsavedRecordingUris.current.clear();
@@ -775,6 +825,12 @@ export default function AnswerSheet({
       savingRef.current = false;
       setSaving(false);
     }
+  };
+
+  const decideAnswerConsent = async (decision: 'allowed' | 'denied') => {
+    await useSettings.getState().setConsent('answer_context', decision);
+    setAnswerConsentOpen(false);
+    if (AppState.currentState === 'active') await save();
   };
 
   // «Отмена» с подтверждением: несохранённый контент не выбрасываем молча
@@ -1006,11 +1062,26 @@ export default function AnswerSheet({
       onStopRecording={stopRecordingFromUi}
       onTogglePlay={togglePlay}
       onDelete={askOrConfirmDelete}
-      onTranscribe={startTranscription}
+      onTranscribe={(recording) => void startTranscription(recording)}
       onRemoveTranscript={removeTranscript}
       onToggleTranscript={toggleTranscript}
       onAppendToAnswer={appendTranscriptToAnswer}
       onDismiss={handleRecordingsDismiss}
+    />
+    <PrivacyConsentDialog
+      visible={answerConsentOpen}
+      purpose="answer_context"
+      onDismiss={() => setAnswerConsentOpen(false)}
+      onDecision={decideAnswerConsent}
+    />
+    <PrivacyConsentDialog
+      visible={audioConsentOpen}
+      purpose="audio_transcription"
+      onDismiss={() => {
+        pendingConsentRecording.current = null;
+        setAudioConsentOpen(false);
+      }}
+      onDecision={decideAudioConsent}
     />
     </>
   );

@@ -104,16 +104,17 @@ export function buildScriptureRequest(input: {
   translation?: number;
   topic: string;
   replies: readonly string[];
+  shareTopic: boolean;
   shareReplies: boolean;
   shownCanonicalIds: readonly string[];
 }): ScriptureRequest {
   const request: ScriptureRequest = {
     language: input.language,
-    topic: limitCharacters(input.topic, 500),
   };
+  if (input.shareTopic) request.topic = limitCharacters(input.topic, 500);
   if (input.translation !== undefined) request.translation = input.translation;
 
-  if (input.shareReplies) {
+  if (input.shareTopic && input.shareReplies) {
     const replies: string[] = [];
     let total = 0;
     for (const raw of input.replies) {

@@ -25,12 +25,12 @@ Maestro flows the `appId` of the custom build is `twinkler`, not
 ## AI
 
 AI requests go through `https://api.bible.garden/api/ai/question` to an existing
-FastAPI service. It holds the Google AI Studio key and calls Gemini; neither the
-Google key nor the system instructions are embedded into the app. To enable AI,
-copy `.env.example` to `.env.local` and set the client `X-API-Key` of the
-service. That client key is visible in the built app and does not replace the
-server-side limits. Voice answers are sent only when "Transcribe" is pressed, as
-a separate request to `/api/ai/transcribe`; the URL is set through
+FastAPI service. It routes each stage to a company-hosted model; neither model
+configuration nor system instructions are embedded into the app. To enable AI,
+copy `.env.example` to `.env.local` and set the client `X-API-Key` of the service.
+That client key is visible in the built app and does not replace the server-side
+limits. Voice answers are sent only when "Transcribe" is pressed, as a separate
+request to `/api/ai/transcribe`; the URL is set through
 `EXPO_PUBLIC_AI_TRANSCRIBE_URL` or derived from the `/api/ai/question` URL.
 
 > The app uses native modules that Expo Go does not have

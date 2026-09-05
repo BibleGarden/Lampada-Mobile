@@ -17,28 +17,45 @@ import {
   parseStoredReminderSchedule,
   type ReminderSchedule,
 } from './prayerReminders';
+import {
+  consentAllowsTransfer,
+  resolveConsentDecision,
+  serializeConsentRecord,
+  type ConsentDecision,
+  type ConsentPurpose,
+} from './privacyConsent';
 
 // Настройки приложения; хранятся в таблице meta (key/value).
 //
-// shareAnswers управляет только передачей письменных ответов в контекст
-// следующих вопросов. Голосовая запись отправляется на расшифровку только
-// после отдельного действия пользователя.
+// Каждая передача молитвенного контента имеет независимое versioned-согласие.
+// Отсутствие записи и старые разрешающие значения никогда не означают consent.
+
+const CONSENT_KEYS: Record<ConsentPurpose, string> = {
+  core_prayer_ai: 'privacy_consent_core_prayer_ai',
+  answer_context: 'privacy_consent_answer_context',
+  audio_transcription: 'privacy_consent_audio_transcription',
+};
 
 type SettingsState = {
-  shareAnswers: boolean;
+  coreAiConsent: ConsentDecision;
+  answerContextConsent: ConsentDecision;
+  audioTranscriptionConsent: ConsentDecision;
   scripturePreferences: ScripturePreferences;
   reminderSchedule: ReminderSchedule;
   loaded: boolean;
   load: () => Promise<void>;
-  setShareAnswers: (v: boolean) => Promise<void>;
+  setConsent: (purpose: ConsentPurpose, decision: Exclude<ConsentDecision, 'undecided'>) => Promise<void>;
   setScripturePreferences: (preferences: ScripturePreferences) => Promise<void>;
   setReminderSchedule: (schedule: ReminderSchedule) => Promise<void>;
 };
 
 let loadPromise: Promise<void> | null = null;
+let consentSavePromise: Promise<void> = Promise.resolve();
 
 export const useSettings = create<SettingsState>((set) => ({
-  shareAnswers: true,
+  coreAiConsent: 'undecided',
+  answerContextConsent: 'undecided',
+  audioTranscriptionConsent: 'undecided',
   scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
   reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
   loaded: false,
@@ -48,7 +65,16 @@ export const useSettings = create<SettingsState>((set) => ({
     if (!loadPromise) {
       loadPromise = (async () => {
         const d = await getDb();
-        const [shareRow, scriptureRow, remindersRow] = await Promise.all([
+        const [coreRow, answerRow, audioRow, legacyShareRow, scriptureRow, remindersRow] = await Promise.all([
+          d.getFirstAsync<{ value: string }>(
+            `SELECT value FROM meta WHERE key = '${CONSENT_KEYS.core_prayer_ai}'`,
+          ),
+          d.getFirstAsync<{ value: string }>(
+            `SELECT value FROM meta WHERE key = '${CONSENT_KEYS.answer_context}'`,
+          ),
+          d.getFirstAsync<{ value: string }>(
+            `SELECT value FROM meta WHERE key = '${CONSENT_KEYS.audio_transcription}'`,
+          ),
           d.getFirstAsync<{ value: string }>(
             "SELECT value FROM meta WHERE key = 'share_answers'",
           ),
@@ -59,8 +85,34 @@ export const useSettings = create<SettingsState>((set) => ({
             "SELECT value FROM meta WHERE key = 'prayer_reminders'",
           ),
         ]);
-        // Для новых установок записи ещё нет — используем включённое значение
-        // по умолчанию. Явно сохранённый "0" остаётся выбором пользователя.
+        const coreAiConsent = resolveConsentDecision(coreRow?.value ?? null);
+        const answerContextConsent = resolveConsentDecision(
+          answerRow?.value ?? null,
+          legacyShareRow?.value ?? null,
+        );
+        const audioTranscriptionConsent = resolveConsentDecision(audioRow?.value ?? null);
+        // Нормализуем отсутствующие, malformed и obsolete записи сразу. Так
+        // последующие чтения не зависят от legacy-ключа и версии приложения.
+        await Promise.all([
+          d.runAsync(
+            `INSERT INTO meta (key, value) VALUES (?, ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+            CONSENT_KEYS.core_prayer_ai,
+            serializeConsentRecord(coreAiConsent),
+          ),
+          d.runAsync(
+            `INSERT INTO meta (key, value) VALUES (?, ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+            CONSENT_KEYS.answer_context,
+            serializeConsentRecord(answerContextConsent),
+          ),
+          d.runAsync(
+            `INSERT INTO meta (key, value) VALUES (?, ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+            CONSENT_KEYS.audio_transcription,
+            serializeConsentRecord(audioTranscriptionConsent),
+          ),
+        ]);
         const storedPreferences = parseStoredScripturePreferences(scriptureRow?.value ?? null);
         let scripturePreferences = storedPreferences;
         if (!scripturePreferences) {
@@ -83,7 +135,9 @@ export const useSettings = create<SettingsState>((set) => ({
           );
         }
         set({
-          shareAnswers: shareRow?.value !== '0',
+          coreAiConsent,
+          answerContextConsent,
+          audioTranscriptionConsent,
           scripturePreferences,
           // Расписание по умолчанию статично, поэтому его отсутствие не нужно
           // дописывать в meta: запись появится с первой правкой пользователя.
@@ -99,14 +153,33 @@ export const useSettings = create<SettingsState>((set) => ({
     await loadPromise;
   },
 
-  setShareAnswers: async (v) => {
-    set({ shareAnswers: v }); // мгновенно для UI, запись — следом
-    const d = await getDb();
-    await d.runAsync(
-      `INSERT INTO meta (key, value) VALUES ('share_answers', ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-      v ? '1' : '0',
-    );
+  setConsent: async (purpose, decision) => {
+    const stateKey = purpose === 'core_prayer_ai'
+      ? 'coreAiConsent'
+      : purpose === 'answer_context'
+        ? 'answerContextConsent'
+        : 'audioTranscriptionConsent';
+    const previousDecision = useSettings.getState()[stateKey];
+    // Сначала закрываем барьер в памяти: отзыв уже действует для следующего
+    // request builder, даже пока SQLite завершает запись.
+    set({ [stateKey]: decision } as Pick<SettingsState, typeof stateKey>);
+    consentSavePromise = consentSavePromise.catch(() => undefined).then(async () => {
+      const d = await getDb();
+      await d.runAsync(
+        `INSERT INTO meta (key, value) VALUES (?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        CONSENT_KEYS[purpose],
+        serializeConsentRecord(decision),
+      );
+    });
+    try {
+      await consentSavePromise;
+    } catch (error) {
+      if (useSettings.getState()[stateKey] === decision) {
+        set({ [stateKey]: previousDecision } as Pick<SettingsState, typeof stateKey>);
+      }
+      throw error;
+    }
   },
 
   setScripturePreferences: async (preferences) => {
@@ -142,16 +215,26 @@ export const useSettings = create<SettingsState>((set) => ({
  */
 export const resetSettingsStore = () => {
   loadPromise = null;
+  consentSavePromise = Promise.resolve();
   useSettings.setState({
-    shareAnswers: true,
+    coreAiConsent: 'undecided',
+    answerContextConsent: 'undecided',
+    audioTranscriptionConsent: 'undecided',
     scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
     reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
     loaded: false,
   });
 };
 
-/** Текущее значение для не-React кода (store), без подписки */
-export const shareAnswersNow = () => useSettings.getState().shareAnswers;
+/** Текущие privacy-барьеры для не-React кода, без подписки. */
+export const coreAiAllowedNow = () =>
+  consentAllowsTransfer(useSettings.getState().coreAiConsent);
+
+export const answerContextAllowedNow = () =>
+  consentAllowsTransfer(useSettings.getState().answerContextConsent);
+
+export const audioTranscriptionAllowedNow = () =>
+  consentAllowsTransfer(useSettings.getState().audioTranscriptionConsent);
 
 /** Current validated Bible selection for non-React request code. */
 export const scripturePreferencesNow = () => useSettings.getState().scripturePreferences;

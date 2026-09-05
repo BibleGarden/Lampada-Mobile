@@ -53,6 +53,7 @@ import {
   type BiometryInfo,
 } from '../lib/lock';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
 
@@ -90,6 +91,60 @@ function Toggle({ value, label, testID, onChange }: {
     >
       <View style={[styles.knob, value && styles.knobOn]} />
     </Pressable>
+  );
+}
+
+function ConsentSetting({
+  title,
+  description,
+  decision,
+  purpose,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  decision: ConsentDecision;
+  purpose: ConsentPurpose;
+  onChange: (purpose: ConsentPurpose, decision: 'allowed' | 'denied') => Promise<void>;
+}) {
+  const styles = useStyles(stylesFactory);
+  return (
+    <View style={styles.consentSetting} testID={`privacy-setting-${purpose}`}>
+      <Text style={styles.rowTitle}>{title}</Text>
+      <Text style={[styles.settingHint, styles.shareAnswersHint]}>{description}</Text>
+      <View style={styles.consentActions}>
+        {([
+          { decision: 'denied' as const, label: 'Не передавать' },
+          { decision: 'allowed' as const, label: 'Разрешить' },
+        ]).map((option) => {
+          const selected = decision === option.decision;
+          return (
+            <Pressable
+              key={option.decision}
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              testID={`privacy-setting-${purpose}-${option.decision}`}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                void onChange(purpose, option.decision);
+              }}
+              style={({ pressed }) => [
+                styles.consentAction,
+                selected && styles.consentActionSelected,
+                pressed && styles.optionPressed,
+              ]}
+            >
+              <Text style={[styles.consentActionText, selected && styles.consentActionTextSelected]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {decision === 'undecided' ? (
+        <Text style={styles.consentUndecided}>Решение ещё не принято</Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -227,8 +282,9 @@ export default function Settings() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const {
-    shareAnswers, scripturePreferences, reminderSchedule,
-    load, setShareAnswers, setScripturePreferences, setReminderSchedule,
+    coreAiConsent, answerContextConsent, audioTranscriptionConsent,
+    scripturePreferences, reminderSchedule,
+    load, setConsent, setScripturePreferences, setReminderSchedule,
   } = useSettings();
   const lockEnabled = useLock((s) => s.enabled);
   const biometricsEnabled = useLock((s) => s.biometrics);
@@ -826,25 +882,27 @@ export default function Settings() {
 
           <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Конфиденциальность</Kicker>
           <View style={styles.card}>
-            <View style={styles.shareAnswersHeader}>
-              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>
-                Использовать ответы для цитат и вопросов
-              </Text>
-              <Toggle
-                value={shareAnswers}
-                label="Использовать ответы для цитат и вопросов"
-                testID="share-answers-toggle"
-                onChange={setShareAnswers}
-              />
-            </View>
-            <Text style={[styles.settingHint, styles.shareAnswersHint]}>
-              {shareAnswers
-                ? 'Текст ваших ответов и сделанные расшифровки голосовых записей будут '
-                  + 'отправляться на сервер приложения и провайдеру ИИ, чтобы вопросы и отрывки '
-                  + 'Писания учитывали контекст вашей молитвы. На сервере приложения они не сохраняются.'
-                : 'Текст ваших ответов и расшифровки не будут передаваться для подбора вопросов '
-                  + 'и отрывков Писания.'}
-            </Text>
+            <ConsentSetting
+              title="Тема молитвы для помощи ИИ"
+              description="Передача темы на сервер приложения для обработки моделью ИИ, размещённой на сервере компании."
+              decision={coreAiConsent}
+              purpose="core_prayer_ai"
+              onChange={setConsent}
+            />
+            <ConsentSetting
+              title="Ответы и расшифровки как контекст"
+              description="Передача текста на сервер приложения для обработки моделью ИИ, размещённой на сервере компании."
+              decision={answerContextConsent}
+              purpose="answer_context"
+              onChange={setConsent}
+            />
+            <ConsentSetting
+              title="Аудио для расшифровки"
+              description="Передача выбранной записи на сервер приложения для расшифровки моделью, размещённой на сервере компании."
+              decision={audioTranscriptionConsent}
+              purpose="audio_transcription"
+              onChange={setConsent}
+            />
 
             <View style={[styles.shareAnswersHeader, styles.lockRow]}>
               <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>Пин-код</Text>
@@ -1090,6 +1148,45 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(15), color: colors.warmHint,
   },
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
+  consentSetting: {
+    paddingVertical: sc(10),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(214,182,120,.16)',
+  },
+  consentActions: {
+    flexDirection: 'row',
+    gap: 3,
+    alignSelf: 'stretch',
+    marginTop: sc(7),
+    padding: 2,
+    borderWidth: 1,
+    borderColor: colors.white08,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(0,0,0,.25)',
+  },
+  consentAction: {
+    flex: 1,
+    height: sc(28),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: sc(10),
+    borderRadius: radius.pill,
+  },
+  consentActionSelected: {
+    backgroundColor: 'rgba(214,182,120,.22)',
+  },
+  consentActionText: {
+    color: 'rgba(214,182,120,.55)',
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(11),
+  },
+  consentActionTextSelected: { color: '#f0e6c8' },
+  consentUndecided: {
+    marginTop: sc(7),
+    color: 'rgba(240,170,120,.92)',
+    fontFamily: fonts.sans,
+    fontSize: sc(9.25),
+  },
   reminderWarning: { color: 'rgba(240,170,120,.92)' },
   reminderSettingsRow: {
     marginTop: sc(8), paddingTop: sc(8),

@@ -13,6 +13,13 @@ appId: twinkler
 - hideKeyboard
 - tapOn: "5"
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - swipe:
     start: "50%,78%"
     end: "50%,78%"
@@ -47,6 +54,13 @@ appId: twinkler
     timeout: 2000
 - tapOn:
     id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
 - tapOn: "Изменить"
 - tapOn:
     id: "answer-record-button"
@@ -71,6 +85,13 @@ appId: twinkler
     timeout: 2000
 - tapOn:
     id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
 - assertVisible: "Изменить"
 - tapOn:
     point: "84%,91%"
@@ -89,6 +110,13 @@ appId: twinkler
     timeout: 2000
 - tapOn:
     id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
 - tapOn:
     point: "16%,91%"
 - tapOn: "Изменить"

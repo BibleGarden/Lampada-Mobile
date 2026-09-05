@@ -1,5 +1,5 @@
-// Низкоуровневый клиент нашего Gemini-прокси на api.bible.garden.
-// Ключ Google AI Studio хранится только на сервере.
+// Низкоуровневый клиент AI-прокси на api.bible.garden.
+// Модель и системные инструкции выбираются и хранятся на сервере.
 //
 // Конфигурация — через .env.local (не коммитится, см. .gitignore):
 //   EXPO_PUBLIC_AI_PROXY_URL=https://api.bible.garden/api/ai/question
@@ -7,12 +7,12 @@
 //
 // EXPO_PUBLIC_* зашиваются в бандл при сборке: после правки .env.local
 // нужен перезапуск dev-сервера. Секретов уровня «мастер-ключ» тут быть
-// не должно — ключ Google и другие серверные секреты остаются в bible-api.
+// не должно — все серверные секреты остаются в bible-api.
 
 const PROXY_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
 const PROXY_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
-// Backend itself waits up to 20 seconds for Gemini; leave time for its 502 response.
+// The backend model call may take up to 20 seconds; leave time for its 502 response.
 const TIMEOUT_MS = 25_000;
 
 export const llmConfigured = () => Boolean(PROXY_URL);
@@ -48,6 +48,21 @@ export async function complete(user: string): Promise<string> {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Hard privacy barrier for prompts derived from a prayer session. */
+export async function completePrayerContent(
+  user: string,
+  includesAnswerContext = false,
+): Promise<string> {
+  // Lazy import keeps the transport independently testable in Node while the
+  // app path still checks the live persisted gate immediately before fetch.
+  const { answerContextAllowedNow, coreAiAllowedNow } = await import('./settings');
+  if (!coreAiAllowedNow()) throw new Error('Core prayer AI consent is not allowed');
+  if (includesAnswerContext && !answerContextAllowedNow()) {
+    throw new Error('Answer context consent is not allowed');
+  }
+  return complete(user);
 }
 
 /**

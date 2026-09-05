@@ -10,6 +10,13 @@ appId: twinkler
 - hideKeyboard
 - tapOn: "∞"
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - assertVisible: ".*столько времени, сколько нужно.*"
 - swipe:
     start: "50%,78%"

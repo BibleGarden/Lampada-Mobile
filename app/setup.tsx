@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  AppState,
   Keyboard,
   Modal,
   Pressable,
@@ -16,7 +17,9 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
+import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 const EXAMPLES = [
   'Поблагодарить Бога',
@@ -38,10 +41,26 @@ export default function Setup() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
+  const [coreConsentOpen, setCoreConsentOpen] = useState(false);
 
-  const next = () => {
+  const continueToThreshold = () => {
     s.prepareThreshold();
     router.push('/threshold');
+  };
+
+  const next = async () => {
+    await ensureSettingsLoaded();
+    if (useSettings.getState().coreAiConsent === 'undecided') {
+      setCoreConsentOpen(true);
+      return;
+    }
+    continueToThreshold();
+  };
+
+  const decideCoreConsent = async (decision: 'allowed' | 'denied') => {
+    await useSettings.getState().setConsent('core_prayer_ai', decision);
+    setCoreConsentOpen(false);
+    if (AppState.currentState === 'active') continueToThreshold();
   };
 
   return (
@@ -156,7 +175,7 @@ export default function Setup() {
             </View>
           </View>
 
-          <GoldButton label="Далее" onPress={next} />
+          <GoldButton label="Далее" onPress={() => void next()} />
         </Pressable>
       </Animated.View>
 
@@ -179,6 +198,12 @@ export default function Setup() {
           </View>
         </Pressable>
       </Modal>
+      <PrivacyConsentDialog
+        visible={coreConsentOpen}
+        purpose="core_prayer_ai"
+        onDismiss={() => setCoreConsentOpen(false)}
+        onDecision={decideCoreConsent}
+      />
     </View>
   );
 }

@@ -220,11 +220,14 @@ The smoke counts as passed only in full.
 | AI-002 | Successful AI responses | the questions are not empty, the transitions are not blocked |
 | AI-003 | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, no endless loading and no unhandled rejection |
 | AI-004 | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
-| AI-005 | "Use my answers" is off | the text of the answers is absent from the AI request |
-| AI-006 | The setting is on | the UI warns about the sending explicitly; only the expected text is sent |
-| AI-007 | Change the setting and restart the app | the chosen value is restored from SQLite |
+| AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
+| AI-006 | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; both choices have equal weight |
+| AI-007 | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record |
 | AI-008 | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
 | AI-009 | Finish the prayer with a fast, a slow and an unavailable AI | the closing question is prepared 15 seconds before zero; a ready one is shown immediately, a pending one shows a loader without an intermediate fallback; changing the answer in the last 15 seconds updates the prefetch; a real fallback is explicitly marked as such |
+| AI-010 | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server and company-hosted model processing, the transferred topic and both purposes before any content request |
+| AI-011 | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file and transcription purpose; no upload starts and the recording stays usable |
+| AI-012 | Withdraw each allowed decision in settings immediately before its feature | the next question/scripture request or upload observes the denial without restarting the app |
 
 ### Scripture
 
@@ -344,9 +347,13 @@ are in
 
 - the Google / server master key is absent from the client bundle and the logs;
 - the client proxy key is treated as public and limited;
-- the text of the answers is sent only when the setting is on;
-- the audio files are stored in the expected directory and sent to the
-  transcription endpoint only after an explicit press;
+- the topic, answer context and audio upload each require their own current,
+  versioned `allowed` decision; missing and legacy permissive values do not open
+  a gate;
+- denied core AI sends neither `topic` nor `user_replies`; denied answer context
+  omits the field instead of sending an empty placeholder;
+- audio files are stored in the expected directory and reach the transcription
+  endpoint only after both an explicit press and transcription consent;
 - the server logs and persistent storage contain neither the audio, nor the file
   name, nor the transcript;
 - the logs contain no prayer answers, tokens or full network payloads;
