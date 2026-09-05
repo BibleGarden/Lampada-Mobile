@@ -176,7 +176,7 @@ export default function AnswerSheet({
         allowsRecording: false,
         playsInSilentMode: true,
       })
-      .catch((error) => console.warn('Не удалось восстановить аудиорежим', error));
+      .catch((error) => console.warn('Failed to restore audio mode', error));
   });
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
@@ -242,7 +242,7 @@ export default function AnswerSheet({
         .catch((error) => {
           if (controller.signal.aborted) return;
           console.warn(
-            'Не удалось расшифровать аудиозапись',
+            'Failed to transcribe audio recording',
             error instanceof Error ? error.message : 'unknown error',
           );
           updateRecs((current) =>
@@ -368,7 +368,7 @@ export default function AnswerSheet({
         // so the process-wide lease must not leak into the next Session.
         void recorder
           .stop()
-          .catch((error) => console.warn('Не удалось остановить запись при выходе', error))
+          .catch((error) => console.warn('Failed to stop recording on exit', error))
           .finally(() => {
             recordingAudioModeLeaseRef.current?.release();
             recordingAudioModeLeaseRef.current = null;
@@ -516,7 +516,7 @@ export default function AnswerSheet({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
       console.warn(
-        'Не удалось начать аудиозапись',
+        'Failed to start audio recording',
         error instanceof Error ? error.message : 'unknown error',
       );
       setAudioError('components.answers.startFailed');
@@ -558,7 +558,7 @@ export default function AnswerSheet({
                 playsInSilentMode: true,
               })
               .catch((modeError) =>
-                console.warn('Не удалось восстановить аудиорежим', modeError),
+                console.warn('Failed to restore audio mode', modeError),
               );
           }
         }
@@ -612,7 +612,7 @@ export default function AnswerSheet({
         // Never destroy a candidate stopped recording from a heuristic. It may
         // still be a recoverable M4A whose metadata was late on physical iOS.
         console.warn(
-          'Аудиозапись не была завершена',
+          'Audio recording was not finalized',
           JSON.stringify({
             issue,
             durationMillis,
@@ -636,7 +636,7 @@ export default function AnswerSheet({
       return draft;
     } catch (error) {
       console.warn(
-        'Не удалось завершить аудиозапись',
+        'Failed to finalize audio recording',
         error instanceof Error ? error.message : 'unknown error',
       );
       setAudioError('components.answers.saveFailed');
@@ -657,7 +657,7 @@ export default function AnswerSheet({
             allowsRecording: false,
             playsInSilentMode: true,
           })
-          .catch((error) => console.warn('Не удалось восстановить аудиорежим', error));
+          .catch((error) => console.warn('Failed to restore audio mode', error));
         onAudioBusyChange?.(false);
       }
     }
@@ -716,7 +716,7 @@ export default function AnswerSheet({
       })
       .catch((error) => {
         if (generation !== draftPlaybackGenerationRef.current) return;
-        console.warn('Не удалось включить аудиозапись', error);
+        console.warn('Failed to play audio recording', error);
         setAudioError('components.answers.playbackFailed');
         onAudioBusyChange?.(false);
       });

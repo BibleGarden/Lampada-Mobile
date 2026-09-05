@@ -262,7 +262,8 @@ export function formatScriptureReference(
   passage: TranslatedPassage,
   bookNames: Readonly<Record<number, string>>,
 ): string {
-  const book = bookNames[passage.book_number] ?? `Книга ${passage.book_number}`;
+  const book = bookNames[passage.book_number];
+  if (!book) throw new Error('Missing Scripture book name');
   const verses = passage.verse_start === passage.verse_end
     ? `${passage.verse_start}`
     : `${passage.verse_start}–${passage.verse_end}`;

@@ -1,3 +1,4 @@
+import { languageNames } from '../lib/locales/languageNames';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
@@ -731,7 +732,7 @@ export default function Settings() {
           <View style={[styles.pickerCard, { marginBottom: sc(24) }]} testID="interface-language-selector">
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${t('settings.interfaceLanguage')}: ${{ en: 'English', ru: 'Русский', uk: 'Українська' }[uiLanguage]}`}
+              accessibilityLabel={`${t('settings.interfaceLanguage')}: ${languageNames[uiLanguage]}`}
               accessibilityState={{ expanded: interfaceLanguageOpen }}
               testID="interface-language-picker"
               onPress={() => {
@@ -741,7 +742,7 @@ export default function Settings() {
               style={styles.pickerHeader}
             >
               <Text style={[styles.optionTitle, { flex: 1 }]}>
-                {{ en: 'English', ru: 'Русский', uk: 'Українська' }[uiLanguage]}
+                {languageNames[uiLanguage]}
               </Text>
               <View style={styles.chevronCircle}>
                 <View style={{ transform: [{ rotate: interfaceLanguageOpen ? '-90deg' : '90deg' }] }}>
@@ -750,9 +751,9 @@ export default function Settings() {
               </View>
             </Pressable>
             {interfaceLanguageOpen ? <View style={styles.options}>{([
-              { code: 'en', name: 'English' },
-              { code: 'ru', name: 'Русский' },
-              { code: 'uk', name: 'Українська' },
+              { code: 'en', name: languageNames.en },
+              { code: 'ru', name: languageNames.ru },
+              { code: 'uk', name: languageNames.uk },
             ] as const).map((item, index) => (
               <OptionRow
                 key={item.code}

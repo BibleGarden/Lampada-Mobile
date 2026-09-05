@@ -6,7 +6,8 @@
 // экраны никогда не ждут ИИ дольше таймаута и никогда не видят ошибку.
 
 import { completePrayerContent, llmConfigured } from './llm';
-import { coreAiAllowedNow } from './settings';
+import { coreAiAllowedNow, useSettings } from './settings';
+import { fallbackQuestions } from './locales/fallbackQuestions';
 import { buildQuestionRequest } from './questionRequest';
 import type { AnswerContext } from './answerContext';
 
@@ -16,35 +17,14 @@ export type GeneratedQuestion = { text: string; source: QuestionSource };
 const fromAi = (text: string): GeneratedQuestion => ({ text, source: 'ai' });
 const fromFallback = (text: string): GeneratedQuestion => ({ text, source: 'fallback' });
 
-export const curatedQuestions: string[] = [
-  'Что на самом деле тревожит тебя сейчас больше всего?',
-  'Чего ты по-настоящему хочешь в этой ситуации?',
-  'Чего ты боишься потерять?',
-  'Что тебе подсказывает совесть, когда ты затихаешь?',
-  'Если бы Бог сейчас был рядом и слушал — что бы ты Ему сказал?',
-];
-
-const questionPool: string[] = [
-  'Что изменится в тебе, если ты доверишь это Богу?',
-  'За что ты можешь поблагодарить даже сейчас?',
-  'Кому, кроме тебя, важен исход этой ситуации?',
-  'Что ты держишь в руках слишком крепко?',
-  'Какой первый честный шаг ты можешь сделать?',
-  'Где в этом ты ищешь своей воли, а где — Его?',
-  'Что бы ты сказал другу в такой же ситуации?',
-  'Чего ты пока не решаешься сказать вслух?',
-];
-
-const reflectPool: string[] = [
-  'Стало ли тебе яснее, о чём ты на самом деле просил?',
-  'Почувствовал ли ты, что продвинулся к тому, ради чего молился?',
-  'Что из этой молитвы тебе хочется унести с собой?',
-];
+const currentFallbacks = () => fallbackQuestions[useSettings.getState().uiLanguage];
+export const getCuratedQuestions = (): string[] => [...currentFallbacks().first];
 
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Мгновенный локальный вопрос на случай, если фоновый слот ещё не готов. */
 export const pickFallbackQuestion = (asked: string[]): string => {
+  const questionPool = currentFallbacks().next;
   const used = new Set(asked);
   const fresh = questionPool.filter((q) => !used.has(q));
   return pickRandom(fresh.length ? fresh : questionPool);
@@ -53,7 +33,7 @@ export const pickFallbackQuestion = (asked: string[]): string => {
 // деградация тихая для человека, но не для разработчика: причина отката
 // на курируемый пул видна в логах dev-сервера
 const warn = (where: string, e: unknown) =>
-  console.warn(`[ai] ${where}: fallback на пул —`, e instanceof Error ? e.message : e);
+  console.warn(`[ai] ${where}: using fallback pool —`, e instanceof Error ? e.message : e);
 
 // один вопрос — одна строка: нумерация и маркеры из модели вычищаются
 const tidy = (q: string) =>
@@ -68,15 +48,15 @@ const isQuestion = (q: unknown): q is string =>
  * пополняется по ходу молитвы и пересобирается после нового ответа.
  */
 export async function generateFirstQuestion(topic: string): Promise<GeneratedQuestion> {
-  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(curatedQuestions));
+  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(currentFallbacks().first));
   try {
     const q = await completePrayerContent(buildQuestionRequest('first', topic));
     const clean = tidy(q);
-    if (!isQuestion(clean)) warn('firstQuestion', `кривой ответ: «${q}»`);
-    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(curatedQuestions));
+    if (!isQuestion(clean)) warn('firstQuestion', 'Invalid question response');
+    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().first));
   } catch (e) {
     warn('firstQuestion', e);
-    return fromFallback(pickRandom(curatedQuestions));
+    return fromFallback(pickRandom(currentFallbacks().first));
   }
 }
 
@@ -96,7 +76,7 @@ export async function generateQuestion(
   try {
     const q = await completePrayerContent(buildQuestionRequest('next', topic, asked, answers));
     const clean = tidy(q);
-    if (!isQuestion(clean)) warn('question', `кривой ответ: «${q}»`);
+    if (!isQuestion(clean)) warn('question', 'Invalid question response');
     return isQuestion(clean) ? fromAi(clean) : fallback();
   } catch (e) {
     warn('question', e);
@@ -110,14 +90,14 @@ export async function generateReflectQuestion(
   asked: string[],
   answers: Record<number, AnswerContext>,
 ): Promise<GeneratedQuestion> {
-  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(reflectPool));
+  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(currentFallbacks().reflect));
   try {
     const q = await completePrayerContent(buildQuestionRequest('reflect', topic, asked, answers));
     const clean = tidy(q);
-    if (!isQuestion(clean)) warn('reflect', `кривой ответ: «${q}»`);
-    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(reflectPool));
+    if (!isQuestion(clean)) warn('reflect', 'Invalid question response');
+    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().reflect));
   } catch (e) {
     warn('reflect', e);
-    return fromFallback(pickRandom(reflectPool));
+    return fromFallback(pickRandom(currentFallbacks().reflect));
   }
 }

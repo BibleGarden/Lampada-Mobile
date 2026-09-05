@@ -124,7 +124,7 @@ export function useScriptureAudio({
         })
         .catch((error) => {
           if (!continuation.isCurrent()) return;
-          console.warn('Не удалось восстановить аудиорежим Писания', error);
+          console.warn('Failed to restore Scripture audio mode', error);
           setPhase('error');
           onAudioBusyChange(false);
         });
@@ -166,7 +166,7 @@ export function useScriptureAudio({
       } catch (error) {
         if (controller.signal.aborted) return;
         console.warn(
-          'Не удалось воспроизвести отрывок Писания',
+          'Failed to play Scripture passage',
           error instanceof Error ? error.message : 'unknown error',
         );
         setPhase('error');

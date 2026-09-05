@@ -7,6 +7,7 @@ import {
   coreAiAllowedNow,
   ensureSettingsLoaded,
   scripturePreferencesNow,
+  useSettings,
 } from './settings';
 import type { ScriptureLanguage } from './scripture';
 import { createOneAheadPool } from './oneAheadPool';
@@ -128,7 +129,7 @@ const isAnswered = (a: Answer | undefined) =>
 
 const reportSystemTimerError = (action: string, error: unknown) => {
   console.warn(
-    `Не удалось ${action} системный таймер молитвы`,
+    `Could not ${action} the prayer system timer`,
     error instanceof Error ? error.message : error,
   );
 };
@@ -144,6 +145,7 @@ let scriptureToken = 0;
 let scriptureAbortController: AbortController | null = null;
 let firstQuestionFetch: {
   topic: string;
+  language: string;
   promise: Promise<ai.GeneratedQuestion>;
   result?: ai.GeneratedQuestion;
 } | null = null;
@@ -168,11 +170,12 @@ let scripturePrefetch: {
 const runScriptureExclusive = (load: () => Promise<ScriptureLoadResult>) =>
   scriptureSingleFlight.run(load);
 
+// Язык входит только в ключ локального буфера; в запрос модели его не добавляем.
 const poolKey = (
   s: SessionState,
   index: number,
   answers: Record<number, Answer> = s.answers,
-) => JSON.stringify([s.sessionId, index, s.topic, s.questions, answersForAi(answers)]);
+) => JSON.stringify([s.sessionId, index, s.topic, s.questions, answersForAi(answers), useSettings.getState().uiLanguage]);
 
 const prepareQuestion = (
   s: SessionState,
@@ -187,7 +190,7 @@ const prepareQuestion = (
 };
 
 const reflectKey = (s: SessionState) =>
-  JSON.stringify([s.sessionId, s.topic, s.questions, answersForAi(s.answers)]);
+  JSON.stringify([s.sessionId, s.topic, s.questions, answersForAi(s.answers), useSettings.getState().uiLanguage]);
 
 const prepareReflectQuestion = (s: SessionState) => {
   if (s.sessionId === null) return null;
@@ -244,8 +247,8 @@ const initial: SessionState = {
   topic: '',
   minutes: 10,
   sessionId: null,
-  questions: ai.curatedQuestions,
-  questionSources: ai.curatedQuestions.map(() => 'fallback'),
+  questions: ai.getCuratedQuestions(),
+  questionSources: ai.getCuratedQuestions().map(() => 'fallback'),
   qIndex: 0,
   answeredCount: 0,
   answers: {},
@@ -299,7 +302,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // Результат применяется только до входа в сессию: опоздавший вопрос
     // не должен затирать уже идущую молитву
     const promise = ai.generateFirstQuestion(topic);
-    const fetch: NonNullable<typeof firstQuestionFetch> = { topic, promise };
+    const fetch: NonNullable<typeof firstQuestionFetch> = { topic, promise, language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
     promise.then((q) => {
       if (firstQuestionFetch === fetch) fetch.result = q;
@@ -324,9 +327,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // показывает spinner; fallback появляется только когда AI-слой вернул его
     // из-за явной ошибки.
     const fetch: NonNullable<typeof firstQuestionFetch> =
-      firstQuestionFetch?.topic === topic
+      firstQuestionFetch?.topic === topic && firstQuestionFetch.language === useSettings.getState().uiLanguage
         ? firstQuestionFetch
-        : { topic, promise: ai.generateFirstQuestion(topic) };
+        : { topic, promise: ai.generateFirstQuestion(topic), language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
     const firstQuestion = fetch.result;
     const [sessionId, favoriteScriptures] = await Promise.all([
@@ -375,7 +378,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     void (systemTimer
       ? startPrayerSystemTimer(systemTimer)
       : stopPrayerSystemTimer()
-    ).catch((error) => reportSystemTimerError('запустить', error));
+    ).catch((error) => reportSystemTimerError('start', error));
     scriptureAbortController?.abort();
     scriptureAbortController = new AbortController();
     const currentScriptureToken = ++scriptureToken;
@@ -439,7 +442,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       void updatePrayerSystemTimer({
         startedAtMs: current.startedAtMs,
         endsAtMs: current.endsAtMs,
-      }).catch((error) => reportSystemTimerError('обновить', error));
+      }).catch((error) => reportSystemTimerError('update', error));
     }
   },
 
@@ -629,7 +632,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   complete: async (takeaway) => {
     const s = get();
     await stopPrayerSystemTimer().catch((error) =>
-      reportSystemTimerError('остановить', error),
+      reportSystemTimerError('stop', error),
     );
     if (s.sessionId !== null) await db.finishSession(s.sessionId, s.elapsed, takeaway);
     const streak = await db.markPrayedToday();
@@ -638,7 +641,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   reset: () => {
     void stopPrayerSystemTimer().catch((error) =>
-      reportSystemTimerError('остановить', error),
+      reportSystemTimerError('stop', error),
     );
     prepareToken++; // висящие prepareThreshold-промисы больше не применятся
     reflectToken++;
@@ -652,8 +655,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     set((s) => ({
       ...initial,
       streak: s.streak,
-      questions: ai.curatedQuestions,
-      questionSources: ai.curatedQuestions.map(() => 'fallback'),
+      questions: ai.getCuratedQuestions(),
+      questionSources: ai.getCuratedQuestions().map(() => 'fallback'),
     }));
   },
 
@@ -810,13 +813,4 @@ export const fmtTime = (sec: number) => {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m}:${s < 10 ? '0' : ''}${s}`;
-};
-
-export const plMinutes = (n: number) => {
-  const a = Math.abs(n) % 100;
-  const b = a % 10;
-  if (a > 10 && a < 20) return 'минут';
-  if (b === 1) return 'минута';
-  if (b >= 2 && b <= 4) return 'минуты';
-  return 'минут';
 };

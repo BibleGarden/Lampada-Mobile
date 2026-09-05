@@ -447,3 +447,19 @@ and the independent Scripture selection are unchanged.
 Plural selection uses the explicit English/Russian/Ukrainian cardinal rules in
 `lib/uiLanguage.ts`; it does not require `Intl.PluralRules`, which is unavailable
 in the installed iOS runtime.
+
+## Bundled fallback question language
+
+The first, follow-up and reflection fallback pools live in
+`lib/locales/fallbackQuestions.ts` and follow the active interface language
+(ADR-0022). The session initializes and resets its local questions from that
+language. Prefetch keys include interface language to avoid reusing a ready local
+question after switching. Model payloads and language inference are unchanged;
+existing questions and stored prayer content are not translated retroactively.
+
+Native permission localization is generated from app configuration and
+`languages/` through Expo prebuild. The physical-iPhone deployment script derives
+the workspace, scheme and app path from the generated Xcode project instead of
+assuming the former Twinkler project name. It synchronizes native configuration
+with prebuild before CocoaPods and xcodebuild, including when `ios/` already
+exists, so permission translations cannot remain stale.

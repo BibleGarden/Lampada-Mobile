@@ -151,7 +151,7 @@ function SessionScreen() {
     standbyPlayer.pause();
     standbyPlayer.volume = 0;
     void standbyPlayer.seekTo(0).catch((error) => {
-      console.warn('Не удалось вернуть следующий музыкальный трек к началу', error);
+      console.warn('Failed to rewind the next music track', error);
     });
   }, [musicPlayerForSlot]);
 
@@ -183,7 +183,7 @@ function SessionScreen() {
       .then((deactivated) => {
         if (deactivated) musicSessionActive.current = false;
       })
-      .catch((error) => console.warn('Не удалось освободить аудиосессию', error));
+      .catch((error) => console.warn('Failed to release audio session', error));
   }, [musicPlayerA, musicPlayerB]);
 
   useEffect(() => {
@@ -226,7 +226,7 @@ function SessionScreen() {
         activePlayer.play();
       }
     })().catch((error) => {
-      console.warn('Не удалось включить музыкальное сопровождение', error);
+      console.warn('Failed to start background music', error);
       if (active && !transientAudioBusyRef.current && useSession.getState().musicOn) {
         useSession.getState().toggleMusic();
       }
@@ -410,7 +410,7 @@ function SessionScreen() {
     // native shared objects при unmount, и обращаться к ним из cleanup уже нельзя.
     pauseMusicPlayers();
     await stopPrayerSystemTimer().catch((error) => {
-      console.warn('Не удалось остановить системный таймер молитвы', error);
+      console.warn('Failed to stop prayer system timer', error);
     });
     await releaseMusicSession();
     if (useSession.getState().musicOn) useSession.getState().toggleMusic();

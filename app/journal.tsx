@@ -166,7 +166,7 @@ export default function Journal() {
     } catch (error) {
       if (controller.signal.aborted) return;
       console.warn(
-        'Не удалось расшифровать запись из дневника',
+        'Failed to transcribe journal recording',
         error instanceof Error ? error.message : 'unknown error',
       );
       setTranscriptionStates((current) => ({ ...current, [recording.id]: 'error' }));

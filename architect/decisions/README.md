@@ -46,3 +46,5 @@ implementation details do not need one.
 - [0020: Application-specific update checks](0020-application-version-check.md)
 
 - [0021: Independent interface language](0021-interface-language.md)
+
+- [0022: Localize bundled fallback questions](0022-localized-fallback-questions.md)

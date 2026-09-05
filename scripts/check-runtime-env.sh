@@ -14,13 +14,13 @@ check_names_in_file() {
   local missing=0
 
   if [ ! -f "$file" ]; then
-    echo "✗ Не найден $file" >&2
+    echo "✗ File not found: $file" >&2
     return 1
   fi
 
   for name in "${REQUIRED[@]}"; do
     if ! grep -Eq "^${name}=.+" "$file"; then
-      echo "✗ Отсутствует $name" >&2
+      echo "✗ Missing variable: $name" >&2
       missing=1
     fi
   done
@@ -31,7 +31,7 @@ check_names_in_file() {
 case "$MODE" in
   local)
     check_names_in_file .env.local
-    echo "✔ Локальные runtime-переменные настроены"
+    echo "✔ Local runtime variables are configured"
     ;;
   eas)
     EAS_ENVIRONMENT="${2:-preview}"
@@ -43,18 +43,18 @@ case "$MODE" in
     missing=0
     for name in "${REQUIRED[@]}"; do
       if ! grep -q "^${name}=" "$OUTPUT"; then
-        echo "✗ В EAS environment '$EAS_ENVIRONMENT' отсутствует $name" >&2
+        echo "✗ Missing variable in EAS environment '$EAS_ENVIRONMENT': $name" >&2
         missing=1
       fi
     done
     if [ "$missing" -ne 0 ]; then
-      echo "Сначала настрой переменные через 'eas env:set'. Значения не добавляй в git." >&2
+      echo "Configure the variables with 'eas env:set' first. Do not commit their values to git." >&2
       exit 1
     fi
-    echo "✔ EAS environment '$EAS_ENVIRONMENT' содержит обязательные runtime-переменные"
+    echo "✔ EAS environment '$EAS_ENVIRONMENT' contains the required runtime variables"
     ;;
   *)
-    echo "Использование: $0 local | eas <environment>" >&2
+    echo "Usage: $0 local | eas <environment>" >&2
     exit 2
     ;;
 esac
