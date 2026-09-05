@@ -53,6 +53,7 @@ Changes to the app are made against the documentation of
 | `lib/ai.ts` | Prompts, validation of the AI response and local degradation |
 | `lib/answerContext.ts` | The composition of the person's replies for the AI: the answer text and the transcripts of its recordings |
 | `lib/questionRequest.ts` | Structured question history, stage metadata and request limits |
+| `lib/aboutClient.ts` | Contact cards from the shared Bible Garden `/api/about` endpoint, response validation and request cancellation |
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
 | `lib/settings.ts` | Privacy settings, the atomic save of the scripture choice and the reminder schedule |
@@ -95,7 +96,7 @@ Changes to the app are made against the documentation of
 | `/journal` | Prayer history, search, playback, saved quotes and deletion |
 | `/settings` | Settings for the language, the translation, the narration, privacy, reminders and the lock |
 | `/favorites` | Saved quotes: the key verses, expandable into the full passage |
-| `/about` | The point of the app, privacy information, the version and the author's other projects |
+| `/about` | The point of the app, API-backed contacts, the version and the author's other projects |
 
 `session`, `reflect` and `done` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
@@ -409,3 +410,12 @@ crash logs.
   separate ADR.
 - Do not rewrite an ADR after it is accepted; a new decision supersedes the old
   one through a new ADR that refers to it.
+
+### About screen contacts
+
+The About screen loads contacts from `GET /api/about?app=lampada` on the existing Scripture
+API origin, using `EXPO_PUBLIC_AI_PROXY_KEY` as `x-api-key`. It displays Russian
+labels and subtitles in server-defined order and maps server SF Symbol names to
+local icons. The project description remains local. Requests time out after ten
+seconds and are cancelled when the screen unmounts. Loading, empty and retry
+states are visible; contact URLs are restricted to web, mail and Telegram schemes.

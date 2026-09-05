@@ -1,14 +1,15 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
-import { ExternalLink } from 'lucide-react-native';
+import { Code, ExternalLink, Globe, Mail, Send } from 'lucide-react-native';
+import { fetchAboutContacts, type AboutContact } from '../lib/aboutClient';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
-import { Book, ChevronLeft, Shield } from '../components/icons';
+import { Book, ChevronLeft } from '../components/icons';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const BIBLE_GARDEN_URL = 'https://bible.garden';
@@ -17,6 +18,22 @@ const appVersion = Constants.expoConfig?.version ?? '—';
 export default function About() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
+  const [contacts, setContacts] = useState<AboutContact[]>([]);
+  const [contactsStatus, setContactsStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setContactsStatus('loading');
+    fetchAboutContacts(controller.signal).then((items) => {
+      if (controller.signal.aborted) return;
+      setContacts(items);
+      setContactsStatus('ready');
+    }).catch(() => {
+      if (!controller.signal.aborted) setContactsStatus('error');
+    });
+    return () => controller.abort();
+  }, [attempt]);
 
   return (
     <View style={styles.root}>
@@ -38,32 +55,55 @@ export default function About() {
             paddingBottom: insets.bottom + sc(28),
           }}
         >
-          <Kicker style={styles.sectionKicker}>Назначение</Kicker>
+          <Kicker style={styles.sectionKicker}>О Лампаде</Kicker>
           <View style={[styles.card, styles.purposeCard]}>
-            <Text style={styles.lead}>Пространство для личной молитвы</Text>
+            <Text style={styles.lead}>Время для молитвы</Text>
             <Text style={styles.body}>
-              Вы сами задаёте тему молитвы, а приложение помогает молиться целенаправленно и не
-              терять фокус: задаёт наводящие вопросы и с помощью ИИ подбирает отрывки Писания по
-              смыслу, а не по ключевым словам. Ответы можно сохранить и позже вернуться к ним в
-              дневнике.
+              Задай тему и побудь в молитве. Лампада предложит вопросы для размышления и отрывки
+              из Писания, которые помогут сосредоточиться на важном.
+            </Text>
+            <Text style={styles.body}>
+              Сохраняй мысли в дневнике, чтобы возвращаться к ним позже.
             </Text>
           </View>
 
-          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>Конфиденциальность</Kicker>
-          <View style={styles.card}>
-            <View style={styles.infoHeader}>
-              <View style={styles.iconCircle}>
-                <Shield size={17} color={colors.amberBright} />
-              </View>
-              <Text style={[styles.cardTitle, styles.infoTitle]}>Как используются ваши данные</Text>
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>Связаться с нами</Kicker>
+          {contactsStatus === 'loading' ? <Text style={styles.body}>Загружаем контакты…</Text> : null}
+          {contactsStatus === 'error' ? (
+            <View style={styles.card}>
+              <Text style={styles.body}>Не удалось загрузить контакты.</Text>
+              <Pressable accessibilityRole="button" onPress={() => setAttempt((value) => value + 1)} style={styles.retryButton}>
+                <Text style={styles.cardTitle}>Попробовать снова</Text>
+              </Pressable>
             </View>
-            <Text style={[styles.body, styles.infoBody]}>
-              Тема молитвы, ответы и голосовые записи хранятся на устройстве. Отдельные явные
-              разрешения управляют передачей темы, текста ответов и выбранного аудиофайла через
-              сервер приложения, где его обрабатывают модели, размещённые на управляемых компанией серверах. Сервер приложения не сохраняет этот контент,
-              а каждое разрешение можно изменить в настройках.
-            </Text>
-          </View>
+          ) : null}
+          {contactsStatus === 'ready' && contacts.length === 0 ? <Text style={styles.body}>Контакты пока не добавлены.</Text> : null}
+          {contactsStatus === 'ready' && contacts.length > 0 ? (
+            <View style={[styles.card, styles.contactsCard]}>
+              {contacts.map((contact, index) => {
+            const ContactIcon = contact.icon.includes('paperplane') ? Send
+              : contact.icon.includes('chevron') ? Code
+              : contact.icon.includes('envelope') ? Mail : Globe;
+            return (
+              <Pressable
+                key={contact.id}
+                accessibilityRole="link"
+                accessibilityLabel={`${contact.label}, ${contact.subtitle}`}
+                testID={`contacts-${contact.id}`}
+                onPress={() => void Linking.openURL(contact.url).catch(() => Alert.alert('Не удалось открыть ссылку', 'Попробуй ещё раз позже.'))}
+                style={({ pressed }) => [styles.contactRow, index > 0 && styles.contactDivider, pressed && styles.contactPressed]}
+              >
+                <View style={styles.iconCircle}><ContactIcon size={17} color={colors.amberBright} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.cardTitle, styles.projectTitle]}>{contact.label}</Text>
+                  <Text style={styles.contactSubtitle}>{contact.subtitle}</Text>
+                </View>
+                <ExternalLink size={sc(16)} color={colors.labelGold} strokeWidth={1.7} />
+              </Pressable>
+            );
+              })}
+            </View>
+          ) : null}
 
           <Kicker style={[styles.sectionKicker, styles.sectionGap]}>Другое приложение</Kicker>
           <Pressable
@@ -126,10 +166,13 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(16),
     color: colors.creamDim,
   },
-  infoHeader: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
-  infoTitle: { flex: 1, marginBottom: 0 },
-  infoBody: { marginTop: sc(10) },
   projectHeader: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
+  contactsCard: { paddingVertical: 0 },
+  contactRow: { flexDirection: 'row', alignItems: 'center', gap: sc(10), paddingVertical: sc(8) },
+  contactDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(214,182,120,.16)' },
+  contactPressed: { opacity: 0.72 },
+  contactSubtitle: { fontFamily: fonts.sans, fontSize: sc(11), color: colors.creamDim, marginTop: sc(1) },
+  retryButton: { minHeight: sc(44), justifyContent: 'center', marginTop: sc(6) },
   projectTitle: { marginBottom: 0 },
   projectBody: { marginTop: sc(10) },
   pressed: { opacity: 0.72, transform: [{ scale: 0.99 }] },

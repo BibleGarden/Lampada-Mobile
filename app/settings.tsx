@@ -279,6 +279,7 @@ function TimeRow({ time, ruleIndex, canRemove, onShift, onRemove }: {
 }
 
 export default function Settings() {
+  const [privacyDetailsOpen, setPrivacyDetailsOpen] = useState(false);
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const {
@@ -882,29 +883,61 @@ export default function Settings() {
 
           <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>Конфиденциальность</Kicker>
           <View style={styles.card}>
+            <Text style={styles.settingHint}>
+              При разрешении выбранные данные отправляются на сервер приложения для обработки ИИ.
+            </Text>
             <ConsentSetting
-              title="Тема молитвы для помощи ИИ"
-              description="Передача темы на сервер приложения для обработки моделью ИИ, размещённой на сервере компании."
+              title="Тема молитвы"
+              description="Чтобы подбирать вопросы и отрывки из Писания по твоей теме."
               decision={coreAiConsent}
               purpose="core_prayer_ai"
               onChange={setConsent}
             />
             <ConsentSetting
-              title="Ответы и расшифровки как контекст"
-              description="Передача текста на сервер приложения для обработки моделью ИИ, размещённой на сервере компании."
+              title="Ответы и расшифровки аудио"
+              description="Чтобы вопросы и отрывки из Писания учитывали твои ответы."
               decision={answerContextConsent}
               purpose="answer_context"
               onChange={setConsent}
             />
             <ConsentSetting
-              title="Аудио для расшифровки"
-              description="Передача выбранной записи на сервер приложения для расшифровки моделью, размещённой на сервере компании."
+              title="Расшифровка аудио"
+              description="Чтобы превращать выбранную голосовую запись в текст."
               decision={audioTranscriptionConsent}
               purpose="audio_transcription"
               onChange={setConsent}
             />
 
-            <View style={[styles.shareAnswersHeader, styles.lockRow]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: privacyDetailsOpen }}
+              testID="privacy-details-toggle"
+              onPress={() => setPrivacyDetailsOpen((value) => !value)}
+              style={({ pressed }) => [
+                styles.privacyDetailsToggle,
+                !privacyDetailsOpen && styles.privacyDetailsCollapsed,
+                pressed && styles.optionPressed,
+              ]}
+            >
+              <Text style={styles.privacyDetailsLabel}>
+                {privacyDetailsOpen ? 'Скрыть подробности' : 'Подробнее об обработке данных'}
+              </Text>
+              <View style={{ transform: [{ rotate: privacyDetailsOpen ? '-90deg' : '90deg' }] }}>
+                <ChevronRight size={sc(14)} color={colors.labelGold} />
+              </View>
+            </Pressable>
+            {privacyDetailsOpen ? (
+              <Text style={styles.settingHint} testID="privacy-details">
+                Данные обрабатывают модели на серверах компании. Сервер приложения не сохраняет
+                переданные тему, ответы и аудио. Сохранённые записи остаются на твоём устройстве.
+                Каждое разрешение можно изменить до следующего запроса.
+              </Text>
+            ) : null}
+          </View>
+
+          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>Защита приложения</Kicker>
+          <View style={styles.card}>
+            <View style={styles.shareAnswersHeader}>
               <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>Пин-код</Text>
               <Toggle
                 value={lockEnabled}
@@ -1148,6 +1181,13 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(15), color: colors.warmHint,
   },
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
+  privacyDetailsToggle: {
+    flexDirection: 'row', alignItems: 'center', gap: sc(8), minHeight: sc(44),
+  },
+  privacyDetailsCollapsed: { marginBottom: -sc(12) },
+  privacyDetailsLabel: {
+    flex: 1, fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.labelGold,
+  },
   consentSetting: {
     paddingVertical: sc(10),
     borderBottomWidth: StyleSheet.hairlineWidth,
