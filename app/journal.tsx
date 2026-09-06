@@ -7,11 +7,13 @@ import {
   Modal,
   ScrollView,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -19,13 +21,14 @@ import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Close, Heart, PauseIcon, Pen, PlayIcon, Trash } from '../components/icons';
+import { ChevronLeft, Close, Heart, PauseIcon, Pen, PlayIcon, ShareIcon, Trash } from '../components/icons';
 import ScripturePassageText from '../components/ScripturePassageText';
 import * as db from '../lib/db';
 import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
 import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
+import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
@@ -214,6 +217,38 @@ export default function Journal() {
     setPlayingUri(uri);
   };
 
+  // экспорт молитвы текстом в системное «Поделиться»: только читаемое,
+  // никаких аудиофайлов и никакой сети
+  const sharePrayer = async (item: db.JournalEntry) => {
+    Haptics.selectionAsync();
+    try {
+      const reuse = openId === item.id && detail !== null;
+      const [entryDetail, entryFavorites] = reuse
+        ? ([detail, favorites] as const)
+        : await Promise.all([
+            db.getJournalDetail(item.id),
+            getFavoriteScripturesBySession(item.id),
+          ]);
+      const title = prayerExportTitle(item, t);
+      const message = buildPrayerExportText(
+        item,
+        entryDetail,
+        entryFavorites,
+        t,
+        localeTag(language),
+        Constants.expoConfig?.name ?? DEFAULT_APP_NAME,
+      );
+      // отказ пользователя приходит как dismissedAction, а не как ошибка
+      await Share.share({ message, title }, { subject: title });
+    } catch (error) {
+      console.warn(
+        'Failed to share journal prayer',
+        error instanceof Error ? error.message : 'unknown error',
+      );
+      Alert.alert(t('screens.journal.shareFailed'), t('screens.retryMessage'));
+    }
+  };
+
   // удаление в два тапа, как записи в шторке ответа
   const askOrConfirmDelete = async (id: number) => {
     if (confirmDeleteId === id) {
@@ -341,15 +376,30 @@ export default function Journal() {
               </View>
             )}
 
-            <Pressable
-              onPress={() => askOrConfirmDelete(item.id)}
-              style={[styles.deleteBtn, confirming && styles.deleteBtnConfirming]}
-            >
-              <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
-              <Text style={[styles.deleteLabel, confirming && { color: '#ec8a7a' }]}>
-                {confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
-              </Text>
-            </Pressable>
+            <View style={styles.actionsRow}>
+              <Pressable
+                onPress={() => sharePrayer(item)}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.journal.share')}
+                testID="journal-share"
+                style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.7 }]}
+              >
+                <ShareIcon size={14} color="rgba(255,255,255,.45)" />
+                <Text style={styles.actionLabel}>{t('screens.journal.share')}</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => askOrConfirmDelete(item.id)}
+                accessibilityRole="button"
+                testID="journal-delete"
+                style={[styles.actionBtn, confirming && styles.actionBtnConfirming]}
+              >
+                <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
+                <Text style={[styles.actionLabel, confirming && { color: '#ec8a7a' }]}>
+                  {confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
+                </Text>
+              </Pressable>
+            </View>
           </Animated.View>
         )}
       </View>
@@ -764,23 +814,28 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(24),
     color: colors.cardText,
   },
-  deleteBtn: {
+  actionsRow: {
+    flexDirection: 'row',
+    gap: sc(8),
+    marginTop: sc(14),
+  },
+  actionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: sc(6),
-    marginTop: sc(14),
     paddingVertical: sc(9),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.03)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,.08)',
   },
-  deleteBtnConfirming: {
+  actionBtnConfirming: {
     backgroundColor: 'rgba(220,90,70,.14)',
     borderColor: 'rgba(220,90,70,.4)',
   },
-  deleteLabel: {
+  actionLabel: {
     fontFamily: fonts.sans,
     fontSize: sc(12),
     color: colors.creamDim,

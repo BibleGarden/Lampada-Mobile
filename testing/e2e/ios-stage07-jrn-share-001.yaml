@@ -1,0 +1,39 @@
+appId: twinkler
+---
+# JRN-014: share a prayer from the journal as plain text through the system share sheet.
+# Runs on the data left by the stage 06 journal flows, so it does not clear the state.
+- launchApp:
+    stopApp: true
+    clearState: false
+- runFlow:
+    when:
+      visible: "ДНЕВНИК"
+    commands:
+      - tapOn:
+          point: "10%,8%"
+- assertVisible: "Начать молитву"
+- tapOn:
+    point: "76%,12%"
+- assertVisible: "ДНЕВНИК"
+# expand the first prayer in the list
+- tapOn:
+    point: "50%,30%"
+- assertVisible:
+    id: "journal-share"
+- assertVisible:
+    id: "journal-delete"
+- tapOn:
+    id: "journal-share"
+- waitForAnimationToEnd:
+    timeout: 4000
+# the system share sheet is outside the app, so match its own labels
+- assertVisible: ".*(Скопировать|Copy|Ещё|More|Отменить|Cancel).*"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-06-journal-share/JRN-014-share-sheet
+- runFlow:
+    when:
+      visible: ".*(Отменить|Cancel).*"
+    commands:
+      - tapOn: ".*(Отменить|Cancel).*"
+- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-share"

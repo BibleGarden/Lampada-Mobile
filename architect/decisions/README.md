@@ -56,3 +56,5 @@ implementation details do not need one.
 - [0025: Configure one API origin](0025-single-api-origin.md)
 
 - [0026: Identify test installations independently of Debug/Release](0026-test-build-label.md)
+
+- [0029: Export a prayer as plain text through the system share sheet](0029-prayer-text-export.md)

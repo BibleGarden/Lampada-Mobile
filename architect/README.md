@@ -345,6 +345,16 @@ the result of a server selection.
 mount through `lib/versionCheck.ts`. The shared API receives `app=lampada`;
 only matching responses may trigger optional or mandatory update screens.
 The overlay sits above navigation and below `LockGate`, with accessible content
+A prayer can leave the device only as plain text and only by an explicit action
+of the user (ADR-0029). The "Share" button of an expanded journal card builds the
+note in `lib/exportPrayer.ts` - a pure function over the journal entry, its
+`getJournalDetail` content and its saved passages - and hands it to the system
+share sheet through the built-in `Share.share` of React Native. The note carries
+the topic, the start and the duration, the questions with their answers and the
+transcripts of the voice recordings, the saved passages, the takeaway and the
+app name. Audio files and file URIs are never exported, and the export itself
+makes no network request: where the text goes is decided by the share sheet.
+
 isolation. Network errors leave the app usable. Lampada updates remain disabled
 server-side until its App Store listing is published. See ADR 0020.
 

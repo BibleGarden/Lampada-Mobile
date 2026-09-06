@@ -282,6 +282,7 @@ The smoke counts as passed only in full.
 | JRN-011 | Search by a word from a transcript in a different case | the right prayer is found |
 | JRN-012 | Get a transcription error in the journal and retry | the audio stays available, a repeated attempt can save the text |
 | JRN-013 | Close the details or delete the prayer during transcription | the request is cancelled, a late response does not bring the deleted data back into the UI or the database |
+| JRN-014 | Share an expanded prayer | the system share sheet opens with plain text carrying localized labels (`Topic:`, `Date:`, `Duration:`, `Question N:`, `Answer:`, `Voice note:`, `Saved passages:`, `Takeaway:`) and `———` separators between the meta block, the questions, the closing block and the app name; no audio file is attached and cancelling changes nothing |
 
 ### Prayer reminders
 

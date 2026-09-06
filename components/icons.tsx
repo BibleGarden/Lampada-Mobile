@@ -124,6 +124,15 @@ export const Trash = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth =
   </Svg>
 );
 
+// Системная иконка «Поделиться» iOS: коробка с выходящей вверх стрелкой.
+export const ShareIcon = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth = 1.7 }: P) => (
+  <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M12 15V3" />
+    <Path d="M8.5 6.5 12 3l3.5 3.5" />
+    <Path d="M8 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-3" />
+  </Svg>
+);
+
 export const Bell = ({ size = 13, color = 'rgba(255,255,255,.3)', strokeWidth = 1.7 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
     <Path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
