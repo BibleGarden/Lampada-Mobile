@@ -59,9 +59,9 @@ appId: twinkler
 - assertVisible: ".*Луки.*15:11.*24.*"
 - assertVisible: "Читать целиком"
 - tapOn: "Читать целиком"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-top
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-top
 - swipe:
     start: "50%,78%"
     end: "50%,30%"
     duration: 800
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-bottom
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-bottom

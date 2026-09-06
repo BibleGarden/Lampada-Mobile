@@ -11,4 +11,4 @@ appId: twinkler
 - assertVisible: ".*Аудиозапись.*"
 - tapOn: ".*Аудиозапись.*"
 - assertVisible: "ДНЕВНИК"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-008-after-install-over-playback
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-008-after-install-over-playback

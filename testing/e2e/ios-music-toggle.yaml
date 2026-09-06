@@ -27,7 +27,7 @@ appId: twinkler
 - assertVisible:
     id: "music-playing"
 - assertVisible: "Выключить тихую музыку"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-23-music/MUS-001-music-on
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-23-music/MUS-001-music-on
 - tapOn: "Выключить тихую музыку"
 - assertNotVisible:
     id: "music-playing"

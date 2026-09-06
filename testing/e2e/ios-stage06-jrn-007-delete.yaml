@@ -17,9 +17,9 @@ appId: twinkler
 - tapOn: ".*END-003 double finish.*"
 - assertVisible: ".*Ответ Кириллица про доверие.*"
 - assertVisible: ".*Аудиозапись.*"
-- tapOn: "Удалить молитву"
+- tapOn: "Удалить запись"
 - assertVisible: "Точно удалить? Это навсегда"
 - tapOn: "Точно удалить? Это навсегда"
 - assertNotVisible: ".*END-003 double finish.*"
 - assertVisible: ".*END-004 second prayer.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-007-after-delete
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-007-after-delete

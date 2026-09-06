@@ -5,7 +5,7 @@ appId: twinkler
     stopApp: true
     clearState: true
 - assertVisible: "Поддержи огонёк"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-before
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-before
 - tapOn: "Начать молитву"
 - tapOn:
     point: "50%,37%"
@@ -31,7 +31,7 @@ appId: twinkler
 - tapOn:
     point: "10%,11%"
 - assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input
 - assertVisible: "Завершить"
 - tapOn: "Завершить"
 - assertVisible: "Огонёк горит"
@@ -40,9 +40,9 @@ appId: twinkler
 - assertVisible:
     id: "journal-button"
 - assertVisible: "Огонёк горит"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
 - tapOn:
     point: "76%,12%"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: ".*END-001 без вывода.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-journal
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-journal

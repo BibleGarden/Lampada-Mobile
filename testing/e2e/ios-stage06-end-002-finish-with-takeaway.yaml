@@ -33,7 +33,7 @@ appId: twinkler
 - inputText: "END-002 вывод молитвы"
 - tapOn: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
 - assertVisible: "Сохранить и завершить"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-002-reflect-filled
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-002-reflect-filled
 - tapOn: "Сохранить и завершить"
 - assertVisible: "Огонёк горит"
 - assertVisible:
@@ -46,4 +46,4 @@ appId: twinkler
 - assertVisible: "ДНЕВНИК"
 - assertVisible: ".*END-002 с выводом.*"
 - assertVisible: ".*END-002 вывод молитвы.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-002-journal-takeaway
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-002-journal-takeaway

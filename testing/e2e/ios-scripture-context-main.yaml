@@ -31,7 +31,7 @@ appId: twinkler
 - assertVisible: "Господь — Пастырь мой.*"
 - assertVisible: "Читать целиком"
 - tapOn: "Читать целиком"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-25-scripture-context/reader-short-wrapped
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-25-scripture-context/reader-short-wrapped
 - tapOn: "Bottom sheet backdrop"
 - tapOn: "В избранное"
 - assertVisible: "В избранном"
@@ -44,7 +44,7 @@ appId: twinkler
     start: "50%,13%"
     end: "50%,3%"
     duration: 700
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-25-scripture-context/reader-safe-area-max
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-25-scripture-context/reader-safe-area-max
 - tapOn:
     point: "89%,18%"
 - tapOn:

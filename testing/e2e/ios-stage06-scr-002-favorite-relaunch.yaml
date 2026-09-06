@@ -28,7 +28,7 @@ appId: twinkler
 - assertVisible: "Колоссянам 3:23"
 - tapOn: "В избранное"
 - assertVisible: "В избранном"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-before-relaunch
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-002-before-relaunch
 - stopApp
 - launchApp:
     stopApp: false
@@ -56,7 +56,7 @@ appId: twinkler
     point: "84%,70%"
 - assertVisible: "Колоссянам 3:23"
 - assertVisible: "В избранном"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-after-relaunch
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-002-after-relaunch
 - tapOn: "В избранном"
 - assertVisible: "В избранное"
 - stopApp
@@ -86,4 +86,4 @@ appId: twinkler
     point: "84%,70%"
 - assertVisible: "Колоссянам 3:23"
 - assertVisible: "В избранное"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/SCR-002-removed-after-relaunch
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-002-removed-after-relaunch

@@ -33,4 +33,4 @@ appId: twinkler
 - inputText: "кириллица"
 - hideKeyboard
 - assertVisible: ".*END-003 double finish.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-003-004-search-cyrillic
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-003-004-search-cyrillic

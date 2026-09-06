@@ -30,4 +30,4 @@ appId: twinkler
     start: "94%,1%"
     end: "94%,48%"
     duration: 700
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-MUSIC-control-center
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-29-background/BG-MUSIC-control-center

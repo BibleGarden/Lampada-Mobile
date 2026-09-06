@@ -5,4 +5,4 @@ appId: twinkler
     stopApp: false
 - assertVisible: "Завершить"
 - assertVisible: "Вернуться к молитве"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-29-background/BG-TIMER-resumed-at-zero
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-29-background/BG-TIMER-resumed-at-zero

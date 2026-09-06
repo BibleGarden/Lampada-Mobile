@@ -13,10 +13,10 @@ appId: twinkler
 - assertVisible: "ДНЕВНИК"
 - tapOn: ".*JRN-008 upgrade retest.*"
 - tapOn: ".*Аудиозапись.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-006-first-playing
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-006-first-playing
 - tapOn: ".*JRN-008 upgrade retest.*"
 - assertVisible: ".*JRN-006 second audio.*"
 - tapOn: ".*JRN-006 second audio.*"
 - tapOn: ".*Аудиозапись.*"
 - assertVisible: "ДНЕВНИК"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-006-second-playing
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-006-second-playing

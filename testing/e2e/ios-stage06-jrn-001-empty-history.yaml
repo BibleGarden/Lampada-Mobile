@@ -9,11 +9,11 @@ appId: twinkler
     point: "76%,12%"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: "Здесь появятся твои молитвы"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-history
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-history
 # search over an empty history must not error either
 - tapOn: "Найти молитву…"
 - inputText: "тревога"
 - assertVisible: "тревога"
 - hideKeyboard
 - assertVisible: "Ничего не нашлось — попробуй другое слово"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-search
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-search

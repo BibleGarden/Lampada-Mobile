@@ -33,6 +33,6 @@ appId: twinkler
     timeout: 10000
 - assertVisible:
     id: "scripture-preview-highlight-2"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-28-scripture-highlight/preview-highlight
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-28-scripture-highlight/preview-highlight
 - tapOn: "Читать целиком"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-28-scripture-highlight/reader-highlight
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-28-scripture-highlight/reader-highlight

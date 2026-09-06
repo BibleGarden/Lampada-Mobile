@@ -61,4 +61,4 @@ appId: twinkler
     point: "76%,12%"
 - assertVisible: ".*END-003 double finish.*"
 - assertVisible: ".*END-004 second prayer.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-003-004-two-prayers-one-day
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-003-004-two-prayers-one-day

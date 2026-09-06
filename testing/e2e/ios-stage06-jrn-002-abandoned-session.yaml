@@ -23,7 +23,7 @@ appId: twinkler
     end: "50%,78%"
     duration: 1700
 - assertVisible: "МОЛИТВА"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-002-session-started
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-002-session-started
 # kill the app mid-prayer: nothing was answered, nothing was concluded
 - stopApp
 - launchApp:
@@ -35,4 +35,4 @@ appId: twinkler
 - assertVisible: "ДНЕВНИК"
 - assertVisible: "Здесь появятся твои молитвы"
 - assertNotVisible: "JRN-002 брошенная сессия"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/JRN-002-journal-after-abandon
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-002-journal-after-abandon
