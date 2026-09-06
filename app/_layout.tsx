@@ -31,7 +31,7 @@ import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
 // завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
 // не выбрасывает пользователя из неё.
-const PRAYER_FLOW = new Set(['/session', '/reflect', '/done']);
+const PRAYER_FLOW = new Set(['/session', '/reflect']);
 
 /** Тап по напоминанию открывает главную. */
 function ReminderRouting() {
@@ -115,7 +115,6 @@ export default function RootLayout() {
               выход — только явными кнопками (finishEarly / завершение) */}
           <Stack.Screen name="session" options={{ gestureEnabled: false }} />
           <Stack.Screen name="reflect" options={{ gestureEnabled: false }} />
-          <Stack.Screen name="done" options={{ gestureEnabled: false }} />
         </Stack>
       </View>
       {/* Последним элементом, поверх всей навигации: экран блокировки и шторку

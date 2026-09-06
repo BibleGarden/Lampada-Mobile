@@ -104,6 +104,7 @@ export default function AnswerSheet({
   const qIndex = useSession((st) => st.qIndex);
   const saveAnswerToStore = useSession((st) => st.saveAnswer);
   const [text, setText] = useState('');
+  const answerInputRef = useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
   const [recs, setRecs] = useState<RecordingDraft[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   // Расшифровка показывается свёрнутой — три строки; раскрытая читается целиком.
@@ -792,6 +793,10 @@ export default function AnswerSheet({
     savingRef.current = true;
     setSaving(true);
     try {
+      // Снимаем фокус до окна согласия: при его закрытии iOS иначе может
+      // вернуть клавиатуру уже поверх закрытой шторки ответа.
+      answerInputRef.current?.blur();
+      Keyboard.dismiss();
       // активная запись не должна молча продолжаться после сохранения
       if (
         recordingOperation.getPhase() === 'recording' ||
@@ -994,6 +999,7 @@ export default function AnswerSheet({
         {/* Поле занимает всю оставшуюся высоту и прокручивается само:
             курсор при наборе всегда остаётся в поле зрения. */}
         <BottomSheetTextInput
+          ref={answerInputRef}
           testID="answer-input"
           value={text}
           onChangeText={setText}

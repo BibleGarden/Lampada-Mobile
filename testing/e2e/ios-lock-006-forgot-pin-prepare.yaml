@@ -63,17 +63,8 @@ appId: twinkler
 - pressKey: Enter
 - tapOn: "Сохранить и завершить"
 - assertVisible: "Огонёк горит"
-- tapOn: "На главную"
-# Защита от dev-баннера LogBox поверх нижней кнопки (86cbbqzcj). Известные
-# источники предупреждений устранены, ветка обычно пропускается; ретрай
-# оставлен на случай новых предупреждений в dev-сборке.
-- runFlow:
-    when:
-      notVisible:
-        id: "journal-button"
-    commands:
-      - tapOn: "На главную"
-
+- assertVisible:
+    id: "journal-button"
 # Запись действительно в дневнике.
 - tapOn:
     id: "journal-button"

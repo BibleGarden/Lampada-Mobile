@@ -27,11 +27,10 @@ appId: twinkler
 - tapOn:
     point: "10%,11%"
 - assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- tapOn: "Завершить"
-- tapOn:
-    point: "50%,79%"
+- doubleTapOn: "Завершить"
 - assertVisible: "Огонёк горит"
-- tapOn: "На главную"
+- assertVisible:
+    id: "journal-button"
 - tapOn: "Начать молитву"
 - tapOn:
     point: "50%,37%"
@@ -56,7 +55,8 @@ appId: twinkler
     point: "10%,11%"
 - tapOn: "Завершить"
 - assertVisible: "Огонёк горит"
-- tapOn: "На главную"
+- assertVisible:
+    id: "journal-button"
 - tapOn:
     point: "76%,12%"
 - assertVisible: ".*END-003 double finish.*"

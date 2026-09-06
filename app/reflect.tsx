@@ -86,20 +86,21 @@ function ReflectScreen() {
     completing.current = true;
     try {
       await s.complete(saveText);
-      router.replace('/done');
+      Keyboard.dismiss();
+      router.dismissTo({ pathname: '/', params: { prayerSaved: '1' } });
     } catch (e) {
       completing.current = false;
       throw e;
     }
   };
 
-  // свежий отсчёт, та же цель и длительность — как continuePraying в прототипе
+  // Новый отсчёт внутри той же молитвы, с сохранением всей истории.
   const continuePraying = async () => {
     if (completing.current) return;
     completing.current = true;
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await s.enterSession();
+      s.resumeSession();
       router.replace('/session');
     } finally {
       completing.current = false;

@@ -57,4 +57,8 @@ implementation details do not need one.
 
 - [0026: Identify test installations independently of Debug/Release](0026-test-build-label.md)
 
+- [0027: Resume the current prayer from reflection](0027-resume-current-prayer.md)
+
+- [0028: Show prayer completion on Home](0028-completion-on-home.md)
+
 - [0029: Export a prayer as plain text through the system share sheet](0029-prayer-text-export.md)

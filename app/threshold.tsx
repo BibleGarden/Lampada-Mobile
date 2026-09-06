@@ -1,6 +1,6 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
@@ -134,7 +134,7 @@ export default function Threshold() {
         </View>
 
         {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
-        <View style={styles.brief}>
+        <ScrollView style={styles.briefScroll} contentContainerStyle={styles.brief}>
           <Text style={styles.title}>{t('screens.threshold.title')}</Text>
           {brief.map((b, i) => {
             // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
@@ -159,7 +159,7 @@ export default function Threshold() {
               </View>
             );
           })}
-        </View>
+        </ScrollView>
 
         <View style={styles.holdWrap}>
           <GestureDetector gesture={hold}>
@@ -176,8 +176,8 @@ export default function Threshold() {
               </View>
               <View style={styles.holdContent} pointerEvents="none">
                 <Lamp />
-                <Text style={styles.holdHint}>{t(hint)}</Text>
-                <Text style={styles.holdLabel}>{t('screens.threshold.start')}</Text>
+                <Text style={styles.holdHint} maxFontSizeMultiplier={1.2}>{t(hint)}</Text>
+                <Text style={styles.holdLabel} maxFontSizeMultiplier={1.2}>{t('screens.threshold.start')}</Text>
               </View>
             </View>
           </GestureDetector>
@@ -208,8 +208,12 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(28),
     color: colors.cream,
   },
-  brief: {
+  briefScroll: {
     flex: 1,
+  },
+  brief: {
+    flexGrow: 1,
+    paddingVertical: sc(16),
     justifyContent: 'center',
     gap: sc(12),
     paddingHorizontal: 2,
@@ -240,6 +244,7 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.goldSoft,
   },
   holdWrap: {
+    flexShrink: 0,
     alignItems: 'center',
     gap: sc(16),
   },
@@ -259,20 +264,26 @@ const stylesFactory = () => StyleSheet.create({
   holdContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: sc(46),
-    paddingBottom: sc(42),
+    justifyContent: 'center',
+    gap: sc(4),
   },
   holdHint: {
+    // Две строки остаются внутри круга; высота не меняется при удержании.
+    width: sc(112),
+    height: sc(32),
+    textAlign: 'center',
     fontFamily: fonts.sans,
     fontSize: sc(10),
-    letterSpacing: sc(1.8),
+    lineHeight: sc(13),
+    letterSpacing: sc(1),
     textTransform: 'uppercase',
     color: colors.warmHint,
   },
   holdLabel: {
+    textAlign: 'center',
     fontFamily: fonts.serifRegular,
     fontSize: sc(17),
+    lineHeight: sc(24),
     color: colors.creamBright,
   },
 });

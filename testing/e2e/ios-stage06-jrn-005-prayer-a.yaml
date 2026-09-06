@@ -68,7 +68,8 @@ appId: twinkler
 - assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
 - tapOn: "Завершить"
 - assertVisible: "Огонёк горит"
-- tapOn: "На главную"
+- assertVisible:
+    id: "journal-button"
 - tapOn:
     point: "76%,12%"
 - assertVisible: "ДНЕВНИК"

@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Check, Delete, ScanFace } from 'lucide-react-native';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, fonts, sc, useStyles } from '../lib/theme';
 import { PIN_MAX_LENGTH, PIN_MIN_LENGTH } from '../lib/lock';
 
 // Клавиатура пин-кода: точки-индикаторы + круглые цифры в стиле приложения.
@@ -19,6 +19,9 @@ import { PIN_MAX_LENGTH, PIN_MIN_LENGTH } from '../lib/lock';
 // только замедляло бы вход. При установке и смене длину выбирает пользователь
 // (4–8 цифр), и закончить ввод может только он сам кнопкой «готово»: иначе
 // шестизначный пин проверялся бы на четвёртой цифре.
+
+// Ограничиваем только геометрию клавиш; текст сохраняет масштаб приложения.
+const keyScale = (value: number) => Math.min(sc(value), value * 1.25);
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 
@@ -67,6 +70,7 @@ function KeyButton({
   onPress,
   disabled,
   dim,
+  plain,
   emphasis,
   children,
   testID,
@@ -76,6 +80,7 @@ function KeyButton({
   onPress: () => void;
   disabled?: boolean;
   dim?: boolean;
+  plain?: boolean;
   /** Янтарная заливка со свечением — для главного действия (галочка «Готово»). */
   emphasis?: boolean;
   children?: React.ReactNode;
@@ -93,6 +98,7 @@ function KeyButton({
       style={({ pressed }) => [
         styles.key,
         dim && styles.keyDim,
+        plain && styles.keyPlain,
         emphasis && !disabled && styles.keyEmphasis,
         disabled && styles.keyDisabled,
         pressed && !disabled && styles.keyPressed,
@@ -234,10 +240,10 @@ export default function PinPad({
             accessibilityLabel={t('components.security.eraseDigit')}
             onPress={pressBackspace}
             disabled={busy || !pin.length}
-            dim
+            plain
             testID="pin-key-backspace"
           >
-            <Delete size={24} color={colors.goldSoft} />
+            <Delete size={26} strokeWidth={1.5} color={colors.goldSoft} />
           </KeyButton>
         )}
 
@@ -248,10 +254,10 @@ export default function PinPad({
             accessibilityLabel={t('components.security.eraseDigit')}
             onPress={pressBackspace}
             disabled={busy || !pin.length}
-            dim
+            plain
             testID="pin-key-backspace"
           >
-            <Delete size={24} color={colors.goldSoft} />
+            <Delete size={26} strokeWidth={1.5} color={colors.goldSoft} />
           </KeyButton>
         ) : (
           <KeyButton
@@ -271,7 +277,7 @@ export default function PinPad({
   );
 }
 
-const KEY_SIZE = () => sc(64);
+const KEY_SIZE = () => keyScale(64);
 
 const stylesFactory = () => StyleSheet.create({
   root: { alignItems: 'center' },
@@ -319,10 +325,10 @@ const stylesFactory = () => StyleSheet.create({
   hintError: { color: 'rgba(240,170,120,.95)' },
   keys: {
     marginTop: sc(18),
-    width: KEY_SIZE() * 3 + sc(18) * 2,
+    width: KEY_SIZE() * 3 + keyScale(18) * 2,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: sc(18),
+    gap: keyScale(18),
     justifyContent: 'center',
   },
   key: {
@@ -337,6 +343,8 @@ const stylesFactory = () => StyleSheet.create({
   },
   // Пустой угол клавиатуры: держит сетку, но не выглядит нажимаемой кнопкой.
   keySpacer: { width: KEY_SIZE(), height: KEY_SIZE() },
+  // Контур стирания без круга; область касания совпадает с цифровой кнопкой.
+  keyPlain: { backgroundColor: 'transparent', borderColor: 'transparent' },
   keyDim: { backgroundColor: colors.btnGoldBgDim, borderColor: colors.btnGoldBorderDim },
   // Как GoldButton: главная CTA-кнопка экрана должна бросаться в глаза.
   keyEmphasis: {
@@ -350,7 +358,7 @@ const stylesFactory = () => StyleSheet.create({
   keyPressed: { transform: [{ scale: 0.94 }], backgroundColor: 'rgba(214,182,120,.26)' },
   keyLabel: {
     fontFamily: fonts.sansMedium,
-    fontSize: sc(25),
+    fontSize: keyScale(28),
     color: colors.parchment,
   },
   footer: { marginTop: sc(22), alignItems: 'center', gap: sc(10) },

@@ -29,11 +29,16 @@ code cannot bypass it accidentally. Each first relevant action shows the data,
 route, named processor and purpose before an equally weighted allow or deny
 choice. Settings expose the same three independent decisions.
 
-The current processor contract identifies company-managed model infrastructure,
+The current processor contract identifies model infrastructure managed by the individual app developer,
 not a particular model family. A server-side model swap under the same processing
 terms does not require a client release; moving content to a third-party processor
 or materially changing those terms requires a new contract identity and renewed
 consent.
+
+The September 6 wording clarification removes references to a company: the app
+is published by an individual developer. It does not change the processing route
+or consent terms. The persisted `company-hosted-ai-2026-09` identifier is retained
+for compatibility and is not displayed to users.
 
 On migration, legacy `share_answers=0` becomes answer-context `denied`. A missing
 or permissive legacy value becomes `undecided`, as do core AI and transcription
@@ -69,7 +74,7 @@ enforce the same barriers.
   before the settings action completes.
 - Provider or material contract changes require updating the contract identity
   or notice version and collecting consent again.
-- The September 2026 move from Gemini to company-hosted chat and speech models
+- The September 2026 move from Gemini to self-hosted chat and speech models
   changes both identifiers, so an old Gemini allowance resolves to `undecided`.
 - Unit tests cover parsing, migration and serialized scripture fields; manual
   scenarios cover all three first-use disclosures and withdrawal.
@@ -80,4 +85,4 @@ enforce the same barriers.
 - [Cross-repository AI processing decision](https://github.com/BibleGarden/Architecture/blob/main/decisions/0001-lampada-ai-data-processing.md)
 - [ClickUp: topic and answer consent](https://app.clickup.com/t/86cbcunkb)
 - [ClickUp: audio transcription consent](https://app.clickup.com/t/86cbcunm6)
-- [ClickUp: company-hosted AI migration](https://app.clickup.com/t/86cbegfzt)
+- [ClickUp: self-hosted AI migration](https://app.clickup.com/t/86cbegfzt)

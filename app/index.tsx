@@ -1,7 +1,7 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, NotebookText, Settings2 } from 'lucide-react-native';
 import Flame from '../components/Flame';
@@ -23,6 +23,21 @@ export default function Home() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const { streak, loadStreak, reset } = useSession();
+  const { prayerSaved } = useLocalSearchParams<{ prayerSaved?: string }>();
+  const [showSavedNotice, setShowSavedNotice] = useState(false);
+
+  useEffect(() => {
+    if (prayerSaved !== '1') return;
+    setShowSavedNotice(true);
+    // Забираем одноразовое сообщение, чтобы оно не повторялось при возврате.
+    router.setParams({ prayerSaved: undefined });
+  }, [prayerSaved]);
+
+  useEffect(() => {
+    if (!showSavedNotice) return;
+    const timer = setTimeout(() => setShowSavedNotice(false), 4000);
+    return () => clearTimeout(timer);
+  }, [showSavedNotice]);
 
   // при каждом возврате на Home: сброс сессии + свежий стрик
   useFocusEffect(
@@ -108,6 +123,11 @@ export default function Home() {
         </View>
 
         <View style={[styles.bottom, { paddingBottom: insets.bottom + sc(24) }]}>
+          {showSavedNotice && (
+            <Text accessibilityRole="alert" style={styles.savedNotice} testID="prayer-saved-notice">
+              {t('screens.home.prayerSaved')}
+            </Text>
+          )}
           <GoldButton label={t('screens.home.start')} onPress={() => router.push('/setup')} />
         </View>
       </View>
@@ -183,5 +203,13 @@ const stylesFactory = () => StyleSheet.create({
   // центрируется по всему экрану и наезжает на кнопку.
   bottom: {
     paddingHorizontal: sc(18),
+  },
+  savedNotice: {
+    marginBottom: sc(12),
+    fontFamily: fonts.sans,
+    fontSize: sc(13),
+    lineHeight: sc(18),
+    textAlign: 'center',
+    color: colors.goldSoft,
   },
 });

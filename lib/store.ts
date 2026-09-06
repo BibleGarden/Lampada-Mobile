@@ -102,6 +102,7 @@ type SessionActions = {
   prepareThreshold: () => void;
   prepareReflect: () => void;
   enterSession: () => Promise<void>;
+  resumeSession: () => void;
   tick: (nowMs?: number) => void;
   adjustTimer: (deltaMin: number) => void;
 
@@ -409,6 +410,27 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       });
       prepareQuestion(get(), 0);
     });
+  },
+
+  resumeSession: () => {
+    const s = get();
+    if (s.sessionId === null || s.startedAtMs === null) return;
+    const nowMs = Date.now();
+    const remaining = s.minutes === 0 ? null : s.minutes * 60;
+    const endsAtMs = remaining === null ? null : nowMs + remaining * 1_000;
+    // Возвращаемся в ту же молитву: ответы, цитаты и позиции не сбрасываем.
+    // Поздний итоговый вопрос с экрана завершения больше не применяется.
+    reflectToken++;
+    set({
+      remaining,
+      endsAtMs,
+      elapsed: Math.max(s.elapsed, sessionTimerSnapshot(s.startedAtMs, s.endsAtMs, nowMs).elapsed),
+      reflectGenerating: false,
+    });
+    void (endsAtMs === null
+      ? stopPrayerSystemTimer()
+      : startPrayerSystemTimer({ startedAtMs: nowMs, endsAtMs })
+    ).catch((error) => reportSystemTimerError('resume', error));
   },
 
   tick: (nowMs = Date.now()) => {

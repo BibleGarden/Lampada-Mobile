@@ -1,6 +1,6 @@
 appId: twinkler
 ---
-# END-002: a saved takeaway is shown on the final screen and in the journal.
+# END-002: a saved takeaway returns directly Home and remains in the journal.
 - launchApp:
     stopApp: true
     clearState: true
@@ -36,10 +36,10 @@ appId: twinkler
 - takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-002-reflect-filled
 - tapOn: "Сохранить и завершить"
 - assertVisible: "Огонёк горит"
-- assertVisible: "ТЫ ВЫНЕС ИЗ МОЛИТВЫ"
-- assertVisible: ".*END-002 вывод молитвы.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-002-done-takeaway-card
-- tapOn: "На главную"
+- assertVisible:
+    id: "prayer-saved-notice"
+- assertVisible:
+    id: "journal-button"
 - assertVisible: "Огонёк горит"
 - tapOn:
     point: "76%,12%"

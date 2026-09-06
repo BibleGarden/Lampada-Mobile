@@ -122,7 +122,7 @@ The smoke counts as passed only in full.
 | SMK-002 | Open the prayer setup, set a goal and 5 minutes | the values are displayed and lead to the threshold screen |
 | SMK-003 | Release the hold too early, then hold it fully | the first gesture is cancelled, the second starts exactly one session |
 | SMK-004 | Open the answer, save the text | the answer is marked as saved and is not lost |
-| SMK-005 | Finish early, save the takeaway | the successful finish screen opens |
+| SMK-005 | Finish early, save the takeaway | Home opens directly with a lit flame and a temporary saved notice |
 | SMK-006 | Go back Home and open the journal | the prayer, the answer and the takeaway are there |
 | SMK-007 | Force-quit and open the app again | the saved data and the streak remain |
 
@@ -258,8 +258,8 @@ The smoke counts as passed only in full.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| END-001 | Finish without a takeaway | the session finishes, an empty takeaway card is not shown |
-| END-002 | Finish with a takeaway | the text is shown on the final screen and in the journal |
+| END-001 | Finish without a takeaway | the session finishes and returns directly Home with a temporary saved notice |
+| END-002 | Finish with a takeaway | Home opens with a temporary saved notice; the text remains in the journal |
 | END-003 | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the streak and the seven dots agree with the local calendar date |

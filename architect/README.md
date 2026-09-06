@@ -92,13 +92,13 @@ Changes to the app are made against the documentation of
 | `/threshold` | Preparing to start the session and generating the question in advance |
 | `/session` | The timer, the questions, the answers and scripture |
 | `/reflect` | The closing question and the wording of the takeaway |
-| `/done` | Finishing and returning Home |
+| `/done` | Compatibility redirect to Home for older links |
 | `/journal` | Prayer history, search, playback, saved quotes and deletion |
 | `/settings` | Settings for the language, the translation, the narration, privacy, reminders and the lock |
 | `/favorites` | Saved quotes: the key verses, expandable into the full passage |
 | `/about` | The point of the app, API-backed contacts, the version and the author's other projects |
 
-`session`, `reflect` and `done` cannot be left by an accidental system gesture:
+`session` and `reflect` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
 
 ## State and the main data flow
@@ -112,9 +112,9 @@ The main flows:
 
 ```text
 Screen → useSession → lib/db.ts → SQLite / local audio files
-                   ↘ lib/ai.ts → lib/llm.ts → bible-api → company-hosted chat model
+                   ↘ lib/ai.ts → lib/llm.ts → bible-api → self-hosted chat model
                                ↘ local curated fallback
-                   ↘ lib/transcription.ts → bible-api → company-hosted speech model
+                   ↘ lib/transcription.ts → bible-api → self-hosted speech model
                    ↘ lib/scriptureClient.ts → bible-api /api/ai/scripture
                                             ↘ lib/scriptureRepository.ts → SQLite
                    ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
@@ -144,6 +144,21 @@ clock every time, so after coming back from the background the timer immediately
 catches up with the interval that passed. A session unloaded by the OS is not
 restored yet, and the transition to reflection happens once JavaScript is active
 again.
+
+Returning from reflection uses `resumeSession`, not `enterSession`: it retains
+one session ID, all questions, answers and recordings, the scripture trail and
+current positions. A finite prayer gets a fresh interval of the selected duration;
+an untimed prayer remains untimed. The original start and cumulative wall-clock
+elapsed time are retained, including time on the reflection screen. Late reflection
+results are invalidated. Final completion writes to the same journal session.
+See [ADR-0027](decisions/0027-resume-current-prayer.md).
+
+After the reflection is saved (or skipped), completion returns directly Home with
+`router.dismissTo`, removing the prayer flow from the navigation stack. Home shows
+a localized four-second saved notice and the updated flame/day state. The takeaway
+remains in the journal; there is no separate success screen. A consumed route
+parameter triggers the notice once. Legacy `/done` links redirect without claiming
+a new save. See [ADR-0028](decisions/0028-completion-on-home.md).
 
 For a finite prayer the same `endsAtMs` is handed to a system surface: iOS shows
 an `expo-widgets` Live Activity on the Lock Screen and in the Dynamic Island,
@@ -330,6 +345,16 @@ end of the current one, with a crossfade of the volumes. During recording,
 scripture narration, when the music is turned off or when the prayer ends, both
 players are paused in sync and an unfinished crossfade is reset.
 
+A prayer can leave the device only as plain text and only by an explicit action
+of the user (ADR-0029). The "Share" button of an expanded journal card builds the
+note in `lib/exportPrayer.ts` - a pure function over the journal entry, its
+`getJournalDetail` content and its saved passages - and hands it to the system
+share sheet through the built-in `Share.share` of React Native. The note carries
+the topic, the start and the duration, the questions with their answers and the
+transcripts of the voice recordings, the saved passages, the takeaway and the
+app name. Audio files and file URIs are never exported, and the export itself
+makes no network request: where the text goes is decided by the share sheet.
+
 There is no continuous synchronisation of user data with a server at the moment.
 The scripture cache and the favourites are read entirely locally. The
 availability of Bible API is determined by the result of the HTTP request itself,
@@ -345,16 +370,6 @@ the result of a server selection.
 mount through `lib/versionCheck.ts`. The shared API receives `app=lampada`;
 only matching responses may trigger optional or mandatory update screens.
 The overlay sits above navigation and below `LockGate`, with accessible content
-A prayer can leave the device only as plain text and only by an explicit action
-of the user (ADR-0029). The "Share" button of an expanded journal card builds the
-note in `lib/exportPrayer.ts` - a pure function over the journal entry, its
-`getJournalDetail` content and its saved passages - and hands it to the system
-share sheet through the built-in `Share.share` of React Native. The note carries
-the topic, the start and the duration, the questions with their answers and the
-transcripts of the voice recordings, the saved passages, the takeaway and the
-app name. Audio files and file URIs are never exported, and the export itself
-makes no network request: where the text goes is decided by the share sheet.
-
 isolation. Network errors leave the app usable. Lampada updates remain disabled
 server-side until its App Store listing is published. See ADR 0020.
 
@@ -378,7 +393,7 @@ embedded settings. See [ADR-0025](decisions/0025-single-api-origin.md).
 
 The app talks to a `bible-api` server endpoint which owns model routing, model
 credentials and system prompts. Chat and speech models run on infrastructure
-managed by the company; changing a stage's model is a server configuration
+managed by the individual app developer; changing a stage's model is a server configuration
 change and does not alter the client contract. Question requests use
 `{ topic, stage, messages, skipped_questions? }` (ADR-0019, ADR-0023). The topic is separate from conversation
 history; `stage` selects the server's first, next or reflection question prompt.
@@ -415,7 +430,7 @@ values resolve to `undecided`; the old `share_answers=0` is retained as an
 answer-context denial. Settings expose every decision separately.
 
 Before the first core AI use, the setup flow names the application server,
-company-managed model infrastructure and the purposes of sending the topic.
+AI processing and the purposes of sending the topic.
 Without an allowance, question
 generation uses the curated local pools and scripture selection sends neither
 `topic` nor `user_replies`, while the non-contextual server safe pool remains
@@ -427,7 +442,7 @@ composition, limits and ordering are defined by `lib/answerContext.ts` and
 
 Pressing "Transcribe" requests the feature but is not consent. The first attempt
 explains that the selected audio file goes through Bible API to a speech model on
-company-managed infrastructure only for a verbatim transcript. The UI checks the decision before it starts, and
+developer-managed infrastructure only for a verbatim transcript. The UI checks the decision before it starts, and
 `lib/transcription.ts` repeats the gate before opening or uploading the local
 file. The device locale remains a soft language hint. The returned transcript is
 local data and needs the separate answer-context consent before it can be sent in

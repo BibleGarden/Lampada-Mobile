@@ -1,6 +1,6 @@
 appId: twinkler
 ---
-# END-001: finishing without a takeaway completes the session and shows no empty takeaway card.
+# END-001: finishing without a takeaway completes the session and returns directly Home.
 - launchApp:
     stopApp: true
     clearState: true
@@ -35,10 +35,10 @@ appId: twinkler
 - assertVisible: "Завершить"
 - tapOn: "Завершить"
 - assertVisible: "Огонёк горит"
-# пустая карточка вывода не должна появляться
-- assertNotVisible: "ТЫ ВЫНЕС ИЗ МОЛИТВЫ"
-- takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-done-no-takeaway-card
-- tapOn: "На главную"
+- assertVisible:
+    id: "prayer-saved-notice"
+- assertVisible:
+    id: "journal-button"
 - assertVisible: "Огонёк горит"
 - takeScreenshot: /Users/maria/Desktop/Dev/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
 - tapOn:
