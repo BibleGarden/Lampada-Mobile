@@ -12,7 +12,7 @@ import { buildQuestionRequest } from './questionRequest';
 import type { AnswerContext } from './answerContext';
 
 export type QuestionSource = 'ai' | 'fallback';
-export type GeneratedQuestion = { text: string; source: QuestionSource };
+export type GeneratedQuestion = { text: string; source: QuestionSource; novel?: boolean };
 
 const fromAi = (text: string): GeneratedQuestion => ({ text, source: 'ai' });
 const fromFallback = (text: string): GeneratedQuestion => ({ text, source: 'fallback' });
@@ -51,9 +51,9 @@ export async function generateFirstQuestion(topic: string): Promise<GeneratedQue
   if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(currentFallbacks().first));
   try {
     const q = await completePrayerContent(buildQuestionRequest('first', topic));
-    const clean = tidy(q);
+    const clean = tidy(q.text);
     if (!isQuestion(clean)) warn('firstQuestion', 'Invalid question response');
-    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().first));
+    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().first));
   } catch (e) {
     warn('firstQuestion', e);
     return fromFallback(pickRandom(currentFallbacks().first));
@@ -70,14 +70,15 @@ export async function generateQuestion(
   topic: string,
   asked: string[],
   answers: Record<number, AnswerContext> = {},
+  skippedQuestions: string[] = [],
 ): Promise<GeneratedQuestion> {
-  const fallback = () => fromFallback(pickFallbackQuestion(asked));
+  const fallback = () => fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions]));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
-    const q = await completePrayerContent(buildQuestionRequest('next', topic, asked, answers));
-    const clean = tidy(q);
+    const q = await completePrayerContent(buildQuestionRequest('next', topic, asked, answers, skippedQuestions));
+    const clean = tidy(q.text);
     if (!isQuestion(clean)) warn('question', 'Invalid question response');
-    return isQuestion(clean) ? fromAi(clean) : fallback();
+    return isQuestion(clean) ? { ...fromAi(clean), novel: q.novel } : fallback();
   } catch (e) {
     warn('question', e);
     return fallback();
@@ -89,13 +90,14 @@ export async function generateReflectQuestion(
   topic: string,
   asked: string[],
   answers: Record<number, AnswerContext>,
+  skippedQuestions: string[] = [],
 ): Promise<GeneratedQuestion> {
   if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(currentFallbacks().reflect));
   try {
-    const q = await completePrayerContent(buildQuestionRequest('reflect', topic, asked, answers));
-    const clean = tidy(q);
+    const q = await completePrayerContent(buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions));
+    const clean = tidy(q.text);
     if (!isQuestion(clean)) warn('reflect', 'Invalid question response');
-    return isQuestion(clean) ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().reflect));
+    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().reflect));
   } catch (e) {
     warn('reflect', e);
     return fromFallback(pickRandom(currentFallbacks().reflect));

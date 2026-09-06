@@ -8,6 +8,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+export EXPO_PUBLIC_BUILD_CHANNEL=test
+
 TEAM="${TEAM:-4SC2JCE37N}"                 # Maria Novikov (платная)
 BUNDLE="${BUNDLE:-twinkler}"
 BUILD_DIR="$(pwd -P)/ios/build"
@@ -15,6 +17,8 @@ MODULE_CACHE="$BUILD_DIR/ModuleCache.noindex"
 
 echo "▶︎ Checking runtime variables for the local Release build…"
 bash scripts/check-runtime-env.sh local
+
+node scripts/bump-version.mjs
 
 # --- нативная папка ------------------------------------------------------
 # Синхронизируем конфигурацию и переводы разрешений даже при существующей ios/.

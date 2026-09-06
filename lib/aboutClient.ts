@@ -1,5 +1,5 @@
 import type { UiLanguage } from './uiLanguage';
-import { resolveScriptureCatalogUrl } from './scriptureCatalogClient';
+import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
 export type AboutContact = {
   id: string;
@@ -42,7 +42,7 @@ export function parseAboutContacts(value: unknown, language: UiLanguage = 'ru'):
 }
 
 export async function fetchAboutContacts(signal: AbortSignal, language: UiLanguage = 'ru'): Promise<AboutContact[]> {
-  const endpoint = resolveScriptureCatalogUrl('/api/about');
+  const endpoint = resolveApiUrl(apiPaths.about);
   if (!endpoint) throw new Error('not_configured');
   const url = new URL(endpoint);
   url.searchParams.set('app', 'lampada');

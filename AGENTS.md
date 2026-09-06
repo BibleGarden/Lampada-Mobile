@@ -23,10 +23,9 @@
   `.env.local` is never uploaded to the cloud.
 - Always run `npm run env:check:preview` before any EAS preview build. Start the
   build itself through `npm run eas:preview`, not through a bare `eas build`.
-- Required runtime variables: `EXPO_PUBLIC_AI_PROXY_URL`,
-  `EXPO_PUBLIC_AI_PROXY_KEY`, `EXPO_PUBLIC_AI_TRANSCRIBE_URL`.
-  `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` is optional: the Scripture URL is derived
-  from `AI_PROXY_URL`.
+- Required runtime variables: `EXPO_PUBLIC_API_URL` (server origin only) and
+  `EXPO_PUBLIC_AI_PROXY_KEY`. Endpoint paths are defined in `lib/apiConfig.ts`;
+  do not add separate URL variables for individual API methods.
 - If the preflight check fails, do not start the build. First state explicitly
   which names are missing and configure the chosen environment; never print the
   values of the variables into a response or a public log.

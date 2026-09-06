@@ -4,10 +4,9 @@ import type { ScriptureLanguage } from './scripture.ts';
 // @ts-ignore See note above.
 import type { ScriptureLanguageOption, ScriptureTranslation, ScriptureVoice } from './scripturePreferences.ts';
 // @ts-ignore See note above.
-import { resolveScriptureUrl, SCRIPTURE_REQUEST_TIMEOUT_MS } from './scriptureClient.ts';
+import { SCRIPTURE_REQUEST_TIMEOUT_MS } from './scriptureClient.ts';
+import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
-const EXPLICIT_SCRIPTURE_URL = process.env.EXPO_PUBLIC_SCRIPTURE_SELECT_URL;
-const QUESTION_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
 const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -89,20 +88,6 @@ export function parseScriptureTranslations(value: unknown): ScriptureTranslation
   return result;
 }
 
-export function resolveScriptureCatalogUrl(path: string): string | null {
-  const selectUrl = resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL);
-  if (!selectUrl) return null;
-  try {
-    const url = new URL(selectUrl);
-    url.pathname = path;
-    url.search = '';
-    url.hash = '';
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
 async function fetchCatalog<T>(
   url: string | null,
   parse: (value: unknown) => T | null,
@@ -130,10 +115,10 @@ async function fetchCatalog<T>(
 }
 
 export const fetchScriptureLanguages = (signal?: AbortSignal) =>
-  fetchCatalog(resolveScriptureCatalogUrl('/api/languages'), parseScriptureLanguages, signal);
+  fetchCatalog(resolveApiUrl(apiPaths.languages), parseScriptureLanguages, signal);
 
 export const fetchScriptureTranslations = (language: ScriptureLanguage, signal?: AbortSignal) => {
-  const raw = resolveScriptureCatalogUrl('/api/translations');
+  const raw = resolveApiUrl(apiPaths.translations);
   if (!raw) return fetchCatalog<ScriptureTranslation[]>(null, parseScriptureTranslations, signal);
   const url = new URL(raw);
   url.searchParams.set('language', language);

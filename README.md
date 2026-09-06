@@ -33,8 +33,8 @@ configuration nor system instructions are embedded into the app. To enable AI,
 copy `.env.example` to `.env.local` and set the client `X-API-Key` of the service.
 That client key is visible in the built app and does not replace the server-side
 limits. Voice answers are sent only when "Transcribe" is pressed, as a separate
-request to `/api/ai/transcribe`; the URL is set through
-`EXPO_PUBLIC_AI_TRANSCRIBE_URL` or derived from the `/api/ai/question` URL.
+request to `/api/ai/transcribe`. All requests use the server origin configured
+in `EXPO_PUBLIC_API_URL`; endpoint paths are defined in `lib/apiConfig.ts`.
 
 > The app uses native modules that Expo Go does not have
 > (`@shopify/react-native-skia`, `react-native-reanimated` 4). Running it on a
@@ -53,13 +53,13 @@ year.
 | --- | --- | --- |
 | `npm run iphone` | Local Release build installed directly onto a connected iPhone | `.env.local` |
 | `npm run eas:preview` | Internal Ad Hoc EAS build for registered devices | EAS environment `preview` |
-| `eas build --profile production` | Publishing through the App Store | EAS environment `production` |
+| `npm run eas:production` | Publishing through the App Store | EAS environment `production` |
 
 `preview` does not read `.env.local`: that file is excluded from git and from the
 cloud archive. Before a preview build the command checks automatically that the
-required variables are present. A separate `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` is
-not required - the Scripture API address is derived from
-`EXPO_PUBLIC_AI_PROXY_URL`.
+required variables `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_AI_PROXY_KEY` are
+present and that the URL is a valid HTTP(S) origin. Set the same two names in
+each EAS environment used for builds.
 
 ```bash
 npm run env:check:local     # check the local Release build
@@ -72,6 +72,58 @@ ones" caption, check the build environment first: this is the typical sign that
 the URL or the key were not baked into the JS bundle. After changing EAS
 variables an old `.ipa` will not fix itself - it has to be rebuilt and
 reinstalled.
+
+### API configuration
+
+Set `EXPO_PUBLIC_API_URL=https://api.bible.garden` (an origin only, without
+`/api` or an endpoint path). Local HTTP origins with a port are supported for
+emulators. The limited client key remains `EXPO_PUBLIC_AI_PROXY_KEY`.
+`lib/apiConfig.ts` defines paths for questions, transcription, Scripture,
+catalogs, audio, contacts and version checks. About displays the normalized
+base origin in test builds.
+
+When migrating an existing environment, replace `EXPO_PUBLIC_AI_PROXY_URL`,
+`EXPO_PUBLIC_AI_TRANSCRIBE_URL` and `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` with
+`EXPO_PUBLIC_API_URL`; keep the key unchanged. Legacy endpoint variables are
+no longer read. Migrate EAS preview/production environments before their next
+build, then rebuild and reinstall. A local `.env.local` change requires
+restarting Metro for Debug and rebuilding for Release.
+
+### Automatic app versions
+
+`app.json` → `expo.version` is the source of the app version. Each invocation of
+`npm run iphone`, `npm run ios`, `npm run android`, `npm run eas:preview` or
+`npm run eas:production` reserves the next patch before building:
+`1.0.0` → `1.0.1` → `1.0.2`. The major and minor numbers remain manual.
+Required environment checks run before reserving a version for iPhone and EAS
+builds. A later failure consumes the number; gaps are expected.
+
+The About screen reads the installed native version, with a config fallback for
+web and Expo Go. Local build commands synchronize native configuration before
+compilation. EAS receives the incremented config in its source archive.
+EAS remote build numbers are separate from this user-facing patch version;
+the existing production build-number auto-increment remains enabled.
+
+Run builds sequentially from one checkout and preserve the updated `app.json`
+in version control before switching machines or checkouts. Direct Xcode,
+Gradle, `expo run:*` and `eas build` invocations bypass the version reservation;
+use the npm commands above. `npm start`, web development and hot reload do not
+increment the version. The package version is package metadata only.
+
+Debug builds (`npm run ios` / `npm run android` by default) provide development
+tools and use Metro. Release builds bundle JavaScript and use production
+optimizations. `npm run iphone` and EAS preview build Release; preview uses
+internal Ad Hoc distribution, while production targets the App Store.
+The About footer always shows the installed version. Local native installs and
+EAS preview additionally show a localized "Test build" label and the configured
+API origin (or `—` when absent). TestFlight/App Store builds from the production
+profile show only the version. The API key is never rendered.
+
+This distinction uses `EXPO_PUBLIC_BUILD_CHANNEL`, not `__DEV__`. Local scripts
+and development/preview EAS profiles set it to `test`; the production script and
+profile set it to `store`. It is selected automatically, so do not add it to
+`.env.local` or the EAS environment. An absent value hides test details. Local
+physical-device installs remain standalone Release builds without Metro.
 
 ### Requirements
 
@@ -92,10 +144,10 @@ npm run iphone
 The `scripts/deploy-iphone.sh` script does the rest by itself:
 
 1. checks the required variables in `.env.local`;
-2. finds the connected iPhone (the UDID is detected automatically);
-3. generates the `ios/` folder through `expo prebuild` if it is missing;
+2. reserves the next patch version;
+3. synchronizes the `ios/` folder through `expo prebuild`;
 4. syncs CocoaPods with the installed Expo modules;
-5. sets the signing team;
+5. finds the connected iPhone (the UDID is detected automatically) and sets the signing team;
 6. builds Release, installs the app and launches it.
 
 The first build is slow (5-20 min: compiling Skia, Hermes and so on), later ones

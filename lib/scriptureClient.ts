@@ -1,12 +1,11 @@
 // The repository's native Node test runner requires the explicit extension.
 // @ts-ignore Expo/Metro resolves TypeScript sources, while tsc disallows the suffix here.
 import { parseScriptureSelection, type ScriptureRequest, type ScriptureSelection } from './scripture.ts';
+import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
 export const SCRIPTURE_REQUEST_TIMEOUT_MS = 25_000;
 export const DEFAULT_RETRY_AFTER_SECONDS = 30;
 
-const EXPLICIT_SCRIPTURE_URL = process.env.EXPO_PUBLIC_SCRIPTURE_SELECT_URL;
-const QUESTION_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
 const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 export type ScriptureSelectError =
@@ -47,32 +46,8 @@ export type ScriptureClientDependencies = {
 const defaultSleep = (milliseconds: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 
-export function resolveScriptureUrl(
-  explicitUrl: string | undefined,
-  questionUrl: string | undefined,
-): string | null {
-  const explicit = explicitUrl?.trim();
-  if (explicit) return explicit;
-  if (!questionUrl?.trim()) return null;
-
-  try {
-    const url = new URL(questionUrl);
-    const derivedPath = url.pathname.replace(
-      /\/api\/ai\/question\/?$/,
-      '/api/ai/scripture',
-    );
-    if (derivedPath === url.pathname) return null;
-    url.pathname = derivedPath;
-    url.search = '';
-    url.hash = '';
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
 export const scriptureConfigured = () =>
-  resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL) !== null;
+  resolveApiUrl(apiPaths.scripture) !== null;
 
 export function resolveScriptureBooksUrl(
   selectUrl: string | null,
@@ -80,11 +55,7 @@ export function resolveScriptureBooksUrl(
 ): string | null {
   if (!selectUrl) return null;
   try {
-    const url = new URL(selectUrl);
-    url.pathname = `/api/translations/${translation}/books`;
-    url.search = '';
-    url.hash = '';
-    return url.toString();
+    return resolveApiUrl(apiPaths.books(translation), new URL(selectUrl).origin);
   } catch {
     return null;
   }
@@ -120,7 +91,7 @@ export async function selectScriptureOnce(
   dependencies: ScriptureClientDependencies = {},
 ): Promise<ScriptureSelectResult> {
   const url = dependencies.url === undefined
-    ? resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL)
+    ? resolveApiUrl(apiPaths.scripture)
     : dependencies.url;
   if (!url) return { ok: false, error: { kind: 'not_configured' } };
 
@@ -265,10 +236,9 @@ export async function fetchScriptureBooks(
   translation: number,
   dependencies: ScriptureClientDependencies = {},
 ): Promise<ScriptureBookResponse[] | null> {
-  const selectUrl = dependencies.url === undefined
-    ? resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL)
-    : dependencies.url;
-  const url = resolveScriptureBooksUrl(selectUrl, translation);
+  const url = dependencies.url === undefined
+    ? resolveApiUrl(apiPaths.books(translation))
+    : resolveScriptureBooksUrl(dependencies.url, translation);
   if (!url) return null;
   const controller = new AbortController();
   const cancel = () => controller.abort();

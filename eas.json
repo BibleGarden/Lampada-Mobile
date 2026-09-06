@@ -5,11 +5,17 @@
   },
   "build": {
     "development": {
+      "env": {
+        "EXPO_PUBLIC_BUILD_CHANNEL": "test"
+      },
       "developmentClient": true,
       "distribution": "internal",
       "environment": "development"
     },
     "preview": {
+      "env": {
+        "EXPO_PUBLIC_BUILD_CHANNEL": "test"
+      },
       "distribution": "internal",
       "environment": "preview",
       "ios": {
@@ -17,6 +23,9 @@
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_BUILD_CHANNEL": "store"
+      },
       "autoIncrement": true,
       "environment": "production"
     }

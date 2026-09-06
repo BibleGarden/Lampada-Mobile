@@ -48,3 +48,11 @@ implementation details do not need one.
 - [0021: Independent interface language](0021-interface-language.md)
 
 - [0022: Localize bundled fallback questions](0022-localized-fallback-questions.md)
+
+- [0023: Send skipped questions and respect server novelty](0023-skipped-question-history.md)
+
+- [0024: Allocate a patch version for each build](0024-build-patch-version.md)
+
+- [0025: Configure one API origin](0025-single-api-origin.md)
+
+- [0026: Identify test installations independently of Debug/Release](0026-test-build-label.md)

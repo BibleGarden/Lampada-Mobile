@@ -49,16 +49,17 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web",
+    "start": "EXPO_PUBLIC_BUILD_CHANNEL=test expo start",
+    "android": "bash scripts/build-native.sh android",
+    "ios": "bash scripts/build-native.sh ios",
+    "web": "EXPO_PUBLIC_BUILD_CHANNEL=test expo start --web",
     "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "scripture:stub": "node scripts/scripture-stub.mjs",
     "env:check:local": "bash scripts/check-runtime-env.sh local",
     "env:check:preview": "bash scripts/check-runtime-env.sh eas preview",
     "eas:preview": "bash scripts/build-preview.sh",
+    "eas:production": "bash scripts/build-production.sh",
     "iphone": "bash scripts/deploy-iphone.sh"
   },
   "private": true

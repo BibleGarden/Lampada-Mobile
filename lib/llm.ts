@@ -1,18 +1,19 @@
 import { limitQuestionRequest } from './questionRequest';
 import type { QuestionRequest } from './questionRequest';
+import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
 // Низкоуровневый клиент AI-прокси на api.bible.garden.
 // Модель и системные инструкции выбираются и хранятся на сервере.
 //
 // Конфигурация — через .env.local (не коммитится, см. .gitignore):
-//   EXPO_PUBLIC_AI_PROXY_URL=https://api.bible.garden/api/ai/question
+//   EXPO_PUBLIC_API_URL=https://api.bible.garden
 //   EXPO_PUBLIC_AI_PROXY_KEY=… — отдельный ограниченный ключ прокси
 //
 // EXPO_PUBLIC_* зашиваются в бандл при сборке: после правки .env.local
 // нужен перезапуск dev-сервера. Секретов уровня «мастер-ключ» тут быть
 // не должно — все серверные секреты остаются в bible-api.
 
-const PROXY_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
+const PROXY_URL = resolveApiUrl(apiPaths.question);
 const PROXY_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 // The backend model call may take up to 20 seconds; leave time for its 502 response.
@@ -26,7 +27,13 @@ export const llmConfigured = () => Boolean(PROXY_URL);
  * Бросает при любой проблеме: не настроено, таймаут, не-2xx, пустой ответ.
  *
  */
+export type QuestionResponse = { text: string; novel?: boolean };
+
 export async function complete(request: QuestionRequest): Promise<string> {
+  return (await completeQuestion(request)).text;
+}
+
+export async function completeQuestion(request: QuestionRequest): Promise<QuestionResponse> {
   if (!PROXY_URL) throw new Error('AI proxy is not configured');
 
   const body = JSON.stringify(limitQuestionRequest(request));
@@ -47,7 +54,7 @@ export async function complete(request: QuestionRequest): Promise<string> {
     const data = await res.json();
     const text = typeof data?.text === 'string' ? data.text.trim() : '';
     if (!text) throw new Error('AI proxy: empty response');
-    return text;
+    return { text, ...(typeof data.novel === 'boolean' ? { novel: data.novel } : {}) };
   } finally {
     clearTimeout(timer);
   }
@@ -56,7 +63,7 @@ export async function complete(request: QuestionRequest): Promise<string> {
 /** Hard privacy barrier for prompts derived from a prayer session. */
 export async function completePrayerContent(
   request: QuestionRequest,
-): Promise<string> {
+): Promise<QuestionResponse> {
   // Lazy import keeps the transport independently testable in Node while the
   // app path still checks the live persisted gate immediately before fetch.
   const { answerContextAllowedNow, coreAiAllowedNow } = await import('./settings');
@@ -64,7 +71,7 @@ export async function completePrayerContent(
   if (request.messages.some((message) => message.role === 'user') && !answerContextAllowedNow()) {
     throw new Error('Answer context consent is not allowed');
   }
-  return complete(request);
+  return completeQuestion(request);
 }
 
 /**

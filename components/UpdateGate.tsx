@@ -5,7 +5,7 @@ import * as Application from 'expo-application';
 import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { checkVersion, type VersionCheck } from '../lib/versionCheck';
-import { resolveScriptureCatalogUrl } from '../lib/scriptureCatalogClient';
+import { apiPaths, resolveApiUrl } from '../lib/apiConfig';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function UpdateGate({ covered, onVisibleChange }: {
@@ -20,7 +20,7 @@ export default function UpdateGate({ covered, onVisibleChange }: {
   useEffect(() => {
     const controller = new AbortController();
     const version = Application.nativeApplicationVersion;
-    if (version) void checkVersion(resolveScriptureCatalogUrl('/api/version-check'), version,
+    if (version) void checkVersion(resolveApiUrl(apiPaths.versionCheck), version,
       process.env.EXPO_PUBLIC_AI_PROXY_KEY, controller.signal).then((result) => {
       if (!controller.signal.aborted) setData(result);
     });

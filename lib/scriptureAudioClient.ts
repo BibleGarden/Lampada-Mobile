@@ -2,10 +2,9 @@
 // @ts-ignore Expo/Metro resolves TypeScript sources, while tsc disallows the suffix here.
 import type { ScriptureDisplay } from './scripture.ts';
 // @ts-ignore See note above.
-import { resolveScriptureUrl, SCRIPTURE_REQUEST_TIMEOUT_MS } from './scriptureClient.ts';
+import { SCRIPTURE_REQUEST_TIMEOUT_MS } from './scriptureClient.ts';
+import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
-const EXPLICIT_SCRIPTURE_URL = process.env.EXPO_PUBLIC_SCRIPTURE_SELECT_URL;
-const QUESTION_URL = process.env.EXPO_PUBLIC_AI_PROXY_URL;
 const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 export type ScriptureAudioClip = {
@@ -27,18 +26,9 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
-const resolveApiUrl = (path: string): URL | null => {
-  const selectUrl = resolveScriptureUrl(EXPLICIT_SCRIPTURE_URL, QUESTION_URL);
-  if (!selectUrl) return null;
-  try {
-    const url = new URL(selectUrl);
-    url.pathname = path;
-    url.search = '';
-    url.hash = '';
-    return url;
-  } catch {
-    return null;
-  }
+const apiUrl = (path: string): URL | null => {
+  const url = resolveApiUrl(path);
+  return url ? new URL(url) : null;
 };
 
 const fetchJson = async (url: URL, signal?: AbortSignal): Promise<unknown> => {
@@ -73,7 +63,7 @@ async function getBookAlias(
   const cached = bookAliases.get(key);
   if (cached) return cached;
 
-  const url = resolveApiUrl(`/api/translations/${translation}/books`);
+  const url = apiUrl(apiPaths.books(translation));
   if (!url) throw new Error('not_configured');
   url.searchParams.set('voice_code', String(voice));
   const body = await fetchJson(url, signal);
@@ -91,7 +81,7 @@ async function getBookAlias(
 }
 
 const publicAudioUrl = (rawUrl: string): string => {
-  const base = resolveApiUrl('/');
+  const base = apiUrl('/');
   if (!base) throw new Error('not_configured');
   let audio: URL;
   try {
@@ -120,7 +110,7 @@ export async function fetchScriptureAudioClip(
     passage.chapter_number,
     signal,
   );
-  const url = resolveApiUrl('/api/excerpt_with_alignment');
+  const url = apiUrl(apiPaths.excerpt);
   if (!url) throw new Error('not_configured');
   url.searchParams.set('translation', String(passage.translation));
   url.searchParams.set(

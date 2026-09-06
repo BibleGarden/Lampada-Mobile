@@ -348,20 +348,50 @@ The overlay sits above navigation and below `LockGate`, with accessible content
 isolation. Network errors leave the app usable. Lampada updates remain disabled
 server-side until its App Store listing is published. See ADR 0020.
 
+## Shared API configuration
+
+`lib/apiConfig.ts` owns the single `EXPO_PUBLIC_API_URL` origin and endpoint
+paths. Question generation, transcription, Scripture selection, language and
+translation catalogs, books, aligned audio, About contacts and update checks
+all use this origin. Server-returned audio paths are still rebased onto that
+origin. The limited client key remains `EXPO_PUBLIC_AI_PROXY_KEY`.
+
+Only HTTP(S) origins without credentials, a path, query or fragment are valid;
+localhost/port origins are supported for development. Missing or malformed
+configuration preserves the clients' existing unavailable/fallback behavior.
+Build preflight checks both required variables and validates the origin.
+Legacy per-endpoint environment variables are ignored. Local and EAS
+environments must migrate before a new build; existing bundles keep their
+embedded settings. See [ADR-0025](decisions/0025-single-api-origin.md).
+
 ## AI and privacy
 
 The app talks to a `bible-api` server endpoint which owns model routing, model
 credentials and system prompts. Chat and speech models run on infrastructure
 managed by the company; changing a stage's model is a server configuration
 change and does not alter the client contract. Question requests use
-`{ topic, stage, messages }` (ADR-0019). The topic is separate from conversation
+`{ topic, stage, messages, skipped_questions? }` (ADR-0019, ADR-0023). The topic is separate from conversation
 history; `stage` selects the server's first, next or reflection question prompt.
 `lib/questionRequest.ts` pairs each answered question with its human reply in
 ascending question-index order. One user message joins typed text and completed
-transcripts with newlines. Unanswered questions are omitted, and an empty history
-is valid. Nonempty history ends with a user message. Requests retain at most 40
-messages and 16,000 UTF-16 code units across the topic and message text, dropping
-oldest messages without truncating the latest reply. Core and answer consent are
+transcripts with newlines. Unanswered questions are omitted from `messages`, and
+an empty conversation is valid. Nonempty history ends with a user message.
+The session keeps replaced unanswered questions in memory until reset or a new
+prayer. Requests include them in chronological order in `skipped_questions`,
+plus currently displayed unanswered questions so the one-ahead prefetch can
+avoid them before replacement. Actual answers, including untranscribed voice
+recordings, determine whether a question is unanswered before the privacy gate.
+Questions in assistant messages are excluded from the skipped list. First-stage
+requests never include skipped history. Requests retain at most 40 messages and
+the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
+budget is 16,000 UTF-16 code units across topic, messages and skipped questions;
+messages have priority, oldest entries are dropped, and the latest human reply
+is never truncated. Pool keys include skipped context to reject stale prefetches.
+The transport preserves the optional `novel` response flag. A replacement with
+`novel: false` leaves the current question visible and retries only on the next
+explicit tap. Advancing after an answer, first-question generation and reflection
+use a local fallback when the server reports no novel result. Missing `novel`
+remains compatible with older servers. Core and answer consent are
 rechecked before transfer. Only public Expo variables -
 the URL and the limited proxy key - may be embedded into a client build; server
 secrets and system instructions are not put into the app.
@@ -401,6 +431,25 @@ content and derived identifiers are not written into analytics, diagnostics or
 crash logs.
 
 ## Checks and operational sources
+
+### Build version allocation
+
+The npm native and EAS build entry points reserve the next `expo.version` patch
+in `app.json` through `scripts/bump-version.mjs` before compilation or upload.
+Local native builds run prebuild to synchronize existing native projects.
+The About screen uses `expo-application.nativeApplicationVersion`, with an Expo
+config fallback for web and Expo Go. This matches the installed version used
+by the update gate. EAS remote build numbers remain independent.
+The About footer always renders the installed version. A separate build-time
+`EXPO_PUBLIC_BUILD_CHANNEL=test` adds a localized "Test build" label and API
+origin. Local scripts and EAS development/preview select `test`; production
+selects `store` for both TestFlight and App Store. Missing channel values hide
+test details. This is independent of Debug/Release optimization; local iPhone
+installs remain standalone Release builds. See [ADR-0026](decisions/0026-test-build-label.md).
+Allocation is sequential per checkout; failed attempts may leave gaps, and the updated config
+must be preserved in version control. See [ADR-0024](decisions/0024-build-patch-version.md).
+
+### Commands and evidence
 
 - `npm test` - local unit tests of the library logic.
 - `npm run typecheck` - the TypeScript check.

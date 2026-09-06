@@ -60,6 +60,7 @@ type SessionState = {
   // session runtime
   sessionId: number | null;
   questions: string[];
+  skippedQuestions: string[];
   questionSources: ai.QuestionSource[];
   qIndex: number;
   answeredCount: number;
@@ -175,7 +176,14 @@ const poolKey = (
   s: SessionState,
   index: number,
   answers: Record<number, Answer> = s.answers,
-) => JSON.stringify([s.sessionId, index, s.topic, s.questions, answersForAi(answers), useSettings.getState().uiLanguage]);
+) => JSON.stringify([s.sessionId, index, s.topic, s.questions, skippedForAi(s, answers), answersForAi(answers), useSettings.getState().uiLanguage]);
+
+// Текущий неотвеченный вопрос уже показан: prefetch должен исключить и его.
+// Проверяем реальные ответы до privacy gate, включая ещё не расшифрованный голос.
+const skippedForAi = (s: SessionState, answers = s.answers) => [
+  ...s.skippedQuestions,
+  ...s.questions.filter((question, index) => question.trim() && !isAnswered(answers[index])),
+];
 
 const prepareQuestion = (
   s: SessionState,
@@ -185,18 +193,18 @@ const prepareQuestion = (
   if (s.sessionId === null) return null;
   const key = poolKey(s, index, answers);
   return questionPool.prepare(key, () =>
-    ai.generateQuestion(s.topic, s.questions, answersForAi(answers)),
+    ai.generateQuestion(s.topic, s.questions, answersForAi(answers), skippedForAi(s, answers)),
   );
 };
 
 const reflectKey = (s: SessionState) =>
-  JSON.stringify([s.sessionId, s.topic, s.questions, answersForAi(s.answers), useSettings.getState().uiLanguage]);
+  JSON.stringify([s.sessionId, s.topic, s.questions, skippedForAi(s), answersForAi(s.answers), useSettings.getState().uiLanguage]);
 
 const prepareReflectQuestion = (s: SessionState) => {
   if (s.sessionId === null) return null;
   const key = reflectKey(s);
   return reflectPool.prepare(key, () =>
-    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers)),
+    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers), skippedForAi(s)),
   );
 };
 
@@ -247,6 +255,7 @@ const initial: SessionState = {
   topic: '',
   minutes: 10,
   sessionId: null,
+  skippedQuestions: [],
   questions: ai.getCuratedQuestions(),
   questionSources: ai.getCuratedQuestions().map(() => 'fallback'),
   qIndex: 0,
@@ -346,6 +355,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     set({
       sessionId,
       questions: [firstQuestion?.text ?? ''],
+      skippedQuestions: [],
       questionSources: [firstQuestion?.source ?? 'ai'],
       qIndex: 0,
       answeredCount: 0,
@@ -481,6 +491,15 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       }
     }
 
+    if (q.novel === false) {
+      if (!isAnswered(s.answers[frontier])) {
+        // Слот уже забран: следующее нажатие попробует снова, без фонового цикла.
+        set({ generating: false });
+        return;
+      }
+      q = { text: ai.pickFallbackQuestion([...s.questions, ...s.skippedQuestions]), source: 'fallback' };
+    }
+
     if (isAnswered(s.answers[frontier])) {
       // плюс: открыть следующий вопрос в след
       const nf = s.answeredCount + 1;
@@ -500,7 +519,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       questions[frontier] = q.text;
       const questionSources = s.questionSources.slice();
       questionSources[frontier] = q.source;
-      set({ questions, questionSources, generating: false });
+      set({ questions, questionSources, generating: false,
+        skippedQuestions: [...s.skippedQuestions, s.questions[frontier]].filter(Boolean),
+      });
     }
 
     // Уже показанный вопрос не зависит от этого запроса: refill идёт в фоне.

@@ -5,16 +5,20 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import Constants from 'expo-constants';
+import * as Application from 'expo-application';
 import * as Linking from 'expo-linking';
 import { Code, ExternalLink, Globe, Mail, Send } from 'lucide-react-native';
 import { fetchAboutContacts, type AboutContact } from '../lib/aboutClient';
+import { apiBaseUrl } from '../lib/apiConfig';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Book, ChevronLeft } from '../components/icons';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const BIBLE_GARDEN_URL = 'https://bible.garden';
-const appVersion = Constants.expoConfig?.version ?? '—';
+const appVersion = (Constants.executionEnvironment === 'storeClient'
+  ? Constants.expoConfig?.version
+  : Application.nativeApplicationVersion ?? Constants.expoConfig?.version) ?? '—';
 
 export default function About() {
   const { t, language } = useI18n();
@@ -130,6 +134,14 @@ export default function About() {
           </Pressable>
 
           <Text style={styles.version}>{t('screens.about.version', { version: appVersion })}</Text>
+          {process.env.EXPO_PUBLIC_BUILD_CHANNEL === 'test' ? (
+            <View style={styles.buildInfo} testID="about-test-build-info">
+              <Text style={styles.buildText}>{t('screens.about.testBuild')}</Text>
+              <Text selectable style={styles.buildText}>
+                API: {apiBaseUrl() ?? '—'}
+              </Text>
+            </View>
+          ) : null}
         </ScrollView>
       </Animated.View>
     </View>
@@ -200,6 +212,16 @@ const stylesFactory = () => StyleSheet.create({
   },
   version: {
     marginTop: sc(26),
+    textAlign: 'center',
+    fontFamily: fonts.mono,
+    fontSize: sc(9.5),
+    color: colors.labelGoldDim,
+  },
+  buildInfo: {
+    marginTop: sc(8),
+    gap: sc(4),
+  },
+  buildText: {
     textAlign: 'center',
     fontFamily: fonts.mono,
     fontSize: sc(9.5),
