@@ -1,13 +1,13 @@
 import { languageNames } from '../lib/locales/languageNames';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
-import { Check, ChevronLeft, ChevronRight, Close, Minus, Plus, Trash } from '../components/icons';
+import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
 import { useSettings } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
 import {
@@ -39,6 +39,7 @@ import {
   type ScriptureTranslation,
   type ScriptureVoice,
 } from '../lib/scripturePreferences';
+import BottomSheet from '../components/BottomSheet';
 import PinPrompt from '../components/PinPrompt';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import {
@@ -151,42 +152,39 @@ function ConsentSetting({
   );
 }
 
-function PickerCard({
-  id, label, value, open, disabled, children, onToggle,
-}: {
-  id: Exclude<OpenPicker, null>;
-  label: string;
-  value: string;
-  open: boolean;
+/** Строка настройки: название слева, текущее значение справа, шеврон. */
+function SettingRow({ title, value, testID, accessibilityLabel, disabled, divided, onPress }: {
+  title: string;
+  value?: string;
+  testID: string;
+  accessibilityLabel?: string;
   disabled?: boolean;
-  children: React.ReactNode;
-  onToggle: (id: Exclude<OpenPicker, null>) => void;
+  divided?: boolean;
+  onPress: () => void;
 }) {
   const styles = useStyles(stylesFactory);
   return (
-    <View style={[styles.pickerCard, open && styles.pickerCardOpen, disabled && styles.disabled]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${label}: ${value}`}
-        accessibilityState={{ expanded: open, disabled: !!disabled }}
-        testID={`scripture-${id}-picker`}
-        disabled={disabled}
-        onPress={() => onToggle(id)}
-        style={styles.pickerHeader}
-      >
-        <View style={[styles.pickerAccent, open && styles.pickerAccentOpen]} />
-        <View style={styles.pickerHeading}>
-          <Text style={styles.pickerLabel}>{label}</Text>
-          <Text style={styles.pickerValue} numberOfLines={1}>{value}</Text>
-        </View>
-        <View style={styles.chevronCircle}>
-          <View style={{ transform: [{ rotate: open ? '-90deg' : '90deg' }] }}>
-            <ChevronRight size={16} color={colors.parchment} />
-          </View>
-        </View>
-      </Pressable>
-      {open ? <View style={styles.options}>{children}</View> : null}
-    </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? (value ? `${title}: ${value}` : title)}
+      accessibilityState={{ disabled: !!disabled }}
+      testID={testID}
+      disabled={disabled}
+      onPress={() => {
+        void Haptics.selectionAsync();
+        onPress();
+      }}
+      style={({ pressed }) => [
+        styles.settingRow,
+        divided && styles.settingRowDivided,
+        disabled && styles.disabled,
+        pressed && styles.optionPressed,
+      ]}
+    >
+      <Text style={[styles.rowTitle, value ? styles.settingRowTitle : styles.settingRowTitleWide]} numberOfLines={1}>{title}</Text>
+      {value ? <Text style={styles.settingRowValue} numberOfLines={1}>{value}</Text> : null}
+      <ChevronRight size={sc(15)} color={colors.labelGold} />
+    </Pressable>
   );
 }
 
@@ -288,6 +286,7 @@ export default function Settings() {
   const [languageSaveError, setLanguageSaveError] = useState(false);
   const languageSave = useRef<Promise<void>>(Promise.resolve());
   const [privacyDetailsOpen, setPrivacyDetailsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const {
@@ -340,15 +339,6 @@ export default function Settings() {
       setLoadingCatalog(false);
     }
   };
-
-  useEffect(() => {
-    if (reminderEditorRuleIndex === null) return undefined;
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      setReminderEditorRuleIndex(null);
-      return true;
-    });
-    return () => subscription.remove();
-  }, [reminderEditorRuleIndex]);
 
   useEffect(() => {
     void hydrate();
@@ -693,23 +683,31 @@ export default function Settings() {
       .catch(() => undefined);
   };
 
-  const togglePicker = (id: Exclude<OpenPicker, null>) => {
-    void Haptics.selectionAsync();
-    setOpen((current) => current === id ? null : id);
-  };
+  const openPicker = (id: Exclude<OpenPicker, null>) => setOpen(id);
+
+  const privacyAllowedCount = [coreAiConsent, answerContextConsent, audioTranscriptionConsent]
+    .filter((decision) => decision === 'allowed').length;
+
+  const scriptureSheetTitle = open === 'language'
+    ? t('settings.bibleLanguage')
+    : open === 'translation'
+      ? t('settings.translation')
+      : t('settings.voice');
+
+  // Пока сверху лежит любая шторка, экран под ней для программы чтения с
+  // экрана не существует. На iOS то же делает accessibilityViewIsModal самой
+  // шторки (см. lib/a11y). ScreenBg остаётся непомеченным намеренно: это
+  // декоративный холст Skia, узлов доступности он не создаёт.
+  const sheetOpen =
+    reminderEditorRuleIndex !== null || open !== null || interfaceLanguageOpen || privacyOpen;
 
   return (
     <View style={styles.root}>
       <ScreenBg />
-      {/* Пометка для TalkBack: пока сверху висит ввод пина, настроек под ним
-          для программы чтения с экрана не существует. На iOS то же делает сам
-          PinPrompt флагом accessibilityViewIsModal (см. lib/a11y).
-          ScreenBg остаётся непомеченным намеренно: это декоративный холст
-          Skia, узлов доступности он не создаёт. */}
       <Animated.View
         entering={FadeIn.duration(500)}
         style={styles.screen}
-        {...screenReaderHiddenProps(!!pinPrompt || reminderEditorRuleIndex !== null)}
+        {...screenReaderHiddenProps(!!pinPrompt || sheetOpen)}
       >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
           <IconButton accessibilityLabel={t('settings.back')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
@@ -723,134 +721,52 @@ export default function Settings() {
           style={{ flex: 1 }}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
-            paddingTop: sc(20),
+            paddingTop: sc(16),
             paddingHorizontal: sc(12),
             paddingBottom: insets.bottom + sc(24),
           }}
         >
           <Kicker style={styles.sectionKicker}>{t('settings.interfaceLanguage')}</Kicker>
-          <View style={[styles.pickerCard, { marginBottom: sc(24) }]} testID="interface-language-selector">
-            <Pressable
-              accessibilityRole="button"
+          <View style={styles.card} testID="interface-language-selector">
+            <SettingRow
+              title={languageNames[uiLanguage]}
               accessibilityLabel={`${t('settings.interfaceLanguage')}: ${languageNames[uiLanguage]}`}
-              accessibilityState={{ expanded: interfaceLanguageOpen }}
               testID="interface-language-picker"
-              onPress={() => {
-                void Haptics.selectionAsync();
-                setInterfaceLanguageOpen((value) => !value);
-              }}
-              style={styles.pickerHeader}
-            >
-              <Text style={[styles.optionTitle, { flex: 1 }]}>
-                {languageNames[uiLanguage]}
-              </Text>
-              <View style={styles.chevronCircle}>
-                <View style={{ transform: [{ rotate: interfaceLanguageOpen ? '-90deg' : '90deg' }] }}>
-                  <ChevronRight size={16} color={colors.parchment} />
-                </View>
-              </View>
-            </Pressable>
-            {interfaceLanguageOpen ? <View style={styles.options}>{([
-              { code: 'en', name: languageNames.en },
-              { code: 'ru', name: languageNames.ru },
-              { code: 'uk', name: languageNames.uk },
-            ] as const).map((item, index) => (
-              <OptionRow
-                key={item.code}
-                title={item.name}
-                selected={uiLanguage === item.code}
-                divided={index < 2}
-                testID={`interface-language-${item.code}`}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setLanguageSaveError(false);
-                  languageSave.current = languageSave.current
-                    .catch(() => undefined)
-                    .then(() => setUiLanguage(item.code))
-                    .then(() => {
-                      setLanguageSaveError(false);
-                      setInterfaceLanguageOpen(false);
-                    })
-                    .catch(() => setLanguageSaveError(true));
-                }}
-              />
-            ))}</View> : null}
+              onPress={() => setInterfaceLanguageOpen(true)}
+            />
             {languageSaveError ? (
               <Text accessibilityRole="alert" style={[styles.settingHint, styles.reminderWarning]}>
                 {t('settings.languageSaveError')}
               </Text>
             ) : null}
           </View>
-          <Kicker style={styles.sectionKicker}>{t('settings.scripture')}</Kicker>
-          <View style={styles.pickerStack}>
-            <PickerCard
-              id="language"
-              label={t('settings.bibleLanguage')}
+
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('settings.scripture')}</Kicker>
+          <View style={styles.card}>
+            <SettingRow
+              title={t('settings.bibleLanguage')}
               value={language?.nameNational ?? scripturePreferences.languageName}
-              open={open === 'language'}
+              testID="scripture-language-picker"
               disabled={loadingCatalog && languages.length === 0}
-              onToggle={togglePicker}
-            >
-              {languages.map((item, index) => (
-                <OptionRow
-                  key={item.alias}
-                  title={item.nameNational}
-                  subtitle={item.nameEnglish !== item.nameNational ? item.nameEnglish : null}
-                  selected={language?.alias === item.alias}
-                  divided={index < languages.length - 1}
-                  onPress={() => chooseLanguage(item)}
-                  testID={`scripture-language-${item.alias}`}
-                />
-              ))}
-            </PickerCard>
-
-            <PickerCard
-              id="translation"
-              label={t('settings.translation')}
+              divided
+              onPress={() => openPicker('language')}
+            />
+            <SettingRow
+              title={t('settings.translation')}
               value={translation?.name.trim() ?? (language ? t('settings.chooseTranslation') : scripturePreferences.translationName.trim())}
-              open={open === 'translation'}
+              testID="scripture-translation-picker"
               disabled={!language || loadingCatalog}
-              onToggle={togglePicker}
-            >
-              {translations.map((item, index) => (
-                <OptionRow
-                  key={item.code}
-                  title={item.name.trim()}
-                  subtitle={
-                    item.description?.trim() && item.description.trim() !== item.name.trim()
-                      ? item.description.trim()
-                      : null
-                  }
-                  selected={translation?.code === item.code}
-                  divided={index < translations.length - 1}
-                  onPress={() => chooseTranslation(item)}
-                  testID={`scripture-translation-${item.code}`}
-                />
-              ))}
-            </PickerCard>
-
-            <PickerCard
-              id="voice"
-              label={t('settings.voice')}
+              divided
+              onPress={() => openPicker('translation')}
+            />
+            <SettingRow
+              title={t('settings.voice')}
               value={voice?.name ?? (translation ? t('settings.chooseVoice') : scripturePreferences.voiceName)}
-              open={open === 'voice'}
+              testID="scripture-voice-picker"
               disabled={!translation}
-              onToggle={togglePicker}
-            >
-              {(translation?.voices ?? []).map((item, index, voices) => (
-                <OptionRow
-                  key={item.code}
-                  title={item.name}
-                  subtitle={item.description}
-                  selected={voice?.code === item.code}
-                  divided={index < voices.length - 1}
-                  onPress={() => chooseVoice(item)}
-                  testID={`scripture-voice-${item.code}`}
-                />
-              ))}
-            </PickerCard>
+              onPress={() => openPicker('voice')}
+            />
           </View>
-
           {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
           {catalogError ? (
             <Pressable onPress={() => void hydrate()} style={styles.retryButton}>
@@ -858,9 +774,9 @@ export default function Settings() {
             </Pressable>
           ) : null}
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>{t('settings.reminders')}</Kicker>
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('settings.reminders')}</Kicker>
           <View style={styles.card}>
-            <View style={styles.shareAnswersHeader}>
+            <View style={styles.toggleRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowTitle}>
                   {t('settings.prayerReminders')}
@@ -892,9 +808,8 @@ export default function Settings() {
                   testID={`reminders-settings-button-${ruleIndex}`}
                   onPress={() => setReminderEditorRuleIndex(ruleIndex)}
                   style={({ pressed }) => [
-                    styles.reminderSettingsRow,
-                    styles.reminderRuleSettingsRow,
-                    ruleIndex === 0 && styles.firstReminderSettingsRow,
+                    styles.settingRow,
+                    styles.settingRowDivided,
                     pressed && styles.optionPressed,
                   ]}
                 >
@@ -902,16 +817,13 @@ export default function Settings() {
                     style={styles.reminderSettingsCopy}
                     testID={ruleIndex === 0 ? 'reminders-summary' : `reminders-summary-${ruleIndex}`}
                   >
-                    <Text
-                      style={styles.reminderSettingsTitle}
-                      numberOfLines={1}
-                    >
+                    <Text style={styles.rowTitle} numberOfLines={1}>
                       {formatReminderWeekdays(rule.weekdays, uiLanguage)}
                     </Text>
-                    <Text style={styles.reminderSettingsSubtitle} numberOfLines={1}>
-                      {rule.times.map(formatReminderTime).join(', ')}
-                    </Text>
                   </View>
+                  <Text style={styles.settingRowValue} numberOfLines={1}>
+                    {rule.times.map(formatReminderTime).join(', ')}
+                  </Text>
                   <ChevronRight size={sc(15)} color={colors.labelGold} />
                 </Pressable>
               );
@@ -930,8 +842,8 @@ export default function Settings() {
                   }
                 }}
                 style={({ pressed }) => [
-                  styles.reminderSettingsRow,
-                  styles.addScheduleRow,
+                  styles.settingRow,
+                  styles.settingRowDivided,
                   pressed && styles.optionPressed,
                 ]}
               >
@@ -939,65 +851,25 @@ export default function Settings() {
                 <Plus size={sc(15)} color={colors.labelGold} />
               </Pressable>
             ) : null}
-
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(24) }]}>{t('settings.privacy')}</Kicker>
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('settings.privacy')}</Kicker>
           <View style={styles.card}>
-            <Text style={styles.settingHint}>
-              {t('settings.privacyHint')}
-            </Text>
-            <ConsentSetting
-              title={t('settings.prayerTopic')}
-              description={t('settings.topicConsentHint')}
-              decision={coreAiConsent}
-              purpose="core_prayer_ai"
-              onChange={setConsent}
+            <SettingRow
+              title={t('settings.privacyRow')}
+              value={t('settings.privacyAllowedCount', { count: privacyAllowedCount, total: 3 })}
+              testID="privacy-settings-button"
+              onPress={() => {
+                void Haptics.selectionAsync();
+                setPrivacyOpen(true);
+              }}
             />
-            <ConsentSetting
-              title={t('settings.answers')}
-              description={t('settings.answersConsentHint')}
-              decision={answerContextConsent}
-              purpose="answer_context"
-              onChange={setConsent}
-            />
-            <ConsentSetting
-              title={t('settings.transcription')}
-              description={t('settings.transcriptionConsentHint')}
-              decision={audioTranscriptionConsent}
-              purpose="audio_transcription"
-              onChange={setConsent}
-            />
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded: privacyDetailsOpen }}
-              testID="privacy-details-toggle"
-              onPress={() => setPrivacyDetailsOpen((value) => !value)}
-              style={({ pressed }) => [
-                styles.privacyDetailsToggle,
-                !privacyDetailsOpen && styles.privacyDetailsCollapsed,
-                pressed && styles.optionPressed,
-              ]}
-            >
-              <Text style={styles.privacyDetailsLabel}>
-                {privacyDetailsOpen ? t('settings.hideDetails') : t('settings.privacyDetailsLink')}
-              </Text>
-              <View style={{ transform: [{ rotate: privacyDetailsOpen ? '-90deg' : '90deg' }] }}>
-                <ChevronRight size={sc(14)} color={colors.labelGold} />
-              </View>
-            </Pressable>
-            {privacyDetailsOpen ? (
-              <Text style={styles.settingHint} testID="privacy-details">
-                {t('settings.privacyDetails')}
-              </Text>
-            ) : null}
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>{t('settings.protection')}</Kicker>
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('settings.protection')}</Kicker>
           <View style={styles.card}>
-            <View style={styles.shareAnswersHeader}>
-              <Text style={[styles.rowTitle, styles.shareAnswersTitle]}>{t('settings.pin')}</Text>
+            <View style={styles.toggleRow}>
+              <Text style={[styles.rowTitle, { flex: 1 }]}>{t('settings.pin')}</Text>
               <Toggle
                 value={lockEnabled}
                 label={t('settings.pin')}
@@ -1006,22 +878,18 @@ export default function Settings() {
               />
             </View>
             {lockEnabled ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('settings.changePin')}
+              <SettingRow
+                title={t('settings.changePin')}
                 testID="change-pin-button"
+                divided
                 onPress={startChangePin}
-                style={({ pressed }) => [styles.lockRow, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={[styles.rowTitle, { flex: 1 }]}>{t('settings.changePin')}</Text>
-                <ChevronRight size={16} color={colors.labelGold} />
-              </Pressable>
+              />
             ) : null}
 
             {/* Биометрия существует только поверх пина: без кода не осталось бы
                 запасного входа, если Face ID перестанет узнавать. */}
             {lockEnabled && biometry?.available ? (
-              <View style={styles.lockRow}>
+              <View style={[styles.toggleRow, styles.settingRowDivided]}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{biometry.label}</Text>
                   <Text style={[styles.settingHint, styles.shareAnswersHint]}>
@@ -1038,141 +906,249 @@ export default function Settings() {
             ) : null}
           </View>
 
-          <Kicker style={[styles.sectionKicker, { marginTop: sc(22) }]}>{t('settings.app')}</Kicker>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('settings.about')}
-            testID="about-button"
-            onPress={() => router.push('/about')}
-            style={({ pressed }) => [styles.card, styles.aboutLink, pressed && { opacity: 0.75 }]}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowTitle}>{t('settings.about')}</Text>
-            </View>
-            <ChevronRight size={16} color={colors.labelGold} />
-          </Pressable>
+          <Kicker style={[styles.sectionKicker, styles.sectionGap]}>{t('settings.app')}</Kicker>
+          <View style={styles.card}>
+            <SettingRow
+              title={t('settings.about')}
+              testID="about-button"
+              onPress={() => router.push('/about')}
+            />
+          </View>
         </ScrollView>
       </Animated.View>
 
-      {activeReminderRule && reminderEditorRuleIndex !== null ? (
-        <View style={styles.reminderModalBackdrop} accessibilityViewIsModal>
-          <Pressable
-            accessibilityLabel={t('settings.closeReminders')}
-            style={StyleSheet.absoluteFill}
-            onPress={() => setReminderEditorRuleIndex(null)}
+      {interfaceLanguageOpen ? (
+        <BottomSheet
+          title={t('settings.interfaceLanguage')}
+          closeLabel={t('settings.done')}
+          testID="interface-language-sheet"
+          onClose={() => setInterfaceLanguageOpen(false)}
+        >
+          <View style={styles.sheetList}>
+            {([
+              { code: 'en', name: languageNames.en },
+              { code: 'ru', name: languageNames.ru },
+              { code: 'uk', name: languageNames.uk },
+            ] as const).map((item, index) => (
+              <OptionRow
+                key={item.code}
+                title={item.name}
+                selected={uiLanguage === item.code}
+                divided={index < 2}
+                testID={`interface-language-${item.code}`}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setLanguageSaveError(false);
+                  languageSave.current = languageSave.current
+                    .catch(() => undefined)
+                    .then(() => setUiLanguage(item.code))
+                    .then(() => {
+                      setLanguageSaveError(false);
+                      setInterfaceLanguageOpen(false);
+                    })
+                    .catch(() => setLanguageSaveError(true));
+                }}
+              />
+            ))}
+          </View>
+          {languageSaveError ? (
+            <Text accessibilityRole="alert" style={[styles.settingHint, styles.reminderWarning]}>
+              {t('settings.languageSaveError')}
+            </Text>
+          ) : null}
+        </BottomSheet>
+      ) : null}
+
+      {open ? (
+        <BottomSheet
+          kicker={t('settings.scripture')}
+          title={scriptureSheetTitle}
+          closeLabel={t('settings.done')}
+          testID={`scripture-${open}-sheet`}
+          onClose={() => setOpen(null)}
+        >
+          <View style={styles.sheetList}>
+            {open === 'language' ? languages.map((item, index) => (
+              <OptionRow
+                key={item.alias}
+                title={item.nameNational}
+                subtitle={item.nameEnglish !== item.nameNational ? item.nameEnglish : null}
+                selected={language?.alias === item.alias}
+                divided={index < languages.length - 1}
+                onPress={() => chooseLanguage(item)}
+                testID={`scripture-language-${item.alias}`}
+              />
+            )) : null}
+            {open === 'translation' ? translations.map((item, index) => (
+              <OptionRow
+                key={item.code}
+                title={item.name.trim()}
+                subtitle={
+                  item.description?.trim() && item.description.trim() !== item.name.trim()
+                    ? item.description.trim()
+                    : null
+                }
+                selected={translation?.code === item.code}
+                divided={index < translations.length - 1}
+                onPress={() => chooseTranslation(item)}
+                testID={`scripture-translation-${item.code}`}
+              />
+            )) : null}
+            {open === 'voice' ? (translation?.voices ?? []).map((item, index, voices) => (
+              <OptionRow
+                key={item.code}
+                title={item.name}
+                subtitle={item.description}
+                selected={voice?.code === item.code}
+                divided={index < voices.length - 1}
+                onPress={() => chooseVoice(item)}
+                testID={`scripture-voice-${item.code}`}
+              />
+            )) : null}
+          </View>
+          {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
+          {catalogError ? (
+            <Pressable onPress={() => void hydrate()} style={styles.retryButton}>
+              <Text style={styles.catalogMessage}>{t('settings.catalogError')}</Text>
+            </Pressable>
+          ) : null}
+        </BottomSheet>
+      ) : null}
+
+      {privacyOpen ? (
+        <BottomSheet
+          title={t('settings.privacy')}
+          closeLabel={t('settings.done')}
+          doneLabel={t('settings.done')}
+          doneTestID="privacy-sheet-done"
+          testID="privacy-sheet"
+          onClose={() => setPrivacyOpen(false)}
+        >
+          <Text style={styles.settingHint}>
+            {t('settings.privacyHint')}
+          </Text>
+          <ConsentSetting
+            title={t('settings.prayerTopic')}
+            description={t('settings.topicConsentHint')}
+            decision={coreAiConsent}
+            purpose="core_prayer_ai"
+            onChange={setConsent}
           />
-          <View
-            testID="reminders-editor-modal"
-            style={[
-              styles.reminderModal,
-              { paddingBottom: Math.max(insets.bottom, sc(14)) },
-            ]}
+          <ConsentSetting
+            title={t('settings.answers')}
+            description={t('settings.answersConsentHint')}
+            decision={answerContextConsent}
+            purpose="answer_context"
+            onChange={setConsent}
+          />
+          <ConsentSetting
+            title={t('settings.transcription')}
+            description={t('settings.transcriptionConsentHint')}
+            decision={audioTranscriptionConsent}
+            purpose="audio_transcription"
+            onChange={setConsent}
+          />
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: privacyDetailsOpen }}
+            testID="privacy-details-toggle"
+            onPress={() => setPrivacyDetailsOpen((value) => !value)}
+            style={({ pressed }) => [styles.privacyDetailsToggle, pressed && styles.optionPressed]}
           >
-            <View style={styles.reminderModalHandle} />
-            <View style={styles.reminderModalHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.reminderModalKicker}>{t('settings.remindersHeading')}</Text>
-                <Text style={styles.reminderModalTitle}>{t('settings.whenToRemind')}</Text>
-              </View>
-              {reminderRules.length > 1 ? (
-                <IconButton
-                  accessibilityLabel={t('settings.removeSchedule', { number: reminderEditorRuleIndex + 1 })}
-                  onPress={() => removeReminderRule(reminderEditorRuleIndex)}
-                >
-                  <Trash size={sc(14)} color={colors.white65} />
-                </IconButton>
-              ) : null}
-              <IconButton
-                accessibilityLabel={t('settings.closeReminders')}
-                onPress={() => setReminderEditorRuleIndex(null)}
-              >
-                <Close size={sc(14)} />
-              </IconButton>
+            <Text style={styles.privacyDetailsLabel}>
+              {privacyDetailsOpen ? t('settings.hideDetails') : t('settings.privacyDetailsLink')}
+            </Text>
+            <View style={{ transform: [{ rotate: privacyDetailsOpen ? '-90deg' : '90deg' }] }}>
+              <ChevronRight size={sc(14)} color={colors.labelGold} />
+            </View>
+          </Pressable>
+          {privacyDetailsOpen ? (
+            <Text style={styles.settingHint} testID="privacy-details">
+              {t('settings.privacyDetails')}
+            </Text>
+          ) : null}
+        </BottomSheet>
+      ) : null}
+
+      {activeReminderRule && reminderEditorRuleIndex !== null ? (
+        <BottomSheet
+          kicker={t('settings.remindersHeading')}
+          title={t('settings.whenToRemind')}
+          summary={activeReminderSummary}
+          closeLabel={t('settings.closeReminders')}
+          doneLabel={t('settings.done')}
+          doneTestID="reminders-editor-done"
+          testID="reminders-editor-modal"
+          onClose={() => setReminderEditorRuleIndex(null)}
+          headerAction={reminderRules.length > 1 ? (
+            <IconButton
+              accessibilityLabel={t('settings.removeSchedule', { number: reminderEditorRuleIndex + 1 })}
+              onPress={() => removeReminderRule(reminderEditorRuleIndex)}
+            >
+              <Trash size={sc(14)} color={colors.white65} />
+            </IconButton>
+          ) : null}
+        >
+          <View
+            style={styles.reminderRuleCard}
+            testID={`reminder-rule-${reminderEditorRuleIndex}`}
+          >
+            <Text style={styles.reminderLabel}>{t('settings.weekdays')}</Text>
+            <View style={styles.dayRow}>
+              {weekdayShortNames(uiLanguage).map((name, dayIndex) => {
+                const isoWeekday = dayIndex + 1;
+                const selected = activeReminderRule.weekdays.includes(isoWeekday);
+                return (
+                  <Pressable
+                    key={name}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('settings.scheduleDay', { name, number: reminderEditorRuleIndex + 1 })}
+                    accessibilityState={{ selected }}
+                    testID={`reminder-rule-${reminderEditorRuleIndex}-day-${isoWeekday}`}
+                    onPress={() => toggleReminderWeekday(reminderEditorRuleIndex, isoWeekday)}
+                    style={({ pressed }) => [
+                      styles.dayChip,
+                      selected && styles.dayChipOn,
+                      pressed && styles.optionPressed,
+                    ]}
+                  >
+                    <Text style={[styles.dayChipText, selected && styles.dayChipTextOn]}>
+                      {name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
 
-            {activeReminderSummary ? (
-              <View style={styles.reminderModalSummaryPill}>
-                <View style={styles.reminderModalSummaryDot} />
-                <Text style={styles.reminderModalSummary}>{activeReminderSummary}</Text>
-              </View>
+            <Text style={[styles.reminderLabel, styles.reminderTimeLabel]}>{t('settings.time')}</Text>
+            <View style={styles.reminderTimes}>
+              {activeReminderRule.times.map((time, timeIndex) => (
+                <TimeRow
+                  key={formatReminderTime(time)}
+                  time={time}
+                  ruleIndex={reminderEditorRuleIndex}
+                  canRemove={activeReminderRule.times.length > 1}
+                  onShift={(delta) => shiftReminderTime(reminderEditorRuleIndex, timeIndex, delta)}
+                  onRemove={() => removeReminderTime(reminderEditorRuleIndex, timeIndex)}
+                />
+              ))}
+            </View>
+
+            {activeReminderRule.times.length < MAX_REMINDER_TIMES_PER_RULE ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('settings.addScheduleTime', { number: reminderEditorRuleIndex + 1 })}
+                testID={`reminder-add-time-${reminderEditorRuleIndex}`}
+                onPress={() => addReminderTime(reminderEditorRuleIndex)}
+                style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
+              >
+                <Plus size={sc(13)} color={colors.white65} />
+                <Text style={styles.addTimeText}>{t('settings.addTime')}</Text>
+              </Pressable>
             ) : null}
-
-            <ScrollView
-              bounces={false}
-              contentContainerStyle={styles.reminderModalContent}
-            >
-              <View style={styles.reminderEditor}>
-                <View
-                  style={styles.reminderRuleCard}
-                  testID={`reminder-rule-${reminderEditorRuleIndex}`}
-                >
-                    <Text style={styles.reminderLabel}>{t('settings.weekdays')}</Text>
-                    <View style={styles.dayRow}>
-                      {weekdayShortNames(uiLanguage).map((name, dayIndex) => {
-                        const isoWeekday = dayIndex + 1;
-                        const selected = activeReminderRule.weekdays.includes(isoWeekday);
-                        return (
-                          <Pressable
-                            key={name}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('settings.scheduleDay', { name, number: reminderEditorRuleIndex + 1 })}
-                            accessibilityState={{ selected }}
-                            testID={`reminder-rule-${reminderEditorRuleIndex}-day-${isoWeekday}`}
-                            onPress={() => toggleReminderWeekday(reminderEditorRuleIndex, isoWeekday)}
-                            style={({ pressed }) => [
-                              styles.dayChip,
-                              selected && styles.dayChipOn,
-                              pressed && styles.optionPressed,
-                            ]}
-                          >
-                            <Text style={[styles.dayChipText, selected && styles.dayChipTextOn]}>
-                              {name}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-
-                    <Text style={[styles.reminderLabel, styles.reminderTimeLabel]}>{t('settings.time')}</Text>
-                    <View style={styles.reminderTimes}>
-                      {activeReminderRule.times.map((time, timeIndex) => (
-                        <TimeRow
-                          key={formatReminderTime(time)}
-                          time={time}
-                          ruleIndex={reminderEditorRuleIndex}
-                          canRemove={activeReminderRule.times.length > 1}
-                          onShift={(delta) => shiftReminderTime(reminderEditorRuleIndex, timeIndex, delta)}
-                          onRemove={() => removeReminderTime(reminderEditorRuleIndex, timeIndex)}
-                        />
-                      ))}
-                    </View>
-
-                    {activeReminderRule.times.length < MAX_REMINDER_TIMES_PER_RULE ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={t('settings.addScheduleTime', { number: reminderEditorRuleIndex + 1 })}
-                        testID={`reminder-add-time-${reminderEditorRuleIndex}`}
-                        onPress={() => addReminderTime(reminderEditorRuleIndex)}
-                        style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
-                      >
-                        <Plus size={sc(13)} color={colors.white65} />
-                        <Text style={styles.addTimeText}>{t('settings.addTime')}</Text>
-                      </Pressable>
-                    ) : null}
-                </View>
-              </View>
-            </ScrollView>
-
-            <Pressable
-              accessibilityRole="button"
-              testID="reminders-editor-done"
-              onPress={() => setReminderEditorRuleIndex(null)}
-              style={({ pressed }) => [styles.reminderDone, pressed && styles.optionPressed]}
-            >
-              <Text style={styles.reminderDoneText}>{t('settings.done')}</Text>
-            </Pressable>
           </View>
-        </View>
+        </BottomSheet>
       ) : null}
 
       {/* Поверх экрана, а не системным Modal: иначе окно ввода закрыло бы собой
@@ -1198,25 +1174,44 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   topSpacer: { width: sc(34), height: sc(34) },
-  sectionKicker: { marginBottom: sc(8), marginLeft: sc(4) },
-  pickerStack: { gap: sc(6) },
-  pickerCard: {
-    overflow: 'hidden', backgroundColor: colors.cardBg, borderWidth: 1,
-    borderColor: 'rgba(214,182,120,.22)', borderRadius: radius.md,
+  sectionKicker: { marginBottom: sc(7), marginLeft: sc(4) },
+  sectionGap: { marginTop: sc(18) },
+  card: {
+    backgroundColor: colors.cardBg, borderWidth: 1, borderColor: 'rgba(214,182,120,.22)',
+    borderRadius: radius.md, paddingHorizontal: sc(12), paddingVertical: sc(2),
   },
-  pickerCardOpen: { borderColor: 'rgba(230,162,60,.72)' },
+  settingRow: {
+    minHeight: sc(46), flexDirection: 'row', alignItems: 'center', gap: sc(10),
+    paddingVertical: sc(8),
+  },
+  settingRowDivided: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(214,182,120,.16)',
+  },
+  settingRowTitle: { flexShrink: 1 },
+  settingRowTitleWide: { flex: 1 },
+  settingRowValue: {
+    flex: 1, textAlign: 'right', fontFamily: fonts.sans, fontSize: sc(12),
+    color: colors.creamDim,
+  },
+  toggleRow: {
+    minHeight: sc(46), flexDirection: 'row', alignItems: 'center', gap: sc(10),
+    paddingVertical: sc(8),
+  },
   disabled: { opacity: 0.52 },
-  pickerHeader: { minHeight: sc(53), flexDirection: 'row', alignItems: 'center', padding: sc(9) },
-  pickerAccent: { width: sc(3), height: sc(28), borderRadius: 99, backgroundColor: 'rgba(214,182,120,.38)' },
-  pickerAccentOpen: { backgroundColor: colors.amberBright },
-  pickerHeading: { flex: 1, paddingHorizontal: sc(9) },
-  pickerLabel: { fontFamily: fonts.sans, fontSize: sc(9.25), color: colors.warmHint },
-  pickerValue: { marginTop: sc(1), fontFamily: fonts.sansMedium, fontSize: sc(13.25), color: colors.parchment },
-  chevronCircle: {
-    width: sc(27), height: sc(27), borderRadius: 99, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,.06)',
+  rowTitle: { fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment },
+  settingHint: {
+    marginTop: sc(4), fontFamily: fonts.sans, fontSize: sc(10.5),
+    lineHeight: sc(15), color: colors.warmHint,
   },
-  options: { marginHorizontal: sc(9), borderTopWidth: 1, borderTopColor: 'rgba(214,182,120,.16)' },
+  shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
+  reminderWarning: { color: 'rgba(240,170,120,.92)' },
+  reminderSettingsCopy: { flexShrink: 1 },
+  addScheduleTitle: { flex: 1, color: colors.warmHint },
+  sheetList: {
+    paddingHorizontal: sc(11), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,.025)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.065)',
+  },
   optionRow: { minHeight: sc(51), flexDirection: 'row', alignItems: 'center', gap: sc(9), paddingVertical: sc(9) },
   optionDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -1228,22 +1223,9 @@ const stylesFactory = () => StyleSheet.create({
   optionSubtitle: { marginTop: sc(3), fontFamily: fonts.sans, fontSize: sc(10), lineHeight: sc(14), color: colors.warmHint },
   catalogMessage: { fontFamily: fonts.sans, fontSize: sc(10.5), color: colors.warmHint, textAlign: 'center', marginTop: sc(10) },
   retryButton: { paddingVertical: sc(4) },
-  card: {
-    backgroundColor: colors.cardBg, borderWidth: 1, borderColor: 'rgba(214,182,120,.22)',
-    borderRadius: radius.md, padding: sc(12),
-  },
-  rowTitle: { fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment },
-  shareAnswersHeader: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
-  shareAnswersTitle: { flex: 1, fontSize: sc(12), lineHeight: sc(16) },
-  settingHint: {
-    marginTop: sc(4), fontFamily: fonts.sans, fontSize: sc(10.5),
-    lineHeight: sc(15), color: colors.warmHint,
-  },
-  shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
   privacyDetailsToggle: {
     flexDirection: 'row', alignItems: 'center', gap: sc(8), minHeight: sc(44),
   },
-  privacyDetailsCollapsed: { marginBottom: -sc(12) },
   privacyDetailsLabel: {
     flex: 1, fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.labelGold,
   },
@@ -1286,65 +1268,6 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: sc(9.25),
   },
-  reminderWarning: { color: 'rgba(240,170,120,.92)' },
-  reminderSettingsRow: {
-    marginTop: sc(8), paddingTop: sc(8),
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(214,182,120,.16)',
-    flexDirection: 'row', alignItems: 'center', gap: sc(10),
-  },
-  reminderRuleSettingsRow: { minHeight: sc(44) },
-  firstReminderSettingsRow: { marginTop: sc(12) },
-  reminderSettingsCopy: { flex: 1, gap: 0 },
-  reminderSettingsTitle: {
-    fontFamily: fonts.sansMedium, fontSize: sc(13.5), color: colors.parchment,
-  },
-  reminderSettingsSubtitle: {
-    fontFamily: fonts.sans, fontSize: sc(10.5), lineHeight: sc(15), color: colors.warmHint,
-  },
-  addScheduleRow: { paddingTop: sc(12) },
-  addScheduleTitle: { flex: 1, color: colors.warmHint },
-  reminderModalBackdrop: {
-    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
-    justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.78)',
-  },
-  reminderModal: {
-    maxHeight: '82%', paddingTop: sc(7), paddingHorizontal: sc(14),
-    backgroundColor: '#171109', borderTopLeftRadius: sc(22), borderTopRightRadius: sc(22),
-    borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(214,182,120,.2)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: -8 }, shadowOpacity: 0.42,
-    shadowRadius: sc(18), elevation: 20,
-  },
-  reminderModalHandle: {
-    alignSelf: 'center', width: sc(34), height: sc(3), borderRadius: 99,
-    marginBottom: sc(8), backgroundColor: 'rgba(255,255,255,.16)',
-  },
-  reminderModalHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: sc(10), paddingBottom: sc(8),
-  },
-  reminderModalKicker: {
-    fontFamily: fonts.sansMedium, fontSize: sc(8), letterSpacing: sc(1.8),
-    color: colors.warmHint,
-  },
-  reminderModalTitle: {
-    marginTop: sc(2), fontFamily: fonts.serifRegular, fontSize: sc(19),
-    lineHeight: sc(23), color: colors.parchment,
-  },
-  reminderModalSummaryPill: {
-    flexDirection: 'row', alignItems: 'center', gap: sc(8),
-    paddingVertical: sc(8), paddingHorizontal: sc(10), marginBottom: sc(2),
-    borderRadius: radius.sm, backgroundColor: 'rgba(255,255,255,.035)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,.07)',
-  },
-  reminderModalSummaryDot: {
-    width: sc(6), height: sc(6), borderRadius: 99, backgroundColor: 'rgba(214,182,120,.55)',
-  },
-  reminderModalSummary: {
-    flex: 1, fontFamily: fonts.sansMedium, fontSize: sc(9.5),
-    lineHeight: sc(13), color: colors.creamDim,
-  },
-  reminderModalContent: { paddingTop: sc(8), paddingBottom: sc(8) },
-  reminderEditor: { gap: sc(8) },
   reminderRuleCard: {
     padding: sc(11), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,.025)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,.065)',
@@ -1388,24 +1311,6 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: 'rgba(255,255,255,.07)',
   },
   addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.creamDim },
-  reminderDone: {
-    minHeight: sc(42), alignItems: 'center', justifyContent: 'center',
-    marginTop: sc(2), borderRadius: sc(12), backgroundColor: 'rgba(214,182,120,.12)',
-    borderWidth: 1, borderColor: 'rgba(214,182,120,.25)',
-  },
-  reminderDoneText: {
-    fontFamily: fonts.sansMedium, fontSize: sc(12), color: colors.goldSoft,
-  },
-  lockRow: {
-    marginTop: sc(12),
-    paddingTop: sc(12),
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(214,182,120,.16)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(10),
-  },
-  aboutLink: { flexDirection: 'row', alignItems: 'center', gap: sc(10) },
   toggle: {
     flexShrink: 0, width: sc(40), height: sc(24), borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)',
     borderWidth: 1, borderColor: 'rgba(214,182,120,.26)', padding: sc(3), justifyContent: 'center',

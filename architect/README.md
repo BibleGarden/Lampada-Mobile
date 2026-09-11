@@ -53,6 +53,7 @@ upgrading it requires rebuilding the native app.
 | `components/AnswerSheet.tsx` | The text answer sheet and the coordination of the audio recording lifecycle |
 | `components/RecordingsSheet.tsx` | A separate sheet for recordings, the player and transcripts, on top of the answer |
 | `components/PrivacyConsentDialog.tsx` | The equal-weight first-use disclosure and allow/deny actions for an AI purpose |
+| `components/BottomSheet.tsx` | The in-screen bottom sheet used by the settings screen for option lists, the reminder editor and privacy consents; an overlay rather than a system Modal so the privacy screen and lock stay on top |
 | `lib/store.ts` | The state and the scenario of a prayer session |
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
 | `lib/ai.ts` | Prompts, validation of the AI response and local degradation |
