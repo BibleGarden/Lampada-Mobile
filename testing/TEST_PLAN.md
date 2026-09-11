@@ -263,7 +263,7 @@ The smoke counts as passed only in full.
 | END-003 | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the streak and the seven dots agree with the local calendar date |
-| END-006 | Enter a takeaway with the keyboard open | the screen switches to a compact mode: the question and the whole input card are visible above the keyboard; after "Done" the finish and back actions are visible |
+| END-006 | Enter a takeaway with the keyboard open on iPad in portrait and landscape, then rotate while typing | the editing column widens on tablets and the input fills the available space below the question and above the keyboard; long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 
 ### The journal and local data
 

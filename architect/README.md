@@ -101,6 +101,12 @@ Changes to the app are made against the documentation of
 `session` and `reflect` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
 
+Reflection uses a keyboard-avoiding, scrollable content area. While typing,
+the input fills the available space below the question and above the keyboard.
+The editing column expands to at most 960 pt on tablets. The decorative header
+and completion actions return when the keyboard closes.
+Content can scroll when a long question or a small window needs more room.
+
 ## State and the main data flow
 
 `useSession` in `lib/store.ts` is the single model of a running prayer session.

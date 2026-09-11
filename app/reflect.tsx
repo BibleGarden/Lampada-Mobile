@@ -4,9 +4,11 @@ import {
   BackHandler,
   ActivityIndicator,
   Keyboard,
+  KeyboardAvoidingView,
   LayoutAnimation,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -22,7 +24,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
 export default function Reflect() {
   const sessionId = useSession((state) => state.sessionId);
@@ -110,62 +112,84 @@ function ReflectScreen() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View
-        entering={FadeIn.duration(500)}
-        style={[styles.body, { paddingTop: insets.top + sc(16), paddingBottom: insets.bottom + sc(24) }]}
-      >
-        <Pressable onPress={Keyboard.dismiss} accessible={false} style={{ flex: 1 }}>
-          {!keyboardOpen && (
-            <View style={styles.emberWrap}>
-              <Flame width={sc(104)} ember />
-            </View>
-          )}
-
-          <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
-            {!keyboardOpen && (
-              <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
-                {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
-              </Kicker>
-            )}
-            {s.reflectGenerating ? (
-              <View style={styles.questionLoading}>
-                <ActivityIndicator color={colors.goldSoft} />
-                <Text style={styles.loadingText}>{t('screens.questionLoading')}</Text>
-              </View>
-            ) : (
-              <Text style={[styles.question, questionTypography(s.reflectQ)]}>{s.reflectQ}</Text>
-            )}
-          </View>
-
-          <TextInput
-            value={takeaway}
-            onChangeText={setTakeaway}
-            multiline
-            placeholder={t('screens.reflect.placeholder')}
-            placeholderTextColor="rgba(240,230,210,.35)"
-            style={styles.input}
-            // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
-            returnKeyType="done"
-            submitBehavior="blurAndSubmit"
-            onSubmitEditing={Keyboard.dismiss}
-          />
-
-          <View style={{ flex: 1, minHeight: sc(16) }} />
-
-          <View style={{ gap: sc(12) }}>
-            <GoldButton
-              label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
-              onPress={() => complete(takeaway.trim())}
-            />
+      <Animated.View entering={FadeIn.duration(500)} style={styles.fill}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.fill}
+        >
+          <ScrollView
+            contentContainerStyle={[
+              styles.body,
+              keyboardOpen && styles.bodyEditing,
+              {
+                paddingTop: insets.top + sc(16),
+                paddingBottom: keyboardOpen ? sc(16) : insets.bottom + sc(24),
+              },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
             <Pressable
-              onPress={continuePraying}
-              style={({ pressed }) => [styles.continueBtn, pressed && { transform: [{ scale: 0.985 }] }]}
+              onPress={Keyboard.dismiss}
+              accessible={false}
+              style={styles.content}
             >
-              <Regen size={16} color={colors.amberBright} strokeWidth={1.7} />
-              <Text style={styles.continueLabel}>{t('screens.reflect.return')}</Text>
+              {!keyboardOpen && (
+                <View style={styles.emberWrap}>
+                  <Flame width={sc(104)} ember />
+                </View>
+              )}
+
+              <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
+                {!keyboardOpen && (
+                  <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
+                    {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
+                  </Kicker>
+                )}
+                {s.reflectGenerating ? (
+                  <View style={styles.questionLoading}>
+                    <ActivityIndicator color={colors.goldSoft} />
+                    <Text style={styles.loadingText}>{t('screens.questionLoading')}</Text>
+                  </View>
+                ) : (
+                  <Text style={[styles.question, questionTypography(s.reflectQ)]}>{s.reflectQ}</Text>
+                )}
+              </View>
+
+              <TextInput
+                value={takeaway}
+                onChangeText={setTakeaway}
+                multiline
+                placeholder={t('screens.reflect.placeholder')}
+                placeholderTextColor="rgba(240,230,210,.35)"
+                style={[styles.input, keyboardOpen && styles.inputEditing]}
+                testID="reflection-input"
+                // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+
+              {!keyboardOpen && <View style={{ flex: 1, minHeight: sc(16) }} />}
+
+              {!keyboardOpen && (
+                <View style={{ gap: sc(12) }}>
+                  <GoldButton
+                    label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
+                    onPress={() => complete(takeaway.trim())}
+                  />
+                  <Pressable
+                    onPress={continuePraying}
+                    style={({ pressed }) => [styles.continueBtn, pressed && { transform: [{ scale: 0.985 }] }]}
+                  >
+                    <Regen size={16} color={colors.amberBright} strokeWidth={1.7} />
+                    <Text style={styles.continueLabel}>{t('screens.reflect.return')}</Text>
+                  </Pressable>
+                </View>
+              )}
             </Pressable>
-          </View>
-        </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Animated.View>
     </View>
   );
@@ -173,7 +197,10 @@ function ReflectScreen() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  body: { flex: 1, paddingHorizontal: sc(18), ...column() },
+  fill: { flex: 1 },
+  body: { flexGrow: 1, paddingHorizontal: sc(18), ...column() },
+  bodyEditing: { maxWidth: isTablet() ? 960 : sc(360) },
+  content: { flexGrow: 1 },
   emberWrap: {
     alignItems: 'center',
   },
@@ -202,9 +229,6 @@ const stylesFactory = () => StyleSheet.create({
   },
   input: {
     marginTop: sc(20),
-    // Поле — единственное, что здесь может уступить высоту: уголёк, вопрос и
-    // кнопки заданы жёстко. Без сжатия в альбомной ориентации на планшете
-    // «Вернуться к молитве» уходила за нижний край.
     flexBasis: sc(128),
     flexShrink: 1,
     minHeight: sc(72),
@@ -218,6 +242,9 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(24),
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
+  },
+  inputEditing: {
+    flexGrow: 1,
   },
   continueBtn: {
     flexDirection: 'row',
