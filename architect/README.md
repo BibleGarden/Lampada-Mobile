@@ -107,6 +107,9 @@ upgrading it requires rebuilding the native app.
 `session` and `reflect` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
 
+On landscape tablets, the threshold places its scrollable briefing beside the
+hold-to-start control. Portrait and phone windows retain a vertical layout.
+
 Reflection uses a keyboard-avoiding, scrollable content area. While typing,
 the input fills the available space below the question and above the keyboard.
 The editing column expands to at most 960 pt on tablets. The decorative header
@@ -348,6 +351,9 @@ While answering, the text and the voice recordings are split between two sheets
 (ADR-0016). `AnswerSheet` holds the answer field, `RecordingsSheet` holds the
 audio files and their transcripts. Transcripts can be expanded or appended to
 the editable answer; they are removed together with their recording.
+On landscape tablets, the question scrolls in a separate column beside the
+answer field and actions. While typing, the voice hint is hidden and the field
+uses the remaining height above the keyboard.
 Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.

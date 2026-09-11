@@ -1,6 +1,6 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
@@ -12,7 +12,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { useSession } from '../lib/store';
 import { recordDiagnostic } from '../lib/db';
-import { colors, column, durations, fonts, sc, useStyles } from '../lib/theme';
+import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
 
 export default function Threshold() {
   const { t, language } = useI18n();
@@ -25,6 +25,8 @@ export default function Threshold() {
       : t('screens.duration.hoursMinutes', { hours, minutes: remainder });
   };
   const styles = useStyles(stylesFactory);
+  const { width, height } = useWindowDimensions();
+  const landscapeTablet = isTablet() && width > height;
   const insets = useSafeAreaInsets();
   const s = useSession();
 
@@ -123,7 +125,11 @@ export default function Threshold() {
       <ScreenBg />
       <Animated.View
         entering={FadeIn.duration(500)}
-        style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(34) }]}
+        style={[
+          styles.body,
+          landscapeTablet && styles.bodyLandscape,
+          { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(34) },
+        ]}
       >
         {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
         <View style={styles.headerRow}>
@@ -133,54 +139,56 @@ export default function Threshold() {
           <Kicker style={{ fontSize: sc(11) }}>{t('screens.threshold.before')}</Kicker>
         </View>
 
-        {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
-        <ScrollView style={styles.briefScroll} contentContainerStyle={styles.brief}>
-          <Text style={styles.title}>{t('screens.threshold.title')}</Text>
-          {brief.map((b, i) => {
-            // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
-            // цель — часть той же строки, её длина тоже считается
-            const long = Math.ceil((b.text.length + (b.goal?.length ?? 0)) / 30) >= 3;
-            return (
-              <View
-                key={i}
-                style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
-              >
-                <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
-                {/* Text с вложенным Text меряет ширину криво (уезжает за
-                    край) — ширину ограничивает View-обёртка */}
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.briefText}>
-                    {b.text}
-                    {'goal' in b && !!b.goal && (
-                      <Text style={styles.briefGoal}>{b.goal}</Text>
-                    )}
-                  </Text>
+        <View style={[styles.main, landscapeTablet && styles.mainLandscape]}>
+          {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
+          <ScrollView style={styles.briefScroll} contentContainerStyle={styles.brief}>
+            <Text style={styles.title}>{t('screens.threshold.title')}</Text>
+            {brief.map((b, i) => {
+              // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
+              // цель — часть той же строки, её длина тоже считается
+              const long = Math.ceil((b.text.length + (b.goal?.length ?? 0)) / 30) >= 3;
+              return (
+                <View
+                  key={i}
+                  style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
+                >
+                  <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
+                  {/* Text с вложенным Text меряет ширину криво (уезжает за
+                      край) — ширину ограничивает View-обёртка */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.briefText}>
+                      {b.text}
+                      {'goal' in b && !!b.goal && (
+                        <Text style={styles.briefGoal}>{b.goal}</Text>
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          <View style={[styles.holdWrap, landscapeTablet && styles.holdWrapLandscape]}>
+            <GestureDetector gesture={hold}>
+              <View style={styles.holdBtn}>
+                <View style={styles.holdInner} />
+                <View style={StyleSheet.absoluteFill}>
+                  <ProgressRing
+                    size={sc(158)}
+                    strokeWidth={2.5}
+                    progress={progress}
+                    trackColor="rgba(230,162,60,.14)"
+                    gradient={['#ffdca0', '#d68a2e']}
+                  />
+                </View>
+                <View style={styles.holdContent} pointerEvents="none">
+                  <Lamp />
+                  <Text style={styles.holdHint} maxFontSizeMultiplier={1.2}>{t(hint)}</Text>
+                  <Text style={styles.holdLabel} maxFontSizeMultiplier={1.2}>{t('screens.threshold.start')}</Text>
                 </View>
               </View>
-            );
-          })}
-        </ScrollView>
-
-        <View style={styles.holdWrap}>
-          <GestureDetector gesture={hold}>
-            <View style={styles.holdBtn}>
-              <View style={styles.holdInner} />
-              <View style={StyleSheet.absoluteFill}>
-                <ProgressRing
-                  size={sc(158)}
-                  strokeWidth={2.5}
-                  progress={progress}
-                  trackColor="rgba(230,162,60,.14)"
-                  gradient={['#ffdca0', '#d68a2e']}
-                />
-              </View>
-              <View style={styles.holdContent} pointerEvents="none">
-                <Lamp />
-                <Text style={styles.holdHint} maxFontSizeMultiplier={1.2}>{t(hint)}</Text>
-                <Text style={styles.holdLabel} maxFontSizeMultiplier={1.2}>{t('screens.threshold.start')}</Text>
-              </View>
-            </View>
-          </GestureDetector>
+            </GestureDetector>
+          </View>
         </View>
       </Animated.View>
     </View>
@@ -194,6 +202,17 @@ const stylesFactory = () => StyleSheet.create({
     paddingHorizontal: sc(16),
     ...column(),
     justifyContent: 'space-between',
+  },
+  bodyLandscape: {
+    maxWidth: 1120,
+    paddingHorizontal: sc(24),
+  },
+  main: {
+    flex: 1,
+  },
+  mainLandscape: {
+    flexDirection: 'row',
+    gap: sc(32),
   },
   headerRow: {
     flexDirection: 'row',
@@ -247,6 +266,10 @@ const stylesFactory = () => StyleSheet.create({
     flexShrink: 0,
     alignItems: 'center',
     gap: sc(16),
+  },
+  holdWrapLandscape: {
+    width: sc(190),
+    justifyContent: 'center',
   },
   holdBtn: {
     width: sc(158),

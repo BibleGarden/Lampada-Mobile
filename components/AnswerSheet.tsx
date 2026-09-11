@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { File } from 'expo-file-system';
@@ -46,7 +46,7 @@ import {
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type RecordingAudioModeLease,
 } from '../lib/audioModeCoordinator';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { playAudioRecording } from '../lib/audioPlayerOperation';
@@ -76,7 +76,6 @@ type Props = {
   onAudioBusyChange?: (busy: boolean) => void;
 };
 
-const HANDLE_HEIGHT = sc(22);
 const MIN_UI_RECORDING_MILLIS = 1_500;
 const DRAFT_PLAYBACK_MODE = {
   allowsRecording: false,
@@ -193,13 +192,15 @@ export default function AnswerSheet({
   // Контейнер контента у шторки всегда высотой в верхнюю точку, а ручка
   // абсолютная — flex по ним не посчитать. Поэтому высоту тела считаем сами:
   // видимая часть шторки = высота окна минус её позиция.
-  const windowHeight = useWindowDimensions().height;
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const landscapeTablet = isTablet() && windowWidth > windowHeight;
+  const handleHeight = sc(22);
   const sheetPosition = useSharedValue(windowHeight);
   const keyboardHeight = useSharedValue(0);
   const bodyStyle = useAnimatedStyle(() => ({
     height: Math.max(
       0,
-      windowHeight - sheetPosition.value - HANDLE_HEIGHT - keyboardHeight.value,
+      windowHeight - sheetPosition.value - handleHeight - keyboardHeight.value,
     ),
   }));
 
@@ -898,6 +899,18 @@ export default function AnswerSheet({
       ? Math.min(playerStatus.currentTime / playerStatus.duration, 1)
       : 0;
 
+  const questionHeader = (
+    <View style={styles.header}>
+      <View style={styles.orbRow}>
+        <View style={styles.orb} />
+        <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
+      </View>
+      <Text style={styles.question} testID="answer-question">
+        {questions[answerIndexRef.current] ?? questions[qIndex]}
+      </Text>
+    </View>
+  );
+
   return (
     <>
     <BottomSheet
@@ -968,11 +981,10 @@ export default function AnswerSheet({
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
     >
-      {/* Тело: вопрос сверху, поле ответа во всю оставшуюся высоту, кнопки
-          снизу. Список записей уехал в отдельную шторку, поэтому делить высоту
-          между полем и карточками больше не нужно и тело не прокручивается. */}
+      {/* В альбомном окне планшета вопрос стоит рядом с формой, оставляя
+          полю высоту над клавиатурой. Длинный вопрос прокручивается отдельно. */}
       <Animated.View
-        style={[styles.content, bodyStyle]}
+        style={[styles.content, landscapeTablet && styles.contentLandscape, bodyStyle]}
         {...screenReaderHiddenProps(recordingsSheetOpen)}
         // тап по пустому месту тела убирает клавиатуру
         onStartShouldSetResponder={() => {
@@ -980,71 +992,73 @@ export default function AnswerSheet({
           return false;
         }}
       >
-        <View style={styles.header}>
-          <View style={styles.orbRow}>
-            <View style={styles.orb} />
-            <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
-          </View>
-          <Text style={styles.question} testID="answer-question">
-            {questions[answerIndexRef.current] ?? questions[qIndex]}
-          </Text>
-        </View>
-
-        {/* Поле занимает всю оставшуюся высоту и прокручивается само:
-            курсор при наборе всегда остаётся в поле зрения. */}
-        <BottomSheetTextInput
-          ref={answerInputRef}
-          testID="answer-input"
-          value={text}
-          onChangeText={setText}
-          multiline
-          placeholder={t('components.answers.placeholder')}
-          placeholderTextColor="rgba(240,230,210,.35)"
-          style={styles.input}
-        />
-
-        {!text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
-
-        <View style={styles.actionsRow}>
-          {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
-              карточки-спутника. Бадж показывает, сколько записей уже есть:
-              сами они живут в отдельной шторке и из ответа не видны. */}
-          <Pressable
-            accessibilityLabel={
-              recs.length ? t('components.answers.voiceCount', { count: recs.length }) : t('components.answers.recordAudio')
-            }
-            accessibilityRole="button"
-            testID="answer-record-button"
-            onPress={openRecordings}
-            style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
+        {landscapeTablet ? (
+          <BottomSheetScrollView
+            style={styles.questionColumn}
+            contentContainerStyle={styles.questionColumnContent}
+            keyboardShouldPersistTaps="handled"
           >
-            <Mic color={colors.greenSoft} />
-            {recs.length > 0 && (
-              <View style={styles.micBadge} testID="answer-record-badge">
-                <Text style={styles.micBadgeText}>{recs.length}</Text>
-              </View>
-            )}
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={requestClose}
-            style={({ pressed }) => [
-              styles.cancelBtn,
-              confirmCancel && styles.cancelBtnConfirming,
-              pressed && { transform: [{ scale: 0.97 }] },
-            ]}
-          >
-            <Text style={[styles.cancelLabel, confirmCancel && { color: '#ec9b8e' }]}>
-              {confirmCancel ? t('components.answers.confirmClose') : t('components.answers.cancel')}
-            </Text>
-          </Pressable>
-          <GoldButton
-            compact
-            label={saving ? t('components.answers.saving') : timeExpired ? t('components.answers.saveFinish') : t('components.answers.save')}
-            onPress={save}
-            style={{ flex: 1 }}
-            testID="answer-save-button"
+            {questionHeader}
+          </BottomSheetScrollView>
+        ) : questionHeader}
+
+        <View style={styles.form}>
+          {/* Поле занимает всю оставшуюся высоту и прокручивается само:
+              курсор при наборе всегда остаётся в поле зрения. */}
+          <BottomSheetTextInput
+            ref={answerInputRef}
+            testID="answer-input"
+            value={text}
+            onChangeText={setText}
+            multiline
+            placeholder={t('components.answers.placeholder')}
+            placeholderTextColor="rgba(240,230,210,.35)"
+            style={styles.input}
           />
+
+          {!keyboardOpen && !text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
+
+          <View style={styles.actionsRow}>
+            {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
+                карточки-спутника. Бадж показывает, сколько записей уже есть:
+                сами они живут в отдельной шторке и из ответа не видны. */}
+            <Pressable
+              accessibilityLabel={
+                recs.length ? t('components.answers.voiceCount', { count: recs.length }) : t('components.answers.recordAudio')
+              }
+              accessibilityRole="button"
+              testID="answer-record-button"
+              onPress={openRecordings}
+              style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
+            >
+              <Mic color={colors.greenSoft} />
+              {recs.length > 0 && (
+                <View style={styles.micBadge} testID="answer-record-badge">
+                  <Text style={styles.micBadgeText}>{recs.length}</Text>
+                </View>
+              )}
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={requestClose}
+              style={({ pressed }) => [
+                styles.cancelBtn,
+                confirmCancel && styles.cancelBtnConfirming,
+                pressed && { transform: [{ scale: 0.97 }] },
+              ]}
+            >
+              <Text style={[styles.cancelLabel, confirmCancel && { color: '#ec9b8e' }]}>
+                {confirmCancel ? t('components.answers.confirmClose') : t('components.answers.cancel')}
+              </Text>
+            </Pressable>
+            <GoldButton
+              compact
+              label={saving ? t('components.answers.saving') : timeExpired ? t('components.answers.saveFinish') : t('components.answers.save')}
+              onPress={save}
+              style={{ flex: 1 }}
+              testID="answer-save-button"
+            />
+          </View>
         </View>
       </Animated.View>
     </BottomSheet>
@@ -1098,7 +1112,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   // высота ручки задана явно: от неё считается высота тела шторки
   handleWrap: {
-    height: HANDLE_HEIGHT,
+    height: sc(22),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1114,6 +1128,25 @@ const stylesFactory = () => StyleSheet.create({
     ...column(),
     paddingHorizontal: sc(16),
     paddingBottom: sc(16),
+  },
+  contentLandscape: {
+    maxWidth: 1120,
+    flexDirection: 'row',
+    gap: sc(24),
+    paddingHorizontal: sc(24),
+  },
+  questionColumn: {
+    width: sc(210),
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  questionColumnContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  form: {
+    flex: 1,
+    minWidth: 0,
   },
   // Шапка не сжимается скроллом: вопрос — контекст ответа и должен быть виден.
   // flexShrink на крайний случай очень длинного вопроса на низком экране.
