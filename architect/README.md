@@ -21,6 +21,9 @@ While Home is focused, its prayer calendar refreshes on app activation and at
 the next local midnight. Leaving Home removes the listener and timer; resuming
 the app refreshes the calendar without resetting the session.
 
+Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
+canvas size on the UI thread so rotation does not wait for JavaScript updates.
+
 ## Technology outline
 
 - Expo SDK 57, React Native 0.86 and React 19.

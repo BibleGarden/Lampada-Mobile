@@ -139,6 +139,7 @@ The smoke counts as passed only in full.
 | NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created |
 | NAV-006 | Leave Home in the background after praying, then reopen the app on a later day without navigating | the last dot represents the current local day, yesterday's prayer moves left, and the flame and greeting refresh |
 | NAV-007 | Keep Home open across local midnight, including a daylight-saving transition | the calendar advances at local midnight; today's unprayed dot becomes an outline and the previous prayer remains on its actual date |
+| NAV-008 | Rotate an iPad between portrait and landscape on Home and another screen, including while JavaScript is briefly busy | the background covers the entire canvas during and after rotation; no strip retains the previous width or height |
 
 ### Setup and entering the prayer
 

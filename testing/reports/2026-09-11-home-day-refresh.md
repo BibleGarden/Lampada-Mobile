@@ -19,5 +19,7 @@ days, and the existing future-date calendar regression.
 
 Full check logs: `/tmp/pray-home-refresh-tests.log` and
 `/tmp/pray-home-refresh-typecheck.log`.
-No physical-device midnight transition was exercised. The installed iPad
-version 1.0.12 predates this fix.
+No physical-device midnight transition was exercised. Later on 2026-09-11,
+local Release 1.0.13 containing this fix was installed over Wi-Fi on the iPad
+Pro 11-inch (M4), iPadOS 26.6.1. `devicectl` confirmed the installed version
+and running app process.
