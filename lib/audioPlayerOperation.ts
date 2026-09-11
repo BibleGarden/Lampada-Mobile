@@ -24,3 +24,27 @@ export async function waitForAudioPlayerReady(
   }
   throw new Error('Audio player did not load the recording in time');
 }
+
+type RecordingAudioPlayer = {
+  readonly currentStatus: AudioPlayerReadyStatus;
+  replace: (uri: string) => void;
+  seekTo: (seconds: number, toleranceBefore: number, toleranceAfter: number) => Promise<void>;
+  play: () => void;
+};
+
+/** Resuming preserves the loaded item and its native playback position. */
+export async function playAudioRecording(
+  player: RecordingAudioPlayer,
+  uri: string,
+  resume: boolean,
+  isCurrent: () => boolean,
+) {
+  if (!isCurrent()) return false;
+  if (!resume) player.replace(uri);
+  const ready = await waitForAudioPlayerReady(() => player.currentStatus, isCurrent);
+  if (!ready || !isCurrent()) return false;
+  if (!resume) await player.seekTo(0, 0, 0);
+  if (!isCurrent()) return false;
+  player.play();
+  return true;
+}

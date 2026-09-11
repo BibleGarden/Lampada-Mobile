@@ -20,6 +20,12 @@ export const ChevronRight = ({ size = 17, color = '#e7cf95', strokeWidth = 2 }: 
   </Svg>
 );
 
+export const ChevronDown = ({ size = 17, color = '#e7cf95', strokeWidth = 2 }: P) => (
+  <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="m6 9 6 6 6-6" />
+  </Svg>
+);
+
 export const Plus = ({ size = 18, color = '#e7cf95', strokeWidth = 2 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round">
     <Path d="M12 5v14M5 12h14" />

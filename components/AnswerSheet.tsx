@@ -49,7 +49,7 @@ import {
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { playAudioRecording } from '../lib/audioPlayerOperation';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
@@ -113,6 +113,7 @@ export default function AnswerSheet({
   const recSheetRef = useRef<BottomSheet | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
+  const [pausedId, setPausedId] = useState<number | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [recordingPhase, setRecordingPhase] = useState<
     'idle' | 'starting' | 'recording' | 'stopping'
@@ -290,25 +291,6 @@ export default function AnswerSheet({
     if (decision === 'allowed' && recording) runTranscription(recording);
   }, [runTranscription]);
 
-  // Убрать расшифровку: карточка возвращается к одной строке, а кнопка
-  // «Расшифровать» — на место. Сама запись остаётся.
-  const removeTranscript = useCallback(
-    (id: number) => {
-      pendingTranscriptions.current.get(id)?.controller.abort();
-      pendingTranscriptions.current.delete(id);
-      updateRecs((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, transcript: null, transcriptState: 'idle' } : item,
-        ),
-      );
-      setExpandedTranscripts((current) => {
-        const { [id]: _removed, ...rest } = current;
-        return rest;
-      });
-    },
-    [updateRecs],
-  );
-
   const toggleTranscript = useCallback((id: number) => {
     setExpandedTranscripts((current) => ({ ...current, [id]: !current[id] }));
   }, []);
@@ -341,6 +323,7 @@ export default function AnswerSheet({
     setExpandedTranscripts({});
     setConfirmCancel(false);
     setPlayingId(null);
+    setPausedId(null);
     setAudioError(null);
     recorderErrorRef.current = null;
     onEditingChange?.(true);
@@ -401,12 +384,14 @@ export default function AnswerSheet({
   useEffect(() => {
     if (playerStatus.error) {
       setPlayingId(null);
+      setPausedId(null);
       setAudioError('components.answers.playbackFailed');
       onAudioBusyChange?.(false);
       return;
     }
     if (playerStatus.didJustFinish) {
       setPlayingId(null);
+      setPausedId(null);
       onAudioBusyChange?.(false);
     }
   }, [playerStatus.didJustFinish, playerStatus.error, onAudioBusyChange]);
@@ -445,6 +430,7 @@ export default function AnswerSheet({
     // audio mode: иначе музыка может попасть в начало голосовой записи.
     player.pause();
     setPlayingId(null);
+    setPausedId(null);
     onAudioBusyChange?.(true);
     recorderErrorRef.current = null;
     setAudioError(null);
@@ -687,10 +673,16 @@ export default function AnswerSheet({
       draftPlaybackGenerationRef.current += 1;
       player.pause();
       setPlayingId(null);
+      setPausedId(r.id);
       onAudioBusyChange?.(false);
       return;
     }
+    const resume = pausedId === r.id;
     const generation = ++draftPlaybackGenerationRef.current;
+    player.pause();
+    setPlayingId(null);
+    if (!resume) setPausedId(null);
+    setAudioError(null);
     onAudioBusyChange?.(true);
     void audioModeCoordinator
       .requestPlayback(setAudioModeAsync, DRAFT_PLAYBACK_MODE)
@@ -698,26 +690,24 @@ export default function AnswerSheet({
         const isCurrent = () =>
           generation === draftPlaybackGenerationRef.current &&
           recordingSheetOpenRef.current &&
+          recsRef.current.some((item) => item.id === r.id && item.uri === r.uri) &&
           !!grant?.isCurrent();
         if (generation !== draftPlaybackGenerationRef.current || !recordingSheetOpenRef.current) return;
         if (!grant?.isCurrent()) {
           onAudioBusyChange?.(false);
           return;
         }
-        player.replace(r.uri);
-        const ready = await waitForAudioPlayerReady(
-          () => player.currentStatus,
-          isCurrent,
-        );
-        if (!ready || !isCurrent()) return;
-        await player.seekTo(0, 0, 0);
-        if (!isCurrent()) return;
-        player.play();
+        if (!(await playAudioRecording(player, r.uri, resume, isCurrent))) {
+          if (generation === draftPlaybackGenerationRef.current) onAudioBusyChange?.(false);
+          return;
+        }
         setPlayingId(r.id);
+        setPausedId(null);
       })
       .catch((error) => {
         if (generation !== draftPlaybackGenerationRef.current) return;
         console.warn('Failed to play audio recording', error);
+        setPausedId(null);
         setAudioError('components.answers.playbackFailed');
         onAudioBusyChange?.(false);
       });
@@ -726,6 +716,7 @@ export default function AnswerSheet({
   const handleRecordingsDismiss = () => {
     draftPlaybackGenerationRef.current += 1;
     setRecordingsSheetOpen(false);
+    setPausedId(null);
     recordingSheetOpenRef.current = false;
     // Незавершённый start после следующего await увидит новый token и не
     // сможет включить микрофон за закрытой шторкой.
@@ -764,6 +755,7 @@ export default function AnswerSheet({
     if (confirmDeleteId === id) {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       setConfirmDeleteId(null);
+      if (pausedId === id) setPausedId(null);
       if (playingId === id) {
         player.pause();
         setPlayingId(null);
@@ -900,9 +892,9 @@ export default function AnswerSheet({
 
   const recording = recordingPhase === 'recording' || recordingPhase === 'stopping';
 
-  // прогресс воспроизведения активной записи (0..1)
+  // Пауза сохраняет позицию и её отображение на той же карточке.
   const playProgress =
-    playingId !== null && playerStatus.duration > 0
+    (playingId !== null || pausedId !== null) && playerStatus.duration > 0
       ? Math.min(playerStatus.currentTime / playerStatus.duration, 1)
       : 0;
 
@@ -928,6 +920,8 @@ export default function AnswerSheet({
         openSheetRef.current = editing;
         onEditingChange?.(editing);
         if (i < 0) {
+          draftPlaybackGenerationRef.current += 1;
+          setPausedId(null);
           // Отменяем start до первого await: запись не сможет включиться уже
           // после начала закрытия родительской шторки.
           recordingSheetOpenRef.current = false;
@@ -1062,6 +1056,7 @@ export default function AnswerSheet({
       recording={recording}
       recordingPhase={recordingPhase}
       playingId={playingId}
+      pausedId={pausedId}
       playProgress={playProgress}
       audioError={audioError ? t(audioError) : null}
       confirmDeleteId={confirmDeleteId}
@@ -1071,7 +1066,6 @@ export default function AnswerSheet({
       onTogglePlay={togglePlay}
       onDelete={askOrConfirmDelete}
       onTranscribe={(recording) => void startTranscription(recording)}
-      onRemoveTranscript={removeTranscript}
       onToggleTranscript={toggleTranscript}
       onAppendToAnswer={appendTranscriptToAnswer}
       onDismiss={handleRecordingsDismiss}

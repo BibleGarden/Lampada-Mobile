@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RecordingDraft, fmtTime } from '../lib/store';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { Close, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
+import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -30,6 +30,7 @@ type Props = {
   recording: boolean;
   recordingPhase: 'idle' | 'starting' | 'recording' | 'stopping';
   playingId: number | null;
+  pausedId: number | null;
   playProgress: number;
   audioError: string | null;
   confirmDeleteId: number | null;
@@ -39,7 +40,6 @@ type Props = {
   onTogglePlay: (recording: RecordingDraft) => void;
   onDelete: (id: number) => void;
   onTranscribe: (recording: RecordingDraft) => void;
-  onRemoveTranscript: (id: number) => void;
   onToggleTranscript: (id: number) => void;
   onAppendToAnswer: (transcript: string) => void;
   onDismiss: () => void;
@@ -60,6 +60,7 @@ export default function RecordingsSheet({
   recording,
   recordingPhase,
   playingId,
+  pausedId,
   playProgress,
   audioError,
   confirmDeleteId,
@@ -69,7 +70,6 @@ export default function RecordingsSheet({
   onTogglePlay,
   onDelete,
   onTranscribe,
-  onRemoveTranscript,
   onToggleTranscript,
   onAppendToAnswer,
   onDismiss,
@@ -156,7 +156,7 @@ export default function RecordingsSheet({
             onPress={() => sheetRef.current?.close()}
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
           >
-            <Close size={sc(13)} color="rgba(255,255,255,.5)" />
+            <ChevronDown size={18} color="rgba(255,255,255,.5)" />
           </Pressable>
         </View>
 
@@ -174,6 +174,7 @@ export default function RecordingsSheet({
 
           {recordings.map((r, i) => {
             const playing = playingId === r.id;
+            const hasProgress = playing || pausedId === r.id;
             const loading = r.transcriptState === 'loading';
             return (
               <View key={r.id} style={styles.recCard} testID={`recording-card-${i}`}>
@@ -198,7 +199,7 @@ export default function RecordingsSheet({
                       <View
                         style={[
                           styles.recTrackFill,
-                          { width: `${Math.round((playing ? playProgress : 0) * 100)}%` },
+                          { width: `${Math.round((hasProgress ? playProgress : 0) * 100)}%` },
                         ]}
                       />
                     </View>
@@ -207,12 +208,10 @@ export default function RecordingsSheet({
                     <Text style={[styles.recMeta, loading && styles.recMetaState]} numberOfLines={1}>
                       {loading
                         ? t('components.answers.transcribing')
-                        : t('components.answers.recordingIndex', { index: i + 1, duration: fmtTime(playing ? Math.round(playProgress * r.durationSec) : r.durationSec) })}
+                        : t('components.answers.recordingIndex', { index: i + 1, duration: fmtTime(hasProgress ? Math.round(playProgress * r.durationSec) : r.durationSec) })}
                     </Text>
                   </View>
-                  {/* Кнопка расшифровки живёт в строке с плеем и корзиной, пока
-                      расшифровки нет. Когда она появилась, её действия уезжают
-                      в шапку самой расшифровки. */}
+                  {/* Кнопка расшифровки доступна, пока у записи нет текста. */}
                   {r.transcript === null && (
                     <Pressable
                       accessibilityLabel={
@@ -253,18 +252,7 @@ export default function RecordingsSheet({
 
                 {r.transcript !== null && (
                   <View style={styles.transcriptBlock}>
-                    <View style={styles.transcriptHead}>
-                      <Text style={styles.transcriptLabel}>{t('components.answers.transcriptTitle')}</Text>
-                      <Pressable
-                        accessibilityLabel={t('components.answers.removeTranscriptIndex', { index: i + 1 })}
-                        accessibilityRole="button"
-                        hitSlop={sc(8)}
-                        onPress={() => onRemoveTranscript(r.id)}
-                        style={({ pressed }) => [styles.transcriptHeadBtn, pressed && { opacity: 0.7 }]}
-                      >
-                        <Close size={sc(11)} color="rgba(255,255,255,.45)" />
-                      </Pressable>
-                    </View>
+                    <Text style={styles.transcriptLabel}>{t('components.answers.transcriptTitle')}</Text>
                     {/* Расшифровка — не черновик ответа, а результат распознания:
                         читается, но не правится. Нужное переносят в поле ответа
                         кнопкой и правят уже там. */}
@@ -560,28 +548,13 @@ const stylesFactory = () => StyleSheet.create({
   transcriptBlock: {
     marginTop: sc(9),
   },
-  transcriptHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(6),
+  transcriptLabel: {
     paddingHorizontal: sc(2),
     marginBottom: sc(5),
-  },
-  // Подпись занимает всю свободную ширину, кнопка прижата вправо
-  transcriptLabel: {
-    flex: 1,
     fontFamily: fonts.mono,
     fontSize: sc(9),
     letterSpacing: sc(1.2),
     color: colors.labelGoldDim,
-  },
-  transcriptHeadBtn: {
-    width: sc(20),
-    height: sc(20),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,.05)',
   },
   // Свёрнутая расшифровка: та же карточка, но три строки и без курсора
   transcriptPreview: {

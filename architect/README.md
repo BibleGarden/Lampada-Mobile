@@ -32,11 +32,17 @@ The journal and the settings are separate branches off Home.
 - Expo Secure Store, Expo Local Authentication and Expo Crypto for the optional
   app lock with a PIN and biometrics.
 - Expo Localization for initial interface and scripture language selection.
-- Reanimated, Gesture Handler and Skia for animations, gestures and graphics.
+- Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
+
+Reanimated 4.5.5 fixes stale settled animation properties that can move an open
+sheet below the screen while leaving its backdrop visible
+([upstream fix](https://github.com/software-mansion/react-native-reanimated/pull/9527)).
+This patch supports the project's React Native 0.86 and Worklets 0.10 versions;
+upgrading it requires rebuilding the native app.
 
 ## Application structure
 
@@ -340,7 +346,12 @@ does not change the historical day in the streak.
 
 While answering, the text and the voice recordings are split between two sheets
 (ADR-0016). `AnswerSheet` holds the answer field, `RecordingsSheet` holds the
-audio files and their transcripts. The asynchronous recorder start/stop are
+audio files and their transcripts. Transcripts can be expanded or appended to
+the editable answer; they are removed together with their recording.
+Within the recordings sheet, pausing retains the loaded audio and its progress;
+Play resumes that position. Switching recordings or replaying a completed one
+starts from the beginning. Closing the sheet clears the paused selection.
+The asynchronous recorder start/stop are
 serialized: a pending state immediately blocks a repeated action and the closing
 of the upper sheet. The global audio mode is changed only through
 `audioModeCoordinator`: while a recording lease is active, the music and the

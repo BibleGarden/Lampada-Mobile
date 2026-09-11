@@ -184,8 +184,8 @@ The smoke counts as passed only in full.
 | ANS-002 | Close an empty sheet | it closes without an extra confirmation |
 | ANS-003 | Close an unsaved non-empty answer | an explicit second confirmation is required, the data is not lost silently |
 | ANS-004 | Deny access to the microphone | the app does not crash and stays usable |
-| ANS-005 | Record and stop one audio | a recording with a non-zero duration appears and plays |
-| ANS-006 | Create several recordings | the files differ, the earlier recordings are not overwritten |
+| ANS-005 | Record and stop one audio; play, pause, resume and replay after completion | a recording with a non-zero duration appears; pause keeps the progress and elapsed time; Play resumes from that position; replay after completion starts from zero |
+| ANS-006 | Create several recordings and switch playback between them | the files differ, earlier recordings are not overwritten; switching starts the selected recording from zero and resets the previous row's progress |
 | ANS-007 | Save while a recording is active | the recording is stopped and saved correctly |
 | ANS-008 | Delete a recording with a confirmation | the recording disappears from the UI, the database and the files after saving |
 | ANS-009 | Try to close the recordings sheet by a swipe or by the background during a recording | the sheet does not close; the microphone stays under visible control until "Done"; after stopping the sheet closes the usual way |
@@ -197,7 +197,7 @@ The smoke counts as passed only in full.
 | ANS-015 | Delete or cancel a recording during transcription | the request is cancelled, a late response does not bring the deleted recording back into the UI or the database |
 | ANS-016 | Open a long transcript in the recordings sheet | the block shows three lines, "Show in full" expands and collapses it; the list of recordings stays scrollable |
 | ANS-017 | Press "Add to the answer" on an empty and on a filled answer | the recordings sheet closes, the transcript text is appended to the end of the answer field after a blank line, the transcript itself does not change |
-| ANS-018 | Remove the transcript with the cross and save | the card returns to a single line with a "Transcribe" button, the recording remains, the text moved into the answer does not disappear |
+| ANS-018 | Inspect a generated transcript and save the answer | the transcript offers expand/collapse and "Add to the answer", with no separate deletion action; the transcript and audio remain available after reopening |
 | ANS-019 | On an empty answer, quickly press the microphone / "Record" again while it is starting | exactly one recorder start happens, the buttons and closing are unavailable until the pending state ends, there is no hidden recording |
 | ANS-020 | Quickly press "Done" twice while a recording is stopping | exactly one stop happens, one working recording appears, a successful file is not deleted and no save error is shown |
 | ANS-021 | With the music on, save an audio in one question, move to the next one and record a second immediately | both recordings are saved and play back; a late restoration of the music does not cut the second file and the "The recording was not saved" message does not appear |
@@ -211,6 +211,7 @@ The smoke counts as passed only in full.
 | ANS-029 | On physical iOS, perform 10 cycles of start → stop → play without restarting the app | every cycle creates one new valid M4A; there is no save error, no stuck overlay and no unavailable next start |
 | ANS-030 | On physical iOS, start a recording right after pausing or finishing a draft or the scripture narration | the deferred deactivation of the player does not cut the recorder; the M4A duration matches the speech and playback does not jump to the end |
 | ANS-031 | On physical iOS, record two different files in a row and play the second, the first and the second in turn | every replace waits for its own AVPlayerItem to load, starts from zero and plays the correct file in full |
+| ANS-032 | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
 
 ### The AI and the companion
 
