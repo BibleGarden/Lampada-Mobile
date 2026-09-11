@@ -1,6 +1,6 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AppState, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, NotebookText, Settings2 } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
 import { useSession } from '../lib/store';
+import { startHomeRefresh } from '../lib/homeRefresh';
 import { colors, column, fonts, sc, useStyles } from '../lib/theme';
 
 const greetingByHour = (t: ReturnType<typeof useI18n>['t']) => {
@@ -39,12 +40,12 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [showSavedNotice]);
 
-  // при каждом возврате на Home: сброс сессии + свежий стрик
+  // Сброс сессии — только при переходе на Home; календарь обновляется и без навигации.
   useFocusEffect(
     useCallback(() => {
       reset();
-      loadStreak();
-    }, []),
+      return startHomeRefresh(AppState, loadStreak);
+    }, [loadStreak, reset]),
   );
 
   // календарь последней недели: правая точка — сегодня, левая — 6 дней назад.

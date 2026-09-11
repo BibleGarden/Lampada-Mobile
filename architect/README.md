@@ -17,6 +17,10 @@ The main user flow:
 
 The journal and the settings are separate branches off Home.
 
+While Home is focused, its prayer calendar refreshes on app activation and at
+the next local midnight. Leaving Home removes the listener and timer; resuming
+the app refreshes the calendar without resetting the session.
+
 ## Technology outline
 
 - Expo SDK 57, React Native 0.86 and React 19.
