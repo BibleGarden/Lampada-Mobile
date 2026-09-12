@@ -15,6 +15,7 @@ import Animated, {
   Easing,
   FadeIn,
   FadeInDown,
+  FadeOut,
   cancelAnimation,
   useAnimatedStyle,
   useDerivedValue,
@@ -89,7 +90,7 @@ function SessionScreen() {
   const ringSize = ringSizeFor(height);
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [answerOpen, setAnswerOpen] = useState(false);
+  const [showExpiryNotice, setShowExpiryNotice] = useState(false);
   const [transientAudioBusy, setTransientAudioBusy] = useState(false);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
   const [appState, setAppState] = useState(AppState.currentState);
@@ -98,8 +99,9 @@ function SessionScreen() {
   const readerRef = useRef<BottomSheet>(null);
   const flushAnswerRef = useRef<(() => Promise<void>) | null>(null);
   const ringProgress = useSharedValue(0);
+  const timeExpired = s.remaining === 0;
+  const expiryNotified = useRef(false);
   const finished = useRef(false);
-  const finishTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musicSessionActive = useRef(false);
   // React-effect cleanup happens later than the press handler. The ref lets an
   // already running music activation see recording/playback immediately.
@@ -218,7 +220,11 @@ function SessionScreen() {
         MUSIC_PLAYBACK_MODE,
       );
       if (!modeGrant?.isCurrent()) return;
-      if (active && !transientAudioBusyRef.current && modeGrant.isCurrent()) {
+      if (
+        active &&
+        !transientAudioBusyRef.current &&
+        modeGrant.isCurrent()
+      ) {
         const activeSlot = activeMusicPlayerSlot.current;
         const activePlayer = musicPlayerForSlot(activeSlot);
         activePlayer.volume = MUSIC_VOLUME;
@@ -275,7 +281,10 @@ function SessionScreen() {
 
     const startedAt = Date.now();
     musicCrossfadeTimer.current = setInterval(() => {
-      if (transientAudioBusyRef.current || !useSession.getState().musicOn) {
+      if (
+        transientAudioBusyRef.current ||
+        !useSession.getState().musicOn
+      ) {
         cancelMusicCrossfade();
         return;
       }
@@ -388,10 +397,7 @@ function SessionScreen() {
   // секундный тик
   useEffect(() => {
     const id = setInterval(() => useSession.getState().tick(), 1000);
-    return () => {
-      clearInterval(id);
-      if (finishTimeout.current) clearTimeout(finishTimeout.current);
-    };
+    return () => clearInterval(id);
   }, []);
 
   // Android «назад» не должен срывать молитву — глотаем жест
@@ -401,6 +407,8 @@ function SessionScreen() {
   }, []);
 
   const goToReflect = async () => {
+    if (finished.current) return;
+    finished.current = true;
     // открытый черновик ответа дописывается, а не выбрасывается
     if (flushAnswerRef.current) await flushAnswerRef.current();
     // useAudioPlayer освобождает native shared object при unmount, поэтому
@@ -418,27 +426,25 @@ function SessionScreen() {
     router.replace('/reflect');
   };
 
-  // конец таймера → рефлексия
+  // Истечение времени только напоминает о завершении: читать, слушать
+  // и отвечать можно дальше. После фона показываем ещё не увиденную плашку.
   useEffect(() => {
-    if (s.remaining === 0 && !finished.current) {
-      // Ноль на таймере не обрывает мысль: ждём явного сохранения или
-      // закрытия шторки, включая активную голосовую запись.
-      if (answerOpen) return;
-      finished.current = true;
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      finishTimeout.current = setTimeout(goToReflect, 400);
+    if (!timeExpired) {
+      expiryNotified.current = false;
+      setShowExpiryNotice(false);
+      return;
     }
-  }, [s.remaining, answerOpen]);
+    if (appState !== 'active' || expiryNotified.current) return;
+    expiryNotified.current = true;
+    setShowExpiryNotice(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [timeExpired, appState]);
 
-  // Если шторка начала открываться в 400-мс окне перед переходом,
-  // запланированное завершение отменяется и ждёт ответа.
   useEffect(() => {
-    if (s.remaining === 0 && answerOpen && finishTimeout.current) {
-      clearTimeout(finishTimeout.current);
-      finishTimeout.current = null;
-      finished.current = false;
-    }
-  }, [s.remaining, answerOpen]);
+    if (!showExpiryNotice) return;
+    const timeout = setTimeout(() => setShowExpiryNotice(false), 6_000);
+    return () => clearTimeout(timeout);
+  }, [showExpiryNotice]);
 
   // кольцо: доля прошедшего времени (или минутный цикл в ∞-режиме)
   useEffect(() => {
@@ -457,16 +463,12 @@ function SessionScreen() {
     }
   }, [s.remaining, s.elapsed]);
 
-  const finishEarly = () => {
-    if (finished.current) return;
-    finished.current = true;
-    goToReflect();
-  };
+  const finishEarly = () => { void goToReflect(); };
 
   const timerLabel = s.remaining === null ? fmtTime(s.elapsed) : fmtTime(s.remaining);
   const timerSub =
-    s.remaining === 0 && answerOpen
-      ? t('screens.session.finishAnswer')
+    timeExpired
+      ? t('screens.session.continuePrayer')
       : s.remaining === null
         ? t('screens.session.elapsed')
         : t('screens.session.remaining');
@@ -494,7 +496,11 @@ function SessionScreen() {
           ]}
         >
           <View style={styles.topBar}>
-            <IconButton onPress={finishEarly}>
+            <IconButton
+              onPress={finishEarly}
+              accessibilityLabel={t('screens.session.finish')}
+              testID="session-finish-button"
+            >
               <Close />
             </IconButton>
             <Kicker numberOfLines={1} style={styles.topTitle}>
@@ -542,7 +548,10 @@ function SessionScreen() {
               >
                 {timerLabel}
               </Text>
-              <Kicker style={{ fontSize: Math.min(sc(11), ringSize * 0.062) }}>
+              <Kicker style={{
+                fontSize: Math.min(sc(11), ringSize * 0.062),
+                textAlign: 'center',
+              }}>
                 {timerSub}
               </Kicker>
             </View>
@@ -589,11 +598,22 @@ function SessionScreen() {
         sheetRef={answerRef}
         openRef={openAnswerRef}
         flushRef={flushAnswerRef}
-        onEditingChange={setAnswerOpen}
-        timeExpired={s.remaining === 0}
         onAudioBusyChange={handleAnswerAudioChange}
       />
       <ScriptureReader sheetRef={readerRef} scriptureAudio={scriptureAudio} />
+      {showExpiryNotice && (
+        <Animated.View
+          entering={FadeInDown.duration(200)}
+          exiting={FadeOut.duration(250)}
+          pointerEvents="none"
+          style={[styles.expiryNotice, { top: insets.top + sc(8) }]}
+          testID="session-expiry-notice"
+        >
+          <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.expiryNoticeText}>
+            {t('screens.session.expiryNotice')}
+          </Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -723,6 +743,27 @@ function AdjustBtn({
 }
 
 const stylesFactory = () => StyleSheet.create({
+  expiryNotice: {
+    position: 'absolute',
+    alignSelf: 'center',
+    maxWidth: sc(390),
+    marginHorizontal: sc(16),
+    paddingHorizontal: sc(18),
+    paddingVertical: sc(12),
+    borderRadius: sc(14),
+    backgroundColor: '#21190f',
+    borderWidth: 1,
+    borderColor: 'rgba(214,182,120,.3)',
+    zIndex: 30,
+    elevation: 30,
+  },
+  expiryNoticeText: {
+    fontFamily: fonts.sansMedium,
+    fontSize: sc(13),
+    lineHeight: sc(19),
+    color: colors.creamBright,
+    textAlign: 'center',
+  },
   root: { flex: 1, backgroundColor: '#0a0806' },
   topBar: {
     // Оптическая поправка к общему gap: зазор до кольца читается от строки

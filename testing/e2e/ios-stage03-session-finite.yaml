@@ -31,10 +31,24 @@ appId: twinkler
 - tapOn: "−1"
 - tapOn: "−1"
 - tapOn: "−1"
+- extendedWaitUntil:
+    visible:
+      id: "session-expiry-notice"
+    timeout: 10000
+- assertVisible: "Время закончилось. Можно продолжить."
+- assertVisible: "МОЛИТВА"
+- extendedWaitUntil:
+    notVisible:
+      id: "session-expiry-notice"
+    timeout: 10000
+- assertVisible: "МОЛИТВА"
+- assertNotVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn:
+    id: "session-finish-button"
 - assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
 - tapOn: "Вернуться к молитве"
 - assertVisible: "МОЛИТВА"
 - assertVisible: "SES-001 finite timer"
 - tapOn:
-    point: "10%,11%"
+    id: "session-finish-button"
 - assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"

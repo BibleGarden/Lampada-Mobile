@@ -171,7 +171,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serif,
     fontSize: sc(16),
     lineHeight: sc(24),
-    color: '#eef0e6',
+    color: colors.cardText,
   },
   title: {
     marginBottom: sc(12),
@@ -180,7 +180,7 @@ const stylesFactory = () => StyleSheet.create({
     textTransform: 'uppercase',
     // тот же базовый цвет, что и у текста отрывка; прозрачность гасит его
     // до серовато-зелёного на тёмном фоне читалки
-    color: '#eef0e6',
+    color: colors.cardText,
     opacity: 0.6,
   },
 });

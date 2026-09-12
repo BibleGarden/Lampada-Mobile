@@ -68,10 +68,6 @@ type Props = {
   openRef: React.MutableRefObject<(() => void) | null>;
   /** Сессия зовёт это перед уходом на рефлексию: дописать открытый черновик */
   flushRef?: React.MutableRefObject<(() => Promise<void>) | null>;
-  /** Таймер не завершает молитву, пока человек отвечает в открытой шторке. */
-  onEditingChange?: (editing: boolean) => void;
-  /** После нуля ответ завершается только явной кнопкой или подтверждённой отменой. */
-  timeExpired?: boolean;
   /** Музыка сессии уступает аудиофокус записи и прослушиванию черновика. */
   onAudioBusyChange?: (busy: boolean) => void;
 };
@@ -91,8 +87,6 @@ export default function AnswerSheet({
   sheetRef,
   openRef,
   flushRef,
-  onEditingChange,
-  timeExpired = false,
   onAudioBusyChange,
 }: Props) {
   const { t } = useI18n();
@@ -327,9 +321,8 @@ export default function AnswerSheet({
     setPausedId(null);
     setAudioError(null);
     recorderErrorRef.current = null;
-    onEditingChange?.(true);
     sheetRef.current?.snapToIndex(0);
-  }, [abortAllTranscriptions, sheetRef, onEditingChange]);
+  }, [abortAllTranscriptions, sheetRef]);
 
   useEffect(() => {
     openRef.current = handleOpen;
@@ -876,10 +869,10 @@ export default function AnswerSheet({
         appearsOnIndex={0}
         disappearsOnIndex={-1}
         opacity={0.7}
-        pressBehavior={hasUnsavedContent || timeExpired ? 'none' : 'close'}
+        pressBehavior={hasUnsavedContent ? 'none' : 'close'}
       />
     ),
-    [hasUnsavedContent, timeExpired],
+    [hasUnsavedContent],
   );
 
   const renderHandle = useCallback(
@@ -928,7 +921,7 @@ export default function AnswerSheet({
       enableDynamicSizing={false}
       // Свайп доступен только для пустой шторки. Иначе закрытие возможно
       // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
-      enablePanDownToClose={!timeExpired && !hasUnsavedContent}
+      enablePanDownToClose={!hasUnsavedContent}
       // Жест содержимого выключен: иначе вертикальное протягивание внутри
       // поля ответа двигает шторку вместо прокрутки текста. Шторку тянут
       // за ручку.
@@ -937,7 +930,6 @@ export default function AnswerSheet({
         onIndexChange(i);
         const editing = i >= 0;
         openSheetRef.current = editing;
-        onEditingChange?.(editing);
         if (i < 0) {
           draftPlaybackGenerationRef.current += 1;
           setPausedId(null);
@@ -1060,7 +1052,7 @@ export default function AnswerSheet({
               </Pressable>
               <GoldButton
                 compact
-                label={saving ? t('components.answers.saving') : timeExpired ? t('components.answers.saveFinish') : t('components.answers.save')}
+                label={saving ? t('components.answers.saving') : t('components.answers.save')}
                 onPress={save}
                 style={{ flex: 1 }}
                 testID="answer-save-button"
