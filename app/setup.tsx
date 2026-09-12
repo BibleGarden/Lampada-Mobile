@@ -63,16 +63,16 @@ export default function Setup() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View
-        entering={FadeIn.duration(450)}
-        style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
+      {/* Область закрытия клавиатуры занимает весь экран, включая поля
+          по бокам ограниченной по ширине колонки на планшете. */}
+      <Pressable
+        onPress={Keyboard.dismiss}
+        accessible={false}
+        style={styles.dismissArea}
       >
-        {/* элементы не двигаются под клавиатуру: она открывается поверх,
-            а тап по пустому месту экрана её прячет */}
-        <Pressable
-          onPress={Keyboard.dismiss}
-          accessible={false}
-          style={{ flex: 1, justifyContent: 'space-between' }}
+        <Animated.View
+          entering={FadeIn.duration(450)}
+          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
         >
           <View style={styles.headerRow}>
             <IconButton size={sc(30)} onPress={() => router.back()}>
@@ -173,8 +173,8 @@ export default function Setup() {
           </View>
 
           <GoldButton label={t('screens.setup.next')} onPress={() => void next()} />
-        </Pressable>
-      </Animated.View>
+        </Animated.View>
+      </Pressable>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
@@ -207,7 +207,8 @@ export default function Setup() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  body: { flex: 1, paddingHorizontal: sc(18), ...column() },
+  dismissArea: { flex: 1 },
+  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',

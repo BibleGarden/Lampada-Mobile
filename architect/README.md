@@ -97,6 +97,14 @@ upgrading it requires rebuilding the native app.
 | `assets/audio/` | The local music files and the record of their origin and licenses |
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
 
+Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
+pass unscaled values. Settings sheets are centered and capped at `sc(390)` in
+width to keep their controls compact on wide tablet windows.
+
+Keyboard dismissal covers the screen or sheet bounds independently of the
+centered text column. Text fields retain their own touch handling; the answer
+sheet's side margins and handle dismiss the keyboard without discarding drafts.
+
 ## Screens and navigation
 
 | Route | Role |
@@ -247,6 +255,11 @@ lets the user assemble several rules with independent sets of days and times, an
 this path remains the degradation for when the AI is unavailable. Inside the
 model the weekdays are ISO (1 = Monday); they are converted into the
 expo-notifications numbering (1 = Sunday) in exactly one place.
+
+Deleting a rule or an individual time follows the journal and recording pattern:
+the first tap highlights the trash button, and a second tap within three seconds
+confirms deletion. Only one target can be armed. Editing the schedule, closing
+the editor or leaving the active app clears the confirmation.
 
 The scheduling is done by `lib/prayerReminderScheduler.ts`: every "day x time"
 pair becomes a single WEEKLY trigger, and the repetition is held by the system,

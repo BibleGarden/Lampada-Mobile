@@ -407,7 +407,13 @@ export default function Journal() {
   };
 
   return (
-    <View style={styles.root}>
+    <View
+      style={styles.root}
+      onStartShouldSetResponder={() => {
+        Keyboard.dismiss();
+        return false;
+      }}
+    >
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>

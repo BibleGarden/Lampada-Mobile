@@ -148,7 +148,7 @@ The smoke counts as passed only in full.
 | SETUP-001 | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 | A long goal and an open keyboard | the field stays manageable, the "Next" button is available once the keyboard is closed |
+| SETUP-004 | A long goal and an open keyboard; tap above the field and in the tablet's left and right margins | the field stays manageable; outside taps dismiss the keyboard without losing text, inside taps keep editing; the "Next" button is available once the keyboard is closed |
 | START-001 | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
@@ -307,6 +307,8 @@ The smoke counts as passed only in full.
 | REM-011 | A notification arrives while the app is open | it is shown as a banner rather than silently dropped |
 | REM-012 | A reminder during an active prayer timer | the ongoing chronometer (ADR-0010) does not disappear and is not replaced |
 | REM-013 | Pray, then wait for the reminder time on the same day | the reminder arrives: it was agreed to remind unconditionally |
+| REM-014 | Tap the trash button for a rule or time, then tap it again within three seconds | the first tap highlights the button without deleting; the second deletes only the selected item |
+| REM-015 | Arm deletion, then wait three seconds, edit the schedule, close the editor or background the app | confirmation clears; deleting again requires two taps; arming a different target cancels the previous one |
 
 ### App lock
 
@@ -333,8 +335,11 @@ are in
 ### Interface and accessibility
 
 - screens 320-430 pt wide, iPhones with and without a Dynamic Island;
-- an iPad in the supported portrait orientation;
+- an iPad in portrait and landscape orientations;
 - the keyboard does not cover the field and the main actions;
+- outside taps, including both tablet margins, dismiss the keyboard in setup,
+  reflection, journal search and the answer sheet; inside taps retain editing,
+  and dismissing the keyboard preserves the entered text;
 - long Russian strings are not clipped in a damaging way;
 - the buttons have a sufficient tap area and clear accessibility labels;
 - enlarged system text, VoiceOver/TalkBack, Reduce Motion;
