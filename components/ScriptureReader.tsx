@@ -14,10 +14,11 @@ import { useSheetReflow } from '../lib/useSheetReflow';
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
   scriptureAudio: ScriptureAudioControl;
+  onOpenChange: (open: boolean) => void;
 };
 
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
-export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
+export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
@@ -53,7 +54,10 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
       enableDynamicSizing={false}
       topInset={insets.top}
       enablePanDownToClose
-      onChange={onIndexChange}
+      onChange={(index) => {
+        onIndexChange(index);
+        onOpenChange(index >= 0);
+      }}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
       handleIndicatorStyle={styles.handle}

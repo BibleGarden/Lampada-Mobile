@@ -35,20 +35,7 @@ appId: twinkler
 - tapOn: "−1"
 - tapOn: "−1"
 - extendedWaitUntil:
-    visible:
-      id: "session-expiry-notice"
+    visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
     timeout: 10000
-- assertVisible:
-    id: "music-playing"
-- extendedWaitUntil:
-    notVisible:
-      id: "session-expiry-notice"
-    timeout: 10000
-- assertVisible:
-    id: "music-playing"
-- assertNotVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- tapOn:
-    id: "session-finish-button"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
 - assertNotVisible:
     id: "music-playing"

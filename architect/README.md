@@ -175,14 +175,16 @@ clock every time, so after coming back from the background the timer immediately
 catches up with the interval that passed. A session unloaded by the OS is not
 restored yet.
 
-Timer expiry never navigates or interrupts reading, an answer, narration or
-music. It leaves the timer at zero with a continuation hint and shows a
-non-interactive six-second notice above the reader and answer sheets. If expiry
-happened in the background, the notice appears when the app becomes active.
-Each deadline is announced once; extending the timer clears the notice and
-allows a fresh one at the next expiry. Only explicit completion opens reflection,
-after saving an open answer and stopping audio. A synchronous guard prevents
-duplicate completion while the answer is being saved.
+Timer expiry waits while the reader or answer sheet is open, or narration is
+loading, playing, paused or showing an error. A non-interactive six-second notice
+allows the user to finish that activity. Sheet opening is reported before its
+animation; closing is reported after the sheet settles and recording cleanup
+finishes. Once the active prayer screen has no such activity, reflection opens
+after one second. Reopening a sheet, starting narration, extending the timer or
+backgrounding cancels the pending transition. Returning from the background
+re-evaluates the current state. Manual completion bypasses the delay, saves an
+open answer and stops audio; a synchronous guard prevents duplicate completion.
+Each deadline is announced once. Extending the timer resets the notice.
 
 Returning from reflection uses `resumeSession`, not `enterSession`: it retains
 one session ID, all questions, answers and recordings, the scripture trail and
@@ -221,7 +223,7 @@ the `passage` coordinates of the chosen translation. When `passage.verses` is
 present, the text is assembled from the structured verses, and the
 `highlight.passage` range defines the key verses in the numbering of the chosen
 translation. The compact card and the key verses in the full reader use the same
-off-white text colour. Surrounding verses use that colour at 75% opacity; passages
+off-white text colour. Surrounding verses use that colour at 55% opacity; passages
 without a key-verse range stay at full opacity. The shared passage renderer also
 applies this hierarchy in favourites and the journal, with a translucent white
 underline for the currently narrated verse. The full reader is opened both by

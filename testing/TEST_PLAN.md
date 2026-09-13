@@ -159,7 +159,7 @@ The smoke counts as passed only in full.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| SES-001 | A finite timer | it decreases to zero, shows a six-second notice and keeps the prayer open until explicit completion |
+| SES-001 | A finite timer | it decreases to zero, waits for the reader, answer and narration, then opens reflection after one second on the unobstructed prayer screen |
 | SES-002 | The ∞ mode | the elapsed time is displayed, there is no automatic finish |
 | SES-003 | Change the timer with the − / + buttons | the time changes by the expected step and never becomes invalid |
 | SES-004 | Background the app and come back after 10-60 seconds | the timer behaviour matches the chosen product policy; any divergence is recorded |
@@ -176,8 +176,8 @@ The smoke counts as passed only in full.
 | MUS-003 | Wait for the end of the playlist | fifteen tracks play in sequence and the loop starts again |
 | MUS-004 | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
 | MUS-005 | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording |
-| MUS-006 | Finish the prayer explicitly before or after timer expiry | the music player stops and does not play on reflection or the next session screens |
-| MUS-007 | Let the timer reach zero with the music on, then finish explicitly | the notice does not stop music or navigate; explicit completion stops both players without a released-player crash |
+| MUS-006 | Finish the prayer manually or after timer expiry | the music player stops and does not play on reflection or the next session screens |
+| MUS-007 | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |
 
 ### Answers and audio
@@ -193,7 +193,7 @@ The smoke counts as passed only in full.
 | ANS-007 | Save while a recording is active | the recording is stopped and saved correctly |
 | ANS-008 | Delete a recording with a confirmation | the recording disappears from the UI, the database and the files after saving |
 | ANS-009 | Try to close the recordings sheet by a swipe or by the background during a recording | the sheet does not close; the microphone stays under visible control until "Done"; after stopping the sheet closes the usual way |
-| ANS-010 | The timer runs out with the sheet open | a non-interactive notice appears above the sheet; the text and recording continue; saving or closing the answer keeps the prayer open until explicit completion |
+| ANS-010 | The timer runs out with the sheet open | a non-interactive notice appears above the sheet; text and recording continue; successful save/close and recording cleanup are followed by reflection after one second |
 | ANS-011 | Switch between questions and edit an old answer | the answer is saved under the correct question |
 | ANS-012 | Stop a recording and do not press "Transcribe" | the audio recording and the button appear; no network request is made and no tokens are spent |
 | ANS-013 | Press "Transcribe", then save while the request is in flight | a loading state appears; the save waits for the request, the audio and the text are restored after reopening |
@@ -254,10 +254,10 @@ The smoke counts as passed only in full.
 | SCR-013 | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |
 | SCR-014 | Change the device language after the setting was saved | the saved user choice is not overridden |
 | SCR-015 | Pause the scripture narration, press resume and immediately switch the mode or the passage | the old passage does not resume after the context changes; the new passage starts normally |
-| SCR-016 | Let the timer expire during scripture narration with music enabled | a six-second notice appears; the passage plays to its end; music resumes normally; the prayer stays open until explicit completion |
-| SCR-017 | Read silently in the expanded reader when time expires; continue scrolling, then close the reader | the notice appears above the reader without intercepting touches; the passage, position and prayer remain open after the notice disappears |
-| SCR-018 | Pause/resume, encounter an audio error, save an answer or add time after expiry | there is no automatic navigation; extra time clears the notice and permits a new one at the next expiry; explicit completion runs once |
-| SCR-019 | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 75% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
+| SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
+| SCR-017 | Read silently in the expanded reader when time expires; continue scrolling, then close the reader | the notice does not intercept touches or close the passage; closing the reader returns to the timer, then reflection opens after one second |
+| SCR-018 | Reopen the reader, pause/resume narration, open an answer or add time during the one-second delay | the pending transition is cancelled; open activities and audio errors remain visible; extra time resets expiry; completion runs once |
+| SCR-019 | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
 | SCR-008 | A launch and navigation with no network | the cache of shown passages is used; with an empty cache there is a neutral error and a retry |
 | SCR-009 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
 | SCR-010 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |

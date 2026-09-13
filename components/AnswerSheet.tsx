@@ -68,6 +68,8 @@ type Props = {
   openRef: React.MutableRefObject<(() => void) | null>;
   /** Сессия зовёт это перед уходом на рефлексию: дописать открытый черновик */
   flushRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  /** Завершение сессии ждёт закрытия ответа, включая остановку записи. */
+  onOpenChange?: (open: boolean) => void;
   /** Музыка сессии уступает аудиофокус записи и прослушиванию черновика. */
   onAudioBusyChange?: (busy: boolean) => void;
 };
@@ -87,6 +89,7 @@ export default function AnswerSheet({
   sheetRef,
   openRef,
   flushRef,
+  onOpenChange,
   onAudioBusyChange,
 }: Props) {
   const { t } = useI18n();
@@ -304,6 +307,8 @@ export default function AnswerSheet({
   // черновик текущего вопроса подтягивается ДО показа шторки: если делать
   // это в onChange, на открытии успевает мелькнуть контент прошлого вопроса
   const handleOpen = useCallback(() => {
+    openSheetRef.current = true;
+    onOpenChange?.(true);
     abortAllTranscriptions();
     const st = useSession.getState();
     answerIndexRef.current = st.qIndex;
@@ -322,7 +327,7 @@ export default function AnswerSheet({
     setAudioError(null);
     recorderErrorRef.current = null;
     sheetRef.current?.snapToIndex(0);
-  }, [abortAllTranscriptions, sheetRef]);
+  }, [abortAllTranscriptions, sheetRef, onOpenChange]);
 
   useEffect(() => {
     openRef.current = handleOpen;
@@ -930,6 +935,7 @@ export default function AnswerSheet({
         onIndexChange(i);
         const editing = i >= 0;
         openSheetRef.current = editing;
+        if (editing) onOpenChange?.(true);
         if (i < 0) {
           draftPlaybackGenerationRef.current += 1;
           setPausedId(null);
@@ -966,6 +972,7 @@ export default function AnswerSheet({
           onAudioBusyChange?.(false);
           setConfirmCancel(false);
           discardUnsavedRecordings();
+          if (!openSheetRef.current) onOpenChange?.(false);
         }
       }}
       // По умолчанию контейнер контента шторки — единый элемент доступности,

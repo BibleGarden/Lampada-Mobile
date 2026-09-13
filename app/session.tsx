@@ -45,6 +45,7 @@ import { getPrayerTracks } from '../lib/music';
 import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
+import { scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
   audioModeCoordinator,
   type AudioModeRequest,
@@ -90,6 +91,8 @@ function SessionScreen() {
   const ringSize = ringSizeFor(height);
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
+  const [readerOpen, setReaderOpen] = useState(false);
+  const [answerOpen, setAnswerOpen] = useState(false);
   const [showExpiryNotice, setShowExpiryNotice] = useState(false);
   const [transientAudioBusy, setTransientAudioBusy] = useState(false);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
@@ -386,6 +389,7 @@ function SessionScreen() {
     enabled: s.dockMode === 'scripture' && appState === 'active',
     onAudioBusyChange: handleTransientAudioChange,
   });
+  const activityOpen = readerOpen || answerOpen || scriptureAudio.phase !== 'idle';
   const handleAnswerAudioChange = useCallback(
     (busy: boolean) => {
       if (busy) scriptureAudio.stop();
@@ -426,8 +430,16 @@ function SessionScreen() {
     router.replace('/reflect');
   };
 
-  // Истечение времени только напоминает о завершении: читать, слушать
-  // и отвечать можно дальше. После фона показываем ещё не увиденную плашку.
+  const goToReflectRef = useRef(goToReflect);
+  goToReflectRef.current = goToReflect;
+  useEffect(() => scheduleSessionCompletion({
+    timeExpired,
+    appActive: appState === 'active',
+    activityOpen,
+  }, () => { void goToReflectRef.current(); }), [timeExpired, appState, activityOpen]);
+
+  // Читалку, ответ и озвучку не обрываем. После фона показываем
+  // ещё не увиденную плашку, а после возврата к таймеру завершаем сессию.
   useEffect(() => {
     if (!timeExpired) {
       expiryNotified.current = false;
@@ -436,9 +448,9 @@ function SessionScreen() {
     }
     if (appState !== 'active' || expiryNotified.current) return;
     expiryNotified.current = true;
-    setShowExpiryNotice(true);
+    setShowExpiryNotice(activityOpen);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [timeExpired, appState]);
+  }, [timeExpired, appState, activityOpen]);
 
   useEffect(() => {
     if (!showExpiryNotice) return;
@@ -468,7 +480,7 @@ function SessionScreen() {
   const timerLabel = s.remaining === null ? fmtTime(s.elapsed) : fmtTime(s.remaining);
   const timerSub =
     timeExpired
-      ? t('screens.session.continuePrayer')
+      ? t(activityOpen ? 'screens.session.continuePrayer' : 'screens.session.timeCompleted')
       : s.remaining === null
         ? t('screens.session.elapsed')
         : t('screens.session.remaining');
@@ -587,7 +599,10 @@ function SessionScreen() {
           <View style={styles.dockWrap}>
             <CompanionDock
               onOpenAnswer={() => openAnswerRef.current?.()}
-              onOpenReader={() => readerRef.current?.snapToIndex(0)}
+              onOpenReader={() => {
+                setReaderOpen(true);
+                readerRef.current?.snapToIndex(0);
+              }}
               scriptureAudio={scriptureAudio}
             />
           </View>
@@ -598,10 +613,15 @@ function SessionScreen() {
         sheetRef={answerRef}
         openRef={openAnswerRef}
         flushRef={flushAnswerRef}
+        onOpenChange={setAnswerOpen}
         onAudioBusyChange={handleAnswerAudioChange}
       />
-      <ScriptureReader sheetRef={readerRef} scriptureAudio={scriptureAudio} />
-      {showExpiryNotice && (
+      <ScriptureReader
+        sheetRef={readerRef}
+        scriptureAudio={scriptureAudio}
+        onOpenChange={setReaderOpen}
+      />
+      {showExpiryNotice && activityOpen && (
         <Animated.View
           entering={FadeInDown.duration(200)}
           exiting={FadeOut.duration(250)}

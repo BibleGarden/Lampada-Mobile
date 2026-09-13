@@ -96,8 +96,8 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifSemiBold,
   },
   contextVerse: {
-    // Тот же белый, что у карточки и ключевого стиха, с непрозрачностью 75%.
-    color: `${colors.cardText}BF`,
+    // Тот же белый, что у карточки и ключевого стиха, с непрозрачностью 55%.
+    color: `${colors.cardText}8C`,
   },
   activeVerse: {
     textDecorationLine: 'underline',

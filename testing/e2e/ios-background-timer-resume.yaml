@@ -1,8 +1,8 @@
 appId: twinkler
 ---
-# Resume without stopping the process: expiry is a notice, not navigation.
+# Resume without stopping the process: an idle expired prayer opens reflection.
 - launchApp:
     stopApp: false
-- assertVisible: "МОЛИТВА"
-- assertNotVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-29-background/BG-TIMER-resumed-at-zero
+- extendedWaitUntil:
+    visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+    timeout: 10000
