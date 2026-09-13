@@ -11,6 +11,7 @@ import ProgressRing from '../components/ProgressRing';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { useSession } from '../lib/store';
+import { useSettings } from '../lib/settings';
 import { recordDiagnostic } from '../lib/db';
 import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
 
@@ -29,12 +30,12 @@ export default function Threshold() {
   const landscapeTablet = isTablet() && width > height;
   const insets = useSafeAreaInsets();
   const s = useSession();
+  const answerContextConsent = useSettings((state) => state.answerContextConsent);
 
-  // брифинг собирается из выбора на «Настройке»: цель не переписывается,
-  // а вливается в фразу как есть, с золотой подсветкой (строчная — она
-  // продолжает предложение после двоеточия)
+  // Брифинг сохраняет тему ровно в формулировке человека и только визуально
+  // продолжает ею нейтральную подпись «Тема молитвы».
   const topicTrim = s.topic.trim();
-  const goal = topicTrim.replace(/^[А-ЯA-ZЁ]/, (c) => c.toLowerCase());
+  const goal = topicTrim;
   const timeText = topicTrim
     ? s.minutes === 0
       ? t('screens.threshold.unlimitedGoal')
@@ -55,7 +56,7 @@ export default function Threshold() {
     },
     {
       icon: <Shield size={16} color={colors.amberBright} />,
-      text: t('screens.threshold.local'),
+      text: t(`screens.threshold.answers.${answerContextConsent}`),
     },
   ];
   const progress = useSharedValue(0);
