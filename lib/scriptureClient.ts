@@ -1,6 +1,7 @@
 // The repository's native Node test runner requires the explicit extension.
 // @ts-ignore Expo/Metro resolves TypeScript sources, while tsc disallows the suffix here.
 import { parseScriptureSelection, type ScriptureRequest, type ScriptureSelection } from './scripture.ts';
+import { isPrefetchDenial } from './prefetch.ts';
 import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
 export const SCRIPTURE_REQUEST_TIMEOUT_MS = 25_000;
@@ -10,6 +11,7 @@ const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
 export type ScriptureSelectError =
   | { kind: 'not_configured' }
+  | { kind: 'prefetch_denied' }
   | { kind: 'cancelled' }
   | { kind: 'unauthorized' }
   | { kind: 'validation'; detail: string }
@@ -140,6 +142,9 @@ export async function selectScriptureOnce(
       };
     }
     if (response.status === 429) {
+      if (request.prefetch && isPrefetchDenial(await readDetail(response))) {
+        return { ok: false, error: { kind: 'prefetch_denied' } };
+      }
       return {
         ok: false,
         error: {
@@ -194,6 +199,7 @@ export async function selectScripture(
   request: ScriptureRequest,
   dependencies: ScriptureClientDependencies = {},
 ): Promise<ScriptureSelectResult> {
+  if (request.prefetch) return selectScriptureOnce(request, dependencies);
   let rateLimitRetries = 0;
   let unavailableRetries = 0;
   let transportRetries = 0;

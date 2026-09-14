@@ -1,10 +1,7 @@
-// AI-слой: вопросы Спутника и вопрос рефлексии по заданной пользователем цели.
-//
-// Сетевая часть живёт в llm.ts; здесь — промпты и правило деградации:
-// любая ошибка (прокси не настроен, сеть, таймаут, кривой ответ) тихо
-// откатывает на курируемые пулы из прототипа. Молитва важнее генерации —
-// экраны никогда не ждут ИИ дольше таймаута и никогда не видят ошибку.
+// Prayer questions and reflection use the server's prompts and model policy.
+// Unavailable prefetch returns no content; foreground errors retain curated questions.
 
+import { PrefetchDeniedError } from './prefetch.ts';
 import { completePrayerContent, llmConfigured } from './llm';
 import { coreAiAllowedNow, useSettings } from './settings';
 import { fallbackQuestions } from './locales/fallbackQuestions';
@@ -32,8 +29,8 @@ export const pickFallbackQuestion = (asked: string[]): string => {
 
 // деградация тихая для человека, но не для разработчика: причина отката
 // на курируемый пул видна в логах dev-сервера
-const warn = (where: string, e: unknown) =>
-  console.warn(`[ai] ${where}: using fallback pool —`, e instanceof Error ? e.message : e);
+const warn = (where: string, e: unknown, prefetch = false) =>
+  console.warn(`[ai] ${where}: ${prefetch ? 'prefetch unavailable' : 'using fallback pool'} —`, e instanceof Error ? e.message : e);
 
 // один вопрос — одна строка: нумерация и маркеры из модели вычищаются
 const tidy = (q: string) =>
@@ -47,16 +44,21 @@ const isQuestion = (q: unknown): q is string =>
  * Остальные вопросы не заготавливаются пакетом: одноэлементный буфер
  * пополняется по ходу молитвы и пересобирается после нового ответа.
  */
-export async function generateFirstQuestion(topic: string): Promise<GeneratedQuestion> {
-  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(currentFallbacks().first));
+export async function generateFirstQuestion(topic: string, prefetch = false): Promise<GeneratedQuestion | null> {
+  const fallback = () => prefetch ? null : fromFallback(pickRandom(currentFallbacks().first));
+  if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
-    const q = await completePrayerContent(buildQuestionRequest('first', topic));
+    const q = await completePrayerContent({
+      ...buildQuestionRequest('first', topic),
+      ...(prefetch ? { prefetch: true } : {}),
+    });
     const clean = tidy(q.text);
-    if (!isQuestion(clean)) warn('firstQuestion', 'Invalid question response');
-    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().first));
+    if (!isQuestion(clean)) warn('firstQuestion', 'Invalid question response', prefetch);
+    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fallback();
   } catch (e) {
-    warn('firstQuestion', e);
-    return fromFallback(pickRandom(currentFallbacks().first));
+    if (prefetch && e instanceof PrefetchDeniedError) return null;
+    warn('firstQuestion', e, prefetch);
+    return fallback();
   }
 }
 
@@ -71,16 +73,21 @@ export async function generateQuestion(
   asked: string[],
   answers: Record<number, AnswerContext> = {},
   skippedQuestions: string[] = [],
-): Promise<GeneratedQuestion> {
-  const fallback = () => fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions]));
+  prefetch = false,
+): Promise<GeneratedQuestion | null> {
+  const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions]));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
-    const q = await completePrayerContent(buildQuestionRequest('next', topic, asked, answers, skippedQuestions));
+    const q = await completePrayerContent({
+      ...buildQuestionRequest('next', topic, asked, answers, skippedQuestions),
+      ...(prefetch ? { prefetch: true } : {}),
+    });
     const clean = tidy(q.text);
-    if (!isQuestion(clean)) warn('question', 'Invalid question response');
+    if (!isQuestion(clean)) warn('question', 'Invalid question response', prefetch);
     return isQuestion(clean) ? { ...fromAi(clean), novel: q.novel } : fallback();
   } catch (e) {
-    warn('question', e);
+    if (prefetch && e instanceof PrefetchDeniedError) return null;
+    warn('question', e, prefetch);
     return fallback();
   }
 }
@@ -91,15 +98,21 @@ export async function generateReflectQuestion(
   asked: string[],
   answers: Record<number, AnswerContext>,
   skippedQuestions: string[] = [],
-): Promise<GeneratedQuestion> {
-  if (!llmConfigured() || !coreAiAllowedNow()) return fromFallback(pickRandom(currentFallbacks().reflect));
+  prefetch = false,
+): Promise<GeneratedQuestion | null> {
+  const fallback = () => prefetch ? null : fromFallback(pickRandom(currentFallbacks().reflect));
+  if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
-    const q = await completePrayerContent(buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions));
+    const q = await completePrayerContent({
+      ...buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions),
+      ...(prefetch ? { prefetch: true } : {}),
+    });
     const clean = tidy(q.text);
-    if (!isQuestion(clean)) warn('reflect', 'Invalid question response');
-    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fromFallback(pickRandom(currentFallbacks().reflect));
+    if (!isQuestion(clean)) warn('reflect', 'Invalid question response', prefetch);
+    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fallback();
   } catch (e) {
-    warn('reflect', e);
-    return fromFallback(pickRandom(currentFallbacks().reflect));
+    if (prefetch && e instanceof PrefetchDeniedError) return null;
+    warn('reflect', e, prefetch);
+    return fallback();
   }
 }

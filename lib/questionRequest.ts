@@ -6,6 +6,7 @@ export type QuestionRequest = {
   topic: string;
   messages: QuestionMessage[];
   skipped_questions?: string[];
+  prefetch?: boolean;
 };
 
 /** История только реальных ходов, без инструкций под видом реплик человека. */
@@ -61,6 +62,7 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
     remaining -= question.length;
   }
   return { stage: request.stage, topic: request.topic, messages,
+    ...(request.prefetch ? { prefetch: true } : {}),
     ...(skipped.length ? { skipped_questions: skipped } : {}),
   };
 }
