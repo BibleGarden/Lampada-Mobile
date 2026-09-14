@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-14",
+  "sourceCommit": "7bb5259",
+  "deviceModel": "iPad Pro 11-inch (M4)",
+  "bundleIdentifier": "twinkler",
+  "installedVersion": "1.0.22",
+  "buildConfiguration": "Release",
+  "buildSucceeded": true,
+  "embeddedJavaScript": true,
+  "containsDefaultLanguage": true,
+  "containsPrefetchPolicy": true,
+  "launchStatus": "blocked_by_device_lock",
+  "warningGroups": {
+    "Clang diagnostics": 580,
+    "Other Swift diagnostics": 21,
+    "Object files without symbols": 34,
+    "Swift Sendable conformance": 40,
+    "Deprecated native APIs": 42,
+    "Native headers": 97,
+    "React umbrella headers": 588,
+    "Duplicate linker library": 1,
+    "CLI color variables": 7,
+    "Hermes bundle diagnostics": 55,
+    "Signed widget binaries": 1,
+    "Build script dependency analysis": 1
+  }
+}
