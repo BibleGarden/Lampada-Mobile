@@ -36,3 +36,35 @@ incompatible API.
 
 GitHub's Actions workflows API returned zero workflows for Lampada-Mobile on
 2026-09-14; validation was local. No CI run was available to execute.
+
+## SE simulator installation
+
+Follow-up verification on 2026-09-14:
+
+- The API selected by `.env.local` advertises `default_language` with the
+  expected `ru`/`uk`/`en`/null schema. An invalid language returns HTTP 422 with
+  `literal_error`, rather than an unknown-field error.
+- Empty-topic requests with `ru`, `uk` and `en` each returned HTTP 200 and a
+  question in the requested language.
+- A synthetic Ukrainian topic with Russian `default_language` returned HTTP
+  502 once. It was not retried; live verification of detection priority remains
+  unsuccessful. No cause was inferred from the status alone.
+- The configured local API is a different origin from `api.bible.garden`.
+  A subsequent public OpenAPI check still showed no `default_language` field;
+  the public-release prerequisite above remains in effect.
+
+For installation, the feature commit `7174062` was combined with the existing
+application changes at `ac0c7f1` in a temporary worktree. The combined sources
+passed all 203 tests and TypeScript checking, both with exit 0 and no diagnostics
+or warnings. The local environment preflight passed without exposing values.
+
+Built with `npm run ios -- --configuration Release --device
+18FBF907-60BB-48EF-9BE8-1DB2767465F5 --no-bundler`. The script reserved version
+1.0.21. Native build and installation exited 0; Xcode reported zero errors and
+four warnings concerning native linking and signed widget binaries. The build
+log also contained a Node color-environment warning.
+
+Verified the installed `twinkler` bundle on Pray SE reports version 1.0.21,
+contains an embedded JavaScript bundle with `default_language`, and opens the
+Home screen. The screenshot is
+[SE Home](../evidence/2026-09-14-question-interface-language/se-home.png).
