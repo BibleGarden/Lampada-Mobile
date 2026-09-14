@@ -1,4 +1,5 @@
 import type { AnswerContext } from './answerContext';
+import type { UiLanguage } from './uiLanguage';
 
 export type QuestionMessage = { role: 'assistant' | 'user'; text: string };
 export type QuestionRequest = {
@@ -6,6 +7,7 @@ export type QuestionRequest = {
   topic: string;
   messages: QuestionMessage[];
   skipped_questions?: string[];
+  default_language?: UiLanguage | null;
 };
 
 /** История только реальных ходов, без инструкций под видом реплик человека. */
@@ -62,5 +64,6 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
   }
   return { stage: request.stage, topic: request.topic, messages,
     ...(skipped.length ? { skipped_questions: skipped } : {}),
+    ...(request.default_language !== undefined ? { default_language: request.default_language } : {}),
   };
 }

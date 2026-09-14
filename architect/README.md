@@ -426,12 +426,20 @@ The app talks to a `bible-api` server endpoint which owns model routing, model
 credentials and system prompts. Chat and speech models run on infrastructure
 managed by the individual app developer; changing a stage's model is a server configuration
 change and does not alter the client contract. Question requests use
-`{ topic, stage, messages, skipped_questions? }` (ADR-0019, ADR-0023). The topic is separate from conversation
+`{ topic, stage, messages, skipped_questions?, default_language? }` (ADR-0019,
+ADR-0023, ADR-0030). The topic is separate from conversation
 history; `stage` selects the server's first, next or reflection question prompt.
 `lib/questionRequest.ts` pairs each answered question with its human reply in
 ascending question-index order. One user message joins typed text and completed
 transcripts with newlines. Unanswered questions are omitted from `messages`, and
 an empty conversation is valid. Nonempty history ends with a user message.
+Immediately before transfer, `completePrayerContent` adds the current
+`uiLanguage` as `default_language` (`ru`, `uk` or `en`) for first, next,
+replacement and reflection questions. Scripture preferences are independent.
+The server uses this default only when prayer-text language is undetermined;
+confident language detection keeps priority. The low-level transport also
+preserves omitted and `null` values and propagates HTTP 422 without removing
+the field or retrying the request. Deploy API support before releasing this client.
 The session keeps replaced unanswered questions in memory until reset or a new
 prayer. Requests include them in chronological order in `skipped_questions`,
 plus currently displayed unanswered questions so the one-ahead prefetch can
@@ -546,8 +554,9 @@ include accessibility, privacy, errors, dates and reminder copy.
 Changing the interface language reschedules system-held reminder text without
 altering the saved schedule. Timer labels are passed into native rendering.
 OS-owned permission prompts use native locale files and therefore follow OS app
-language settings. AI requests, model language inference, stored journal content
-and the independent Scripture selection are unchanged.
+language settings. Question requests carry the interface language as a default
+when the server cannot determine the prayer-text language (ADR-0030). Stored
+journal content and the independent Scripture selection are unchanged.
 
 Plural selection uses the explicit English/Russian/Ukrainian cardinal rules in
 `lib/uiLanguage.ts`; it does not require `Intl.PluralRules`, which is unavailable
@@ -559,8 +568,8 @@ The first, follow-up and reflection fallback pools live in
 `lib/locales/fallbackQuestions.ts` and follow the active interface language
 (ADR-0022). The session initializes and resets its local questions from that
 language. Prefetch keys include interface language to avoid reusing a ready local
-question after switching. Model payloads and language inference are unchanged;
-existing questions and stored prayer content are not translated retroactively.
+question after switching. Existing questions and stored prayer content are not
+translated retroactively.
 
 Native permission localization is generated from app configuration and
 `languages/` through Expo prebuild. The physical-iPhone deployment script derives

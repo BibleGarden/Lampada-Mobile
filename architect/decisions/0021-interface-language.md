@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Partly superseded by [ADR-0030](0030-interface-language-question-default.md)
+(question request language metadata).
 
 ## Context
 
