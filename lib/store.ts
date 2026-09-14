@@ -172,7 +172,7 @@ let scripturePrefetch: {
 const runScriptureExclusive = (load: () => Promise<ScriptureLoadResult>) =>
   scriptureSingleFlight.run(load);
 
-// Язык входит только в ключ локального буфера; в запрос модели его не добавляем.
+// Язык входит в ключ буфера и передаётся как default_language в completePrayerContent.
 const poolKey = (
   s: SessionState,
   index: number,

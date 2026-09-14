@@ -66,12 +66,13 @@ export async function completePrayerContent(
 ): Promise<QuestionResponse> {
   // Lazy import keeps the transport independently testable in Node while the
   // app path still checks the live persisted gate immediately before fetch.
-  const { answerContextAllowedNow, coreAiAllowedNow } = await import('./settings');
+  const { answerContextAllowedNow, coreAiAllowedNow, useSettings } = await import('./settings');
   if (!coreAiAllowedNow()) throw new Error('Core prayer AI consent is not allowed');
   if (request.messages.some((message) => message.role === 'user') && !answerContextAllowedNow()) {
     throw new Error('Answer context consent is not allowed');
   }
-  return completeQuestion(request);
+  // Все потоки вопросов берут актуальный язык интерфейса перед отправкой.
+  return completeQuestion({ ...request, default_language: useSettings.getState().uiLanguage });
 }
 
 /**
