@@ -1,0 +1,181 @@
+{
+  "checkedAt": "2026-09-14T09:13:16.241Z",
+  "records": [
+    {
+      "path": "/api/ai/question",
+      "request": {
+        "stage": "first",
+        "topic": "",
+        "messages": [],
+        "prefetch": true,
+        "default_language": "uk"
+      },
+      "status": 429,
+      "retryAfter": null,
+      "durationMs": 215,
+      "body": {
+        "detail": "prefetch_disabled"
+      }
+    },
+    {
+      "path": "/api/ai/question",
+      "request": {
+        "stage": "first",
+        "topic": "",
+        "messages": [],
+        "default_language": "uk"
+      },
+      "status": 200,
+      "retryAfter": null,
+      "durationMs": 1625,
+      "body": {
+        "text": "Що в твоєму житті зараз найближче до серця?",
+        "subject": "близьке до серця",
+        "novel": true
+      }
+    },
+    {
+      "path": "/api/ai/question",
+      "request": {
+        "stage": "next",
+        "topic": "",
+        "messages": [],
+        "prefetch": true,
+        "default_language": "uk"
+      },
+      "status": 429,
+      "retryAfter": null,
+      "durationMs": 94,
+      "body": {
+        "detail": "prefetch_disabled"
+      }
+    },
+    {
+      "path": "/api/ai/question",
+      "request": {
+        "stage": "next",
+        "topic": "",
+        "messages": [],
+        "default_language": "uk"
+      },
+      "status": 502,
+      "retryAfter": null,
+      "durationMs": 1829,
+      "body": {
+        "detail": "AI service unavailable"
+      }
+    },
+    {
+      "path": "/api/ai/question",
+      "request": {
+        "stage": "reflect",
+        "topic": "",
+        "messages": [],
+        "prefetch": true,
+        "default_language": "uk"
+      },
+      "status": 429,
+      "retryAfter": null,
+      "durationMs": 215,
+      "body": {
+        "detail": "prefetch_disabled"
+      }
+    },
+    {
+      "path": "/api/ai/question",
+      "request": {
+        "stage": "reflect",
+        "topic": "",
+        "messages": [],
+        "default_language": "uk"
+      },
+      "status": 200,
+      "retryAfter": null,
+      "durationMs": 1371,
+      "body": {
+        "text": "Якби тобі довелось сказати Богу лише одне речення — яке б воно було?",
+        "subject": "головна думка молитви",
+        "novel": true
+      }
+    },
+    {
+      "path": "/api/ai/scripture",
+      "request": {
+        "language": "uk",
+        "topic": "",
+        "prefetch": true
+      },
+      "status": 429,
+      "retryAfter": null,
+      "durationMs": 103,
+      "body": {
+        "detail": "prefetch_disabled"
+      }
+    },
+    {
+      "path": "/api/ai/scripture",
+      "request": {
+        "language": "uk",
+        "topic": ""
+      },
+      "status": 200,
+      "retryAfter": null,
+      "durationMs": 1681,
+      "body": {
+        "language": "uk",
+        "canonical": {
+          "canonical_id": "v3:19.023.001-006",
+          "book_number": 19,
+          "chapter_number": 23,
+          "verse_start": 1,
+          "verse_end": 6
+        },
+        "passage": {
+          "translation": 20,
+          "translation_alias": "ubh",
+          "book_number": 19,
+          "chapter_number": 23,
+          "verse_start": 1,
+          "verse_end": 6,
+          "title": "(22) Господь - добрий пастир",
+          "text": "Псалом. Давида. Господь — мій пастир: Нічого мені не бракуватиме.\n\nНа буйних пасовиськах він дає мені лежати; веде мене на тихі води.\n\nВін відживляє мою душу, веде мене по стежках правих імени ради свого.\n\nНавіть коли б ходив я долиною темряви, — я не боюся лиха, бо ти зо мною. Жезло твоє й палиця твоя — вони дають мені підтримку.\n\nГотуєш стіл для мене перед моїми противниками; ти голову мою помазав миром, переливається мій кубок.\n\nДобрість і милість будуть мене супроводити усі дні життя мого, і житиму в домі Господнім по віки вічні.",
+          "verses": [
+            {
+              "number": 1,
+              "text": "Псалом. Давида. Господь — мій пастир: Нічого мені не бракуватиме.",
+              "paragraph_start": true
+            },
+            {
+              "number": 2,
+              "text": "На буйних пасовиськах він дає мені лежати; веде мене на тихі води.",
+              "paragraph_start": true
+            },
+            {
+              "number": 3,
+              "text": "Він відживляє мою душу, веде мене по стежках правих імени ради свого.",
+              "paragraph_start": true
+            },
+            {
+              "number": 4,
+              "text": "Навіть коли б ходив я долиною темряви, — я не боюся лиха, бо ти зо мною. Жезло твоє й палиця твоя — вони дають мені підтримку.",
+              "paragraph_start": true
+            },
+            {
+              "number": 5,
+              "text": "Готуєш стіл для мене перед моїми противниками; ти голову мою помазав миром, переливається мій кубок.",
+              "paragraph_start": true
+            },
+            {
+              "number": 6,
+              "text": "Добрість і милість будуть мене супроводити усі дні життя мого, і житиму в домі Господнім по віки вічні.",
+              "paragraph_start": true
+            }
+          ]
+        },
+        "source": "safe_pool",
+        "fallback_reason": "empty_topic",
+        "history_reset": false
+      }
+    }
+  ]
+}

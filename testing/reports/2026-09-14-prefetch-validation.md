@@ -35,22 +35,51 @@ Final verification on 2026-09-14:
 ## Configured API verification
 
 Used the API origin and limited key from the existing `.env.local`; neither
-value is included in this report or evidence. OpenAPI declares `prefetch` for
-both endpoints. The following synthetic requests were each sent once:
+value is included in this report or evidence. Before the server restart, the
+following synthetic requests were each sent once:
 
 | Request | Result |
 | --- | --- |
 | Question: empty topic, `default_language: "uk"`, `prefetch: true` | HTTP 422, `extra_forbidden` at `body.default_language` |
 | Scripture: Ukrainian, empty topic, `prefetch: true` | HTTP 429, `prefetch_disabled`, no `Retry-After` |
 
-The deployed question API lacks the interface-language field required by local
-main. Server-side prefetch denial works for Scripture, but the integrated
-question request is rejected before admission. The client was not modified to
-drop the field, and the failed request was not retried.
+That deployment lacked the interface-language field required by local main.
+The client was not modified to drop the field, and the failed request was not
+retried before the server changed.
 
-The API deployment must combine interface-language and prefetch support before
-live question flows can be verified. No server configuration or deployment was
-changed. The SE simulator was not replaced with this branch while the live
-question contract is incompatible.
+Initial evidence: [API responses](../evidence/2026-09-14-prefetch-validation/api-responses.json).
 
-Evidence: [API responses](../evidence/2026-09-14-prefetch-validation/api-responses.json).
+## Verification after the server restart
+
+On 2026-09-14 after 09:11 UTC, OpenAPI confirmed both `default_language` and
+`prefetch` in the question contract. A live harness then exercised the actual
+`ai.ts`, `llm.ts` and `scriptureClient.ts` modules from this branch. Native
+settings were replaced with explicit consent for synthetic test content and
+Ukrainian UI language; HTTP requests used the configured API without mocks.
+Each row below is one request, with no automatic or manual retry:
+
+| Flow | Background request | Ordinary request |
+| --- | --- | --- |
+| First question | HTTP 429, `prefetch_disabled` | HTTP 200, Ukrainian question |
+| Next question | HTTP 429, `prefetch_disabled` | HTTP 502, `AI service unavailable` |
+| Reflection | HTTP 429, `prefetch_disabled` | HTTP 200, Ukrainian question |
+| Scripture | HTTP 429, `prefetch_disabled` | HTTP 200, parsed Ukrainian selection from `safe_pool` |
+
+All question requests retained `default_language: "uk"`; ordinary requests
+omitted `prefetch`. The real client classified background refusals as empty
+results (`null` for questions and `prefetch_denied` for Scripture), without a
+local replacement or retry. The next-question HTTP 502 followed existing
+foreground error handling and returned a bundled fallback question; the live
+assertion correctly failed on that response. Only the remaining, unexecuted
+reflection and Scripture scenarios were run afterward.
+
+The contract incompatibility is resolved and live prefetch admission behavior
+works with background generation disabled. The next-question generation check
+did not pass because of the server's HTTP 502; its cause was not established.
+Enabled prefetch and quota exhaustion remain covered by local tests rather than
+this deployment, whose prefetch policy was not changed. No application code,
+server configuration or deployment was modified during this follow-up, and the
+SE simulator was not reinstalled.
+
+Evidence: [OpenAPI fields](../evidence/2026-09-14-prefetch-validation/openapi-after-restart.json)
+and [eight live responses](../evidence/2026-09-14-prefetch-validation/api-after-restart.json).

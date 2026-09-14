@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-09-14T09:11:45.790Z",
+  "status": 200,
+  "endpoints": [
+    {
+      "path": "/api/ai/question",
+      "prefetch": {
+        "type": "boolean",
+        "title": "Prefetch",
+        "description": "Speculative generation; the server may decline without calling AI",
+        "default": false
+      },
+      "default_language": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "ru",
+              "uk",
+              "en"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Default Language",
+        "description": "Optional UI language used for the question prompt only after language detection abstains across the entire source chain. It never overrides a detected language, including an unsupported one, and does not affect safety replies, transcription, or scripture and quotation languages"
+      }
+    },
+    {
+      "path": "/api/ai/scripture",
+      "prefetch": {
+        "type": "boolean",
+        "title": "Prefetch",
+        "description": "Speculative selection; the server may decline before retrieval",
+        "default": false
+      },
+      "default_language": null
+    }
+  ]
+}
