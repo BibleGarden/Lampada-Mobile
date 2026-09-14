@@ -65,6 +65,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
     useShallow((st) => ({
       dockMode: st.dockMode,
       questions: st.questions,
+      questionSources: st.questionSources,
       qIndex: st.qIndex,
       answeredCount: st.answeredCount,
       answers: st.answers,
@@ -169,6 +170,11 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 bounces={false}
               >
                 <Text style={styles.cardText}>{s.questions[s.qIndex]}</Text>
+                {s.questionSources[s.qIndex] === 'fallback' && (
+                  <Text style={styles.questionSourceLabel} testID="question-source-label">
+                    {t('components.reader.backupQuestion')}
+                  </Text>
+                )}
               </ScrollView>
             )}
           </View>
@@ -262,7 +268,15 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   </Text>
                 </Pressable>
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
-                  <Text style={styles.offlineLabel}>{t('components.reader.offline')}</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={tap(() => void s.retryScripture())}
+                    style={styles.offlineAction}
+                  >
+                    <Text style={styles.offlineLabel}>
+                      {t('components.reader.offline')} · {t('components.reader.retry')}
+                    </Text>
+                  </Pressable>
                 )}
               </>
             ) : (
@@ -470,6 +484,15 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.cardText,
     textAlign: 'center',
   },
+  questionSourceLabel: {
+    marginTop: sc(5),
+    fontFamily: fonts.mono,
+    fontSize: sc(9),
+    letterSpacing: sc(0.8),
+    textTransform: 'uppercase',
+    color: colors.white50,
+    textAlign: 'center',
+  },
   scripturePreviewPressed: {
     opacity: 0.7,
   },
@@ -484,12 +507,18 @@ const stylesFactory = () => StyleSheet.create({
     opacity: 0,
   },
   offlineLabel: {
-    marginTop: sc(5),
     fontFamily: fonts.mono,
     fontSize: sc(9),
     letterSpacing: sc(0.8),
     textTransform: 'uppercase',
-    color: colors.white50,
+    color: colors.goldSoft,
+  },
+  offlineAction: {
+    marginTop: sc(5),
+    minHeight: sc(24),
+    paddingHorizontal: sc(8),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   retryWrap: {
     alignItems: 'center',

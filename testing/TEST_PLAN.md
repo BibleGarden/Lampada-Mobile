@@ -224,15 +224,15 @@ The smoke counts as passed only in full.
 |---|---|---|
 | AI-001 | The AI variables are missing | the local questions are used, the main flow works |
 | AI-002 | Successful AI responses | the questions are not empty, the transitions are not blocked |
-| AI-003 | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, no endless loading and no unhandled rejection |
+| AI-003 | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, it is visibly labelled as a backup question, and there is no endless loading or unhandled rejection |
 | AI-004 | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
 | AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
-| AI-006 | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; both choices have equal weight |
+| AI-006 | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; it says the data is used only for AI processing and is not stored on the server; both choices have equal weight |
 | AI-007 | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record |
 | AI-008 | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
 | AI-009 | Finish the prayer with a fast, a slow and an unavailable AI | the closing question is prepared 15 seconds before zero; a ready one is shown immediately, a pending one shows a loader without an intermediate fallback; changing the answer in the last 15 seconds updates the prefetch; a real fallback is explicitly marked as such |
-| AI-010 | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server and company-hosted model processing, the transferred topic and both purposes before any content request |
-| AI-011 | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file and transcription purpose; no upload starts and the recording stays usable |
+| AI-010 | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server, the transferred topic and both AI purposes, and says the topic is not stored on the server before any content request |
+| AI-011 | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file, the AI transcription purpose and the server's no-storage rule; no upload starts and the recording stays usable |
 | AI-012 | Withdraw each allowed decision in settings immediately before its feature | the next question/scripture request or upload observes the denial without restarting the app |
 
 ### Scripture
@@ -258,11 +258,12 @@ The smoke counts as passed only in full.
 | SCR-017 | Read silently in the expanded reader when time expires; continue scrolling, then close the reader | the notice does not intercept touches or close the passage; closing the reader returns to the timer, then reflection opens after one second |
 | SCR-018 | Reopen the reader, pause/resume narration, open an answer or add time during the one-second delay | the pending transition is cancelled; open activities and audio errors remain visible; extra time resets expiry; completion runs once |
 | SCR-019 | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
-| SCR-008 | A launch and navigation with no network | the cache of shown passages is used; with an empty cache there is a neutral error and a retry |
-| SCR-009 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
-| SCR-010 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
-| SCR-011 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
-| SCR-012 | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
+| SCR-020 | A launch and navigation with no network | at most seven recently shown compatible passages are available; with an empty cache there is a neutral error and a retry |
+| SCR-021 | Recover the network while an offline passage is visible and press its retry label | a fresh server passage replaces the offline frontier without walking to the end of the saved history |
+| SCR-022 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
+| SCR-023 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
+| SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
+| SCR-025 | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 
 ### Reflection, finishing and the streak
 

@@ -157,7 +157,8 @@ Screen → useSession → lib/db.ts → SQLite / local audio files
 The AI is not required to go through a prayer. When there is no configuration, or
 on a network error, a timeout or a malformed response, `lib/ai.ts` returns a
 question from the local pool. Later questions use a buffer one question ahead;
-stale asynchronous results are cut off by keys and tokens.
+stale asynchronous results are cut off by keys and tokens. Local-pool questions
+carry a visible backup-question label in both the session and reflection screens.
 
 During a session the user can turn on quiet local music. Fifteen bundled CC0
 tracks play in a looping queue without a network and keep playing when the app is
@@ -219,7 +220,11 @@ selection request runs at a time. `source: retrieval_fallback` and
 only the passages that were actually shown and lives within the current session;
 the app walks back along it without a network. The stable `canonical_id` is used
 for exclusions and favourites, but the user-facing reference is always built from
-the `passage` coordinates of the chosen translation. When `passage.verses` is
+the `passage` coordinates of the chosen translation. A failed selection keeps the
+current trail and appends compatible saved snapshots only while the trail has
+fewer than seven entries. The offline label retries the server immediately, so a
+transient failure does not trap navigation behind the full persistent history.
+When `passage.verses` is
 present, the text is assembled from the structured verses, and the
 `highlight.passage` range defines the key verses in the numbering of the chosen
 translation. The compact card and the key verses in the full reader use the same
