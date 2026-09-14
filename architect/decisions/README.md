@@ -62,3 +62,5 @@ implementation details do not need one.
 - [0028: Show prayer completion on Home](0028-completion-on-home.md)
 
 - [0029: Export a prayer as plain text through the system share sheet](0029-prayer-text-export.md)
+
+- [0030: Let the server admit AI prefetch](0030-server-controlled-ai-prefetch.md)
