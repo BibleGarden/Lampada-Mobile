@@ -32,6 +32,8 @@ A denied warmup trades latency on subsequent demand for reduced API spending.
 This requires an updated app: older builds send unmarked requests that the
 server cannot distinguish from user demand. Deploy the API change before the
 mobile release because older servers reject the new field with HTTP 422.
+The deployed question API must also retain `default_language` support from
+ADR-0030. Both fields are sent together in the integrated client.
 No native dependency, persistent
 storage change or migration is required.
 

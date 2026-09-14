@@ -1,0 +1,40 @@
+[
+  {
+    "path": "/api/ai/question",
+    "request": {
+      "stage": "first",
+      "topic": "",
+      "messages": [],
+      "default_language": "uk",
+      "prefetch": true
+    },
+    "status": 422,
+    "retryAfter": null,
+    "body": {
+      "detail": [
+        {
+          "type": "extra_forbidden",
+          "loc": [
+            "body",
+            "default_language"
+          ],
+          "msg": "Extra inputs are not permitted",
+          "input": "uk"
+        }
+      ]
+    }
+  },
+  {
+    "path": "/api/ai/scripture",
+    "request": {
+      "language": "uk",
+      "topic": "",
+      "prefetch": true
+    },
+    "status": 429,
+    "retryAfter": null,
+    "body": {
+      "detail": "prefetch_disabled"
+    }
+  }
+]

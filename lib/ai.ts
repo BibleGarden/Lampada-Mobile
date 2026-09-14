@@ -1,5 +1,5 @@
-// Prayer questions and reflection use the server's prompts and model policy.
-// Unavailable prefetch returns no content; foreground errors retain curated questions.
+// Вопросы и рефлексия используют серверные промпты и настройки модели.
+// Неудачная фоновая подготовка не даёт контента; явный запрос сохраняет прежнюю обработку ошибок.
 
 import { PrefetchDeniedError } from './prefetch.ts';
 import { completePrayerContent, llmConfigured } from './llm';

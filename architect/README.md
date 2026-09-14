@@ -589,6 +589,8 @@ request. If background work yielded no content, it performs an ordinary request
 with the current context, including when demand arrived before the denial.
 Normal foreground error handling remains in place. Deploy the API change before
 releasing the updated app: older servers reject the new field with HTTP 422.
+Question requests require server support for both `prefetch` and
+`default_language`; deploying one contract change without the other is incompatible.
 Older app builds cannot have their unmarked warmups controlled by the server's
 prefetch policy.
 
