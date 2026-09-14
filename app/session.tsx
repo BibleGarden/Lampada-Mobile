@@ -44,6 +44,7 @@ import { getPrayerTracks } from '../lib/music';
 import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
+import { createSessionCompletion } from '../lib/sessionCompletion';
 import {
   audioModeCoordinator,
   type AudioModeRequest,
@@ -98,8 +99,7 @@ function SessionScreen() {
   const readerRef = useRef<BottomSheet>(null);
   const flushAnswerRef = useRef<(() => Promise<void>) | null>(null);
   const ringProgress = useSharedValue(0);
-  const finished = useRef(false);
-  const finishTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeExpired = s.remaining === 0;
   const musicSessionActive = useRef(false);
   // React-effect cleanup happens later than the press handler. The ref lets an
   // already running music activation see recording/playback immediately.
@@ -203,7 +203,7 @@ function SessionScreen() {
 
   useEffect(() => {
     let active = true;
-    const shouldPlay = s.musicOn && !transientAudioBusy;
+    const shouldPlay = s.musicOn && !transientAudioBusy && !timeExpired;
     if (!shouldPlay) {
       pauseMusicPlayers();
       // Keep the global session active while this screen is mounted. A late
@@ -218,7 +218,12 @@ function SessionScreen() {
         MUSIC_PLAYBACK_MODE,
       );
       if (!modeGrant?.isCurrent()) return;
-      if (active && !transientAudioBusyRef.current && modeGrant.isCurrent()) {
+      if (
+        active &&
+        !transientAudioBusyRef.current &&
+        useSession.getState().remaining !== 0 &&
+        modeGrant.isCurrent()
+      ) {
         const activeSlot = activeMusicPlayerSlot.current;
         const activePlayer = musicPlayerForSlot(activeSlot);
         activePlayer.volume = MUSIC_VOLUME;
@@ -243,6 +248,7 @@ function SessionScreen() {
     s.musicOn,
     setMusicLockScreen,
     transientAudioBusy,
+    timeExpired,
   ]);
 
   const startMusicCrossfade = useCallback((durationMs = MUSIC_CROSSFADE_MS) => {
@@ -250,6 +256,7 @@ function SessionScreen() {
       musicCrossfadeRunning.current ||
       musicTracks.length === 0 ||
       transientAudioBusyRef.current ||
+      useSession.getState().remaining === 0 ||
       !useSession.getState().musicOn
     ) {
       return;
@@ -275,7 +282,11 @@ function SessionScreen() {
 
     const startedAt = Date.now();
     musicCrossfadeTimer.current = setInterval(() => {
-      if (transientAudioBusyRef.current || !useSession.getState().musicOn) {
+      if (
+        transientAudioBusyRef.current ||
+        useSession.getState().remaining === 0 ||
+        !useSession.getState().musicOn
+      ) {
         cancelMusicCrossfade();
         return;
       }
@@ -388,10 +399,7 @@ function SessionScreen() {
   // секундный тик
   useEffect(() => {
     const id = setInterval(() => useSession.getState().tick(), 1000);
-    return () => {
-      clearInterval(id);
-      if (finishTimeout.current) clearTimeout(finishTimeout.current);
-    };
+    return () => clearInterval(id);
   }, []);
 
   // Android «назад» не должен срывать молитву — глотаем жест
@@ -418,27 +426,24 @@ function SessionScreen() {
     router.replace('/reflect');
   };
 
-  // конец таймера → рефлексия
-  useEffect(() => {
-    if (s.remaining === 0 && !finished.current) {
-      // Ноль на таймере не обрывает мысль: ждём явного сохранения или
-      // закрытия шторки, включая активную голосовую запись.
-      if (answerOpen) return;
-      finished.current = true;
+  const goToReflectRef = useRef(goToReflect);
+  goToReflectRef.current = goToReflect;
+  const [completion] = useState(() =>
+    createSessionCompletion(() => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      finishTimeout.current = setTimeout(goToReflect, 400);
-    }
-  }, [s.remaining, answerOpen]);
+      void goToReflectRef.current();
+    }),
+  );
 
-  // Если шторка начала открываться в 400-мс окне перед переходом,
-  // запланированное завершение отменяется и ждёт ответа.
   useEffect(() => {
-    if (s.remaining === 0 && answerOpen && finishTimeout.current) {
-      clearTimeout(finishTimeout.current);
-      finishTimeout.current = null;
-      finished.current = false;
-    }
-  }, [s.remaining, answerOpen]);
+    completion.update({
+      remaining: s.remaining,
+      answerOpen,
+      scripturePhase: scriptureAudio.phase,
+    });
+  }, [completion, s.remaining, answerOpen, scriptureAudio.phase]);
+
+  useEffect(() => () => completion.cancel(), [completion]);
 
   // кольцо: доля прошедшего времени (или минутный цикл в ∞-режиме)
   useEffect(() => {
@@ -457,19 +462,19 @@ function SessionScreen() {
     }
   }, [s.remaining, s.elapsed]);
 
-  const finishEarly = () => {
-    if (finished.current) return;
-    finished.current = true;
-    goToReflect();
-  };
+  const finishEarly = () => completion.finish();
 
   const timerLabel = s.remaining === null ? fmtTime(s.elapsed) : fmtTime(s.remaining);
   const timerSub =
-    s.remaining === 0 && answerOpen
+    timeExpired && answerOpen
       ? t('screens.session.finishAnswer')
-      : s.remaining === null
-        ? t('screens.session.elapsed')
-        : t('screens.session.remaining');
+      : timeExpired
+        ? t(scriptureAudio.phase !== 'idle'
+          ? 'screens.session.finishListening'
+          : 'screens.session.timeCompleted')
+        : s.remaining === null
+          ? t('screens.session.elapsed')
+          : t('screens.session.remaining');
   // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
   // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
@@ -542,7 +547,10 @@ function SessionScreen() {
               >
                 {timerLabel}
               </Text>
-              <Kicker style={{ fontSize: Math.min(sc(11), ringSize * 0.062) }}>
+              <Kicker style={{
+                fontSize: Math.min(sc(11), ringSize * 0.062),
+                textAlign: 'center',
+              }}>
                 {timerSub}
               </Kicker>
             </View>

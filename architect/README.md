@@ -168,6 +168,16 @@ catches up with the interval that passed. A session unloaded by the OS is not
 restored yet, and the transition to reflection happens once JavaScript is active
 again.
 
+`lib/sessionCompletion.ts` owns the pending transition to reflection. At zero,
+an open answer and scripture narration (including loading or pause) keep the
+prayer screen open. Once the narration ends, a three-second quiet interval
+precedes reflection. Background music stays paused after the deadline; extending
+the timer cancels completion and lets it resume. Starting audio or opening an
+answer cancels a pending transition. Playback errors remain visible for retry or
+manual completion. Manual finish bypasses these waits and cancels the pending
+transition; completion runs once. The ordinary expiry delay remains 400 ms when
+there was no narration to finish.
+
 Returning from reflection uses `resumeSession`, not `enterSession`: it retains
 one session ID, all questions, answers and recordings, the scripture trail and
 current positions. A finite prayer gets a fresh interval of the selected duration;

@@ -159,7 +159,7 @@ The smoke counts as passed only in full.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| SES-001 | A finite timer | it decreases every second and opens the reflection exactly once at zero |
+| SES-001 | A finite timer | it decreases every second and opens reflection once after zero, waiting for an open answer or scripture narration |
 | SES-002 | The ∞ mode | the elapsed time is displayed, there is no automatic finish |
 | SES-003 | Change the timer with the − / + buttons | the time changes by the expected step and never becomes invalid |
 | SES-004 | Background the app and come back after 10-60 seconds | the timer behaviour matches the chosen product policy; any divergence is recorded |
@@ -254,6 +254,9 @@ The smoke counts as passed only in full.
 | SCR-013 | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |
 | SCR-014 | Change the device language after the setting was saved | the saved user choice is not overridden |
 | SCR-015 | Pause the scripture narration, press resume and immediately switch the mode or the passage | the old passage does not resume after the context changes; the new passage starts normally |
+| SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; the timer shows a localized listening hint; music stays paused; reflection opens once after three seconds of silence |
+| SCR-017 | Pause/resume or load narration after expiry; open an answer or extend the timer during the final pause | pending navigation is cancelled; paused narration can resume; an open answer is retained; extra time resumes the countdown |
+| SCR-018 | Finish manually during narration or the final pause; trigger a playback error at expiry | manual finish stops audio and opens reflection once; a playback error stays visible for retry or manual completion |
 | SCR-008 | A launch and navigation with no network | the cache of shown passages is used; with an empty cache there is a neutral error and a retry |
 | SCR-009 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
 | SCR-010 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
