@@ -110,12 +110,14 @@ export function useScriptureAudio({
     if ((phase === 'paused' || phase === 'idle') && clipRef.current) {
       const continuation = playbackOperation.begin();
       if (!continuation) return;
+      setPhase('loading');
       onAudioBusyChange(true);
       void audioModeCoordinator
         .requestPlayback(setAudioModeAsync, SCRIPTURE_PLAYBACK_MODE)
         .then((grant) => {
           if (!continuation.isCurrent()) return;
           if (!grant?.isCurrent()) {
+            setPhase(phase);
             onAudioBusyChange(false);
             return;
           }

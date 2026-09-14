@@ -34,6 +34,8 @@ appId: twinkler
 - tapOn: "−1"
 - tapOn: "−1"
 - tapOn: "−1"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- extendedWaitUntil:
+    visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+    timeout: 10000
 - assertNotVisible:
     id: "music-playing"

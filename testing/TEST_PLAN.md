@@ -148,7 +148,7 @@ The smoke counts as passed only in full.
 | SETUP-001 | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 | A long goal and an open keyboard | the field stays manageable, the "Next" button is available once the keyboard is closed |
+| SETUP-004 | A long goal and an open keyboard; tap above the field and in the tablet's left and right margins | the field stays manageable; outside taps dismiss the keyboard without losing text, inside taps keep editing; the "Next" button is available once the keyboard is closed |
 | START-001 | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
@@ -159,7 +159,7 @@ The smoke counts as passed only in full.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| SES-001 | A finite timer | it decreases every second and opens the reflection exactly once at zero |
+| SES-001 | A finite timer | it decreases to zero, waits for the reader, answer and narration, then opens reflection after one second on the unobstructed prayer screen |
 | SES-002 | The ∞ mode | the elapsed time is displayed, there is no automatic finish |
 | SES-003 | Change the timer with the − / + buttons | the time changes by the expected step and never becomes invalid |
 | SES-004 | Background the app and come back after 10-60 seconds | the timer behaviour matches the chosen product policy; any divergence is recorded |
@@ -176,8 +176,8 @@ The smoke counts as passed only in full.
 | MUS-003 | Wait for the end of the playlist | fifteen tracks play in sequence and the loop starts again |
 | MUS-004 | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
 | MUS-005 | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording |
-| MUS-006 | Finish the prayer early or by the timer | the music player stops and does not play on the reflection, the finish and the next session screens |
-| MUS-007 | Let the timer reach zero with the music on | the transition to the reflection does not cause the `ERR_NATIVE_SHARED_OBJECT_NOT_FOUND` crash after the playlist is removed |
+| MUS-006 | Finish the prayer manually or after timer expiry | the music player stops and does not play on reflection or the next session screens |
+| MUS-007 | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |
 
 ### Answers and audio
@@ -193,7 +193,7 @@ The smoke counts as passed only in full.
 | ANS-007 | Save while a recording is active | the recording is stopped and saved correctly |
 | ANS-008 | Delete a recording with a confirmation | the recording disappears from the UI, the database and the files after saving |
 | ANS-009 | Try to close the recordings sheet by a swipe or by the background during a recording | the sheet does not close; the microphone stays under visible control until "Done"; after stopping the sheet closes the usual way |
-| ANS-010 | The timer runs out with the sheet open | the timer stays at `0:00` with a "finish your answer" hint; the text and the recording are not cut off; the transition to the reflection happens once, after an explicit save or after the sheet is closed |
+| ANS-010 | The timer runs out with the sheet open | a non-interactive notice appears above the sheet; text and recording continue; successful save/close and recording cleanup are followed by reflection after one second |
 | ANS-011 | Switch between questions and edit an old answer | the answer is saved under the correct question |
 | ANS-012 | Stop a recording and do not press "Transcribe" | the audio recording and the button appear; no network request is made and no tokens are spent |
 | ANS-013 | Press "Transcribe", then save while the request is in flight | a loading state appears; the save waits for the request, the audio and the text are restored after reopening |
@@ -224,15 +224,15 @@ The smoke counts as passed only in full.
 |---|---|---|
 | AI-001 | The AI variables are missing | the local questions are used, the main flow works |
 | AI-002 | Successful AI responses | the questions are not empty, the transitions are not blocked |
-| AI-003 | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, no endless loading and no unhandled rejection |
+| AI-003 | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, it is visibly labelled as a backup question, and there is no endless loading or unhandled rejection |
 | AI-004 | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
 | AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
-| AI-006 | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; both choices have equal weight |
+| AI-006 | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; it says the data is used only for AI processing and is not stored on the server; both choices have equal weight |
 | AI-007 | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record |
 | AI-008 | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
 | AI-009 | Finish the prayer with a fast, a slow and an unavailable AI | the closing question is prepared 15 seconds before zero; a ready one is shown immediately, a pending one shows a loader without an intermediate fallback; changing the answer in the last 15 seconds updates the prefetch; a real fallback is explicitly marked as such |
-| AI-010 | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server and company-hosted model processing, the transferred topic and both purposes before any content request |
-| AI-011 | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file and transcription purpose; no upload starts and the recording stays usable |
+| AI-010 | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server, the transferred topic and both AI purposes, and says the topic is not stored on the server before any content request |
+| AI-011 | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file, the AI transcription purpose and the server's no-storage rule; no upload starts and the recording stays usable |
 | AI-012 | Withdraw each allowed decision in settings immediately before its feature | the next question/scripture request or upload observes the denial without restarting the app |
 
 ### Scripture
@@ -254,11 +254,16 @@ The smoke counts as passed only in full.
 | SCR-013 | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |
 | SCR-014 | Change the device language after the setting was saved | the saved user choice is not overridden |
 | SCR-015 | Pause the scripture narration, press resume and immediately switch the mode or the passage | the old passage does not resume after the context changes; the new passage starts normally |
-| SCR-008 | A launch and navigation with no network | the cache of shown passages is used; with an empty cache there is a neutral error and a retry |
-| SCR-009 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
-| SCR-010 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
-| SCR-011 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
-| SCR-012 | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
+| SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
+| SCR-017 | Read silently in the expanded reader when time expires; continue scrolling, then close the reader | the notice does not intercept touches or close the passage; closing the reader returns to the timer, then reflection opens after one second |
+| SCR-018 | Reopen the reader, pause/resume narration, open an answer or add time during the one-second delay | the pending transition is cancelled; open activities and audio errors remain visible; extra time resets expiry; completion runs once |
+| SCR-019 | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
+| SCR-020 | A launch and navigation with no network | at most seven recently shown compatible passages are available; with an empty cache there is a neutral error and a retry |
+| SCR-021 | Recover the network while an offline passage is visible and press its retry label | a fresh server passage replaces the offline frontier without walking to the end of the saved history |
+| SCR-022 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
+| SCR-023 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
+| SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
+| SCR-025 | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 
 ### Reflection, finishing and the streak
 
@@ -307,6 +312,8 @@ The smoke counts as passed only in full.
 | REM-011 | A notification arrives while the app is open | it is shown as a banner rather than silently dropped |
 | REM-012 | A reminder during an active prayer timer | the ongoing chronometer (ADR-0010) does not disappear and is not replaced |
 | REM-013 | Pray, then wait for the reminder time on the same day | the reminder arrives: it was agreed to remind unconditionally |
+| REM-014 | Tap the trash button for a rule or time, then tap it again within three seconds | the first tap highlights the button without deleting; the second deletes only the selected item |
+| REM-015 | Arm deletion, then wait three seconds, edit the schedule, close the editor or background the app | confirmation clears; deleting again requires two taps; arming a different target cancels the previous one |
 
 ### App lock
 
@@ -333,8 +340,11 @@ are in
 ### Interface and accessibility
 
 - screens 320-430 pt wide, iPhones with and without a Dynamic Island;
-- an iPad in the supported portrait orientation;
+- an iPad in portrait and landscape orientations;
 - the keyboard does not cover the field and the main actions;
+- outside taps, including both tablet margins, dismiss the keyboard in setup,
+  reflection, journal search and the answer sheet; inside taps retain editing,
+  and dismissing the keyboard preserves the entered text;
 - long Russian strings are not clipped in a damaging way;
 - the buttons have a sufficient tap area and clear accessibility labels;
 - enlarged system text, VoiceOver/TalkBack, Reduce Motion;

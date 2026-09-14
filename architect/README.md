@@ -97,6 +97,14 @@ upgrading it requires rebuilding the native app.
 | `assets/audio/` | The local music files and the record of their origin and licenses |
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
 
+Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
+pass unscaled values. Settings sheets are centered and capped at `sc(390)` in
+width to keep their controls compact on wide tablet windows.
+
+Keyboard dismissal covers the screen or sheet bounds independently of the
+centered text column. Text fields retain their own touch handling; the answer
+sheet's side margins and handle dismiss the keyboard without discarding drafts.
+
 ## Screens and navigation
 
 | Route | Role |
@@ -151,7 +159,8 @@ on a network error, a timeout or a malformed response, `lib/ai.ts` returns a
 question from the local pool for a user-requested generation. Background generation
 returns no content on failure and does not substitute a local question. Later
 questions use a buffer one question ahead;
-stale asynchronous results are cut off by keys and tokens.
+stale asynchronous results are cut off by keys and tokens. Local-pool questions
+carry a visible backup-question label in both the session and reflection screens.
 
 During a session the user can turn on quiet local music. Fifteen bundled CC0
 tracks play in a looping queue without a network and keep playing when the app is
@@ -167,8 +176,18 @@ in the runtime session state. The one-second tick is only needed to update the
 interface: the actual `elapsed` and `remaining` are computed from the system
 clock every time, so after coming back from the background the timer immediately
 catches up with the interval that passed. A session unloaded by the OS is not
-restored yet, and the transition to reflection happens once JavaScript is active
-again.
+restored yet.
+
+Timer expiry waits while the reader or answer sheet is open, or narration is
+loading, playing, paused or showing an error. A non-interactive six-second notice
+allows the user to finish that activity. Sheet opening is reported before its
+animation; closing is reported after the sheet settles and recording cleanup
+finishes. Once the active prayer screen has no such activity, reflection opens
+after one second. Reopening a sheet, starting narration, extending the timer or
+backgrounding cancels the pending transition. Returning from the background
+re-evaluates the current state. Manual completion bypasses the delay, saves an
+open answer and stops audio; a synchronous guard prevents duplicate completion.
+Each deadline is announced once. Extending the timer resets the notice.
 
 Returning from reflection uses `resumeSession`, not `enterSession`: it retains
 one session ID, all questions, answers and recordings, the scripture trail and
@@ -206,13 +225,20 @@ selection request runs at a time. `source: retrieval_fallback` and
 only the passages that were actually shown and lives within the current session;
 the app walks back along it without a network. The stable `canonical_id` is used
 for exclusions and favourites, but the user-facing reference is always built from
-the `passage` coordinates of the chosen translation. When `passage.verses` is
+the `passage` coordinates of the chosen translation. A failed selection keeps the
+current trail and appends compatible saved snapshots only while the trail has
+fewer than seven entries. The offline label retries the server immediately, so a
+transient failure does not trap navigation behind the full persistent history.
+When `passage.verses` is
 present, the text is assembled from the structured verses, and the
 `highlight.passage` range defines the key verses in the numbering of the chosen
-translation. The compact card shows only those verses and always in a single font
-colour; the whole passage with the golden highlight of the key verses stays in
-the full reader, which is opened both by tapping the card text itself and by the
-"Read in full" link - both available when the card truncates the text and when it
+translation. The compact card and the key verses in the full reader use the same
+off-white text colour. Surrounding verses use that colour at 55% opacity; passages
+without a key-verse range stay at full opacity. The shared passage renderer also
+applies this hierarchy in favourites and the journal, with a translucent white
+underline for the currently narrated verse. The full reader is opened both by
+tapping the card text itself and by the "Read in full" link - both available when
+the card truncates the text and when it
 shows only the highlighted fragment. If there is no highlight, or it covers the
 whole passage, the card shows the passage in full. The client uses the
 verse-level representation only when it reconstructs `passage.text` exactly; old
@@ -252,6 +278,11 @@ lets the user assemble several rules with independent sets of days and times, an
 this path remains the degradation for when the AI is unavailable. Inside the
 model the weekdays are ISO (1 = Monday); they are converted into the
 expo-notifications numbering (1 = Sunday) in exactly one place.
+
+Deleting a rule or an individual time follows the journal and recording pattern:
+the first tap highlights the trash button, and a second tap within three seconds
+confirms deletion. Only one target can be armed. Editing the schedule, closing
+the editor or leaving the active app clears the confirmation.
 
 The scheduling is done by `lib/prayerReminderScheduler.ts`: every "day x time"
 pair becomes a single WEEKLY trigger, and the repetition is held by the system,

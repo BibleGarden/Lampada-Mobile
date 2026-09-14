@@ -183,7 +183,7 @@ function SettingRow({ title, value, testID, accessibilityLabel, disabled, divide
     >
       <Text style={[styles.rowTitle, value ? styles.settingRowTitle : styles.settingRowTitleWide]} numberOfLines={1}>{title}</Text>
       {value ? <Text style={styles.settingRowValue} numberOfLines={1}>{value}</Text> : null}
-      <ChevronRight size={sc(15)} color={colors.labelGold} />
+      <ChevronRight size={15} color={colors.labelGold} />
     </Pressable>
   );
 }
@@ -242,10 +242,11 @@ function StepButton({ label, onPress, children }: {
 }
 
 /** Час шагает по часу, минуты — по пять; значение закольцовано внутри суток. */
-function TimeRow({ time, ruleIndex, canRemove, onShift, onRemove }: {
+function TimeRow({ time, ruleIndex, canRemove, confirmingRemove, onShift, onRemove }: {
   time: ReminderTime;
   ruleIndex: number;
   canRemove: boolean;
+  confirmingRemove: boolean;
   onShift: (deltaMinutes: number) => void;
   onRemove: () => void;
 }) {
@@ -255,26 +256,42 @@ function TimeRow({ time, ruleIndex, canRemove, onShift, onRemove }: {
   const [hour, minute] = label.split(':');
   return (
     <View style={styles.timeRow} testID={`reminder-rule-${ruleIndex}-time-${label}`}>
-      <StepButton label={t('settings.hourBack', { time: label })} onPress={() => onShift(-60)}>
-        <Minus size={sc(14)} color={colors.white65} />
-      </StepButton>
-      <Text style={styles.timeUnit}>{hour}</Text>
-      <StepButton label={t('settings.hourForward', { time: label })} onPress={() => onShift(60)}>
-        <Plus size={sc(14)} color={colors.white65} />
-      </StepButton>
-      <Text style={styles.timeColon}>:</Text>
-      <StepButton label={t('settings.minutesBack', { time: label })} onPress={() => onShift(-5)}>
-        <Minus size={sc(14)} color={colors.white65} />
-      </StepButton>
-      <Text style={styles.timeUnit}>{minute}</Text>
-      <StepButton label={t('settings.minutesForward', { time: label })} onPress={() => onShift(5)}>
-        <Plus size={sc(14)} color={colors.white65} />
-      </StepButton>
-      <View style={{ flex: 1 }} />
+      <View style={styles.timeControls}>
+        <View style={styles.timeGroup}>
+          <StepButton label={t('settings.hourBack', { time: label })} onPress={() => onShift(-60)}>
+            <Minus size={14} color={colors.creamDim} />
+          </StepButton>
+          <Text style={styles.timeUnit}>{hour}</Text>
+          <StepButton label={t('settings.hourForward', { time: label })} onPress={() => onShift(60)}>
+            <Plus size={14} color={colors.creamDim} />
+          </StepButton>
+        </View>
+        <Text style={styles.timeColon}>:</Text>
+        <View style={styles.timeGroup}>
+          <StepButton label={t('settings.minutesBack', { time: label })} onPress={() => onShift(-5)}>
+            <Minus size={14} color={colors.creamDim} />
+          </StepButton>
+          <Text style={styles.timeUnit}>{minute}</Text>
+          <StepButton label={t('settings.minutesForward', { time: label })} onPress={() => onShift(5)}>
+            <Plus size={14} color={colors.creamDim} />
+          </StepButton>
+        </View>
+      </View>
       {canRemove ? (
-        <StepButton label={t('settings.removeTime', { time: label })} onPress={onRemove}>
-          <Trash size={sc(14)} />
-        </StepButton>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t(confirmingRemove ? 'settings.confirmRemoveTime' : 'settings.removeTime', { time: label })}
+          testID={`reminder-delete-time-${label}`}
+          hitSlop={6}
+          onPress={onRemove}
+          style={({ pressed }) => [
+            styles.stepBtn,
+            confirmingRemove && styles.deleteConfirming,
+            pressed && styles.optionPressed,
+          ]}
+        >
+          <Trash size={14} color={confirmingRemove ? '#ec8a7a' : colors.white65} />
+        </Pressable>
       ) : null}
     </View>
   );
@@ -301,6 +318,8 @@ export default function Settings() {
   const [pinFlow, setPinFlow] = useState<PinFlow>(null);
   const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
   const [reminderEditorRuleIndex, setReminderEditorRuleIndex] = useState<number | null>(null);
+  const [confirmReminderDelete, setConfirmReminderDelete] = useState<string | null>(null);
+  const reminderDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reminderSave = useRef<Promise<void>>(Promise.resolve());
   const [languages, setLanguages] = useState<ScriptureLanguageOption[]>([]);
   const [translations, setTranslations] = useState<ScriptureTranslation[]>([]);
@@ -312,6 +331,39 @@ export default function Settings() {
   const [catalogError, setCatalogError] = useState(false);
   const translationRequest = useRef(0);
   const preferenceSave = useRef<Promise<void>>(Promise.resolve());
+
+  useEffect(() => {
+    const reset = () => {
+      if (reminderDeleteTimer.current) clearTimeout(reminderDeleteTimer.current);
+      reminderDeleteTimer.current = null;
+      setConfirmReminderDelete(null);
+    };
+    reset();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') reset();
+    });
+    return () => {
+      subscription.remove();
+      if (reminderDeleteTimer.current) clearTimeout(reminderDeleteTimer.current);
+    };
+  }, [reminderEditorRuleIndex, reminderSchedule]);
+
+  // Как в журнале и аудиозаписях: первый тап подсвечивает, второй удаляет.
+  const askOrConfirmReminderDelete = (target: string, remove: () => void) => {
+    if (reminderDeleteTimer.current) clearTimeout(reminderDeleteTimer.current);
+    if (confirmReminderDelete === target) {
+      reminderDeleteTimer.current = null;
+      setConfirmReminderDelete(null);
+      remove();
+      return;
+    }
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setConfirmReminderDelete(target);
+    reminderDeleteTimer.current = setTimeout(() => {
+      reminderDeleteTimer.current = null;
+      setConfirmReminderDelete(null);
+    }, 3000);
+  };
 
   const hydrate = async () => {
     setLoadingCatalog(true);
@@ -824,7 +876,7 @@ export default function Settings() {
                   <Text style={styles.settingRowValue} numberOfLines={1}>
                     {rule.times.map(formatReminderTime).join(', ')}
                   </Text>
-                  <ChevronRight size={sc(15)} color={colors.labelGold} />
+                  <ChevronRight size={15} color={colors.labelGold} />
                 </Pressable>
               );
             })}
@@ -848,7 +900,7 @@ export default function Settings() {
                 ]}
               >
                 <Text style={[styles.rowTitle, styles.addScheduleTitle]}>{t('settings.addSchedule')}</Text>
-                <Plus size={sc(15)} color={colors.labelGold} />
+                <Plus size={15} color={colors.labelGold} />
               </Pressable>
             ) : null}
           </View>
@@ -1060,7 +1112,7 @@ export default function Settings() {
               {privacyDetailsOpen ? t('settings.hideDetails') : t('settings.privacyDetailsLink')}
             </Text>
             <View style={{ transform: [{ rotate: privacyDetailsOpen ? '-90deg' : '90deg' }] }}>
-              <ChevronRight size={sc(14)} color={colors.labelGold} />
+              <ChevronRight size={14} color={colors.labelGold} />
             </View>
           </Pressable>
           {privacyDetailsOpen ? (
@@ -1073,25 +1125,35 @@ export default function Settings() {
 
       {activeReminderRule && reminderEditorRuleIndex !== null ? (
         <BottomSheet
-          kicker={t('settings.remindersHeading')}
           title={t('settings.whenToRemind')}
           summary={activeReminderSummary}
           closeLabel={t('settings.closeReminders')}
+          showCloseButton={false}
           doneLabel={t('settings.done')}
           doneTestID="reminders-editor-done"
           testID="reminders-editor-modal"
           onClose={() => setReminderEditorRuleIndex(null)}
-          headerAction={reminderRules.length > 1 ? (
-            <IconButton
-              accessibilityLabel={t('settings.removeSchedule', { number: reminderEditorRuleIndex + 1 })}
-              onPress={() => removeReminderRule(reminderEditorRuleIndex)}
+          footerAction={reminderRules.length > 1 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t(
+                confirmReminderDelete === 'schedule' ? 'settings.confirmRemoveSchedule' : 'settings.removeSchedule',
+                { number: reminderEditorRuleIndex + 1 },
+              )}
+              testID="reminders-delete-rule"
+              onPress={() => askOrConfirmReminderDelete('schedule', () => removeReminderRule(reminderEditorRuleIndex))}
+              style={({ pressed }) => [
+                styles.removeSchedule,
+                confirmReminderDelete === 'schedule' && styles.deleteConfirming,
+                pressed && styles.optionPressed,
+              ]}
             >
-              <Trash size={sc(14)} color={colors.white65} />
-            </IconButton>
+              <Trash size={16} color={confirmReminderDelete === 'schedule' ? '#ec8a7a' : colors.white65} />
+            </Pressable>
           ) : null}
         >
           <View
-            style={styles.reminderRuleCard}
+            style={styles.reminderRuleContent}
             testID={`reminder-rule-${reminderEditorRuleIndex}`}
           >
             <Text style={styles.reminderLabel}>{t('settings.weekdays')}</Text>
@@ -1129,8 +1191,12 @@ export default function Settings() {
                   time={time}
                   ruleIndex={reminderEditorRuleIndex}
                   canRemove={activeReminderRule.times.length > 1}
+                  confirmingRemove={confirmReminderDelete === formatReminderTime(time)}
                   onShift={(delta) => shiftReminderTime(reminderEditorRuleIndex, timeIndex, delta)}
-                  onRemove={() => removeReminderTime(reminderEditorRuleIndex, timeIndex)}
+                  onRemove={() => askOrConfirmReminderDelete(
+                    formatReminderTime(time),
+                    () => removeReminderTime(reminderEditorRuleIndex, timeIndex),
+                  )}
                 />
               ))}
             </View>
@@ -1143,7 +1209,7 @@ export default function Settings() {
                 onPress={() => addReminderTime(reminderEditorRuleIndex)}
                 style={({ pressed }) => [styles.addTime, pressed && styles.optionPressed]}
               >
-                <Plus size={sc(13)} color={colors.white65} />
+                <Plus size={13} color={colors.goldSoft} />
                 <Text style={styles.addTimeText}>{t('settings.addTime')}</Text>
               </Pressable>
             ) : null}
@@ -1268,18 +1334,24 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: sc(9.25),
   },
-  reminderRuleCard: {
-    padding: sc(11), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,.025)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,.065)',
+  reminderRuleContent: { paddingVertical: sc(8) },
+  removeSchedule: {
+    width: sc(42), alignItems: 'center', justifyContent: 'center',
+    borderRadius: sc(12), backgroundColor: 'rgba(255,255,255,.035)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,.1)',
+  },
+  deleteConfirming: {
+    backgroundColor: 'rgba(220,90,70,.18)',
+    borderWidth: 1, borderColor: 'rgba(220,90,70,.45)',
   },
   reminderLabel: {
     fontFamily: fonts.sansMedium, fontSize: sc(8.5), letterSpacing: sc(1.15),
     color: colors.warmHint, marginBottom: sc(8),
   },
-  reminderTimeLabel: { marginTop: sc(12) },
+  reminderTimeLabel: { marginTop: sc(20) },
   dayRow: { flexDirection: 'row', gap: sc(5) },
   dayChip: {
-    flex: 1, minHeight: sc(34), alignItems: 'center', justifyContent: 'center',
+    flex: 1, minHeight: sc(36), alignItems: 'center', justifyContent: 'center',
     borderRadius: sc(10), backgroundColor: 'rgba(255,255,255,.035)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,.075)',
   },
@@ -1288,29 +1360,32 @@ const stylesFactory = () => StyleSheet.create({
   },
   dayChipText: { fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.creamDim },
   dayChipTextOn: { color: colors.parchment },
-  reminderTimes: { gap: sc(6) },
+  reminderTimes: { gap: sc(8) },
   timeRow: {
-    flexDirection: 'row', alignItems: 'center', gap: sc(4), minHeight: sc(44),
-    paddingHorizontal: sc(7), borderRadius: sc(11), backgroundColor: 'rgba(0,0,0,.16)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,.055)',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: sc(8),
+    minHeight: sc(52), padding: sc(6), borderRadius: sc(12),
+    backgroundColor: 'rgba(255,255,255,.035)',
+  },
+  timeControls: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: sc(8),
+  },
+  timeGroup: {
+    flexDirection: 'row', alignItems: 'center', gap: sc(2),
   },
   stepBtn: {
-    width: sc(28), height: sc(28), alignItems: 'center', justifyContent: 'center',
-    borderRadius: sc(9), backgroundColor: 'rgba(255,255,255,.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,.07)',
+    width: sc(28), height: sc(32), alignItems: 'center', justifyContent: 'center',
+    borderRadius: sc(9),
   },
   timeUnit: {
-    minWidth: sc(24), textAlign: 'center',
-    fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.parchment,
+    minWidth: sc(28), textAlign: 'center',
+    fontFamily: fonts.monoMedium, fontSize: sc(18), color: colors.parchment,
   },
-  timeColon: { fontFamily: fonts.monoMedium, fontSize: sc(14), color: colors.warmHint },
+  timeColon: { fontFamily: fonts.monoMedium, fontSize: sc(16), color: colors.warmHint },
   addTime: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: sc(5),
-    minHeight: sc(35), marginTop: sc(7), borderRadius: sc(10),
-    backgroundColor: 'rgba(255,255,255,.025)', borderWidth: 1,
-    borderColor: 'rgba(255,255,255,.07)',
+    minHeight: sc(36), marginTop: sc(8), borderRadius: sc(10),
   },
-  addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.creamDim },
+  addTimeText: { fontFamily: fonts.sansMedium, fontSize: sc(10.5), color: colors.goldSoft },
   toggle: {
     flexShrink: 0, width: sc(40), height: sc(24), borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)',
     borderWidth: 1, borderColor: 'rgba(214,182,120,.26)', padding: sc(3), justifyContent: 'center',

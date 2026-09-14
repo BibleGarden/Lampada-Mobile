@@ -16,9 +16,10 @@ export default function BottomSheet({
   title,
   summary,
   closeLabel,
+  showCloseButton = true,
   doneLabel,
   doneTestID,
-  headerAction,
+  footerAction,
   testID,
   onClose,
   children,
@@ -27,9 +28,10 @@ export default function BottomSheet({
   title: string;
   summary?: string;
   closeLabel: string;
+  showCloseButton?: boolean;
   doneLabel?: string;
   doneTestID?: string;
-  headerAction?: React.ReactNode;
+  footerAction?: React.ReactNode;
   testID?: string;
   onClose: () => void;
   children: React.ReactNode;
@@ -58,10 +60,11 @@ export default function BottomSheet({
             {kicker ? <Text style={styles.kicker}>{kicker}</Text> : null}
             <Text style={styles.title}>{title}</Text>
           </View>
-          {headerAction}
-          <IconButton accessibilityLabel={closeLabel} onPress={onClose}>
-            <Close size={sc(14)} />
-          </IconButton>
+          {showCloseButton ? (
+            <IconButton size={sc(28)} accessibilityLabel={closeLabel} onPress={onClose}>
+              <Close size={18} />
+            </IconButton>
+          ) : null}
         </View>
 
         {summary ? (
@@ -76,14 +79,17 @@ export default function BottomSheet({
         </ScrollView>
 
         {doneLabel ? (
-          <Pressable
-            accessibilityRole="button"
-            testID={doneTestID}
-            onPress={onClose}
-            style={({ pressed }) => [styles.done, pressed && styles.pressed]}
-          >
-            <Text style={styles.doneText}>{doneLabel}</Text>
-          </Pressable>
+          <View style={styles.footer}>
+            {footerAction}
+            <Pressable
+              accessibilityRole="button"
+              testID={doneTestID}
+              onPress={onClose}
+              style={({ pressed }) => [styles.done, pressed && styles.pressed]}
+            >
+              <Text style={styles.doneText}>{doneLabel}</Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
     </View>
@@ -96,6 +102,7 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.78)',
   },
   sheet: {
+    width: '100%', maxWidth: sc(390), alignSelf: 'center',
     maxHeight: '82%', paddingTop: sc(7), paddingHorizontal: sc(14),
     backgroundColor: '#171109', borderTopLeftRadius: sc(22), borderTopRightRadius: sc(22),
     borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(214,182,120,.2)',
@@ -131,9 +138,10 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(13), color: colors.creamDim,
   },
   content: { paddingTop: sc(8), paddingBottom: sc(8) },
+  footer: { flexDirection: 'row', alignItems: 'stretch', gap: sc(8), marginTop: sc(2) },
   done: {
-    minHeight: sc(42), alignItems: 'center', justifyContent: 'center',
-    marginTop: sc(2), borderRadius: sc(12), backgroundColor: 'rgba(214,182,120,.12)',
+    flex: 1, minHeight: sc(42), alignItems: 'center', justifyContent: 'center',
+    borderRadius: sc(12), backgroundColor: 'rgba(214,182,120,.12)',
     borderWidth: 1, borderColor: 'rgba(214,182,120,.25)',
   },
   doneText: {

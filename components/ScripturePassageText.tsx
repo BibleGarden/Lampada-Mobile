@@ -70,6 +70,7 @@ export default function ScripturePassageText({
           <Text
             style={[
               segment.highlighted && styles.highlightedVerse,
+              !segment.highlighted && highlightedNumbers.length > 0 && styles.contextVerse,
               segment.number === activeVerseNumber && styles.activeVerse,
             ]}
           >
@@ -91,12 +92,16 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(7),
   },
   highlightedVerse: {
-    color: colors.amberBright,
+    color: colors.cardText,
     fontFamily: fonts.serifSemiBold,
+  },
+  contextVerse: {
+    // Тот же белый, что у карточки и ключевого стиха, с непрозрачностью 55%.
+    color: `${colors.cardText}8C`,
   },
   activeVerse: {
     textDecorationLine: 'underline',
     textDecorationStyle: 'dotted',
-    textDecorationColor: 'rgba(231,207,149,.56)',
+    textDecorationColor: `${colors.cardText}8F`,
   },
 });

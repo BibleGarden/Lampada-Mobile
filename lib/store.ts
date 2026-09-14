@@ -757,16 +757,11 @@ const applyOfflineFallback = async (sessionId: number, token: number) => {
   );
   if (!sessionIsCurrent(sessionId, token)) return;
   const current = useSession.getState();
-  if (current.scrList.length) {
+  const offlineTrail = mergeOfflineTrail(current.scrList, cached, current.scrIndex);
+  if (offlineTrail.length) {
     useSession.setState({
-      scrList: mergeOfflineTrail(current.scrList, cached, current.scrIndex),
-      scrStatus: 'offline_fallback',
-      scrError: null,
-    });
-  } else if (cached.length) {
-    useSession.setState({
-      scrList: cached,
-      scrIndex: 0,
+      scrList: offlineTrail,
+      scrIndex: current.scrList.length ? current.scrIndex : 0,
       scrStatus: 'offline_fallback',
       scrError: null,
     });

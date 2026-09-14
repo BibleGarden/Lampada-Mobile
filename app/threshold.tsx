@@ -11,6 +11,7 @@ import ProgressRing from '../components/ProgressRing';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { useSession } from '../lib/store';
+import { useSettings } from '../lib/settings';
 import { recordDiagnostic } from '../lib/db';
 import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
 
@@ -26,15 +27,18 @@ export default function Threshold() {
   };
   const styles = useStyles(stylesFactory);
   const { width, height } = useWindowDimensions();
-  const landscapeTablet = isTablet() && width > height;
+  const tablet = isTablet();
+  const landscapeTablet = tablet && width > height;
+  const compactPhone = !tablet && height < 720;
+  const holdButtonSize = sc(compactPhone ? 136 : 158);
   const insets = useSafeAreaInsets();
   const s = useSession();
+  const answerContextConsent = useSettings((state) => state.answerContextConsent);
 
-  // брифинг собирается из выбора на «Настройке»: цель не переписывается,
-  // а вливается в фразу как есть, с золотой подсветкой (строчная — она
-  // продолжает предложение после двоеточия)
+  // Брифинг сохраняет тему ровно в формулировке человека и только визуально
+  // продолжает ею нейтральную подпись «Тема молитвы».
   const topicTrim = s.topic.trim();
-  const goal = topicTrim.replace(/^[А-ЯA-ZЁ]/, (c) => c.toLowerCase());
+  const goal = topicTrim;
   const timeText = topicTrim
     ? s.minutes === 0
       ? t('screens.threshold.unlimitedGoal')
@@ -55,7 +59,7 @@ export default function Threshold() {
     },
     {
       icon: <Shield size={16} color={colors.amberBright} />,
-      text: t('screens.threshold.local'),
+      text: t(`screens.threshold.answers.${answerContextConsent}`),
     },
   ];
   const progress = useSharedValue(0);
@@ -141,7 +145,10 @@ export default function Threshold() {
 
         <View style={[styles.main, landscapeTablet && styles.mainLandscape]}>
           {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
-          <ScrollView style={styles.briefScroll} contentContainerStyle={styles.brief}>
+          <ScrollView
+            style={styles.briefScroll}
+            contentContainerStyle={[styles.brief, compactPhone && styles.briefCompact]}
+          >
             <Text style={styles.title}>{t('screens.threshold.title')}</Text>
             {brief.map((b, i) => {
               // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
@@ -170,11 +177,11 @@ export default function Threshold() {
 
           <View style={[styles.holdWrap, landscapeTablet && styles.holdWrapLandscape]}>
             <GestureDetector gesture={hold}>
-              <View style={styles.holdBtn}>
-                <View style={styles.holdInner} />
+              <View style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]}>
+                <View style={[styles.holdInner, compactPhone && styles.holdInnerCompact]} />
                 <View style={StyleSheet.absoluteFill}>
                   <ProgressRing
-                    size={sc(158)}
+                    size={holdButtonSize}
                     strokeWidth={2.5}
                     progress={progress}
                     trackColor="rgba(230,162,60,.14)"
@@ -183,8 +190,8 @@ export default function Threshold() {
                 </View>
                 <View style={styles.holdContent} pointerEvents="none">
                   <Lamp />
-                  <Text style={styles.holdHint} maxFontSizeMultiplier={1.2}>{t(hint)}</Text>
                   <Text style={styles.holdLabel} maxFontSizeMultiplier={1.2}>{t('screens.threshold.start')}</Text>
+                  <Text style={styles.holdHint} maxFontSizeMultiplier={1.2}>{t(hint)}</Text>
                 </View>
               </View>
             </GestureDetector>
@@ -237,6 +244,12 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(12),
     paddingHorizontal: 2,
   },
+  // На коротких телефонах сохраняем кегль и освобождаем высоту за счёт
+  // декоративных интервалов. ScrollView остаётся страховкой для Dynamic Type.
+  briefCompact: {
+    paddingVertical: sc(8),
+    gap: sc(8),
+  },
   briefRow: {
     flexDirection: 'row',
     gap: sc(12),
@@ -275,6 +288,10 @@ const stylesFactory = () => StyleSheet.create({
     width: sc(158),
     height: sc(158),
   },
+  holdBtnCompact: {
+    width: sc(136),
+    height: sc(136),
+  },
   holdInner: {
     position: 'absolute',
     top: sc(11),
@@ -283,6 +300,13 @@ const stylesFactory = () => StyleSheet.create({
     bottom: sc(11),
     borderRadius: sc(79),
     backgroundColor: 'rgba(230,162,60,.07)',
+  },
+  holdInnerCompact: {
+    top: sc(9),
+    left: sc(9),
+    right: sc(9),
+    bottom: sc(9),
+    borderRadius: sc(68),
   },
   holdContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -296,7 +320,7 @@ const stylesFactory = () => StyleSheet.create({
     height: sc(32),
     textAlign: 'center',
     fontFamily: fonts.sans,
-    fontSize: sc(10),
+    fontSize: sc(9),
     lineHeight: sc(13),
     letterSpacing: sc(1),
     textTransform: 'uppercase',
