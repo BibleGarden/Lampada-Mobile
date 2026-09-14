@@ -148,14 +148,14 @@ let scriptureAbortController: AbortController | null = null;
 let firstQuestionFetch: {
   topic: string;
   language: string;
-  promise: Promise<ai.GeneratedQuestion>;
-  result?: ai.GeneratedQuestion;
+  promise: Promise<ai.GeneratedQuestion | null>;
+  result?: ai.GeneratedQuestion | null;
 } | null = null;
 
 // Готовый слот показывается синхронно. Если слот ещё pending, кнопка ждёт
 // именно уже запущенный запрос; новый refill стартует только после показа.
-const questionPool = createOneAheadPool<ai.GeneratedQuestion>();
-const reflectPool = createOneAheadPool<ai.GeneratedQuestion>();
+const questionPool = createOneAheadPool<ai.GeneratedQuestion | null>();
+const reflectPool = createOneAheadPool<ai.GeneratedQuestion | null>();
 
 type ScriptureLoadError = ScriptureSelectError;
 
@@ -190,22 +190,23 @@ const prepareQuestion = (
   s: SessionState,
   index: number,
   answers: Record<number, Answer> = s.answers,
+  prefetch = true,
 ) => {
   if (s.sessionId === null) return null;
   const key = poolKey(s, index, answers);
   return questionPool.prepare(key, () =>
-    ai.generateQuestion(s.topic, s.questions, answersForAi(answers), skippedForAi(s, answers)),
+    ai.generateQuestion(s.topic, s.questions, answersForAi(answers), skippedForAi(s, answers), prefetch),
   );
 };
 
 const reflectKey = (s: SessionState) =>
   JSON.stringify([s.sessionId, s.topic, s.questions, skippedForAi(s), answersForAi(s.answers), useSettings.getState().uiLanguage]);
 
-const prepareReflectQuestion = (s: SessionState) => {
+const prepareReflectQuestion = (s: SessionState, prefetch = true) => {
   if (s.sessionId === null) return null;
   const key = reflectKey(s);
   return reflectPool.prepare(key, () =>
-    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers), skippedForAi(s)),
+    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers), skippedForAi(s), prefetch),
   );
 };
 
@@ -241,7 +242,7 @@ const loadScriptureForState = async (
   });
   const result = foreground
     ? await selectScripture(request, { signal })
-    : await selectScriptureOnce(request, { signal });
+    : await selectScriptureOnce({ ...request, prefetch: true }, { signal });
   if (!result.ok) return result;
   const bookNames = await ensureBookNames(result.data.passage.translation, signal);
   if (!bookNames?.[result.data.passage.book_number]) {
@@ -311,12 +312,12 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // по ходу молитвы, с учётом живых ответов (если человек разрешил).
     // Результат применяется только до входа в сессию: опоздавший вопрос
     // не должен затирать уже идущую молитву
-    const promise = ai.generateFirstQuestion(topic);
+    const promise = ai.generateFirstQuestion(topic, true);
     const fetch: NonNullable<typeof firstQuestionFetch> = { topic, promise, language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
     promise.then((q) => {
       if (firstQuestionFetch === fetch) fetch.result = q;
-      if (token === prepareToken) {
+      if (q && token === prepareToken) {
         set((st) =>
           st.sessionId === null
             ? { questions: [q.text], questionSources: [q.source] }
@@ -394,15 +395,17 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     scriptureAbortController = new AbortController();
     const currentScriptureToken = ++scriptureToken;
     scripturePrefetch = null;
-    void loadFirstScripture(sessionId, currentScriptureToken);
+    void loadFirstScripture(sessionId, currentScriptureToken, false);
     if (firstQuestion) {
       // Первый запасной вопрос начинает готовиться сразу после входа.
       prepareQuestion(get(), 0);
       return;
     }
 
-    void fetch.promise.then((question) => {
+    void fetch.promise.then(async (question) => {
       if (get().sessionId !== sessionId) return;
+      if (!question) question = await ai.generateFirstQuestion(topic);
+      if (!question || get().sessionId !== sessionId) return;
       set({
         questions: [question.text],
         questionSources: [question.source],
@@ -495,7 +498,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     let q = questionPool.takeReady(key);
     if (q === undefined) {
       set({ generating: true });
-      const pending = questionPool.wait(key) ?? prepareQuestion(s, target);
+      const pending = questionPool.wait(key) ?? prepareQuestion(s, target, s.answers, false);
       if (pending === null) {
         set({ generating: false });
         return;
@@ -508,6 +511,20 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       }
       q = questionPool.takeReady(key);
       if (q === undefined) {
+        set({ generating: false });
+        return;
+      }
+    }
+
+    if (q === null) {
+      set({ generating: true });
+      q = await prepareQuestion(s, target, s.answers, false);
+      questionPool.takeReady(key);
+      if (get().sessionId !== sessionToken || poolKey(get(), target) !== key) {
+        set((st) => st.sessionId === sessionToken ? { generating: false } : st);
+        return;
+      }
+      if (!q) {
         set({ generating: false });
         return;
       }
@@ -636,7 +653,14 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     await loadFirstScripture(s.sessionId, scriptureToken);
   },
 
-  setDockMode: (dockMode) => set({ dockMode }),
+  setDockMode: (dockMode) => {
+    set({ dockMode });
+    const state = get();
+    if (dockMode === 'scripture' && state.sessionId !== null && state.scrStatus === 'idle') {
+      set({ scrStatus: 'loading' });
+      void loadFirstScripture(state.sessionId, scriptureToken);
+    }
+  },
   toggleMusic: () => set((s) => ({ musicOn: !s.musicOn })),
 
   finish: async () => {
@@ -648,7 +672,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     let q = reflectPool.takeReady(key);
     if (q === undefined) {
       set({ reflectQ: '', reflectSource: null, reflectGenerating: true });
-      const pending = reflectPool.wait(key) ?? prepareReflectQuestion(s);
+      const pending = reflectPool.wait(key) ?? prepareReflectQuestion(s, false);
       if (pending === null) {
         set({ reflectGenerating: false });
         return;
@@ -663,6 +687,16 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       }
       q = reflectPool.takeReady(key);
       if (q === undefined) {
+        set({ reflectGenerating: false });
+        return;
+      }
+    }
+    if (q === null) {
+      set({ reflectQ: '', reflectSource: null, reflectGenerating: true });
+      q = await prepareReflectQuestion(s, false);
+      reflectPool.takeReady(key);
+      if (token !== reflectToken || get().sessionId !== sessionToken || reflectKey(get()) !== key) return;
+      if (!q) {
         set({ reflectGenerating: false });
         return;
       }
@@ -774,14 +808,22 @@ const handleScriptureFailure = async (
   ) useSession.setState({ scrError: 'not_configured' });
 };
 
-async function loadFirstScripture(sessionId: number, token: number) {
+async function loadFirstScripture(sessionId: number, token: number, foreground = true) {
   if (!sessionIsCurrent(sessionId, token)) return;
   const controller = scriptureAbortController;
   if (!controller) return;
   const result = await runScriptureExclusive(() =>
-    loadScriptureForState(useSession.getState(), true, controller.signal),
+    loadScriptureForState(useSession.getState(), foreground, controller.signal),
   );
   if (!sessionIsCurrent(sessionId, token)) return;
+  if (!result.ok && !foreground) {
+    if (useSession.getState().dockMode === 'scripture') {
+      await loadFirstScripture(sessionId, token);
+    } else {
+      useSession.setState({ scrStatus: 'idle', scrError: null });
+    }
+    return;
+  }
   if (!result.ok) {
     await handleScriptureFailure(sessionId, token, result.error);
     return;

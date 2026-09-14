@@ -1,3 +1,4 @@
+import { isPrefetchDenial, PrefetchDeniedError } from './prefetch.ts';
 import { limitQuestionRequest } from './questionRequest';
 import type { QuestionRequest } from './questionRequest';
 import { apiPaths, resolveApiUrl } from './apiConfig.ts';
@@ -49,7 +50,13 @@ export async function completeQuestion(request: QuestionRequest): Promise<Questi
       },
       body,
     });
-    if (!res.ok) throw new Error(`AI proxy: HTTP ${res.status}`);
+    if (!res.ok) {
+      if (request.prefetch && res.status === 429) {
+        const denial = await res.json();
+        if (isPrefetchDenial(denial?.detail)) throw new PrefetchDeniedError();
+      }
+      throw new Error(`AI proxy: HTTP ${res.status}`);
+    }
 
     const data = await res.json();
     const text = typeof data?.text === 'string' ? data.text.trim() : '';

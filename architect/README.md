@@ -148,7 +148,9 @@ Screen → useSession → lib/db.ts → SQLite / local audio files
 
 The AI is not required to go through a prayer. When there is no configuration, or
 on a network error, a timeout or a malformed response, `lib/ai.ts` returns a
-question from the local pool. Later questions use a buffer one question ahead;
+question from the local pool for a user-requested generation. Background generation
+returns no content on failure and does not substitute a local question. Later
+questions use a buffer one question ahead;
 stale asynchronous results are cut off by keys and tokens.
 
 During a session the user can turn on quiet local music. Fifteen bundled CC0
@@ -194,8 +196,11 @@ does not change the prayer deadline.
 
 The main scripture selection is done by the server with AI, by the meaning of the
 prayer topic and of the person's replies that the setting allows, not by keyword
-match. The first request starts in the background on entering the session, and
-after the first display exactly one prefetch is kept alive. No more than one
+match. The first request starts as prefetch on entering the session while the
+scripture panel is hidden. If it fails, the panel stays idle with no error or
+cached substitute; opening it requests scripture normally. Opening it during a
+pending failed prefetch also triggers one ordinary request. After the first
+display exactly one prefetch is kept alive. No more than one
 selection request runs at a time. `source: retrieval_fallback` and
 `source: safe_pool` count as successful responses. The navigation trail contains
 only the passages that were actually shown and lives within the current session;
@@ -426,8 +431,8 @@ The app talks to a `bible-api` server endpoint which owns model routing, model
 credentials and system prompts. Chat and speech models run on infrastructure
 managed by the individual app developer; changing a stage's model is a server configuration
 change and does not alter the client contract. Question requests use
-`{ topic, stage, messages, skipped_questions?, default_language? }` (ADR-0019,
-ADR-0023, ADR-0030). The topic is separate from conversation
+`{ topic, stage, messages, skipped_questions?, default_language?, prefetch? }`
+(ADR-0019, ADR-0023, ADR-0030, ADR-0031). The topic is separate from conversation
 history; `stage` selects the server's first, next or reflection question prompt.
 `lib/questionRequest.ts` pairs each answered question with its human reply in
 ascending question-index order. One user message joins typed text and completed
@@ -561,6 +566,31 @@ journal content and the independent Scripture selection are unchanged.
 Plural selection uses the explicit English/Russian/Ukrainian cardinal rules in
 `lib/uiLanguage.ts`; it does not require `Intl.PluralRules`, which is unavailable
 in the installed iOS runtime.
+
+## Server-controlled AI prefetch
+
+Both `/api/ai/question` and `/api/ai/scripture` accept optional `prefetch: true`
+in the request body. The app sets it for the threshold's first question, every
+one-ahead question, the closing reflection prepared before the session ends, the
+initial hidden scripture selection and subsequent one-ahead passages. Requests
+made because the user needs content omit the field. The server decides whether
+to admit background work independently for questions and scriptures.
+
+HTTP 429 with `detail: "prefetch_disabled"` or
+`detail: "prefetch_limit_exceeded"` means that no background content was generated.
+Only the limit response carries `Retry-After`; the app does not schedule retries
+for either response. These denials show no error and do not generate a local
+fallback. Other failed background generations likewise return no content.
+Question and reflection slots retain that empty outcome until consumed or their
+context changes, so timer ticks cannot repeatedly request a denied warmup.
+
+A user request consumes a successful prepared result or waits for its pending
+request. If background work yielded no content, it performs an ordinary request
+with the current context, including when demand arrived before the denial.
+Normal foreground error handling remains in place. Deploy the API change before
+releasing the updated app: older servers reject the new field with HTTP 422.
+Older app builds cannot have their unmarked warmups controlled by the server's
+prefetch policy.
 
 ## Bundled fallback question language
 

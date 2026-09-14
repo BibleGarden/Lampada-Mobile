@@ -62,6 +62,7 @@ export type ScriptureSelection = {
 };
 
 export type ScriptureRequest = {
+  prefetch?: boolean;
   language: ScriptureLanguage;
   topic?: string;
   user_replies?: string[];

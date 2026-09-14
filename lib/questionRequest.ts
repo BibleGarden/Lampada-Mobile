@@ -8,6 +8,7 @@ export type QuestionRequest = {
   messages: QuestionMessage[];
   skipped_questions?: string[];
   default_language?: UiLanguage | null;
+  prefetch?: boolean;
 };
 
 /** История только реальных ходов, без инструкций под видом реплик человека. */
@@ -63,6 +64,7 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
     remaining -= question.length;
   }
   return { stage: request.stage, topic: request.topic, messages,
+    ...(request.prefetch ? { prefetch: true } : {}),
     ...(skipped.length ? { skipped_questions: skipped } : {}),
     ...(request.default_language !== undefined ? { default_language: request.default_language } : {}),
   };

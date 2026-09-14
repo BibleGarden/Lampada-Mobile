@@ -64,3 +64,5 @@ implementation details do not need one.
 - [0029: Export a prayer as plain text through the system share sheet](0029-prayer-text-export.md)
 
 - [0030: Use interface language for questions with undetermined prayer language](0030-interface-language-question-default.md)
+
+- [0031: Let the server admit AI prefetch](0031-server-controlled-ai-prefetch.md)
