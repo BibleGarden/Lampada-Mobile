@@ -5,9 +5,10 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
-import { Heart, Close, PauseIcon, PlayIcon } from './icons';
+import { Heart, Close, Flag, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
 import ScripturePassageText from './ScripturePassageText';
+import ContentReportDialog from './ContentReportDialog';
 import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
 import { useSheetReflow } from '../lib/useSheetReflow';
 
@@ -25,6 +26,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
   const { height: windowHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const [reportText, setReportText] = useState<string | null>(null);
   // точечные подписки — читалка не ререндерится от тика таймера
   const scrList = useSession((st) => st.scrList);
   const scrIndex = useSession((st) => st.scrIndex);
@@ -46,6 +48,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
   );
 
   return (
+    <>
     <BottomSheet
       key={mountKey}
       ref={sheetRef}
@@ -99,6 +102,22 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
           >
             <Heart size={16} fill={fav ? '#e7cf95' : 'none'} />
           </IconButton>
+          {/* жалоба — рядом с закрытием и в общем сером тоне: нужна редко и не
+              должна конкурировать с прослушиванием и избранным */}
+          {cur ? (
+            <IconButton
+              accessibilityLabel={t('components.contentReport.reportScripture')}
+              size={sc(32)}
+              bg="rgba(255,255,255,.04)"
+              border={colors.white08}
+              testID="scripture-report-button"
+              onPress={() => {
+                setReportText([cur.reference, cur.title, cur.text].filter(Boolean).join('\n\n'));
+              }}
+            >
+              <Flag size={16} color={colors.labelGold} />
+            </IconButton>
+          ) : null}
           <IconButton
             accessibilityLabel={t('components.reader.closeReader')}
             size={sc(32)}
@@ -125,6 +144,13 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
         ) : null}
       </BottomSheetScrollView>
     </BottomSheet>
+    <ContentReportDialog
+      visible={reportText !== null}
+      contentType="scripture"
+      contentText={reportText ?? ''}
+      onDismiss={() => setReportText(null)}
+    />
+    </>
   );
 }
 

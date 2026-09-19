@@ -21,6 +21,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Flag,
   Heart,
   Pen,
   Plus,
@@ -28,6 +29,7 @@ import {
   PauseIcon,
   PlayIcon,
 } from './icons';
+import ContentReportDialog from './ContentReportDialog';
 import ScripturePassageText from './ScripturePassageText';
 import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
 
@@ -56,6 +58,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
   // Сколько строк отрывка реально помещается: карточка тянется по свободной
   // высоте экрана, поэтому лимит считаем по замеренной области, а не фиксируем.
   const [textAreaHeight, setTextAreaHeight] = React.useState(0);
+  const [reportOpen, setReportOpen] = React.useState(false);
   const scriptureLineLimit = textAreaHeight
     ? Math.max(2, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
     : 3;
@@ -106,6 +109,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
     && (scriptureIsTruncated || compactScripture.partial);
   const curFav = !!curScripture && s.scrFav.includes(curScripture.canonicalId);
   const onFrontier = s.qIndex === s.answeredCount;
+  const questionText = s.questions[s.qIndex] ?? '';
 
   const onTextAreaLayout = React.useCallback((e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
@@ -153,6 +157,24 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>{t('components.reader.quote')}</Text>
           </Pressable>
         </View>
+        {/* Жалоба на вопрос живёт в углу карточки: кнопка сервисная и
+            намеренно малозаметная, чтобы не конкурировать с ответом.
+            Показывается только в режиме вопроса, когда текст уже загружен. */}
+        {isQ && !s.generating && !!questionText.trim() && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('components.contentReport.reportQuestion')}
+            onPress={tap(() => setReportOpen(true))}
+            hitSlop={sc(8)}
+            testID="question-report-button"
+            style={({ pressed }) => [
+              styles.reportBtn,
+              pressed && styles.reportBtnPressed,
+            ]}
+          >
+            <Flag size={16} strokeWidth={1.6} color="rgba(214,182,120,.45)" />
+          </Pressable>
+        )}
       </View>
 
       {isQ ? (
@@ -357,6 +379,12 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
           </View>
         </Animated.View>
       )}
+      <ContentReportDialog
+        visible={reportOpen}
+        contentType="question"
+        contentText={questionText}
+        onDismiss={() => setReportOpen(false)}
+      />
     </View>
   );
 }
@@ -410,6 +438,18 @@ const stylesFactory = () => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: sc(8),
+  },
+  reportBtn: {
+    position: 'absolute',
+    right: 0,
+    top: sc(3),
+    width: sc(32),
+    height: sc(32),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reportBtnPressed: {
+    opacity: 0.55,
   },
   scriptureTools: {
     minHeight: sc(26),

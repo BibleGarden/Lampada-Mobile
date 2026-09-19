@@ -60,6 +60,7 @@ upgrading it requires rebuilding the native app.
 | `components/AnswerSheet.tsx` | The text answer sheet and the coordination of the audio recording lifecycle |
 | `components/RecordingsSheet.tsx` | A separate sheet for recordings, the player and transcripts, on top of the answer |
 | `components/PrivacyConsentDialog.tsx` | The equal-weight first-use disclosure and allow/deny actions for an AI purpose |
+| `components/ContentReportDialog.tsx` | Confirmation, optional comment and delivery state for reporting a generated question or selected passage |
 | `components/BottomSheet.tsx` | The in-screen bottom sheet used by the settings screen for option lists, the reminder editor and privacy consents; an overlay rather than a system Modal so the privacy screen and lock stay on top |
 | `lib/store.ts` | The state and the scenario of a prayer session |
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
@@ -68,6 +69,7 @@ upgrading it requires rebuilding the native app.
 | `lib/questionRequest.ts` | Structured question history, stage metadata and request limits |
 | `lib/aboutClient.ts` | Contact cards from the shared Bible Garden `/api/about` endpoint, response validation and request cancellation |
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
+| `lib/contentReportClient.ts` | The bounded HTTP client for AI-content reports; it sends no prayer answer or topic |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
 | `lib/settings.ts` | Privacy settings, interface language, atomic scripture choice and reminder schedule saves |
 | `lib/i18n.ts`, `lib/locales/` | Reactive English, Russian and Ukrainian interface translations |
@@ -150,6 +152,7 @@ Screen → useSession → lib/db.ts → SQLite / local audio files
                                             ↘ lib/scriptureRepository.ts → SQLite
                    ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
                                                  ↘ /api/audio/...mp3
+                   ↘ lib/contentReportClient.ts → bible-api /api/ai/content-reports
                    ↘ lib/scriptureCatalogClient.ts → bible-api /api/languages
                                                      ↘ /api/translations
 ```
@@ -445,7 +448,7 @@ server-side until its App Store listing is published. See ADR 0020.
 `lib/apiConfig.ts` owns the single `EXPO_PUBLIC_API_URL` origin and endpoint
 paths. Question generation, transcription, Scripture selection, language and
 translation catalogs, books, aligned audio, About contacts and update checks
-all use this origin. Server-returned audio paths are still rebased onto that
+and AI-content reports all use this origin. Server-returned audio paths are still rebased onto that
 origin. The limited client key remains `EXPO_PUBLIC_AI_PROXY_KEY`.
 
 Only HTTP(S) origins without credentials, a path, query or fragment are valid;
@@ -495,6 +498,15 @@ remains compatible with older servers. Core and answer consent are
 rechecked before transfer. Only public Expo variables -
 the URL and the limited proxy key - may be embedded into a client build; server
 secrets and system instructions are not put into the app.
+
+The current question and the current selected passage each expose an explicit
+report action. Confirmation sends only the generated text, its kind, the UI
+language and an optional comment. The prayer topic, the person's answer,
+recordings and client identity are not part of the request. A failed request
+keeps both the unsaved answer and the report comment on screen for retry. Saved
+journal entries deliberately have no report action: the journal mixes generated
+questions with private answers, while reporting at the generation screens keeps
+the transferred boundary visible and unambiguous.
 
 Three independent SQLite records gate prayer-content transfers (ADR-0017): core
 prayer AI for the topic, answer context for typed answers and finished

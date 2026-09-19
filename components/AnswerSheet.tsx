@@ -903,6 +903,7 @@ export default function AnswerSheet({
       ? Math.min(playerStatus.currentTime / playerStatus.duration, 1)
       : 0;
 
+  const questionText = questions[answerIndexRef.current] ?? questions[qIndex] ?? '';
   const questionHeader = (
     <View style={styles.header}>
       <View style={styles.orbRow}>
@@ -910,7 +911,7 @@ export default function AnswerSheet({
         <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
       </View>
       <Text style={styles.question} testID="answer-question">
-        {questions[answerIndexRef.current] ?? questions[qIndex]}
+        {questionText}
       </Text>
     </View>
   );
@@ -1221,6 +1222,7 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(127,174,154,.28)',
   },
+  actionDisabled: { opacity: 0.4 },
   // Счётчик записей сидит на углу микрофона: сами карточки видны только
   // в шторке записей, и без баджа непонятно, что там уже что-то есть.
   micBadge: {

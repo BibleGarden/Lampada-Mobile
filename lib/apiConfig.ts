@@ -2,6 +2,7 @@ export const apiPaths = {
   question: '/api/ai/question',
   transcription: '/api/ai/transcribe',
   scripture: '/api/ai/scripture',
+  contentReports: '/api/ai/content-reports',
   languages: '/api/languages',
   translations: '/api/translations',
   books: (translation: number) => `/api/translations/${translation}/books`,
