@@ -50,9 +50,10 @@ import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/t
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { playAudioRecording } from '../lib/audioPlayerOperation';
-import { Mic } from './icons';
+import { Flag, Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
+import ContentReportDialog from './ContentReportDialog';
 import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
@@ -120,6 +121,7 @@ export default function AnswerSheet({
   const [saving, setSaving] = useState(false);
   const [answerConsentOpen, setAnswerConsentOpen] = useState(false);
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
+  const [reportText, setReportText] = useState<string | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
@@ -899,6 +901,7 @@ export default function AnswerSheet({
       ? Math.min(playerStatus.currentTime / playerStatus.duration, 1)
       : 0;
 
+  const questionText = questions[answerIndexRef.current] ?? questions[qIndex] ?? '';
   const questionHeader = (
     <View style={styles.header}>
       <View style={styles.orbRow}>
@@ -906,7 +909,7 @@ export default function AnswerSheet({
         <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
       </View>
       <Text style={styles.question} testID="answer-question">
-        {questions[answerIndexRef.current] ?? questions[qIndex]}
+        {questionText}
       </Text>
     </View>
   );
@@ -1039,6 +1042,23 @@ export default function AnswerSheet({
               )}
             </Pressable>
             <Pressable
+              accessibilityLabel={t('components.contentReport.reportQuestion')}
+              accessibilityRole="button"
+              disabled={recordingPhase !== 'idle' || saving || !questionText}
+              testID="answer-report-button"
+              onPress={() => {
+                Keyboard.dismiss();
+                setReportText(questionText);
+              }}
+              style={({ pressed }) => [
+                styles.reportBtn,
+                (recordingPhase !== 'idle' || saving || !questionText) && styles.actionDisabled,
+                pressed && { transform: [{ scale: 0.97 }] },
+              ]}
+            >
+              <Flag color={colors.goldSoft} />
+            </Pressable>
+            <Pressable
               accessibilityRole="button"
               onPress={requestClose}
               style={({ pressed }) => [
@@ -1098,6 +1118,12 @@ export default function AnswerSheet({
         setAudioConsentOpen(false);
       }}
       onDecision={decideAudioConsent}
+    />
+    <ContentReportDialog
+      visible={reportText !== null}
+      contentType="question"
+      contentText={reportText ?? ''}
+      onDismiss={() => setReportText(null)}
     />
     </>
   );
@@ -1212,6 +1238,17 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(127,174,154,.28)',
   },
+  reportBtn: {
+    width: sc(32),
+    height: sc(32),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(214,182,120,.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(214,182,120,.24)',
+  },
+  actionDisabled: { opacity: 0.4 },
   // Счётчик записей сидит на углу микрофона: сами карточки видны только
   // в шторке записей, и без баджа непонятно, что там уже что-то есть.
   micBadge: {
