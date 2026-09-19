@@ -72,20 +72,6 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
           ) : null}
         </View>
         <View style={styles.headerBtns}>
-          {cur ? (
-            <IconButton
-              accessibilityLabel={t('components.contentReport.reportScripture')}
-              size={sc(32)}
-              bg="rgba(214,182,120,.08)"
-              border="rgba(214,182,120,.24)"
-              testID="scripture-report-button"
-              onPress={() => {
-                setReportText([cur.reference, cur.title, cur.text].filter(Boolean).join('\n\n'));
-              }}
-            >
-              <Flag size={14} color={colors.goldSoft} />
-            </IconButton>
-          ) : null}
           {cur && !cur.offline ? (
             <IconButton
               accessibilityLabel={scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
@@ -112,6 +98,22 @@ export default function ScriptureReader({ sheetRef, scriptureAudio }: Props) {
           >
             <Heart size={16} fill={fav ? '#e7cf95' : 'none'} />
           </IconButton>
+          {/* жалоба — рядом с закрытием и в общем сером тоне: нужна редко и не
+              должна конкурировать с прослушиванием и избранным */}
+          {cur ? (
+            <IconButton
+              accessibilityLabel={t('components.contentReport.reportScripture')}
+              size={sc(32)}
+              bg="rgba(255,255,255,.04)"
+              border={colors.white08}
+              testID="scripture-report-button"
+              onPress={() => {
+                setReportText([cur.reference, cur.title, cur.text].filter(Boolean).join('\n\n'));
+              }}
+            >
+              <Flag size={16} color={colors.labelGold} />
+            </IconButton>
+          ) : null}
           <IconButton
             accessibilityLabel={t('components.reader.closeReader')}
             size={sc(32)}

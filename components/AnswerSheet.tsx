@@ -911,6 +911,26 @@ export default function AnswerSheet({
       <Text style={styles.question} testID="answer-question">
         {questionText}
       </Text>
+      {/* жалоба живёт в углу шапки: она относится к самому вопросу, а в ряду
+          действий отвлекала от микрофона и сохранения */}
+      <Pressable
+        accessibilityLabel={t('components.contentReport.reportQuestion')}
+        accessibilityRole="button"
+        disabled={recordingPhase !== 'idle' || saving || !questionText}
+        hitSlop={sc(8)}
+        testID="answer-report-button"
+        onPress={() => {
+          Keyboard.dismiss();
+          setReportText(questionText);
+        }}
+        style={({ pressed }) => [
+          styles.reportBtn,
+          (recordingPhase !== 'idle' || saving || !questionText) && styles.actionDisabled,
+          pressed && styles.reportBtnPressed,
+        ]}
+      >
+        <Flag size={16} color={colors.labelGold} />
+      </Pressable>
     </View>
   );
 
@@ -1040,23 +1060,6 @@ export default function AnswerSheet({
                   <Text style={styles.micBadgeText}>{recs.length}</Text>
                 </View>
               )}
-            </Pressable>
-            <Pressable
-              accessibilityLabel={t('components.contentReport.reportQuestion')}
-              accessibilityRole="button"
-              disabled={recordingPhase !== 'idle' || saving || !questionText}
-              testID="answer-report-button"
-              onPress={() => {
-                Keyboard.dismiss();
-                setReportText(questionText);
-              }}
-              style={({ pressed }) => [
-                styles.reportBtn,
-                (recordingPhase !== 'idle' || saving || !questionText) && styles.actionDisabled,
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-            >
-              <Flag color={colors.goldSoft} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -1239,15 +1242,15 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: 'rgba(127,174,154,.28)',
   },
   reportBtn: {
+    position: 'absolute',
+    top: -sc(2),
+    right: -sc(2),
     width: sc(32),
     height: sc(32),
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(214,182,120,.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(214,182,120,.24)',
   },
+  reportBtnPressed: { opacity: 0.6 },
   actionDisabled: { opacity: 0.4 },
   // Счётчик записей сидит на углу микрофона: сами карточки видны только
   // в шторке записей, и без баджа непонятно, что там уже что-то есть.

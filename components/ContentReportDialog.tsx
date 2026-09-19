@@ -1,11 +1,13 @@
 import { useI18n } from '../lib/i18n';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AppState,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -41,6 +43,7 @@ export default function ContentReportDialog({
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<ContentReportError | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (!visible) return;
@@ -57,6 +60,16 @@ export default function ContentReportDialog({
     });
     return () => subscription.remove();
   }, [onDismiss, visible]);
+
+  // Прокручиваем именно на появление клавиатуры: на фокусе карточка ещё не
+  // сжата, скроллить нечего, и поле комментария остаётся под сгибом.
+  useEffect(() => {
+    if (!visible || sent) return undefined;
+    const subscription = Keyboard.addListener('keyboardDidShow', () => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => subscription.remove();
+  }, [sent, visible]);
 
   const dismiss = () => {
     if (!submitting) onDismiss();
@@ -90,46 +103,61 @@ export default function ContentReportDialog({
           { paddingTop: insets.top + sc(20), paddingBottom: insets.bottom + sc(20) },
         ]}
       >
+        {/* тап по фону гасит клавиатуру, но не закрывает диалог: иначе
+            набранный комментарий пропадал бы вместе с ним */}
+        <Pressable
+          accessible={false}
+          onPress={() => Keyboard.dismiss()}
+          style={StyleSheet.absoluteFill}
+        />
         <View accessibilityViewIsModal style={styles.card} testID="content-report-dialog">
-          <Text style={styles.kicker}>{t('components.contentReport.kicker')}</Text>
-          <Text style={styles.title}>
-            {contentType === 'question'
-              ? t('components.contentReport.questionTitle')
-              : t('components.contentReport.scriptureTitle')}
-          </Text>
-          {sent ? (
-            <>
+          {/* текст и поле скроллятся, а кнопки закреплены внизу карточки:
+              с открытой клавиатурой на узких экранах они иначе уезжают под неё */}
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={styles.cardContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.kicker}>{t('components.contentReport.kicker')}</Text>
+            <Text style={styles.title}>
+              {contentType === 'question'
+                ? t('components.contentReport.questionTitle')
+                : t('components.contentReport.scriptureTitle')}
+            </Text>
+            {sent ? (
               <Text style={styles.body}>{t('components.contentReport.sent')}</Text>
+            ) : (
+              <>
+                <Text style={styles.body}>{t('components.contentReport.body')}</Text>
+                <TextInput
+                  value={comment}
+                  onChangeText={setComment}
+                  editable={!submitting}
+                  multiline
+                  maxLength={1000}
+                  placeholder={t('components.contentReport.commentPlaceholder')}
+                  placeholderTextColor="rgba(255,255,255,.35)"
+                  style={styles.input}
+                  textAlignVertical="top"
+                  testID="content-report-comment"
+                />
+                {error ? <Text style={styles.error}>{t(errorKey(error))}</Text> : null}
+              </>
+            )}
+          </ScrollView>
+          <View style={styles.footer}>
+            {sent ? (
               <Pressable
                 accessibilityRole="button"
                 testID="content-report-done"
                 onPress={dismiss}
-                style={({ pressed }) => [
-                  styles.primaryAction,
-                  styles.doneAction,
-                  pressed && styles.pressed,
-                ]}
+                style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
               >
                 <Text style={styles.primaryActionText}>{t('components.contentReport.done')}</Text>
               </Pressable>
-            </>
-          ) : (
-            <>
-              <Text style={styles.body}>{t('components.contentReport.body')}</Text>
-              <TextInput
-                value={comment}
-                onChangeText={setComment}
-                editable={!submitting}
-                multiline
-                maxLength={1000}
-                placeholder={t('components.contentReport.commentPlaceholder')}
-                placeholderTextColor="rgba(255,255,255,.35)"
-                style={styles.input}
-                textAlignVertical="top"
-                testID="content-report-comment"
-              />
-              {error ? <Text style={styles.error}>{t(errorKey(error))}</Text> : null}
-              <View style={styles.actions}>
+            ) : (
+              <>
                 <Pressable
                   accessibilityRole="button"
                   disabled={submitting}
@@ -155,9 +183,9 @@ export default function ContentReportDialog({
                       : t('components.contentReport.send')}
                   </Text>
                 </Pressable>
-              </View>
-            </>
-          )}
+              </>
+            )}
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -175,11 +203,23 @@ const stylesFactory = () => StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: sc(440),
-    padding: sc(22),
+    maxHeight: '100%',
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.white08,
     backgroundColor: '#1d1710',
+  },
+  cardContent: {
+    paddingHorizontal: sc(22),
+    paddingTop: sc(22),
+    paddingBottom: sc(4),
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: sc(10),
+    paddingHorizontal: sc(22),
+    paddingTop: sc(14),
+    paddingBottom: sc(22),
   },
   kicker: {
     marginBottom: sc(10),
@@ -222,11 +262,6 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(12),
     lineHeight: sc(18),
   },
-  actions: {
-    flexDirection: 'row',
-    gap: sc(10),
-    marginTop: sc(18),
-  },
   secondaryAction: {
     flex: 1,
     minHeight: sc(44),
@@ -257,7 +292,6 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sansMedium,
     fontSize: sc(13),
   },
-  doneAction: { flex: 0, width: '100%', marginTop: sc(18) },
   disabled: { opacity: 0.55 },
   pressed: { opacity: 0.72 },
 });
