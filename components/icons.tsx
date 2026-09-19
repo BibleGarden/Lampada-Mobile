@@ -130,6 +130,13 @@ export const Trash = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth =
   </Svg>
 );
 
+export const Flag = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth = 1.7 }: P) => (
+  <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M5 21V4" />
+    <Path d="M5 5h11l-2 4 2 4H5" />
+  </Svg>
+);
+
 // Системная иконка «Поделиться» iOS: коробка с выходящей вверх стрелкой.
 export const ShareIcon = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth = 1.7 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
