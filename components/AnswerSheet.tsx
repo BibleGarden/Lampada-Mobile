@@ -50,10 +50,9 @@ import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/t
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { playAudioRecording } from '../lib/audioPlayerOperation';
-import { Flag, Mic } from './icons';
+import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
-import ContentReportDialog from './ContentReportDialog';
 import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
@@ -121,7 +120,6 @@ export default function AnswerSheet({
   const [saving, setSaving] = useState(false);
   const [answerConsentOpen, setAnswerConsentOpen] = useState(false);
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
-  const [reportText, setReportText] = useState<string | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
@@ -911,26 +909,6 @@ export default function AnswerSheet({
       <Text style={styles.question} testID="answer-question">
         {questionText}
       </Text>
-      {/* жалоба живёт в углу шапки: она относится к самому вопросу, а в ряду
-          действий отвлекала от микрофона и сохранения */}
-      <Pressable
-        accessibilityLabel={t('components.contentReport.reportQuestion')}
-        accessibilityRole="button"
-        disabled={recordingPhase !== 'idle' || saving || !questionText}
-        hitSlop={sc(8)}
-        testID="answer-report-button"
-        onPress={() => {
-          Keyboard.dismiss();
-          setReportText(questionText);
-        }}
-        style={({ pressed }) => [
-          styles.reportBtn,
-          (recordingPhase !== 'idle' || saving || !questionText) && styles.actionDisabled,
-          pressed && styles.reportBtnPressed,
-        ]}
-      >
-        <Flag size={16} color={colors.labelGold} />
-      </Pressable>
     </View>
   );
 
@@ -1122,12 +1100,6 @@ export default function AnswerSheet({
       }}
       onDecision={decideAudioConsent}
     />
-    <ContentReportDialog
-      visible={reportText !== null}
-      contentType="question"
-      contentText={reportText ?? ''}
-      onDismiss={() => setReportText(null)}
-    />
     </>
   );
 }
@@ -1241,16 +1213,6 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(127,174,154,.28)',
   },
-  reportBtn: {
-    position: 'absolute',
-    top: -sc(2),
-    right: -sc(2),
-    width: sc(32),
-    height: sc(32),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reportBtnPressed: { opacity: 0.6 },
   actionDisabled: { opacity: 0.4 },
   // Счётчик записей сидит на углу микрофона: сами карточки видны только
   // в шторке записей, и без баджа непонятно, что там уже что-то есть.
