@@ -42,16 +42,35 @@ targets.forEach((target, index) => {
   }
   const goal = Number(target.slice(0, 2)) * 60 + Number(target.slice(3));
   const delta = (goal - current + 1440) % 1440;
-  const hourSteps = Math.floor(delta / 60);
-  const minuteSteps = (delta % 60) / 5;
-  for (let i = 0; i < hourSteps; i += 1) {
-    lines.push(`- tapOn: "${fmt(current)}: час вперёд"`);
-    current = (current + 60) % 1440;
-  }
-  for (let i = 0; i < minuteSteps; i += 1) {
-    lines.push(`- tapOn: "${fmt(current)}: пять минут вперёд"`);
-    current = (current + 5) % 1440;
+  // Выбираем кратчайшее направление: путь «только вперёд» может пересечь
+  // уже занятое время — экран отклонит сдвиг (guard в shiftReminderTime).
+  const forward = Math.floor(delta / 60) + (delta % 60) / 5;
+  const backDelta = (1440 - delta) % 1440;
+  const backward = Math.floor(backDelta / 60) + (backDelta % 60) / 5;
+  if (forward <= backward) {
+    for (let i = 0; i < Math.floor(delta / 60); i += 1) {
+      lines.push(`- tapOn: "${fmt(current)}: час вперёд"`);
+      current = (current + 60) % 1440;
+    }
+    for (let i = 0; i < (delta % 60) / 5; i += 1) {
+      lines.push(`- tapOn: "${fmt(current)}: пять минут вперёд"`);
+      current = (current + 5) % 1440;
+    }
+  } else {
+    for (let i = 0; i < Math.floor(backDelta / 60); i += 1) {
+      lines.push(`- tapOn: "${fmt(current)}: час назад"`);
+      current = (current + 1380) % 1440;
+    }
+    for (let i = 0; i < (backDelta % 60) / 5; i += 1) {
+      lines.push(`- tapOn: "${fmt(current)}: пять минут назад"`);
+      current = (current + 1435) % 1440;
+    }
   }
 });
+
+// Сабфлоу без команд не парсится Maestro — добавляем безопасный no-op.
+if (lines.length === 2) {
+  lines.push('- assertVisible:', '    id: "reminders-editor-modal"');
+}
 
 console.log(lines.join('\n'));
