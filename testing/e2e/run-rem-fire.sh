@@ -1,11 +1,9 @@
 #!/bin/bash
 # Прогон REM-флоу срабатывания (REM-004/005/006/008).
 #
-# Предусловия:
-#   1. Симулятор «Pray Smoke iPhone 17 Pro» загружен, установлена Release-сборка.
-#   2. REM-001 прогнан: разрешение на уведомления выдано, тумблер включён,
-#      в правиле одна строка времени 09:00 (дефолт).
-#      Если первая строка в другом времени — передайте INIT0=HH:MM.
+# Самодостаточен: делает чистую установку и прогон REM-001 (разрешение на
+# уведомления), поэтому начальное состояние всегда известно — в правиле одна
+# строка 09:00, тумблер включён. Пропуск сброса: SKIP_RESET=1.
 #
 # Сценарий: ставит времена now+4мин и now+9мин (кратно 5), прогоняет флоу.
 # Срабатывание уведомлений фиксируется скриншотами устройства: баннер живёт в
@@ -17,6 +15,14 @@ export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
 EVIDENCE=/Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-reminders
 mkdir -p "$EVIDENCE"
 UDID=05F697B7-36CD-4050-9D57-FC9316AA093C
+APP="${APP:-$HOME/Library/Developer/Xcode/DerivedData/Lampada-gehztyibhocyfdajdtvhehendfdc/Build/Products/Release-iphonesimulator/Lampada.app}"
+
+if [ "${SKIP_RESET:-0}" != "1" ]; then
+  echo "== Чистая установка + REM-001 (разрешение)"
+  xcrun simctl uninstall "$UDID" twinkler
+  xcrun simctl install "$UDID" "$APP"
+  maestro test testing/e2e/ios-rem-001-permission-allow.yaml
+fi
 
 # now+DELAY минут, округление ВВЕРХ до кратности 5. Вывод "HH:MM".
 ceil_time() {
@@ -25,10 +31,8 @@ ceil_time() {
   local rounded=$(( (total + 4) / 5 * 5 % 1440 ))
   printf '%02d:%02d' $((rounded / 60)) $((rounded % 60))
 }
-# Текущее время первой строки: явный INIT0, файл состояния или дефолт 09:00.
-STATE=/tmp/rem-state.env
-[ -f "$STATE" ] && source "$STATE"
-ROW0="${INIT0:-${ROW0:-09:00}}"
+# Текущее время первой строки после сброса — всегда дефолт 09:00.
+ROW0="${INIT0:-09:00}"
 save_row0() { echo "ROW0=$1" > "$STATE"; }
 # Секунды от «сейчас» до "HH:MM + pad".
 sleep_until() {
@@ -49,7 +53,7 @@ save_row0 "$T1"
 sleep_until "$T1" 4
 shot REM-004-011-013-banner
 
-INIT1=$ROW0
+INIT1=$T1
 T1=$(ceil_time 4)
 T2=$(ceil_time 9)
 echo "== REM-005: цели $T1, $T2 (исходная строка $INIT1)"
