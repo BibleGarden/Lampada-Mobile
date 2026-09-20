@@ -9,7 +9,7 @@ duplicated here, otherwise the two pictures drift apart.
 | Path | Contents | Does it change |
 | --- | --- | --- |
 | [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
-| `e2e/` | Executable Maestro scenarios, 68 flows | Living |
+| `e2e/` | Executable Maestro scenarios, 91 flows | Living |
 | `reports/` | Dated results of runs | Immutable: a new run means a new file |
 | `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |
 
@@ -58,6 +58,31 @@ EXPO_PUBLIC_API_URL=http://localhost:9085 npx expo run:ios --configuration Relea
 SCRIPTURE_STUB_MODE=privacy npm run scripture:stub
 maestro test testing/e2e/ios-scripture-context-privacy.yaml
 # …then reinstall the normal Release build (re-run without the URL override).
+```
+
+The wider stub phase (update banners, journal transcription, delayed AI
+answers, scripture navigation, legacy favorites migration, the threshold
+error path) runs under one orchestrated session. The build additionally needs
+`EXPO_PUBLIC_FORCE_SESSION_ERROR=1` (the e2e hook in `lib/store.ts` fires
+only for topics starting with `STG`, so the rest of the build behaves
+normally), and the stub is switched between steps through
+`POST localhost:9085/__control`:
+
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:9085 \
+EXPO_PUBLIC_FORCE_SESSION_ERROR=1 \
+  npx expo run:ios --configuration Release --no-bundler
+npm run scripture:stub
+bash testing/e2e/run-stub-phase.sh
+# …then reinstall the normal Release build (re-run without the overrides).
+```
+
+Two more groups are driven by wrapper scripts because Maestro cannot send
+system signals or evaluate the current clock:
+
+```bash
+bash testing/e2e/run-rem-fire.sh       # REM-004/005/006/008: scheduled-notification firing
+bash testing/e2e/run-lock-biometrics.sh  # LOCK-009/010: simulator Face ID via BiometricKit signals
 ```
 
 ## What to do with the result
