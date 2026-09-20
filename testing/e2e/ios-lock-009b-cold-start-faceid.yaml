@@ -8,10 +8,11 @@ appId: twinkler
 # (прогон ios-lock-009a через run-lock-biometrics.sh).
 - launchApp:
     stopApp: true
-- waitForAnimationToEnd:
-    timeout: 5000
-- assertVisible:
-    id: "lock-screen"
+# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
 # Автозапрос Face ID выполнился один раз за появление экрана; скрипт шлёт
 # совпадение, пока флоу спит.
 - evalScript: "java.lang.Thread.sleep(20000)"

@@ -9,14 +9,15 @@ appId: twinkler
 # приложении сохранился.
 - launchApp:
     stopApp: true
-- waitForAnimationToEnd:
-    timeout: 5000
-- assertVisible:
-    id: "lock-screen"
+# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
 - assertVisible: "Введите пин-код"
 # Face ID больше не предлагается: ни кнопки входа через биометрию, ни
 # автозапроса (он недоступен без зарегистрированного образца).
-- assertNotVisible: "Войти через Face ID"
+- assertNotVisible: "Войти через (Face ID|Touch ID)"
 # Пин работает.
 - tapOn:
     id: "pin-key-1"

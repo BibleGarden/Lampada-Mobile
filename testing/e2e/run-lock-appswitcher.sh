@@ -16,7 +16,7 @@ EVIDENCE=/Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock
 mkdir -p "$EVIDENCE"
 UDID=05F697B7-36CD-4050-9D57-FC9316AA093C
 
-maestro test testing/e2e/ios-lock-008-appswitcher.yaml
+maestro test --device "$UDID" testing/e2e/ios-lock-008-appswitcher.yaml
 
 echo "== Открываем App Switcher через меню Simulator"
 if osascript -e 'tell application "System Events" to tell process "Simulator" to click menu item "App Switcher" of menu 1 of menu bar item "Device" of menu bar 1' 2>/dev/null; then
@@ -30,5 +30,5 @@ fi
 
 # Разбор защиты: приложение разблокировано пином после возврата, затем пин снят.
 xcrun simctl spawn "$UDID" notifyutil -p com.apple.springboard.home 2>/dev/null || true
-maestro test /tmp/disable-pin.yaml || true
+maestro test --device "$UDID" /tmp/disable-pin.yaml || true
 echo "== Готово"

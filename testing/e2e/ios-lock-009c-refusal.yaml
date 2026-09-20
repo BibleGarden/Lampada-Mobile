@@ -7,10 +7,11 @@ appId: twinkler
 # Предусловия: пин 123456, биометрия включена (прогон 009a/009b).
 - launchApp:
     stopApp: true
-- waitForAnimationToEnd:
-    timeout: 5000
-- assertVisible:
-    id: "lock-screen"
+# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
 # Скрипт шлёт несовпадение, пока флоу спит.
 - evalScript: "java.lang.Thread.sleep(20000)"
 # Экран блокировки остался; показан понятный текст про нераспознанное лицо.
