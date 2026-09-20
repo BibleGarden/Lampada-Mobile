@@ -23,6 +23,8 @@ tags:
     file: /tmp/rem-set-time.yaml
 - tapOn:
     id: "reminders-editor-done"
+- waitForAnimationToEnd:
+    timeout: 5000
 # Строка расписания показывает оба времени (значения через -e REM_T1/REM_T2).
 - assertVisible: ".*${REM_T1}.*"
 - assertVisible: ".*${REM_T2}.*"

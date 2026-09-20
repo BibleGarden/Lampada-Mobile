@@ -32,6 +32,7 @@ ceil_time() {
   printf '%02d:%02d' $((rounded / 60)) $((rounded % 60))
 }
 # Текущее время первой строки после сброса — всегда дефолт 09:00.
+STATE=/tmp/rem-state.env
 ROW0="${INIT0:-09:00}"
 save_row0() { echo "ROW0=$1" > "$STATE"; }
 # Секунды от «сейчас» до "HH:MM + pad".

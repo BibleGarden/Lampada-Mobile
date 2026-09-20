@@ -73,8 +73,8 @@ appId: twinkler
     commands:
       - tapOn:
           id: "privacy-consent-audio_transcription-allow"
-# Лоадинг, затем текст под аудиоплеером.
-- assertVisible: "Расшифровываю…"
+# Stub отвечает мгновенно — состояние «Расшифровываю…» недетерминировано
+# для ассерта; ждём сразу готовый текст.
 - extendedWaitUntil:
     visible: "Стабильная расшифровка лампады номер семь"
     timeout: 30000

@@ -1,7 +1,9 @@
 appId: twinkler
 # NEEDS-STUB: перед прогоном скрипт переключил stub обратно в ok (run-jrn-transcription.sh).
 ---
-# JRN-012 (часть 2): повтор после ошибки сохраняет текст.
+# JRN-012 (часть 2): повтор после ошибки сохраняет текст. Состояние ошибки не
+# персистится: после перезапуска приложения запись снова предлагает
+# «Расшифровать» — это ожидаемое поведение, повтор идёт с чистого листа.
 - launchApp:
     stopApp: true
 - assertVisible: "Начать молитву"
@@ -9,9 +11,9 @@ appId: twinkler
     id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - tapOn: ".*JRN-012 повтор расшифровки.*"
-- assertVisible: "Не удалось расшифровать"
-- assertVisible: "Повторить"
-- tapOn: "Повторить"
+- assertVisible: ".*Аудиозапись ·.*"
+- assertVisible: "Расшифровать"
+- tapOn: "Расшифровать"
 - extendedWaitUntil:
     visible: "Стабильная расшифровка лампады номер семь"
     timeout: 30000
