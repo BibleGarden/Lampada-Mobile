@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - critical
 ---
 - launchApp:
     stopApp: true

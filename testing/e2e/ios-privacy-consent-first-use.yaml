@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - critical
 ---
 - launchApp:
     stopApp: true
@@ -11,15 +13,20 @@ appId: twinkler
 - tapOn: "Далее"
 - assertVisible:
     id: "privacy-consent-core_prayer_ai"
-- assertVisible: "Тема молитвы будет отправлена.*управляемом компанией сервере.*"
+- assertVisible: "Тема молитвы будет отправлена.*сервер приложения.*"
 - assertVisible:
     id: "privacy-consent-core_prayer_ai-deny"
 - assertVisible:
     id: "privacy-consent-core_prayer_ai-allow"
 - tapOn:
     id: "privacy-consent-core_prayer_ai-deny"
-- assertVisible: "Прежде чем войти"
+# После отказа приложение идёт на пороговый экран «Перед началом»
+# (screens.threshold.before/title); отдельного экрана «Прежде чем войти» больше нет.
+- assertVisible: "Перед началом"
 - openLink: "lampada://settings"
+# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+- tapOn:
+    id: "privacy-settings-button"
 - scrollUntilVisible:
     element:
       id: "privacy-setting-core_prayer_ai"

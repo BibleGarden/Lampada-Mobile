@@ -1,16 +1,23 @@
 appId: twinkler
+tags:
+  - critical
 ---
 # Run stub with SCRIPTURE_STUB_MODE=privacy. It returns 422 if any reply leaks.
 - launchApp:
     stopApp: true
     clearState: true
 - openLink: "lampada://settings"
+# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+- tapOn:
+    id: "privacy-settings-button"
 - scrollUntilVisible:
     element:
       id: "privacy-setting-answer_context-denied"
     direction: DOWN
 - tapOn:
     id: "privacy-setting-answer_context-denied"
+- tapOn:
+    id: "privacy-sheet-done"
 - openLink: "lampada://"
 - tapOn: "Начать молитву"
 - tapOn:
@@ -32,8 +39,8 @@ appId: twinkler
     duration: 1700
 - assertVisible: "МОЛИТВА"
 - tapOn:
-    point: "84%,70%"
+    id: "dock-scripture-tab"
 - extendedWaitUntil:
-    visible: "Псалом 22:1–6"
+    visible: ".*22:1.*6.*"
     timeout: 10000
 - assertNotVisible: "Сейчас не удалось подобрать отрывок."

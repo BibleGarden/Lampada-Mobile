@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # Regression: timer completion must not call pause() after AudioPlaylist release.
 - launchApp:
@@ -27,15 +29,12 @@ appId: twinkler
 - assertVisible:
     id: "music-playing"
 - tapOn:
-    point: "50%,29%"
+    id: "session-timer-button"
 - assertVisible: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
 - tapOn: "−1"
 - tapOn: "−1"
 - extendedWaitUntil:
     visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-    timeout: 10000
+    timeout: 360000
 - assertNotVisible:
     id: "music-playing"

@@ -1,10 +1,18 @@
 appId: twinkler
+tags:
+  - rare
 ---
 - launchApp
 - tapOn:
     id: "settings-button"
+# Дефолт языка теперь следует локали устройства (ru) — для английских подписей
+# переводов (BSB/WEBUS) пикер переводится на en.
 - tapOn:
-    id: "scripture-translation-picker"
+    id: "scripture-language-picker"
+- tapOn:
+    id: "scripture-language-en"
+# Новый UX (app/settings.tsx:796-820): выбор языка сам переключает шторку на
+# шаг перевода — пикер отдельно не открываем, подписи проверяем прямо в шторке.
 - assertVisible: ".*BSB.*"
 - assertVisible: ".*Berean Standard Bible.*"
 - assertVisible: ".*WEBUS.*"

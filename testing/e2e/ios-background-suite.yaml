@@ -1,0 +1,14 @@
+appId: twinkler
+---
+# Background-suite: пары music/music-resume и timer-setup/timer-resume имеют
+# межфлоу-зависимости (приложение уходит в фон и не должно перезапускаться
+# между ними) и исключены из теговых прогонов.
+# Запускать целиком: maestro test testing/e2e/ios-background-suite.yaml
+- runFlow:
+    file: ios-background-music.yaml
+- runFlow:
+    file: ios-background-music-resume.yaml
+- runFlow:
+    file: ios-background-timer-setup.yaml
+- runFlow:
+    file: ios-background-timer-resume.yaml

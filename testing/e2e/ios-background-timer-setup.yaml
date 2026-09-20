@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - rare
 ---
 # Put a five-second finite prayer in background before it reaches zero.
 - launchApp:

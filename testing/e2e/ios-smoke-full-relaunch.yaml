@@ -1,11 +1,13 @@
 appId: twinkler
+tags:
+  - critical
 ---
 - launchApp:
     stopApp: true
     clearState: false
 - assertVisible: "Начать молитву"
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: ".*Финальный smoke.*"
 - tapOn: ".*Финальный smoke.*"

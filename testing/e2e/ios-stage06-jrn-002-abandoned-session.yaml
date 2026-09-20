@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # JRN-002: a prayer abandoned with no answers and no takeaway never reaches the journal.
 - launchApp:
@@ -31,7 +33,7 @@ appId: twinkler
     clearState: false
 - assertVisible: "Начать молитву"
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: "Здесь появятся твои молитвы"
 - assertNotVisible: "JRN-002 брошенная сессия"

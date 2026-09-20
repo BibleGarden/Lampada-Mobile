@@ -1,0 +1,131 @@
+appId: twinkler
+---
+# Фрагмент для ios-jrn-suite.yaml, самостоятельно не запускать.
+# END-003/004 для jrn-suite: вариант ios-stage06-end-003-004-idempotency.yaml без
+# launchApp/clearState — suite гарантирует чистое состояние (jrn-001). Первая
+# сессия дополнительно оставляет ответ со словами «Кириллица про доверие» и
+# «надежда», голосовую запись (jrn-007-delete ждёт «Аудиозапись» в деталях) и
+# takeaway со словами «тревожит» и «Кириллица» — по ним потом ищет
+# ios-stage06-jrn-003-004-search.
+# Перед стартом — relaunch без clearState: предыдущий флоу suite может закончить
+# на любом экране, а фрагмент стартует с Home.
+- launchApp:
+    stopApp: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "END-003 double finish"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- waitForAnimationToEnd:
+    timeout: 9000
+
+# Ответ со словами «Кириллица про доверие» и «надежда» — по «надежда» ищет
+# jrn-003/004-search, текст ждёт jrn-007-delete в деталях END-003.
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-input"
+- inputText: "Ответ Кириллица про доверие и надежда"
+- tapOn:
+    id: "answer-question"
+# Голосовая запись к ответу — jrn-007-delete ждёт «Аудиозапись» в деталях END-003.
+- tapOn:
+    id: "answer-record-button"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn: "Закрыть записи"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertVisible: "Изменить"
+# Шторка ответа после сохранения может быть уже закрыта (consent-диалог её
+# гасит) или нет — первый тап либо уводит сразу на «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ»,
+# либо только закрывает шторку; во втором случае «Ответить» виден и жмём ещё раз.
+- tapOn:
+    point: "10%,11%"
+- runFlow:
+    when:
+      visible: "Ответить"
+    commands:
+      - tapOn:
+          point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+
+# Takeaway со словами «тревожит» и «Кириллица» — по ним ищет jrn-003/004-search.
+- tapOn: "Одна-две строки…"
+- inputText: "END-003 вывод: тревожит разговор; Кириллица тест"
+# Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
+# (app/reflect.tsx:144) — гасим клавиатуру через Enter (как в smoke-full).
+- pressKey: Enter
+- assertVisible: "Сохранить и завершить"
+- tapOn: "Сохранить и завершить"
+- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "journal-button"
+
+# Вторая сессия — как в оригинале (ios-stage06-end-003-004-idempotency).
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "END-004 second prayer"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    point: "10%,11%"
+- tapOn: "Завершить"
+- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "journal-button"
+- tapOn:
+    id: "journal-button"
+- assertVisible: ".*END-003 double finish.*"
+- assertVisible: ".*END-004 second prayer.*"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-003-004-two-prayers-one-day

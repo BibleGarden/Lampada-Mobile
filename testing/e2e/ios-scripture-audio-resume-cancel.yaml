@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - rare
 ---
 # SCR-015: a cached resume cannot publish playing state after the Scripture
 # context is disabled or replaced.

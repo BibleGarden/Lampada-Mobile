@@ -1,0 +1,18 @@
+appId: twinkler
+---
+# LOCK-suite: lock-флоу имеют межфлоу-зависимости (002 включает пин 123456,
+# 003/004/005/007 требуют включённый пин) и исключены из теговых прогонов.
+# Запускать целиком: maestro test testing/e2e/ios-lock-suite.yaml
+# Порядок важен: 001 → 002 → 003 → 004 → 005 → 007.
+- runFlow:
+    file: ios-lock-001-disabled-by-default.yaml
+- runFlow:
+    file: ios-lock-002-enable-pin.yaml
+- runFlow:
+    file: ios-lock-003-wrong-and-correct-pin.yaml
+- runFlow:
+    file: ios-lock-004-change-pin.yaml
+- runFlow:
+    file: ios-lock-005-disable-pin.yaml
+- runFlow:
+    file: ios-lock-007-background-timeout.yaml

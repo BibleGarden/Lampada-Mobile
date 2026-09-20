@@ -352,7 +352,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             </View>
           )}
           <View style={styles.actionsRow}>
-            <SquareBtn disabled={!curScripture || s.scrIndex === 0} onPress={tap(s.prevScripture)} dim>
+            <SquareBtn disabled={!curScripture || s.scrIndex === 0} onPress={tap(s.prevScripture)} dim testID="dock-scripture-prev">
               <ChevronLeft />
             </SquareBtn>
             <Pressable
@@ -370,6 +370,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             <SquareBtn
               disabled={!curScripture || s.scrStatus === 'loading' || s.scrStatus === 'retrying'}
               onPress={tap(() => void s.nextScripture())}
+              testID="dock-scripture-next"
             >
               <ChevronRight />
             </SquareBtn>
@@ -394,15 +395,18 @@ function SquareBtn({
   onPress,
   disabled,
   dim,
+  testID,
 }: {
   children: React.ReactNode;
   onPress: () => void;
   disabled?: boolean;
   dim?: boolean;
+  testID?: string;
 }) {
   const styles = useStyles(stylesFactory);
   return (
     <Pressable
+      testID={testID}
       onPress={disabled ? undefined : onPress}
       style={({ pressed }) => [
         styles.squareBtn,

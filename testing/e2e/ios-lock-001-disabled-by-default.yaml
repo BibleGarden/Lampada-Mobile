@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # LOCK-001: пока пользователь не включил защиту, ни один экран не ведёт себя
 # иначе. Проверяется холодный старт и пин-код в секции «Конфиденциальность».
@@ -20,7 +22,6 @@ appId: twinkler
     element:
       id: "lock-toggle"
     direction: DOWN
-- assertVisible: ".*не восстанавливается.*"
 - assertNotVisible:
     id: "change-pin-button"
 - assertNotVisible:

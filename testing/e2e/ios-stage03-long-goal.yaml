@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - rare
 ---
 - launchApp:
     stopApp: true
@@ -20,7 +22,7 @@ appId: twinkler
     commands:
       - tapOn:
           id: "privacy-consent-core_prayer_ai-allow"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ВОЙТИ"
+- assertVisible: "ПЕРЕД НАЧАЛОМ"
 - assertVisible: ".*SETUP-004 very long prayer goal.*"
 - swipe:
     start: "50%,78%"

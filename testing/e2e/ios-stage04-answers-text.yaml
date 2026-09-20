@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - critical
 ---
 # ANS-001: a saved text answer is restored when the same question is reopened.
 - launchApp:

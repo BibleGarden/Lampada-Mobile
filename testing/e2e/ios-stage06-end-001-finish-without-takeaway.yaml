@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - critical
 ---
 # END-001: finishing without a takeaway completes the session and returns directly Home.
 - launchApp:
@@ -34,15 +36,17 @@ appId: twinkler
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input
 - assertVisible: "Завершить"
 - tapOn: "Завершить"
-- assertVisible: "Огонёк горит"
+# Баннер prayer-saved-notice автоскрывается через 4 с (app/index.tsx) —
+# проверять сразу, до остальных assert'ов Home.
 - assertVisible:
     id: "prayer-saved-notice"
+- assertVisible: "Огонёк горит"
 - assertVisible:
     id: "journal-button"
 - assertVisible: "Огонёк горит"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: ".*END-001 без вывода.*"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-journal

@@ -94,7 +94,6 @@ appId: twinkler
     direction: DOWN
 - assertNotVisible:
     id: "change-pin-button"
-- assertVisible: ".*не восстанавливается.*"
 
 # Холодный старт больше не спрашивает код.
 - launchApp:

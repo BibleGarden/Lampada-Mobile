@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # ANS-005/006/008/028: player controls, persistence after reopening, deletion,
 # and ownership by different questions. Audio content is verified separately on

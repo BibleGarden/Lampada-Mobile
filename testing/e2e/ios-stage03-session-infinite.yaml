@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 - launchApp:
     stopApp: true
@@ -17,7 +19,7 @@ appId: twinkler
     commands:
       - tapOn:
           id: "privacy-consent-core_prayer_ai-allow"
-- assertVisible: ".*столько времени, сколько нужно.*"
+- assertVisible: ".*Без таймера и спешки.*"
 - swipe:
     start: "50%,78%"
     end: "50%,78%"
