@@ -27,15 +27,5 @@ tags:
 - assertVisible: ".*${REM_T1}.*"
 - assertVisible: ".*${REM_T2}.*"
 - openLink: "lampada://"
-# Первое время.
-- extendedWaitUntil:
-    visible: ".*(тишине с Богом|время помолиться|Он ждёт|минута молитвы|сказать Богу|Зажги лампаду|Помолимся|Побудь с Ним|станет легче|главному разговору|поблагодарить|Не спеши мимо).*"
-    timeout: 300000
-- assertVisible: "Lampada"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-reminders/REM-005-first
-# Второе время: баннер приходит повторно.
-- extendedWaitUntil:
-    visible: ".*(тишине с Богом|время помолиться|Он ждёт|минута молитвы|сказать Богу|Зажги лампаду|Помолимся|Побудь с Ним|станет легче|главному разговору|поблагодарить|Не спеши мимо).*"
-    timeout: 420000
-- assertVisible: "Lampada"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-reminders/REM-005-second
+- assertVisible: "Начать молитву"
+# Срабатывания на оба времени фиксирует run-rem-fire.sh скриншотами.
