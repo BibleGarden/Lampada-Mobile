@@ -36,7 +36,7 @@ appId: twinkler
 - tapOn:
     id: "pin-key-6"
 - tapOn:
-    id: "pin-prompt-confirm"
+    id: "pin-key-confirm"
 - assertVisible: "Повторите пин-код"
 - tapOn:
     id: "pin-key-1"
@@ -51,7 +51,7 @@ appId: twinkler
 - tapOn:
     id: "pin-key-6"
 - tapOn:
-    id: "pin-prompt-confirm"
+    id: "pin-key-confirm"
 - assertVisible:
     id: "change-pin-button"
 

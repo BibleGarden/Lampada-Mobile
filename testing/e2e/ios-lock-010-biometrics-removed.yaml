@@ -59,7 +59,7 @@ appId: twinkler
 - tapOn:
     id: "pin-key-6"
 - tapOn:
-    id: "pin-prompt-confirm"
+    id: "pin-key-confirm"
 - assertNotVisible:
     id: "change-pin-button"
 - assertNotVisible:
