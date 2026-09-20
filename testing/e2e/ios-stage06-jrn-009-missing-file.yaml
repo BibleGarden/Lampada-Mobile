@@ -11,7 +11,7 @@ appId: twinkler
       - tapOn:
           point: "10%,8%"
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: ".*JRN-009 missing file.*"
 - tapOn: ".*JRN-009 missing file.*"
 - assertVisible: ".*Аудиозапись.*"

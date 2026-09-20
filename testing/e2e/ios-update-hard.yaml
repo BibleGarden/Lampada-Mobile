@@ -1,4 +1,5 @@
 appId: twinkler
+# NEEDS-ENV: требует stub /api/version-check (update_type=soft|hard) — задача 86cbj95j4
 ---
 - tapOn:
     text: Open

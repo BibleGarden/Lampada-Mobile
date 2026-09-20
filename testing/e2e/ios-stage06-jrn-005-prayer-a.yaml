@@ -1,9 +1,12 @@
 appId: twinkler
+tags:
+  - main
 ---
 # JRN-005 (data setup A): a finished prayer that has both a text answer and a real voice recording.
+# Без clearState: флоу входит в ios-jrn-suite.yaml и должен накапливать данные
+# (в теговых прогонах ассертит только собственную запись — clearState не нужен).
 - launchApp:
     stopApp: true
-    clearState: true
 - tapOn: "Начать молитву"
 - tapOn:
     point: "50%,37%"
@@ -49,7 +52,10 @@ appId: twinkler
 - waitForAnimationToEnd:
     timeout: 4000
 - tapOn:
-    point: "50%,92%"
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn: "Закрыть записи"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-saved-a
 - waitForAnimationToEnd:
     timeout: 3000
@@ -71,7 +77,7 @@ appId: twinkler
 - assertVisible:
     id: "journal-button"
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: ".*Тревога перед разговором с отцом.*"
 - tapOn: ".*Тревога перед разговором с отцом.*"

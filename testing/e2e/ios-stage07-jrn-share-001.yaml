@@ -1,10 +1,12 @@
 appId: twinkler
+tags:
+  - rare
 ---
 # JRN-014: share a prayer from the journal as plain text through the system share sheet.
-# Runs on the data left by the stage 06 journal flows, so it does not clear the state.
+# Самодостаточен: создаёт запись дневника сам (clearState: true), порядок прогона не важен.
 - launchApp:
     stopApp: true
-    clearState: false
+    clearState: true
 - runFlow:
     when:
       visible: "ДНЕВНИК"
@@ -12,12 +14,65 @@ appId: twinkler
       - tapOn:
           point: "10%,8%"
 - assertVisible: "Начать молитву"
+# --- сетап: молитва с одним сохранённым ответом ---
+- tapOn: "Начать молитву"
 - tapOn:
-    point: "76%,12%"
+    point: "50%,37%"
+- inputText: "JRN-014 share"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+# накопить elapsed_sec > 0, иначе сессия не попадёт в дневник (lib/db.ts:223)
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-input"
+- inputText: "JRN-014 answer"
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertVisible: "Изменить"
+# Шторка ответа после сохранения может быть уже закрыта (consent-диалог её
+# гасит) или нет — первый тап либо уводит сразу на «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ»,
+# либо только закрывает шторку; во втором случае «Ответить» виден и жмём ещё раз.
+- tapOn:
+    point: "10%,11%"
+- runFlow:
+    when:
+      visible: "Ответить"
+    commands:
+      - tapOn:
+          point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn: "Завершить"
+# Баннер prayer-saved-notice живёт 4 с и здесь может скрыться до assert —
+# для этого флоу достаточно сигнала «завершение сразу на Home» (ADR-0028).
+- assertVisible: "Огонёк горит"
+# --- конец сетапа ---
+- tapOn:
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
-# expand the first prayer in the list
-- tapOn:
-    point: "50%,30%"
+# expand the created prayer in the list
+- tapOn: ".*JRN-014 share.*"
 - assertVisible:
     id: "journal-share"
 - assertVisible:
@@ -28,12 +83,11 @@ appId: twinkler
     timeout: 4000
 # the system share sheet is outside the app, so match its own labels
 - assertVisible: ".*(Скопировать|Copy|Ещё|More|Отменить|Cancel).*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-06-journal-share/JRN-014-share-sheet
-- runFlow:
-    when:
-      visible: ".*(Отменить|Cancel).*"
-    commands:
-      - tapOn: ".*(Отменить|Cancel).*"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-journal-share/JRN-014-share-sheet
+# В шите iOS 26 нет кнопки «Отменить» — закрывается тапом по затемнённой
+# области над шитом.
+- tapOn:
+    point: "50%,12%"
 - assertVisible: "ДНЕВНИК"
 - assertVisible:
     id: "journal-share"

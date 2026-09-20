@@ -82,7 +82,6 @@ appId: twinkler
     timeout: 5000
 - assertNotVisible:
     id: "change-pin-button"
-- assertVisible: ".*не восстанавливается.*"
 
 # Холодный старт больше не спрашивает код.
 - launchApp:

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # MUS-001: local prayer music has an explicit, reversible session control.
 - launchApp:

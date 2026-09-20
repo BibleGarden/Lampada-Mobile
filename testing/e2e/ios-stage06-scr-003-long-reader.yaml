@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - rare
 ---
 # SCR-003: long scripture opens in a scrollable reader without losing controls.
 - launchApp:
@@ -55,20 +57,31 @@ appId: twinkler
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
+# Режим цитаты открывается табом дока (CompanionDock.tsx:144), а не точкой:
+# на старом месте координаты теперь кнопка жалобы на вопрос.
 - tapOn:
-    point: "84%,70%"
+    id: "dock-scripture-tab"
+- assertVisible: "В избранное"
 - tapOn: "В избранное"
+# После добавления надпись меняется на «В избранном» (CompanionDock.tsx:368) —
+# ждём её, затем листаем к следующему отрывку, где состояние сброшено.
+- assertVisible: "В избранном"
 - tapOn:
-    point: "82%,86%"
+    id: "dock-scripture-next"
 - tapOn: "В избранное"
+- assertVisible: "В избранном"
 - tapOn:
-    point: "82%,86%"
+    id: "dock-scripture-next"
 - tapOn: "В избранное"
+- assertVisible: "В избранном"
 - tapOn:
-    point: "82%,86%"
-- assertVisible: ".*Луки.*15:11.*24.*"
-- assertVisible: "Читать целиком"
-- tapOn: "Читать целиком"
+    id: "dock-scripture-next"
+# Конкретный отрывок не фиксируем: список цитат зависит от ответа сервера
+# (в 08-22 флоу жил на старых фикстурах). Проверяем, что 4-й отрывок загружен.
+- assertVisible:
+    id: "scripture-audio-button"
+- assertVisible: "Читать отрывок целиком"
+- tapOn: "Читать отрывок целиком"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-003-long-reader-top
 - swipe:
     start: "50%,78%"

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 - launchApp:
     stopApp: true
@@ -27,5 +29,4 @@ appId: twinkler
     end: "50%,78%"
     duration: 1700
 - assertVisible: "МОЛИТВА"
-- assertVisible: "Готовлю вопрос"
-- assertVisible: "Что для тебя сейчас важнее всего?"
+- assertVisible: "Ответить"

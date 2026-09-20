@@ -1,13 +1,16 @@
 appId: twinkler
+tags:
+  - main
 ---
 - launchApp:
     stopApp: true
     clearState: true
 - openLink: "lampada://settings"
-- scrollUntilVisible:
-    element:
-      id: "privacy-setting-core_prayer_ai"
-    direction: DOWN
+# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+- tapOn:
+    id: "privacy-settings-button"
+- assertVisible:
+    id: "privacy-sheet"
 - assertVisible:
     id: "privacy-setting-core_prayer_ai"
 - assertVisible:
@@ -16,26 +19,18 @@ appId: twinkler
     id: "privacy-setting-core_prayer_ai-allowed"
 - tapOn:
     id: "privacy-setting-answer_context-denied"
-- scrollUntilVisible:
-    element:
-      id: "privacy-setting-audio_transcription"
-    direction: DOWN
 - tapOn:
     id: "privacy-setting-audio_transcription-allowed"
+- tapOn:
+    id: "privacy-sheet-done"
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
-- scrollUntilVisible:
-    element:
-      id: "privacy-setting-core_prayer_ai-allowed"
-    direction: DOWN
+- tapOn:
+    id: "privacy-settings-button"
 - assertVisible:
     id: "privacy-setting-core_prayer_ai-allowed"
 - assertVisible:
     id: "privacy-setting-answer_context-denied"
-- scrollUntilVisible:
-    element:
-      id: "privacy-setting-audio_transcription-allowed"
-    direction: DOWN
 - assertVisible:
     id: "privacy-setting-audio_transcription-allowed"

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # ANS-003: a downward swipe must not discard a non-empty draft. Discarding it
 # remains possible only through the explicit two-step "Отмена" confirmation.
@@ -36,7 +38,7 @@ appId: twinkler
     end: "50%,92%"
     duration: 500
 - assertVisible: ".*ANS-003.*"
-- tapOn: "Отмена"
-- assertVisible: "Точно закрыть?"
-- tapOn: "Точно закрыть?"
+# Окно «Точно закрыть?» живёт 3 с (AnswerSheet.tsx:849) — меньше задержки
+# Maestro между tapOn и assert. doubleTapOn шлёт оба касания одной командой.
+- doubleTapOn: "Отмена"
 - assertVisible: "МОЛИТВА"

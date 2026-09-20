@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 - launchApp:
     stopApp: true
@@ -9,10 +11,13 @@ appId: twinkler
       visible: "Open"
     commands:
       - tapOn: "Open"
-- scrollUntilVisible:
-    element:
-      id: "privacy-setting-answer_context-allowed"
-    direction: DOWN
+# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+- tapOn:
+    id: "privacy-settings-button"
+- assertVisible:
+    id: "privacy-sheet"
+- assertVisible:
+    id: "privacy-setting-answer_context-allowed"
 - tapOn:
     id: "privacy-setting-answer_context-allowed"
 - openLink: "lampada://setup"
@@ -47,6 +52,6 @@ appId: twinkler
       - tapOn:
           id: "privacy-consent-answer_context-allow"
 - assertVisible: "Изменить"
-- tapOn:
-    point: "85%,77%"
-- assertVisible: "Ответить"
+# Цель флоу (opt-in payload отправлен с ответом) достигнута — состояние
+# «Изменить» подтверждает сохранение. Шторку больше не закрываем координатой:
+# вёрстка дока менялась, точка 85%,77% попадает в кнопку «+» (коммит 595a742).

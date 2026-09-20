@@ -1,4 +1,7 @@
 appId: twinkler
+# NEEDS-STUB: избранное проверяется между разными молитвами — отрывки второй
+# молитвы отличаются от первой (живой сервер), ассерт «В избранном» недостижим.
+# Требуется переработка под stub-фикстуры (86cbj95j4). В теговые прогоны не входит.
 ---
 # SCR-002: favorite state must be restored from SQLite after app relaunch.
 - launchApp:
@@ -24,8 +27,11 @@ appId: twinkler
     duration: 1700
 - assertVisible: "МОЛИТВА"
 - tapOn:
-    point: "84%,70%"
-- assertVisible: "Колоссянам 3:23"
+    id: "dock-scripture-tab"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 20000
 - tapOn: "В избранное"
 - assertVisible: "В избранном"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-002-before-relaunch
@@ -53,8 +59,11 @@ appId: twinkler
     duration: 1700
 - assertVisible: "МОЛИТВА"
 - tapOn:
-    point: "84%,70%"
-- assertVisible: "Колоссянам 3:23"
+    id: "dock-scripture-tab"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 20000
 - assertVisible: "В избранном"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-002-after-relaunch
 - tapOn: "В избранном"
@@ -83,7 +92,10 @@ appId: twinkler
     duration: 1700
 - assertVisible: "МОЛИТВА"
 - tapOn:
-    point: "84%,70%"
-- assertVisible: "Колоссянам 3:23"
+    id: "dock-scripture-tab"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 20000
 - assertVisible: "В избранное"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-002-removed-after-relaunch

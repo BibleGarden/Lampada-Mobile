@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # Run stub with SCRIPTURE_STUB_MODE=fallback: 503 -> 429 Retry-After:1 -> success.
 - launchApp:
@@ -24,9 +26,9 @@ appId: twinkler
     duration: 1700
 - assertVisible: "МОЛИТВА"
 - tapOn:
-    point: "84%,70%"
+    id: "dock-scripture-tab"
 - extendedWaitUntil:
-    visible: "Псалом 22:1–6"
+    visible: ".*22:1.*6.*"
     timeout: 20000
 - assertNotVisible: "temporarily unavailable"
 - assertNotVisible: "Scripture selection request limit exceeded"

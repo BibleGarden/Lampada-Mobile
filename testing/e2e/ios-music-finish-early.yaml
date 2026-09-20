@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # Regression: explicit session finish must stop music before playlist release.
 - launchApp:

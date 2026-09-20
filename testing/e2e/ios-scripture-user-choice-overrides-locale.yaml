@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 - launchApp:
     clearState: true
@@ -12,8 +14,6 @@ appId: twinkler
     id: "scripture-translation-1"
 - tapOn:
     id: "scripture-voice-1"
-- tapOn:
-    id: "scripture-settings-save"
 - stopApp
 - launchApp
 - tapOn:

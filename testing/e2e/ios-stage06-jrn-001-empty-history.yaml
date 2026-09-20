@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - critical
 ---
 # JRN-001: an empty journal shows a clear empty state and no error.
 - launchApp:
@@ -6,7 +8,7 @@ appId: twinkler
     clearState: true
 - assertVisible: "Начать молитву"
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: "Здесь появятся твои молитвы"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-history

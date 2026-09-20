@@ -1,9 +1,13 @@
 appId: twinkler
+tags:
+  - main
 ---
+# Дефолт теперь следует локали устройства (lib/scripturePreferences.ts),
+# английский остаётся только фолбэком.
 - launchApp:
     clearState: true
 - tapOn:
     id: "settings-button"
-- assertVisible: ".*English.*"
-- assertVisible: ".*BSB.*"
-- assertVisible: ".*Bob Souer.*"
+- assertVisible: ".*Русский.*"
+- assertVisible: ".*SYNO.*"
+- assertVisible: ".*Александр Бондаренко.*"

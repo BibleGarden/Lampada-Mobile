@@ -1,0 +1,9 @@
+appId: twinkler
+---
+# LOCK-006-suite: wipe требует состояния, которое готовит prepare (пин 4321
+# + запись дневника). Порядок в теговом прогоне не гарантирован, поэтому
+# отдельный suite. Запускать целиком: maestro test testing/e2e/ios-lock-006-suite.yaml
+- runFlow:
+    file: ios-lock-006-forgot-pin-prepare.yaml
+- runFlow:
+    file: ios-lock-006-forgot-pin-wipe.yaml

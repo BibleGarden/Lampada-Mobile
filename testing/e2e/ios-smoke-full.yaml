@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - critical
 ---
 # Клавиатура закрывается кнопкой «Готово» (returnKeyType="done" у поля цели), а
 # не `hideKeyboard`: на iOS 26.5 / Maestro 2.6.1 тот закрывает свайпом вниз и
@@ -70,11 +72,12 @@ appId: twinkler
 - pressKey: Enter
 - tapOn: "Сохранить и завершить"
 - assertVisible: "Огонёк горит"
-- assertVisible: "«Финальный вывод»"
+# Цитата takeaway на Home больше не показывается (ADR-0028: завершение сразу
+# на Home); её наличие проверяется ниже в дневнике и в smoke-full-relaunch.
 - assertVisible:
     id: "journal-button"
 - tapOn:
-    point: "76%,12%"
+    id: "journal-button"
 - assertVisible: "ДНЕВНИК"
 - assertVisible: ".*Финальный smoke.*"
 - tapOn: ".*Финальный smoke.*"

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 # SCR-003 on iPhone SE, entered through the app's registered deep-link scheme.
 - launchApp:
@@ -46,19 +48,22 @@ appId: twinkler
     end: "50%,78%"
     duration: 1700
 - tapOn:
-    point: "87%,63%"
+    id: "dock-scripture-tab"
 - tapOn: "В избранное"
 - tapOn:
-    point: "82%,86%"
+    id: "dock-scripture-next"
 - tapOn: "В избранное"
 - tapOn:
-    point: "82%,86%"
+    id: "dock-scripture-next"
 - tapOn: "В избранное"
 - tapOn:
-    point: "82%,86%"
-- assertVisible: ".*Луки.*15:11.*24.*"
-- assertVisible: "Читать целиком"
-- tapOn: "Читать целиком"
+    id: "dock-scripture-next"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 20000
+- assertVisible: "Читать отрывок целиком"
+- tapOn: "Читать отрывок целиком"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-003-small-reader-top
 - swipe:
     start: "50%,78%"

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - main
 ---
 - launchApp:
     stopApp: true
@@ -39,7 +41,7 @@ appId: twinkler
     id: "recording-transcribe-0"
 - assertVisible:
     id: "privacy-consent-audio_transcription"
-- assertVisible: "Выбранный аудиофайл будет отправлен.*управляемом компанией сервере.*"
+- assertVisible: "Выбранный аудиофайл будет отправлен.*сервер приложения.*"
 - assertVisible:
     id: "privacy-consent-audio_transcription-deny"
 - assertVisible:
