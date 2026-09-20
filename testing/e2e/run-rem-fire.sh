@@ -25,6 +25,11 @@ ceil_time() {
   local rounded=$(( (total + 4) / 5 * 5 % 1440 ))
   printf '%02d:%02d' $((rounded / 60)) $((rounded % 60))
 }
+# Текущее время первой строки: явный INIT0, файл состояния или дефолт 09:00.
+STATE=/tmp/rem-state.env
+[ -f "$STATE" ] && source "$STATE"
+ROW0="${INIT0:-${ROW0:-09:00}}"
+save_row0() { echo "ROW0=$1" > "$STATE"; }
 # Секунды от «сейчас» до "HH:MM + pad".
 sleep_until() {
   local t=$1 pad=$2
@@ -37,18 +42,20 @@ shot() { xcrun simctl io "$UDID" screenshot "$EVIDENCE/$1.png" > /dev/null 2>&1;
 
 T1=$(ceil_time 4)
 T2=$(ceil_time 9)
-echo "== REM-004/011/013: цель $T1"
-node testing/e2e/gen-rem-set-time.mjs --init "${INIT0:-09:00}" "$T1" > /tmp/rem-set-time.yaml
+echo "== REM-004/011/013: цель $T1 (строка сейчас $ROW0)"
+node testing/e2e/gen-rem-set-time.mjs --init "$ROW0" "$T1" > /tmp/rem-set-time.yaml
 maestro test testing/e2e/ios-rem-fire.yaml
+save_row0 "$T1"
 sleep_until "$T1" 4
 shot REM-004-011-013-banner
 
-INIT1=$T1
+INIT1=$ROW0
 T1=$(ceil_time 4)
 T2=$(ceil_time 9)
 echo "== REM-005: цели $T1, $T2 (исходная строка $INIT1)"
 node testing/e2e/gen-rem-set-time.mjs --init "$INIT1" "$T1" "$T2" > /tmp/rem-set-time.yaml
 maestro test -e REM_T1="$T1" -e REM_T2="$T2" testing/e2e/ios-rem-005-two-times.yaml
+save_row0 "$T1"
 sleep_until "$T1" 4
 shot REM-005-first
 sleep_until "$T2" 4

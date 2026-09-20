@@ -28,12 +28,25 @@ tags:
     id: "reminders-editor-done"
 - assertVisible: ".*Настроить расписание 1: Каждый день:.*"
 
-# REM-013: сначала молитва в тот же день.
+# REM-013: сначала молитва в тот же день. Сетап идемпотентен: eraseText чистит
+# сохранённую цель, если она есть.
 - openLink: "lampada://"
 - assertVisible: "Начать молитву"
 - tapOn: "Начать молитву"
-# Цель уже задана ранее — подтверждаем пороговый экран.
+- tapOn:
+    point: "50%,37%"
+- eraseText
+- inputText: "REM 004 fire"
+- hideKeyboard
+- tapOn: "5"
 - tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
 - assertVisible: "Перед началом"
 - swipe:
     start: "50%,78%"
@@ -58,8 +71,7 @@ tags:
       visible: "Вернуться к молитве"
     commands:
       - tapOn: "Завершить"
-- assertVisible:
-    id: "prayer-saved-notice"
+- assertVisible: "Огонёк горит"
 
 # REM-004/011: приложение открыто на Home — баннер должен появиться в T1.
 # Срабатывание фиксирует run-rem-fire.sh скриншотом (simctl io screenshot):
