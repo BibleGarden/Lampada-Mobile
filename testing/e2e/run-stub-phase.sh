@@ -77,5 +77,14 @@ maestro test testing/e2e/ios-scripture-legacy-favorites.yaml
 step "STG: ошибка входа через хук и живой повтор"
 maestro test testing/e2e/ios-stage03-start-sqlite-lock.yaml
 
+step "RPT-001/002: жалобы на вопрос и отрывок"
+control '{"contentReports":"ok"}'
+maestro test testing/e2e/ios-rpt-001-002.yaml
+
+step "RPT-003: сбой и повтор (fail-once)"
+control '{"contentReports":"fail-once"}'
+maestro test testing/e2e/ios-rpt-003.yaml
+control '{"contentReports":"ok"}'
+
 echo "== Stub-фаза завершена. Доказательства: $EVIDENCE"
 echo "== Не забудьте переустановить обычную Release-сборку (без override)!"

@@ -19,6 +19,10 @@ let versionResponse = {
   store_url: 'https://example.com/lampada',
   message: null,
 };
+/** 'ok' — успех; 'fail-once' — первый запрос 500 (ретрай-сценарий RPT-003). */
+let contentReportMode = 'ok';
+/** Пейлоды принятых жалоб — для проверки раннером через /__status. */
+const contentReports = [];
 
 const TRANSCRIBE_TEXT = 'Стабильная расшифровка лампады номер семь';
 const QUESTION_TEXT = 'STUB вопрос с опозданием: что ты чувствуешь?';
@@ -78,6 +82,7 @@ const server = http.createServer((request, response) => {
   if (request.method === 'GET' && request.url === '/__status') {
     json(response, 200, {
       requestCount, privacySafe, transcriptionMode, questionDelayMs, versionResponse,
+      contentReportMode, contentReports,
     });
     return;
   }
@@ -93,8 +98,9 @@ const server = http.createServer((request, response) => {
       if (['ok', 'fail', 'delay'].includes(body.transcription)) transcriptionMode = body.transcription;
       if (Number.isFinite(body.questionDelayMs) && body.questionDelayMs >= 0) questionDelayMs = body.questionDelayMs;
       if (body.version && typeof body.version === 'object') versionResponse = { ...versionResponse, ...body.version };
+      if (['ok', 'fail-once'].includes(body.contentReports)) contentReportMode = body.contentReports;
       if (body.resetScripture) requestCount = 0;
-      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse });
+      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse, contentReportMode });
     });
     return;
   }
@@ -113,6 +119,24 @@ const server = http.createServer((request, response) => {
       const send = () => json(response, 200, { text: TRANSCRIBE_TEXT });
       if (transcriptionMode === 'delay') setTimeout(send, 12000);
       else send();
+    });
+    return;
+  }
+  // Жалобы на контент: ловим пейлоуд для проверок раннера, отвечаем как прокси.
+  if (request.method === 'POST' && url.pathname === '/api/ai/content-reports') {
+    let raw = '';
+    request.setEncoding('utf8');
+    request.on('data', (chunk) => { raw += chunk; });
+    request.on('end', () => {
+      let payload = null;
+      try { payload = JSON.parse(raw); } catch { payload = { unparsed: raw }; }
+      contentReports.push(payload);
+      if (contentReportMode === 'fail-once') {
+        contentReportMode = 'ok';
+        json(response, 500, { detail: 'content report stub failure' });
+        return;
+      }
+      json(response, 200, { status: 'ok', report_id: contentReports.length });
     });
     return;
   }

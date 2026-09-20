@@ -1,0 +1,81 @@
+appId: twinkler
+# NEEDS-STUB: пейлоды жалоб принимает stub :9085 (run-stub-phase.sh или
+# вручную: npm run scripture:stub). В теговые прогоны не входит.
+---
+# RPT-001: жалоба на вопрос без комментария.
+# RPT-002: жалоба на отрывок из полного ридера с комментарием.
+# RPT-003: сбой отправки — диалог и комментарий остаются, повтор успешен.
+# Предусловие: stub в режиме contentReports=fail-once (первый запрос 500).
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "RPT content reports"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+
+# === RPT-001: вопрос без комментария ===
+- tapOn:
+    id: "question-report-button"
+- assertVisible:
+    id: "content-report-dialog"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-001-dialog
+- tapOn:
+    id: "content-report-send"
+- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-001-sent
+- tapOn:
+    id: "content-report-done"
+
+# === RPT-002: отрывок из ридера с комментарием ===
+- tapOn:
+    id: "dock-scripture-tab"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 20000
+# Тап по неполному тексту открывает полный ридер.
+- tapOn: "Читать отрывок целиком"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-report-button"
+    timeout: 10000
+- tapOn:
+    id: "scripture-report-button"
+- assertVisible:
+    id: "content-report-dialog"
+- tapOn:
+    id: "content-report-comment"
+- inputText: "Тестовый комментарий RPT-002"
+- tapOn:
+    id: "content-report-send"
+- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-002-sent
+- tapOn:
+    id: "content-report-done"
+# Возвращаемся из ридера в док (крепление сценария к молитве не важно,
+# дальше — только жалоба на вопрос).
+- tapOn:
+    point: "10%,11%"
+- runFlow:
+    when:
+      visible: "МОЛИТВА"
+    commands:
+      - tapOn:
+          id: "dock-scripture-tab"
+
