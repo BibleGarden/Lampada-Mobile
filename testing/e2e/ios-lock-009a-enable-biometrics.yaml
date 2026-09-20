@@ -1,0 +1,69 @@
+appId: twinkler
+# Только через run-lock-biometrics.sh: после тапа по тумблеру скрипт шлёт
+# сигнал совпадения Face ID (simctl spawn ... notifyutil -p ...pearl.match).
+---
+# LOCK-009 (часть 1): тумблер биометрии доступен только при включённом пине и
+# зарегистрированном образце; включение подтверждается успешным Face ID.
+#
+# Предусловия: защита выключена, в симуляторе зарегистрирован образец Face ID
+# (run-lock-biometrics.sh шаг enroll).
+- launchApp:
+    stopApp: true
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+# Без пина тумблера биометрии нет.
+- assertNotVisible:
+    id: "biometrics-toggle"
+
+# Включаем пин 123456 (повторяем lock-002).
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Придумайте пин-код"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-prompt-confirm"
+- assertVisible: "Повторите пин-код"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-prompt-confirm"
+- assertVisible:
+    id: "change-pin-button"
+
+# С пином и зарегистрированным образцом тумблер появился.
+- assertVisible:
+    id: "biometrics-toggle"
+# Включаем: приложение сразу просит подтвердить лицом. Скрипт шлёт match,
+# пока флоу спит; включение происходит без ввода пина.
+- tapOn:
+    id: "biometrics-toggle"
+- evalScript: "java.lang.Thread.sleep(20000)"
+- assertVisible:
+    id: "biometrics-toggle"
+    checked: true
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-009-biometrics-enabled

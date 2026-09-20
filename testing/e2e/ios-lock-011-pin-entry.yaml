@@ -1,0 +1,45 @@
+appId: twinkler
+# Только через run-lock-storage-check.sh (LOCK-011): скрипт одновременно пишет
+# системный лог устройства и грепает контейнер приложения.
+---
+# LOCK-011 (часть 2): ввод неверного и верного пина под записью лога.
+# Скрипт уже проверил контейнер; здесь генерируем события ввода пина.
+#
+# Предусловия: защита включена пином 123456 (см. run-lock-storage-check.sh).
+- launchApp:
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: "lock-screen"
+# Неверный пин (000000): не пускает, ошибка показана.
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- assertVisible: "Неверный пин-код"
+# Верный пин: пускает.
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- assertNotVisible:
+    id: "lock-screen"
+- assertVisible:
+    id: "settings-button"

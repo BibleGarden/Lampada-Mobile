@@ -5,6 +5,24 @@ const mode = process.env.SCRIPTURE_STUB_MODE ?? 'main';
 let requestCount = 0;
 let privacySafe = true;
 
+// --- управляемое состояние (меняется через POST /__control между прогонами) ---
+
+/** 'ok' — вернуть текст; 'fail' — HTTP 500; 'delay' — ответ через 12 с. */
+let transcriptionMode = 'ok';
+/** Задержка ответа /api/ai/question, мс (0 — без задержки). */
+let questionDelayMs = 0;
+/** Ответ /api/version-check; update_type переключает update-soft/hard флоу. */
+let versionResponse = {
+  app: 'lampada',
+  update_type: 'none',
+  latest_version: '1.0.23',
+  store_url: 'https://example.com/lampada',
+  message: null,
+};
+
+const TRANSCRIBE_TEXT = 'Стабильная расшифровка лампады номер семь';
+const QUESTION_TEXT = 'STUB вопрос с опозданием: что ты чувствуешь?';
+
 const fixtures = [
   {
     language: 'ru',
@@ -58,7 +76,53 @@ const json = (response, status, body, headers = {}) => {
 const server = http.createServer((request, response) => {
   const url = new URL(request.url, `http://${request.headers.host ?? 'localhost'}`);
   if (request.method === 'GET' && request.url === '/__status') {
-    json(response, 200, { requestCount, privacySafe });
+    json(response, 200, {
+      requestCount, privacySafe, transcriptionMode, questionDelayMs, versionResponse,
+    });
+    return;
+  }
+  // Управление поведением между шагами прогона: curl -X POST localhost:9085/__control
+  // -d '{"transcription":"fail","version":{"update_type":"soft",...},"questionDelayMs":8000,"resetScripture":true}'
+  if (request.method === 'POST' && url.pathname === '/__control') {
+    let raw = '';
+    request.setEncoding('utf8');
+    request.on('data', (chunk) => { raw += chunk; });
+    request.on('end', () => {
+      let body;
+      try { body = JSON.parse(raw); } catch { json(response, 400, { detail: 'bad JSON' }); return; }
+      if (['ok', 'fail', 'delay'].includes(body.transcription)) transcriptionMode = body.transcription;
+      if (Number.isFinite(body.questionDelayMs) && body.questionDelayMs >= 0) questionDelayMs = body.questionDelayMs;
+      if (body.version && typeof body.version === 'object') versionResponse = { ...versionResponse, ...body.version };
+      if (body.resetScripture) requestCount = 0;
+      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse });
+    });
+    return;
+  }
+  if (request.method === 'GET' && url.pathname === '/api/version-check') {
+    json(response, 200, versionResponse);
+    return;
+  }
+  // Транскрипция: приложение шлёт multipart — тело просто вычитываем.
+  if (request.method === 'POST' && url.pathname === '/api/ai/transcribe') {
+    request.resume();
+    request.on('end', () => {
+      if (transcriptionMode === 'fail') {
+        json(response, 500, { detail: 'transcription stub failure' });
+        return;
+      }
+      const send = () => json(response, 200, { text: TRANSCRIBE_TEXT });
+      if (transcriptionMode === 'delay') setTimeout(send, 12000);
+      else send();
+    });
+    return;
+  }
+  if (request.method === 'POST' && url.pathname === '/api/ai/question') {
+    request.resume();
+    request.on('end', () => {
+      const send = () => json(response, 200, { text: QUESTION_TEXT, novel: true });
+      if (questionDelayMs > 0) setTimeout(send, questionDelayMs);
+      else send();
+    });
     return;
   }
   if (request.method === 'GET' && url.pathname === '/api/languages') {

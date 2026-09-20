@@ -143,6 +143,8 @@ const answersForAi = (answers: Record<number, Answer>) =>
 
 let prepareToken = 0;
 let reflectToken = 0;
+// Одноразовость хука принудительной ошибки enterSession (EXPO_PUBLIC_FORCE_SESSION_ERROR).
+let forcedSessionErrorSpent = false;
 let scriptureToken = 0;
 let scriptureAbortController: AbortController | null = null;
 let firstQuestionFetch: {
@@ -334,6 +336,19 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   enterSession: async () => {
     const { topic, minutes } = get();
     reflectToken++;
+    // Тестовый хук e2e: сборка с EXPO_PUBLIC_FORCE_SESSION_ERROR=1 один раз
+    // падает на входе с темой-маркером «STG», воспроизводя путь generic-catch
+    // порога (app/threshold.tsx) без внешней блокировки SQLite — с WAL
+    // (lib/db.ts) она уже не работает. Маркер-тема не даёт хуку ломать
+    // остальные сценарии той же сборки.
+    if (
+      process.env.EXPO_PUBLIC_FORCE_SESSION_ERROR === '1'
+      && topic.startsWith('STG')
+      && !forcedSessionErrorSpent
+    ) {
+      forcedSessionErrorSpent = true;
+      throw new Error('Forced session start failure (e2e hook)');
+    }
     // Вход не зависит от сети. Пока первый вопрос готовится, карточка вопроса
     // показывает spinner; fallback появляется только когда AI-слой вернул его
     // из-за явной ошибки.

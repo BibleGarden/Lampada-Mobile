@@ -1,0 +1,37 @@
+appId: twinkler
+tags:
+  - reminders
+---
+# REM-002: отказ в системном запросе оставляет тумблер выключенным и показывает
+# объяснение. Предусловие: чистая установка (undetermined), этап онбординга пройден
+# (suite редактора), разрешение ещё не запрашивалось.
+- launchApp:
+    stopApp: true
+- assertVisible: "Начать молитву"
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+# Системный запрос появляется ровно в момент включения.
+- tapOn:
+    id: "reminders-toggle"
+- assertVisible: ".*уведомления.*"
+- tapOn: "Не разрешать"
+# Тумблер честно остался выключенным, показан понятный текст.
+- assertVisible:
+    id: "reminders-toggle"
+    checked: false
+- assertVisible:
+    id: "reminders-permission-warning"
+- assertVisible: "Уведомления запрещены в настройках системы."
+# Экран настроек продолжает работать: остальные блоки на месте (конфиденциальность
+# и защита — ниже блока напоминаний).
+- scrollUntilVisible:
+    element:
+      id: "privacy-settings-button"
+    direction: DOWN
+- assertVisible:
+    id: "privacy-settings-button"
+- assertVisible:
+    id: "lock-toggle"

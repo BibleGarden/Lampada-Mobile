@@ -1,0 +1,37 @@
+appId: twinkler
+tags:
+  - reminders
+---
+# REM-006: перезапуск приложения сохраняет расписание (системные WEEKLY-триггеры
+# не зависят от процесса; приложение при старте лишь сверяет их с сохранённым).
+#
+# Предусловия: прогон ios-rem-005 (в правиле две строки времени; текст строки
+# расписания с двумя времёнами виден на экране настроек).
+- launchApp:
+    stopApp: true
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+- assertVisible:
+    id: "reminders-toggle"
+    checked: true
+# Строка расписания пережила перезапуск.
+- assertVisible:
+    id: "reminders-summary"
+- assertVisible: ".*Настроить расписание 1: Каждый день:.*"
+# Холодный старт: stopApp + launchApp.
+- launchApp:
+    stopApp: true
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+- assertVisible:
+    id: "reminders-toggle"
+    checked: true
+- assertVisible:
+    id: "reminders-summary"
+- assertVisible: ".*Настроить расписание 1: Каждый день:.*"

@@ -1,16 +1,44 @@
 appId: twinkler
+# NEEDS-ENV: сборка с EXPO_PUBLIC_FORCE_SESSION_ERROR=1 — e2e-хук в lib/store.ts
+# один раз падает на входе и воспроизводит путь generic-catch порога
+# (app/threshold.tsx:102) без внешней блокировки SQLite: с WAL (lib/db.ts:60)
+# BEGIN EXCLUSIVE / locking_mode=EXCLUSIVE / chmod писателей приложения не
+# держат (проверено 20.09, см. testing/reports/2026-09-20-stub-run.md).
+# В теговые прогоны не входит.
 ---
-# Предусловие: требует запуска сразу после ios-stage03-start-sqlite-lock-prepare
-# при сделанной только для чтения SQLite-базе приложения (chmod a-w на lampada.db,
-# lampada.db-wal, lampada.db-shm). Раньше использовался BEGIN EXCLUSIVE, но с
-# PRAGMA journal_mode=WAL (lib/db.ts:60) внешняя блокировка писателей приложения
-# не держит — путь тот же generic-catch (app/threshold.tsx:102).
-# Фрагмент, не для теговых прогонов.
+# STG-SQLITE: ошибка входа в молитву — понятный алерт, живой повтор.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "STG sqlite ошибка входа"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- assertVisible: "Перед началом"
+# Первая попытка входа падает (хук).
 - swipe:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
 - assertVisible: "Не удалось начать молитву"
 - assertVisible: "Попробуй ещё раз."
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/STG-sqlite-error
 - tapOn: "Понятно"
+# Кнопка не мёртвая: повторный вход проходит (хук одноразовый).
 - assertVisible: "НАЖМИ И ДЕРЖИ"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/STG-sqlite-retry-ok

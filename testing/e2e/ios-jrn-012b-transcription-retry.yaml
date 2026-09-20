@@ -1,0 +1,22 @@
+appId: twinkler
+# NEEDS-STUB: перед прогоном скрипт переключил stub обратно в ok (run-jrn-transcription.sh).
+---
+# JRN-012 (часть 2): повтор после ошибки сохраняет текст.
+- launchApp:
+    stopApp: true
+- assertVisible: "Начать молитву"
+- tapOn:
+    id: "journal-button"
+- assertVisible: "ДНЕВНИК"
+- tapOn: ".*JRN-012 повтор расшифровки.*"
+- assertVisible: "Не удалось расшифровать"
+- assertVisible: "Повторить"
+- tapOn: "Повторить"
+- extendedWaitUntil:
+    visible: "Стабильная расшифровка лампады номер семь"
+    timeout: 30000
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-012-retry-saved
+# Текст пережил переоткрытие деталей.
+- tapOn: ".*JRN-012 повтор расшифровки.*"
+- tapOn: ".*JRN-012 повтор расшифровки.*"
+- assertVisible: "Стабильная расшифровка лампады номер семь"
