@@ -12,24 +12,24 @@ tags:
 - assertVisible: "10"
 - assertVisible: "минут"
 - tapOn: "?"
-- assertVisible: ".*Поблагодарить Бога.*"
+- assertVisible:
+    id: "setup-example-0"
 - tapOn:
-    point: "50%,32%"
+    id: "setup-example-0"
 - assertVisible: "Поблагодарить Бога"
 - tapOn: "?"
 - tapOn:
-    point: "50%,39%"
+    id: "setup-example-1"
 - assertVisible: "Привести мысли в порядок"
 - tapOn: "?"
 - tapOn:
-    point: "50%,46%"
+    id: "setup-example-2"
 - assertVisible: "Принять важное решение"
 - tapOn: "?"
 - tapOn:
-    point: "50%,53%"
-- assertVisible: "Подготовиться к разговору"
-- tapOn:
     id: "setup-example-3"
+- assertVisible: "Подготовиться к разговору"
+- tapOn: "Подготовиться к разговору"
 - eraseText: 100
 - hideKeyboard
 - tapOn: "5"
