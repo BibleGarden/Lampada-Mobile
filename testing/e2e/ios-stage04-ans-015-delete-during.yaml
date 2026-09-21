@@ -1,0 +1,69 @@
+appId: twinkler
+---
+# ANS-015 (часть про удаление во время запроса): запись пропадает из списка,
+# запрос отменяется. Что поздний ответ сервера не вернёт строку в БД, Maestro
+# не доказывает — нужна медленная сеть и ручная проверка.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- runFlow:
+    when:
+      notVisible: "ПЕРЕД МОЛИТВОЙ"
+    commands:
+      - tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "ANS-015 удаление во время расшифровки"
+- tapOn: "Готово"
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- runFlow:
+    when:
+      notVisible:
+        id: "answer-record-button"
+    commands:
+      - tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- tapOn:
+    id: "recording-transcribe-0"
+- tapOn:
+    id: "privacy-consent-audio_transcription-allow"
+- extendedWaitUntil:
+    visible: "Расшифровываю…"
+    timeout: 8000
+    optional: true
+- doubleTapOn:
+    id: "recording-delete-0"
+- assertNotVisible:
+    id: "recording-card-0"
+- assertNotVisible: "Расшифровываю…"

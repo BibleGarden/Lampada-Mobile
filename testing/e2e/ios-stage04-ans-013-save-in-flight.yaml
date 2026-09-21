@@ -1,0 +1,89 @@
+appId: twinkler
+---
+# ANS-013 (часть про сохранение во время запроса): после «Расшифровать»
+# появляется загрузка, «Сохранить» не закрывает шторку, пока промис жив,
+# запись после повторного открытия на месте.
+#
+# Сам текст расшифровки и его восстановление зависят от сети и живой речи.
+# На симуляторе тихий M4A чаще даёт ошибку — это не провал этой части.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- runFlow:
+    when:
+      notVisible: "ПЕРЕД МОЛИТВОЙ"
+    commands:
+      - tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "ANS-013 сохранение в полёте"
+- tapOn: "Готово"
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- runFlow:
+    when:
+      notVisible:
+        id: "answer-record-button"
+    commands:
+      - tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- tapOn:
+    id: "recording-transcribe-0"
+- assertVisible:
+    id: "privacy-consent-audio_transcription"
+- tapOn:
+    id: "privacy-consent-audio_transcription-allow"
+- extendedWaitUntil:
+    visible: "Расшифровываю…"
+    timeout: 8000
+    optional: true
+- tapOn:
+    id: "recordings-close-button"
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+# Сохранение ждёт транскрипцию до 60 с (lib/transcription.ts).
+- extendedWaitUntil:
+    visible: "Изменить"
+    timeout: 70000
+- tapOn: "Изменить"
+- tapOn:
+    id: "answer-record-button"
+- assertVisible:
+    id: "recording-card-0"

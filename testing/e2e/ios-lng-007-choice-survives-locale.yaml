@@ -1,0 +1,21 @@
+appId: twinkler
+# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
+# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+---
+# LNG-007: явный выбор не сбрасывается сменой языка устройства.
+#
+# Предусловие: только что отработал ios-lng-006-persist-relaunch.yaml
+# (в SQLite лежит ui_language=uk). Раннер переключил симулятор на locale=de_DE
+# — Maestro сам системный язык сменить не может. clearState здесь нельзя:
+# сотрётся сохранённый выбор, и проверять будет нечего.
+- launchApp:
+    stopApp: true
+- assertVisible: "Почати молитву"
+- assertNotVisible: "Begin prayer"
+- tapOn:
+    id: "settings-button"
+- assertVisible:
+    id: "interface-language-picker"
+- assertVisible: "Українська"
+- assertVisible: "НАЛАШТУВАННЯ"
+- assertNotVisible: "SETTINGS"
