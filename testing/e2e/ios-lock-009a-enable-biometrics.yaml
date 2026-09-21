@@ -1,0 +1,52 @@
+appId: twinkler
+# Только через run-lock-biometrics.sh: после тапа по тумблеру скрипт шлёт
+# сигнал совпадения Face ID (simctl spawn ... notifyutil -p ...pearl.match).
+---
+# LOCK-009 (часть 1): тумблер биометрии виден при включённом пине и
+# зарегистрированном образце; включение подтверждается успешным Face ID.
+#
+# Предусловия (обеспечивает скрипт): защита включена пином 123456, образец
+# Face ID зарегистрирован, приложение разблокировано.
+- launchApp:
+    stopApp: true
+# LockGate поднимается асинхронно: даём ему появиться перед проверкой.
+- evalScript: "java.lang.Thread.sleep(2500)"
+# Холодный старт при включённом пине открывается на экране блокировки.
+- runFlow:
+    when:
+      visible:
+        id: "lock-screen"
+    commands:
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - assertNotVisible:
+          id: "lock-screen"
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- assertVisible:
+    id: "change-pin-button"
+- assertVisible:
+    id: "biometrics-toggle"
+# Включаем: приложение сразу просит подтвердить лицом. Скрипт шлёт match,
+# пока флоу спит; включение происходит без ввода пина.
+- tapOn:
+    id: "biometrics-toggle"
+- evalScript: "java.lang.Thread.sleep(20000)"
+- assertVisible:
+    id: "biometrics-toggle"
+    checked: true
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-009-biometrics-enabled

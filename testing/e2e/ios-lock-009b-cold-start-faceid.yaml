@@ -1,0 +1,23 @@
+appId: twinkler
+# Только через run-lock-biometrics.sh: скрипт шлёт pearl.match после холодного старта.
+---
+# LOCK-009 (часть 2): холодный старт при включённой биометрии сразу показывает
+# запрос Face ID; совпадение пускает в приложение без пин-кода.
+#
+# Предусловия: пин 123456, биометрия включена, образец зарегистрирован
+# (прогон ios-lock-009a через run-lock-biometrics.sh).
+- launchApp:
+    stopApp: true
+# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
+# Автозапрос Face ID выполнился один раз за появление экрана; скрипт шлёт
+# совпадение, пока флоу спит.
+- evalScript: "java.lang.Thread.sleep(20000)"
+- assertNotVisible:
+    id: "lock-screen"
+- assertVisible:
+    id: "settings-button"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-009-faceid-unlock

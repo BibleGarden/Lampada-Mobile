@@ -1,0 +1,85 @@
+appId: twinkler
+# Гибридный сценарий: снапшот в переключателе приложений фиксирует
+# run-lock-appswitcher.sh (AppleScript → меню Simulator → App Switcher →
+# simctl io screenshot). В теговые прогоны не входит.
+---
+# LOCK-008: с защитой уход в фон накрывает шторкой приватности — снимок
+# приложения для переключателя не содержит контент.
+# Предусловие: защита выключена.
+- launchApp:
+    stopApp: true
+- evalScript: "java.lang.Thread.sleep(2500)"
+# Холодный старт при включённом пине открывается на экране блокировки.
+- runFlow:
+    when:
+      visible:
+        id: "lock-screen"
+    commands:
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - assertNotVisible:
+          id: "lock-screen"
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+# Если защита ещё не включена — включаем пин 123456.
+- runFlow:
+    when:
+      notVisible:
+        id: "change-pin-button"
+    commands:
+      - tapOn:
+          id: "lock-toggle"
+      - assertVisible: "Придумайте пин-код"
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - tapOn:
+          id: "pin-key-confirm"
+      - assertVisible: "Повторите пин-код"
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - tapOn:
+          id: "pin-key-confirm"
+- assertVisible:
+    id: "change-pin-button"
+# Контент до сворачивания: дневник с записью.
+- openLink: "lampada://journal"
+- assertVisible: "ДНЕВНИК"
+# Уход домой: приложение в фоне, активна шторка приватности (obscured).
+- pressKey: HOME
+- assertNotVisible: "ДНЕВНИК"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-008-home-screen
+# Скрипт открывает переключатель приложений и снимает снапшот.

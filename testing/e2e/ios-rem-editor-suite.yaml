@@ -1,0 +1,133 @@
+appId: twinkler
+tags:
+  - reminders
+---
+# REM-014/REM-015: двухтактное удаление времён и правил напоминаний.
+# Предусловие: чистая установка (xcrun simctl uninstall/install Release).
+# Разрешение уведомлений не требуется — редактор доступен и при выключенном тумблере.
+- launchApp:
+    stopApp: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "REM editor"
+- hideKeyboard
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-deny"
+- assertVisible: "Перед началом"
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+
+# === REM-014: первый тап на корзину — только подтверждение, второй — удаление ===
+- tapOn:
+    id: "reminders-settings-button-0"
+- assertVisible:
+    id: "reminders-editor-modal"
+- tapOn:
+    id: "reminder-add-time-0"
+- assertVisible:
+    id: "reminder-rule-0-time-10:00"
+# Первый тап: строка остаётся, кнопка перешла в состояние подтверждения.
+- tapOn: "Убрать напоминание в 10:00"
+- assertVisible:
+    id: "reminder-rule-0-time-10:00"
+- assertVisible: "Подтвердить удаление напоминания в 10:00"
+# Второй тап: строка удалена, подтверждение исчезло, 09:00 на месте.
+- tapOn: "Подтвердить удаление напоминания в 10:00"
+- assertNotVisible:
+    id: "reminder-rule-0-time-10:00"
+- assertNotVisible: "Подтвердить удаление напоминания в 10:00"
+- assertVisible:
+    id: "reminder-rule-0-time-09:00"
+
+# === REM-015: таймаут 3 с сбрасывает подтверждение ===
+# У единственного времени корзины нет (canRemove = times.length > 1), поэтому
+# работаем с двумя строками: добавляем 10:00 и вооружаем удаление именно его.
+- tapOn:
+    id: "reminder-add-time-0"
+- assertVisible:
+    id: "reminder-rule-0-time-10:00"
+- tapOn: "Убрать напоминание в 10:00"
+- assertVisible: "Подтвердить удаление напоминания в 10:00"
+# Java.sleep через Rhino — единственный надёжный sleep в Maestro.
+- evalScript: "java.lang.Thread.sleep(3600)"
+- assertVisible: "Убрать напоминание в 10:00"
+- assertNotVisible: "Подтвердить удаление напоминания в 10:00"
+
+# === REM-015: закрытие редактора сбрасывает подтверждение ===
+- tapOn: "Убрать напоминание в 10:00"
+- assertVisible: "Подтвердить удаление напоминания в 10:00"
+- tapOn:
+    id: "reminders-editor-done"
+- tapOn:
+    id: "reminders-settings-button-0"
+- assertVisible:
+    id: "reminders-editor-modal"
+- assertVisible: "Убрать напоминание в 10:00"
+- assertNotVisible: "Подтвердить удаление напоминания в 10:00"
+
+# === REM-015: вооружение другой цели отменяет предыдущую ===
+- tapOn: "Убрать напоминание в 10:00"
+- assertVisible: "Подтвердить удаление напоминания в 10:00"
+- tapOn: "Убрать напоминание в 09:00"
+- assertVisible: "Подтвердить удаление напоминания в 09:00"
+- assertNotVisible: "Подтвердить удаление напоминания в 10:00"
+
+# === REM-015: правка расписания сбрасывает подтверждение ===
+- tapOn: "09:00: пять минут вперёд"
+- assertNotVisible: "Подтвердить удаление напоминания в 09:00"
+- assertVisible: "Убрать напоминание в 09:05"
+# Возвращаем расписание в дефолт.
+- tapOn: "09:05: пять минут назад"
+- assertVisible:
+    id: "reminder-rule-0-time-09:00"
+# Убираем вторую строку, чтобы дальше работать с дефолтным расписанием.
+- tapOn: "Убрать напоминание в 10:00"
+- tapOn: "Подтвердить удаление напоминания в 10:00"
+- assertNotVisible:
+    id: "reminder-rule-0-time-10:00"
+
+# === REM-014: двухтактное удаление правила (расписания) ===
+# Второе правило появляется с днями «Сб–Вс» и временем +1 час от последнего.
+# Редактор открывается на новом правиле: внутри модалки проверяем чипсы дней и
+# строку времени (строка «Сб–Вс» списка под модалкой не видна).
+- tapOn:
+    id: "reminders-editor-done"
+- tapOn:
+    id: "reminders-add-rule"
+- assertVisible:
+    id: "reminders-editor-modal"
+- assertVisible:
+    id: "reminder-rule-1"
+- assertVisible:
+    id: "reminder-rule-1-day-6"
+    selected: true
+- assertVisible:
+    id: "reminder-rule-1-day-7"
+    selected: true
+- assertVisible:
+    id: "reminder-rule-1-time-10:00"
+# Первый тап: правило не удалено — кнопка перешла в подтверждение.
+# (Список правил под модалкой редактора не виден — проверяем по подписи кнопки.)
+- tapOn:
+    id: "reminders-delete-rule"
+- assertVisible: "Подтвердить удаление расписания 2"
+# Второй тап: правило удалено, редактор закрылся, в списке снова одно расписание.
+- tapOn:
+    id: "reminders-delete-rule"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible:
+    id: "reminders-summary-1"
+- assertVisible:
+    id: "reminders-summary"
+- assertVisible: ".*Настроить расписание 1: Каждый день: 09:00.*"

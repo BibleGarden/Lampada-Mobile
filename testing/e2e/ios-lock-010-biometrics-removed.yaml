@@ -1,0 +1,68 @@
+appId: twinkler
+# Только через run-lock-biometrics.sh: скрипт снимает регистрацию образца перед стартом.
+---
+# LOCK-010: после удаления биометрических образцов в системе экран блокировки
+# больше не предлагает Face ID, а пин продолжает работать.
+#
+# Предусловия: пин 123456, биометрия включена (прогон 009a/009b). Скрипт
+# выполнил unenroll: образцов в системе больше нет, флаг биометрии в
+# приложении сохранился.
+- launchApp:
+    stopApp: true
+# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
+- assertVisible: "Введите пин-код"
+# Face ID больше не предлагается: ни кнопки входа через биометрию, ни
+# автозапроса (он недоступен без зарегистрированного образца).
+- assertNotVisible: "Войти через (Face ID|Touch ID)"
+# Пин работает.
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- assertNotVisible:
+    id: "lock-screen"
+- assertVisible:
+    id: "settings-button"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-010-pin-after-unenroll
+
+# Разбираем защиту: биометрия выключается вместе с пином.
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+- tapOn:
+    id: "lock-toggle"
+- assertVisible: "Введите пин-код"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- tapOn:
+    id: "pin-key-confirm"
+- assertNotVisible:
+    id: "change-pin-button"
+- assertNotVisible:
+    id: "biometrics-toggle"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-010-lock-disabled

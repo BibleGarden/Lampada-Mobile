@@ -1,0 +1,73 @@
+appId: twinkler
+# Фрагмент для run-lock-storage-check.sh: включает защиту пином 123456.
+# Предусловие: защита выключена.
+---
+- launchApp:
+    stopApp: true
+# LockGate поднимается асинхронно: даём ему появиться перед проверкой.
+- evalScript: "java.lang.Thread.sleep(2500)"
+- runFlow:
+    when:
+      visible:
+        id: "lock-screen"
+    commands:
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - assertNotVisible:
+          id: "lock-screen"
+- tapOn:
+    id: "settings-button"
+- scrollUntilVisible:
+    element:
+      id: "lock-toggle"
+    direction: DOWN
+# Если защита уже включена — ничего не делаем.
+- runFlow:
+    when:
+      notVisible:
+        id: "change-pin-button"
+    commands:
+      - tapOn:
+          id: "lock-toggle"
+      - assertVisible: "Придумайте пин-код"
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - tapOn:
+          id: "pin-key-confirm"
+      - assertVisible: "Повторите пин-код"
+      - tapOn:
+          id: "pin-key-1"
+      - tapOn:
+          id: "pin-key-2"
+      - tapOn:
+          id: "pin-key-3"
+      - tapOn:
+          id: "pin-key-4"
+      - tapOn:
+          id: "pin-key-5"
+      - tapOn:
+          id: "pin-key-6"
+      - tapOn:
+          id: "pin-key-confirm"
+- assertVisible:
+    id: "change-pin-button"

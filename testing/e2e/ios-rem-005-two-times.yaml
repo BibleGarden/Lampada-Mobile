@@ -1,0 +1,33 @@
+appId: twinkler
+tags:
+  - reminders
+---
+# REM-005: несколько времён в правиле — строка расписания читается корректно,
+# уведомление приходит на каждое установленное время.
+#
+# Предусловия: прогон ios-rem-fire завершён (в правиле одна строка времени,
+# начальное время известно); /tmp/rem-set-time.yaml сгенерирован двумя целями
+# now+4мин и now+9мин: gen-rem-set-time.mjs --init <текущее> HH:MM HH:MM.
+- launchApp:
+    stopApp: true
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+- tapOn:
+    id: "reminders-settings-button-0"
+- assertVisible:
+    id: "reminders-editor-modal"
+- runFlow:
+    file: /tmp/rem-set-time.yaml
+- tapOn:
+    id: "reminders-editor-done"
+- waitForAnimationToEnd:
+    timeout: 5000
+# Строка расписания показывает оба времени (значения через -e REM_T1/REM_T2).
+- assertVisible: ".*${REM_T1}.*"
+- assertVisible: ".*${REM_T2}.*"
+- openLink: "lampada://"
+- assertVisible: "Начать молитву"
+# Срабатывания на оба времени фиксирует run-rem-fire.sh скриншотами.

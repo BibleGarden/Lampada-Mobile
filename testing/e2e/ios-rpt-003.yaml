@@ -1,0 +1,51 @@
+appId: twinkler
+# NEEDS-STUB: непосредственно перед прогоном stub переводится в
+# contentReports=fail-once (run-stub-phase.sh). Самодостаточен: поднимает
+# новую сессию для жалобы на вопрос.
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "RPT 003 retry"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+# === RPT-003: сбой и повтор ===
+- tapOn:
+    id: "question-report-button"
+- assertVisible:
+    id: "content-report-dialog"
+- tapOn:
+    id: "content-report-comment"
+- inputText: "Черновик комментария RPT-003"
+- tapOn:
+    id: "content-report-send"
+# Первый запрос в режиме fail-once получает 500: ошибка, диалог и текст живы.
+- assertVisible: "Сейчас не удалось отправить жалобу. Попробуйте ещё раз."
+- assertVisible:
+    id: "content-report-dialog"
+- assertVisible:
+    id: "content-report-comment"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-003-error
+# Повтор — stub уже вернулся в ok, комментарий сохранился в поле.
+- tapOn:
+    id: "content-report-send"
+- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-003-retry-sent
+- tapOn:
+    id: "content-report-done"

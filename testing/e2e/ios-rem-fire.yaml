@@ -1,0 +1,80 @@
+appId: twinkler
+tags:
+  - reminders
+---
+# REM-004 + REM-011 + REM-013: напоминание срабатывает в заданное время,
+# показывается баннером поверх открытого приложения, приходит в день молитвы.
+#
+# Предусловия: разрешение выдано (прогон ios-rem-001); /tmp/rem-set-time.yaml
+# сгенерирован одной целью now+4мин (кратно 5): gen-rem-set-time.mjs HH:MM.
+- launchApp:
+    stopApp: true
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+- assertVisible:
+    id: "reminders-toggle"
+    checked: true
+# Ставим ближайшее время.
+- tapOn:
+    id: "reminders-settings-button-0"
+- assertVisible:
+    id: "reminders-editor-modal"
+- runFlow:
+    file: /tmp/rem-set-time.yaml
+- tapOn:
+    id: "reminders-editor-done"
+- assertVisible: ".*Настроить расписание 1: Каждый день:.*"
+
+# REM-013: сначала молитва в тот же день. Сетап идемпотентен: eraseText чистит
+# сохранённую цель, если она есть.
+- openLink: "lampada://"
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- eraseText
+- inputText: "REM 004 fire"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- assertVisible: "Перед началом"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+# Накопить elapsed_sec > 0, иначе сессия не попадёт в дневник.
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    point: "10%,11%"
+# Назад ведёт на экран итога: «Завершить» (или диалог «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» со
+# своей кнопкой «Завершить» в старых сборках).
+- assertVisible: ".*Завершить.*"
+- runFlow:
+    when:
+      visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+    commands:
+      - tapOn: "Завершить"
+- runFlow:
+    when:
+      visible: "Вернуться к молитве"
+    commands:
+      - tapOn: "Завершить"
+- assertVisible: "Огонёк горит"
+
+# REM-004/011: приложение открыто на Home — баннер должен появиться в T1.
+# Срабатывание фиксирует run-rem-fire.sh скриншотом (simctl io screenshot):
+# баннер живёт в SpringBoard и в accessibility-иерархию приложения не попадает.
+- openLink: "lampada://"
+- assertVisible: "Начать молитву"

@@ -1,7 +1,7 @@
 appId: twinkler
-# NEEDS-STUB: навигация по 4+ отрывкам недетерминирована против живого сервера
-# (число и порядок отрывков плавает). Переведён в stub-фазу (86cbj95j4).
-# В теговые прогоны не входит.
+# NEEDS-STUB: против живого сервера число и порядок отрывков плавают; под stub
+# каталог детерминирован — две фикстуры (Псалом 22 и Иакова 1), прогон через
+# run-stub-phase.sh (задача 86cbj95j4). В теговые прогоны не входит.
 ---
 # SCR-001: open reader (companion dock, scripture mode) and page forward/backward;
 # navigation must stay stable at list boundaries.
@@ -58,66 +58,31 @@ appId: twinkler
 - tapOn:
     id: "dock-scripture-prev"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-A6-prev-after-noop-forward
-# Part B: favorite each item while paging forward to grow the trail, up to 10+ taps
+# Part B: favorite each item while paging forward. Stub cycles two fixtures:
+# после двух «вперёд» каталог повторяется, и состояние избранного при повторе
+# сохраняется — это и есть граница каталога.
 - tapOn: "В избранное"
 - assertVisible: "В избранном"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-B00-favorited
 - tapOn:
     id: "dock-scripture-next"
 - tapOn: "В избранное"
+- assertVisible: "В избранном"
 - tapOn:
     id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
+# Каталог исчерпан: тот же отрывок снова, избранное на месте.
+- assertVisible: "В избранном"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-B10-next-catalog-exhausted
-- tapOn: "В избранное"
-- tapOn:
-    id: "dock-scripture-next"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-B11-next-past-exhausted
-# Part B: now walk back to the start via prev, checking boundary at index 0
+# Part C: обратно к началу; на первом элементе prev не уходит дальше.
 - tapOn:
     id: "dock-scripture-prev"
+- assertVisible: "В избранном"
 - tapOn:
     id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
-- tapOn:
-    id: "dock-scripture-prev"
+- assertVisible: "В избранном"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-C10-prev-at-start
+# Prev на границе — безопасное no-op (состояние не меняется).
 - tapOn:
     id: "dock-scripture-prev"
+- assertVisible: "В избранном"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-C11-prev-boundary-noop

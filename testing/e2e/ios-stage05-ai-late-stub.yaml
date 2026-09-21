@@ -1,0 +1,40 @@
+appId: twinkler
+# NEEDS-STUB: questionDelayMs=15000 выставлен run-stub-phase.sh; ответ приходит
+# через 15 с — позже входа в сессию. В теговые прогоны не входит.
+---
+# Ответ ИИ опаздывает: сессия открывается со спиннером, вопрос появляется,
+# когда ответ дошёл; фрагмент ios-stage05-ai-late-response.yaml выполняется
+# внутри такой сессии.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "AI late stub"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+# Предзапрос первого вопроса ушёл на пороге; ответ задержан на 15 с.
+- assertVisible: "Перед началом"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+# Вопрос приходит, только когда stub ответил. (?s) — dotall: текст элемента
+# переносится на две строки, точка без флага newline не пересекает.
+- extendedWaitUntil:
+    visible: "(?s).*STUB вопрос с опозданием.*"
+    timeout: 40000
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/AI-late-question-arrived
+# Оригинальный фрагмент сценария (см. ios-stage05-ai-late-response.yaml).
+- runFlow:
+    file: ios-stage05-ai-late-response.yaml

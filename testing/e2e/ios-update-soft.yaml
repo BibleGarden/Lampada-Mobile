@@ -1,18 +1,36 @@
 appId: twinkler
-# NEEDS-ENV: требует stub /api/version-check (update_type=soft|hard) — задача 86cbj95j4
+# NEEDS-STUB: stub /api/version-check с update_type=soft (run-stub-phase.sh).
+# В теговые прогоны не входит.
 ---
-- tapOn:
-    text: Open
-    optional: true
+# Баннер мягкого обновления: показывается, «позже» скрывает до конца сессии,
+# после перезапуска появляется снова.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: update-soft
+    timeout: 20000
+- assertVisible: "Доступно обновление"
 - assertVisible:
-    id: update-soft
+    id: update-later
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/UPDATE-soft-banner
+# «Позже» скрывает баннер.
 - tapOn:
     id: update-later
 - assertNotVisible:
     id: update-soft
-- openLink: lampada://settings
-- tapOn:
-    text: Open
-    optional: true
+# До конца сессии баннер не возвращается (сверяем настроики и домой).
+- openLink: "lampada://settings"
 - assertNotVisible:
     id: update-soft
+- openLink: "lampada://"
+- assertNotVisible:
+    id: update-soft
+# Холодный старт: проверка версии повторяется, баннер снова показан.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: update-soft
+    timeout: 20000
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/UPDATE-soft-relaunch

@@ -1,0 +1,81 @@
+appId: twinkler
+# NEEDS-STUB: stub остаётся в режиме delay — ответ через 12 с (run-jrn-transcription.sh).
+---
+# JRN-013 (часть 2): удаление молитвы во время расшифровки отменяет запрос —
+# поздний ответ не возвращает удалённое в UI и в базу.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "JRN-013 удаление"
+- hideKeyboard
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recordings-close-button"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    point: "10%,11%"
+- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- tapOn: "Завершить"
+- assertVisible:
+    id: "prayer-saved-notice"
+- tapOn:
+    id: "journal-button"
+- assertVisible: "ДНЕВНИК"
+- tapOn: ".*JRN-013 удаление.*"
+- tapOn: "Расшифровать"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-audio_transcription"
+    commands:
+      - tapOn:
+          id: "privacy-consent-audio_transcription-allow"
+- assertVisible: "Расшифровываю…"
+# Удаляем молитву до прихода ответа (stub отвечает через 12 с).
+- tapOn: "Удалить запись"
+- assertVisible: "Точно удалить? Это навсегда"
+- tapOn: "Точно удалить? Это навсегда"
+- assertNotVisible: ".*JRN-013 удаление.*"
+- evalScript: "java.lang.Thread.sleep(16000)"
+# Поздний ответ не воскресил запись.
+- assertNotVisible: ".*JRN-013 удаление.*"
+- assertNotVisible: "Расшифровываю…"
+- assertVisible: "ДНЕВНИК"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-013-deleted-during

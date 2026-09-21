@@ -1,0 +1,54 @@
+appId: twinkler
+# Только через run-lock-biometrics.sh: скрипт шлёт pearl.nomatch после холодного старта.
+---
+# LOCK-009 (часть 3): отказ биометрии оставляет вход пин-кодом — лицо не
+# распознано, экран блокировки на месте, пин работает.
+#
+# Предусловия: пин 123456, биометрия включена (прогон 009a/009b).
+- launchApp:
+    stopApp: true
+# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
+# Скрипт шлёт несовпадение, пока флоу спит.
+- evalScript: "java.lang.Thread.sleep(20000)"
+# Экран блокировки остался; показан понятный текст про нераспознанное лицо.
+- assertVisible:
+    id: "lock-screen"
+- assertVisible: "Не удалось распознать лицо или отпечаток. Попробуйте ещё раз."
+- assertVisible: "Введите пин-код"
+# Запасной вход — пин: ошибочный не пускает, верный пускает.
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-0"
+- tapOn:
+    id: "pin-key-6"
+- assertVisible: "Неверный пин-код"
+- assertVisible:
+    id: "lock-screen"
+- tapOn:
+    id: "pin-key-1"
+- tapOn:
+    id: "pin-key-2"
+- tapOn:
+    id: "pin-key-3"
+- tapOn:
+    id: "pin-key-4"
+- tapOn:
+    id: "pin-key-5"
+- tapOn:
+    id: "pin-key-6"
+- assertNotVisible:
+    id: "lock-screen"
+- assertVisible:
+    id: "settings-button"
+- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-009-refusal-pin-fallback

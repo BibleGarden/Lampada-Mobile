@@ -1,0 +1,42 @@
+appId: twinkler
+tags:
+  - reminders
+---
+# REM-001: первое включение напоминаний показывает системный запрос ровно один раз
+# и в момент включения, а не при старте приложения.
+# Предусловие: чистая установка после прогона REM-002 (разрешение undetermined),
+# этап онбординга пройден.
+- launchApp:
+    stopApp: true
+# Запуск приложения не показывает никакого системного диалога — иначе бы следующий
+# assert увидел бы его поверх Home.
+- assertVisible: "Начать молитву"
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: "reminders-toggle"
+    direction: DOWN
+- tapOn:
+    id: "reminders-toggle"
+- assertVisible: ".*уведомления.*"
+- tapOn: "Разрешить"
+# Разрешено: тумблер включён, строка расписания появилась.
+- assertVisible:
+    id: "reminders-toggle"
+    checked: true
+- assertVisible:
+    id: "reminders-summary"
+- assertVisible: ".*Настроить расписание 1: Каждый день: 09:00.*"
+# Повторное выключение/включение без смены системного разрешения не спрашивает снова.
+- tapOn:
+    id: "reminders-toggle"
+- assertVisible:
+    id: "reminders-toggle"
+    checked: false
+- tapOn:
+    id: "reminders-toggle"
+- assertVisible:
+    id: "reminders-toggle"
+    checked: true
+- assertVisible:
+    id: "reminders-summary"
