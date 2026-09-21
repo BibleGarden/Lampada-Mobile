@@ -22,7 +22,8 @@ appId: twinkler
 - assertVisible: "Українська"
 - assertVisible: "НАЛАШТУВАННЯ"
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"
-# settings.back в uk — «Назад»; отдельного testID у кнопки назад нет.
-- tapOn: "Назад"
+# Кнопка назад — по testID: её подпись переключается вслед за языком.
+- tapOn:
+    id: "settings-back-button"
 - assertVisible: "Почати молитву"
 - assertVisible: "Підтримай вогник"

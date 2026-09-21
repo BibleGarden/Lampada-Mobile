@@ -19,14 +19,16 @@ export function Kicker({
   children,
   style,
   numberOfLines,
+  testID,
 }: {
   children: React.ReactNode;
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
+  testID?: string;
 }) {
   const styles = useStyles(stylesFactory);
   return (
-    <Text style={[styles.kicker, style]} numberOfLines={numberOfLines}>
+    <Text style={[styles.kicker, style]} numberOfLines={numberOfLines} testID={testID}>
       {children}
     </Text>
   );

@@ -7,13 +7,15 @@ appId: twinkler
 - launchApp:
     stopApp: true
     clearState: true
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "SCR-002 favorite relaunch"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -25,13 +27,16 @@ appId: twinkler
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
+- assertVisible:
+    id: "session-title"
 - tapOn:
     id: "dock-scripture-tab"
 - extendedWaitUntil:
     visible:
       id: "scripture-audio-button"
     timeout: 20000
-- tapOn: "В избранное"
-- assertVisible: "В избранном"
+- tapOn:
+    id: "dock-scripture-favorite"
+- assertVisible:
+    id: "dock-scripture-favorite-active"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/SCR-002-before-relaunch

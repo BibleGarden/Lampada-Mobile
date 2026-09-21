@@ -5,18 +5,23 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
-- doubleTapOn: "Начать молитву"
-- assertVisible: "ПЕРЕД МОЛИТВОЙ"
+- doubleTapOn:
+    id: "start-prayer-button"
+- assertVisible:
+    id: "setup-kicker"
 - tapOn:
     point: "10%,11%"
-- assertVisible: "Начать молитву"
-- tapOn: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "NAV-002 draft"
 - hideKeyboard
 - tapOn: "30"
-- doubleTapOn: "Далее"
+- doubleTapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -27,10 +32,13 @@ tags:
 - assertVisible: ".*30 минут.*NAV-002 draft.*"
 - tapOn:
     point: "10%,11%"
-- assertVisible: "ПЕРЕД МОЛИТВОЙ"
+- assertVisible:
+    id: "setup-kicker"
 - tapOn:
     point: "10%,11%"
-- assertVisible: "Начать молитву"
-- tapOn: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
+- tapOn:
+    id: "start-prayer-button"
 - assertVisible: "10"
 - assertNotVisible: "NAV-002 draft"

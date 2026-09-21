@@ -325,6 +325,7 @@ export default function Journal() {
                     {recs.map((r) => (
                       <RecordingRow
                         key={r.id}
+                        index={detail.recordings.indexOf(r)}
                         uri={r.uri}
                         durationSec={r.durationSec}
                         transcript={r.transcript}
@@ -345,6 +346,7 @@ export default function Journal() {
                 .map((r) => (
                   <RecordingRow
                     key={r.id}
+                    index={detail.recordings.indexOf(r)}
                     uri={r.uri}
                     durationSec={r.durationSec}
                     transcript={r.transcript}
@@ -391,7 +393,7 @@ export default function Journal() {
               <Pressable
                 onPress={() => askOrConfirmDelete(item.id)}
                 accessibilityRole="button"
-                testID="journal-delete"
+                testID={confirming ? 'journal-delete-confirm' : 'journal-delete'}
                 style={[styles.actionBtn, confirming && styles.actionBtnConfirming]}
               >
                 <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
@@ -420,7 +422,7 @@ export default function Journal() {
           <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
-          <Kicker>{t('screens.journal.title')}</Kicker>
+          <Kicker testID="journal-title">{t('screens.journal.title')}</Kicker>
           <View style={{ width: sc(34) }} />
         </View>
 
@@ -433,6 +435,7 @@ export default function Journal() {
             style={styles.search}
             returnKeyType="search"
             clearButtonMode="never"
+            testID="journal-search-input"
           />
           {query.length > 0 && (
             <Pressable onPress={() => setQuery('')} hitSlop={8} style={styles.searchClear}>
@@ -454,7 +457,7 @@ export default function Journal() {
           }}
           ListEmptyComponent={
             loaded ? (
-              <Text style={styles.empty}>
+              <Text style={styles.empty} testID="journal-empty-state">
                 {query.trim()
                   ? t('screens.journal.noResults')
                   : t('screens.journal.empty')}
@@ -522,6 +525,7 @@ export default function Journal() {
 }
 
 function RecordingRow({
+  index,
   uri,
   durationSec,
   transcript,
@@ -530,6 +534,7 @@ function RecordingRow({
   transcriptionState,
   onTranscribe,
 }: {
+  index: number;
   uri: string;
   durationSec: number;
   transcript: string | null;
@@ -542,7 +547,7 @@ function RecordingRow({
   const styles = useStyles(stylesFactory);
   return (
     <View style={styles.recBlock}>
-      <Pressable onPress={onToggle} style={styles.recRow}>
+      <Pressable onPress={onToggle} style={styles.recRow} testID={`journal-recording-${index}`}>
         <View style={styles.recPlay}>
           {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
         </View>
@@ -550,16 +555,18 @@ function RecordingRow({
       </Pressable>
       {!!transcript && <Text style={styles.recTranscript}>{transcript}</Text>}
       {!transcript && transcriptionState === 'loading' ? (
-        <Text style={styles.recTranscriptionState}>{t('screens.journal.transcribing')}</Text>
+        <Text style={styles.recTranscriptionState} testID={`journal-recording-${index}-transcribing`}>
+          {t('screens.journal.transcribing')}
+        </Text>
       ) : !transcript && transcriptionState === 'error' ? (
         <View style={styles.recTranscriptionErrorRow}>
           <Text style={styles.recTranscriptionError}>{t('screens.journal.transcriptionFailed')}</Text>
-          <Pressable onPress={onTranscribe} hitSlop={8}>
+          <Pressable onPress={onTranscribe} hitSlop={8} testID={`journal-recording-${index}-transcribe`}>
             <Text style={styles.recTranscriptionRetry}>{t('screens.journal.retry')}</Text>
           </Pressable>
         </View>
       ) : !transcript ? (
-        <Pressable onPress={onTranscribe} style={styles.recTranscriptionAction}>
+        <Pressable onPress={onTranscribe} style={styles.recTranscriptionAction} testID={`journal-recording-${index}-transcribe`}>
           <Text style={styles.recTranscriptionActionLabel}>{t('screens.journal.transcribe')}</Text>
         </Pressable>
       ) : null}

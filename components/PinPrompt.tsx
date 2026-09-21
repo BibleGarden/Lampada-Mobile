@@ -25,6 +25,8 @@ export type PinPromptProps = {
   expectedLength?: number;
   onSubmit: (pin: string) => string | null | Promise<string | null>;
   onCancel: () => void;
+  /** Стабильный id заголовка для e2e (пробрасывается в PinPad). */
+  titleTestID?: string;
 };
 
 export default function PinPrompt({
@@ -33,6 +35,7 @@ export default function PinPrompt({
   expectedLength,
   onSubmit,
   onCancel,
+  titleTestID,
 }: PinPromptProps) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
@@ -45,6 +48,7 @@ export default function PinPrompt({
           subtitle={subtitle}
           expectedLength={expectedLength}
           onSubmit={onSubmit}
+          titleTestID={titleTestID}
           footer={
             <Pressable
               accessibilityRole="button"

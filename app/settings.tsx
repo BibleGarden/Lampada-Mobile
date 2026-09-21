@@ -219,10 +219,11 @@ function OptionRow({ title, subtitle, selected, divided, onPress, testID }: {
   );
 }
 
-function StepButton({ label, onPress, children }: {
+function StepButton({ label, onPress, children, testID }: {
   label: string;
   onPress: () => void;
   children: React.ReactNode;
+  testID?: string;
 }) {
   const styles = useStyles(stylesFactory);
   return (
@@ -230,6 +231,7 @@ function StepButton({ label, onPress, children }: {
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={6}
+      testID={testID}
       onPress={() => {
         void Haptics.selectionAsync();
         onPress();
@@ -258,21 +260,21 @@ function TimeRow({ time, ruleIndex, canRemove, confirmingRemove, onShift, onRemo
     <View style={styles.timeRow} testID={`reminder-rule-${ruleIndex}-time-${label}`}>
       <View style={styles.timeControls}>
         <View style={styles.timeGroup}>
-          <StepButton label={t('settings.hourBack', { time: label })} onPress={() => onShift(-60)}>
+          <StepButton label={t('settings.hourBack', { time: label })} testID={`reminder-time-${label}-hour-back`} onPress={() => onShift(-60)}>
             <Minus size={14} color={colors.creamDim} />
           </StepButton>
           <Text style={styles.timeUnit}>{hour}</Text>
-          <StepButton label={t('settings.hourForward', { time: label })} onPress={() => onShift(60)}>
+          <StepButton label={t('settings.hourForward', { time: label })} testID={`reminder-time-${label}-hour-forward`} onPress={() => onShift(60)}>
             <Plus size={14} color={colors.creamDim} />
           </StepButton>
         </View>
         <Text style={styles.timeColon}>:</Text>
         <View style={styles.timeGroup}>
-          <StepButton label={t('settings.minutesBack', { time: label })} onPress={() => onShift(-5)}>
+          <StepButton label={t('settings.minutesBack', { time: label })} testID={`reminder-time-${label}-minutes-back`} onPress={() => onShift(-5)}>
             <Minus size={14} color={colors.creamDim} />
           </StepButton>
           <Text style={styles.timeUnit}>{minute}</Text>
-          <StepButton label={t('settings.minutesForward', { time: label })} onPress={() => onShift(5)}>
+          <StepButton label={t('settings.minutesForward', { time: label })} testID={`reminder-time-${label}-minutes-forward`} onPress={() => onShift(5)}>
             <Plus size={14} color={colors.creamDim} />
           </StepButton>
         </View>
@@ -281,7 +283,7 @@ function TimeRow({ time, ruleIndex, canRemove, confirmingRemove, onShift, onRemo
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t(confirmingRemove ? 'settings.confirmRemoveTime' : 'settings.removeTime', { time: label })}
-          testID={`reminder-delete-time-${label}`}
+          testID={confirmingRemove ? `reminder-delete-time-${label}-confirm` : `reminder-delete-time-${label}`}
           hitSlop={6}
           onPress={onRemove}
           style={({ pressed }) => [
@@ -762,7 +764,7 @@ export default function Settings() {
         {...screenReaderHiddenProps(!!pinPrompt || sheetOpen)}
       >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton accessibilityLabel={t('settings.back')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+          <IconButton accessibilityLabel={t('settings.back')} testID="settings-back-button" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
           <Kicker>{t('settings.title')}</Kicker>
@@ -1140,7 +1142,7 @@ export default function Settings() {
                 confirmReminderDelete === 'schedule' ? 'settings.confirmRemoveSchedule' : 'settings.removeSchedule',
                 { number: reminderEditorRuleIndex + 1 },
               )}
-              testID="reminders-delete-rule"
+              testID={confirmReminderDelete === 'schedule' ? 'reminders-delete-rule-confirm' : 'reminders-delete-rule'}
               onPress={() => askOrConfirmReminderDelete('schedule', () => removeReminderRule(reminderEditorRuleIndex))}
               style={({ pressed }) => [
                 styles.removeSchedule,
@@ -1224,6 +1226,7 @@ export default function Settings() {
           title={pinPrompt.title}
           subtitle={pinPrompt.subtitle}
           expectedLength={pinPrompt.expectedLength}
+          titleTestID={pinFlow ? `pin-prompt-${pinFlow.kind}-${pinFlow.step}` : undefined}
           onSubmit={submitPinFlow}
           onCancel={() => setPinFlow(null)}
         />

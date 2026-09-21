@@ -515,7 +515,7 @@ function SessionScreen() {
             >
               <Close />
             </IconButton>
-            <Kicker numberOfLines={1} style={styles.topTitle}>
+            <Kicker numberOfLines={1} style={styles.topTitle} testID="session-title">
               {t('screens.session.title')}
             </Kicker>
             <View style={styles.musicBtnWrap}>
@@ -526,6 +526,7 @@ function SessionScreen() {
                 border={s.musicOn ? 'rgba(230,162,60,.4)' : undefined}
                 accessibilityLabel={s.musicOn ? t('screens.session.musicOff') : t('screens.session.musicOn')}
                 accessibilityState={{ selected: s.musicOn }}
+                testID={s.musicOn ? 'session-music-on' : 'session-music-off'}
               >
                 <Music color={s.musicOn ? colors.amberBright : 'rgba(255,255,255,.5)'} />
               </IconButton>

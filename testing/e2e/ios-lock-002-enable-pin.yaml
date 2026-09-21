@@ -17,7 +17,8 @@ appId: twinkler
     direction: DOWN
 - tapOn:
     id: "lock-toggle"
-- assertVisible: "Придумайте пин-код"
+- assertVisible:
+    id: "pin-prompt-enable-create"
 - assertVisible:
     id: "pin-prompt"
 
@@ -30,7 +31,8 @@ appId: twinkler
     id: "pin-key-3"
 - tapOn:
     id: "pin-key-4"
-- assertVisible: "Придумайте пин-код"
+- assertVisible:
+    id: "pin-prompt-enable-create"
 - tapOn:
     id: "pin-key-5"
 - tapOn:
@@ -38,7 +40,8 @@ appId: twinkler
 - tapOn:
     id: "pin-key-confirm"
 
-- assertVisible: "Повторите пин-код"
+- assertVisible:
+    id: "pin-prompt-enable-repeat"
 - tapOn:
     id: "pin-key-1"
 - tapOn:
@@ -69,5 +72,7 @@ appId: twinkler
     timeout: 5000
 - assertVisible:
     id: "lock-screen"
-- assertVisible: "Введите пин-код"
-- assertVisible: "Забыли пин-код?"
+- assertVisible:
+    id: "lock-pin-title"
+- assertVisible:
+    id: "forgot-pin"

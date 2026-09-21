@@ -6,7 +6,8 @@ appId: twinkler
     clearState: false
 - runFlow:
     when:
-      visible: "ДНЕВНИК"
+      visible:
+        id: "journal-title"
     commands:
       - tapOn:
           point: "10%,8%"
@@ -14,8 +15,11 @@ appId: twinkler
     id: "journal-button"
 - assertVisible: ".*JRN-009 missing file.*"
 - tapOn: ".*JRN-009 missing file.*"
-- assertVisible: ".*Аудиозапись.*"
-- tapOn: ".*Аудиозапись.*"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-recording-0"
+- tapOn:
+    id: "journal-recording-0"
+- assertVisible:
+    id: "journal-title"
 - assertVisible: ".*JRN-009 missing file.*"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-009-missing-file-handled

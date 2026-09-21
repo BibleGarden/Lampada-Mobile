@@ -5,13 +5,15 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "SES-001 finite timer"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -23,7 +25,8 @@ tags:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
+- assertVisible:
+    id: "session-title"
 - tapOn:
     point: "50%,29%"
 - assertVisible: "−1"
@@ -34,11 +37,15 @@ tags:
 - tapOn: "−1"
 - tapOn: "−1"
 - extendedWaitUntil:
-    visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+    visible:
+      id: "reflect-kicker"
     timeout: 10000
-- tapOn: "Вернуться к молитве"
-- assertVisible: "МОЛИТВА"
+- tapOn:
+    id: "reflect-return-button"
+- assertVisible:
+    id: "session-title"
 - assertVisible: "SES-001 finite timer"
 - tapOn:
     id: "session-finish-button"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- assertVisible:
+    id: "reflect-kicker"

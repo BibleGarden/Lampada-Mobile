@@ -14,10 +14,12 @@ appId: twinkler
     visible:
       id: "lock-screen"
     timeout: 10000
-- assertVisible: "Введите пин-код"
+- assertVisible:
+    id: "lock-pin-title"
 # Face ID больше не предлагается: ни кнопки входа через биометрию, ни
 # автозапроса (он недоступен без зарегистрированного образца).
-- assertNotVisible: "Войти через (Face ID|Touch ID)"
+- assertNotVisible:
+    id: "pin-key-biometry"
 # Пин работает.
 - tapOn:
     id: "pin-key-1"
@@ -46,7 +48,8 @@ appId: twinkler
     direction: DOWN
 - tapOn:
     id: "lock-toggle"
-- assertVisible: "Введите пин-код"
+- assertVisible:
+    id: "lock-pin-title"
 - tapOn:
     id: "pin-key-1"
 - tapOn:

@@ -7,13 +7,15 @@ tags:
 # (в теговых прогонах ассертит только собственную запись — clearState не нужен).
 - launchApp:
     stopApp: true
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "Тревога перед разговором с отцом"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -25,10 +27,12 @@ tags:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
+- assertVisible:
+    id: "session-title"
 - tapOn:
     point: "92%,95%"
-- tapOn: "Ответить"
+- tapOn:
+    id: "dock-answer-button"
 - tapOn:
     id: "answer-input"
 - inputText: "Первый ответ молитвы А про страх и надежду"
@@ -55,7 +59,8 @@ tags:
     id: "recordings-stop-button"
 - assertVisible:
     id: "recording-card-0"
-- tapOn: "Закрыть записи"
+- tapOn:
+    id: "recordings-close-button"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-saved-a
 - waitForAnimationToEnd:
     timeout: 3000
@@ -68,19 +73,25 @@ tags:
     commands:
       - tapOn:
           id: "privacy-consent-answer_context-allow"
-- assertVisible: "Изменить"
+- assertVisible:
+    id: "dock-answer-edit-button"
 - tapOn:
     point: "10%,11%"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- tapOn: "Завершить"
-- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "reflect-kicker"
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"
 - assertVisible:
     id: "journal-button"
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - assertVisible: ".*Тревога перед разговором с отцом.*"
 - tapOn: ".*Тревога перед разговором с отцом.*"
 - assertVisible: ".*Первый ответ молитвы А про страх и надежду.*"
-- assertVisible: ".*Аудиозапись.*"
+- assertVisible:
+    id: "journal-recording-0"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-005-journal-detail-text-audio

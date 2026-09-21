@@ -142,7 +142,7 @@ function ReflectScreen() {
 
               <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
                 {!keyboardOpen && (
-                  <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }}>
+                  <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }} testID="reflect-kicker">
                     {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
                   </Kicker>
                 )}
@@ -176,10 +176,12 @@ function ReflectScreen() {
                 <View style={{ gap: sc(12) }}>
                   <GoldButton
                     label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
+                    testID="reflect-complete-button"
                     onPress={() => complete(takeaway.trim())}
                   />
                   <Pressable
                     onPress={continuePraying}
+                    testID="reflect-return-button"
                     style={({ pressed }) => [styles.continueBtn, pressed && { transform: [{ scale: 0.985 }] }]}
                   >
                     <Regen size={16} color={colors.amberBright} strokeWidth={1.7} />

@@ -29,5 +29,6 @@ tags:
 - assertVisible: ".*${REM_T1}.*"
 - assertVisible: ".*${REM_T2}.*"
 - openLink: "lampada://"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 # Срабатывания на оба времени фиксирует run-rem-fire.sh скриншотами.

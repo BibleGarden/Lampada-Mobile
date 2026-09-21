@@ -10,7 +10,8 @@ appId: twinkler
     visible:
       id: update-soft
     timeout: 20000
-- assertVisible: "Доступно обновление"
+- assertVisible:
+    id: "update-soft"
 - assertVisible:
     id: update-later
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/UPDATE-soft-banner

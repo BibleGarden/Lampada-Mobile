@@ -18,7 +18,8 @@ appId: twinkler
 - assertVisible:
     id: "lock-screen"
 - assertVisible: "Не удалось распознать лицо или отпечаток. Попробуйте ещё раз."
-- assertVisible: "Введите пин-код"
+- assertVisible:
+    id: "lock-pin-title"
 # Запасной вход — пин: ошибочный не пускает, верный пускает.
 - tapOn:
     id: "pin-key-0"

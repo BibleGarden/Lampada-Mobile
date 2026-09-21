@@ -154,6 +154,7 @@ function LockScreen() {
       <Animated.View entering={FadeIn.duration(320)} style={styles.lockScreen}>
         <PinPad
           title={t('components.security.enterPin')}
+          titleTestID="lock-pin-title"
           subtitle={
             canUseBiometry
               ? biometryError ?? t('components.security.orBiometrics', { name: biometry?.label ?? '' })

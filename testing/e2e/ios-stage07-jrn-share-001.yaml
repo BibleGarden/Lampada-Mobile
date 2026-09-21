@@ -9,19 +9,23 @@ tags:
     clearState: true
 - runFlow:
     when:
-      visible: "ДНЕВНИК"
+      visible:
+        id: "journal-title"
     commands:
       - tapOn:
           point: "10%,8%"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 # --- сетап: молитва с одним сохранённым ответом ---
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "JRN-014 share"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -33,11 +37,13 @@ tags:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
+- assertVisible:
+    id: "session-title"
 # накопить elapsed_sec > 0, иначе сессия не попадёт в дневник (lib/db.ts:223)
 - waitForAnimationToEnd:
     timeout: 9000
-- tapOn: "Ответить"
+- tapOn:
+    id: "dock-answer-button"
 - tapOn:
     id: "answer-input"
 - inputText: "JRN-014 answer"
@@ -50,7 +56,8 @@ tags:
     commands:
       - tapOn:
           id: "privacy-consent-answer_context-allow"
-- assertVisible: "Изменить"
+- assertVisible:
+    id: "dock-answer-edit-button"
 # Шторка ответа после сохранения может быть уже закрыта (consent-диалог её
 # гасит) или нет — первый тап либо уводит сразу на «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ»,
 # либо только закрывает шторку; во втором случае «Ответить» виден и жмём ещё раз.
@@ -58,19 +65,24 @@ tags:
     point: "10%,11%"
 - runFlow:
     when:
-      visible: "Ответить"
+      visible:
+        id: "dock-answer-button"
     commands:
       - tapOn:
           point: "10%,11%"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
-- tapOn: "Завершить"
+- assertVisible:
+    id: "reflect-kicker"
+- tapOn:
+    id: "reflect-complete-button"
 # Баннер prayer-saved-notice живёт 4 с и здесь может скрыться до assert —
 # для этого флоу достаточно сигнала «завершение сразу на Home» (ADR-0028).
-- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "home-title-lit"
 # --- конец сетапа ---
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 # expand the created prayer in the list
 - tapOn: ".*JRN-014 share.*"
 - assertVisible:
@@ -88,6 +100,7 @@ tags:
 # области над шитом.
 - tapOn:
     point: "50%,12%"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - assertVisible:
     id: "journal-share"

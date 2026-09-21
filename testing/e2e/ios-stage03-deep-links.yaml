@@ -6,8 +6,11 @@ tags:
     stopApp: true
     clearState: true
 - openLink: "lampada://session"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - openLink: "lampada://reflect"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - openLink: "lampada://done"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"

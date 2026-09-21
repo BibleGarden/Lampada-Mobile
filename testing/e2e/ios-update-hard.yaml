@@ -9,7 +9,8 @@ appId: twinkler
     visible:
       id: update-hard
     timeout: 20000
-- assertVisible: "Обнови Лампаду"
+- assertVisible:
+    id: "update-hard"
 - assertNotVisible:
     id: update-later
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/UPDATE-hard-banner

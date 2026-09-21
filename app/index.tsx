@@ -105,7 +105,10 @@ export default function Home() {
           {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
               после — в полную силу: «поддержи» обретает буквальный смысл */}
           <Flame width={sc(240)} lit={streak.prayedToday} />
-          <Text style={styles.title}>
+          <Text
+            style={styles.title}
+            testID={streak.prayedToday ? 'home-title-lit' : 'home-title'}
+          >
             {streak.prayedToday ? t('screens.home.lit') : t('screens.home.keepFlame')}
           </Text>
           <View style={styles.dotsRow}>
@@ -129,7 +132,7 @@ export default function Home() {
               {t('screens.home.prayerSaved')}
             </Text>
           )}
-          <GoldButton label={t('screens.home.start')} onPress={() => router.push('/setup')} />
+          <GoldButton label={t('screens.home.start')} testID="start-prayer-button" onPress={() => router.push('/setup')} />
         </View>
       </View>
     </View>

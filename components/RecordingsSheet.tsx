@@ -205,7 +205,11 @@ export default function RecordingsSheet({
                     </View>
                     {/* Ход расшифровки занимает всю строку метаданных: рядом
                         с «Запись N · время» он не помещается и обрезается. */}
-                    <Text style={[styles.recMeta, loading && styles.recMetaState]} numberOfLines={1}>
+                    <Text
+                      style={[styles.recMeta, loading && styles.recMetaState]}
+                      numberOfLines={1}
+                      testID={loading ? `recording-transcribing-${i}` : `recording-meta-${i}`}
+                    >
                       {loading
                         ? t('components.answers.transcribing')
                         : t('components.answers.recordingIndex', { index: i + 1, duration: fmtTime(hasProgress ? Math.round(playProgress * r.durationSec) : r.durationSec) })}

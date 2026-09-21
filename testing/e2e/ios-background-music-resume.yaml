@@ -5,5 +5,6 @@ appId: twinkler
     stopApp: false
 - assertVisible:
     id: "music-playing"
-- assertVisible: "Выключить тихую музыку"
+- assertVisible:
+    id: "session-music-on"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-29-background/BG-MUSIC-resumed-playing

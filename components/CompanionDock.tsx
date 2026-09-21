@@ -210,6 +210,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             </SquareBtn>
             <Pressable
               onPress={tap(onOpenAnswer)}
+              testID={answered ? 'dock-answer-edit-button' : 'dock-answer-button'}
               style={({ pressed }) => [
                 styles.mainBtn,
                 answered && styles.mainBtnAnswered,
@@ -258,6 +259,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   disabled={!canReadInFull}
                   accessibilityRole={canReadInFull ? 'button' : undefined}
                   accessibilityLabel={canReadInFull ? t('components.reader.readFull') : undefined}
+                  testID={canReadInFull ? 'scripture-read-full' : undefined}
                   style={({ pressed }) => [
                     styles.scripturePreview,
                     pressed && canReadInFull && styles.scripturePreviewPressed,
@@ -333,7 +335,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                   ) : (
                     <PlayIcon size={12} />
                   )}
-                  <Text style={styles.readMoreLabel}>
+                  <Text style={styles.readMoreLabel} testID={`scripture-audio-label-${scriptureAudio.phase}`}>
                     {scriptureAudio.phase === 'loading'
                       ? t('components.reader.loading')
                       : scriptureAudio.phase === 'playing'
@@ -358,6 +360,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             <Pressable
               disabled={!curScripture}
               onPress={tap(s.toggleFav)}
+              testID={curFav ? 'dock-scripture-favorite-active' : 'dock-scripture-favorite'}
               style={({ pressed }) => [
                 styles.mainBtn,
                 !curScripture && { opacity: 0.35 },
