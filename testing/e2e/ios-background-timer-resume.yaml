@@ -4,5 +4,6 @@ appId: twinkler
 - launchApp:
     stopApp: false
 - extendedWaitUntil:
-    visible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+    visible:
+      id: "reflect-kicker"
     timeout: 10000

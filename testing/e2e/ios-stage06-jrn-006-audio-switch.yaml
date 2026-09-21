@@ -6,17 +6,22 @@ appId: twinkler
     clearState: false
 - runFlow:
     when:
-      visible: "Начать молитву"
+      visible:
+        id: "start-prayer-button"
     commands:
       - tapOn:
           id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - tapOn: ".*JRN-008 upgrade retest.*"
-- tapOn: ".*Аудиозапись.*"
+- tapOn:
+    id: "journal-recording-0"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-006-first-playing
 - tapOn: ".*JRN-008 upgrade retest.*"
 - assertVisible: ".*JRN-006 second audio.*"
 - tapOn: ".*JRN-006 second audio.*"
-- tapOn: ".*Аудиозапись.*"
-- assertVisible: "ДНЕВНИК"
+- tapOn:
+    id: "journal-recording-0"
+- assertVisible:
+    id: "journal-title"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-006-second-playing

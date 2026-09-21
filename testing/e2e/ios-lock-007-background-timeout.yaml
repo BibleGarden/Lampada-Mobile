@@ -17,7 +17,8 @@ appId: twinkler
 - launchApp:
     stopApp: true
     clearState: true
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 # Явная проверка предусловия. Оверлеи блокировки модальны для дерева
 # доступности (accessibilityViewIsModal), поэтому проверка ловит и регресс
 # самой модальности, а не только состояние защиты.
@@ -33,7 +34,8 @@ appId: twinkler
     direction: DOWN
 - tapOn:
     id: "lock-toggle"
-- assertVisible: "Придумайте пин-код"
+- assertVisible:
+    id: "pin-prompt-enable-create"
 - tapOn:
     id: "pin-key-4"
 - tapOn:
@@ -44,7 +46,8 @@ appId: twinkler
     id: "pin-key-1"
 - tapOn:
     id: "pin-key-confirm"
-- assertVisible: "Повторите пин-код"
+- assertVisible:
+    id: "pin-prompt-enable-repeat"
 - tapOn:
     id: "pin-key-4"
 - tapOn:
@@ -65,11 +68,13 @@ appId: twinkler
     id: "journal-button"
 - runFlow:
     when:
-      notVisible: "ДНЕВНИК"
+      notVisible:
+        id: "journal-title"
     commands:
       - tapOn:
           id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 
 # Короткое переключение код не запрашивает.
 - pressKey: Home
@@ -78,7 +83,8 @@ appId: twinkler
     timeout: 10000
     optional: true
 - tapOn: "Лампада"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - assertNotVisible:
     id: "lock-screen"
 
@@ -93,7 +99,8 @@ appId: twinkler
     visible:
       id: "lock-screen"
     timeout: 10000
-- assertVisible: "Введите пин-код"
+- assertVisible:
+    id: "lock-pin-title"
 
 # Процесс тот же: после ввода кода приложение осталось на дневнике.
 - tapOn:
@@ -108,7 +115,8 @@ appId: twinkler
     notVisible:
       id: "lock-screen"
     timeout: 5000
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 
 # Уборка: вернуть приложение в состояние без защиты.
 - tapOn:
@@ -121,7 +129,8 @@ appId: twinkler
     direction: DOWN
 - tapOn:
     id: "lock-toggle"
-- assertVisible: "Введите пин-код"
+- assertVisible:
+    id: "pin-prompt-disable-current"
 - tapOn:
     id: "pin-key-4"
 - tapOn:

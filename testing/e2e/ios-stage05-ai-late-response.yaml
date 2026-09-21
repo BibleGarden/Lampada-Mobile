@@ -3,4 +3,5 @@ appId: twinkler
 # исполняется runFlow внутри сессии с задержанным ИИ-ответом (stub :9085);
 # standalone запуск бессмысленен — сессии нет. См. отчёт 2026-09-20.
 ---
-- assertVisible: "Ответить"
+- assertVisible:
+    id: "dock-answer-button"

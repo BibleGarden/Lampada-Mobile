@@ -78,7 +78,7 @@ export default function Setup() {
             <IconButton size={sc(30)} onPress={() => router.back()}>
               <ChevronLeft size={18} color={colors.white65} />
             </IconButton>
-            <Kicker style={{ fontSize: sc(11) }}>{t('screens.setup.before')}</Kicker>
+            <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
           </View>
 
           <View>
@@ -151,6 +151,7 @@ export default function Setup() {
                 return (
                   <Pressable
                     key={p.v}
+                    testID={`setup-preset-${p.v}`}
                     onPress={() => {
                       Haptics.selectionAsync();
                       s.setMinutes(p.v);
@@ -172,7 +173,7 @@ export default function Setup() {
             </View>
           </View>
 
-          <GoldButton label={t('screens.setup.next')} onPress={() => void next()} />
+          <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
         </Animated.View>
       </Pressable>
 
@@ -183,6 +184,7 @@ export default function Setup() {
             {EXAMPLES.map((ex, index) => (
               <Pressable
                 key={ex}
+                testID={`setup-example-${index}`}
                 onPress={() => {
                   s.setTopic(t(`screens.setup.example${index}`));
                   setExamplesOpen(false);

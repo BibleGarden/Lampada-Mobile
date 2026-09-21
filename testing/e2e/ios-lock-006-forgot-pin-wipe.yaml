@@ -45,7 +45,8 @@ appId: twinkler
     id: "pin-key-2"
 - tapOn:
     id: "pin-key-1"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - tapOn:
     id: "journal-button"
 - assertVisible: ".*LOCK-006 запись.*"
@@ -74,13 +75,16 @@ appId: twinkler
     notVisible:
       id: "lock-screen"
     timeout: 15000
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 
 # Дневник пуст.
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
-- assertVisible: "Здесь появятся твои молитвы"
+- assertVisible:
+    id: "journal-title"
+- assertVisible:
+    id: "journal-empty-state"
 - assertNotVisible: ".*LOCK-006 запись.*"
 - tapOn:
     point: "10%,11%"
@@ -98,6 +102,7 @@ appId: twinkler
 # Холодный старт больше не спрашивает код.
 - launchApp:
     stopApp: true
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - assertNotVisible:
     id: "lock-screen"

@@ -11,7 +11,8 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - assertNotVisible:
     id: "lock-screen"
 - assertNotVisible:

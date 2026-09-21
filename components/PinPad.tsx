@@ -44,6 +44,8 @@ export type PinPadProps = {
   /** Ссылки под клавиатурой: «Забыли пин-код?», «Отмена». */
   footer?: React.ReactNode;
   testID?: string;
+  /** Стабильный id заголовка для e2e: шаги сценария различаются по нему. */
+  titleTestID?: string;
 };
 
 /**
@@ -117,6 +119,7 @@ export default function PinPad({
   biometry,
   footer,
   testID,
+  titleTestID,
 }: PinPadProps) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
@@ -195,7 +198,7 @@ export default function PinPad({
   return (
     <View style={styles.root} testID={testID}>
       <View style={styles.head}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title} testID={titleTestID}>{title}</Text>
         <Animated.View style={shakeStyle}>
           <PinDots entered={pin.length} expectedLength={expectedLength} />
         </Animated.View>

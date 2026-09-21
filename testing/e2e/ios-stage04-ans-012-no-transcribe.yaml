@@ -8,19 +8,24 @@ appId: twinkler
 - launchApp:
     stopApp: true
     clearState: true
-- assertVisible: "Начать молитву"
-- tapOn: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
+- tapOn:
+    id: "start-prayer-button"
 - runFlow:
     when:
-      notVisible: "ПЕРЕД МОЛИТВОЙ"
+      notVisible:
+        id: "setup-kicker"
     commands:
-      - tapOn: "Начать молитву"
+      - tapOn:
+          id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "ANS-012 без расшифровки"
 - tapOn: "Готово"
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -32,14 +37,17 @@ appId: twinkler
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
-- tapOn: "Ответить"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-answer-button"
 - runFlow:
     when:
       notVisible:
         id: "answer-record-button"
     commands:
-      - tapOn: "Ответить"
+      - tapOn:
+          id: "dock-answer-button"
 - tapOn:
     id: "answer-record-button"
 - runFlow:
@@ -60,7 +68,9 @@ appId: twinkler
     id: "recording-card-0"
 - assertVisible:
     id: "recording-transcribe-0"
-- assertVisible: "Расшифровать"
-- assertNotVisible: "Расшифровываю…"
+- assertVisible:
+    id: "recording-transcribe-0"
+- assertNotVisible:
+    id: "recording-transcribing-0"
 - assertNotVisible: "РАСШИФРОВКА"
 - assertNotVisible: "Не удалось расшифровать"

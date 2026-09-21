@@ -28,7 +28,8 @@ appId: twinkler
     timeout: 5000
 - assertVisible:
     id: "lock-screen"
-- assertNotVisible: "Начать молитву.*Поддержи огонёк"
+- assertNotVisible:
+    id: "start-prayer-button"
 
 # Верный код впускает без дополнительного подтверждения.
 - tapOn:
@@ -47,4 +48,5 @@ appId: twinkler
     notVisible:
       id: "lock-screen"
     timeout: 5000
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"

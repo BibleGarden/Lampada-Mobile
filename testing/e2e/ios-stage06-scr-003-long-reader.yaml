@@ -30,22 +30,28 @@ tags:
       - tapOn: "Cancel"
 - runFlow:
     when:
-      visible: "Начать молитву"
+      visible:
+        id: "start-prayer-button"
     commands:
       - waitForAnimationToEnd:
           timeout: 5000
-      - tapOn: "Начать молитву"
+      - tapOn:
+          id: "start-prayer-button"
 - runFlow:
     when:
-      visible: "Начать молитву"
+      visible:
+        id: "start-prayer-button"
     commands:
-      - tapOn: "Начать молитву"
-- assertVisible: "ПЕРЕД МОЛИТВОЙ"
+      - tapOn:
+          id: "start-prayer-button"
+- assertVisible:
+    id: "setup-kicker"
 - tapOn: "?"
 - tapOn:
     point: "50%,34%"
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -61,27 +67,36 @@ tags:
 # на старом месте координаты теперь кнопка жалобы на вопрос.
 - tapOn:
     id: "dock-scripture-tab"
-- assertVisible: "В избранное"
-- tapOn: "В избранное"
+- assertVisible:
+    id: "dock-scripture-favorite"
+- tapOn:
+    id: "dock-scripture-favorite"
 # После добавления надпись меняется на «В избранном» (CompanionDock.tsx:368) —
 # ждём её, затем листаем к следующему отрывку, где состояние сброшено.
-- assertVisible: "В избранном"
+- assertVisible:
+    id: "dock-scripture-favorite-active"
 - tapOn:
     id: "dock-scripture-next"
-- tapOn: "В избранное"
-- assertVisible: "В избранном"
+- tapOn:
+    id: "dock-scripture-favorite"
+- assertVisible:
+    id: "dock-scripture-favorite-active"
 - tapOn:
     id: "dock-scripture-next"
-- tapOn: "В избранное"
-- assertVisible: "В избранном"
+- tapOn:
+    id: "dock-scripture-favorite"
+- assertVisible:
+    id: "dock-scripture-favorite-active"
 - tapOn:
     id: "dock-scripture-next"
 # Конкретный отрывок не фиксируем: список цитат зависит от ответа сервера
 # (в 08-22 флоу жил на старых фикстурах). Проверяем, что 4-й отрывок загружен.
 - assertVisible:
     id: "scripture-audio-button"
-- assertVisible: "Читать отрывок целиком"
-- tapOn: "Читать отрывок целиком"
+- assertVisible:
+    id: "scripture-read-full"
+- tapOn:
+    id: "scripture-read-full"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-003-long-reader-top
 - swipe:
     start: "50%,78%"

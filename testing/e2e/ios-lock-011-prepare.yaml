@@ -39,7 +39,8 @@ appId: twinkler
     commands:
       - tapOn:
           id: "lock-toggle"
-      - assertVisible: "Придумайте пин-код"
+      - assertVisible:
+          id: "pin-prompt-enable-create"
       - tapOn:
           id: "pin-key-1"
       - tapOn:
@@ -54,7 +55,8 @@ appId: twinkler
           id: "pin-key-6"
       - tapOn:
           id: "pin-key-confirm"
-      - assertVisible: "Повторите пин-код"
+      - assertVisible:
+          id: "pin-prompt-enable-repeat"
       - tapOn:
           id: "pin-key-1"
       - tapOn:

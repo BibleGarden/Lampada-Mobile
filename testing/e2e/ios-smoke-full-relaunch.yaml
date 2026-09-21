@@ -5,10 +5,12 @@ tags:
 - launchApp:
     stopApp: true
     clearState: false
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - assertVisible: ".*Финальный smoke.*"
 - tapOn: ".*Финальный smoke.*"
 - assertVisible: ".*Финальный ответ.*"

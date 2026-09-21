@@ -21,7 +21,8 @@ appId: twinkler
     id: "pin-key-5"
 - tapOn:
     id: "pin-key-6"
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 
 - tapOn:
     id: "settings-button"
@@ -33,7 +34,8 @@ appId: twinkler
     id: "change-pin-button"
 
 # Текущий код: длина известна, подтверждение не требуется.
-- assertVisible: "Текущий пин-код"
+- assertVisible:
+    id: "pin-prompt-change-current"
 - tapOn:
     id: "pin-key-1"
 - tapOn:
@@ -48,7 +50,8 @@ appId: twinkler
     id: "pin-key-6"
 
 # Новый код из четырёх цифр — минимально допустимая длина.
-- assertVisible: "Новый пин-код"
+- assertVisible:
+    id: "pin-prompt-change-create"
 - tapOn:
     id: "pin-key-9"
 - tapOn:
@@ -60,7 +63,8 @@ appId: twinkler
 - tapOn:
     id: "pin-key-confirm"
 
-- assertVisible: "Повторите пин-код"
+- assertVisible:
+    id: "pin-prompt-change-repeat"
 - tapOn:
     id: "pin-key-9"
 - tapOn:
@@ -108,4 +112,5 @@ appId: twinkler
     notVisible:
       id: "lock-screen"
     timeout: 5000
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"

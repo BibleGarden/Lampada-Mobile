@@ -5,12 +5,16 @@ tags:
 - launchApp:
     stopApp: true
     clearState: false
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - tapOn:
     id: "journal-button"
 - assertVisible: ".*JRN-008 upgrade retest.*"
 - tapOn: ".*JRN-008 upgrade retest.*"
-- assertVisible: ".*Аудиозапись.*"
-- tapOn: ".*Аудиозапись.*"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-recording-0"
+- tapOn:
+    id: "journal-recording-0"
+- assertVisible:
+    id: "journal-title"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-008-after-install-over-playback

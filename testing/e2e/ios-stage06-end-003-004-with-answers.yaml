@@ -11,13 +11,15 @@ appId: twinkler
 # на любом экране, а фрагмент стартует с Home.
 - launchApp:
     stopApp: true
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "END-003 double finish"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -34,7 +36,8 @@ appId: twinkler
 
 # Ответ со словами «Кириллица про доверие» и «надежда» — по «надежда» ищет
 # jrn-003/004-search, текст ждёт jrn-007-delete в деталях END-003.
-- tapOn: "Ответить"
+- tapOn:
+    id: "dock-answer-button"
 - tapOn:
     id: "answer-input"
 - inputText: "Ответ Кириллица про доверие и надежда"
@@ -59,7 +62,8 @@ appId: twinkler
     id: "recordings-stop-button"
 - assertVisible:
     id: "recording-card-0"
-- tapOn: "Закрыть записи"
+- tapOn:
+    id: "recordings-close-button"
 - waitForAnimationToEnd:
     timeout: 3000
 - tapOn:
@@ -71,7 +75,8 @@ appId: twinkler
     commands:
       - tapOn:
           id: "privacy-consent-answer_context-allow"
-- assertVisible: "Изменить"
+- assertVisible:
+    id: "dock-answer-edit-button"
 # Шторка ответа после сохранения может быть уже закрыта (consent-диалог её
 # гасит) или нет — первый тап либо уводит сразу на «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ»,
 # либо только закрывает шторку; во втором случае «Ответить» виден и жмём ещё раз.
@@ -79,32 +84,40 @@ appId: twinkler
     point: "10%,11%"
 - runFlow:
     when:
-      visible: "Ответить"
+      visible:
+        id: "dock-answer-button"
     commands:
       - tapOn:
           point: "10%,11%"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- assertVisible:
+    id: "reflect-kicker"
 
 # Takeaway со словами «тревожит» и «Кириллица» — по ним ищет jrn-003/004-search.
-- tapOn: "Одна-две строки…"
+- tapOn:
+    id: "reflection-input"
 - inputText: "END-003 вывод: тревожит разговор; Кириллица тест"
 # Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
 # (app/reflect.tsx:144) — гасим клавиатуру через Enter (как в smoke-full).
 - pressKey: Enter
-- assertVisible: "Сохранить и завершить"
-- tapOn: "Сохранить и завершить"
-- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "reflect-complete-button"
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"
 - assertVisible:
     id: "journal-button"
 
 # Вторая сессия — как в оригинале (ios-stage06-end-003-004-idempotency).
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "END-004 second prayer"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -120,8 +133,10 @@ appId: twinkler
     timeout: 9000
 - tapOn:
     point: "10%,11%"
-- tapOn: "Завершить"
-- assertVisible: "Огонёк горит"
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"
 - assertVisible:
     id: "journal-button"
 - tapOn:

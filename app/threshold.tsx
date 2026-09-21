@@ -140,7 +140,7 @@ export default function Threshold() {
           <IconButton size={sc(30)} onPress={() => router.back()}>
             <ChevronLeft size={18} color={colors.white55} />
           </IconButton>
-          <Kicker style={{ fontSize: sc(11) }}>{t('screens.threshold.before')}</Kicker>
+          <Kicker style={{ fontSize: sc(11) }} testID="threshold-kicker">{t('screens.threshold.before')}</Kicker>
         </View>
 
         <View style={[styles.main, landscapeTablet && styles.mainLandscape]}>
@@ -177,7 +177,7 @@ export default function Threshold() {
 
           <View style={[styles.holdWrap, landscapeTablet && styles.holdWrapLandscape]}>
             <GestureDetector gesture={hold}>
-              <View style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]}>
+              <View style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]} testID="threshold-hold-button">
                 <View style={[styles.holdInner, compactPhone && styles.holdInnerCompact]} />
                 <View style={StyleSheet.absoluteFill}>
                   <ProgressRing

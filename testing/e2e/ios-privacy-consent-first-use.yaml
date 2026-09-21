@@ -5,12 +5,14 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "PRV first use"
 - hideKeyboard
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - assertVisible:
     id: "privacy-consent-core_prayer_ai"
 - assertVisible: "Тема молитвы будет отправлена.*сервер приложения.*"
@@ -22,7 +24,8 @@ tags:
     id: "privacy-consent-core_prayer_ai-deny"
 # После отказа приложение идёт на пороговый экран «Перед началом»
 # (screens.threshold.before/title); отдельного экрана «Прежде чем войти» больше нет.
-- assertVisible: "Перед началом"
+- assertVisible:
+    id: "threshold-kicker"
 - openLink: "lampada://settings"
 # Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
 - tapOn:

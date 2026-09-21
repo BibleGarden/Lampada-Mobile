@@ -6,15 +6,18 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
-- assertVisible: "Поддержи огонёк"
+- assertVisible:
+    id: "home-title"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-before
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "END-001 без вывода"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -26,27 +29,34 @@ tags:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
+- assertVisible:
+    id: "session-title"
 # накопить elapsed_sec > 0, иначе сессия не попадёт в дневник (lib/db.ts:223)
 - waitForAnimationToEnd:
     timeout: 9000
 - tapOn:
     point: "10%,11%"
-- assertVisible: "ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ"
+- assertVisible:
+    id: "reflect-kicker"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input
-- assertVisible: "Завершить"
-- tapOn: "Завершить"
+- assertVisible:
+    id: "reflect-complete-button"
+- tapOn:
+    id: "reflect-complete-button"
 # Баннер prayer-saved-notice автоскрывается через 4 с (app/index.tsx) —
 # проверять сразу, до остальных assert'ов Home.
 - assertVisible:
     id: "prayer-saved-notice"
-- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "home-title-lit"
 - assertVisible:
     id: "journal-button"
-- assertVisible: "Огонёк горит"
+- assertVisible:
+    id: "home-title-lit"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - assertVisible: ".*END-001 без вывода.*"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-journal

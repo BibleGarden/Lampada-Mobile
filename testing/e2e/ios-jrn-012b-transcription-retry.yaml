@@ -6,14 +6,19 @@ appId: twinkler
 # «Расшифровать» — это ожидаемое поведение, повтор идёт с чистого листа.
 - launchApp:
     stopApp: true
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 - tapOn: ".*JRN-012 повтор расшифровки.*"
-- assertVisible: ".*Аудиозапись ·.*"
-- assertVisible: "Расшифровать"
-- tapOn: "Расшифровать"
+- assertVisible:
+    id: "journal-recording-0"
+- assertVisible:
+    id: "journal-recording-0-transcribe"
+- tapOn:
+    id: "journal-recording-0-transcribe"
 - extendedWaitUntil:
     visible: "Стабильная расшифровка лампады номер семь"
     timeout: 30000

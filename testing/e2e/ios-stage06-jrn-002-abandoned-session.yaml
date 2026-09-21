@@ -6,13 +6,15 @@ tags:
 - launchApp:
     stopApp: true
     clearState: false
-- tapOn: "Начать молитву"
+- tapOn:
+    id: "start-prayer-button"
 - tapOn:
     point: "50%,37%"
 - inputText: "JRN-002 брошенная сессия"
 - hideKeyboard
 - tapOn: "5"
-- tapOn: "Далее"
+- tapOn:
+    id: "setup-next-button"
 - runFlow:
     when:
       visible:
@@ -24,17 +26,21 @@ tags:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-- assertVisible: "МОЛИТВА"
+- assertVisible:
+    id: "session-title"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-002-session-started
 # kill the app mid-prayer: nothing was answered, nothing was concluded
 - stopApp
 - launchApp:
     stopApp: false
     clearState: false
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - tapOn:
     id: "journal-button"
-- assertVisible: "ДНЕВНИК"
-- assertVisible: "Здесь появятся твои молитвы"
+- assertVisible:
+    id: "journal-title"
+- assertVisible:
+    id: "journal-empty-state"
 - assertNotVisible: "JRN-002 брошенная сессия"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-002-journal-after-abandon

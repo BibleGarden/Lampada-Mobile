@@ -43,7 +43,8 @@ appId: twinkler
     commands:
       - tapOn:
           id: "lock-toggle"
-      - assertVisible: "Придумайте пин-код"
+      - assertVisible:
+          id: "pin-prompt-enable-create"
       - tapOn:
           id: "pin-key-1"
       - tapOn:
@@ -58,7 +59,8 @@ appId: twinkler
           id: "pin-key-6"
       - tapOn:
           id: "pin-key-confirm"
-      - assertVisible: "Повторите пин-код"
+      - assertVisible:
+          id: "pin-prompt-enable-repeat"
       - tapOn:
           id: "pin-key-1"
       - tapOn:
@@ -77,9 +79,11 @@ appId: twinkler
     id: "change-pin-button"
 # Контент до сворачивания: дневник с записью.
 - openLink: "lampada://journal"
-- assertVisible: "ДНЕВНИК"
+- assertVisible:
+    id: "journal-title"
 # Уход домой: приложение в фоне, активна шторка приватности (obscured).
 - pressKey: HOME
-- assertNotVisible: "ДНЕВНИК"
+- assertNotVisible:
+    id: "journal-title"
 - takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-008-home-screen
 # Скрипт открывает переключатель приложений и снимает снапшот.

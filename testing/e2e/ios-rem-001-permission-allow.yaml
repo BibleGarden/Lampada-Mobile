@@ -10,7 +10,8 @@ tags:
     stopApp: true
 # Запуск приложения не показывает никакого системного диалога — иначе бы следующий
 # assert увидел бы его поверх Home.
-- assertVisible: "Начать молитву"
+- assertVisible:
+    id: "start-prayer-button"
 - openLink: "lampada://settings"
 - scrollUntilVisible:
     element:
