@@ -1,0 +1,35 @@
+appId: twinkler
+# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
+# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+---
+# LNG-008: язык интерфейса и язык Писания — независимые настройки.
+# Не дублирует ios-scripture-default-language / user-choice-overrides-locale:
+# здесь меняем только интерфейс и смотрим, что тройка Писания не сдвинулась.
+#
+# Предусловие: симулятор на locale=en_US, чтобы дефолт Писания был
+# English / BSB / Bob Souer (как в ios-scripture-default-language.yaml).
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "settings-button"
+- assertVisible:
+    id: "interface-language-picker"
+- assertVisible: "English"
+- assertVisible:
+    id: "scripture-language-picker"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"
+- tapOn:
+    id: "interface-language-picker"
+- tapOn:
+    id: "interface-language-ru"
+- assertVisible: "НАСТРОЙКИ"
+- assertVisible: "ЯЗЫК ИНТЕРФЕЙСА"
+- assertVisible: "Русский"
+- assertVisible: "Язык цитат"
+- assertVisible:
+    id: "scripture-language-picker"
+- assertVisible: ".*English.*"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"

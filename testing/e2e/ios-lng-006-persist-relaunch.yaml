@@ -1,0 +1,30 @@
+appId: twinkler
+# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
+# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+---
+# LNG-006: явный выбор языка переживает холодный старт.
+#
+# Предусловие: симулятор на locale=en_US, чтобы сохраняемый uk не совпадал
+# с языком устройства. Следующий флоу, ios-lng-007-choice-survives-locale.yaml,
+# должен идти сразу после этого: он читает тот же контейнер на другом locale
+# и не должен делать clearState.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "interface-language-picker"
+- tapOn:
+    id: "interface-language-uk"
+- assertVisible: "Українська"
+- assertVisible: "НАЛАШТУВАННЯ"
+- launchApp:
+    stopApp: true
+- assertVisible: "Почати молитву"
+- tapOn:
+    id: "settings-button"
+- assertVisible:
+    id: "interface-language-picker"
+- assertVisible: "Українська"
+- assertVisible: "НАЛАШТУВАННЯ"

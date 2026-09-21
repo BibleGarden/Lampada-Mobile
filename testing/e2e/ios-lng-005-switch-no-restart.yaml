@@ -1,0 +1,28 @@
+appId: twinkler
+# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
+# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+---
+# LNG-005: смена языка в настройках меняет хром сразу, без перезапуска.
+# Стартовый язык устройства не важен: выбор идёт по testID, проверяем украинский.
+#
+# Язык Писания здесь не трогаем — независимость от него проверяет LNG-008.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "interface-language-picker"
+- tapOn:
+    id: "interface-language-uk"
+- assertNotVisible:
+    id: "interface-language-sheet"
+- assertVisible:
+    id: "interface-language-picker"
+- assertVisible: "Українська"
+- assertVisible: "НАЛАШТУВАННЯ"
+- assertVisible: "МОВА ІНТЕРФЕЙСУ"
+# settings.back в uk — «Назад»; отдельного testID у кнопки назад нет.
+- tapOn: "Назад"
+- assertVisible: "Почати молитву"
+- assertVisible: "Підтримай вогник"

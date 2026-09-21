@@ -1,0 +1,21 @@
+appId: twinkler
+# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
+# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+---
+# LNG-003: чистая установка при украинском языке устройства.
+#
+# Предусловие: симулятор уже на locale=uk_UA (AppleLocale + AppleLanguages=uk).
+# Maestro не умеет менять системный язык iOS внутри флоу — это делает
+# scripts/run-all-tests.sh перед запуском.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Почати молитву"
+- assertVisible: "Підтримай вогник"
+- tapOn:
+    id: "settings-button"
+- assertVisible: "НАЛАШТУВАННЯ"
+- assertVisible: "МОВА ІНТЕРФЕЙСУ"
+- assertVisible:
+    id: "interface-language-picker"
+- assertVisible: "Українська"

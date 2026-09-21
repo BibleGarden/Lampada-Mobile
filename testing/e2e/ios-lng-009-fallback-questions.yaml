@@ -1,0 +1,39 @@
+appId: twinkler
+# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
+# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+---
+# LNG-009: локальный пул запасных вопросов следует языку интерфейса.
+# Ядро ИИ заранее запрещаем в настройках, чтобы не уйти в живой ответ сервера.
+# Поле default_language в HTTP — это LNG-011, его Maestro не видит.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "settings-button"
+- tapOn:
+    id: "interface-language-picker"
+- tapOn:
+    id: "interface-language-en"
+- tapOn:
+    id: "privacy-settings-button"
+- tapOn:
+    id: "privacy-setting-core_prayer_ai-denied"
+- tapOn:
+    id: "privacy-sheet-done"
+- openLink: "lampada://setup"
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+- tapOn: "Continue"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible:
+    id: "session-timer-button"
+- assertVisible:
+    id: "question-source-label"
+- assertVisible: "Backup question"
+- assertVisible: "What is truly worrying you most right now\\?|What do you truly want in this situation\\?|What are you afraid of losing\\?|What does your conscience tell you when you become still\\?|If God were beside you listening right now, what would you tell Him\\?"

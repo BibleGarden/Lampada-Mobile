@@ -1,0 +1,66 @@
+appId: twinkler
+---
+# ANS-012 (часть про UI): после остановки записи видны карточка и кнопка
+# «Расшифровать», запроса нет — нет и состояния загрузки.
+#
+# Что сеть и токены действительно не тратятся, Maestro не доказывает: это
+# ручная проверка прокси / логов сервера.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible: "Начать молитву"
+- tapOn: "Начать молитву"
+- runFlow:
+    when:
+      notVisible: "ПЕРЕД МОЛИТВОЙ"
+    commands:
+      - tapOn: "Начать молитву"
+- tapOn:
+    point: "50%,37%"
+- inputText: "ANS-012 без расшифровки"
+- tapOn: "Готово"
+- tapOn: "5"
+- tapOn: "Далее"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible: "МОЛИТВА"
+- tapOn: "Ответить"
+- runFlow:
+    when:
+      notVisible:
+        id: "answer-record-button"
+    commands:
+      - tapOn: "Ответить"
+- tapOn:
+    id: "answer-record-button"
+- runFlow:
+    when:
+      visible: "OK"
+    commands:
+      - tapOn: "OK"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- assertVisible:
+    id: "recording-transcribe-0"
+- assertVisible: "Расшифровать"
+- assertNotVisible: "Расшифровываю…"
+- assertNotVisible: "РАСШИФРОВКА"
+- assertNotVisible: "Не удалось расшифровать"
