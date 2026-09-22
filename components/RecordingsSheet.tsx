@@ -434,7 +434,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: sc(9.5),
     letterSpacing: sc(1.4),
-    color: colors.labelGoldDim,
+    color: colors.labelGold,
   },
   closeBtn: {
     width: sc(24),
@@ -455,7 +455,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifItalic,
     fontSize: sc(13),
     textAlign: 'center',
-    color: 'rgba(240,225,195,.4)',
+    color: colors.creamDim,
   },
   audioError: {
     marginTop: sc(7),
@@ -558,7 +558,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: sc(9),
     letterSpacing: sc(1.2),
-    color: colors.labelGoldDim,
+    color: colors.labelGold,
   },
   // Свёрнутая расшифровка: та же карточка, но три строки и без курсора
   transcriptPreview: {

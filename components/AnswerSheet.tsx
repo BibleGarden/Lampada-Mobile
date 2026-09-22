@@ -46,7 +46,7 @@ import {
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type RecordingAudioModeLease,
 } from '../lib/audioModeCoordinator';
-import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { playAudioRecording } from '../lib/audioPlayerOperation';
@@ -1019,7 +1019,7 @@ export default function AnswerSheet({
               onChangeText={setText}
               multiline
               placeholder={t('components.answers.placeholder')}
-              placeholderTextColor="rgba(240,230,210,.35)"
+              placeholderTextColor={colors.placeholder}
               style={styles.input}
             />
 
@@ -1035,6 +1035,7 @@ export default function AnswerSheet({
                 }
                 accessibilityRole="button"
                 testID="answer-record-button"
+                hitSlop={touchSlop(sc(32))} // micBtn
                 onPress={openRecordings}
                 style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
               >
@@ -1047,6 +1048,7 @@ export default function AnswerSheet({
               </Pressable>
               <Pressable
                 accessibilityRole="button"
+                hitSlop={touchSlop(sc(32))} // cancelBtn
                 onPress={requestClose}
                 style={({ pressed }) => [
                   styles.cancelBtn,
@@ -1210,7 +1212,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifItalic,
     fontSize: sc(12),
     textAlign: 'center',
-    color: 'rgba(240,225,195,.4)',
+    color: colors.creamDim,
   },
   micBtn: {
     width: sc(32),

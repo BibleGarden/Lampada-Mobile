@@ -19,7 +19,7 @@ import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 const EXAMPLES = [0, 1, 2, 3] as const;
@@ -136,7 +136,8 @@ export default function Setup() {
               >
                 <Minus color={colors.white65} />
               </Pressable>
-              <View style={styles.stepValue}>
+              {/* «15» и «минут» VoiceOver читает одной фразой */}
+              <View accessible style={styles.stepValue}>
                 <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
                 <Text style={styles.stepUnit}>
                   {s.minutes === 0 ? t('screens.setup.untimed') : t(`screens.minute.${pluralCategory(language, s.minutes)}`)}
@@ -172,6 +173,7 @@ export default function Setup() {
                     accessibilityRole="button"
                     accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : p.label}
                     accessibilityState={{ selected: active }}
+                    hitSlop={touchSlop(presetHeight())}
                     style={[styles.preset, active && styles.presetActive]}
                   >
                     <Text
@@ -224,6 +226,8 @@ export default function Setup() {
     </View>
   );
 }
+
+const presetHeight = () => sc(30);
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
@@ -321,7 +325,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   preset: {
     flex: 1,
-    height: sc(30),
+    height: presetHeight(),
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,

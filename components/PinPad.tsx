@@ -270,7 +270,7 @@ export default function PinPad({
             emphasis={canConfirm}
             testID="pin-key-confirm"
           >
-            <Check size={24} color={canConfirm ? colors.ink : colors.labelGoldDim} />
+            <Check size={24} color={canConfirm ? colors.ink : colors.labelGold} />
           </KeyButton>
         )}
       </View>

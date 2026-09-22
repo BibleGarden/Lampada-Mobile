@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { FadeIn, useSharedValue, withTiming, Easing, ReduceMotion } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
@@ -76,12 +76,32 @@ export default function Threshold() {
 
   useEffect(() => clearTimers, []);
 
+  const enter = async () => {
+    if (entering.current) return;
+    entering.current = true;
+    setHint('screens.questionLoading');
+    try {
+      await s.enterSession();
+    } catch (error) {
+      recordDiagnostic('session_start_failed', error);
+      Alert.alert(t('screens.threshold.error'), t('screens.retryMessage'), [{ text: t('screens.understood') }]);
+      // при ошибке enterSession кнопка не должна остаться мёртвой
+      entering.current = false;
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.replace('/session');
+  };
+
   const begin = () => {
     if (entering.current) return;
     setHint('screens.threshold.holding');
     progress.value = withTiming(1, {
       duration: durations.holdToStart,
       easing: Easing.out(Easing.quad),
+      // заполнение кольца — функциональная обратная связь удержания, а не
+      // украшение: при «Уменьшении движения» оно не должно прыгать к концу
+      reduceMotion: ReduceMotion.Never,
     });
     // нарастающая хаптика: тики учащаются к завершению
     [0, 300, 550, 750, 920, 1060, 1180, 1280].forEach((t, i) => {
@@ -93,21 +113,7 @@ export default function Threshold() {
         }, t),
       );
     });
-    holdTimer.current = setTimeout(async () => {
-      entering.current = true;
-      setHint('screens.questionLoading');
-      try {
-        await s.enterSession();
-      } catch (error) {
-        recordDiagnostic('session_start_failed', error);
-        Alert.alert(t('screens.threshold.error'), t('screens.retryMessage'), [{ text: t('screens.understood') }]);
-        // при ошибке enterSession кнопка не должна остаться мёртвой
-        entering.current = false;
-        return;
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/session');
-    }, durations.holdToStart);
+    holdTimer.current = setTimeout(() => void enter(), durations.holdToStart);
   };
 
   const cancel = () => {
@@ -181,7 +187,12 @@ export default function Threshold() {
                 style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]}
                 accessibilityRole="button"
                 accessibilityLabel={t('screens.threshold.start')}
-                accessibilityHint={t('screens.threshold.hold')}
+                // VoiceOver двойным касанием не удерживает: для него кнопка
+                // срабатывает сразу, без ритуала удержания
+                accessibilityActions={[{ name: 'activate' }]}
+                onAccessibilityAction={({ nativeEvent }) => {
+                  if (nativeEvent.actionName === 'activate') void enter();
+                }}
                 testID="threshold-hold-button"
               >
                 <View style={[styles.holdInner, compactPhone && styles.holdInnerCompact]} />
@@ -251,7 +262,7 @@ const stylesFactory = () => StyleSheet.create({
     paddingHorizontal: 2,
   },
   // На коротких телефонах сохраняем кегль и освобождаем высоту за счёт
-  // декоративных интервалов. ScrollView остаётся страховкой для Dynamic Type.
+  // декоративных интервалов. ScrollView остаётся страховкой для самых низких окон.
   briefCompact: {
     paddingVertical: sc(8),
     gap: sc(8),

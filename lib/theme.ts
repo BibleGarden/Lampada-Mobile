@@ -51,6 +51,11 @@ Dimensions.addEventListener('change', ({ window }) => {
 
 /** px из прототипа → pt на текущем экране (шаг 0.5 для чёткости линий) */
 export const sc = (v: number) => Math.round(v * geometry.scale * 2) / 2;
+/**
+ * hitSlop, который добирает сторону `size` (в pt) до 44 pt — минимальной зоны
+ * касания по HIG. Нужен компактным кнопкам: на iPhone SE sc(32) — это 41 pt.
+ */
+export const touchSlop = (size: number) => Math.max(0, Math.ceil((44 - size) / 2));
 /** Планшетная раскладка. Функция, а не константа: зависит от текущего окна. */
 export const isTablet = () => geometry.isTablet;
 
@@ -96,7 +101,10 @@ export const colors = {
   // текст — по ролям, не плодить оттенки:
   // cream — заголовки и вопросы; parchment — основной текст (поля, карточки);
   // creamBright — крупные цифры; creamDim — вторичные строки;
-  // labelGold — mono-подписи капсом; warmHint — тёплые хинты у кнопок
+  // labelGold — mono-подписи капсом; warmHint — тёплые хинты у кнопок;
+  // placeholder — плейсхолдеры полей ввода.
+  // Альфа текстовых токенов подобрана под WCAG AA (≥4.5:1) на самых светлых
+  // фонах, где они стоят: карточка cardBg поверх bgScreen и bgSheet
   cream: '#f3e6c8',
   creamBright: '#f6ecd4',
   creamDim: 'rgba(240,225,195,.65)',
@@ -105,6 +113,7 @@ export const colors = {
   body: 'rgba(238,233,225,.82)',
   cardText: '#eef0e6',
   warmHint: 'rgba(240,200,140,.7)',
+  placeholder: 'rgba(240,230,210,.55)',
 
   // служебные
   white05: 'rgba(255,255,255,.05)',
@@ -113,8 +122,7 @@ export const colors = {
   white50: 'rgba(255,255,255,.5)',
   white55: 'rgba(255,255,255,.55)',
   white65: 'rgba(255,255,255,.65)',
-  labelGold: 'rgba(214,182,120,.68)',
-  labelGoldDim: 'rgba(214,182,120,.5)',
+  labelGold: 'rgba(214,182,120,.72)',
   cardBorder: 'rgba(214,182,120,.42)',
   cardBg: 'rgba(214,182,120,.08)',
   btnGoldBg: 'rgba(214,182,120,.16)',

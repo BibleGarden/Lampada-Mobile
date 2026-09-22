@@ -1,4 +1,4 @@
-import { useI18n } from '../lib/i18n';
+import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
@@ -83,7 +83,7 @@ export default function Session() {
 }
 
 function SessionScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   useKeepAwake(); // экран не гаснет во время молитвы
   const insets = useSafeAreaInsets();
@@ -486,6 +486,7 @@ function SessionScreen() {
         : t('screens.session.remaining');
   // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
+  const adjDuration = `${adjStep} ${t(`screens.minute.${pluralCategory(language, adjStep)}`)}`;
   // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
   // над таймером и прилипал к кольцу.
   const musicPlaying = s.musicOn && !transientAudioBusy && musicPlayersPlaying;
@@ -548,7 +549,8 @@ function SessionScreen() {
               style={StyleSheet.absoluteFill}
               testID="session-timer-button"
             />
-            <View pointerEvents="none" style={styles.timerContent}>
+            {/* Время и подпись под ним VoiceOver читает одной фразой */}
+            <View pointerEvents="none" accessible style={styles.timerContent}>
               <Text
                 style={[
                   styles.timerText,
@@ -574,6 +576,7 @@ function SessionScreen() {
                   ringSize={ringSize}
                   side="left"
                   label={`−${adjStep}`}
+                  accessibilityLabel={t('screens.session.subtractTime', { duration: adjDuration })}
                   accent
                   onPress={() => s.adjustTimer(-adjStep)}
                 />
@@ -581,6 +584,7 @@ function SessionScreen() {
                   ringSize={ringSize}
                   side="right"
                   label={`+${adjStep}`}
+                  accessibilityLabel={t('screens.session.addTime', { duration: adjDuration })}
                   accent
                   onPress={() => s.adjustTimer(adjStep)}
                 />
@@ -588,8 +592,8 @@ function SessionScreen() {
             )}
           </View>
 
-          <View style={styles.goalWrap}>
-            <Kicker style={{ fontSize: sc(9), color: colors.labelGoldDim, marginBottom: sc(5) }}>
+          <View accessible style={styles.goalWrap}>
+            <Kicker style={{ fontSize: sc(9), marginBottom: sc(5) }}>
               {t('screens.session.goal')}
             </Kicker>
             <Text style={styles.goalText} numberOfLines={3}>
@@ -727,12 +731,14 @@ function AdjustBtn({
   ringSize,
   side,
   label,
+  accessibilityLabel,
   accent,
   onPress,
 }: {
   ringSize: number;
   side: 'left' | 'right';
   label: string;
+  accessibilityLabel: string;
   accent?: boolean;
   onPress: () => void;
 }) {
@@ -747,6 +753,8 @@ function AdjustBtn({
       ]}
     >
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
         onPress={() => {
           Haptics.selectionAsync();
           onPress();

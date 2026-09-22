@@ -15,7 +15,7 @@ import { BookOpen, CircleQuestionMark } from 'lucide-react-native';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { buildScriptureCompactText } from '../lib/scripture';
-import { colors, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
+import { colors, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { WindowDots } from './ui';
 import {
   Check,
@@ -45,6 +45,10 @@ const cardLineHeight = () => sc(20);
 // Кнопки в карточке ниже, чем ряд действий на весь экран: карточка и так
 // набирает высоту, а строки отрывка нужнее.
 const cardBtnSize = () => sc(32);
+const switchBtnHeight = () => sc(32);
+// Текстовые кнопки карточки ниже 44 pt: зону касания добирает hitSlop.
+const offlineActionHeight = () => sc(24);
+const listenButtonHeight = () => sc(26);
 
 // Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
 // Механика следа/фронтира живёт в store; здесь только отображение.
@@ -132,12 +136,13 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             accessibilityState={{ selected: isQ }}
             onPress={tap(() => s.setDockMode('question'))}
             testID="dock-question-tab"
+            hitSlop={touchSlop(switchBtnHeight())}
             style={[styles.switchBtn, isQ && styles.switchBtnActive]}
           >
             <CircleQuestionMark
               size={17}
               strokeWidth={1.7}
-              color={isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'}
+              color={isQ ? '#f0e6c8' : colors.labelGold}
             />
             <Text style={[styles.switchLabel, isQ && styles.switchLabelActive]}>{t('components.reader.question')}</Text>
           </Pressable>
@@ -147,12 +152,13 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             accessibilityState={{ selected: !isQ }}
             onPress={tap(() => s.setDockMode('scripture'))}
             testID="dock-scripture-tab"
+            hitSlop={touchSlop(switchBtnHeight())}
             style={[styles.switchBtn, !isQ && styles.switchBtnActive]}
           >
             <BookOpen
               size={17}
               strokeWidth={1.7}
-              color={!isQ ? '#f0e6c8' : 'rgba(214,182,120,.55)'}
+              color={!isQ ? '#f0e6c8' : colors.labelGold}
             />
             <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>{t('components.reader.quote')}</Text>
           </Pressable>
@@ -214,6 +220,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               accessibilityRole="button"
               accessibilityLabel={answered ? t('components.reader.edit') : t('components.reader.answer')}
               testID={answered ? 'dock-answer-edit-button' : 'dock-answer-button'}
+              hitSlop={touchSlop(cardBtnSize())}
               style={({ pressed }) => [
                 styles.mainBtn,
                 answered && styles.mainBtnAnswered,
@@ -245,6 +252,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               total={s.answeredCount + 1}
               current={s.qIndex}
               onSet={s.jumpQuestion}
+              accessibilityLabel={t('components.reader.question')}
             />
           </View>
         </Animated.View>
@@ -259,12 +267,13 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               <ActivityIndicator accessibilityLabel={t('components.reader.selecting')} color={colors.goldSoft} />
             ) : curScripture ? (
               <>
-                {/* Неполный текст отрывка открывает полную читалку. */}
+                {/* Неполный текст отрывка открывает полную читалку. Подпись
+                    не задаём: VoiceOver читает сам отрывок, а действие — подсказкой. */}
                 <Pressable
                   onPress={canReadInFull ? tap(onOpenReader) : undefined}
                   disabled={!canReadInFull}
                   accessibilityRole={canReadInFull ? 'button' : undefined}
-                  accessibilityLabel={canReadInFull ? t('components.reader.readFull') : undefined}
+                  accessibilityHint={canReadInFull ? t('components.reader.readFull') : undefined}
                   testID={canReadInFull ? 'scripture-read-full' : undefined}
                   style={({ pressed }) => [
                     styles.scripturePreview,
@@ -300,8 +309,8 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`${t('components.reader.offline')} · ${t('components.reader.retry')}`}
                     onPress={tap(() => void s.retryScripture())}
+                    hitSlop={touchSlop(offlineActionHeight())}
                     style={styles.offlineAction}
                   >
                     <Text style={styles.offlineLabel}>
@@ -311,9 +320,9 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 )}
               </>
             ) : (
+              // Подпись не задаём: VoiceOver должен прочитать и причину, и действие.
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={t('components.reader.tryAgain')}
                 onPress={tap(() => void s.retryScripture())}
                 style={styles.retryWrap}
               >
@@ -330,6 +339,9 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 <Pressable
                   onPress={tap(scriptureAudio.toggle)}
                   disabled={scriptureAudio.phase === 'loading'}
+                  accessibilityRole="button"
+                  accessibilityState={{ busy: scriptureAudio.phase === 'loading' }}
+                  hitSlop={touchSlop(listenButtonHeight())}
                   style={styles.listenButton}
                   accessibilityLabel={
                     scriptureAudio.phase === 'playing'
@@ -382,6 +394,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               accessibilityLabel={curFav ? t('components.reader.saved') : t('components.reader.save')}
               accessibilityState={{ selected: curFav }}
               testID={curFav ? 'dock-scripture-favorite-active' : 'dock-scripture-favorite'}
+              hitSlop={touchSlop(cardBtnSize())}
               style={({ pressed }) => [
                 styles.mainBtn,
                 !curScripture && { opacity: 0.35 },
@@ -401,7 +414,12 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             </SquareBtn>
           </View>
           <View style={styles.dotsWrap}>
-            <WindowDots total={Math.max(1, s.scrList.length)} current={s.scrIndex} onSet={s.jumpScripture} />
+            <WindowDots
+              total={Math.max(1, s.scrList.length)}
+              current={s.scrIndex}
+              onSet={s.jumpScripture}
+              accessibilityLabel={t('components.reader.quote')}
+            />
           </View>
         </Animated.View>
       )}
@@ -438,6 +456,7 @@ function SquareBtn({
       accessibilityState={{ disabled: !!disabled }}
       testID={testID}
       onPress={disabled ? undefined : onPress}
+      hitSlop={touchSlop(cardBtnSize())}
       style={({ pressed }) => [
         styles.squareBtn,
         dim && styles.squareBtnDim,
@@ -495,7 +514,7 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(10),
   },
   listenButton: {
-    minHeight: sc(26),
+    minHeight: listenButtonHeight(),
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(6),
@@ -510,7 +529,7 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: colors.white08,
   },
   switchBtn: {
-    height: sc(32),
+    height: switchBtnHeight(),
     paddingHorizontal: sc(10),
     flexDirection: 'row',
     gap: sc(5),
@@ -524,7 +543,7 @@ const stylesFactory = () => StyleSheet.create({
   switchLabel: {
     fontFamily: fonts.sansMedium,
     fontSize: sc(11),
-    color: 'rgba(214,182,120,.55)',
+    color: colors.labelGold,
   },
   switchLabelActive: { color: '#f0e6c8' },
   textWrap: {
@@ -589,7 +608,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   offlineAction: {
     marginTop: sc(5),
-    minHeight: sc(24),
+    minHeight: offlineActionHeight(),
     paddingHorizontal: sc(8),
     alignItems: 'center',
     justifyContent: 'center',

@@ -30,7 +30,7 @@ import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 export default function Journal() {
@@ -284,7 +284,8 @@ export default function Journal() {
         <Pressable
           onPress={() => toggleOpen(item.id)}
           accessibilityRole="button"
-          accessibilityLabel={t('screens.journal.openEntry', { date: fmtDate(item.startedAt) })}
+          // без подписи: VoiceOver читает саму карточку — дату, длительность,
+          // тему и вывод, а не одну дату
           accessibilityState={{ expanded: open }}
         >
           <View style={styles.cardHead}>
@@ -441,7 +442,7 @@ export default function Journal() {
             onChangeText={setQuery}
             placeholder={t('screens.journal.search')}
             accessibilityLabel={t('screens.journal.search')}
-            placeholderTextColor="rgba(240,230,210,.35)"
+            placeholderTextColor={colors.placeholder}
             style={styles.search}
             returnKeyType="search"
             clearButtonMode="never"
@@ -452,7 +453,7 @@ export default function Journal() {
               onPress={() => setQuery('')}
               accessibilityRole="button"
               accessibilityLabel={t('screens.journal.clearSearch')}
-              hitSlop={8}
+              hitSlop={touchSlop(sc(14))} // по размеру крестика
               style={styles.searchClear}
             >
               <Close size={14} />
@@ -568,6 +569,7 @@ function RecordingRow({
         accessibilityRole="button"
         accessibilityLabel={t('screens.journal.recording', { duration: fmtTime(durationSec) })}
         accessibilityState={{ selected: playing }}
+        hitSlop={touchSlop(recPlaySize())}
         style={styles.recRow}
         testID={`journal-recording-${index}`}
       >
@@ -588,7 +590,7 @@ function RecordingRow({
             onPress={onTranscribe}
             accessibilityRole="button"
             accessibilityLabel={t('screens.journal.retry')}
-            hitSlop={8}
+            hitSlop={touchSlop(sc(15))} // по высоте строки подписи
             testID={`journal-recording-${index}-transcribe`}
           >
             <Text style={styles.recTranscriptionRetry}>{t('screens.journal.retry')}</Text>
@@ -599,6 +601,7 @@ function RecordingRow({
           onPress={onTranscribe}
           accessibilityRole="button"
           accessibilityLabel={t('screens.journal.transcribe')}
+          hitSlop={touchSlop(sc(26))} // по высоте пилюли с подписью
           style={styles.recTranscriptionAction}
           testID={`journal-recording-${index}-transcribe`}
         >
@@ -608,6 +611,8 @@ function RecordingRow({
     </View>
   );
 }
+
+const recPlaySize = () => sc(28);
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
@@ -733,8 +738,8 @@ const stylesFactory = () => StyleSheet.create({
     marginTop: sc(8),
   },
   recPlay: {
-    width: sc(28),
-    height: sc(28),
+    width: recPlaySize(),
+    height: recPlaySize(),
     borderRadius: sc(14),
     alignItems: 'center',
     justifyContent: 'center',

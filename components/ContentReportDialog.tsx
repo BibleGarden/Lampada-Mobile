@@ -138,7 +138,7 @@ export default function ContentReportDialog({
                   maxLength={1000}
                   placeholder={t('components.contentReport.commentPlaceholder')}
                   accessibilityLabel={t('components.contentReport.commentPlaceholder')}
-                  placeholderTextColor="rgba(255,255,255,.35)"
+                  placeholderTextColor={colors.placeholder}
                   style={styles.input}
                   textAlignVertical="top"
                   testID="content-report-comment"

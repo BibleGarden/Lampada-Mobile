@@ -215,7 +215,7 @@ const stylesFactory = () => StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.mono,
     fontSize: sc(9.5),
-    color: colors.labelGoldDim,
+    color: colors.labelGold,
   },
   buildInfo: {
     marginTop: sc(8),
@@ -225,6 +225,6 @@ const stylesFactory = () => StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.mono,
     fontSize: sc(9.5),
-    color: colors.labelGoldDim,
+    color: colors.labelGold,
   },
 });

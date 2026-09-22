@@ -105,6 +105,18 @@ pass unscaled values. Text size depends only on window geometry: the system
 font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032). Settings sheets are centered and capped at `sc(390)` in
 width to keep their controls compact on wide tablet windows.
 
+Accessibility baseline. Text tokens in `lib/theme.ts` (including
+`placeholder`) meet WCAG AA 4.5:1 on the lightest backgrounds they sit on - a
+`cardBg` card over `bgScreen` or `bgSheet`; screens use tokens rather than their
+own translucent text colors. Controls smaller than 44 pt (sizes scale with
+`sc()`, so `sc(32)` is 41 pt on an iPhone SE) extend their touch area with
+`touchSlop(size)` from `lib/theme.ts` instead of growing visually. Reduce Motion
+relies on Reanimated's default `ReduceMotion.System`: entering/exiting
+animations are skipped and `withRepeat` loops (flame, halos, recording wave)
+freeze; Reanimated reads the setting at app start. The hold-to-start ring opts
+out with `ReduceMotion.Never` because it is progress feedback, and for
+VoiceOver the hold button starts the session on the `activate` action.
+
 Keyboard dismissal covers the screen or sheet bounds independently of the
 centered text column. Text fields retain their own touch handling; the answer
 sheet's side margins and handle dismiss the keyboard without discarding drafts.

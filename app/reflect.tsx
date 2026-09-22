@@ -161,7 +161,7 @@ function ReflectScreen() {
                 onChangeText={setTakeaway}
                 multiline
                 placeholder={t('screens.reflect.placeholder')}
-                placeholderTextColor="rgba(240,230,210,.35)"
+                placeholderTextColor={colors.placeholder}
                 style={[styles.input, keyboardOpen && styles.inputEditing]}
                 accessibilityLabel={t('screens.reflect.placeholder')}
                 accessibilityHint={t('screens.reflect.inputHint')}

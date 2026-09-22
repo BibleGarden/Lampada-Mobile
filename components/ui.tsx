@@ -13,7 +13,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 
 /** Подпись капсом моноширинным — фирменный элемент прототипа */
 export function Kicker({
@@ -56,6 +56,7 @@ export function GoldButton({
       accessibilityLabel={label}
       accessibilityRole="button"
       testID={testID}
+      hitSlop={compact ? touchSlop(sc(32)) : undefined}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         onPress();
@@ -151,15 +152,23 @@ export function CardIn({
   );
 }
 
-/** Точки-индикатор с «окном» из 7, как _winDots в прототипе */
+/**
+ * Точки-индикатор с «окном» из 7, как _winDots в прототипе.
+ *
+ * Для VoiceOver ряд — один элемент-регулятор, как системный UIPageControl:
+ * «Вопрос, 3 из 7», свайп вверх/вниз листает. Отдельные точки мельче 44 pt
+ * и продублированы кнопками «назад/вперёд» рядом, поэтому скрыты.
+ */
 export function WindowDots({
   total,
   current,
   onSet,
+  accessibilityLabel,
 }: {
   total: number;
   current: number;
   onSet: (i: number) => void;
+  accessibilityLabel: string;
 }) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
@@ -181,13 +190,22 @@ export function WindowDots({
   const bg = (k: Kind) =>
     k === 'cur' ? colors.goldSoft : k === 'edge' ? 'rgba(214,182,120,.2)' : 'rgba(214,182,120,.32)';
   return (
-    <View style={styles.dotsRow}>
+    <View
+      style={styles.dotsRow}
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityValue={{ text: t('components.reader.position', { current: current + 1, total }) }}
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={({ nativeEvent }) => {
+        if (nativeEvent.actionName === 'increment' && current < total - 1) onSet(current + 1);
+        if (nativeEvent.actionName === 'decrement' && current > 0) onSet(current - 1);
+      }}
+    >
       {dots.map(({ i, kind }) => (
         <Pressable
           key={i}
-          accessibilityRole="button"
-          accessibilityLabel={t('components.reader.step', { count: i + 1 })}
-          accessibilityState={{ selected: i === current }}
+          accessible={false}
           hitSlop={6}
           onPress={() => onSet(i)}
         >

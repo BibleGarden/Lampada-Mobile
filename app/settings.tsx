@@ -1336,7 +1336,7 @@ const stylesFactory = () => StyleSheet.create({
     backgroundColor: 'rgba(214,182,120,.22)',
   },
   consentActionText: {
-    color: 'rgba(214,182,120,.55)',
+    color: colors.labelGold,
     fontFamily: fonts.sansMedium,
     fontSize: sc(11),
   },
