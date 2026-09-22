@@ -35,6 +35,9 @@ const FixedTextInput = React.forwardRef<TextInputRef, TextInputProps>(
   (props, ref) => <NativeTextInput ref={ref} allowFontScaling={false} {...props} />,
 );
 FixedTextInput.displayName = 'TextInput';
+// Статика TextInput.State нужна навигации (useKeyboardManager в expo-router
+// читает currentlyFocusedInput при закрытии экрана); без неё — падение.
+Object.assign(FixedTextInput, { State: NativeTextInput.State });
 
 Object.defineProperty(ReactNative, 'Text', { configurable: true, get: () => FixedText });
 Object.defineProperty(ReactNative, 'TextInput', { configurable: true, get: () => FixedTextInput });
