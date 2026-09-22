@@ -95,12 +95,14 @@ upgrading it requires rebuilding the native app.
 | `lib/prayerSystemTimer.*.ts` | The platform lifecycle of the timer on the locked screen |
 | `widgets/PrayerLiveActivity.tsx` | The iOS Live Activity and Dynamic Island with the system countdown |
 | `modules/prayer-timer-notification/` | The Android ongoing notification with the system chronometer |
+| `lib/disableFontScaling.tsx` | Turns off system font scaling for every `Text` and `TextInput`; imported first in `app/_layout.tsx` (ADR-0032) |
 | `lib/theme.ts` | Visual tokens, `useStyles` - rebuilding the styles when the window geometry changes (ADR-0011), `column()` - the content column of the single layout (ADR-0012) |
 | `assets/audio/` | The local music files and the record of their origin and licenses |
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
 
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
-pass unscaled values. Settings sheets are centered and capped at `sc(390)` in
+pass unscaled values. Text size depends only on window geometry: the system
+font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032). Settings sheets are centered and capped at `sc(390)` in
 width to keep their controls compact on wide tablet windows.
 
 Keyboard dismissal covers the screen or sheet bounds independently of the

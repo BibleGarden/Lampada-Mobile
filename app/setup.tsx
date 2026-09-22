@@ -5,7 +5,6 @@ import {
   Keyboard,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -66,20 +65,16 @@ export default function Setup() {
       <ScreenBg />
       {/* Область закрытия клавиатуры занимает весь экран, включая поля
           по бокам ограниченной по ширине колонки на планшете. */}
-      <View style={styles.dismissArea}>
+      <Pressable
+        onPress={Keyboard.dismiss}
+        accessible={false}
+        style={styles.dismissArea}
+      >
         <Animated.View
           entering={FadeIn.duration(450)}
-          style={styles.body}
+          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
         >
-          <ScrollView
-            contentContainerStyle={[
-              styles.bodyContent,
-              { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) },
-            ]}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
-            <View style={styles.headerRow}>
+          <View style={styles.headerRow}>
             <IconButton
               size={sc(30)}
               accessibilityLabel={t('settings.back')}
@@ -92,7 +87,7 @@ export default function Setup() {
 
           <View>
             <View style={styles.goalHeader}>
-              <Text style={styles.goalTitle} maxFontSizeMultiplier={1.2}>{t('screens.setup.goal')}</Text>
+              <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
               <Pressable
                 onPress={() => setExamplesOpen(true)}
                 accessibilityRole="button"
@@ -194,10 +189,9 @@ export default function Setup() {
             </View>
           </View>
 
-            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
-          </ScrollView>
+          <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
         </Animated.View>
-      </View>
+      </Pressable>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
@@ -234,8 +228,7 @@ export default function Setup() {
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   dismissArea: { flex: 1 },
-  body: { flex: 1 },
-  bodyContent: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
+  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -249,7 +242,6 @@ const stylesFactory = () => StyleSheet.create({
     marginBottom: sc(8),
   },
   goalTitle: {
-    flexShrink: 1,
     fontFamily: fonts.serif,
     fontSize: sc(21),
     color: colors.cream,

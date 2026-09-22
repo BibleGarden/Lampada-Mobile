@@ -196,8 +196,8 @@ export default function Threshold() {
                 </View>
                 <View style={styles.holdContent} pointerEvents="none">
                   <Lamp />
-                  <Text style={styles.holdLabel} maxFontSizeMultiplier={1.2}>{t('screens.threshold.start')}</Text>
-                  <Text style={styles.holdHint} maxFontSizeMultiplier={1.2}>{t(hint)}</Text>
+                  <Text style={styles.holdLabel}>{t('screens.threshold.start')}</Text>
+                  <Text style={styles.holdHint}>{t(hint)}</Text>
                 </View>
               </View>
             </GestureDetector>

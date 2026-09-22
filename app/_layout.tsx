@@ -1,3 +1,4 @@
+import '../lib/disableFontScaling';
 import 'react-native-gesture-handler';
 import { useEffect, useRef, useState } from 'react';
 import { Stack, router, usePathname } from 'expo-router';

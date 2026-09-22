@@ -1,6 +1,6 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useState } from 'react';
-import { AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, NotebookText, Settings2 } from 'lucide-react-native';
@@ -68,16 +68,8 @@ export default function Home() {
           загрузкой бандла, FadeIn замирает на полупрозрачности — весь экран
           остаётся «бледным». Home — первый экран, ему проявление не нужно */}
       <View style={styles.screen}>
-        <ScrollView
-          contentContainerStyle={[
-            styles.homeContent,
-            { paddingTop: insets.top + sc(18), paddingBottom: insets.bottom + sc(96) },
-          ]}
-          contentInsetAdjustmentBehavior="never"
-          showsVerticalScrollIndicator={false}
-        >
-        <View style={styles.top}>
-          <Text style={styles.greeting} maxFontSizeMultiplier={1.2}>{greetingByHour(t)}</Text>
+        <View style={[styles.top, { top: insets.top + sc(18) }]}>
+          <Text style={styles.greeting}>{greetingByHour(t)}</Text>
           <View style={styles.topBtns}>
             <IconButton
               onPress={() => router.push('/journal')}
@@ -115,7 +107,6 @@ export default function Home() {
           <Flame width={sc(240)} lit={streak.prayedToday} />
           <Text
             style={styles.title}
-            maxFontSizeMultiplier={1.2}
             testID={streak.prayedToday ? 'home-title-lit' : 'home-title'}
           >
             {streak.prayedToday ? t('screens.home.lit') : t('screens.home.keepFlame')}
@@ -135,7 +126,6 @@ export default function Home() {
           {!!streakLine && <Text style={styles.streakLabel}>{streakLine}</Text>}
         </View>
 
-        </ScrollView>
         <View style={[styles.bottom, { paddingBottom: insets.bottom + sc(24) }]}>
           {showSavedNotice && (
             <Text accessibilityRole="alert" style={styles.savedNotice} testID="prayer-saved-notice">
@@ -151,9 +141,12 @@ export default function Home() {
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
-  screen: { flex: 1 },
-  homeContent: { flexGrow: 1, ...column() },
+  screen: { flex: 1, ...column() },
   top: {
+    position: 'absolute',
+    left: sc(18),
+    right: sc(18),
+    zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -169,19 +162,16 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(6),
   },
   center: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: sc(8),
-    paddingVertical: sc(24),
   },
   title: {
-    width: '100%',
-    flexShrink: 1,
     fontFamily: fonts.serif,
     fontSize: sc(26),
     color: colors.cream,
     marginTop: sc(12),
-    textAlign: 'center',
   },
   dotsRow: {
     flexDirection: 'row',
@@ -216,11 +206,6 @@ const stylesFactory = () => StyleSheet.create({
   // получать оставшуюся высоту, иначе на низком окне огонёк с подписями
   // центрируется по всему экрану и наезжает на кнопку.
   bottom: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
     paddingHorizontal: sc(18),
   },
   savedNotice: {

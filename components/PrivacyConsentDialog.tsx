@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
 import React, { useEffect, useState } from 'react';
-import { AppState, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
@@ -65,17 +65,10 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
         style={[styles.backdrop, { paddingTop: insets.top + sc(20), paddingBottom: insets.bottom + sc(20) }]}
       >
         <View style={styles.card} testID={`privacy-consent-${purpose}`}>
-          <ScrollView
-            style={styles.copyScroll}
-            contentContainerStyle={styles.cardContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator
-          >
-            <Text style={styles.kicker}>{text.kicker}</Text>
-            <Text style={styles.title}>{text.title}</Text>
-            <Text style={styles.body}>{text.body}</Text>
-            <Text style={styles.note}>{t('components.reader.decisionNote')}</Text>
-          </ScrollView>
+          <Text style={styles.kicker}>{text.kicker}</Text>
+          <Text style={styles.title}>{text.title}</Text>
+          <Text style={styles.body}>{text.body}</Text>
+          <Text style={styles.note}>{t('components.reader.decisionNote')}</Text>
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
@@ -115,14 +108,12 @@ const stylesFactory = () => StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: sc(440),
-    maxHeight: '90%',
+    padding: sc(22),
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.white08,
     backgroundColor: '#1d1710',
   },
-  copyScroll: { flexShrink: 1 },
-  cardContent: { padding: sc(22) },
   kicker: {
     marginBottom: sc(10),
     color: colors.labelGold,
