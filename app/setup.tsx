@@ -5,6 +5,7 @@ import {
   Keyboard,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -65,17 +66,25 @@ export default function Setup() {
       <ScreenBg />
       {/* Область закрытия клавиатуры занимает весь экран, включая поля
           по бокам ограниченной по ширине колонки на планшете. */}
-      <Pressable
-        onPress={Keyboard.dismiss}
-        accessible={false}
-        style={styles.dismissArea}
-      >
+      <View style={styles.dismissArea}>
         <Animated.View
           entering={FadeIn.duration(450)}
-          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
+          style={styles.body}
         >
-          <View style={styles.headerRow}>
-            <IconButton size={sc(30)} onPress={() => router.back()}>
+          <ScrollView
+            contentContainerStyle={[
+              styles.bodyContent,
+              { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
+            <View style={styles.headerRow}>
+            <IconButton
+              size={sc(30)}
+              accessibilityLabel={t('settings.back')}
+              onPress={() => router.back()}
+            >
               <ChevronLeft size={18} color={colors.white65} />
             </IconButton>
             <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
@@ -83,9 +92,12 @@ export default function Setup() {
 
           <View>
             <View style={styles.goalHeader}>
-              <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
+              <Text style={styles.goalTitle} maxFontSizeMultiplier={1.2}>{t('screens.setup.goal')}</Text>
               <Pressable
                 onPress={() => setExamplesOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.setup.examples')}
+                accessibilityHint={t('screens.setup.openExamples')}
                 hitSlop={8}
                 style={({ pressed }) => [styles.helpBtn, pressed && { transform: [{ scale: 0.92 }] }]}
               >
@@ -99,6 +111,8 @@ export default function Setup() {
               // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
               // говорят достаточно, а любая подсказка навязывала тон
               style={styles.topicInput}
+              accessibilityLabel={t('screens.setup.goal')}
+              accessibilityHint={t('screens.setup.goalHint')}
               // цель — одна фраза, переносы строк не нужны: клавиша ввода
               // становится синей «Готово» и закрывает клавиатуру
               returnKeyType="done"
@@ -117,6 +131,8 @@ export default function Setup() {
                   Haptics.selectionAsync();
                   s.decMinutes();
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.setup.decreaseDuration')}
                 style={({ pressed }) => [
                   styles.stepBtn,
                   styles.stepBtnLeft,
@@ -136,6 +152,8 @@ export default function Setup() {
                   Haptics.selectionAsync();
                   s.incMinutes();
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.setup.increaseDuration')}
                 style={({ pressed }) => [
                   styles.stepBtn,
                   styles.stepBtnRight,
@@ -156,6 +174,9 @@ export default function Setup() {
                       Haptics.selectionAsync();
                       s.setMinutes(p.v);
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : p.label}
+                    accessibilityState={{ selected: active }}
                     style={[styles.preset, active && styles.presetActive]}
                   >
                     <Text
@@ -173,18 +194,21 @@ export default function Setup() {
             </View>
           </View>
 
-          <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+          </ScrollView>
         </Animated.View>
-      </Pressable>
+      </View>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
+        <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
           <View style={[styles.examplesCard, { marginTop: insets.top + sc(92) }]}>
             <Kicker style={{ marginBottom: sc(8) }}>{t('screens.setup.examples')}</Kicker>
             {EXAMPLES.map((ex, index) => (
               <Pressable
                 key={ex}
                 testID={`setup-example-${index}`}
+                accessibilityRole="button"
+                accessibilityLabel={t(`screens.setup.example${index}`)}
                 onPress={() => {
                   s.setTopic(t(`screens.setup.example${index}`));
                   setExamplesOpen(false);
@@ -210,7 +234,8 @@ export default function Setup() {
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   dismissArea: { flex: 1 },
-  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
+  body: { flex: 1 },
+  bodyContent: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -224,6 +249,7 @@ const stylesFactory = () => StyleSheet.create({
     marginBottom: sc(8),
   },
   goalTitle: {
+    flexShrink: 1,
     fontFamily: fonts.serif,
     fontSize: sc(21),
     color: colors.cream,

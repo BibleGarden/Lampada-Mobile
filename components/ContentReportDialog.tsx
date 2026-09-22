@@ -137,6 +137,7 @@ export default function ContentReportDialog({
                   multiline
                   maxLength={1000}
                   placeholder={t('components.contentReport.commentPlaceholder')}
+                  accessibilityLabel={t('components.contentReport.commentPlaceholder')}
                   placeholderTextColor="rgba(255,255,255,.35)"
                   style={styles.input}
                   textAlignVertical="top"

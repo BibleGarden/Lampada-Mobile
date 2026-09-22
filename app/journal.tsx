@@ -281,7 +281,12 @@ export default function Journal() {
     const confirming = confirmDeleteId === item.id;
     return (
       <View style={[styles.card, open && styles.cardOpen]}>
-        <Pressable onPress={() => toggleOpen(item.id)}>
+        <Pressable
+          onPress={() => toggleOpen(item.id)}
+          accessibilityRole="button"
+          accessibilityLabel={t('screens.journal.openEntry', { date: fmtDate(item.startedAt) })}
+          accessibilityState={{ expanded: open }}
+        >
           <View style={styles.cardHead}>
             <Text style={styles.cardDate}>{fmtDate(item.startedAt)}</Text>
             <View style={styles.cardMetaRow}>
@@ -393,6 +398,7 @@ export default function Journal() {
               <Pressable
                 onPress={() => askOrConfirmDelete(item.id)}
                 accessibilityRole="button"
+                accessibilityLabel={confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
                 testID={confirming ? 'journal-delete-confirm' : 'journal-delete'}
                 style={[styles.actionBtn, confirming && styles.actionBtnConfirming]}
               >
@@ -419,7 +425,10 @@ export default function Journal() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
-          <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+          <IconButton
+            accessibilityLabel={t('settings.back')}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+          >
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
           <Kicker testID="journal-title">{t('screens.journal.title')}</Kicker>
@@ -431,6 +440,7 @@ export default function Journal() {
             value={query}
             onChangeText={setQuery}
             placeholder={t('screens.journal.search')}
+            accessibilityLabel={t('screens.journal.search')}
             placeholderTextColor="rgba(240,230,210,.35)"
             style={styles.search}
             returnKeyType="search"
@@ -438,7 +448,13 @@ export default function Journal() {
             testID="journal-search-input"
           />
           {query.length > 0 && (
-            <Pressable onPress={() => setQuery('')} hitSlop={8} style={styles.searchClear}>
+            <Pressable
+              onPress={() => setQuery('')}
+              accessibilityRole="button"
+              accessibilityLabel={t('screens.journal.clearSearch')}
+              hitSlop={8}
+              style={styles.searchClear}
+            >
               <Close size={14} />
             </Pressable>
           )}
@@ -476,7 +492,7 @@ export default function Journal() {
         statusBarTranslucent
         onRequestClose={() => setOpenQuote(null)}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setOpenQuote(null)}>
+        <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setOpenQuote(null)}>
           <Pressable
             style={[styles.modalCard, { maxHeight: '78%' }]}
             onPress={(event) => event.stopPropagation()}
@@ -547,7 +563,14 @@ function RecordingRow({
   const styles = useStyles(stylesFactory);
   return (
     <View style={styles.recBlock}>
-      <Pressable onPress={onToggle} style={styles.recRow} testID={`journal-recording-${index}`}>
+      <Pressable
+        onPress={onToggle}
+        accessibilityRole="button"
+        accessibilityLabel={t('screens.journal.recording', { duration: fmtTime(durationSec) })}
+        accessibilityState={{ selected: playing }}
+        style={styles.recRow}
+        testID={`journal-recording-${index}`}
+      >
         <View style={styles.recPlay}>
           {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
         </View>
@@ -561,12 +584,24 @@ function RecordingRow({
       ) : !transcript && transcriptionState === 'error' ? (
         <View style={styles.recTranscriptionErrorRow}>
           <Text style={styles.recTranscriptionError}>{t('screens.journal.transcriptionFailed')}</Text>
-          <Pressable onPress={onTranscribe} hitSlop={8} testID={`journal-recording-${index}-transcribe`}>
+          <Pressable
+            onPress={onTranscribe}
+            accessibilityRole="button"
+            accessibilityLabel={t('screens.journal.retry')}
+            hitSlop={8}
+            testID={`journal-recording-${index}-transcribe`}
+          >
             <Text style={styles.recTranscriptionRetry}>{t('screens.journal.retry')}</Text>
           </Pressable>
         </View>
       ) : !transcript ? (
-        <Pressable onPress={onTranscribe} style={styles.recTranscriptionAction} testID={`journal-recording-${index}-transcribe`}>
+        <Pressable
+          onPress={onTranscribe}
+          accessibilityRole="button"
+          accessibilityLabel={t('screens.journal.transcribe')}
+          style={styles.recTranscriptionAction}
+          testID={`journal-recording-${index}-transcribe`}
+        >
           <Text style={styles.recTranscriptionActionLabel}>{t('screens.journal.transcribe')}</Text>
         </Pressable>
       ) : null}

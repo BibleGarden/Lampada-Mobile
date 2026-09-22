@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../lib/i18n';
 import {
   Pressable,
   StyleSheet,
@@ -160,6 +161,7 @@ export function WindowDots({
   current: number;
   onSet: (i: number) => void;
 }) {
+  const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   type Kind = 'cur' | 'edge' | 'norm';
   const dots: { i: number; kind: Kind }[] = [];
@@ -181,7 +183,14 @@ export function WindowDots({
   return (
     <View style={styles.dotsRow}>
       {dots.map(({ i, kind }) => (
-        <Pressable key={i} hitSlop={6} onPress={() => onSet(i)}>
+        <Pressable
+          key={i}
+          accessibilityRole="button"
+          accessibilityLabel={t('components.reader.step', { count: i + 1 })}
+          accessibilityState={{ selected: i === current }}
+          hitSlop={6}
+          onPress={() => onSet(i)}
+        >
           <View
             style={{
               width: size(kind),

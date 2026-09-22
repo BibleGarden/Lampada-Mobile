@@ -163,6 +163,8 @@ function ReflectScreen() {
                 placeholder={t('screens.reflect.placeholder')}
                 placeholderTextColor="rgba(240,230,210,.35)"
                 style={[styles.input, keyboardOpen && styles.inputEditing]}
+                accessibilityLabel={t('screens.reflect.placeholder')}
+                accessibilityHint={t('screens.reflect.inputHint')}
                 testID="reflection-input"
                 // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
                 returnKeyType="done"
@@ -181,6 +183,8 @@ function ReflectScreen() {
                   />
                   <Pressable
                     onPress={continuePraying}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('screens.reflect.return')}
                     testID="reflect-return-button"
                     style={({ pressed }) => [styles.continueBtn, pressed && { transform: [{ scale: 0.985 }] }]}
                   >

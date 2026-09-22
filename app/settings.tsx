@@ -823,7 +823,12 @@ export default function Settings() {
           </View>
           {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
           {catalogError ? (
-            <Pressable onPress={() => void hydrate()} style={styles.retryButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('settings.catalogError')}
+              onPress={() => void hydrate()}
+              style={styles.retryButton}
+            >
               <Text style={styles.catalogMessage}>{t('settings.catalogError')}</Text>
             </Pressable>
           ) : null}
@@ -1062,7 +1067,12 @@ export default function Settings() {
           </View>
           {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
           {catalogError ? (
-            <Pressable onPress={() => void hydrate()} style={styles.retryButton}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('settings.catalogError')}
+              onPress={() => void hydrate()}
+              style={styles.retryButton}
+            >
               <Text style={styles.catalogMessage}>{t('settings.catalogError')}</Text>
             </Pressable>
           ) : null}

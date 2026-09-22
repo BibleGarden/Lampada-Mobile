@@ -202,6 +202,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
           </View>
           <View style={styles.actionsRow}>
             <SquareBtn
+              accessibilityLabel={t('components.reader.previousQuestion')}
               disabled={s.qIndex === 0}
               onPress={tap(s.prevQuestion)}
               dim
@@ -210,6 +211,8 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             </SquareBtn>
             <Pressable
               onPress={tap(onOpenAnswer)}
+              accessibilityRole="button"
+              accessibilityLabel={answered ? t('components.reader.edit') : t('components.reader.answer')}
               testID={answered ? 'dock-answer-edit-button' : 'dock-answer-button'}
               style={({ pressed }) => [
                 styles.mainBtn,
@@ -222,7 +225,10 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 {answered ? t('components.reader.edit') : t('components.reader.answer')}
               </Text>
             </Pressable>
-            <SquareBtn onPress={tap(() => s.nextQuestion())}>
+            <SquareBtn
+              accessibilityLabel={t('components.reader.nextQuestion')}
+              onPress={tap(() => s.nextQuestion())}
+            >
               {/* Plus и Regen — сплошные фигуры на всю кегль, в отличие от
                   узкого шеврона, поэтому в кнопке им нужен меньший размер */}
               {!onFrontier ? (
@@ -294,6 +300,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
                   <Pressable
                     accessibilityRole="button"
+                    accessibilityLabel={`${t('components.reader.offline')} · ${t('components.reader.retry')}`}
                     onPress={tap(() => void s.retryScripture())}
                     style={styles.offlineAction}
                   >
@@ -304,7 +311,12 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
                 )}
               </>
             ) : (
-              <Pressable onPress={tap(() => void s.retryScripture())} style={styles.retryWrap}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('components.reader.tryAgain')}
+                onPress={tap(() => void s.retryScripture())}
+                style={styles.retryWrap}
+              >
                 <Text style={styles.cardText}>{t('components.reader.unavailable')}</Text>
                 <Text style={styles.retryLabel}>
                   {s.scrError === 'not_configured' ? t('components.reader.checkSettings') : t('components.reader.tryAgain')}
@@ -354,12 +366,21 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             </View>
           )}
           <View style={styles.actionsRow}>
-            <SquareBtn disabled={!curScripture || s.scrIndex === 0} onPress={tap(s.prevScripture)} dim testID="dock-scripture-prev">
+            <SquareBtn
+              accessibilityLabel={t('components.reader.previousPassage')}
+              disabled={!curScripture || s.scrIndex === 0}
+              onPress={tap(s.prevScripture)}
+              dim
+              testID="dock-scripture-prev"
+            >
               <ChevronLeft />
             </SquareBtn>
             <Pressable
               disabled={!curScripture}
               onPress={tap(s.toggleFav)}
+              accessibilityRole="button"
+              accessibilityLabel={curFav ? t('components.reader.saved') : t('components.reader.save')}
+              accessibilityState={{ selected: curFav }}
               testID={curFav ? 'dock-scripture-favorite-active' : 'dock-scripture-favorite'}
               style={({ pressed }) => [
                 styles.mainBtn,
@@ -371,6 +392,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
               <Text style={styles.mainBtnLabel}>{curFav ? t('components.reader.saved') : t('components.reader.save')}</Text>
             </Pressable>
             <SquareBtn
+              accessibilityLabel={t('components.reader.nextPassage')}
               disabled={!curScripture || s.scrStatus === 'loading' || s.scrStatus === 'retrying'}
               onPress={tap(() => void s.nextScripture())}
               testID="dock-scripture-next"
@@ -398,17 +420,22 @@ function SquareBtn({
   onPress,
   disabled,
   dim,
+  accessibilityLabel,
   testID,
 }: {
   children: React.ReactNode;
   onPress: () => void;
   disabled?: boolean;
   dim?: boolean;
+  accessibilityLabel: string;
   testID?: string;
 }) {
   const styles = useStyles(stylesFactory);
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled }}
       testID={testID}
       onPress={disabled ? undefined : onPress}
       style={({ pressed }) => [

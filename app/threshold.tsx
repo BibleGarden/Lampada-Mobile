@@ -137,7 +137,7 @@ export default function Threshold() {
       >
         {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
         <View style={styles.headerRow}>
-          <IconButton size={sc(30)} onPress={() => router.back()}>
+          <IconButton size={sc(30)} accessibilityLabel={t('settings.back')} onPress={() => router.back()}>
             <ChevronLeft size={18} color={colors.white55} />
           </IconButton>
           <Kicker style={{ fontSize: sc(11) }} testID="threshold-kicker">{t('screens.threshold.before')}</Kicker>
@@ -177,7 +177,13 @@ export default function Threshold() {
 
           <View style={[styles.holdWrap, landscapeTablet && styles.holdWrapLandscape]}>
             <GestureDetector gesture={hold}>
-              <View style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]} testID="threshold-hold-button">
+              <View
+                style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.threshold.start')}
+                accessibilityHint={t('screens.threshold.hold')}
+                testID="threshold-hold-button"
+              >
                 <View style={[styles.holdInner, compactPhone && styles.holdInnerCompact]} />
                 <View style={StyleSheet.absoluteFill}>
                   <ProgressRing
