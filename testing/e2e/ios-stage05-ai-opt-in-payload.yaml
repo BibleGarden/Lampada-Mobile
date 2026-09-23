@@ -8,9 +8,9 @@ tags:
 - openLink: "lampada://settings"
 - runFlow:
     when:
-      visible: "Open"
+      visible: "Open|Открыть"
     commands:
-      - tapOn: "Open"
+      - tapOn: "Open|Открыть"
 # Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
 - tapOn:
     id: "privacy-settings-button"

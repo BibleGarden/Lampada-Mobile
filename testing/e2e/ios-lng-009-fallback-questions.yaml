@@ -23,9 +23,9 @@ appId: twinkler
 - openLink: "lampada://setup"
 - runFlow:
     when:
-      visible: "Open"
+      visible: "Open|Открыть"
     commands:
-      - tapOn: "Open"
+      - tapOn: "Open|Открыть"
 - tapOn: "Continue"
 - swipe:
     start: "50%,78%"

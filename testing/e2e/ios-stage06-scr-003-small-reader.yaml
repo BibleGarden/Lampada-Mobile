@@ -10,7 +10,7 @@ tags:
     when:
       visible: "Open in.*"
     commands:
-      - tapOn: "Open"
+      - tapOn: "Open|Открыть"
 - runFlow:
     when:
       visible: "Open in.*"
@@ -36,7 +36,8 @@ tags:
           id: "start-prayer-button"
 - assertVisible:
     id: "setup-kicker"
-- tapOn: "?"
+- tapOn:
+    id: "setup-examples-button"
 - tapOn:
     point: "50%,34%"
 - tapOn: "5"

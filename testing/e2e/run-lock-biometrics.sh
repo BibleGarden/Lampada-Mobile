@@ -51,13 +51,13 @@ appId: twinkler
 ---
 - openLink: "lampada://"
 - tapOn:
-    text: "Open"
+    text: "Open|Открыть"
     optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 - openLink: "lampada://settings"
 - tapOn:
-    text: "Open"
+    text: "Open|Открыть"
     optional: true
 - waitForAnimationToEnd:
     timeout: 3000

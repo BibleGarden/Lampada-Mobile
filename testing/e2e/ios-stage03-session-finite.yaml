@@ -29,13 +29,21 @@ tags:
     id: "session-title"
 - tapOn:
     point: "50%,29%"
-- assertVisible: "−1"
-- assertVisible: "+1"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
+# у кнопок ±шаг голосовая подпись «Убавить/Добавить N минут», а не «−1»
+- assertVisible:
+    id: "session-time-subtract"
+- assertVisible:
+    id: "session-time-add"
+- tapOn:
+    id: "session-time-subtract"
+- tapOn:
+    id: "session-time-subtract"
+- tapOn:
+    id: "session-time-subtract"
+- tapOn:
+    id: "session-time-subtract"
+- tapOn:
+    id: "session-time-subtract"
 - extendedWaitUntil:
     visible:
       id: "reflect-kicker"
@@ -44,7 +52,10 @@ tags:
     id: "reflect-return-button"
 - assertVisible:
     id: "session-title"
-- assertVisible: "SES-001 finite timer"
+# кикер «цель» и тема VoiceOver читает одной фразой
+- assertVisible:
+    id: "session-goal"
+    text: ".*SES-001 finite timer"
 - tapOn:
     id: "session-finish-button"
 - assertVisible:

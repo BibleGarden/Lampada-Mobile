@@ -46,4 +46,5 @@ tags:
     id: "dock-answer-edit-button"
 - tapOn:
     id: "dock-answer-edit-button"
-- takeScreenshot: ANS-001-restored-text
+- assertVisible:
+    text: ".*ANS-001 сохранённый текст.*"

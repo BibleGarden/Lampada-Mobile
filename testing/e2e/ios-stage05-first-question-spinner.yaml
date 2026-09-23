@@ -7,9 +7,9 @@ tags:
     clearState: true
 - runFlow:
     when:
-      visible: "Open"
+      visible: "Open|Открыть"
     commands:
-      - tapOn: "Open"
+      - tapOn: "Open|Открыть"
 - assertVisible:
     id: "start-prayer-button"
 - tapOn:

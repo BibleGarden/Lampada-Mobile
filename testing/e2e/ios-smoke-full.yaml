@@ -53,11 +53,13 @@ tags:
     id: "dock-answer-button"
 - runFlow:
     when:
-      notVisible: "Bottom Sheet"
+      notVisible:
+        id: "answer-input"
     commands:
       - tapOn:
           id: "dock-answer-button"
-- assertVisible: "Bottom Sheet"
+- assertVisible:
+    id: "answer-input"
 - tapOn:
     id: "answer-input"
 - inputText: "Финальный ответ"

@@ -34,8 +34,9 @@ tags:
     point: "10%,11%"
 - assertVisible:
     id: "reflect-kicker"
+# по testID, а не по точке: на iPhone SE в 47% высоты лежит вопрос, а не поле
 - tapOn:
-    point: "50%,47%"
+    id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
 # Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
 # (app/reflect.tsx:144) — гасим клавиатуру через Enter (как в smoke-full).

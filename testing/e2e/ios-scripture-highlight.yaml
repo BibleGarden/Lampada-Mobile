@@ -7,7 +7,7 @@ tags:
     stopApp: true
     clearState: true
 - tapOn:
-    text: "Open"
+    text: "Open|Открыть"
     optional: true
 - tapOn:
     id: "start-prayer-button"

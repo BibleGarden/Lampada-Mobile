@@ -40,5 +40,7 @@ tags:
     id: "start-prayer-button"
 - tapOn:
     id: "start-prayer-button"
-- assertVisible: "10"
+- assertVisible:
+    id: "setup-duration-value"
+    text: "10 минут"
 - assertNotVisible: "NAV-002 draft"

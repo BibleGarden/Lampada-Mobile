@@ -7,7 +7,19 @@ tags:
     stopApp: true
     clearState: true
 - openLink: "lampada://settings"
+# iOS 26 подтверждает переход по схеме системным диалогом на языке
+# симулятора; неотвеченный, он переживает перезапуск и валит следующие флоу.
+- runFlow:
+    when:
+      visible: "Open|Открыть"
+    commands:
+      - tapOn: "Open|Открыть"
 # Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+# На iPhone SE строка ниже первого экрана, а невидимых узлов XCTest не отдаёт.
+- scrollUntilVisible:
+    element:
+      id: "privacy-settings-button"
+    direction: DOWN
 - tapOn:
     id: "privacy-settings-button"
 - scrollUntilVisible:
@@ -19,6 +31,11 @@ tags:
 - tapOn:
     id: "privacy-sheet-done"
 - openLink: "lampada://"
+- runFlow:
+    when:
+      visible: "Open|Открыть"
+    commands:
+      - tapOn: "Open|Открыть"
 - tapOn:
     id: "start-prayer-button"
 - tapOn:

@@ -9,23 +9,29 @@ tags:
     id: "start-prayer-button"
 - tapOn:
     id: "start-prayer-button"
-- assertVisible: "10"
-- assertVisible: "минут"
-- tapOn: "?"
+# число и единица — один элемент доступности: VoiceOver читает их фразой
+- assertVisible:
+    id: "setup-duration-value"
+    text: "10 минут"
+- tapOn:
+    id: "setup-examples-button"
 - assertVisible:
     id: "setup-example-0"
 - tapOn:
     id: "setup-example-0"
 - assertVisible: "Поблагодарить Бога"
-- tapOn: "?"
+- tapOn:
+    id: "setup-examples-button"
 - tapOn:
     id: "setup-example-1"
 - assertVisible: "Привести мысли в порядок"
-- tapOn: "?"
+- tapOn:
+    id: "setup-examples-button"
 - tapOn:
     id: "setup-example-2"
 - assertVisible: "Принять важное решение"
-- tapOn: "?"
+- tapOn:
+    id: "setup-examples-button"
 - tapOn:
     id: "setup-example-3"
 - assertVisible: "Подготовиться к разговору"
@@ -33,17 +39,26 @@ tags:
 - eraseText: 100
 - hideKeyboard
 - tapOn: "5"
-- assertVisible: "5"
-- assertVisible: "минут"
+- assertVisible:
+    id: "setup-duration-value"
+    text: "5 минут"
 - tapOn: "15"
-- assertVisible: "15"
+- assertVisible:
+    id: "setup-duration-value"
+    text: "15 минут"
 - tapOn: "30"
-- assertVisible: "30"
+- assertVisible:
+    id: "setup-duration-value"
+    text: "30 минут"
 - tapOn:
     id: "setup-preset-60"
-- assertVisible: "60"
+- assertVisible:
+    id: "setup-duration-value"
+    text: "60 минут"
 - tapOn: "∞"
-- assertVisible: "без таймера"
+- assertVisible:
+    id: "setup-duration-value"
+    text: "без таймера"
 - tapOn: "5"
 - tapOn:
     id: "setup-next-button"
@@ -67,4 +82,7 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-- assertVisible: "Свободная молитва — без конкретной темы"
+# кикер «цель» и тема VoiceOver читает одной фразой
+- assertVisible:
+    id: "session-goal"
+    text: ".*Свободная молитва — без конкретной темы"
