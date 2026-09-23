@@ -47,6 +47,11 @@ export type AnswerRow = {
 // не должны открывать базу и гнать DDL дважды
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
+// busy_timeout действует на соединение: без него запись при чужой блокировке
+// сразу падает с «database is locked», а не ждёт её снятия. Эксклюзивная
+// транзакция expo-sqlite открывает новое соединение, поэтому задаём и там.
+const BUSY_TIMEOUT_PRAGMA = 'PRAGMA busy_timeout = 5000;';
+
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
     dbPromise = openAndMigrate().catch((e) => {
@@ -61,6 +66,7 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('lampada.db');
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
+    ${BUSY_TIMEOUT_PRAGMA}
     CREATE TABLE IF NOT EXISTS sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       started_at TEXT NOT NULL,
@@ -170,11 +176,10 @@ export async function saveAnswer(
   let previous: { uri: string }[] = [];
   // Отдельное соединение транзакции: чужие запросы не вклиниваются в неё.
   await d.withExclusiveTransactionAsync(async (txn) => {
-    previous = await txn.getAllAsync<{ uri: string }>(
-      'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
-      a.sessionId,
-      a.questionIndex,
-    );
+    await txn.execAsync(BUSY_TIMEOUT_PRAGMA);
+    // Первой идёт запись: она берёт блокировку с ожиданием. Чтение первым
+    // сделало бы транзакцию читающей, и её повышение до записи после чужого
+    // коммита упало бы SQLITE_BUSY_SNAPSHOT без учёта busy_timeout.
     await txn.runAsync(
       `INSERT INTO answers (session_id, question_index, question, text) VALUES (?, ?, ?, ?)
        ON CONFLICT(session_id, question_index) DO UPDATE SET question = excluded.question, text = excluded.text`,
@@ -182,6 +187,11 @@ export async function saveAnswer(
       a.questionIndex,
       a.question,
       a.text,
+    );
+    previous = await txn.getAllAsync<{ uri: string }>(
+      'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
+      a.sessionId,
+      a.questionIndex,
     );
     await txn.runAsync(
       'DELETE FROM recordings WHERE session_id = ? AND question_index = ?',
