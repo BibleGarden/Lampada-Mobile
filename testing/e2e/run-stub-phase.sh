@@ -49,6 +49,8 @@ maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-013a-close-during
 
 step "JRN-013b: удаление во время расшифровки"
 maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-013b-delete-during.yaml
+step "ANS-013: подсказка и сохранение во время расшифровки"
+maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage04-ans-013-save-in-flight.yaml
 control '{"transcription":"ok"}'
 
 step "Проверка БД: осиротевшие записи отсутствуют"

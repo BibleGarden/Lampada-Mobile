@@ -447,6 +447,16 @@ uses the remaining height above the keyboard.
 Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.
+The recording overlay appears once the native recorder confirms `isRecording`.
+Its elapsed time (m:ss) polls the recorder's native `durationMillis` every 250 ms.
+The saved duration comes from the same clock and is also floored to whole seconds.
+VoiceOver reads the elapsed time as the value of the Stop button and does not
+announce each second. The Stop button ignores taps for the first 1.5 s against
+double taps. It stays at full opacity so recording never looks unstarted.
+A transcription running longer than 4 s shows a hint that the window can be closed.
+The hint is true because closing the recordings sheet does not abort the request,
+and "Save", including the automatic save before reflection, waits for it.
+Cancelling the answer and closing a journal card drop the request.
 The asynchronous recorder start/stop are
 serialized: a pending state immediately blocks a repeated action and the closing
 of the upper sheet. The global audio mode is changed only through

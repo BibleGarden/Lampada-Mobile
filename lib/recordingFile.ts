@@ -28,6 +28,11 @@ export function recordingDurationMillis(
   return Math.max(0, Math.round(stoppedAtMillis - startedAtMillis));
 }
 
+/** Whole recorded seconds: the live timer and the saved card count the same way. */
+export function recordedSeconds(durationMillis: number) {
+  return Math.floor(durationMillis / 1000);
+}
+
 /** Waits for AVAudioRecorder to finish publishing stable file metadata. */
 export async function waitForRecordingFile(
   readMetadata: () => RecordingFileMetadata,

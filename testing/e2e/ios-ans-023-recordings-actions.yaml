@@ -41,6 +41,17 @@ tags:
     timeout: 2500
 - assertVisible:
     id: "recordings-stop-button"
+# Таймер записи идёт от нативных часов рекордера. Абсолютное значение зависит
+# от того, сколько Maestro ждал на тапе, поэтому проверяем m:ss и рост.
+- copyTextFrom:
+    id: "recording-elapsed"
+- evalScript: ${output.elapsed = maestro.copiedText}
+- assertTrue: ${/\d+:\d\d$/.test(output.elapsed)}
+- extendedWaitUntil:
+    notVisible:
+      id: "recording-elapsed"
+      text: ${output.elapsed}
+    timeout: 3000
 - takeScreenshot: ANS-023-recording-done
 - tapOn:
     id: "recordings-stop-button"

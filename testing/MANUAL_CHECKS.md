@@ -224,12 +224,12 @@ The journal transcription paths are automated under `run-stub-phase.sh`:
 `ios-jrn-010-011-transcribe.yaml` (loading → transcript → reopen → search by a
 transcript word, JRN-010/JRN-011), `ios-jrn-012a/012b` (error, then retry,
 JRN-012) and `ios-jrn-013a/013b` (close or delete during transcription,
-JRN-013). `ANS-013` and `ANS-015` have their UI slices automated
-(`ios-stage04-ans-013-save-in-flight.yaml`,
-`ios-stage04-ans-015-delete-during.yaml`); that a late live response stays out
-of SQLite is only proven against a slow proxy — the stub phase covers it for
-the journal, this sitting covers it for the answer sheet if the proxy is slow
-enough, otherwise sitting 7.
+JRN-013). `ios-stage04-ans-013-save-in-flight.yaml` runs there too (ANS-013:
+the slow-transcription hint, then "Save" waits and the transcript is restored).
+`ANS-015` has its UI slice automated (`ios-stage04-ans-015-delete-during.yaml`);
+that a late live response stays out of SQLite is only proven against a slow
+proxy — the stub phase covers it for the journal, this sitting covers it for
+the answer sheet if the proxy is slow enough, otherwise sitting 7.
 
 ---
 

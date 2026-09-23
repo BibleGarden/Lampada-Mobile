@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Animated, {
   Easing,
@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RecordingDraft, fmtTime } from '../lib/store';
+import { recordedSeconds } from '../lib/recordingFile';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
@@ -22,6 +23,10 @@ import { useSheetReflow } from '../lib/useSheetReflow';
 // ~150 символов — это примерно те же три строки на телефоне.
 const isLongTranscript = (transcript: string) => transcript.trim().length > 150;
 const STOP_GUARD_MILLIS = 1_500;
+// Таймер показывает целые секунды; опрос чаще секунды не даёт ему запаздывать.
+const ELAPSED_POLL_MILLIS = 250;
+// Обычно расшифровка приходит за пару секунд; дольше — показываем, что ждать не обязательно.
+const SLOW_TRANSCRIPTION_MILLIS = 4_000;
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
@@ -30,6 +35,8 @@ type Props = {
   /** Идёт запись: поверх списка показывается оверлей с волной. */
   recording: boolean;
   recordingPhase: 'idle' | 'starting' | 'recording' | 'stopping';
+  /** Длительность записи по часам нативного рекордера. */
+  getRecordedMillis: () => number;
   playingId: number | null;
   pausedId: number | null;
   playProgress: number;
@@ -60,6 +67,7 @@ export default function RecordingsSheet({
   recordings,
   recording,
   recordingPhase,
+  getRecordedMillis,
   playingId,
   pausedId,
   playProgress,
@@ -100,6 +108,22 @@ export default function RecordingsSheet({
   }, [recording]);
 
   const stopDisabled = recordingPending || !stopReady;
+
+  // Сколько уже записано. Считаем только в фазе recording: во время stopping
+  // таймер замирает на последнем значении, после записи сбрасывается.
+  const [elapsedSec, setElapsedSec] = useState(0);
+  useEffect(() => {
+    if (!recording) {
+      setElapsedSec(0);
+      return;
+    }
+    if (recordingPhase !== 'recording') return;
+    const update = () => setElapsedSec(recordedSeconds(getRecordedMillis()));
+    update();
+    const interval = setInterval(update, ELAPSED_POLL_MILLIS);
+    return () => clearInterval(interval);
+  }, [recording, recordingPhase, getRecordedMillis]);
+  const elapsedLabel = fmtTime(elapsedSec);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -264,6 +288,8 @@ export default function RecordingsSheet({
                   </Pressable>
                 </View>
 
+                {loading && <SlowTranscriptionHint index={i} sheetVisible={visible} />}
+
                 {r.transcriptState === 'error' && (
                   <Text style={styles.transcriptionError}>{t('components.answers.transcriptionFailed')}</Text>
                 )}
@@ -361,17 +387,27 @@ export default function RecordingsSheet({
                 <WaveBar key={i} color={b.color} delay={b.delay} />
               ))}
             </View>
+            {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
+            <Text
+              accessibilityLabel={t('components.answers.recordedTime', { time: elapsedLabel })}
+              style={styles.recElapsed}
+              testID="recording-elapsed"
+            >
+              {elapsedLabel}
+            </Text>
             <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
           </View>
           <Pressable
             accessibilityLabel={t('components.answers.stop')}
             accessibilityRole="button"
+            accessibilityValue={{ text: elapsedLabel }}
             testID="recordings-stop-button"
             disabled={stopDisabled}
             onPress={onStopRecording}
+            // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
+            // и полупрозрачное «готово» выглядело как незапущенная запись.
             style={({ pressed }) => [
               styles.recDoneBtn,
-              stopDisabled && { opacity: 0.5 },
               pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
             ]}
           >
@@ -396,6 +432,35 @@ const WAVE_BARS = [
   { color: '#f0c074', delay: 600 },
   { color: '#d68a2e', delay: 750 },
 ];
+
+// Подсказка появляется, только пока расшифровка идёт дольше порога. Обещание
+// честное: закрытие шторки записей её не прерывает, а «Сохранить» и уход
+// на рефлексию ждут результат (AnswerSheet.save). VoiceOver слышит её один раз
+// и только при открытой шторке: за закрытой совет «можно закрыть» ни к чему.
+function SlowTranscriptionHint({ index, sheetVisible }: { index: number; sheetVisible: boolean }) {
+  const styles = useStyles(stylesFactory);
+  const { t } = useI18n();
+  const [visible, setVisible] = useState(false);
+  const sheetVisibleRef = useRef(sheetVisible);
+  sheetVisibleRef.current = sheetVisible;
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setVisible(true);
+      if (!sheetVisibleRef.current) return;
+      AccessibilityInfo.announceForAccessibilityWithOptions(
+        t('components.answers.transcriptionContinues'),
+        { queue: true },
+      );
+    }, SLOW_TRANSCRIPTION_MILLIS);
+    return () => clearTimeout(timeout);
+  }, [t]);
+  if (!visible) return null;
+  return (
+    <Text style={styles.transcriptionHint} testID={`recording-transcription-hint-${index}`}>
+      {t('components.answers.transcriptionContinues')}
+    </Text>
+  );
+}
 
 // столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
 function WaveBar({ color, delay }: { color: string; delay: number }) {
@@ -563,6 +628,12 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(11.5),
     color: '#ec9b8e',
   },
+  transcriptionHint: {
+    marginTop: sc(6),
+    fontFamily: fonts.sans,
+    fontSize: sc(11.5),
+    color: colors.creamDim,
+  },
   transcriptBlock: {
     marginTop: sc(9),
   },
@@ -658,6 +729,12 @@ const stylesFactory = () => StyleSheet.create({
     width: sc(4),
     height: sc(48),
     borderRadius: sc(3),
+  },
+  recElapsed: {
+    fontFamily: fonts.mono,
+    fontSize: sc(13),
+    letterSpacing: sc(1),
+    color: colors.warmHint,
   },
   recOverlayHint: {
     fontFamily: fonts.serifItalic,

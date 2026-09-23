@@ -32,6 +32,7 @@ import {
   useSettings,
 } from '../lib/settings';
 import {
+  recordedSeconds,
   recordingDurationMillis,
   recordingFileIssue,
   waitForRecordingFile,
@@ -620,7 +621,7 @@ export default function AnswerSheet({
       const draft: RecordingDraft = {
         id: Date.now(),
         uri,
-        durationSec: Math.max(1, Math.round(durationMillis / 1000)),
+        durationSec: Math.max(1, recordedSeconds(durationMillis)),
         transcript: null,
         transcriptState: 'idle',
       };
@@ -662,6 +663,9 @@ export default function AnswerSheet({
     // не может удалить файл, уже сохранённый первым stop.
     return recordingOperation.runStop(performStopRecording).catch(() => null);
   };
+
+  // Тот же нативный durationMillis, из которого сохраняется длительность записи.
+  const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
 
   const stopRecordingFromUi = (): Promise<RecordingDraft | null> => {
     const startedAt = recordingStartedAtRef.current;
@@ -1094,6 +1098,7 @@ export default function AnswerSheet({
       recordings={recs}
       recording={recording}
       recordingPhase={recordingPhase}
+      getRecordedMillis={getRecordedMillis}
       playingId={playingId}
       pausedId={pausedId}
       playProgress={playProgress}

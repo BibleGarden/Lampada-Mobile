@@ -1,11 +1,10 @@
 appId: twinkler
 ---
-# ANS-013 (часть про сохранение во время запроса): после «Расшифровать»
-# появляется загрузка, «Сохранить» не закрывает шторку, пока промис жив,
-# запись после повторного открытия на месте.
-#
-# Сам текст расшифровки и его восстановление зависят от сети и живой речи.
-# На симуляторе тихий M4A чаще даёт ошибку — это не провал этой части.
+# ANS-013: после «Расшифровать» появляется загрузка, через 4 с — подсказка
+# «можно закрыть окно». Закрываем шторку записей и сохраняем, пока запрос
+# жив: «Сохранить» ждёт ответ, и после повторного открытия у записи есть
+# текст расшифровки. Stub-флоу: run-stub-phase.sh, режим transcription=delay
+# (ответ через 12 с).
 - launchApp:
     stopApp: true
     clearState: true
@@ -72,11 +71,13 @@ appId: twinkler
     id: "privacy-consent-audio_transcription"
 - tapOn:
     id: "privacy-consent-audio_transcription-allow"
+- assertVisible:
+    id: "recording-transcribing-0"
 - extendedWaitUntil:
     visible:
-      id: "recording-transcribing-0"
+      id: "recording-transcription-hint-0"
     timeout: 8000
-    optional: true
+- takeScreenshot: ANS-013-transcription-hint
 - tapOn:
     id: "recordings-close-button"
 - tapOn:
@@ -88,7 +89,7 @@ appId: twinkler
     commands:
       - tapOn:
           id: "privacy-consent-answer_context-allow"
-# Сохранение ждёт транскрипцию до 60 с (lib/transcription.ts).
+# Сохранение ждёт расшифровку (до 60 с, lib/transcription.ts).
 - extendedWaitUntil:
     visible:
       id: "dock-answer-edit-button"
@@ -99,3 +100,4 @@ appId: twinkler
     id: "answer-record-button"
 - assertVisible:
     id: "recording-card-0"
+- assertVisible: ".*Стабильная расшифровка лампады номер семь.*"

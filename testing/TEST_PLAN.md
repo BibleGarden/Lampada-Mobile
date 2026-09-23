@@ -208,7 +208,7 @@ tier of its e2e runs.
 | ANS-010 | The timer runs out with the sheet open | a non-interactive notice appears above the sheet; text and recording continue; successful save/close and recording cleanup are followed by reflection after one second |
 | ANS-011 | Switch between questions and edit an old answer | the answer is saved under the correct question |
 | ANS-012 | Stop a recording and do not press "Transcribe" | the audio recording and the button appear; no network request is made and no tokens are spent |
-| ANS-013 | Press "Transcribe", then save while the request is in flight | a loading state appears; the save waits for the request, the audio and the text are restored after reopening |
+| ANS-013 | Press "Transcribe", then save while the request is in flight | a loading state appears, after 4 s a hint that the window can be closed; the save waits for the request, the audio and the text are restored after reopening |
 | ANS-014 | Get an offline, a timeout or an HTTP error from the transcription | the audio stays available, "Retry" is shown, a repeated attempt can succeed |
 | ANS-015 | Delete or cancel a recording during transcription | the request is cancelled, a late response does not bring the deleted recording back into the UI or the database |
 | ANS-016 | Open a long transcript in the recordings sheet | the block shows three lines, "Show in full" expands and collapses it; the list of recordings stays scrollable |
