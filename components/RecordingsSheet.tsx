@@ -125,6 +125,23 @@ export default function RecordingsSheet({
   }, [recording, recordingPhase, getRecordedMillis]);
   const elapsedLabel = fmtTime(elapsedSec);
 
+  // VoiceOver слышит подсказку о долгой расшифровке один раз на шторку, пока
+  // хоть одна расшифровка идёт. Не озвучиваем за закрытой шторкой и во время
+  // записи: тогда совет «можно закрыть» неверен.
+  const transcribing = recordings.some((r) => r.transcriptState === 'loading');
+  const slowHintAnnouncedRef = useRef(false);
+  useEffect(() => {
+    if (!transcribing) slowHintAnnouncedRef.current = false;
+  }, [transcribing]);
+  const announceSlowTranscription = () => {
+    if (slowHintAnnouncedRef.current || !visible || recordingBusy) return;
+    slowHintAnnouncedRef.current = true;
+    AccessibilityInfo.announceForAccessibilityWithOptions(
+      t('components.answers.transcriptionContinues'),
+      { queue: true },
+    );
+  };
+
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
@@ -288,7 +305,7 @@ export default function RecordingsSheet({
                   </Pressable>
                 </View>
 
-                {loading && <SlowTranscriptionHint index={i} sheetVisible={visible} />}
+                {loading && <SlowTranscriptionHint index={i} onShown={announceSlowTranscription} />}
 
                 {r.transcriptState === 'error' && (
                   <Text style={styles.transcriptionError}>{t('components.answers.transcriptionFailed')}</Text>
@@ -435,25 +452,20 @@ const WAVE_BARS = [
 
 // Подсказка появляется, только пока расшифровка идёт дольше порога. Обещание
 // честное: закрытие шторки записей её не прерывает, а «Сохранить» и уход
-// на рефлексию ждут результат (AnswerSheet.save). VoiceOver слышит её один раз
-// и только при открытой шторке: за закрытой совет «можно закрыть» ни к чему.
-function SlowTranscriptionHint({ index, sheetVisible }: { index: number; sheetVisible: boolean }) {
+// на рефлексию ждут результат (AnswerSheet.save). Озвучивает её шторка.
+function SlowTranscriptionHint({ index, onShown }: { index: number; onShown: () => void }) {
   const styles = useStyles(stylesFactory);
   const { t } = useI18n();
   const [visible, setVisible] = useState(false);
-  const sheetVisibleRef = useRef(sheetVisible);
-  sheetVisibleRef.current = sheetVisible;
+  const onShownRef = useRef(onShown);
+  onShownRef.current = onShown;
   useEffect(() => {
     const timeout = setTimeout(() => {
       setVisible(true);
-      if (!sheetVisibleRef.current) return;
-      AccessibilityInfo.announceForAccessibilityWithOptions(
-        t('components.answers.transcriptionContinues'),
-        { queue: true },
-      );
+      onShownRef.current();
     }, SLOW_TRANSCRIPTION_MILLIS);
     return () => clearTimeout(timeout);
-  }, [t]);
+  }, []);
   if (!visible) return null;
   return (
     <Text style={styles.transcriptionHint} testID={`recording-transcription-hint-${index}`}>
