@@ -1,6 +1,7 @@
 import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   AppState,
   Keyboard,
   Pressable,
@@ -183,8 +184,15 @@ export default function AnswerSheet({
   // помещаться: keyboardBehavior="extend" поднимает шторку до верхней, и поле
   // ввода с кнопками остаются видны. Верхняя точка — вся высота под
   // статус-баром (topInset).
-  const { mountKey, onIndexChange } = useSheetReflow();
+  const { mountKey, open, onIndexChange } = useSheetReflow();
   const snapPoints = useMemo(() => ['62%', '100%'], []);
+  const questionRef = useRef<Text>(null);
+
+  // Экран под шторкой скрыт от программ чтения с экрана, и фокус с кнопки
+  // «Ответить» уходит в никуда — ставим его на вопрос.
+  useEffect(() => {
+    if (open && questionRef.current) AccessibilityInfo.sendAccessibilityEvent(questionRef.current, 'focus');
+  }, [open]);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   // Контейнер контента у шторки всегда высотой в верхнюю точку, а ручка
   // абсолютная — flex по ним не посчитать. Поэтому высоту тела считаем сами:
@@ -846,6 +854,8 @@ export default function AnswerSheet({
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // смена подписи на кнопке под фокусом сама не озвучивается
+    AccessibilityInfo.announceForAccessibility(t('components.answers.confirmClose'));
     setConfirmCancel(true);
     if (cancelTimer.current) clearTimeout(cancelTimer.current);
     cancelTimer.current = setTimeout(() => setConfirmCancel(false), 3000);
@@ -875,6 +885,8 @@ export default function AnswerSheet({
         disappearsOnIndex={-1}
         opacity={0.7}
         pressBehavior={hasUnsavedContent ? 'none' : 'close'}
+        // Фон без локализованной подписи; закрывают «Отмена» и жест escape.
+        accessible={false}
       />
     ),
     [hasUnsavedContent],
@@ -910,7 +922,7 @@ export default function AnswerSheet({
         <View style={styles.orb} />
         <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
       </View>
-      <Text style={styles.question} testID="answer-question">
+      <Text ref={questionRef} style={styles.question} testID="answer-question">
         {questionText}
       </Text>
     </View>
@@ -991,7 +1003,9 @@ export default function AnswerSheet({
           полю высоту над клавиатурой. Длинный вопрос прокручивается отдельно. */}
       <Animated.View
         style={[styles.dismissArea, bodyStyle]}
-        {...screenReaderHiddenProps(recordingsSheetOpen)}
+        {...screenReaderHiddenProps(!open || recordingsSheetOpen)}
+        // «Z» VoiceOver — та же «Отмена» с подтверждением черновика
+        onAccessibilityEscape={requestClose}
         // Боковые поля шторки тоже закрывают клавиатуру, не перехватывая ввод.
         onStartShouldSetResponder={() => {
           if (keyboardOpen) Keyboard.dismiss();
@@ -1020,6 +1034,7 @@ export default function AnswerSheet({
               multiline
               placeholder={t('components.answers.placeholder')}
               placeholderTextColor={colors.placeholder}
+              accessibilityLabel={t('components.answers.placeholder')}
               style={styles.input}
             />
 

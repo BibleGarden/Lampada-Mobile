@@ -62,6 +62,8 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <View
         accessibilityViewIsModal
+        // escape VoiceOver — то же, что «назад» Android: без решения
+        onAccessibilityEscape={onDismiss}
         style={[styles.backdrop, { paddingTop: insets.top + sc(20), paddingBottom: insets.bottom + sc(20) }]}
       >
         <View style={styles.card} testID={`privacy-consent-${purpose}`}>

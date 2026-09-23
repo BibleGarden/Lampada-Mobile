@@ -99,10 +99,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <StatusBar style="light" />
       <ReminderRouting />
-      {/* Обёртка нужна только как адресат пометки для TalkBack: оверлеи —
-          сиблинги навигации, а не её родитель, и пометить содержимое под ними
-          больше неоткуда. Раскладку она не трогает: flex: 1 и никаких стилей
-          сверх него. */}
+      {/* Обёртка нужна только как адресат пометки для программ чтения с
+          экрана: оверлеи — сиблинги навигации, а не её родитель, и пометить
+          содержимое под ними больше неоткуда. Раскладку она не трогает:
+          flex: 1 и никаких стилей сверх него. */}
       <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered || updateVisible)}>
         <Stack
           screenOptions={{

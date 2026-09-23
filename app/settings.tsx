@@ -749,9 +749,8 @@ export default function Settings() {
       : t('settings.voice');
 
   // Пока сверху лежит любая шторка, экран под ней для программы чтения с
-  // экрана не существует. На iOS то же делает accessibilityViewIsModal самой
-  // шторки (см. lib/a11y). ScreenBg остаётся непомеченным намеренно: это
-  // декоративный холст Skia, узлов доступности он не создаёт.
+  // экрана не существует (см. lib/a11y). ScreenBg остаётся непомеченным
+  // намеренно: это декоративный холст Skia, узлов доступности он не создаёт.
   const sheetOpen =
     reminderEditorRuleIndex !== null || open !== null || interfaceLanguageOpen || privacyOpen;
 

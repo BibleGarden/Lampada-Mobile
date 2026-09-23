@@ -46,7 +46,10 @@ export default function About() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+          <IconButton
+            accessibilityLabel={t('settings.back')}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+          >
             <ChevronLeft color={colors.goldSoft} />
           </IconButton>
           <Kicker>{t('screens.about.title')}</Kicker>

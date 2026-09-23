@@ -108,6 +108,8 @@ export default function RecordingsSheet({
         opacity={0.55}
         // Во время записи фон не закрывает шторку: микрофон остановит «готово».
         pressBehavior={recordingBusy ? 'none' : 'close'}
+        // Фон без локализованной подписи; закрывает кнопка-шеврон.
+        accessible={false}
       />
     ),
     [recordingBusy],
@@ -141,7 +143,15 @@ export default function RecordingsSheet({
       topInset={insets.top}
       backgroundStyle={styles.sheetBg}
     >
-      <View style={styles.sheetBody} accessibilityViewIsModal={visible}>
+      {/* закрытая шторка уехала за край, но без пометки осталась бы в обходе */}
+      <View
+        style={styles.sheetBody}
+        {...screenReaderHiddenProps(!visible)}
+        // «Z» VoiceOver — как кнопка-шеврон: во время записи шторка не закрывается
+        onAccessibilityEscape={() => {
+          if (!recordingBusy) sheetRef.current?.close();
+        }}
+      >
       <View style={styles.content} {...screenReaderHiddenProps(recording)}>
         <View style={styles.header}>
           <Text style={styles.kicker}>

@@ -114,8 +114,21 @@ own translucent text colors. Controls smaller than 44 pt (sizes scale with
 relies on Reanimated's default `ReduceMotion.System`: entering/exiting
 animations are skipped and `withRepeat` loops (flame, halos, recording wave)
 freeze; Reanimated reads the setting at app start. The hold-to-start ring opts
-out with `ReduceMotion.Never` because it is progress feedback, and for
-VoiceOver the hold button starts the session on the `activate` action.
+out with `ReduceMotion.Never` because it is progress feedback.
+
+Screen readers. Under Fabric iOS a VoiceOver double tap reaches JS only through
+`onAccessibilityTap`, and adjustable swipes reach `onAccessibilityAction` by the
+`adjustable` role alone; TalkBack knows only declared `accessibilityActions`.
+So the hold-to-start button starts the session at once on `onAccessibilityTap`
+(iOS) and the `activate` action (Android), and the step dots (`WindowDots`)
+declare `increment`/`decrement` only on Android - on iOS declared actions would
+show up as extra untranslated items in the Actions rotor. Transient notices
+(prayer saved, time is up over an open sheet) and two-step confirmations
+(cancel a draft answer, delete a journal entry) are spoken through
+`AccessibilityInfo.announceForAccessibility`: neither `accessibilityRole="alert"`
+nor a live region announces a view reliably on both platforms. Every dialog
+closes with the VoiceOver escape gesture (`onAccessibilityEscape`) as well as
+Android back. `IconButton` requires `accessibilityLabel`.
 
 Keyboard dismissal covers the screen or sheet bounds independently of the
 centered text column. Text fields retain their own touch handling; the answer
@@ -354,16 +367,22 @@ and disable scenarios are shown by the `components/PinPrompt.tsx` overlay above
 the settings screen - not by a system Modal, which would cover the privacy screen
 itself.
 
-Covering pixels hides the content only from the eyes and from touches, so both
-overlays additionally hide it from screen readers - and they do it differently on
-the two platforms. On iOS the `accessibilityViewIsModal` flag on the overlay
-itself is enough: VoiceOver stops seeing everything outside the modal node.
-Android has no such flag, and the mark has to be put from the other side - on the
-subtree being hidden - so the `Stack` in `app/_layout.tsx` is wrapped in a
-layout-neutral `View` subscribed to the lock state, and the settings content under
-the PIN input is marked where it is rendered. The shared helper is `lib/a11y.ts`:
-on iOS it yields no props at all, on Android it sets
-`importantForAccessibility="no-hide-descendants"`.
+Covering pixels hides the content only from the eyes and from touches, so
+overlays and sheets additionally hide it from screen readers. The mark is put on
+the subtree being hidden, on both platforms: Android has no modal flag, and on
+iOS `accessibilityViewIsModal` hides only siblings of the modal node, while
+`@gorhom/bottom-sheet` sheets render as siblings of the screen through a
+fragment. So the `Stack` in `app/_layout.tsx` is wrapped in a layout-neutral
+`View` subscribed to the lock state, the settings content is marked under its
+sheets and the PIN input, and the session content under the answer sheet and the
+Scripture reader. A closed gorhom sheet is only translated below the screen and
+would stay in the reading order, so its content is marked while closed
+(`useSheetReflow` exposes `open`); gorhom backdrops and containers are made
+non-accessible because their built-in labels are English. On opening, focus
+moves to the sheet's heading (the question, the passage reference). The shared
+helper is `lib/a11y.ts`: it sets `accessibilityElementsHidden` and
+`importantForAccessibility="no-hide-descendants"` with a permanent
+`collapsable={false}`.
 
 A forgotten PIN cannot be recovered. After two explicit confirmations the "Forgot
 your PIN?" link performs a full wipe: `wipeLocalData` in `lib/db.ts` deletes the

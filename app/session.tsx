@@ -1,6 +1,7 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   AppState,
   BackHandler,
   Pressable,
@@ -45,6 +46,7 @@ import { getPrayerTracks } from '../lib/music';
 import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
+import { screenReaderHiddenProps } from '../lib/a11y';
 import { scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
   audioModeCoordinator,
@@ -449,6 +451,9 @@ function SessionScreen() {
     if (appState !== 'active' || expiryNotified.current) return;
     expiryNotified.current = true;
     setShowExpiryNotice(activityOpen);
+    // Когда ничего не открыто и не звучит, сессия сразу уходит на экран
+    // итога; иначе плашка сама не озвучивается ни на одной платформе.
+    if (activityOpen) AccessibilityInfo.announceForAccessibility(t('screens.session.expiryNotice'));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [timeExpired, appState, activityOpen]);
 
@@ -494,7 +499,12 @@ function SessionScreen() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
+      {/* пока открыта шторка ответа или читалка, экран под ней скрыт */}
+      <Animated.View
+        entering={FadeIn.duration(500)}
+        style={{ flex: 1 }}
+        {...screenReaderHiddenProps(answerOpen || readerOpen)}
+      >
         {/* Шапка, кольцо, цель и карточка стоят одной колонкой с общим
             зазором; остаток высоты забирает карточка. */}
         <View
@@ -577,6 +587,7 @@ function SessionScreen() {
                   side="left"
                   label={`−${adjStep}`}
                   accessibilityLabel={t('screens.session.subtractTime', { duration: adjDuration })}
+                  testID="session-time-subtract"
                   accent
                   onPress={() => s.adjustTimer(-adjStep)}
                 />
@@ -585,6 +596,7 @@ function SessionScreen() {
                   side="right"
                   label={`+${adjStep}`}
                   accessibilityLabel={t('screens.session.addTime', { duration: adjDuration })}
+                  testID="session-time-add"
                   accent
                   onPress={() => s.adjustTimer(adjStep)}
                 />
@@ -592,7 +604,7 @@ function SessionScreen() {
             )}
           </View>
 
-          <View accessible style={styles.goalWrap}>
+          <View accessible style={styles.goalWrap} testID="session-goal">
             <Kicker style={{ fontSize: sc(9), marginBottom: sc(5) }}>
               {t('screens.session.goal')}
             </Kicker>
@@ -634,7 +646,7 @@ function SessionScreen() {
           style={[styles.expiryNotice, { top: insets.top + sc(8) }]}
           testID="session-expiry-notice"
         >
-          <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.expiryNoticeText}>
+          <Text style={styles.expiryNoticeText}>
             {t('screens.session.expiryNotice')}
           </Text>
         </Animated.View>
@@ -732,6 +744,7 @@ function AdjustBtn({
   side,
   label,
   accessibilityLabel,
+  testID,
   accent,
   onPress,
 }: {
@@ -739,6 +752,7 @@ function AdjustBtn({
   side: 'left' | 'right';
   label: string;
   accessibilityLabel: string;
+  testID: string;
   accent?: boolean;
   onPress: () => void;
 }) {
@@ -755,6 +769,7 @@ function AdjustBtn({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
+        testID={testID}
         onPress={() => {
           Haptics.selectionAsync();
           onPress();

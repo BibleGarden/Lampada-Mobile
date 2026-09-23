@@ -1,6 +1,7 @@
 import { useI18n, localeTag, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   Alert,
   FlatList,
   Keyboard,
@@ -271,6 +272,8 @@ export default function Journal() {
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // смена подписи на кнопке под фокусом сама не озвучивается
+    AccessibilityInfo.announceForAccessibility(t('screens.journal.confirmDelete'));
     setConfirmDeleteId(id);
     if (confirmTimer.current) clearTimeout(confirmTimer.current);
     confirmTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
@@ -494,9 +497,13 @@ export default function Journal() {
         onRequestClose={() => setOpenQuote(null)}
       >
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setOpenQuote(null)}>
+          {/* Pressable по умолчанию — единый элемент доступности: карточка
+              съела бы крестик и текст цитаты */}
           <Pressable
+            accessible={false}
             style={[styles.modalCard, { maxHeight: '78%' }]}
             onPress={(event) => event.stopPropagation()}
+            onAccessibilityEscape={() => setOpenQuote(null)}
           >
             <View style={styles.modalHead}>
               <Text style={styles.quoteRef}>{openQuote?.reference}</Text>

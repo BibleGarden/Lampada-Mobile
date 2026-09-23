@@ -1,6 +1,6 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useSharedValue, withTiming, Easing, ReduceMotion } from 'react-native-reanimated';
@@ -185,11 +185,18 @@ export default function Threshold() {
             <GestureDetector gesture={hold}>
               <View
                 style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]}
+                // без accessible VoiceOver фокусирует надписи внутри, и двойное
+                // касание по ним — короткий тап, который удержание отменяет
+                accessible
                 accessibilityRole="button"
                 accessibilityLabel={t('screens.threshold.start')}
-                // VoiceOver двойным касанием не удерживает: для него кнопка
-                // срабатывает сразу, без ритуала удержания
-                accessibilityActions={[{ name: 'activate' }]}
+                // Программа чтения с экрана двойным касанием не удерживает: для
+                // неё кнопка срабатывает сразу, без ритуала удержания. На iOS
+                // (Fabric) двойное касание приходит только в onAccessibilityTap,
+                // а действие «activate» там стало бы лишним пунктом ротора
+                // «Действия»; TalkBack, наоборот, знает только действие.
+                onAccessibilityTap={() => void enter()}
+                accessibilityActions={Platform.OS === 'android' ? [{ name: 'activate' }] : undefined}
                 onAccessibilityAction={({ nativeEvent }) => {
                   if (nativeEvent.actionName === 'activate') void enter();
                 }}

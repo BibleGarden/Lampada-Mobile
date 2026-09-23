@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 /**
@@ -20,18 +20,18 @@ export function useSheetReflow() {
   const { width, height } = useWindowDimensions();
   const geometry = `${width}x${height}`;
   const [mountKey, setMountKey] = useState(geometry);
-  const open = useRef(false);
-  const latestGeometry = useRef(geometry);
-  latestGeometry.current = geometry;
+  // Состояние, а не ref: по нему закрытую шторку ещё и прячут от программ
+  // чтения с экрана (см. lib/a11y).
+  const [open, setOpen] = useState(false);
 
+  // закрытую — пересобираем и при повороте, и сразу после закрытия
   useEffect(() => {
-    if (!open.current) setMountKey(geometry);
-  }, [geometry]);
+    if (!open) setMountKey(geometry);
+  }, [geometry, open]);
 
   const onIndexChange = useCallback((index: number) => {
-    open.current = index >= 0;
-    if (index < 0) setMountKey(latestGeometry.current);
+    setOpen(index >= 0);
   }, []);
 
-  return { mountKey, onIndexChange };
+  return { mountKey, open, onIndexChange };
 }

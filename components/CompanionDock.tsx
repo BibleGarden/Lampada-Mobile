@@ -268,10 +268,10 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             ) : curScripture ? (
               <>
                 {/* Неполный текст отрывка открывает полную читалку. Подпись
-                    не задаём: VoiceOver читает сам отрывок, а действие — подсказкой. */}
+                    не задаём: VoiceOver читает сам отрывок, а действие — подсказкой.
+                    Без disabled: иначе полный отрывок читался бы «недоступно». */}
                 <Pressable
                   onPress={canReadInFull ? tap(onOpenReader) : undefined}
-                  disabled={!canReadInFull}
                   accessibilityRole={canReadInFull ? 'button' : undefined}
                   accessibilityHint={canReadInFull ? t('components.reader.readFull') : undefined}
                   testID={canReadInFull ? 'scripture-read-full' : undefined}

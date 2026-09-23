@@ -1,9 +1,10 @@
 import { useI18n } from '../lib/i18n';
-import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
+import { screenReaderHiddenProps } from '../lib/a11y';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import { Heart, Close, Flag, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
@@ -34,7 +35,17 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
   const toggleFav = useSession((st) => st.toggleFav);
   const cur = scrList[scrIndex];
   const fav = !!cur && scrFav.includes(cur.canonicalId);
-  const { mountKey, onIndexChange } = useSheetReflow();
+  const { mountKey, open, onIndexChange } = useSheetReflow();
+  const referenceRef = useRef<Text>(null);
+  const close = useCallback(() => sheetRef.current?.close(), [sheetRef]);
+  // У содержимого шторки нет общей обёртки: пометку и escape получают
+  // шапка и текст по отдельности.
+  const contentA11y = { ...screenReaderHiddenProps(!open), onAccessibilityEscape: close };
+
+  // Экран под читалкой скрыт от программ чтения с экрана — фокус на ссылку.
+  useEffect(() => {
+    if (open && referenceRef.current) AccessibilityInfo.sendAccessibilityEvent(referenceRef.current, 'focus');
+  }, [open]);
   const snapPoints = useMemo(() => {
     const measuredHeight = headerHeight + contentHeight + sc(24);
     return [Math.min(windowHeight * 0.88, Math.max(sc(240), measuredHeight))];
@@ -42,7 +53,8 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
 
   const renderBackdrop = useCallback(
     (props: any) => (
-      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.75} />
+      // Фон без локализованной подписи; закрывают крестик и жест escape.
+      <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.75} accessible={false} />
     ),
     [],
   );
@@ -61,16 +73,20 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
         onIndexChange(index);
         onOpenChange(index >= 0);
       }}
+      // По умолчанию контейнер контента — единый элемент «Bottom Sheet», и
+      // кнопки внутри недоступны VoiceOver. Раскрываем детей.
+      accessible={false}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
       handleIndicatorStyle={styles.handle}
     >
       <View
         style={styles.header}
+        {...contentA11y}
         onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
       >
         <View style={styles.referenceWrap}>
-          <Text style={styles.ref}>{cur?.reference ?? t('components.reader.scripture')}</Text>
+          <Text ref={referenceRef} style={styles.ref}>{cur?.reference ?? t('components.reader.scripture')}</Text>
           {cur?.translationAlias ? (
             <Text style={styles.translation}>{cur.translationAlias}</Text>
           ) : null}
@@ -123,13 +139,14 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
             size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}
-            onPress={() => sheetRef.current?.close()}
+            onPress={close}
           >
             <Close size={15} />
           </IconButton>
         </View>
       </View>
       <BottomSheetScrollView
+        {...contentA11y}
         contentContainerStyle={styles.content}
         onContentSizeChange={(_, height) => setContentHeight(height)}
       >

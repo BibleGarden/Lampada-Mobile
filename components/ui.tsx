@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '../lib/i18n';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -100,7 +101,8 @@ export function IconButton({
   bg?: string;
   border?: string;
   style?: StyleProp<ViewStyle>;
-  accessibilityLabel?: string;
+  /** Кнопка из одной иконки: без подписи программа чтения с экрана её не назовёт */
+  accessibilityLabel: string;
   accessibilityState?: AccessibilityState;
   testID?: string;
 }) {
@@ -196,7 +198,12 @@ export function WindowDots({
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ text: t('components.reader.position', { current: current + 1, total }) }}
-      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      // iOS (Fabric) шлёт свайпы регулятора в onAccessibilityAction по одной
+      // роли adjustable, а объявленные действия стали бы лишними пунктами
+      // ротора «Действия»; TalkBack листает только объявленными действиями.
+      accessibilityActions={
+        Platform.OS === 'android' ? [{ name: 'increment' }, { name: 'decrement' }] : undefined
+      }
       onAccessibilityAction={({ nativeEvent }) => {
         if (nativeEvent.actionName === 'increment' && current < total - 1) onSet(current + 1);
         if (nativeEvent.actionName === 'decrement' && current > 0) onSet(current - 1);

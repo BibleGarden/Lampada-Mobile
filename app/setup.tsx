@@ -40,6 +40,10 @@ export default function Setup() {
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
 
+  const durationUnit = s.minutes === 0
+    ? t('screens.setup.untimed')
+    : t(`screens.minute.${pluralCategory(language, s.minutes)}`);
+
   const continueToThreshold = () => {
     s.prepareThreshold();
     router.push('/threshold');
@@ -93,6 +97,7 @@ export default function Setup() {
                 accessibilityRole="button"
                 accessibilityLabel={t('screens.setup.examples')}
                 accessibilityHint={t('screens.setup.openExamples')}
+                testID="setup-examples-button"
                 hitSlop={8}
                 style={({ pressed }) => [styles.helpBtn, pressed && { transform: [{ scale: 0.92 }] }]}
               >
@@ -136,12 +141,15 @@ export default function Setup() {
               >
                 <Minus color={colors.white65} />
               </Pressable>
-              {/* «15» и «минут» VoiceOver читает одной фразой */}
-              <View accessible style={styles.stepValue}>
+              {/* «15 минут» VoiceOver читает одной фразой, без знака «∞» */}
+              <View
+                accessible
+                accessibilityLabel={s.minutes === 0 ? durationUnit : `${s.minutes} ${durationUnit}`}
+                style={styles.stepValue}
+                testID="setup-duration-value"
+              >
                 <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
-                <Text style={styles.stepUnit}>
-                  {s.minutes === 0 ? t('screens.setup.untimed') : t(`screens.minute.${pluralCategory(language, s.minutes)}`)}
-                </Text>
+                <Text style={styles.stepUnit}>{durationUnit}</Text>
               </View>
               <Pressable
                 onPress={() => {
@@ -197,7 +205,12 @@ export default function Setup() {
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
-          <View style={[styles.examplesCard, { marginTop: insets.top + sc(92) }]}>
+          {/* Закрывается тапом по фону, «назад» Android (onRequestClose) и
+              жестом escape VoiceOver — фон для программ чтения не фокусируется */}
+          <View
+            style={[styles.examplesCard, { marginTop: insets.top + sc(92) }]}
+            onAccessibilityEscape={() => setExamplesOpen(false)}
+          >
             <Kicker style={{ marginBottom: sc(8) }}>{t('screens.setup.examples')}</Kicker>
             {EXAMPLES.map((ex, index) => (
               <Pressable
