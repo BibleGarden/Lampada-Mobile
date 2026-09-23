@@ -167,13 +167,15 @@ export async function saveAnswer(
     durationSec: r.durationSec,
     transcript: r.transcript?.trim() ?? '',
   }));
-  const previous = await d.getAllAsync<{ uri: string }>(
-    'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
-    a.sessionId,
-    a.questionIndex,
-  );
-  await d.withTransactionAsync(async () => {
-    await d.runAsync(
+  let previous: { uri: string }[] = [];
+  // Отдельное соединение транзакции: чужие запросы не вклиниваются в неё.
+  await d.withExclusiveTransactionAsync(async (txn) => {
+    previous = await txn.getAllAsync<{ uri: string }>(
+      'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
+      a.sessionId,
+      a.questionIndex,
+    );
+    await txn.runAsync(
       `INSERT INTO answers (session_id, question_index, question, text) VALUES (?, ?, ?, ?)
        ON CONFLICT(session_id, question_index) DO UPDATE SET question = excluded.question, text = excluded.text`,
       a.sessionId,
@@ -181,13 +183,13 @@ export async function saveAnswer(
       a.question,
       a.text,
     );
-    await d.runAsync(
+    await txn.runAsync(
       'DELETE FROM recordings WHERE session_id = ? AND question_index = ?',
       a.sessionId,
       a.questionIndex,
     );
     for (const r of storedRecordings) {
-      await d.runAsync(
+      await txn.runAsync(
         `INSERT INTO recordings
            (session_id, question_index, uri, duration_sec, transcript)
          VALUES (?, ?, ?, ?, ?)`,
