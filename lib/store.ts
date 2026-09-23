@@ -360,6 +360,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         : { topic, promise: ai.generateFirstQuestion(topic), language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
     const firstQuestion = fetch.result;
+    // Запоминаем длительность, с которой начинается молитва: следующая
+    // настройка откроется с ней. Продление таймера в молитве её не меняет —
+    // сюда попадает только выбор на экране настройки. Сохраняем до записи
+    // журнала: сбой сохранения не оставит сессию, а повтор старта не создаст
+    // вторую. Если же упадёт создание сессии, запомненная, но не начатая
+    // длительность безвредна.
+    await useSettings.getState().setPrayerMinutes(minutes);
     // Момент начала берётся один раз: по нему датируются и запись журнала
     // (sessions.started_at), и день молитвы в серии (ADR-0033), иначе около
     // полуночи они могли разойтись на разные дни.
@@ -368,10 +375,6 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       db.createSession(topic, minutes, startedAtMs),
       ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
-    // Запоминаем длительность, с которой молитва реально началась: следующая
-    // настройка откроется с ней. Продление таймера в молитве её не меняет —
-    // сюда попадает только выбор на экране настройки.
-    await useSettings.getState().setPrayerMinutes(minutes);
     const scripturePreferences = scripturePreferencesNow();
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
