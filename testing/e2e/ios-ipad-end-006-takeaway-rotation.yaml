@@ -68,6 +68,9 @@ tags:
 - assertNotVisible:
     id: "shift"
 - assertVisible:
+    id: "reflection-input"
+    text: "END-006 первая часть и вторая"
+- assertVisible:
     id: "reflect-complete-button"
 - tapOn:
     id: "reflection-input"

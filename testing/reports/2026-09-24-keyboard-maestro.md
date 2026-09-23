@@ -46,4 +46,5 @@ and the [actions after dismissal](../evidence/2026-09-24-keyboard-maestro/ipad-e
 Its later assertions check the original phrase and added markers separately:
 the caret position after refocusing the field is layout dependent, so those
 assertions do not prove an exact final character sequence. Exact text retention
-is asserted in the phone END-006 and iPad SETUP-004 flows.
+is asserted in the phone END-006 flow and after the first iPad END-006 margin
+tap; the final iPad SETUP-004 flow also asserts the full long goal.
