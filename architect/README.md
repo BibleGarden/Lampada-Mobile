@@ -99,6 +99,7 @@ upgrading it requires rebuilding the native app.
 | `lib/theme.ts` | Visual tokens, `useStyles` - rebuilding the styles when the window geometry changes (ADR-0011), `column()` - the content column of the single layout (ADR-0012) |
 | `assets/audio/` | The local music files and the record of their origin and licenses |
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
+| `store/` | App Store screenshots |
 
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
