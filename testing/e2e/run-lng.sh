@@ -18,7 +18,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 
 UDID="${UDID:-$(xcrun simctl list devices booted -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print([x["udid"] for k in d for x in d[k] if x["state"]=="Booted"][0])')}"
 

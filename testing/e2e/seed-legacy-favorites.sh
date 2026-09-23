@@ -7,7 +7,7 @@
 #
 # Приложение должно быть установлено, но не запущено (скрипт сам его гасит).
 set -euo pipefail
-UDID=05F697B7-36CD-4050-9D57-FC9316AA093C
+UDID="${UDID:-$("$(dirname "$0")/sim-udid.sh" "Pray Smoke iPhone 17 Pro")}"
 xcrun simctl terminate "$UDID" twinkler 2>/dev/null || true
 CONTAINER=$(xcrun simctl get_app_container "$UDID" twinkler data)
 DB="$CONTAINER/Documents/SQLite/lampada.db"

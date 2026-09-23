@@ -13,6 +13,23 @@
   record a new significant architectural decision as an ADR in
   `architect/decisions/`.
 
+# Simulators
+
+Reuse the existing named simulators; do not create new ones or boot the stock
+Xcode devices. Every simulator with an installed build takes several GB, and
+the disk has already filled up once. If a named simulator is missing, create it
+with the same name and device type. Scripts resolve a simulator by name with
+`testing/e2e/sim-udid.sh "<name>"`; do not hardcode UDIDs.
+
+| Simulator | Device type | Use |
+|---|---|---|
+| `Pray Smoke iPhone 17 Pro` | iPhone 17 Pro | default for Maestro tiers (`critical`, `main`, `rare`) and anything needing a Home Indicator or the Dynamic Island |
+| `Pray SE` | iPhone SE (3rd generation) | small screen and Home button; quick manual checks; `run-lock-biometrics.sh` |
+| `Pray iPad2` | iPad Pro 11-inch (M5) | tablet and rotation flows (`npm run test:e2e:ipad`) |
+| `Lampada AppStore UK iPhone 17 Pro Max`, `Lampada AppStore iPad Pro 13` | — | App Store screenshots only |
+
+Shut a simulator down when you are done with it.
+
 # Builds and environments
 
 - Never substitute the build method silently. A request to install the app on a

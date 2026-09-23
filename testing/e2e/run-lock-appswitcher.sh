@@ -13,10 +13,10 @@
 # Для сохранения в отчёт передайте EVIDENCE_DIR=testing/evidence/<дата>-<тема>.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 EVIDENCE="${EVIDENCE_DIR:-${TMPDIR:-/tmp/}pray-e2e-output}"
 mkdir -p "$EVIDENCE"
-UDID=05F697B7-36CD-4050-9D57-FC9316AA093C
+UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
 
 maestro test --device "$UDID" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-008-appswitcher.yaml
 

@@ -13,9 +13,9 @@
 # Скрипт сам включает пин 123456, гонит проверки и снимает защиту в конце.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-UDID=05F697B7-36CD-4050-9D57-FC9316AA093C
+UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
 PIN=${1:-123456}
-export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 
 echo "== Включаем защиту пином $PIN"
 maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-011-prepare.log 2>&1 || { echo "FAIL: не удалось включить пин"; exit 1; }
@@ -56,7 +56,7 @@ LOG=/tmp/lock011-device.log
 xcrun simctl spawn "$UDID" log stream --style compact > "$LOG" 2>&1 &
 LPID=$!
 sleep 2
-export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-011-pin-entry.yaml > /tmp/lock-011-flow.log 2>&1 || { kill $LPID; echo "FAIL: флоу ввода пина упал"; exit 1; }
 sleep 2
 kill $LPID || true

@@ -10,17 +10,17 @@
 # Maestro не умеет слать эти сигналы из флоу: флоу засыпает на evalScript-sleep,
 # скрипт в это время постит сигнал.
 #
-# Окружение: UDID (по умолчанию iPhone SE «Lampada Test iPhone SE»), SIG
+# Окружение: UDID (по умолчанию симулятор «Pray SE»), SIG
 # (по умолчанию fingerTouch; на устройстве с Face ID — pearl).
 # По умолчанию доказательства идут во временную папку (не в репозиторий).
 # Для сохранения в отчёт передайте EVIDENCE_DIR=testing/evidence/<дата>-<тема>.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 EVIDENCE="${EVIDENCE_DIR:-${TMPDIR:-/tmp/}pray-e2e-output}"
 mkdir -p "$EVIDENCE"
-UDID="${UDID:-C4FCA94D-457A-4161-9689-6FF712F5ED47}"
+UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray SE")}"
 SIG="${SIG:-fingerTouch}"
 DEV=(--device "$UDID")
 BIO="com.apple.BiometricKit_Sim.$SIG"

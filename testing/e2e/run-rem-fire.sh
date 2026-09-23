@@ -13,10 +13,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 EVIDENCE="${EVIDENCE_DIR:-${TMPDIR:-/tmp/}pray-e2e-output}"
 mkdir -p "$EVIDENCE"
-UDID=05F697B7-36CD-4050-9D57-FC9316AA093C
+UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
 APP="${APP:-$HOME/Library/Developer/Xcode/DerivedData/Lampada-gehztyibhocyfdajdtvhehendfdc/Build/Products/Release-iphonesimulator/Lampada.app}"
 
 if [ "${SKIP_RESET:-0}" != "1" ]; then
