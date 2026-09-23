@@ -68,3 +68,5 @@ implementation details do not need one.
 - [0031: Let the server admit AI prefetch](0031-server-controlled-ai-prefetch.md)
 
 - [0032: Ignore the system font size](0032-ignore-system-font-size.md)
+
+- [0033: Bound the music, the duration and the streak day by the prayer time](0033-prayer-time-bounds-music-and-day.md)

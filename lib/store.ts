@@ -26,6 +26,7 @@ import * as scriptureRepository from './scriptureRepository';
 import { createSingleFlight } from './singleFlight';
 import { mergeOfflineTrail, shouldDeferLoadedNext } from './scriptureSessionState';
 import { adjustSessionTimer, sessionTimerSnapshot } from './sessionTimer';
+import { dayKey } from './streak';
 import {
   startPrayerSystemTimer,
   stopPrayerSystemTimer,
@@ -723,11 +724,16 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   complete: async (takeaway) => {
     const s = get();
+    if (s.sessionId === null || s.startedAtMs === null) {
+      throw new Error('No active prayer session to complete');
+    }
     await stopPrayerSystemTimer().catch((error) =>
       reportSystemTimerError('stop', error),
     );
-    if (s.sessionId !== null) await db.finishSession(s.sessionId, s.elapsed, takeaway);
-    const streak = await db.markPrayedToday();
+    await db.finishSession(s.sessionId, s.elapsed, takeaway);
+    // Молитва засчитывается дню, когда она началась, а не дню нажатия «Готово»:
+    // незавершённую с вечера сессию можно подтвердить и на следующее утро.
+    const streak = await db.markPrayedDay(dayKey(new Date(s.startedAtMs)));
     set({ takeaway, streak });
   },
 

@@ -197,7 +197,10 @@ During a session the user can turn on quiet local music. Fifteen bundled CC0
 tracks play in a looping queue without a network and keep playing when the app is
 backgrounded and the screen is locked. The player registers as a system media
 session, and native background playback is enabled by the `expo-audio` config
-plugin. The music stops when the prayer ends. Voice recording, playback of a
+plugin. The music fades out when the prayer ends: over 3 s at the finite deadline
+in the background or on the locked screen, where the transition to reflection
+waits for the app to return, and over 0.8 s on that transition otherwise (see
+[ADR-0033](decisions/0033-prayer-time-bounds-music-and-day.md)). Voice recording, playback of a
 draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.
@@ -206,7 +209,11 @@ The prayer timer keeps the absolute moments of the start and of the planned end
 in the runtime session state. The one-second tick is only needed to update the
 interface: the actual `elapsed` and `remaining` are computed from the system
 clock every time, so after coming back from the background the timer immediately
-catches up with the interval that passed. A session unloaded by the OS is not
+catches up with the interval that passed. For a finite prayer `elapsed` stops at
+`endsAtMs`: the time after zero is not saved as prayer duration, while extending
+the timer or resuming from reflection moves the deadline and so the cap (ADR-0033).
+An untimed prayer saves the wall-clock time from its start to the last tick of the
+session screen. A session unloaded by the OS is not
 restored yet.
 
 Timer expiry waits while the reader or answer sheet is open, or narration is
@@ -230,7 +237,9 @@ See [ADR-0027](decisions/0027-resume-current-prayer.md).
 
 After the reflection is saved (or skipped), completion returns directly Home with
 `router.dismissTo`, removing the prayer flow from the navigation stack. Home shows
-a localized four-second saved notice and the updated flame/day state. The takeaway
+a localized four-second saved notice and the updated flame/day state. The
+completed prayer counts for the local calendar day of its start, not the day
+"Done" is tapped (ADR-0033). The takeaway
 remains in the journal; there is no separate success screen. A consumed route
 parameter triggers the notice once. Legacy `/done` links redirect without claiming
 a new save. See [ADR-0028](decisions/0028-completion-on-home.md).
@@ -412,7 +421,7 @@ created and filled in on open.
 | `scripture_books` | A local directory of book names per translation |
 | `favorites_legacy_backup` | A copy of the old favourites from before the migration |
 | `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value |
-| `prayed_days` | The days used to compute the streak |
+| `prayed_days` | The local calendar days of completed prayers, keyed by the prayer start; the streak is computed from them |
 
 A quote is tied to a prayer through `scripture_favorites.session_id`, which is set
 at the moment it is saved. For records made before the column existed, the link is
@@ -446,8 +455,9 @@ scripture audio cannot apply a playback mode and natively cut the recording shor
 on iOS. The background music uses two automatically released `AudioPlayer`s: the
 next local track is loaded in advance and starts sounding two seconds before the
 end of the current one, with a crossfade of the volumes. During recording,
-scripture narration, when the music is turned off or when the prayer ends, both
-players are paused in sync and an unfinished crossfade is reset.
+scripture narration or when the music is turned off, both players are paused in
+sync and an unfinished crossfade is reset. When the prayer ends, the crossfade is
+reset, the active player fades out on the same curve and then both are paused.
 
 A prayer can leave the device only as plain text and only by an explicit action
 of the user (ADR-0029). The "Share" button of an expanded journal card builds the

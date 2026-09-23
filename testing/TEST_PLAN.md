@@ -190,6 +190,7 @@ tier of its e2e runs.
 | MUS-006 [main] | Finish the prayer manually or after timer expiry | the music player stops and does not play on reflection or the next session screens |
 | MUS-007 [main] | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |
+| MUS-009 [rare] | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
 
 ### Answers and audio
 
@@ -299,7 +300,8 @@ so every scenario below is Not run and belongs to the `main` tier.
 | END-002 [critical] | Finish with a takeaway | Home opens with a temporary saved notice; the text remains in the journal |
 | END-003 [main] | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
-| END-005 | Finishing around midnight and after a time zone change | the streak and the seven dots agree with the local calendar date |
+| END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `sessionResume.test.mjs`) |
+| END-007 | Leave an expired prayer overnight, open the app the next day and finish it on reflection | the prayer counts for the day it started, not the day of "Done"; the streak stays unbroken |
 | END-006 [ipad] | Enter a takeaway with the keyboard open on iPad in portrait and landscape, then rotate while typing | the editing column widens on tablets and the input fills the available space below the question and above the keyboard; long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 
 ### The journal and local data

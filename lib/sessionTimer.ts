@@ -9,8 +9,12 @@ export function sessionTimerSnapshot(
   nowMs: number,
 ): SessionTimerSnapshot {
   const effectiveNowMs = Math.max(startedAtMs, nowMs);
+  // Время молитвы с таймером заканчивается на дедлайне: ожидание в фоне или
+  // на экране итога после нуля в длительность не входит. Продление и возврат
+  // к молитве двигают сам дедлайн.
+  const prayerNowMs = endsAtMs === null ? effectiveNowMs : Math.min(effectiveNowMs, endsAtMs);
   return {
-    elapsed: Math.floor((effectiveNowMs - startedAtMs) / 1_000),
+    elapsed: Math.floor((prayerNowMs - startedAtMs) / 1_000),
     remaining:
       endsAtMs === null
         ? null

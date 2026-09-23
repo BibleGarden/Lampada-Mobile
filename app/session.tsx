@@ -49,6 +49,12 @@ import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
+  hastenMusicFadeOut,
+  musicFadeOutVolume,
+  startMusicFadeOut,
+  type MusicFadeOut,
+} from '../lib/musicFade';
+import {
   audioModeCoordinator,
   type AudioModeRequest,
 } from '../lib/audioModeCoordinator';
@@ -64,6 +70,10 @@ const MUSIC_CROSSFADE_MS = 2000;
 const MUSIC_CROSSFADE_TICK_MS = 50;
 const MUSIC_STATUS_UPDATE_MS = 200;
 const MUSIC_CROSSFADE_LEAD_SECONDS = 2.2;
+// В фоне ничего не ждёт окончания затухания. Переход к итогу ждёт его до
+// router.replace (плееры живут, пока смонтирован экран), поэтому оно короче.
+const MUSIC_BACKGROUND_FADE_OUT_MS = 3000;
+const MUSIC_FINISH_FADE_OUT_MS = 800;
 type MusicPlayerSlot = 0 | 1;
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
@@ -116,6 +126,11 @@ function SessionScreen() {
   const activeMusicPlayerSlot = useRef<MusicPlayerSlot>(0);
   const musicCrossfadeTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const musicCrossfadeRunning = useRef(false);
+  const musicFadeOut = useRef<{
+    fade: MusicFadeOut;
+    finish: (completed: boolean) => void;
+    stopped: Promise<void>;
+  } | null>(null);
   const musicPlayingBySlot = useRef<[boolean, boolean]>([false, false]);
   const loadedMusicTrackIndexes = useRef<[number, number]>([
     0,
@@ -259,6 +274,7 @@ function SessionScreen() {
   const startMusicCrossfade = useCallback((durationMs = MUSIC_CROSSFADE_MS) => {
     if (
       musicCrossfadeRunning.current ||
+      musicFadeOut.current ||
       musicTracks.length === 0 ||
       transientAudioBusyRef.current ||
       !useSession.getState().musicOn
@@ -328,6 +344,7 @@ function SessionScreen() {
       if (
         slot !== activeMusicPlayerSlot.current ||
         musicCrossfadeRunning.current ||
+        musicFadeOut.current ||
         musicTracks.length === 0
       ) {
         return;
@@ -362,6 +379,8 @@ function SessionScreen() {
 
   useEffect(
     () => () => {
+      // Затухание не переживает экран: его плееры освобождаются вместе с ним.
+      musicFadeOut.current?.finish(false);
       if (musicCrossfadeTimer.current) clearInterval(musicCrossfadeTimer.current);
       musicCrossfadeTimer.current = null;
       musicCrossfadeRunning.current = false;
@@ -412,6 +431,62 @@ function SessionScreen() {
     return () => sub.remove();
   }, []);
 
+  // Музыка звучит только во время молитвы и в конце затихает. Плееры
+  // ставятся на паузу после затухания, до освобождения аудиосессии. Повторный
+  // вызов не начинает второе затухание, а может только ускорить текущее.
+  const stopPrayerMusic = useCallback((fadeOutMs: number): Promise<void> => {
+    const running = musicFadeOut.current;
+    if (running) {
+      running.fade = hastenMusicFadeOut(running.fade, Date.now(), fadeOutMs);
+      return running.stopped;
+    }
+    const stop = async () => {
+      pauseMusicPlayers();
+      if (useSession.getState().musicOn) useSession.getState().toggleMusic();
+      await releaseMusicSession();
+    };
+    if (!useSession.getState().musicOn || transientAudioBusyRef.current) return stop();
+
+    cancelMusicCrossfade();
+    const player = musicPlayerForSlot(activeMusicPlayerSlot.current);
+    let settle: (completed: boolean) => void = () => {};
+    const faded = new Promise<boolean>((resolve) => { settle = resolve; });
+    const timer = setInterval(() => {
+      const current = musicFadeOut.current;
+      if (!current) return;
+      const volume = musicFadeOutVolume(current.fade, Date.now());
+      if (volume > 0 && !transientAudioBusyRef.current) {
+        player.volume = volume;
+        return;
+      }
+      current.finish(true);
+    }, MUSIC_CROSSFADE_TICK_MS);
+    const finish = (completed: boolean) => {
+      clearInterval(timer);
+      settle(completed);
+    };
+    // После unmount плееры уже освобождены: отменённое затухание их не трогает.
+    const stopped = faded
+      .then((completed) => (completed ? stop() : undefined))
+      .finally(() => {
+        musicFadeOut.current = null;
+      });
+    musicFadeOut.current = {
+      fade: startMusicFadeOut(player.volume, Date.now(), fadeOutMs),
+      finish,
+      stopped,
+    };
+    return stopped;
+  }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicSession]);
+
+  // На заблокированном экране и в фоне переход к итогу ждёт возврата в
+  // приложение, а музыка заканчивается вместе со временем молитвы. Пока
+  // музыка играет, iOS не приостанавливает JS, и секундный тик доходит до нуля.
+  useEffect(() => {
+    if (!timeExpired || appState === 'active') return;
+    void stopPrayerMusic(MUSIC_BACKGROUND_FADE_OUT_MS);
+  }, [timeExpired, appState, stopPrayerMusic]);
+
   const goToReflect = async () => {
     if (finished.current) return;
     finished.current = true;
@@ -422,12 +497,10 @@ function SessionScreen() {
     scriptureAudio.stop();
     // Останавливаем плееры до router.replace: useAudioPlayer сам удалит
     // native shared objects при unmount, и обращаться к ним из cleanup уже нельзя.
-    pauseMusicPlayers();
+    await stopPrayerMusic(MUSIC_FINISH_FADE_OUT_MS);
     await stopPrayerSystemTimer().catch((error) => {
       console.warn('Failed to stop prayer system timer', error);
     });
-    await releaseMusicSession();
-    if (useSession.getState().musicOn) useSession.getState().toggleMusic();
     void s.finish();
     router.replace('/reflect');
   };

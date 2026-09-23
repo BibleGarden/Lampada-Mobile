@@ -28,9 +28,19 @@ tags:
     duration: 1700
 - tapOn:
     point: "50%,29%"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
 - pressKey: HOME

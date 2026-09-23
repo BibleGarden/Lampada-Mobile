@@ -286,6 +286,7 @@ summary was green.
 | Reminder editor | `maestro test testing/e2e/ios-rem-editor-suite.yaml` | REM-014, REM-015 |
 | iPad | `npm run test:e2e:ipad` (one booted iPad simulator, or `UDID=`) | NAV-008 (partial), START-005, ANS-033, END-006, ANS-023 (`ios-ipad-*.yaml` + `ios-ans-023-recordings-actions.yaml`) |
 | Lock suites | `maestro test testing/e2e/ios-lock-suite.yaml`, `ios-lock-006-suite.yaml` | LOCK-001…007 |
+| Background music at the deadline | `bash testing/e2e/run-background-music-timer-end.sh` (checks the player stop in the simulator audio log) | MUS-009 |
 | Lock wrappers | `run-lock-appswitcher.sh`, `run-lock-biometrics.sh`, `run-lock-storage-check.sh` | LOCK-008, LOCK-009, LOCK-010, LOCK-011 |
 | Journal / background suites | `maestro test testing/e2e/ios-jrn-suite.yaml`, `ios-background-suite.yaml` | JRN-001…005, JRN-007, JRN-014, END-003/004 (with answers), SES-004, MUS-004 |
 | Stub phase | `bash testing/e2e/run-stub-phase.sh` (needs the build with `EXPO_PUBLIC_API_URL=http://localhost:9085` + `EXPO_PUBLIC_FORCE_SESSION_ERROR=1` and `npm run scripture:stub`; see `testing/README.md`) | START-004 (`ios-stage03-start-sqlite-lock.yaml`), SCR-001, SCR-002 (`ios-stage06-scr-001-navigation.yaml`, `ios-stage06-scr-002a-favorite-relaunch.yaml` /

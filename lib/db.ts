@@ -404,7 +404,7 @@ export async function getFavorites(): Promise<string[]> {
   return rows.map((r) => r.ref);
 }
 
-// ---- стрик: день засчитывается по календарной дате завершённой сессии ----
+// ---- стрик: день засчитывается по календарной дате начала завершённой сессии ----
 
 export type Streak = { count: number; prayedToday: boolean; week: boolean[] };
 
@@ -443,9 +443,9 @@ export async function getStreak(): Promise<Streak> {
   return { count, prayedToday, week };
 }
 
-/** Отметить сегодняшнюю молитву; возвращает новый стрик */
-export async function markPrayedToday(): Promise<Streak> {
+/** Отметить день молитвы (`YYYY-MM-DD`); возвращает новый стрик */
+export async function markPrayedDay(day: string): Promise<Streak> {
   const d = await getDb();
-  await d.runAsync('INSERT OR IGNORE INTO prayed_days (day) VALUES (?)', dayKey(new Date()));
+  await d.runAsync('INSERT OR IGNORE INTO prayed_days (day) VALUES (?)', day);
   return getStreak();
 }

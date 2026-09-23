@@ -34,9 +34,14 @@ tags:
     id: "music-playing"
 - tapOn:
     id: "session-timer-button"
-- assertVisible: "−1"
-- tapOn: "−1"
-- tapOn: "−1"
+- assertVisible:
+    id: "session-time-subtract"
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
+- tapOn:
+    id: "session-time-subtract"
+    retryTapIfNoChange: false
 - extendedWaitUntil:
     visible:
       id: "reflect-kicker"

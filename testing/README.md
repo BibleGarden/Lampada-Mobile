@@ -110,12 +110,13 @@ bash testing/e2e/run-stub-phase.sh
 # …then reinstall the normal Release build (re-run without the overrides).
 ```
 
-Two more groups are driven by wrapper scripts because Maestro cannot send
-system signals or evaluate the current clock:
+Three more groups are driven by wrapper scripts because Maestro cannot send
+system signals, evaluate the current clock or hear audio:
 
 ```bash
 bash testing/e2e/run-rem-fire.sh       # REM-004/005/006/008: scheduled-notification firing
 bash testing/e2e/run-lock-biometrics.sh  # LOCK-009/010: simulator Face ID via BiometricKit signals
+bash testing/e2e/run-background-music-timer-end.sh  # MUS-009: music stops at the deadline in the background
 ```
 
 ## What to do with the result
