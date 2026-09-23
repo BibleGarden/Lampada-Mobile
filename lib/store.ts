@@ -603,17 +603,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   saveAnswer: async (questionIndex, text, recordings) => {
     const s = get();
     if (s.sessionId !== null) {
-      await db.saveAnswer({
-        sessionId: s.sessionId,
-        questionIndex,
-        question: s.questions[questionIndex],
-        text,
-      });
-      // полная перезапись: повторное сохранение не плодит дублей,
-      // удалённые в шторке записи уходят и из БД
-      await db.replaceRecordings(
-        s.sessionId,
-        questionIndex,
+      await db.saveAnswer(
+        {
+          sessionId: s.sessionId,
+          questionIndex,
+          question: s.questions[questionIndex],
+          text,
+        },
         recordings.map((r) => ({
           uri: r.uri,
           durationSec: r.durationSec,

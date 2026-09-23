@@ -37,3 +37,23 @@ export async function saveAnswerDraft(
     askAnswerConsent();
   }
 }
+
+/**
+ * Одно сохранение ответа за раз. Повторный вызов во время записи не начинает
+ * вторую, а ждёт текущую: автосохранение перед размышлением не должно уйти
+ * со страницы раньше, чем закончится уже начатое ручное сохранение.
+ */
+export function createAnswerSaveFlight() {
+  let active: Promise<void> | null = null;
+  return {
+    run(save: () => Promise<void>): Promise<void> {
+      if (active) return active;
+      const current = save().finally(() => {
+        active = null;
+      });
+      active = current;
+      return current;
+    },
+    isActive: () => active !== null,
+  };
+}

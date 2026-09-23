@@ -26,7 +26,11 @@ import {
 import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
-import { saveAnswerDraft, type AnswerSaveMode } from '../lib/answerSave';
+import {
+  createAnswerSaveFlight,
+  saveAnswerDraft,
+  type AnswerSaveMode,
+} from '../lib/answerSave';
 import { recordDiagnostic } from '../lib/db';
 import {
   recordedSeconds,
@@ -119,7 +123,7 @@ export default function AnswerSheet({
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
-  const savingRef = useRef(false);
+  const [saveFlight] = useState(createAnswerSaveFlight);
   const recsRef = useRef<RecordingDraft[]>([]);
   const pendingTranscriptions = useRef(
     new Map<number, { controller: AbortController; promise: Promise<void> }>(),
@@ -225,7 +229,7 @@ export default function AnswerSheet({
 
   const runTranscription = useCallback(
     (recording: RecordingDraft) => {
-      if (savingRef.current) return;
+      if (saveFlight.isActive()) return;
       pendingTranscriptions.current.get(recording.id)?.controller.abort();
       const controller = new AbortController();
       updateRecs((current) =>
@@ -265,12 +269,12 @@ export default function AnswerSheet({
 
       pendingTranscriptions.current.set(recording.id, { controller, promise });
     },
-    [updateRecs],
+    [saveFlight, updateRecs],
   );
 
   const startTranscription = useCallback(
     async (recording: RecordingDraft) => {
-      if (savingRef.current) return;
+      if (saveFlight.isActive()) return;
       await ensureSettingsLoaded();
       const decision = useSettings.getState().audioTranscriptionConsent;
       if (decision === 'undecided') {
@@ -284,7 +288,7 @@ export default function AnswerSheet({
       }
       runTranscription(recording);
     },
-    [runTranscription],
+    [runTranscription, saveFlight],
   );
 
   const decideAudioConsent = useCallback(async (decision: 'allowed' | 'denied') => {
@@ -788,9 +792,10 @@ export default function AnswerSheet({
     confirmTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
   };
 
-  const save = async (mode: AnswerSaveMode) => {
-    if (savingRef.current) return;
-    savingRef.current = true;
+  // Повторный вызов во время записи ждёт её, а не пишет второй раз.
+  const save = (mode: AnswerSaveMode) => saveFlight.run(() => runSave(mode));
+
+  const runSave = async (mode: AnswerSaveMode) => {
     setSaving(true);
     try {
       // Снимаем фокус до окна согласия: при его закрытии iOS иначе может
@@ -840,7 +845,6 @@ export default function AnswerSheet({
       sheetRef.current?.close();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -852,7 +856,7 @@ export default function AnswerSheet({
 
   // «Отмена» с подтверждением: несохранённый контент не выбрасываем молча
   const requestClose = () => {
-    if (savingRef.current) return;
+    if (saveFlight.isActive()) return;
     const hasContent = !!text.trim() || recs.length > 0;
     if (!hasContent || confirmCancel) {
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
@@ -876,7 +880,7 @@ export default function AnswerSheet({
   useEffect(() => {
     if (!flushRef) return;
     flushRef.current = async () => {
-      if (!openSheetRef.current) return;
+      if (!openSheetRef.current && !saveFlight.isActive()) return;
       await save('auto');
     };
     return () => {

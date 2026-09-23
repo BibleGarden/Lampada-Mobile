@@ -579,8 +579,9 @@ generation uses the curated local pools and scripture selection sends neither
 `topic` nor `user_replies`, while the non-contextual server safe pool remains
 available. Core permission does not open the answer gate. An answer is always
 saved locally first; the gate only decides whether it may leave the device. The
-save awaits the SQLite write; on failure the sheet keeps the draft and shows an
-error. The first manual save of an answer that could affect another request then
+save awaits one SQLite transaction for the text and recordings; on failure the
+sheet keeps the draft and shows an error. A save requested while another is in
+flight waits for it instead of writing again. The first manual save of an answer that could affect another request then
 shows its own disclosure while the prayer is still running. The automatic save
 before reflection and a save after the time has run out never ask, so navigation
 is not blocked and an undecided gate stays closed until the next manual save. The

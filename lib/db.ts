@@ -153,22 +153,12 @@ export async function finishSession(id: number, elapsedSec: number, takeaway: st
   );
 }
 
-export async function saveAnswer(a: AnswerRow) {
-  const d = await getDb();
-  await d.runAsync(
-    `INSERT INTO answers (session_id, question_index, question, text) VALUES (?, ?, ?, ?)
-     ON CONFLICT(session_id, question_index) DO UPDATE SET question = excluded.question, text = excluded.text`,
-    a.sessionId,
-    a.questionIndex,
-    a.question,
-    a.text,
-  );
-}
-
-/** Полная перезапись записей ответа: без дублей, удалённые уходят из БД */
-export async function replaceRecordings(
-  sessionId: number,
-  questionIndex: number,
+/**
+ * Ответ и его записи пишутся одной транзакцией: текст без записей в БД не
+ * остаётся. Записи перезаписываются полностью — без дублей, удалённые уходят.
+ */
+export async function saveAnswer(
+  a: AnswerRow,
   recordings: { uri: string; durationSec: number; transcript: string | null }[],
 ) {
   const d = await getDb();
@@ -179,22 +169,30 @@ export async function replaceRecordings(
   }));
   const previous = await d.getAllAsync<{ uri: string }>(
     'SELECT uri FROM recordings WHERE session_id = ? AND question_index = ?',
-    sessionId,
-    questionIndex,
+    a.sessionId,
+    a.questionIndex,
   );
   await d.withTransactionAsync(async () => {
     await d.runAsync(
+      `INSERT INTO answers (session_id, question_index, question, text) VALUES (?, ?, ?, ?)
+       ON CONFLICT(session_id, question_index) DO UPDATE SET question = excluded.question, text = excluded.text`,
+      a.sessionId,
+      a.questionIndex,
+      a.question,
+      a.text,
+    );
+    await d.runAsync(
       'DELETE FROM recordings WHERE session_id = ? AND question_index = ?',
-      sessionId,
-      questionIndex,
+      a.sessionId,
+      a.questionIndex,
     );
     for (const r of storedRecordings) {
       await d.runAsync(
         `INSERT INTO recordings
            (session_id, question_index, uri, duration_sec, transcript)
          VALUES (?, ?, ?, ?, ?)`,
-        sessionId,
-        questionIndex,
+        a.sessionId,
+        a.questionIndex,
         r.uri,
         r.durationSec,
         r.transcript,
