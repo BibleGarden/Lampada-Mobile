@@ -15,6 +15,7 @@ import { RecordingDraft, fmtTime } from '../lib/store';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
+import { useSheetReflow } from '../lib/useSheetReflow';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -87,6 +88,7 @@ export default function RecordingsSheet({
   const recordingPending = recordingPhase === 'starting' || recordingPhase === 'stopping';
   const recordingBusy = recordingPhase !== 'idle';
   const [stopReady, setStopReady] = useState(false);
+  const { mountKey, onIndexChange } = useSheetReflow();
 
   useEffect(() => {
     if (!recording) {
@@ -126,6 +128,7 @@ export default function RecordingsSheet({
 
   return (
     <BottomSheet
+      key={mountKey}
       ref={sheetRef}
       index={-1}
       snapPoints={SNAP_POINTS}
@@ -134,6 +137,7 @@ export default function RecordingsSheet({
       // Как и в шторке ответа: иначе внутренний список прокручивается только
       // на верхней snap-точке, а на нижней жест перехватывает сама шторка.
       enableContentPanningGesture={false}
+      onChange={onIndexChange}
       onClose={onDismiss}
       // Контейнер шторки по умолчанию — единый элемент доступности, и всё
       // внутри скрыто от VoiceOver и Maestro. Раскрываем детей.
