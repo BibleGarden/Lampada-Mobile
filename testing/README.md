@@ -9,7 +9,7 @@ duplicated here, otherwise the two pictures drift apart.
 | Path | Contents | Does it change |
 | --- | --- | --- |
 | [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
-| `e2e/` | Executable Maestro scenarios, 91 flows | Living |
+| `e2e/` | Executable Maestro scenarios, 97 flows | Living |
 | `reports/` | Dated results of runs | Immutable: a new run means a new file |
 | `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |
 
@@ -58,8 +58,18 @@ The flows carry risk-tier tags (`critical` / `main` / `rare`, see the legend in
 npm run test:e2e:critical  # group 1: P0 paths, every build
 npm run test:e2e:main      # group 2: the main functionality, before a release
 npm run test:e2e:rare      # group 3: slow, destructive and edge scenarios
-npm run test:e2e:all       # everything
+npm run test:e2e:all       # everything except the iPad-only flows
+npm run test:e2e:ipad      # iPad group, on the one booted iPad simulator (or UDID=)
 ```
+
+The tier runs use the iPhone 17 Pro simulator, so the device-agnostic
+`ios-ans-023-recordings-actions.yaml` (ANS-023) and
+`ios-scr-025-reader-dynamic-island.yaml` (SCR-025) run in `main` on an iPhone
+with a Home Indicator and a Dynamic Island. The iPhone app is portrait-only, so
+the rotation flows `ios-ipad-*.yaml` carry only the `ipad` tag and run through
+`test:e2e:ipad`, together with ANS-023. On an iPhone SE, run ANS-023 directly:
+`maestro --device <udid> test testing/e2e/ios-ans-023-recordings-actions.yaml`.
+Maestro saves landscape screenshots unrotated.
 
 Some flows have interdependencies a tag run cannot guarantee (order is not
 deterministic) and are excluded from the tier tags. Run them as ordered

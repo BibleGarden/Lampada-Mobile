@@ -113,6 +113,7 @@ export default function Setup() {
               style={styles.topicInput}
               accessibilityLabel={t('screens.setup.goal')}
               accessibilityHint={t('screens.setup.goalHint')}
+              testID="setup-goal-input"
               // цель — одна фраза, переносы строк не нужны: клавиша ввода
               // становится синей «Готово» и закрывает клавиатуру
               returnKeyType="done"

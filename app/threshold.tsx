@@ -163,6 +163,7 @@ export default function Threshold() {
               return (
                 <View
                   key={i}
+                  testID={`threshold-brief-${i}`}
                   style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
                 >
                   <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>

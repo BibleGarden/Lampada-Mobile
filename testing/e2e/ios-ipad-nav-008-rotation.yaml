@@ -1,0 +1,52 @@
+appId: twinkler
+tags:
+  - ipad
+---
+# NAV-008 (iPad): Home и второй экран переживают повороты портрет→ландшафт→
+# портрет — элементы на месте и нажимаются. Покрытие фона на скриншотах
+# смотрит человек; «JS занят во время поворота» Maestro не воспроизводит.
+- launchApp:
+    stopApp: true
+    clearState: true
+- setOrientation: PORTRAIT
+- assertVisible:
+    id: "home-title"
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "home-title"
+- assertVisible:
+    id: "start-prayer-button"
+- assertVisible:
+    id: "journal-button"
+- assertVisible:
+    id: "settings-button"
+- takeScreenshot: NAV-008-home-landscape
+- setOrientation: PORTRAIT
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "start-prayer-button"
+- takeScreenshot: NAV-008-home-portrait
+# второй экран: поворот на «Настройках», затем возврат домой в ландшафте
+- tapOn:
+    id: "settings-button"
+- assertVisible:
+    id: "settings-back-button"
+- setOrientation: LANDSCAPE_RIGHT
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "settings-back-button"
+- assertVisible:
+    id: "interface-language-selector"
+- takeScreenshot: NAV-008-settings-landscape
+- tapOn:
+    id: "settings-back-button"
+- assertVisible:
+    id: "start-prayer-button"
+- takeScreenshot: NAV-008-home-back-landscape
+- setOrientation: PORTRAIT
+- assertVisible:
+    id: "start-prayer-button"

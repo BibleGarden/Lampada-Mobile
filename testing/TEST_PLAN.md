@@ -119,7 +119,8 @@ The smoke counts as passed only in full.
 The `[critical]` / `[main]` / `[rare]` suffix on a scenario ID is the
 e2e tier of the Maestro flow that covers it (the `tags:` of the files
 in `testing/e2e/`): `critical` runs on every build, `main` before every
-release, `rare` on demand or before a major release. An ID without a
+release, `rare` on demand or before a major release. `ipad` marks the
+iPad-only rotation flows run by `npm run test:e2e:ipad`. An ID without a
 suffix has no e2e flow and is checked manually.
 
 | ID | Actions | Expected result |
@@ -149,7 +150,7 @@ tier of its e2e runs.
 | NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created |
 | NAV-006 | Leave Home in the background after praying, then reopen the app on a later day without navigating | the last dot represents the current local day, yesterday's prayer moves left, and the flame and greeting refresh |
 | NAV-007 | Keep Home open across local midnight, including a daylight-saving transition | the calendar advances at local midnight; today's unprayed dot becomes an outline and the previous prayer remains on its actual date |
-| NAV-008 | Rotate an iPad between portrait and landscape on Home and another screen, including while JavaScript is briefly busy | the background covers the entire canvas during and after rotation; no strip retains the previous width or height |
+| NAV-008 [ipad] | Rotate an iPad between portrait and landscape on Home and another screen, including while JavaScript is briefly busy | the background covers the entire canvas during and after rotation; no strip retains the previous width or height |
 
 ### Setup and entering the prayer
 
@@ -163,7 +164,7 @@ tier of its e2e runs.
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
 | START-004 [main] | A SQLite error while creating the session | the button does not stay blocked forever, the error is diagnosable |
-| START-005 | Open the threshold on an iPad with a multi-line goal and rotate between portrait and landscape | landscape shows the briefing and hold-to-start button side by side; all three briefing items fit for a typical multi-line goal; longer content scrolls without covering the button; portrait returns to the vertical layout |
+| START-005 [ipad] | Open the threshold on an iPad with a multi-line goal and rotate between portrait and landscape | landscape shows the briefing and hold-to-start button side by side; all three briefing items fit for a typical multi-line goal; longer content scrolls without covering the button; portrait returns to the vertical layout |
 
 ### The timer and the prayer flow
 
@@ -216,7 +217,7 @@ tier of its e2e runs.
 | ANS-020 | Quickly press "Done" twice while a recording is stopping | exactly one stop happens, one working recording appears, a successful file is not deleted and no save error is shown |
 | ANS-021 [main] | With the music on, save an audio in one question, move to the next one and record a second immediately | both recordings are saved and play back; a late restoration of the music does not cut the second file and the "The recording was not saved" message does not appear |
 | ANS-022 [main] | Press "Record another" twice quickly without moving the finger | the second tap does not land on the "Done" button that appeared; the UI stop is unavailable for the first 1.5 seconds, the recording continues, and a file shorter than 0.5 seconds is not added to the list |
-| ANS-023 | Open the recordings and start a recording on an iPhone SE / Home Button, an iPhone with a Home Indicator and an iPad | "Record another" and "Done" are fully visible, the bottom frame is not clipped and a margin remains between the button and the screen edge |
+| ANS-023 [main] | Open the recordings and start a recording on an iPhone SE / Home Button, an iPhone with a Home Indicator and an iPad | "Record another" and "Done" are fully visible, the bottom frame is not clipped and a margin remains between the button and the screen edge |
 | ANS-024 [main] | With the keyboard open, open the existing voice recordings | the keyboard closes before the sheet is shown, the list and the bottom button are fully reachable |
 | ANS-025 | With VoiceOver, check a short and a long transcript | the text is read out in full; a short text is not announced as a button; for a long text "Show in full"/"Collapse" is a separate focusable button |
 | ANS-026 | During a recording, simulate an interruption or a media services reset as far as the device allows | the false recording overlay disappears, the audio focus is released and the next recording starts normally |
@@ -226,7 +227,7 @@ tier of its e2e runs.
 | ANS-030 | On physical iOS, start a recording right after pausing or finishing a draft or the scripture narration | the deferred deactivation of the player does not cut the recorder; the M4A duration matches the speech and playback does not jump to the end |
 | ANS-031 | On physical iOS, record two different files in a row and play the second, the first and the second in turn | every replace waits for its own AVPlayerItem to load, starts from zero and plays the correct file in full |
 | ANS-032 | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
-| ANS-033 | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
+| ANS-033 [ipad] | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
 
 ### The AI and the companion
 
@@ -273,7 +274,7 @@ tier of its e2e runs.
 | SCR-022 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
 | SCR-023 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
 | SCR-024 [main] | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
-| SCR-025 | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
+| SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 
 ### Content reports
 
@@ -299,7 +300,7 @@ so every scenario below is Not run and belongs to the `main` tier.
 | END-003 [main] | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the streak and the seven dots agree with the local calendar date |
-| END-006 | Enter a takeaway with the keyboard open on iPad in portrait and landscape, then rotate while typing | the editing column widens on tablets and the input fills the available space below the question and above the keyboard; long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
+| END-006 [ipad] | Enter a takeaway with the keyboard open on iPad in portrait and landscape, then rotate while typing | the editing column widens on tablets and the input fills the available space below the question and above the keyboard; long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 
 ### The journal and local data
 

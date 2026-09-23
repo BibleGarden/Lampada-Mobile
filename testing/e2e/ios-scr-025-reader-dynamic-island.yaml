@@ -1,0 +1,69 @@
+appId: twinkler
+tags:
+  - main
+---
+# SCR-025: читалка длинного отрывка, раскрытая до предела, — ссылка и кнопки
+# шапки видны и нажимаются. Тир `main` идёт на iPhone с Dynamic Island
+# (Pray Smoke iPhone 17 Pro); что шапка ниже статус-бара, смотрит человек
+# по скриншоту. SE-половина — ios-stage06-scr-003-small-reader.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "SCR-025 длинный отрывок"
+- pressKey: Enter
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-scripture-tab"
+# листаем до отрывка, который не помещается в превью
+- repeat:
+    times: 10
+    while:
+      notVisible:
+        id: "scripture-read-full"
+    commands:
+      - tapOn:
+          id: "dock-scripture-next"
+- tapOn:
+    id: "scripture-read-full"
+- assertVisible:
+    id: "scripture-reader-reference"
+# тянем шторку вверх до упора: у неё один снап, выше topInset она не уходит
+- swipe:
+    start: "50%,20%"
+    end: "50%,2%"
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible:
+    id: "scripture-reader-reference"
+- assertVisible:
+    id: "scripture-reader-close"
+- takeScreenshot: SCR-025-reader-expanded
+- tapOn:
+    id: "scripture-reader-favorite"
+- assertVisible:
+    id: "scripture-reader-favorite-active"
+- tapOn:
+    id: "scripture-reader-close"
+- assertNotVisible:
+    id: "scripture-reader-close"
+- assertVisible:
+    id: "dock-scripture-favorite-active"

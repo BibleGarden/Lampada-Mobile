@@ -2,8 +2,9 @@ appId: twinkler
 tags:
   - critical
 ---
-# Клавиатура закрывается кнопкой «Готово» (returnKeyType="done" у поля цели), а
-# не `hideKeyboard`: на iOS 26.5 / Maestro 2.6.1 тот закрывает свайпом вниз и
+# Клавиатура закрывается клавишей ввода (returnKeyType="done" +
+# submitBehavior="blurAndSubmit" у поля цели: ввод снимает фокус, а не
+# вставляет перенос; подпись клавиши зависит от раскладки), а не `hideKeyboard`: на iOS 26.5 / Maestro 2.6.1 тот закрывает свайпом вниз и
 # уводит вместе с клавиатурой сам лист настройки молитвы. Тот же приём — в
 # testing/e2e/ios-lock-*.yaml.
 - launchApp:
@@ -16,7 +17,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "Финальный smoke"
-- tapOn: "Готово"
+- pressKey: Enter
 - assertVisible: "Финальный smoke"
 - tapOn: "5"
 - tapOn:

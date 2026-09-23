@@ -86,7 +86,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
         onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
       >
         <View style={styles.referenceWrap}>
-          <Text ref={referenceRef} style={styles.ref}>{cur?.reference ?? t('components.reader.scripture')}</Text>
+          <Text ref={referenceRef} style={styles.ref} testID="scripture-reader-reference">{cur?.reference ?? t('components.reader.scripture')}</Text>
           {cur?.translationAlias ? (
             <Text style={styles.translation}>{cur.translationAlias}</Text>
           ) : null}
@@ -114,6 +114,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
             size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}
+            testID={fav ? 'scripture-reader-favorite-active' : 'scripture-reader-favorite'}
             onPress={toggleFav}
           >
             <Heart size={16} fill={fav ? '#e7cf95' : 'none'} />
@@ -139,6 +140,7 @@ export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange
             size={sc(32)}
             bg="rgba(255,255,255,.04)"
             border={colors.white08}
+            testID="scripture-reader-close"
             onPress={close}
           >
             <Close size={15} />

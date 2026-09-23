@@ -23,15 +23,15 @@ A green run means, and only means:
   tags because their order matters, so a tag run alone does not reach them).
 
 It does not prove real microphone audio, a notification that fires in real
-time on a phone, a system dialog, a device reboot, an iPad rotation, airplane
+time on a phone, a system dialog, a device reboot, airplane
 mode, or a server log. It also says nothing about the wrapper-script groups —
-`run-lng.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh` — unless
+`run-lng.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`, `run-ipad.sh` — unless
 those were run explicitly, with their prepared environments. See sitting 9.
 
 Of 176 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
 including `START-*` and `RPT-*`, plus `LNG-001`–`LNG-013`, which the plan does
 not catalogue yet and which live in the e2e flows and this file), automation on
-main fully covers 104, partially covers 22, and does not cover 50. Section 9
+main fully covers 107, partially covers 24, and does not cover 45. Section 9
 of the plan has no IDs and is outside the count. How the count was made is at
 the end of this file.
 
@@ -262,14 +262,11 @@ tablets or accessibility.
 
 | ID | Do | Expected | Need |
 | --- | --- | --- | --- |
-| NAV-008 | Rotate Home and one other screen, including while JS is busy. | The background covers the canvas; no strip keeps the old size. | iPad |
+| NAV-008 | Rotate Home and one other screen while JS is busy. | The background covers the canvas; no strip keeps the old size. Plain rotation is automated (`ios-ipad-nav-008-rotation.yaml`); look at its landscape screenshots. | iPad |
 | SETUP-004 | Long goal; tap above the field and in both tablet margins. | Outside taps dismiss the keyboard without losing text; "Next" works after it closes. The phone half (long goal reaches the session) is automated in `ios-stage03-long-goal.yaml`. | iPad |
-| START-005 | Threshold with a multi-line goal; rotate. | Landscape: briefing and hold side by side; portrait returns to the stack. | iPad |
-| ANS-023 | Recordings sheet on an SE / Home Button, a Home-Indicator iPhone, and an iPad. | "Record another" and "Done" fully visible, not clipped. | Three sizes |
+| ANS-023 | Look at the `ANS-023-*` screenshots from the three devices. | A margin remains between the buttons and the screen edge. Visibility and taps are automated (`ios-ans-023-recordings-actions.yaml`). | Three sizes |
 | ANS-025 | VoiceOver on a short and a long transcript. | Full text; a short one is not a button; "Show in full" is its own focus. | VoiceOver + a transcript from sitting 6 |
-| ANS-033 | Multi-line question on a landscape iPad; type; rotate. | Two columns in landscape; text survives rotation. | iPad |
-| END-006 | Takeaway with the keyboard open; rotate. | The field fills the space; "Done" / a tap outside restores the actions; text stays. | iPad |
-| SCR-025 | Max-expanded reader, long passage, Dynamic Island. | Title and buttons below the status bar. The SE half is in the `main` tier (`ios-stage06-scr-003-small-reader.yaml`). | iPhone with a Dynamic Island |
+| SCR-025 | Look at `SCR-025-reader-expanded` from the `main` run. | Title and buttons below the status bar. Visibility and taps are automated (`ios-scr-025-reader-dynamic-island.yaml`). | iPhone with a Dynamic Island |
 | Section 9, UI | 320–430 pt widths; enlarged Dynamic Type; Reduce Motion; contrast of toggles and delete confirms; tap targets. | Nothing important clipped; labels present. | SE + a Pro + iPad |
 
 ---
@@ -287,6 +284,7 @@ summary was green.
 | Interface language | `bash testing/e2e/run-lng.sh` (switches the simulator locale between flows) | LNG-001…009 (`ios-lng-*.yaml`; they carry a `NEEDS-RUNNER` comment and are not in the tier tags) |
 | Reminder firing | `bash testing/e2e/run-rem-fire.sh` | REM-001, REM-004, REM-005, REM-006, REM-008, REM-011, REM-013 |
 | Reminder editor | `maestro test testing/e2e/ios-rem-editor-suite.yaml` | REM-014, REM-015 |
+| iPad | `npm run test:e2e:ipad` (one booted iPad simulator, or `UDID=`) | NAV-008 (partial), START-005, ANS-033, END-006, ANS-023 (`ios-ipad-*.yaml` + `ios-ans-023-recordings-actions.yaml`) |
 | Lock suites | `maestro test testing/e2e/ios-lock-suite.yaml`, `ios-lock-006-suite.yaml` | LOCK-001…007 |
 | Lock wrappers | `run-lock-appswitcher.sh`, `run-lock-biometrics.sh`, `run-lock-storage-check.sh` | LOCK-008, LOCK-009, LOCK-010, LOCK-011 |
 | Journal / background suites | `maestro test testing/e2e/ios-jrn-suite.yaml`, `ios-background-suite.yaml` | JRN-001…005, JRN-007, JRN-014, END-003/004 (with answers), SES-004, MUS-004 |
@@ -384,17 +382,17 @@ which the plan has no section for yet — they are catalogued by the
 `ios-lng-*.yaml` flows and this file. Section 9 of the plan has no IDs and is
 not in the 176.
 
-- **Covered (104):** a flow asserts the outcome the plan names and runs in one
+- **Covered (107):** a flow asserts the outcome the plan names and runs in one
   of the automated paths on main: a tier tag run (`critical` / `main` /
   `rare`), an ordered suite, or a committed wrapper script (`run-lng.sh`,
-  `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`). For `PRE-002` the
+  `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`, `run-ipad.sh`). For `PRE-002` the
   run is `npm run typecheck`; for `NAV-006`, `NAV-007` and `END-005` the unit
   tests of the date arithmetic count, because the live-midnight pass is
   documented above as optional. Covered IDs whose only automation is a suite
   or a wrapper are not proven by the tier runs alone — sitting 9 names them.
-- **Partial (22):** an automated flow asserts a slice (usually UI, or the unit
+- **Partial (24):** an automated flow asserts a slice (usually UI, or the unit
   tests of the logic) and the rest is in this file.
-- **Not covered (50):** no flow at all (physical-device, airplane-mode,
+- **Not covered (45):** no flow at all (physical-device, airplane-mode,
   backlog and deliberate items), a flow whose preparation is manual
   (`JRN-006`, `JRN-009`), or a documented negative check (`RPT-004`).
 

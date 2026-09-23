@@ -1,0 +1,65 @@
+appId: twinkler
+tags:
+  - main
+---
+# ANS-023: в шторке записей «Готово» (во время записи) и «Записать ещё»
+# (после неё) видны и нажимаются. Флоу не привязан к устройству: тир `main`
+# гоняет его на iPhone с Home Indicator, группа iPad — на планшете, SE —
+# прямым запуском (testing/README.md). Поля у края смотрит человек по скриншотам.
+- launchApp:
+    stopApp: true
+    clearState: true
+    # системный диалог микрофона локализован — разрешаем заранее
+    permissions:
+      microphone: allow
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "ANS-023 кнопки записей"
+- pressKey: Enter
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-answer-button"
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+- assertVisible:
+    id: "recordings-stop-button"
+- takeScreenshot: ANS-023-recording-done
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- assertVisible:
+    id: "recordings-record-button"
+- assertVisible:
+    id: "recordings-close-button"
+- takeScreenshot: ANS-023-record-another
+- tapOn:
+    id: "recordings-record-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-1"
+- tapOn:
+    id: "recordings-close-button"
+- assertVisible:
+    id: "answer-save-button"

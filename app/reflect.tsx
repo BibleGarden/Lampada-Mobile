@@ -152,7 +152,7 @@ function ReflectScreen() {
                     <Text style={styles.loadingText}>{t('screens.questionLoading')}</Text>
                   </View>
                 ) : (
-                  <Text style={[styles.question, questionTypography(s.reflectQ)]}>{s.reflectQ}</Text>
+                  <Text style={[styles.question, questionTypography(s.reflectQ)]} testID="reflect-question">{s.reflectQ}</Text>
                 )}
               </View>
 
