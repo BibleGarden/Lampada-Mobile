@@ -38,15 +38,18 @@ tags:
 - tapOn: "Подготовиться к разговору"
 - eraseText: 100
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - assertVisible:
     id: "setup-duration-value"
     text: "5 минут"
-- tapOn: "15"
+- tapOn:
+    id: "setup-preset-15"
 - assertVisible:
     id: "setup-duration-value"
     text: "15 минут"
-- tapOn: "30"
+- tapOn:
+    id: "setup-preset-30"
 - assertVisible:
     id: "setup-duration-value"
     text: "30 минут"
@@ -55,11 +58,13 @@ tags:
 - assertVisible:
     id: "setup-duration-value"
     text: "60 минут"
-- tapOn: "∞"
+- tapOn:
+    id: "setup-preset-0"
 - assertVisible:
     id: "setup-duration-value"
     text: "без таймера"
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

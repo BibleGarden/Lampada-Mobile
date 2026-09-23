@@ -14,7 +14,8 @@ appId: twinkler
     point: "50%,37%"
 - inputText: "SCR-002 favorite restored"
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:
@@ -53,7 +54,8 @@ appId: twinkler
     point: "50%,37%"
 - inputText: "SCR-002 favorite removed"
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

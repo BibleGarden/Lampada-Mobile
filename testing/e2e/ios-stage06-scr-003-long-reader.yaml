@@ -50,7 +50,8 @@ tags:
     id: "setup-examples-button"
 - tapOn:
     point: "50%,34%"
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

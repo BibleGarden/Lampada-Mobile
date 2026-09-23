@@ -40,7 +40,8 @@ tags:
 - eraseText
 - inputText: "REM 004 fire"
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

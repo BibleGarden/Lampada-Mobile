@@ -14,7 +14,8 @@ appId: twinkler
     point: "50%,37%"
 - inputText: "AI late stub"
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

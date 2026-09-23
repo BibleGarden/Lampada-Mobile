@@ -19,7 +19,8 @@ tags:
     point: "50%,37%"
 - inputText: "NAV-002 draft"
 - hideKeyboard
-- tapOn: "30"
+- tapOn:
+    id: "setup-preset-30"
 - doubleTapOn:
     id: "setup-next-button"
 - runFlow:

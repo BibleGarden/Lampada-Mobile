@@ -38,7 +38,8 @@ appId: twinkler
 - inputText: "LOCK-006 запись"
 - pressKey: Enter
 - assertVisible: "LOCK-006 запись"
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

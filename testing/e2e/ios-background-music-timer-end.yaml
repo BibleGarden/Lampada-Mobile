@@ -13,7 +13,8 @@ appId: twinkler
     point: "50%,37%"
 - inputText: "Background music timer end"
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

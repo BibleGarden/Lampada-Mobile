@@ -40,9 +40,13 @@ export default function Setup() {
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
 
-  const durationUnit = s.minutes === 0
+  const durationUnitFor = (minutes: number) => minutes === 0
     ? t('screens.setup.untimed')
-    : t(`screens.minute.${pluralCategory(language, s.minutes)}`);
+    : t(`screens.minute.${pluralCategory(language, minutes)}`);
+  // «15 минут» и «без таймера» VoiceOver читает одной фразой, без знака «∞»
+  const durationLabel = (minutes: number) =>
+    minutes === 0 ? durationUnitFor(0) : `${minutes} ${durationUnitFor(minutes)}`;
+  const durationUnit = durationUnitFor(s.minutes);
 
   const continueToThreshold = () => {
     s.prepareThreshold();
@@ -142,10 +146,9 @@ export default function Setup() {
               >
                 <Minus color={colors.white65} />
               </Pressable>
-              {/* «15 минут» VoiceOver читает одной фразой, без знака «∞» */}
               <View
                 accessible
-                accessibilityLabel={s.minutes === 0 ? durationUnit : `${s.minutes} ${durationUnit}`}
+                accessibilityLabel={durationLabel(s.minutes)}
                 style={styles.stepValue}
                 testID="setup-duration-value"
               >
@@ -180,7 +183,7 @@ export default function Setup() {
                       s.setMinutes(p.v);
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : p.label}
+                    accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
                     accessibilityState={{ selected: active }}
                     hitSlop={touchSlop(presetHeight())}
                     style={[styles.preset, active && styles.presetActive]}

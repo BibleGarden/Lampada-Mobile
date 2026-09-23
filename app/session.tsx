@@ -487,6 +487,20 @@ function SessionScreen() {
     void stopPrayerMusic(MUSIC_BACKGROUND_FADE_OUT_MS);
   }, [timeExpired, appState, stopPrayerMusic]);
 
+  // Продление истёкшего таймера, пока затухание у дедлайна ещё идёт, отменяет
+  // его: молитва продолжается, и музыка возвращается к обычной громкости.
+  // Затухание перехода к итогу (finished) не отменяется. Если музыка уже
+  // остановлена и выключена, продление её не включает — это решение
+  // пользователя, кнопка музыки рядом.
+  useEffect(() => {
+    const running = musicFadeOut.current;
+    if (timeExpired || finished.current || !running) return;
+    running.finish(false);
+    if (useSession.getState().musicOn && !transientAudioBusyRef.current) {
+      musicPlayerForSlot(activeMusicPlayerSlot.current).volume = MUSIC_VOLUME;
+    }
+  }, [timeExpired, musicPlayerForSlot]);
+
   const goToReflect = async () => {
     if (finished.current) return;
     finished.current = true;

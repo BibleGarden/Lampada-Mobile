@@ -359,12 +359,15 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         : { topic, promise: ai.generateFirstQuestion(topic), language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
     const firstQuestion = fetch.result;
+    // Момент начала берётся один раз: по нему датируются и запись журнала
+    // (sessions.started_at), и день молитвы в серии (ADR-0033), иначе около
+    // полуночи они могли разойтись на разные дни.
+    const startedAtMs = Date.now();
     const [sessionId, favoriteScriptures] = await Promise.all([
-      db.createSession(topic, minutes),
+      db.createSession(topic, minutes, startedAtMs),
       ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
     const scripturePreferences = scripturePreferencesNow();
-    const startedAtMs = Date.now();
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
     firstQuestionFetch = null;

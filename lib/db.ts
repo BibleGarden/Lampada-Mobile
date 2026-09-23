@@ -125,11 +125,15 @@ async function migrateRecordingUris(db: SQLite.SQLiteDatabase) {
   }
 }
 
-export async function createSession(topic: string, plannedMinutes: number): Promise<number> {
+export async function createSession(
+  topic: string,
+  plannedMinutes: number,
+  startedAtMs: number,
+): Promise<number> {
   const d = await getDb();
   const res = await d.runAsync(
     'INSERT INTO sessions (started_at, topic, planned_minutes) VALUES (?, ?, ?)',
-    new Date().toISOString(),
+    new Date(startedAtMs).toISOString(),
     topic,
     plannedMinutes,
   );

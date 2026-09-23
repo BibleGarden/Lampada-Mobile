@@ -23,7 +23,8 @@ tags:
     point: "50%,37%"
 - inputText: "JRN-014 share"
 - hideKeyboard
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

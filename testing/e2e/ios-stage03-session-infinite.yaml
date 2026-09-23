@@ -11,7 +11,8 @@ tags:
     point: "50%,37%"
 - inputText: "SES-002 infinite timer"
 - hideKeyboard
-- tapOn: "∞"
+- tapOn:
+    id: "setup-preset-0"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

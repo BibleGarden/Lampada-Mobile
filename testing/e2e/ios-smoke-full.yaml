@@ -19,7 +19,8 @@ tags:
 - inputText: "Финальный smoke"
 - pressKey: Enter
 - assertVisible: "Финальный smoke"
-- tapOn: "5"
+- tapOn:
+    id: "setup-preset-5"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

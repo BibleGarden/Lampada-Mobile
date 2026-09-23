@@ -28,6 +28,9 @@ next day. It was counted for that next day, which broke the streak.
    session screen stops the music at once: it fades out over 3 s, then both
    players are paused, the music is turned off and the audio session is released.
    The transition to reflection still waits for the app to return, as before.
+   Extending the timer while this fade still runs cancels it and restores the
+   music volume. Once the music has stopped, extending does not turn it back on;
+   the music button stays one tap away.
 2. The music ends with a fade-out on the transition to reflection as well, but in
    0.8 s. The players belong to the session screen and are released when it
    unmounts, so the transition waits for the fade before `router.replace`; a
@@ -37,7 +40,10 @@ next day. It was counted for that next day, which broke the streak.
    it can only shorten the running one, continuing from the current volume.
    Unmounting cancels the fade without touching the released players.
 3. A completed prayer counts for the local calendar day of its start
-   (`startedAtMs`). The day of the tap on "Done" is ignored.
+   (`startedAtMs`). The day of the tap on "Done" is ignored. `startedAtMs` is
+   taken once, before the session row is created, and the same instant is stored
+   in `sessions.started_at`, so the flame and the journal cannot land on
+   different days around midnight.
 4. Completing without an active session is an error, not a silent mark of the
    current day.
 5. The duration of a finite prayer is capped at its current deadline:
