@@ -92,4 +92,4 @@ appId: twinkler
     id: "journal-recording-0-transcribing"
 - assertVisible:
     id: "journal-title"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-013-deleted-during
+- takeScreenshot: JRN-013-deleted-during

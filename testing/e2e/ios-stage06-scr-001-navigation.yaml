@@ -36,7 +36,7 @@ appId: twinkler
     visible:
       id: "scripture-audio-button"
     timeout: 20000
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-00-initial-scripture
+- takeScreenshot: SCR-001-00-initial-scripture
 # Part A: page forward WITHOUT favoriting anything (frontier should just swap content)
 - tapOn:
     id: "dock-scripture-next"
@@ -44,7 +44,7 @@ appId: twinkler
     visible:
       id: "scripture-audio-button"
     timeout: 20000
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-A1-next
+- takeScreenshot: SCR-001-A1-next
 - tapOn:
     id: "dock-scripture-next"
 - extendedWaitUntil:
@@ -60,7 +60,7 @@ appId: twinkler
 # Part A: try prev after non-favorited forward paging (index should still be 0 -> disabled)
 - tapOn:
     id: "dock-scripture-prev"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-A6-prev-after-noop-forward
+- takeScreenshot: SCR-001-A6-prev-after-noop-forward
 # Part B: favorite each item while paging forward. Stub cycles two fixtures:
 # после двух «вперёд» каталог повторяется, и состояние избранного при повторе
 # сохраняется — это и есть граница каталога.
@@ -68,7 +68,7 @@ appId: twinkler
     id: "dock-scripture-favorite"
 - assertVisible:
     id: "dock-scripture-favorite-active"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-B00-favorited
+- takeScreenshot: SCR-001-B00-favorited
 - tapOn:
     id: "dock-scripture-next"
 - tapOn:
@@ -80,7 +80,7 @@ appId: twinkler
 # Каталог исчерпан: тот же отрывок снова, избранное на месте.
 - assertVisible:
     id: "dock-scripture-favorite-active"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-B10-next-catalog-exhausted
+- takeScreenshot: SCR-001-B10-next-catalog-exhausted
 # Part C: обратно к началу; на первом элементе prev не уходит дальше.
 - tapOn:
     id: "dock-scripture-prev"
@@ -90,10 +90,10 @@ appId: twinkler
     id: "dock-scripture-prev"
 - assertVisible:
     id: "dock-scripture-favorite-active"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-C10-prev-at-start
+- takeScreenshot: SCR-001-C10-prev-at-start
 # Prev на границе — безопасное no-op (состояние не меняется).
 - tapOn:
     id: "dock-scripture-prev"
 - assertVisible:
     id: "dock-scripture-favorite-active"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/SCR-001-C11-prev-boundary-noop
+- takeScreenshot: SCR-001-C11-prev-boundary-noop

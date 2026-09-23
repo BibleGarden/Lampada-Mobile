@@ -95,7 +95,7 @@ tags:
     timeout: 4000
 # the system share sheet is outside the app, so match its own labels
 - assertVisible: ".*(Скопировать|Copy|Ещё|More|Отменить|Cancel).*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-journal-share/JRN-014-share-sheet
+- takeScreenshot: JRN-014-share-sheet
 # В шите iOS 26 нет кнопки «Отменить» — закрывается тапом по затемнённой
 # области над шитом.
 - tapOn:

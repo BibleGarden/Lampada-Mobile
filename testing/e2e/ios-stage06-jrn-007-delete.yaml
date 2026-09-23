@@ -28,4 +28,4 @@ appId: twinkler
     id: "journal-delete-confirm"
 - assertNotVisible: ".*END-003 double finish.*"
 - assertVisible: ".*END-004 second prayer.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-007-after-delete
+- takeScreenshot: JRN-007-after-delete

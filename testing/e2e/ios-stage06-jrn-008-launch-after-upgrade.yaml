@@ -17,4 +17,4 @@ tags:
     id: "journal-recording-0"
 - assertVisible:
     id: "journal-title"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-008-after-install-over-playback
+- takeScreenshot: JRN-008-after-install-over-playback

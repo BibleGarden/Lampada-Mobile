@@ -87,7 +87,7 @@ appId: twinkler
 - extendedWaitUntil:
     visible: "Стабильная расшифровка лампады номер семь"
     timeout: 30000
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-010-transcript
+- takeScreenshot: JRN-010-transcript
 # JRN-010: после закрытия и переоткрытия текст на месте (сохранён в SQLite).
 - tapOn: ".*JRN-010 расшифровка.*"
 - tapOn: ".*JRN-010 расшифровка.*"
@@ -99,4 +99,4 @@ appId: twinkler
 - inputText: "стабильная"
 - hideKeyboard
 - assertVisible: ".*JRN-010 расшифровка.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-011-search-transcript
+- takeScreenshot: JRN-011-search-transcript

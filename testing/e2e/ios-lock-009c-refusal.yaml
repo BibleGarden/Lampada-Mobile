@@ -52,4 +52,4 @@ appId: twinkler
     id: "lock-screen"
 - assertVisible:
     id: "settings-button"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-009-refusal-pin-fallback
+- takeScreenshot: LOCK-009-refusal-pin-fallback

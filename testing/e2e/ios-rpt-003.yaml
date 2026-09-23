@@ -44,11 +44,11 @@ appId: twinkler
     id: "content-report-dialog"
 - assertVisible:
     id: "content-report-comment"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-003-error
+- takeScreenshot: RPT-003-error
 # Повтор — stub уже вернулся в ok, комментарий сохранился в поле.
 - tapOn:
     id: "content-report-send"
 - assertVisible: "Спасибо. Жалоба отправлена на проверку."
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-21-stub/RPT-003-retry-sent
+- takeScreenshot: RPT-003-retry-sent
 - tapOn:
     id: "content-report-done"

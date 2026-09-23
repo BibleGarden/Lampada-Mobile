@@ -22,4 +22,4 @@ appId: twinkler
 - assertVisible:
     id: "journal-title"
 - assertVisible: ".*JRN-009 missing file.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-009-missing-file-handled
+- takeScreenshot: JRN-009-missing-file-handled

@@ -37,7 +37,7 @@ appId: twinkler
     id: "lock-screen"
 - assertVisible:
     id: "settings-button"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-010-pin-after-unenroll
+- takeScreenshot: LOCK-010-pin-after-unenroll
 
 # Разбираем защиту: биометрия выключается вместе с пином.
 - tapOn:
@@ -68,4 +68,4 @@ appId: twinkler
     id: "change-pin-button"
 - assertNotVisible:
     id: "biometrics-toggle"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-010-lock-disabled
+- takeScreenshot: LOCK-010-lock-disabled

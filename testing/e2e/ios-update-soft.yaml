@@ -14,7 +14,7 @@ appId: twinkler
     id: "update-soft"
 - assertVisible:
     id: update-later
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/UPDATE-soft-banner
+- takeScreenshot: UPDATE-soft-banner
 # «Позже» скрывает баннер.
 - tapOn:
     id: update-later
@@ -34,4 +34,4 @@ appId: twinkler
     visible:
       id: update-soft
     timeout: 20000
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/UPDATE-soft-relaunch
+- takeScreenshot: UPDATE-soft-relaunch

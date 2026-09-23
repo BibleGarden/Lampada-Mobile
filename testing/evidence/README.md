@@ -16,3 +16,9 @@ not added to the repository without a separate reason.
 The name of every stored file has to appear in the corresponding report - by name,
 or through a directory, a range or a glob reference. Material with no reference
 from a report counts as orphaned and is deleted during cleanup.
+
+New dated folders are produced with `maestro test --test-output-dir
+testing/evidence/<date>-<topic> ...` (see `../README.md#running`), which places
+screenshots in a `screenshots/` subfolder (e.g.
+`2026-09-23-topic/screenshots/NAME.png`). Older folders captured before this
+convention keep screenshots directly at their top level - leave them as-is.

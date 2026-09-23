@@ -49,4 +49,4 @@ appId: twinkler
 - assertVisible:
     id: "biometrics-toggle"
     checked: true
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-009-biometrics-enabled
+- takeScreenshot: LOCK-009-biometrics-enabled

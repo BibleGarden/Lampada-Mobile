@@ -38,7 +38,7 @@ appId: twinkler
     timeout: 20000
 - assertVisible:
     id: "dock-scripture-favorite-active"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/SCR-002-after-relaunch
+- takeScreenshot: SCR-002-after-relaunch
 - tapOn:
     id: "dock-scripture-favorite-active"
 - assertVisible:
@@ -77,4 +77,4 @@ appId: twinkler
     timeout: 20000
 - assertVisible:
     id: "dock-scripture-favorite"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/SCR-002-removed-after-relaunch
+- takeScreenshot: SCR-002-removed-after-relaunch

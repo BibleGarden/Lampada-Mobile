@@ -43,7 +43,7 @@ tags:
 - pressKey: Enter
 - assertVisible:
     id: "reflect-complete-button"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-002-reflect-filled
+- takeScreenshot: END-002-reflect-filled
 - tapOn:
     id: "reflect-complete-button"
 - assertVisible:
@@ -60,4 +60,4 @@ tags:
     id: "journal-title"
 - assertVisible: ".*END-002 с выводом.*"
 - assertVisible: ".*END-002 вывод молитвы.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-002-journal-takeaway
+- takeScreenshot: END-002-journal-takeaway

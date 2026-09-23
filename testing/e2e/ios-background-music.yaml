@@ -35,4 +35,4 @@ tags:
     start: "94%,1%"
     end: "94%,48%"
     duration: 700
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-29-background/BG-MUSIC-control-center
+- takeScreenshot: BG-MUSIC-control-center

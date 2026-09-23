@@ -35,7 +35,7 @@ appId: twinkler
     duration: 1700
 - assertVisible: "Не удалось начать молитву"
 - assertVisible: "Попробуй ещё раз."
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/STG-sqlite-error
+- takeScreenshot: STG-sqlite-error
 - tapOn: "Понятно"
 # Кнопка не мёртвая: повторный вход проходит (хук одноразовый).
 - assertVisible:
@@ -46,4 +46,4 @@ appId: twinkler
     duration: 1700
 - assertVisible:
     id: "session-title"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-stub/STG-sqlite-retry-ok
+- takeScreenshot: STG-sqlite-retry-ok

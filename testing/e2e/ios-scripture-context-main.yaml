@@ -40,7 +40,7 @@ tags:
     id: "scripture-read-full"
 - tapOn:
     id: "scripture-read-full"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-25-scripture-context/reader-short-wrapped
+- takeScreenshot: reader-short-wrapped
 # Шторка ридера не закрывается тапом по фону — только по ✕ (правый верх).
 - tapOn:
     point: "89%,18%"
@@ -59,7 +59,7 @@ tags:
     start: "50%,13%"
     end: "50%,3%"
     duration: 700
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-25-scripture-context/reader-safe-area-max
+- takeScreenshot: reader-safe-area-max
 - tapOn:
     point: "89%,18%"
 - tapOn:

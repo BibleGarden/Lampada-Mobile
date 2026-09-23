@@ -22,8 +22,31 @@ Build and launch the app the way the root [`README.md`](../README.md) describes.
 Expo Go is not suitable: the project uses native modules it does not have.
 
 ```bash
-maestro test testing/e2e/ios-smoke-full.yaml           # the main smoke
-maestro test testing/e2e/ios-smoke-full-relaunch.yaml  # persistence after a relaunch
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-smoke-full.yaml           # the main smoke
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-smoke-full-relaunch.yaml  # persistence after a relaunch
+```
+
+Flows use bare `takeScreenshot:` names, so screenshots go to the Maestro test
+output directory. `npm run test:e2e:*` points it at `$TMPDIR/pray-e2e-output`;
+a direct `maestro test` needs the same `--test-output-dir`, otherwise
+screenshots land in the current directory (the root `.gitignore` keeps
+`/*.png` out of git).
+
+The shell runners in `e2e/*.sh` (`run-lock-appswitcher.sh`,
+`run-lock-biometrics.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, and the
+smaller ones) follow the same rule: they default to `$TMPDIR/pray-e2e-output`
+and only write into `evidence/` when called with `EVIDENCE_DIR=testing/evidence/<date>-<topic>`.
+
+Capturing evidence for a report is a separate, explicit step: point
+`--test-output-dir` (or `EVIDENCE_DIR` for the shell runners) at a new dated
+folder under `evidence/` instead. Maestro puts screenshots in a
+`screenshots/` subfolder of that directory.
+
+```bash
+maestro test --test-output-dir testing/evidence/2026-09-23-topic testing/e2e/ios-foo.yaml
+# → testing/evidence/2026-09-23-topic/screenshots/NAME.png
+
+EVIDENCE_DIR=testing/evidence/2026-09-23-topic bash testing/e2e/run-rem-fire.sh
 ```
 
 Individual scenarios are run the same way, by the file name from `e2e/`.

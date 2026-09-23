@@ -52,7 +52,7 @@ tags:
       visible: "Allow"
     commands:
       - tapOn: "Allow"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-overlay-a
+- takeScreenshot: JRN-005-recording-overlay-a
 - waitForAnimationToEnd:
     timeout: 4000
 - tapOn:
@@ -61,7 +61,7 @@ tags:
     id: "recording-card-0"
 - tapOn:
     id: "recordings-close-button"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-005-recording-saved-a
+- takeScreenshot: JRN-005-recording-saved-a
 - waitForAnimationToEnd:
     timeout: 3000
 - tapOn:
@@ -94,4 +94,4 @@ tags:
 - assertVisible: ".*Первый ответ молитвы А про страх и надежду.*"
 - assertVisible:
     id: "journal-recording-0"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-005-journal-detail-text-audio
+- takeScreenshot: JRN-005-journal-detail-text-audio

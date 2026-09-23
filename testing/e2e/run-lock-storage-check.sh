@@ -18,7 +18,7 @@ PIN=${1:-123456}
 export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
 
 echo "== Включаем защиту пином $PIN"
-maestro test --device "$UDID" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-011-prepare.log 2>&1 || { echo "FAIL: не удалось включить пин"; exit 1; }
+maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-011-prepare.log 2>&1 || { echo "FAIL: не удалось включить пин"; exit 1; }
 
 CONTAINER=$(xcrun simctl get_app_container "$UDID" twinkler data)
 
@@ -57,7 +57,7 @@ xcrun simctl spawn "$UDID" log stream --style compact > "$LOG" 2>&1 &
 LPID=$!
 sleep 2
 export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
-maestro test --device "$UDID" testing/e2e/ios-lock-011-pin-entry.yaml > /tmp/lock-011-flow.log 2>&1 || { kill $LPID; echo "FAIL: флоу ввода пина упал"; exit 1; }
+maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-011-pin-entry.yaml > /tmp/lock-011-flow.log 2>&1 || { kill $LPID; echo "FAIL: флоу ввода пина упал"; exit 1; }
 sleep 2
 kill $LPID || true
 if grep -q "$PIN" "$LOG"; then
@@ -68,5 +68,5 @@ fi
 echo "OK: строка пина в системном логе не найдена ($(wc -l < "$LOG" | tr -d ' ') строк проверено)"
 
 echo "== Снимаем защиту"
-maestro test --device "$UDID" /tmp/disable-pin.yaml > /tmp/lock-011-disable.log 2>&1 || true
+maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" /tmp/disable-pin.yaml > /tmp/lock-011-disable.log 2>&1 || true
 echo "== LOCK-011: все проверки пройдены"

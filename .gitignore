@@ -42,3 +42,8 @@ yarn-error.*
 
 # local agent rules (personal workflow, not part of the project)
 AGENTS.local.md
+
+# Maestro `takeScreenshot:` writes here when a flow is run directly without
+# --test-output-dir (see testing/README.md#running) - never legitimate repo
+# content, only a root .gitignore is needed since nothing else lives at root.
+/*.png

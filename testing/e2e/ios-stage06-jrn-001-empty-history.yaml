@@ -14,7 +14,7 @@ tags:
     id: "journal-title"
 - assertVisible:
     id: "journal-empty-state"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-history
+- takeScreenshot: JRN-001-empty-history
 # search over an empty history must not error either
 - tapOn:
     id: "journal-search-input"
@@ -22,4 +22,4 @@ tags:
 - assertVisible: "тревога"
 - hideKeyboard
 - assertVisible: "Ничего не нашлось — попробуй другое слово"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-001-empty-search
+- takeScreenshot: JRN-001-empty-search

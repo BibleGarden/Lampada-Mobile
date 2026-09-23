@@ -34,7 +34,7 @@ tags:
     id: "music-playing"
 - assertVisible:
     id: "session-music-on"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-23-music/MUS-001-music-on
+- takeScreenshot: MUS-001-music-on
 - tapOn:
     id: "session-music-on"
 - assertNotVisible:

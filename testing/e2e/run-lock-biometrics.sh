@@ -12,11 +12,13 @@
 #
 # Окружение: UDID (по умолчанию iPhone SE «Lampada Test iPhone SE»), SIG
 # (по умолчанию fingerTouch; на устройстве с Face ID — pearl).
+# По умолчанию доказательства идут во временную папку (не в репозиторий).
+# Для сохранения в отчёт передайте EVIDENCE_DIR=testing/evidence/<дата>-<тема>.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 export MAESTRO_DRIVER_STARTUPTIMEOUT=180000
-EVIDENCE=/Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock
+EVIDENCE="${EVIDENCE_DIR:-${TMPDIR:-/tmp/}pray-e2e-output}"
 mkdir -p "$EVIDENCE"
 UDID="${UDID:-C4FCA94D-457A-4161-9689-6FF712F5ED47}"
 SIG="${SIG:-fingerTouch}"
@@ -37,10 +39,10 @@ appId: twinkler
 - waitForAnimationToEnd:
     timeout: 2000
 EOF
-maestro test "${DEV[@]}" /tmp/bio-dismiss.yaml > /dev/null 2>&1 || true
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-dismiss.yaml > /dev/null 2>&1 || true
 
 echo "== Подготовка: включаем пин 123456"
-maestro test "${DEV[@]}" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-bio-prepare.log 2>&1 || { echo "FAIL: подготовка пина"; exit 1; }
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-bio-prepare.log 2>&1 || { echo "FAIL: подготовка пина"; exit 1; }
 
 # Enrollment — переключатель без чтения состояния. Экран настроек опрашивает
 # биометрию при монтировании: возвращаемся home и открываем настройки заново
@@ -63,7 +65,7 @@ appId: twinkler
     timeout: 3000
 EOF
 probe_biometrics_row() {
-  maestro test "${DEV[@]}" /tmp/bio-nav.yaml > /dev/null 2>&1
+  maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-nav.yaml > /dev/null 2>&1
   maestro hierarchy "${DEV[@]}" 2>/dev/null | grep -q "biometrics-toggle"
 }
 echo "== Проверяем enrollment ($SIG)"
@@ -81,21 +83,21 @@ fi
 echo "   биометрия доступна"
 
 echo "== LOCK-009a: включение биометрии"
-maestro test "${DEV[@]}" testing/e2e/ios-lock-009a-enable-biometrics.yaml > /tmp/lock-009a.log 2>&1 &
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-009a-enable-biometrics.yaml > /tmp/lock-009a.log 2>&1 &
 M=$!
 sleep 30
 signal "$BIO.match"
 wait $M || { echo "LOCK-009a FAILED, см. /tmp/lock-009a.log"; exit 1; }
 
 echo "== LOCK-009b: холодный старт, вход по биометрии"
-maestro test "${DEV[@]}" testing/e2e/ios-lock-009b-cold-start-faceid.yaml > /tmp/lock-009b.log 2>&1 &
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-009b-cold-start-faceid.yaml > /tmp/lock-009b.log 2>&1 &
 M=$!
 sleep 30
 signal "$BIO.match"
 wait $M || { echo "LOCK-009b FAILED, см. /tmp/lock-009b.log"; exit 1; }
 
 echo "== LOCK-009c: отказ, запасной вход пином"
-maestro test "${DEV[@]}" testing/e2e/ios-lock-009c-refusal.yaml > /tmp/lock-009c.log 2>&1 &
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-009c-refusal.yaml > /tmp/lock-009c.log 2>&1 &
 M=$!
 sleep 30
 signal "$BIO.nomatch"
@@ -103,7 +105,7 @@ wait $M || { echo "LOCK-009c FAILED, см. /tmp/lock-009c.log"; exit 1; }
 
 echo "== LOCK-010: образцы удалены, вход пином"
 signal "$BIO.enrollment"  # unenroll
-maestro test "${DEV[@]}" testing/e2e/ios-lock-010-biometrics-removed.yaml > /tmp/lock-010.log 2>&1
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-010-biometrics-removed.yaml > /tmp/lock-010.log 2>&1
 echo "LOCK-010 exit=$?"
 
 # Enrollment возвращать не нужно: тумблер биометрии выключен вместе с пином

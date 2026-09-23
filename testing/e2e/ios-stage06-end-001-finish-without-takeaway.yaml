@@ -8,7 +8,7 @@ tags:
     clearState: true
 - assertVisible:
     id: "home-title"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-before
+- takeScreenshot: END-001-home-before
 - tapOn:
     id: "start-prayer-button"
 - tapOn:
@@ -38,7 +38,7 @@ tags:
     point: "10%,11%"
 - assertVisible:
     id: "reflect-kicker"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-reflect-empty-input
+- takeScreenshot: END-001-reflect-empty-input
 - assertVisible:
     id: "reflect-complete-button"
 - tapOn:
@@ -53,10 +53,10 @@ tags:
     id: "journal-button"
 - assertVisible:
     id: "home-title-lit"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-home-after
+- takeScreenshot: END-001-home-after
 - tapOn:
     id: "journal-button"
 - assertVisible:
     id: "journal-title"
 - assertVisible: ".*END-001 без вывода.*"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/END-001-journal
+- takeScreenshot: END-001-journal

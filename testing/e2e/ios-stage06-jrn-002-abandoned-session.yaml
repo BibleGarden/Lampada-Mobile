@@ -28,7 +28,7 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-002-session-started
+- takeScreenshot: JRN-002-session-started
 # kill the app mid-prayer: nothing was answered, nothing was concluded
 - stopApp
 - launchApp:
@@ -43,4 +43,4 @@ tags:
 - assertVisible:
     id: "journal-empty-state"
 - assertNotVisible: "JRN-002 брошенная сессия"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-08-22-stage06/JRN-002-journal-after-abandon
+- takeScreenshot: JRN-002-journal-after-abandon

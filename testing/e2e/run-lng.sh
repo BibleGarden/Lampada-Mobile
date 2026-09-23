@@ -33,7 +33,7 @@ set_locale() { # $1 = locale (en_US), $2 = language (en)
 
 run() { # $1 = flow
   echo "== maestro: $1"
-  maestro test "testing/e2e/$1"
+  maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" "testing/e2e/$1"
 }
 
 FAILED=0

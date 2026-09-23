@@ -87,4 +87,4 @@ appId: twinkler
     id: "journal-recording-0-transcribing"
 - assertVisible:
     id: "journal-recording-0-transcribe"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-013-closed-during
+- takeScreenshot: JRN-013-closed-during

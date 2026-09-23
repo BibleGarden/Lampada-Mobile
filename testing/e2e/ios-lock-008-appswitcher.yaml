@@ -85,5 +85,5 @@ appId: twinkler
 - pressKey: HOME
 - assertNotVisible:
     id: "journal-title"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-lock/LOCK-008-home-screen
+- takeScreenshot: LOCK-008-home-screen
 # Скрипт открывает переключатель приложений и снимает снапшот.

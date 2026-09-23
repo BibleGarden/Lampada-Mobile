@@ -85,4 +85,4 @@ appId: twinkler
     id: "journal-recording-0-transcribe"
 - assertVisible:
     id: "journal-recording-0"
-- takeScreenshot: /Users/maria/Desktop/Dev/cep/pray/testing/evidence/2026-09-20-jrn/JRN-012-error
+- takeScreenshot: JRN-012-error
