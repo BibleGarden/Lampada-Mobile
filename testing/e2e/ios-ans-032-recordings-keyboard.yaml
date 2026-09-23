@@ -1,0 +1,165 @@
+appId: twinkler
+tags:
+  - main
+---
+# ANS-032 и клавиатура в шторке ответа (раздел 9 плана), iPhone.
+# Записи открываются, запись играет и ставится на паузу, шеврон закрывает
+# записи — поле и действия ответа остаются рабочими; то же после цикла
+# клавиатуры. Клавиатура не закрывает поле и «Сохранить»; тап внутри поля
+# продолжает ввод; вопрос и ручка шторки закрывают клавиатуру без потери
+# текста; тап по фону не выбрасывает несохранённый ответ; после сохранения
+# фон уходит и экран сессии нажимается.
+#
+# Видимость клавиатуры — по нелокализованным идентификаторам системной
+# клавиатуры `shift` и `inputView` (см. ios-stage03-long-goal.yaml). Текст
+# до тапа внутри поля — цифры, повтор тапа выключен: иначе iOS выделила бы
+# слово, и ввод заменил бы его.
+- launchApp:
+    stopApp: true
+    clearState: true
+    # системный диалог микрофона локализован — разрешаем заранее
+    permissions:
+      microphone: allow
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "Записи и клавиатура"
+- tapOn:
+    id: "setup-kicker"
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-answer-button"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Записей нет — шторка записей открывается сразу с записью
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible:
+    id: "recording-play-0"
+    text: "Пауза, запись 1"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible:
+    id: "recording-play-0"
+    text: "Прослушать запись 1"
+- tapOn:
+    id: "recordings-close-button"
+- assertNotVisible:
+    id: "recordings-close-button"
+- assertVisible:
+    id: "answer-save-button"
+
+# Цикл клавиатуры
+- tapOn:
+    id: "answer-input"
+- inputText: "3217"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    id: "answer-input"
+    retryTapIfNoChange: false
+- assertVisible:
+    id: "shift"
+- inputText: " ответ"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 ответ"
+    above:
+      id: "inputView"
+- assertVisible:
+    id: "answer-save-button"
+    above:
+      id: "inputView"
+- tapOn:
+    id: "answer-question"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 ответ"
+- tapOn:
+    id: "answer-input"
+- inputText: " дальше"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    id: "answer-sheet-handle"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 ответ дальше"
+# Фон над шторкой (она на 62 % высоты): при несохранённом ответе тап по нему
+# ничего не закрывает
+- tapOn:
+    point: "50%,20%"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 ответ дальше"
+
+# Записи после цикла клавиатуры: открываются списком, играют, закрываются
+# шевроном
+- tapOn:
+    id: "answer-record-button"
+- assertVisible:
+    id: "recording-card-0"
+- assertVisible:
+    id: "recordings-record-button"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible:
+    id: "recording-play-0"
+    text: "Пауза, запись 1"
+- tapOn:
+    id: "recording-play-0"
+- assertVisible:
+    id: "recording-play-0"
+    text: "Прослушать запись 1"
+- tapOn:
+    id: "recordings-close-button"
+- assertNotVisible:
+    id: "recordings-close-button"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 ответ дальше"
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+# фон ушёл вместе с шторкой: кнопка дока под ним нажимается
+- tapOn:
+    id: "dock-answer-edit-button"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 ответ дальше"
+- assertVisible:
+    id: "answer-record-badge"

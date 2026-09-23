@@ -4,7 +4,15 @@ tags:
 ---
 # END-006 (iPad): вывод вводится при открытой клавиатуре — действия
 # «Завершить»/«Вернуться» скрыты; поворот портрет→ландшафт→портрет во время
-# ввода сохраняет текст дословно; тап мимо поля возвращает действия.
+# ввода сохраняет текст дословно; тапы по левому и правому полю вне колонки и
+# по вопросу закрывают клавиатуру и возвращают действия без потери текста.
+#
+# Видимость клавиатуры — по нелокализованному идентификатору клавиши `shift`
+# (см. ios-stage03-long-goal.yaml). Экранную клавиатуру поднимает `inputText`:
+# при подключённой аппаратной клавиатуре симулятора тап по полю только ставит
+# фокус, поэтому каждый цикл начинается с ввода. Тап по полю ставит курсор в
+# точку тапа, а не в конец текста, поэтому исходные части фразы и дописанные
+# числа проверяются независимо от их позиции, а не в порядке вставки.
 - launchApp:
     stopApp: true
     clearState: true
@@ -53,17 +61,60 @@ tags:
 - assertNotVisible:
     id: "reflect-complete-button"
 - takeScreenshot: END-006-reflect-landscape-keyboard
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "3%,40%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "reflect-complete-button"
+- tapOn:
+    id: "reflection-input"
+- inputText: " 3"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,40%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "reflect-complete-button"
+- tapOn:
+    id: "reflection-input"
+- inputText: " 4"
 - setOrientation: PORTRAIT
 - waitForAnimationToEnd:
     timeout: 3000
 - assertVisible:
     id: "reflection-input"
-    text: "END-006 первая часть и вторая"
-# тап мимо поля (по вопросу) закрывает клавиатуру и возвращает действия без
-# потери текста. Повторно клавиатуру не открываем: после аппаратного Enter
-# (pressKey) симулятор iPad перестаёт показывать экранную клавиатуру.
+    text: "(?s)^(?=.*END-006)(?=.*первая)(?=.*вторая)(?=.* 3)(?=.* 4).*$"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "3%,30%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "reflect-complete-button"
+- tapOn:
+    id: "reflection-input"
+- inputText: " 5"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,30%"
+- assertNotVisible:
+    id: "shift"
+- tapOn:
+    id: "reflection-input"
+- inputText: " 6"
+- assertVisible:
+    id: "shift"
 - tapOn:
     id: "reflect-question"
+- assertNotVisible:
+    id: "shift"
 - assertVisible:
     id: "reflect-complete-button"
 - assertVisible:
@@ -73,7 +124,7 @@ tags:
     timeout: 3000
 - assertVisible:
     id: "reflection-input"
-    text: "END-006 первая часть и вторая"
+    text: "(?s)^(?=.*END-006)(?=.*первая)(?=.*вторая)(?=.* 3)(?=.* 4)(?=.* 5)(?=.* 6).*$"
 - assertVisible:
     id: "reflect-complete-button"
 - takeScreenshot: END-006-reflect-landscape-actions
@@ -84,4 +135,4 @@ tags:
     id: "home-title-lit"
 - tapOn:
     id: "journal-button"
-- assertVisible: ".*END-006 первая часть и вторая.*"
+- assertVisible: ".*END-006 первая часть.* и вторая.*"

@@ -1,0 +1,4 @@
+2026-09-24 Europe/Moscow, branch test/keyboard-flows, origin/main f81a75b
+npm run typecheck: exit 0 (typecheck.log)
+git diff --check: exit 0
+node yaml.parseAllDocuments over testing/e2e/*.yaml: 119 files, 0 parse errors, exit 0

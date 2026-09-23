@@ -1,22 +1,57 @@
 appId: twinkler
 tags:
-  - rare
+  - main
 ---
+# SETUP-004 (iPhone): длинная цель при открытой клавиатуре. Поле остаётся над
+# клавиатурой, тап внутри поля продолжает ввод, тап над полем закрывает
+# клавиатуру без потери текста, после этого «Далее» ведёт в молитву.
+#
+# Видимость клавиатуры проверяется по элементам самой системной клавиатуры в
+# иерархии XCTest: `id: "shift"` — клавиша регистра, `id: "inputView"` — её
+# контейнер (для `above:`). Идентификаторы не локализованы (подпись «сдвиг»
+# локализована), и `shift` есть в буквенной раскладке iPhone и iPad в обеих
+# ориентациях, так что проверка не зависит от языка клавиатуры симулятора.
+# В ландшафте iPad Maestro отдаёт клавиатуру неполной и с неповёрнутыми
+# координатами, поэтому `above: inputView` проверяется только в портрете.
+#
+# Экранную клавиатуру поднимает именно `inputText`: при подключённой
+# аппаратной клавиатуре симулятора (I/O → Keyboard, по умолчанию включена)
+# тап по полю только ставит фокус. Поэтому флоу не проверяет «после тапа
+# клавиатура появилась» — только «после ввода видна» и «после тапа снаружи
+# скрыта», что верно в обоих режимах симулятора.
 - launchApp:
     stopApp: true
     clearState: true
 - tapOn:
     id: "start-prayer-button"
 - tapOn:
-    point: "50%,37%"
-- inputText: "SETUP-004 very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
+    id: "setup-goal-input"
+- inputText: "SETUP-004"
 - assertVisible:
-    id: "setup-next-button"
+    id: "shift"
+# тап внутри поля (ниже единственной строки — курсор встаёт в конец) не
+# закрывает клавиатуру, ввод продолжается с того же места. Текст до тапа —
+# одна короткая строка: тап рядом со словом, которое проверка орфографии
+# считает ошибкой, выделяет его, и ввод заменил бы слово. По той же причине
+# выключен повтор тапа Maestro: второй тап подряд выделяет слово.
 - tapOn:
-    point: "87%,88%"
-- assertVisible: "ДЛИТЕЛЬНОСТЬ"
+    id: "setup-goal-input"
+    retryTapIfNoChange: false
 - assertVisible:
-    id: "setup-next-button"
+    id: "shift"
+- inputText: " very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
+- assertVisible:
+    id: "setup-goal-input"
+    above:
+      id: "inputView"
+- tapOn:
+    id: "setup-kicker"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "setup-goal-input"
+    text: "SETUP-004 very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
+- assertVisible: "ДЛИТЕЛЬНОСТЬ"
 - tapOn:
     id: "setup-next-button"
 - runFlow:
@@ -29,10 +64,8 @@ tags:
 - assertVisible:
     id: "threshold-kicker"
 - assertVisible: ".*SETUP-004 very long prayer goal.*"
-- swipe:
-    start: "50%,78%"
-    end: "50%,78%"
-    duration: 1700
+- longPressOn:
+    id: "threshold-hold-button"
 - assertVisible:
     id: "session-title"
 - assertVisible: ".*SETUP-004 very long prayer goal.*"

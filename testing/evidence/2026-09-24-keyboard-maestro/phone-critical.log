@@ -1,0 +1,26 @@
+
+> pray@1.0.0 test:e2e:critical
+> MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=critical --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" testing/e2e/
+
+╭───────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                               │
+│   Get results faster by executing flows in parallel on Maestro Cloud virtual devices. Run:    │
+│   maestro cloud app_file flows_folder/                                                        │
+│                                                                                               │
+╰───────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+Waiting for flows to complete...
+[Passed] ios-stage04-answers-text (1m 11s)
+[Passed] ios-stage06-jrn-001-empty-history (25s)
+[Passed] ios-stage06-end-001-finish-without-takeaway (1m)
+[Passed] ios-privacy-consent-first-use (35s)
+[Passed] ios-stage03-navigation (46s)
+[Passed] ios-stage06-end-002-finish-with-takeaway (1m 12s)
+[Passed] ios-stage03-setup-start (57s)
+[Passed] ios-smoke-full (1m 41s)
+[Passed] ios-smoke-full-relaunch (15s)
+[Passed] ios-scripture-context-privacy (58s)
+[Passed] ios-stage03-session-finite (1m 38s)
+
+11/11 Flows Passed in 10m 38s

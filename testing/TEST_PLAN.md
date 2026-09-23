@@ -121,7 +121,8 @@ e2e tier of the Maestro flow that covers it (the `tags:` of the files
 in `testing/e2e/`): `critical` runs on every build, `main` before every
 release, `rare` on demand or before a major release. `ipad` marks the
 iPad-only rotation flows run by `npm run test:e2e:ipad`. An ID without a
-suffix has no e2e flow and is checked manually.
+suffix has no e2e flow and is checked manually. An ID can list both `main`
+and `ipad` when separate phone and tablet flows cover it.
 
 | ID | Actions | Expected result |
 |---|---|---|
@@ -159,7 +160,7 @@ tier of its e2e runs.
 | SETUP-001 [critical] | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 [critical] | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 [critical] | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 [rare] | A long goal and an open keyboard; tap above the field and in the tablet's left and right margins | the field stays manageable; outside taps dismiss the keyboard without losing text, inside taps keep editing; the "Next" button is available once the keyboard is closed |
+| SETUP-004 [main, ipad] | A long goal and an open keyboard; tap above the field and in the tablet's left and right margins | the field stays manageable; outside taps dismiss the keyboard without losing text, inside taps keep editing; the "Next" button is available once the keyboard is closed |
 | START-001 [critical] | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
@@ -227,7 +228,7 @@ tier of its e2e runs.
 | ANS-029 | On physical iOS, perform 10 cycles of start → stop → play without restarting the app | every cycle creates one new valid M4A; there is no save error, no stuck overlay and no unavailable next start |
 | ANS-030 | On physical iOS, start a recording right after pausing or finishing a draft or the scripture narration | the deferred deactivation of the player does not cut the recorder; the M4A duration matches the speech and playback does not jump to the end |
 | ANS-031 | On physical iOS, record two different files in a row and play the second, the first and the second in turn | every replace waits for its own AVPlayerItem to load, starts from zero and plays the correct file in full |
-| ANS-032 | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
+| ANS-032 [main] | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
 | ANS-033 [ipad] | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
 
 ### The AI and the companion
@@ -302,7 +303,7 @@ so every scenario below is Not run and belongs to the `main` tier.
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `sessionResume.test.mjs`) |
 | END-007 | Leave an expired prayer overnight, open the app the next day and finish it on reflection | the prayer counts for the day it started, not the day of "Done"; the streak stays unbroken |
-| END-006 [ipad] | Enter a takeaway with the keyboard open on iPad in portrait and landscape, then rotate while typing | the editing column widens on tablets and the input fills the available space below the question and above the keyboard; long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
+| END-006 [main, ipad] | Enter a takeaway with the keyboard open on iPhone and iPad; on iPad, rotate while typing | the input stays above the keyboard; on tablets the editing column widens and long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 
 ### The journal and local data
 

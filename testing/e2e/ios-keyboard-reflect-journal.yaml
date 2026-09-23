@@ -1,0 +1,108 @@
+appId: twinkler
+tags:
+  - main
+---
+# Раздел 9 плана, iPhone: клавиатура в размышлении и в поиске журнала. Поле и
+# действия не закрыты клавиатурой, тап внутри поля продолжает ввод, тап
+# снаружи закрывает клавиатуру без потери текста.
+#
+# Видимость клавиатуры — по нелокализованным идентификаторам системной
+# клавиатуры: `shift` (клавиша регистра) и `inputView` (контейнер для
+# `above:`); подробности в ios-stage03-long-goal.yaml. Текст до тапа внутри
+# поля — цифры: тап рядом со словом, которое проверка орфографии считает
+# ошибкой, выделил бы его. Повтор тапа выключен по той же причине.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "Клавиатура в размышлении"
+- tapOn:
+    id: "setup-kicker"
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "session-finish-button"
+- assertVisible:
+    id: "reflect-kicker"
+
+# Размышление: при клавиатуре действия скрыты, поле над клавиатурой
+- tapOn:
+    id: "reflection-input"
+- inputText: "4821"
+- assertVisible:
+    id: "shift"
+- assertNotVisible:
+    id: "reflect-complete-button"
+- tapOn:
+    id: "reflection-input"
+    retryTapIfNoChange: false
+- assertVisible:
+    id: "shift"
+- inputText: " вывод"
+- assertVisible:
+    id: "reflection-input"
+    text: "4821 вывод"
+    above:
+      id: "inputView"
+- assertVisible:
+    id: "reflect-question"
+    above:
+      id: "inputView"
+# тап по вопросу — снаружи поля
+- tapOn:
+    id: "reflect-question"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "reflection-input"
+    text: "4821 вывод"
+- assertVisible:
+    id: "reflect-return-button"
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"
+
+# Поиск журнала
+- tapOn:
+    id: "journal-button"
+- tapOn:
+    id: "journal-search-input"
+- inputText: "4821"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    id: "journal-search-input"
+    retryTapIfNoChange: false
+- assertVisible:
+    id: "shift"
+- inputText: " вывод"
+- assertVisible:
+    id: "journal-search-input"
+    text: "4821 вывод"
+    above:
+      id: "inputView"
+- tapOn:
+    id: "journal-title"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "journal-search-input"
+    text: "4821 вывод"
+- assertVisible: ".*Клавиатура в размышлении.*"
