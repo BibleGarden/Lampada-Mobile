@@ -65,6 +65,7 @@ upgrading it requires rebuilding the native app.
 | `lib/store.ts` | The state and the scenario of a prayer session |
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
 | `lib/ai.ts` | Prompts, validation of the AI response and local degradation |
+| `lib/answerSave.ts` | The answer-save order: always persist locally, then ask the undecided answer-context consent only on a manual save |
 | `lib/answerContext.ts` | The composition of the person's replies for the AI: the answer text and the transcripts of its recordings |
 | `lib/questionRequest.ts` | Structured question history, stage metadata and request limits |
 | `lib/aboutClient.ts` | Contact cards from the shared Bible Garden `/api/about` endpoint, response validation and request cancellation |
@@ -576,9 +577,13 @@ AI processing and the purposes of sending the topic.
 Without an allowance, question
 generation uses the curated local pools and scripture selection sends neither
 `topic` nor `user_replies`, while the non-contextual server safe pool remains
-available. Core permission does not open the answer gate. The first saved answer
-that could affect another request gets its own disclosure; the request builder
-includes its text and completed transcripts only when both gates are open. The
+available. Core permission does not open the answer gate. An answer is always
+saved locally first; the gate only decides whether it may leave the device. The
+first manual save of an answer that could affect another request then shows its
+own disclosure. The automatic save before reflection never asks, so navigation is
+not blocked and an undecided gate stays closed until the next manual save. The
+request builder includes answer text and completed transcripts only when both
+gates are open. `lib/answerSave.ts` defines this order. The
 composition, limits and ordering are defined by `lib/answerContext.ts` and
 `lib/scripture.ts`.
 

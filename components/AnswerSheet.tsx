@@ -2,7 +2,6 @@ import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  AppState,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -25,12 +24,8 @@ import {
 } from 'expo-audio';
 import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
-import {
-  answerContextAllowedNow,
-  coreAiAllowedNow,
-  ensureSettingsLoaded,
-  useSettings,
-} from '../lib/settings';
+import { ensureSettingsLoaded, useSettings } from '../lib/settings';
+import { saveAnswerDraft, type AnswerSaveMode } from '../lib/answerSave';
 import {
   recordedSeconds,
   recordingDurationMillis,
@@ -791,7 +786,7 @@ export default function AnswerSheet({
     confirmTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
   };
 
-  const save = async () => {
+  const save = async (mode: AnswerSaveMode) => {
     if (savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
@@ -813,16 +808,12 @@ export default function AnswerSheet({
       const hasAnswerContext = !!text.trim() || recsRef.current.some((recording) =>
         !!recording.transcript?.trim(),
       );
-      if (
-        hasAnswerContext &&
-        coreAiAllowedNow() &&
-        !answerContextAllowedNow() &&
-        useSettings.getState().answerContextConsent === 'undecided'
-      ) {
-        setAnswerConsentOpen(true);
-        return;
-      }
-      saveAnswerToStore(answerIndexRef.current, text, recsRef.current);
+      const { coreAiConsent, answerContextConsent } = useSettings.getState();
+      saveAnswerDraft(
+        { mode, hasAnswerContext, coreAiConsent, answerContextConsent },
+        () => saveAnswerToStore(answerIndexRef.current, text, recsRef.current),
+        () => setAnswerConsentOpen(true),
+      );
       // После сохранения файлы принадлежат ответу и больше не являются черновиком.
       unsavedRecordingUris.current.clear();
       // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
@@ -840,7 +831,6 @@ export default function AnswerSheet({
   const decideAnswerConsent = async (decision: 'allowed' | 'denied') => {
     await useSettings.getState().setConsent('answer_context', decision);
     setAnswerConsentOpen(false);
-    if (AppState.currentState === 'active') await save();
   };
 
   // «Отмена» с подтверждением: несохранённый контент не выбрасываем молча
@@ -870,7 +860,7 @@ export default function AnswerSheet({
     if (!flushRef) return;
     flushRef.current = async () => {
       if (!openSheetRef.current) return;
-      await save();
+      await save('auto');
     };
     return () => {
       if (flushRef) flushRef.current = null;
@@ -1082,7 +1072,7 @@ export default function AnswerSheet({
               <GoldButton
                 compact
                 label={saving ? t('components.answers.saving') : t('components.answers.save')}
-                onPress={save}
+                onPress={() => void save('manual')}
                 style={{ flex: 1 }}
                 testID="answer-save-button"
               />
