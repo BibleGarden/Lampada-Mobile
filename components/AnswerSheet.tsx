@@ -2,6 +2,7 @@ import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -26,6 +27,7 @@ import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { saveAnswerDraft, type AnswerSaveMode } from '../lib/answerSave';
+import { recordDiagnostic } from '../lib/db';
 import {
   recordedSeconds,
   recordingDurationMillis,
@@ -809,11 +811,26 @@ export default function AnswerSheet({
         !!recording.transcript?.trim(),
       );
       const { coreAiConsent, answerContextConsent } = useSettings.getState();
-      saveAnswerDraft(
-        { mode, hasAnswerContext, coreAiConsent, answerContextConsent },
-        () => saveAnswerToStore(answerIndexRef.current, text, recsRef.current),
-        () => setAnswerConsentOpen(true),
-      );
+      try {
+        await saveAnswerDraft(
+          {
+            mode,
+            hasAnswerContext,
+            coreAiConsent,
+            answerContextConsent,
+            prayerEnded: useSession.getState().remaining === 0,
+          },
+          () => saveAnswerToStore(answerIndexRef.current, text, recsRef.current),
+          () => setAnswerConsentOpen(true),
+        );
+      } catch (error) {
+        // Шторка с черновиком остаётся открытой: ответ не считается сохранённым.
+        recordDiagnostic('answer_save_failed', error);
+        Alert.alert(t('components.answers.answerSaveFailed'), t('screens.retryMessage'), [
+          { text: t('screens.understood') },
+        ]);
+        return;
+      }
       // После сохранения файлы принадлежат ответу и больше не являются черновиком.
       unsavedRecordingUris.current.clear();
       // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()

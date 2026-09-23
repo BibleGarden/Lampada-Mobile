@@ -111,7 +111,8 @@ type SessionActions = {
   prevQuestion: () => void;
   nextQuestion: () => Promise<void>;
   jumpQuestion: (pos: number) => void;
-  saveAnswer: (questionIndex: number, text: string, recordings: RecordingDraft[]) => void;
+  /** Сначала пишет ответ в SQLite; ошибка записи пробрасывается, память не меняется. */
+  saveAnswer: (questionIndex: number, text: string, recordings: RecordingDraft[]) => Promise<void>;
 
   prevScripture: () => void;
   nextScripture: () => Promise<void>;
@@ -599,14 +600,36 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       s.generating ? s : { qIndex: Math.max(0, Math.min(pos, s.answeredCount)) },
     ),
 
-  saveAnswer: (questionIndex, text, recordings) => {
+  saveAnswer: async (questionIndex, text, recordings) => {
     const s = get();
-    const answers = { ...s.answers, [questionIndex]: { text, recordings } };
+    if (s.sessionId !== null) {
+      await db.saveAnswer({
+        sessionId: s.sessionId,
+        questionIndex,
+        question: s.questions[questionIndex],
+        text,
+      });
+      // полная перезапись: повторное сохранение не плодит дублей,
+      // удалённые в шторке записи уходят и из БД
+      await db.replaceRecordings(
+        s.sessionId,
+        questionIndex,
+        recordings.map((r) => ({
+          uri: r.uri,
+          durationSec: r.durationSec,
+          transcript: r.transcript,
+        })),
+      );
+    }
+    const current = get();
+    // Пока шла запись, сессия могла смениться: чужие ответы в память не кладём.
+    if (current.sessionId !== s.sessionId) return;
+    const answers = { ...current.answers, [questionIndex]: { text, recordings } };
     set({ answers });
     // Любое изменение доступного AI-контекста инвалидирует старый слот.
     // Для отвеченного фронтира готовится следующий индекс, иначе — замена
     // текущего вопроса на месте.
-    if (s.sessionId !== null && questionIndex <= s.answeredCount) {
+    if (current.sessionId !== null && questionIndex <= current.answeredCount) {
       const updated = get();
       const frontier = updated.answeredCount;
       const target = isAnswered(updated.answers[frontier]) ? frontier + 1 : frontier;
@@ -619,25 +642,6 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       updatedForReflect.remaining <= 15
     ) {
       prepareReflectQuestion(updatedForReflect);
-    }
-    if (s.sessionId !== null) {
-      db.saveAnswer({
-        sessionId: s.sessionId,
-        questionIndex,
-        question: s.questions[questionIndex],
-        text,
-      });
-      // полная перезапись: повторное сохранение не плодит дублей,
-      // удалённые в шторке записи уходят и из БД
-      db.replaceRecordings(
-        s.sessionId,
-        questionIndex,
-        recordings.map((r) => ({
-          uri: r.uri,
-          durationSec: r.durationSec,
-          transcript: r.transcript,
-        })),
-      );
     }
   },
 

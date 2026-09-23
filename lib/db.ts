@@ -9,7 +9,10 @@ import { migrateScriptureStorage } from './scriptureSchema';
 const diagnosticLog = new File(Paths.document, 'lampada-diagnostics.log');
 
 /** Безопасная диагностическая запись, доступная даже при ошибке SQLite. */
-export function recordDiagnostic(event: 'session_start_failed', error: unknown) {
+export function recordDiagnostic(
+  event: 'session_start_failed' | 'answer_save_failed',
+  error: unknown,
+) {
   try {
     diagnosticLog.write(
       `${JSON.stringify({
