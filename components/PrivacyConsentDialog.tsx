@@ -110,7 +110,7 @@ const stylesFactory = () => StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: sc(440),
-    padding: sc(22),
+    padding: sc(18),
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.white08,
@@ -126,15 +126,15 @@ const stylesFactory = () => StyleSheet.create({
   title: {
     color: colors.parchment,
     fontFamily: fonts.serifSemiBold,
-    fontSize: sc(24),
-    lineHeight: sc(30),
+    fontSize: sc(20),
+    lineHeight: sc(25),
   },
   body: {
     marginTop: sc(12),
     color: colors.white65,
     fontFamily: fonts.sans,
-    fontSize: sc(13),
-    lineHeight: sc(20),
+    fontSize: sc(11),
+    lineHeight: sc(17),
   },
   note: {
     marginTop: sc(12),
