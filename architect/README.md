@@ -71,10 +71,11 @@ upgrading it requires rebuilding the native app.
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
 | `lib/contentReportClient.ts` | The bounded HTTP client for AI-content reports; it sends no prayer answer or topic |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
-| `lib/settings.ts` | Privacy settings, interface language, atomic scripture choice and reminder schedule saves |
+| `lib/settings.ts` | Privacy settings, interface language, atomic scripture choice, reminder schedule and last prayer duration saves |
 | `lib/i18n.ts`, `lib/locales/` | Reactive English, Russian and Ukrainian interface translations |
 | `lib/privacyConsent.ts` | The versioned consent record, provider-contract identity and legacy migration rules |
 | `lib/lock.ts` | The PIN salt and hash in SecureStore, biometrics, the lock state and the full data wipe |
+| `lib/prayerDuration.ts` | The prayer duration bounds, the default and the strict parsing of the stored last duration |
 | `lib/prayerReminders.ts` | The pure model of the reminder schedule: validation, WEEKLY triggers, the human-readable line, the phrase pool |
 | `lib/prayerReminderScheduler.ts` | The channel, the permission and the full rescheduling of local reminders through expo-notifications |
 | `lib/scripture.ts` | The types of the scripture contract, the request builder and the display model |
@@ -420,7 +421,7 @@ created and filled in on open.
 | `scripture_favorites` | Favourite snapshots with a nullable legacy `canonical_id` and the `session_id` of the prayer the quote was saved in |
 | `scripture_books` | A local directory of book names per translation |
 | `favorites_legacy_backup` | A copy of the old favourites from before the migration |
-| `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value |
+| `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value, and `prayer_minutes` - the duration of the last started prayer (0 = untimed), which `/setup` opens with; saved on the prayer start, so extending the timer does not change it; the default of 10 minutes applies until the first prayer |
 | `prayed_days` | The local calendar days of completed prayers, keyed by the prayer start; the streak is computed from them |
 
 A quote is tied to a prayer through `scripture_favorites.session_id`, which is set

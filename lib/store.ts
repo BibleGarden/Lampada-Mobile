@@ -27,6 +27,7 @@ import { createSingleFlight } from './singleFlight';
 import { mergeOfflineTrail, shouldDeferLoadedNext } from './scriptureSessionState';
 import { adjustSessionTimer, sessionTimerSnapshot } from './sessionTimer';
 import { dayKey } from './streak';
+import { DEFAULT_PRAYER_MINUTES, MAX_PRAYER_MINUTES } from './prayerDuration';
 import {
   startPrayerSystemTimer,
   stopPrayerSystemTimer,
@@ -258,7 +259,7 @@ const loadScriptureForState = async (
 
 const initial: SessionState = {
   topic: '',
-  minutes: 10,
+  minutes: DEFAULT_PRAYER_MINUTES,
   sessionId: null,
   skippedQuestions: [],
   questions: ai.getCuratedQuestions(),
@@ -277,7 +278,7 @@ const initial: SessionState = {
   scrError: null,
   dockMode: 'question',
   musicOn: false,
-  remaining: 600,
+  remaining: DEFAULT_PRAYER_MINUTES * 60,
   elapsed: 0,
   startedAtMs: null,
   endsAtMs: null,
@@ -297,7 +298,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     set((s) => {
       if (s.minutes === 0) return { minutes: 5 };
       const step = s.minutes < 5 ? 1 : 5;
-      return { minutes: Math.min(s.minutes + step, 120) };
+      return { minutes: Math.min(s.minutes + step, MAX_PRAYER_MINUTES) };
     }),
   decMinutes: () =>
     set((s) => {
@@ -367,6 +368,10 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       db.createSession(topic, minutes, startedAtMs),
       ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
+    // Запоминаем длительность, с которой молитва реально началась: следующая
+    // настройка откроется с ней. Продление таймера в молитве её не меняет —
+    // сюда попадает только выбор на экране настройки.
+    await useSettings.getState().setPrayerMinutes(minutes);
     const scripturePreferences = scripturePreferencesNow();
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
@@ -755,6 +760,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     reflectPool.invalidate();
     set((s) => ({
       ...initial,
+      minutes: useSettings.getState().prayerMinutes,
       streak: s.streak,
       questions: ai.getCuratedQuestions(),
       questionSources: ai.getCuratedQuestions().map(() => 'fallback'),

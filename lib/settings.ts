@@ -25,6 +25,11 @@ import {
   type ConsentDecision,
   type ConsentPurpose,
 } from './privacyConsent';
+import {
+  DEFAULT_PRAYER_MINUTES,
+  parseStoredPrayerMinutes,
+  serializePrayerMinutes,
+} from './prayerDuration';
 
 // Настройки приложения; хранятся в таблице meta (key/value).
 //
@@ -46,11 +51,13 @@ type SettingsState = {
   audioTranscriptionConsent: ConsentDecision;
   scripturePreferences: ScripturePreferences;
   reminderSchedule: ReminderSchedule;
+  prayerMinutes: number; // длительность последней начатой молитвы; 0 = без таймера
   loaded: boolean;
   load: () => Promise<void>;
   setConsent: (purpose: ConsentPurpose, decision: Exclude<ConsentDecision, 'undecided'>) => Promise<void>;
   setScripturePreferences: (preferences: ScripturePreferences) => Promise<void>;
   setReminderSchedule: (schedule: ReminderSchedule) => Promise<void>;
+  setPrayerMinutes: (minutes: number) => Promise<void>;
 };
 
 let languageSavePromise: Promise<void> = Promise.resolve();
@@ -65,6 +72,7 @@ export const useSettings = create<SettingsState>((set) => ({
   audioTranscriptionConsent: 'undecided',
   scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
   reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
+  prayerMinutes: DEFAULT_PRAYER_MINUTES,
   loaded: false,
 
   load: async () => {
@@ -72,7 +80,7 @@ export const useSettings = create<SettingsState>((set) => ({
     if (!loadPromise) {
       loadPromise = (async () => {
         const d = await getDb();
-        const [coreRow, answerRow, audioRow, legacyShareRow, scriptureRow, remindersRow, languageRow] = await Promise.all([
+        const [coreRow, answerRow, audioRow, legacyShareRow, scriptureRow, remindersRow, languageRow, minutesRow] = await Promise.all([
           d.getFirstAsync<{ value: string }>(
             `SELECT value FROM meta WHERE key = '${CONSENT_KEYS.core_prayer_ai}'`,
           ),
@@ -92,8 +100,16 @@ export const useSettings = create<SettingsState>((set) => ({
             "SELECT value FROM meta WHERE key = 'prayer_reminders'",
           ),
           d.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'ui_language'"),
+          d.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'prayer_minutes'"),
         ]);
-        set({ uiLanguage: isUiLanguage(languageRow?.value) ? languageRow.value : initialUiLanguage(getLocales()), uiLanguageReady: true });
+        // Длительность публикуется вместе с языком: корневой layout показывает
+        // экраны после uiLanguageReady, и первый сброс сессии на Home уже
+        // видит сохранённое значение.
+        set({
+          uiLanguage: isUiLanguage(languageRow?.value) ? languageRow.value : initialUiLanguage(getLocales()),
+          prayerMinutes: parseStoredPrayerMinutes(minutesRow?.value ?? null),
+          uiLanguageReady: true,
+        });
         const coreAiConsent = resolveConsentDecision(coreRow?.value ?? null);
         const answerContextConsent = resolveConsentDecision(
           answerRow?.value ?? null,
@@ -229,6 +245,16 @@ export const useSettings = create<SettingsState>((set) => ({
     );
     set({ reminderSchedule: schedule });
   },
+
+  setPrayerMinutes: async (minutes) => {
+    const d = await getDb();
+    await d.runAsync(
+      `INSERT INTO meta (key, value) VALUES ('prayer_minutes', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      serializePrayerMinutes(minutes),
+    );
+    set({ prayerMinutes: minutes });
+  },
 }));
 
 /**
@@ -249,6 +275,7 @@ export const resetSettingsStore = () => {
     audioTranscriptionConsent: 'undecided',
     scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
     reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
+    prayerMinutes: DEFAULT_PRAYER_MINUTES,
     loaded: false,
   });
 };
