@@ -1,0 +1,63 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-ans-032-recordings-keyboard
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text Записи и клавиатура... COMPLETED
+Tap on id: setup-kicker... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recording-play-0... COMPLETED
+Assert that "Пауза, запись 1", id: recording-play-0 is visible... COMPLETED
+Tap on id: recording-play-0... COMPLETED
+Assert that "Прослушать запись 1", id: recording-play-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Assert that id: recordings-close-button is not visible... COMPLETED
+Assert that id: answer-save-button is visible... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text 3217... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Tap on id: answer-input... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Input text  ответ... COMPLETED
+Assert that "3217 ответ", id: answer-input, Above id: inputView is visible... COMPLETED
+Assert that id: answer-save-button, Above id: inputView is visible... COMPLETED
+Tap on id: answer-question... COMPLETED
+Assert that id: delete is not visible... COMPLETED
+Assert that "3217 ответ", id: answer-input is visible... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text  дальше... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Tap on id: answer-sheet-handle... COMPLETED
+Assert that id: delete is not visible... COMPLETED
+Assert that "3217 ответ дальше", id: answer-input is visible... COMPLETED
+Tap on point (50%,20%)... COMPLETED
+Assert that "3217 ответ дальше", id: answer-input is visible... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Assert that id: recordings-record-button is visible... COMPLETED
+Tap on id: recording-play-0... COMPLETED
+Assert that "Пауза, запись 1", id: recording-play-0 is visible... COMPLETED
+Tap on id: recording-play-0... COMPLETED
+Assert that "Прослушать запись 1", id: recording-play-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Assert that id: recordings-close-button is not visible... COMPLETED
+Assert that "3217 ответ дальше", id: answer-input is visible... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Tap on id: dock-answer-edit-button... COMPLETED
+Assert that "3217 ответ дальше", id: answer-input is visible... COMPLETED
+Assert that id: answer-record-badge is visible... COMPLETED

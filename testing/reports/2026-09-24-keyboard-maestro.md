@@ -24,23 +24,19 @@ input, and the test plan has no reminder-editor keyboard scenario.
 
 | Check | Result and evidence |
 | --- | --- |
+| iPhone SETUP-004, ANS-024, ANS-032, reflection and journal search | Each individual flow exited 0 on 2026-09-23; the exit codes are in the recovered Claude tool results. Full logs: [setup](../evidence/2026-09-24-keyboard-maestro/phone-setup-004.log), [ANS-024](../evidence/2026-09-24-keyboard-maestro/phone-ans-024.log), [ANS-032](../evidence/2026-09-24-keyboard-maestro/phone-ans-032.log), [reflection and journal](../evidence/2026-09-24-keyboard-maestro/phone-reflection-journal.log). |
 | New iPhone END-006 | Exit 0 on 2026-09-24: [full Maestro log](../evidence/2026-09-24-keyboard-maestro/phone-end-006.log). |
 | iPhone critical tier | Exit 0, 11/11 flows on 2026-09-24: [full Maestro log](../evidence/2026-09-24-keyboard-maestro/phone-critical.log). |
-| iPad group before the final assertion edits | Six flows passed on 2026-09-23. ANS-023 then failed because the XCTest driver connection was refused during a tap; this was not an app assertion: [group log](../evidence/2026-09-24-keyboard-maestro/ipad-group.log), [driver error](../evidence/2026-09-24-keyboard-maestro/ipad-driver-failure.txt). |
+| Final iPad group | Exit 0, 7/7 flows on 2026-09-24, including the final SETUP-004 and END-006 assertions: [full group log](../evidence/2026-09-24-keyboard-maestro/ipad-group-passed.log). |
+| Earlier iPad group | Six flows passed on 2026-09-23. ANS-023 then failed because the XCTest driver connection was refused during a tap; this was not an app assertion: [group log](../evidence/2026-09-24-keyboard-maestro/ipad-group.log), [driver error](../evidence/2026-09-24-keyboard-maestro/ipad-driver-failure.txt). The owner authorized one repeat, which passed on 2026-09-24. |
 | Static checks | `npm run typecheck`, `git diff --check`, and parsing all 119 Maestro YAML files: exit 0 on 2026-09-24: [commands and exit codes](../evidence/2026-09-24-keyboard-maestro/checks.txt), [typecheck output](../evidence/2026-09-24-keyboard-maestro/typecheck.log). |
 
 The new phone END-006 command was
 `maestro --device "$(testing/e2e/sim-udid.sh 'Pray Smoke iPhone 17 Pro')" test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" testing/e2e/ios-end-006-takeaway-keyboard.yaml`.
-The critical command was `npm run test:e2e:critical`.
+The critical command was `npm run test:e2e:critical`; the final iPad command was
+`npm run test:e2e:ipad`. The iPad simulator was shut down after the run.
 
-Claude's earlier individual phone flows reached their final assertions in the
-saved logs, but their process exit codes were not preserved. They are not
-counted as confirmed passes here. The iPad SETUP-004 long-goal assertion and
-the iPad END-006 regex were edited after the group run, so the final versions
-are **not yet verified**. The group was not retried because project rules
-require explicit permission after a failed test run.
-
-The iPad END-006 run before the assertion edit captured the
+The earlier iPad END-006 run captured the
 [landscape keyboard](../evidence/2026-09-24-keyboard-maestro/ipad-end-006-landscape-keyboard.png)
 and the [actions after dismissal](../evidence/2026-09-24-keyboard-maestro/ipad-end-006-landscape-actions.png).
 Its later assertions check the original phrase and added markers separately:
