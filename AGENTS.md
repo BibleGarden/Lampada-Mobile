@@ -24,9 +24,11 @@
   `npm run test:e2e:critical` for every new build. Run the full `main` and
   `rare` tiers, ordered suites, and manual checks for release acceptance or
   when the change directly affects them.
-- Keep the full command logs outside the repository and report each exit code,
-  tested commit, and build identity in the PR. Investigate and report failures;
-  never rerun a failed test or CI job without the owner's explicit permission.
+- Save each full command log and exit code as a PR or task artifact accessible
+  to reviewers, and identify the tested commit and build. Put only selected
+  final evidence in `testing/evidence/` as described in `testing/README.md`.
+  Investigate and report failures; never rerun a failed test or CI job without
+  the owner's explicit permission.
 
 # Simulators
 
