@@ -13,6 +13,21 @@
   record a new significant architectural decision as an ADR in
   `architect/decisions/`.
 
+# Testing changes
+
+- When app behavior changes, update the applicable unit tests, Maestro flows,
+  and expected results in `testing/TEST_PLAN.md` in the same PR. Add coverage
+  for changed behavior that has none.
+- Before opening a code PR, run `npm run typecheck` and `npm test`. A docs-only
+  PR does not need these checks.
+- Run affected Maestro scenarios on a build from the PR branch. Run
+  `npm run test:e2e:critical` for every new build. Run the full `main` and
+  `rare` tiers, ordered suites, and manual checks for release acceptance or
+  when the change directly affects them.
+- Keep the full command logs outside the repository and report each exit code,
+  tested commit, and build identity in the PR. Investigate and report failures;
+  never rerun a failed test or CI job without the owner's explicit permission.
+
 # Simulators
 
 Reuse the existing named simulators; do not create new ones or boot the stock
