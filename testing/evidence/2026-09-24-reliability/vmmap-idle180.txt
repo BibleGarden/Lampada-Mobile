@@ -23,49 +23,49 @@ Idle exit:                  untracked
 ReadOnly portion of Libraries: Total=1.9G resident=565.0M(29%) swapped_out_or_unallocated=1.3G(71%)
 Writable regions: Total=322.1M written=1939K(1%) resident=228.4M(71%) swapped_out=0K(0%) unallocated=93.7M(29%)
 
-                                VIRTUAL RESIDENT    DIRTY  SWAPPED VOLATILE   NONVOL    EMPTY   REGION 
-REGION TYPE                        SIZE     SIZE     SIZE     SIZE     SIZE     SIZE     SIZE    COUNT (non-coalesced) 
-===========                     ======= ========    =====  ======= ========   ======    =====  ======= 
-Accelerate framework               128K     128K     128K       0K       0K     128K       0K        1 
-Activity Tracing                   256K      48K      48K       0K       0K      48K       0K        1 
-CG raster data                     864K     864K     864K       0K       0K       0K       0K        6 
-CoreAnimation                     8320K    1824K    1824K       0K       0K     368K    1184K       87 
-Foundation                          16K      16K      16K       0K       0K       0K       0K        1 
-IOSurface                         81.2M       0K       0K       0K       0K       0K       0K        6 
-Kernel Alloc Once                   32K      16K      16K       0K       0K       0K       0K        1 
-MALLOC                            12.1M    1584K    1584K       0K       0K       0K       0K        5 
-MALLOC (empty)                     187K     187K     187K       0K       0K       0K       0K        9 
-MALLOC guard page                   32K       0K       0K       0K       0K       0K       0K        2 
-MALLOC metadata                   1424K     832K     832K       0K       0K       0K       0K        8 
+                                VIRTUAL RESIDENT    DIRTY  SWAPPED VOLATILE   NONVOL    EMPTY   REGION
+REGION TYPE                        SIZE     SIZE     SIZE     SIZE     SIZE     SIZE     SIZE    COUNT (non-coalesced)
+===========                     ======= ========    =====  ======= ========   ======    =====  =======
+Accelerate framework               128K     128K     128K       0K       0K     128K       0K        1
+Activity Tracing                   256K      48K      48K       0K       0K      48K       0K        1
+CG raster data                     864K     864K     864K       0K       0K       0K       0K        6
+CoreAnimation                     8320K    1824K    1824K       0K       0K     368K    1184K       87
+Foundation                          16K      16K      16K       0K       0K       0K       0K        1
+IOSurface                         81.2M       0K       0K       0K       0K       0K       0K        6
+Kernel Alloc Once                   32K      16K      16K       0K       0K       0K       0K        1
+MALLOC                            12.1M    1584K    1584K       0K       0K       0K       0K        5
+MALLOC (empty)                     187K     187K     187K       0K       0K       0K       0K        9
+MALLOC guard page                   32K       0K       0K       0K       0K       0K       0K        2
+MALLOC metadata                   1424K     832K     832K       0K       0K       0K       0K        8
 MALLOC_NANO metadata                64K      48K      48K       0K       0K       0K       0K        2         see MALLOC ZONE table below
 MALLOC_OTHER                        20K      20K      20K       0K       0K       0K       0K        4         see MALLOC ZONE table below
 MALLOC_SMALL                     131.9M   124.3M    72.8M       0K       0K       0K       0K      128         see MALLOC ZONE table below
 MALLOC_SMALL (empty)               112K     112K       0K       0K       0K       0K       0K        5         see MALLOC ZONE table below
 MALLOC_TINY                       4096K     176K     176K       0K       0K       0K       0K        1         see MALLOC ZONE table below
-SQLite page cache                  384K       0K       0K       0K       0K       0K     128K        3 
-STACK GUARD                       56.3M       0K       0K       0K       0K       0K       0K       21 
-Stack                             18.6M     640K     640K       0K       0K       0K       0K       21 
-VM_ALLOCATE                      140.7M    97.9M    97.9M       0K       0K       0K       0K      193 
+SQLite page cache                  384K       0K       0K       0K       0K       0K     128K        3
+STACK GUARD                       56.3M       0K       0K       0K       0K       0K       0K       21
+Stack                             18.6M     640K     640K       0K       0K       0K       0K       21
+VM_ALLOCATE                      140.7M    97.9M    97.9M       0K       0K       0K       0K      193
 VM_ALLOCATE (reserved)             768K       0K       0K       0K       0K       0K       0K        1         reserved VM address space (unallocated)
-__AUTH_CONST                        32K      32K      32K       0K       0K       0K       0K        1 
-__DATA                            55.4M    32.1M    10.7M       0K       0K       0K       0K      983 
-__DATA_CONST                     118.9M    91.0M    13.2M       0K       0K       0K       0K     1015 
-__DATA_DIRTY                       155K     155K     155K       0K       0K       0K       0K       13 
-__FONT_DATA                        2352       0K       0K       0K       0K       0K       0K        1 
-__LINKEDIT                       746.6M    52.5M       0K       0K       0K       0K       0K       94 
-__LLVM_COV                          64K       0K       0K       0K       0K       0K       0K        1 
-__OBJC_RO                         55.6M    50.4M       0K       0K       0K       0K       0K        1 
-__OBJC_RW                         2332K    2316K      44K       0K       0K       0K       0K        1 
-__TEXT                             1.2G   512.4M       0K       0K       0K       0K       0K     1029 
-__TPRO_CONST                       164K      68K      68K       0K       0K       0K       0K        3 
-dyld private memory                3.0G    19.0M    19.0M       0K       0K       0K       0K       85 
-mapped file                      283.9M    23.5M       0K       0K       0K       0K       0K      107 
-page table in kernel              1843K    1843K    1843K       0K       0K       0K       0K        1 
-shared memory                     4192K    1184K    1184K       0K       0K       0K       0K       25 
-unused but dirty shlib __DATA     24.7M    21.9M    4141K       0K       0K       0K       0K      584 
-===========                     ======= ========    =====  ======= ========   ======    =====  ======= 
-TOTAL                              5.9G     1.0G   227.2M       0K       0K     544K    1312K     4450 
-TOTAL, minus reserved VM space     5.9G     1.0G   227.2M       0K       0K     544K    1312K     4450 
+__AUTH_CONST                        32K      32K      32K       0K       0K       0K       0K        1
+__DATA                            55.4M    32.1M    10.7M       0K       0K       0K       0K      983
+__DATA_CONST                     118.9M    91.0M    13.2M       0K       0K       0K       0K     1015
+__DATA_DIRTY                       155K     155K     155K       0K       0K       0K       0K       13
+__FONT_DATA                        2352       0K       0K       0K       0K       0K       0K        1
+__LINKEDIT                       746.6M    52.5M       0K       0K       0K       0K       0K       94
+__LLVM_COV                          64K       0K       0K       0K       0K       0K       0K        1
+__OBJC_RO                         55.6M    50.4M       0K       0K       0K       0K       0K        1
+__OBJC_RW                         2332K    2316K      44K       0K       0K       0K       0K        1
+__TEXT                             1.2G   512.4M       0K       0K       0K       0K       0K     1029
+__TPRO_CONST                       164K      68K      68K       0K       0K       0K       0K        3
+dyld private memory                3.0G    19.0M    19.0M       0K       0K       0K       0K       85
+mapped file                      283.9M    23.5M       0K       0K       0K       0K       0K      107
+page table in kernel              1843K    1843K    1843K       0K       0K       0K       0K        1
+shared memory                     4192K    1184K    1184K       0K       0K       0K       0K       25
+unused but dirty shlib __DATA     24.7M    21.9M    4141K       0K       0K       0K       0K      584
+===========                     ======= ========    =====  ======= ========   ======    =====  =======
+TOTAL                              5.9G     1.0G   227.2M       0K       0K     544K    1312K     4450
+TOTAL, minus reserved VM space     5.9G     1.0G   227.2M       0K       0K     544K    1312K     4450
 
                                              VIRTUAL   RESIDENT      DIRTY    SWAPPED ALLOCATION      BYTES DIRTY+SWAP          REGION
 MALLOC ZONE                                     SIZE       SIZE       SIZE       SIZE      COUNT  ALLOCATED  FRAG SIZE  % FRAG   COUNT
