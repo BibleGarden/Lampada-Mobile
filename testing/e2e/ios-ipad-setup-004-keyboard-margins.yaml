@@ -1,0 +1,92 @@
+appId: twinkler
+tags:
+  - ipad
+---
+# SETUP-004 (iPad): in portrait and landscape, taps in both side margins
+# dismiss the keyboard without losing text. A tap inside keeps editing, the
+# field stays above the keyboard, and Next opens the threshold.
+#
+# The system keyboard's nonlocalized `shift` and `inputView` identifiers
+# establish visibility (see ios-stage03-long-goal.yaml). `inputText` raises
+# the software keyboard even with a connected hardware keyboard, so every
+# new cycle starts with input. The first edits use digits to avoid selection
+# of a misspelled word; the final edit makes the goal span multiple lines.
+# Points at 3% and 97% lie outside the column in both orientations.
+- launchApp:
+    stopApp: true
+    clearState: true
+- setOrientation: PORTRAIT
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "4821"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    id: "setup-goal-input"
+    retryTapIfNoChange: false
+- assertVisible:
+    id: "shift"
+- inputText: " 11"
+- assertVisible:
+    id: "setup-goal-input"
+    text: "4821 11"
+    above:
+      id: "inputView"
+- tapOn:
+    point: "3%,50%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "setup-goal-input"
+    text: "4821 11"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: " 12"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,50%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "setup-goal-input"
+    text: "4821 11 12"
+
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "setup-goal-input"
+- inputText: " 21"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "3%,30%"
+- assertNotVisible:
+    id: "shift"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: " 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,30%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "setup-goal-input"
+    text: "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- assertVisible:
+    id: "threshold-kicker"
+- setOrientation: PORTRAIT

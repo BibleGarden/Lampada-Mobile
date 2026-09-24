@@ -2,17 +2,19 @@ appId: twinkler
 tags:
   - main
 ---
-# ANS-019/021/022/024: keyboard dismissal, double-tap guard, and two
-# consecutive recordings owned by different questions.
+# ANS-019/021/022/024: keyboard dismissal before the recordings sheet,
+# double-tap guard, and two consecutive recordings owned by different
+# questions.
 - launchApp:
     stopApp: true
     clearState: true
 - tapOn:
     id: "start-prayer-button"
 - tapOn:
-    point: "50%,37%"
+    id: "setup-goal-input"
 - inputText: "Регрессия голосовых ответов"
-- hideKeyboard
+- tapOn:
+    id: "setup-kicker"
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
@@ -55,8 +57,16 @@ tags:
 - tapOn:
     id: "answer-input"
 - inputText: "Клавиатура должна закрыться"
+# ANS-024: клавиша `shift` — нелокализованный идентификатор системной
+# клавиатуры (см. ios-stage03-long-goal.yaml)
+- assertVisible:
+    id: "shift"
 - tapOn:
     id: "answer-record-button"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "recording-card-0"
 - assertVisible:
     id: "recordings-record-button"
 - doubleTapOn:

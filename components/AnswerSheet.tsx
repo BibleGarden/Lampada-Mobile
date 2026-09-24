@@ -911,6 +911,7 @@ export default function AnswerSheet({
     () => (
       <View
         style={styles.handleWrap}
+        testID="answer-sheet-handle"
         onStartShouldSetResponder={() => {
           Keyboard.dismiss();
           return false;

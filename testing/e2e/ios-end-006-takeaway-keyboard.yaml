@@ -1,0 +1,81 @@
+appId: twinkler
+tags:
+  - main
+---
+# END-006 (iPhone): the takeaway stays above the keyboard while editing;
+# tapping inside keeps editing, tapping the question dismisses the keyboard
+# without changing the text, and the saved takeaway appears in the journal.
+# The iPad orientation and side-margin cases are in
+# ios-ipad-end-006-takeaway-rotation.yaml.
+#
+# The system keyboard's nonlocalized `shift` and `inputView` identifiers
+# establish keyboard visibility and field placement (see
+# ios-stage03-long-goal.yaml). `inputText` raises the software keyboard even
+# when the simulator has a connected hardware keyboard.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "END-006 phone takeaway"
+- tapOn:
+    id: "setup-kicker"
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "session-finish-button"
+- assertVisible:
+    id: "reflect-kicker"
+- tapOn:
+    id: "reflection-input"
+- inputText: "4821"
+- assertVisible:
+    id: "shift"
+- assertNotVisible:
+    id: "reflect-complete-button"
+- assertNotVisible:
+    id: "reflect-return-button"
+- tapOn:
+    id: "reflection-input"
+    retryTapIfNoChange: false
+- assertVisible:
+    id: "shift"
+- inputText: " takeaway stays editable above the keyboard"
+- assertVisible:
+    id: "reflection-input"
+    text: "4821 takeaway stays editable above the keyboard"
+    above:
+      id: "inputView"
+- tapOn:
+    id: "reflect-question"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "reflection-input"
+    text: "4821 takeaway stays editable above the keyboard"
+- assertVisible:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "reflect-return-button"
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"
+- tapOn:
+    id: "journal-button"
+- assertVisible: ".*4821 takeaway stays editable above the keyboard.*"

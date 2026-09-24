@@ -1,0 +1,43 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-keyboard-reflect-journal
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text Клавиатура в размышлении... COMPLETED
+Tap on id: setup-kicker... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text 4821... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Assert that id: reflect-complete-button is not visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Input text  вывод... COMPLETED
+Assert that "4821 вывод", id: reflection-input, Above id: inputView is visible... COMPLETED
+Assert that id: reflect-question, Above id: inputView is visible... COMPLETED
+Tap on id: reflect-question... COMPLETED
+Assert that id: delete is not visible... COMPLETED
+Assert that "4821 вывод", id: reflection-input is visible... COMPLETED
+Assert that id: reflect-return-button is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Tap on id: journal-search-input... COMPLETED
+Input text 4821... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Tap on id: journal-search-input... COMPLETED
+Assert that id: delete is visible... COMPLETED
+Input text  вывод... COMPLETED
+Assert that "4821 вывод", id: journal-search-input, Above id: inputView is visible... COMPLETED
+Tap on id: journal-title... COMPLETED
+Assert that id: delete is not visible... COMPLETED
+Assert that "4821 вывод", id: journal-search-input is visible... COMPLETED
+Assert that ".*Клавиатура в размышлении.*" is visible... COMPLETED

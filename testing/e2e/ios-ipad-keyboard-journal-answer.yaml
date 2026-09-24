@@ -1,0 +1,165 @@
+appId: twinkler
+tags:
+  - ipad
+---
+# Раздел 9 плана (iPad): тапы по левому и правому полю вне колонки закрывают
+# клавиатуру в поиске журнала и в шторке ответа, в портрете и в ландшафте,
+# без потери текста. В портрете поле и «Сохранить» остаются над клавиатурой.
+#
+# Видимость клавиатуры — по нелокализованным идентификаторам системной
+# клавиатуры `shift` и `inputView` (см. ios-stage03-long-goal.yaml). Экранную
+# клавиатуру поднимает `inputText`, поэтому каждый цикл начинается с ввода.
+# Текст — цифры: тап рядом со словом, которое проверка орфографии считает
+# ошибкой, выделил бы его.
+- launchApp:
+    stopApp: true
+    clearState: true
+- setOrientation: PORTRAIT
+
+# Поиск журнала
+- tapOn:
+    id: "journal-button"
+- tapOn:
+    id: "journal-search-input"
+- inputText: "4821"
+- assertVisible:
+    id: "shift"
+- assertVisible:
+    id: "journal-search-input"
+    above:
+      id: "inputView"
+- tapOn:
+    point: "3%,50%"
+- assertNotVisible:
+    id: "shift"
+- tapOn:
+    id: "journal-search-input"
+- inputText: " 7"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,50%"
+- assertNotVisible:
+    id: "shift"
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "journal-search-input"
+- inputText: " 8"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "3%,40%"
+- assertNotVisible:
+    id: "shift"
+- tapOn:
+    id: "journal-search-input"
+- inputText: " 9"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,40%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "journal-search-input"
+    text: "4821 7 8 9"
+
+# Шторка ответа
+- setOrientation: PORTRAIT
+- launchApp:
+    stopApp: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "iPad keyboard margins"
+- tapOn:
+    id: "setup-kicker"
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-answer-button"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "answer-input"
+- inputText: "3217"
+- assertVisible:
+    id: "shift"
+- assertVisible:
+    id: "answer-input"
+    above:
+      id: "inputView"
+- assertVisible:
+    id: "answer-save-button"
+    above:
+      id: "inputView"
+- tapOn:
+    point: "3%,30%"
+- assertNotVisible:
+    id: "shift"
+- tapOn:
+    id: "answer-input"
+- inputText: " 1"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,30%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 1"
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "answer-input"
+- inputText: " 2"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "3%,25%"
+- assertNotVisible:
+    id: "shift"
+- tapOn:
+    id: "answer-input"
+- inputText: " 3"
+- assertVisible:
+    id: "shift"
+- tapOn:
+    point: "97%,25%"
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "answer-input"
+    text: "3217 1 2 3"
+- setOrientation: PORTRAIT
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertVisible:
+    id: "dock-answer-edit-button"

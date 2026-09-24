@@ -1,0 +1,15 @@
+
+> pray@1.0.0 test:e2e:ipad
+> bash testing/e2e/run-ipad.sh
+
+
+Waiting for flows to complete...
+[Passed] ios-ipad-ans-033-answer-rotation (1m 25s)
+[Passed] ios-ipad-end-006-takeaway-rotation (2m 32s)
+[Passed] ios-ipad-keyboard-journal-answer (2m 49s)
+[Passed] ios-ipad-nav-008-rotation (42s)
+[Passed] ios-ipad-setup-004-keyboard-margins (53s)
+[Passed] ios-ipad-start-005-threshold-rotation (41s)
+[Failed] ios-ans-023-recordings-actions (48s)
+
+1/7 Flow Failed

@@ -93,7 +93,6 @@ session interruptions.
 | ANS-029 | Ten start → stop → play cycles without leaving the app. | Ten valid files; no stuck overlay. | — |
 | ANS-030 | Start a recording right after pausing scripture narration or a draft. | Duration matches the speech; playback does not jump to the end. | Ears |
 | ANS-031 | Two files; play 2, then 1, then 2. | Each starts at zero and is the right file. | Ears |
-| ANS-032 | Open recordings, play/pause, close with the chevron; repeat after opening the keyboard. | Answer field stays usable; closing the answer removes the backdrop; no dark blocked screen. | — |
 | SCR-016 | Timer to zero during scripture narration, music on. | Passage finishes; then reflection after one second; both players stop. | Ears |
 | SCR-017 | Timer to zero while reading silently in the expanded reader; scroll; close. | Notice does not steal touches; reflection after the reader closes. | — |
 | SCR-018 | During the one-second delay: reopen the reader, pause/resume, open an answer, or add time. | Pending finish cancels; extra time resets expiry; completion runs once. | — |
@@ -263,7 +262,7 @@ tablets or accessibility.
 | ID | Do | Expected | Need |
 | --- | --- | --- | --- |
 | NAV-008 | Rotate Home and one other screen while JS is busy. | The background covers the canvas; no strip keeps the old size. Plain rotation is automated (`ios-ipad-nav-008-rotation.yaml`); look at its landscape screenshots. | iPad |
-| SETUP-004 | Long goal; tap above the field and in both tablet margins. | Outside taps dismiss the keyboard without losing text; "Next" works after it closes. The phone half (long goal reaches the session) is automated in `ios-stage03-long-goal.yaml`. | iPad |
+| SETUP-004 | Inspect the iPad flow after a long goal and taps above the field and in both tablet margins. | The input remains readable and the actions remain reachable. Text retention and dismissal are automated in `ios-stage03-long-goal.yaml` and `ios-ipad-setup-004-keyboard-margins.yaml`. | iPad |
 | ANS-023 | Look at the `ANS-023-*` screenshots from the three devices. | A margin remains between the buttons and the screen edge. Visibility and taps are automated (`ios-ans-023-recordings-actions.yaml`). | Three sizes |
 | ANS-025 | VoiceOver on a short and a long transcript. | Full text; a short one is not a button; "Show in full" is its own focus. | VoiceOver + a transcript from sitting 6 |
 | SCR-025 | Look at `SCR-025-reader-expanded` from the `main` run. | Title and buttons below the status bar. Visibility and taps are automated (`ios-scr-025-reader-dynamic-island.yaml`). | iPhone with a Dynamic Island |
@@ -284,7 +283,7 @@ summary was green.
 | Interface language | `bash testing/e2e/run-lng.sh` (switches the simulator locale between flows) | LNG-001…009 (`ios-lng-*.yaml`; they carry a `NEEDS-RUNNER` comment and are not in the tier tags) |
 | Reminder firing | `bash testing/e2e/run-rem-fire.sh` | REM-001, REM-004, REM-005, REM-006, REM-008, REM-011, REM-013 |
 | Reminder editor | `maestro test testing/e2e/ios-rem-editor-suite.yaml` | REM-014, REM-015 |
-| iPad | `npm run test:e2e:ipad` (one booted iPad simulator, or `UDID=`) | NAV-008 (partial), START-005, ANS-033, END-006, ANS-023 (`ios-ipad-*.yaml` + `ios-ans-023-recordings-actions.yaml`) |
+| iPad | `npm run test:e2e:ipad` (one booted iPad simulator, or `UDID=`) | NAV-008 (partial), START-005, SETUP-004, ANS-033, END-006, ANS-023, keyboard dismissal in the journal and answer sheet (`ios-ipad-*.yaml` + `ios-ans-023-recordings-actions.yaml`) |
 | Lock suites | `maestro test testing/e2e/ios-lock-suite.yaml`, `ios-lock-006-suite.yaml` | LOCK-001…007 |
 | Background music at the deadline | `bash testing/e2e/run-background-music-timer-end.sh` (checks the player stop in the simulator audio log) | MUS-009 |
 | Lock wrappers | `run-lock-appswitcher.sh`, `run-lock-biometrics.sh`, `run-lock-storage-check.sh` | LOCK-008, LOCK-009, LOCK-010, LOCK-011 |
