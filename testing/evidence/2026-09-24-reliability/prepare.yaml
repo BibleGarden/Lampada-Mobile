@@ -1,0 +1,57 @@
+appId: twinkler
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      microphone: allow
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "Stage 08 reliability"
+- tapOn:
+    id: "setup-kicker"
+- tapOn:
+    id: "setup-preset-60"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-answer-button"
+- tapOn:
+    id: "answer-record-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: "recordings-stop-button"
+- assertVisible:
+    id: "recording-card-0"
+- tapOn:
+    id: "recordings-close-button"
+- tapOn:
+    id: "answer-input"
+- inputText: "Stage 08 memory cycle"
+- tapOn:
+    id: "answer-question"
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertVisible:
+    id: "dock-answer-edit-button"

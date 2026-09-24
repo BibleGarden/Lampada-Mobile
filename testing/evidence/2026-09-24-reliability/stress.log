@@ -1,0 +1,18 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow pray-stage08-stress
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Repeat 10 times...
+  Tap on id: dock-answer-edit-button... COMPLETED
+  Assert that id: answer-input is visible... COMPLETED
+  Tap on id: answer-record-button... COMPLETED
+  Assert that id: recording-card-0 is visible... COMPLETED
+  Tap on id: recording-play-0... COMPLETED
+  Tap on id: recording-play-0... COMPLETED
+  Tap on id: recordings-close-button... COMPLETED
+  Tap on id: answer-save-button... COMPLETED
+  Assert that id: dock-answer-edit-button is visible... COMPLETED
+Repeat 10 times... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED

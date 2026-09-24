@@ -1,0 +1,33 @@
+appId: twinkler
+---
+- assertVisible:
+    id: "dock-answer-edit-button"
+- repeat:
+    times: 10
+    commands:
+      - tapOn:
+          id: "dock-answer-edit-button"
+      - assertVisible:
+          id: "answer-input"
+      - tapOn:
+          id: "answer-record-button"
+      - assertVisible:
+          id: "recording-card-0"
+      - tapOn:
+          id: "recording-play-0"
+      - tapOn:
+          id: "recording-play-0"
+      - tapOn:
+          id: "recordings-close-button"
+      - tapOn:
+          id: "answer-save-button"
+      - assertVisible:
+          id: "dock-answer-edit-button"
+- tapOn:
+    id: "session-finish-button"
+- assertVisible:
+    id: "reflect-kicker"
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"

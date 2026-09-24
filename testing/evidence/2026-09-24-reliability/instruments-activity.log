@@ -1,0 +1,9 @@
+Starting recording with the Activity Monitor template. Attaching to: Lampada (42591). Time limit: 7.0 min
+Ctrl-C to stop the recording
+Run issues were detected (trace is still ready to be viewed):
+* [Error] Activity monitoring service not available on this device.
+
+* [Error] Activity monitoring service not available on this device.
+
+Recording failed with errors. Saving output file...
+Output file saved as: pray-stage08-activity.trace

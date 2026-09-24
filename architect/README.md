@@ -23,6 +23,8 @@ the app refreshes the calendar without resetting the session.
 
 Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
+The flame's Reanimated clock stops when the app leaves the active state and
+restarts on activation, avoiding Skia path creation while it is backgrounded.
 
 ## Technology outline
 

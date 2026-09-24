@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import {
   BlurMask,
   Canvas,
@@ -92,16 +93,25 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   const flameBase = ember ? pad + H * 0.66 : bowlTop + W / 60;
   const flameMidY = flameBase - flameH * 0.5;
 
-  // t — «часы» анимации, крутятся всегда
+  // t — «часы» анимации; в фоне не создаём новые Skia-пути.
   const t = useSharedValue(0);
   useEffect(() => {
-    t.value = 0;
-    t.value = withRepeat(
-      withTiming(Math.PI * 2 * 1000, { duration: 1000_000, easing: Easing.linear }),
-      -1,
-      false,
-    );
-    return () => cancelAnimation(t);
+    const onAppStateChange = (state: typeof AppState.currentState) => {
+      cancelAnimation(t);
+      if (state !== 'active') return;
+      t.value = 0;
+      t.value = withRepeat(
+        withTiming(Math.PI * 2 * 1000, { duration: 1000_000, easing: Easing.linear }),
+        -1,
+        false,
+      );
+    };
+    onAppStateChange(AppState.currentState);
+    const subscription = AppState.addEventListener('change', onAppStateChange);
+    return () => {
+      subscription.remove();
+      cancelAnimation(t);
+    };
   }, [t]);
 
   // оболочка: яйцо с блуждающим кончиком и дышащей высотой.
