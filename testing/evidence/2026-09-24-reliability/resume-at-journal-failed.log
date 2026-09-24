@@ -1,0 +1,25 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow pray-stage08-resume
+Launch app "twinkler" without stopping app... COMPLETED
+Assert that id: home-title-lit is visible... FAILED
+
+Assertion is false: id: home-title-lit is visible
+
+Assertion 'id: home-title-lit is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/tmp/pray-stage08-maestro/2026-09-24_094559
+╭────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                │
+│   Debug tests faster by easy access to test recordings, maestro logs, screenshots, and more.   │
+│                                                                                                │
+│   Run your flows on Maestro Cloud:                                                             │
+│   maestro cloud app_file flows_folder/                                                         │
+│                                                                                                │
+╰────────────────────────────────────────────────────────────────────────────────────────────────╯

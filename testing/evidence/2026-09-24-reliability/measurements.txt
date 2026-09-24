@@ -1,0 +1,24 @@
+Date: 2026-09-24, Europe/Moscow.
+Source before fix: main 6bef3c4, Lampada 1.0.24 Release, Pray Smoke iPhone 17 Pro simulator, iOS 26.5.
+Source after fix: codex/reliability-stress with Flame AppState pause, same simulator and app version.
+Maestro 2.6.1; Xcode xctrace 16.0.
+
+Before fix: prepare.yaml exit 0; stress.yaml exit 0, ten repetitions in one process (PID 42591), then reflection and Home.
+vmmap -summary physical footprint after preparation: 173.9 MiB (vmmap-before.txt).
+vmmap -summary physical footprint after ten repetitions and Home: 212.8 MiB; peak 227.1 MiB (vmmap-after.txt).
+vmmap -summary physical footprint after about three minutes idle on Home: 220.1 MiB; peak 228.1 MiB (vmmap-idle180.txt).
+vmmap -summary physical footprint in background after 60 seconds: 219.0 MiB (vmmap-background-before.txt).
+RSS time series at 2-second intervals: rss.csv. One run does not establish a leak rate or a physical-device memory limit.
+
+Before fix, after settling in background on Home, ps cumulative CPU time over 30 seconds: 6:13.12 -> 6:14.91, delta 1.79 seconds; RSS 591888 KiB -> 591888 KiB.
+A five-second sample in background contains RNSkia JsiSkPathBuilder::detach and AnimationFrameQueue (sample-background-before.txt).
+
+After fix: simulator Release build exit 0 (release-build.log); ios-smoke-full.yaml exit 0 (smoke-fixed.log); npm run typecheck exit 0 (typecheck.log).
+After settling in background from Home, ps cumulative CPU time over 30 seconds: 1:38.00 -> 1:38.82, delta 0.82 seconds; RSS 505040 KiB -> 505040 KiB.
+vmmap -summary physical footprint in background: 156.0 MiB (vmmap-background-after.txt).
+The five-second background sample has no JsiSkPathBuilder::detach frame (sample-background-after.txt).
+Two Home screenshots one second apart after foregrounding differ in the 500x600 flame region (FFmpeg PSNR average 31.36 dB; home-after-resume-1.png and home-after-resume-2.png).
+
+The first resume assertion expected Home but the smoke flow ends in the journal; the app resumed to the journal without restarting. The assertion failed because its expected screen was wrong (resume-at-journal-failed.log). Returning from the journal to Home then passed (return-home.log).
+Activity Monitor tracing failed because its service is unavailable on this simulator (instruments-activity.log). The Allocations probe did not finish and was terminated after more than two minutes (instruments-allocations.log). Neither trace was used as evidence.
+The paired iPhone 14 Plus (iOS 26.4.2) was locked and connected over the local network; launch was denied (physical-device-launch.log). The repository's npm run iphone installation requires a cable. No physical-device profiling or incoming-call test was performed.

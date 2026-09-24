@@ -1,0 +1,45 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-smoke-full
+Launch app "twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Финальный smoke... COMPLETED
+Press Enter key... COMPLETED
+Assert that "Финальный smoke" is visible... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that ".*5 минут.*финальный smoke.*" is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 450 ms... COMPLETED
+Assert that id: threshold-hold-button is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that id: dock-answer-button is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Run flow when id: answer-input is not visible...
+Run flow when id: answer-input is not visible... SKIPPED
+Assert that id: answer-input is visible... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text Финальный ответ... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text Финальный вывод... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Assert that id: journal-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that ".*Финальный smoke.*" is visible... COMPLETED
+Tap on ".*Финальный smoke.*"... COMPLETED
+Assert that ".*Финальный ответ.*" is visible... COMPLETED
+Assert that ".*Финальный вывод.*" is visible... COMPLETED

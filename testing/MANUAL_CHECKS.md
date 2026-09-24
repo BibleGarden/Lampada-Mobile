@@ -345,10 +345,12 @@ Recorded so a green iOS summary is not mistaken for these:
   `npx expo-doctor` (no npm wrapper; run it by hand and keep the log), and a
   supported Release build. `PRE-002` is the only automated one:
   `npm run typecheck`.
-- **Section 9 reliability** — memory after ten sheet openings, a system
-  call during a prayer, leftover mic / player after leaving a screen. Cold
-  start without a white screen is sampled by every `clearState` flow; stutter
-  and memory are still eyes and Instruments on a phone.
+- **Section 9 reliability** — the simulator stress run and background flame
+  fix are documented in `reports/2026-09-24-reliability-stress.md`. On a
+  physical iPhone, profile memory after ten sheet/audio cycles, take a system
+  call during recording, and check mic/player release after leaving the screen.
+  Cold start is sampled by every `clearState` flow; animation smoothness and
+  physical memory still need eyes and Instruments on a phone.
 
 ---
 

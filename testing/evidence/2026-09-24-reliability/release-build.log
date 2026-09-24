@@ -1,0 +1,149 @@
+env: load .env.local
+env: export EXPO_PUBLIC_AI_PROXY_KEY EXPO_PUBLIC_API_URL
+› Using --device 05F697B7-36CD-4050-9D57-FC9316AA093C
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:48102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+iOS Bundled 8279ms node_modules/expo-router/entry.js (4238 modules)
+Writing bundle output to: /var/folders/_c/ds54_6851cg0h35vc823wns00000gn/T/nsfnr1veh4a/main.jsbundle
+Copying 85 asset files
+Done writing bundle output
+› Planning build
+› Executing react-native Pods/hermes-engine » [CP-User] [Hermes] Replace Hermes for the right configuration, if needed
+› Executing react-native Pods/hermes-engine » [CP] Copy XCFrameworks
+› Executing react-native Pods/ReactNativeDependencies » [CP-User] [RNDeps] Replace React Native Dependencies for the right configuration, if needed
+› Executing react-native Pods/ReactNativeDependencies » [CP] Copy XCFrameworks
+› Executing react-native Pods/React-Core-prebuilt » [CP-User] [RNCore] Replace React Native Core for the right configuration, if needed
+› Executing react-native Pods/React-Core-prebuilt » [CP] Copy XCFrameworks
+› Preparing Pods/React-Core-React-Core_privacy » ResourceBundle-React-Core_privacy-React-Core-Info.plist
+› Preparing Pods/React-cxxreact-React-cxxreact_privacy » ResourceBundle-React-cxxreact_privacy-React-cxxreact-Info.plist
+› Preparing Pods/React-timing-React-timing_privacy » ResourceBundle-React-timing_privacy-React-timing-Info.plist
+› Executing react-native Pods/React-RCTFBReactNativeSpec » [CP-User] [RN]Check FBReactNativeSpec
+› Executing pray Pods/ReactCodegen » [CP-User] Generate Specs
+› Executing pray Pods/ReactCodegen » [Expo] Remove duplicate codegen output
+› Executing expo-modules-jsi Pods/ExpoModulesJSI » [CP-User] Build ExpoModulesJSI xcframework
+› Executing expo-modules-jsi Pods/ExpoModulesJSI » [CP] Copy XCFrameworks
+› Executing expo-modules-core Pods/ExpoModulesCore » [CP-User] [Expo] Resolve ExpoModulesCore dSYM source maps
+› Executing expo-modules-core Pods/ExpoModulesCore » [CP-User] [Expo] Switch ExpoModulesCore XCFramework for build configuration
+› Executing expo-modules-core Pods/ExpoModulesCore » [CP] Copy XCFrameworks
+› Executing expo-modules-core Pods/ExpoModulesWorklets » [CP-User] [Expo] Resolve ExpoModulesWorklets dSYM source maps
+› Executing expo-modules-core Pods/ExpoModulesWorklets » [CP-User] [Expo] Switch ExpoModulesWorklets XCFramework for build configuration
+› Executing expo-modules-core Pods/ExpoModulesWorklets » [CP] Copy XCFrameworks
+› Executing @expo/ui Pods/ExpoUI » Copy generated compatibility header
+› Executing expo Pods/Expo » Copy generated compatibility header
+› Preparing expo-widgets Pods/ExpoWidgets-ExpoWidgets » ResourceBundle-ExpoWidgets-ExpoWidgets-Info.plist
+› Executing expo-widgets Pods/ExpoWidgets » [CP-User] Build ExpoWidgets Bundle
+    Eager bundle does not match new options, bundling again.
+› Executing expo-widgets Pods/ExpoWidgets » [CP-User] Prepare ExpoWidgets Resources
+› Compiling expo-widgets Pods/ExpoWidgets » ExpoWidgets-dummy.m
+› Compiling expo-widgets Pods/ExpoWidgets » ExpoWidgets-dummy.m
+› Packaging expo-widgets Pods/ExpoWidgets » libExpoWidgets.a
+› Packaging expo-widgets Pods/ExpoWidgets » libExpoWidgets.a
+› Executing expo-widgets Pods/ExpoWidgets » Copy generated compatibility header
+› Compiling Pods/Pods-ExpoWidgetsTarget » Pods-ExpoWidgetsTarget-dummy.m
+› Packaging Pods/Pods-ExpoWidgetsTarget » libPods-ExpoWidgetsTarget.a
+› Compiling Pods/Pods-ExpoWidgetsTarget » Pods-ExpoWidgetsTarget-dummy.m
+› Packaging Pods/Pods-ExpoWidgetsTarget » libPods-ExpoWidgetsTarget.a
+› Executing Lampada/ExpoWidgetsTarget » [CP] Check Pods Manifest.lock
+› Executing Lampada/ExpoWidgetsTarget » [Expo] Configure project
+› Linking   Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget.debug.dylib
+› Linking   Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget
+› Linking   Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget.debug.dylib
+› Linking   Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget
+› Linking   Lampada/ExpoWidgetsTarget » __preview.dylib
+› Linking   Lampada/ExpoWidgetsTarget » __preview.dylib
+› Executing Lampada/ExpoWidgetsTarget » [CP] Copy Pods Resources
+› Preparing Pods/RNSVG-RNSVGFilters » ResourceBundle-RNSVGFilters-RNSVG-Info.plist
+› Preparing Pods/RNCAsyncStorage-RNCAsyncStorage_resources » ResourceBundle-RNCAsyncStorage_resources-RNCAsyncStorage-Info.plist
+› Preparing Lampada/ExpoWidgetsTarget » Info.plist
+› Preparing Pods/ExpoSystemUI-ExpoSystemUI_privacy » ResourceBundle-ExpoSystemUI_privacy-ExpoSystemUI-Info.plist
+› Preparing Pods/ExpoNotifications-ExpoNotifications_privacy » ResourceBundle-ExpoNotifications_privacy-ExpoNotifications-Info.plist
+› Preparing Pods/ExpoLocalization-ExpoLocalization_privacy » ResourceBundle-ExpoLocalization_privacy-ExpoLocalization-Info.plist
+› Preparing Pods/EXApplication-ExpoApplication_privacy » ResourceBundle-ExpoApplication_privacy-EXApplication-Info.plist
+› Executing react-native-screens Pods/RNScreens » Copy generated compatibility header
+› Executing @shopify/react-native-skia Pods/react-native-skia » [CP] Copy XCFrameworks
+› Executing expo-symbols Pods/ExpoSymbols » Copy generated compatibility header
+› Executing expo-secure-store Pods/ExpoSecureStore » Copy generated compatibility header
+› Executing expo-sqlite Pods/ExpoSQLite » Copy generated compatibility header
+› Executing @expo/log-box Pods/ExpoLogBox » Copy generated compatibility header
+› Executing expo-local-authentication Pods/ExpoLocalAuthentication » Copy generated compatibility header
+› Executing expo-linking Pods/ExpoLinking » Copy generated compatibility header
+› Executing expo-linear-gradient Pods/ExpoLinearGradient » Copy generated compatibility header
+› Executing expo-keep-awake Pods/ExpoKeepAwake » Copy generated compatibility header
+› Executing expo-haptics Pods/ExpoHaptics » Copy generated compatibility header
+› Executing expo-glass-effect Pods/ExpoGlassEffect » Copy generated compatibility header
+› Executing expo-system-ui Pods/ExpoSystemUI » Copy generated compatibility header
+› Executing expo-notifications Pods/ExpoNotifications » Copy generated compatibility header
+› Executing expo-localization Pods/ExpoLocalization » Copy generated compatibility header
+› Executing expo-font Pods/ExpoFont » [CP-User] [Expo] Resolve ExpoFont dSYM source maps
+› Executing @expo/dom-webview Pods/ExpoDomWebView » Copy generated compatibility header
+› Executing expo-crypto Pods/ExpoCrypto » Copy generated compatibility header
+› Executing expo-audio Pods/ExpoAudio » Copy generated compatibility header
+› Executing expo-asset Pods/ExpoAsset » Copy generated compatibility header
+› Executing expo-application Pods/EXApplication » Copy generated compatibility header
+› Generating debug Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget.appex.dSYM
+› Preparing Pods/ExpoFileSystem-ExpoFileSystem_privacy » ResourceBundle-ExpoFileSystem_privacy-ExpoFileSystem-Info.plist
+› Preparing expo-constants Pods/EXConstants-EXConstants » ResourceBundle-EXConstants-EXConstants-Info.plist
+› Executing expo-file-system Pods/ExpoFileSystem » [CP-User] [Expo] Resolve ExpoFileSystem dSYM source maps
+› Preparing Pods/EXConstants-ExpoConstants_privacy » ResourceBundle-ExpoConstants_privacy-EXConstants-Info.plist
+› Executing expo-constants Pods/EXConstants » [CP-User] Generate app.config for prebuilt Constants.manifest
+› Generating debug Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget.appex.dSYM
+› Executing expo-font Pods/ExpoFont » [CP-User] [Expo] Switch ExpoFont XCFramework for build configuration
+› Executing expo-font Pods/ExpoFont » [CP] Copy XCFrameworks
+› Executing expo-file-system Pods/ExpoFileSystem » [CP-User] [Expo] Switch ExpoFileSystem XCFramework for build configuration
+› Executing expo-file-system Pods/ExpoFileSystem » [CP] Copy XCFrameworks
+› Executing expo-constants Pods/EXConstants » Copy generated compatibility header
+› Signing   Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget.debug.dylib
+› Signing   Lampada/ExpoWidgetsTarget » __preview.dylib
+› Signing   Lampada/ExpoWidgetsTarget » ExpoWidgetsTarget.appex
+› Compiling expo-router Pods/ExpoRouter » ExpoRouter-dummy.m
+› Compiling expo-router Pods/ExpoRouter » ExpoRouter-dummy.m
+› Packaging expo-router Pods/ExpoRouter » libExpoRouter.a
+› Packaging expo-router Pods/ExpoRouter » libExpoRouter.a
+› Executing expo-router Pods/ExpoRouter » Copy generated compatibility header
+› Compiling Pods/Pods-Lampada » Pods-Lampada-dummy.m
+› Packaging Pods/Pods-Lampada » libPods-Lampada.a
+› Compiling Pods/Pods-Lampada » Pods-Lampada-dummy.m
+› Packaging Pods/Pods-Lampada » libPods-Lampada.a
+› Executing Lampada » [CP] Check Pods Manifest.lock
+› Executing Lampada » [Expo] Configure project
+› Compiling Lampada » Lampada_vers.c
+› Linking   Lampada » Lampada
+
+⚠️  (ios/Lampada.xcodeproj:)
+
+
+ignoring duplicate libraries: '-lc++'
+(warning truncated)
+› Linking   Lampada » Lampada
+› Executing Lampada » Bundle React Native code and images
+    Eager bundle does not match new options, bundling again.
+› Executing Lampada » [CP] Copy Pods Resources
+    not stripping binary because it is signed: /Users/maria/Library/Developer/Xcode/DerivedData/Lampada-gehztyibhocyfdajdtvhehendfdc/Build/Products/Release-iphonesimulator/ExpoWidgetsTarget.appex/ExpoWidgetsTarget.debug.dylibwarning: not stripping binary because it is signed: /Users/maria/Library/Developer/Xcode/DerivedData/Lampada-gehztyibhocyfdajdtvhehendfdc/Build/Products/Release-iphonesimulator/ExpoWidgetsTarget.appex/__preview.dylibwarning: not stripping binary because it is signed: /Users/maria/Library/Developer/Xcode/DerivedData/Lampada-gehztyibhocyfdajdtvhehendfdc/Build/Products/Release-iphonesimulator/ExpoWidgetsTarget.appex/ExpoWidgetsTarget (in target 'Lampada' from project 'Lampada')
+› Preparing Lampada » Info.plist
+› Executing Lampada » [CP] Embed Pods Frameworks
+› Generating debug Lampada » Lampada.app.dSYM
+› Signing   Lampada » Lampada.app
+› Build Succeeded
+
+› 0 error(s), and 4 warning(s)
+
+Waiting on http://localhost:8081
+› Installing /Users/maria/Library/Developer/Xcode/DerivedData/Lampada-gehztyibhocyfdajdtvhehendfdc/Build/Products/Release-iphonesimulator/Lampada.app
+› Installing on Pray Smoke iPhone 17 Pro
+› Opening on Pray Smoke iPhone 17 Pro (twinkler)
+› Opening twinkler://expo-development-client/?url=http%3A%2F%2F100.119.101.203%3A8081 on Pray Smoke iPhone 17 Pro
