@@ -507,7 +507,12 @@ server-side until its App Store listing is published. See ADR 0020.
 paths. Question generation, transcription, Scripture selection, language and
 translation catalogs, books, aligned audio, About contacts and update checks
 and AI-content reports all use this origin. Server-returned audio paths are still rebased onto that
-origin. The limited client key remains `EXPO_PUBLIC_AI_PROXY_KEY`.
+origin. `EXPO_PUBLIC_AI_PROXY_KEY` contains Bible-API's dedicated
+`LAMPADA_API_KEY` value, separate from Bible Garden and operations keys. The
+owner sets it manually in local `.env.local` and EAS `preview` and `production`
+(`development` before use); it is embedded in the build and must not enter git.
+Changing it requires a new Release/EAS build and reinstall, or a Metro restart
+for Debug.
 
 Only HTTP(S) origins without credentials, a path, query or fragment are valid;
 localhost/port origins are supported for development. Missing or malformed

@@ -28,7 +28,7 @@ case "$MODE" in
 
     npx eas-cli@latest env:list "$EAS_ENVIRONMENT" --format short > "$OUTPUT"
     if ! check_names_in_file "$OUTPUT"; then
-      echo "Configure the variables with 'eas env:set' first. Do not commit their values to git." >&2
+      echo "Configure the variables with 'eas env:create' first. Do not commit their values to git." >&2
       exit 1
     fi
     echo "✔ EAS environment '$EAS_ENVIRONMENT' contains the required runtime variables"
