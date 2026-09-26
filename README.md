@@ -30,7 +30,9 @@ FastAPI service. Requests contain `topic`, `stage` (`first`, `next`, `reflect`) 
 remain `{ "text": "..." }`. See [ADR-0019](architect/decisions/0019-structured-question-history.md).
 It routes each stage to a company-hosted model; neither model
 configuration nor system instructions are embedded into the app. To enable AI,
-copy `.env.example` to `.env.local` and set the client `X-API-Key` of the service.
+copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_AI_PROXY_KEY` to
+Bible-API's dedicated `LAMPADA_API_KEY` value. The owner supplies this value;
+never commit it or use the Bible Garden or operations key.
 That client key is visible in the built app and does not replace the server-side
 limits. Voice answers are sent only when "Transcribe" is pressed, as a separate
 request to `/api/ai/transcribe`. All requests use the server origin configured
@@ -58,8 +60,10 @@ year.
 `preview` does not read `.env.local`: that file is excluded from git and from the
 cloud archive. Before a preview build the command checks automatically that the
 required variables `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_AI_PROXY_KEY` are
-present and that the URL is a valid HTTP(S) origin. Set the same two names in
-each EAS environment used for builds.
+present and that the URL is a valid HTTP(S) origin. The owner sets the Lampada
+key value manually in local `.env.local` and the EAS `preview` and `production`
+environments; set it in EAS `development` before using that profile. These
+environments keep the variable name `EXPO_PUBLIC_AI_PROXY_KEY`.
 
 ```bash
 npm run env:check:local     # check the local Release build
@@ -77,14 +81,17 @@ reinstalled.
 
 Set `EXPO_PUBLIC_API_URL=https://api.bible.garden` (an origin only, without
 `/api` or an endpoint path). Local HTTP origins with a port are supported for
-emulators. The limited client key remains `EXPO_PUBLIC_AI_PROXY_KEY`.
+emulators. `EXPO_PUBLIC_AI_PROXY_KEY` contains Lampada's own application key
+(`LAMPADA_API_KEY` on Bible-API), embedded in each build. A key change requires
+restarting Metro for Debug or rebuilding and reinstalling Release/EAS builds.
 `lib/apiConfig.ts` defines paths for questions, transcription, Scripture,
 catalogs, audio, contacts and version checks. About displays the normalized
 base origin in test builds.
 
 When migrating an existing environment, replace `EXPO_PUBLIC_AI_PROXY_URL`,
 `EXPO_PUBLIC_AI_TRANSCRIBE_URL` and `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` with
-`EXPO_PUBLIC_API_URL`; keep the key unchanged. Legacy endpoint variables are
+`EXPO_PUBLIC_API_URL`; that earlier URL migration did not rename the key
+variable. Legacy endpoint variables are
 no longer read. Migrate EAS preview/production environments before their next
 build, then rebuild and reinstall. A local `.env.local` change requires
 restarting Metro for Debug and rebuilding for Release.

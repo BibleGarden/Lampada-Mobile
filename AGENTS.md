@@ -58,7 +58,10 @@ Shut a simulator down when you are done with it.
 - Always run `npm run env:check:preview` before any EAS preview build. Start the
   build itself through `npm run eas:preview`, not through a bare `eas build`.
 - Required runtime variables: `EXPO_PUBLIC_API_URL` (server origin only) and
-  `EXPO_PUBLIC_AI_PROXY_KEY`. Endpoint paths are defined in `lib/apiConfig.ts`;
+  `EXPO_PUBLIC_AI_PROXY_KEY`. The owner sets the latter to Bible-API's dedicated
+  `LAMPADA_API_KEY` value in `.env.local` and EAS `preview` and `production`;
+  set it in EAS `development` before use. Never commit or print that value.
+  Endpoint paths are defined in `lib/apiConfig.ts`;
   do not add separate URL variables for individual API methods.
 - If the preflight check fails, do not start the build. First state explicitly
   which names are missing and configure the chosen environment; never print the
@@ -71,3 +74,5 @@ Shut a simulator down when you are done with it.
   `EXPO_PUBLIC_*` variables, rather than as a different API URL.
 - After changing EAS variables, a new EAS build and a fresh install are
   mandatory: an already built JS bundle will not pick the variables up.
+- After changing the local key, restart Metro for Debug or rebuild and
+  reinstall a local Release build.
