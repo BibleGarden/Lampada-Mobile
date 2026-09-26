@@ -60,10 +60,48 @@ year.
 `preview` does not read `.env.local`: that file is excluded from git and from the
 cloud archive. Before a preview build the command checks automatically that the
 required variables `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_AI_PROXY_KEY` are
-present and that the URL is a valid HTTP(S) origin. The owner sets the Lampada
-key value manually in local `.env.local` and the EAS `preview` and `production`
-environments; set it in EAS `development` before using that profile. These
+present and that the URL is a valid HTTP(S) origin. Set the Lampada key in local
+`.env.local` and EAS `preview` and `production` using the procedure below; set
+it in EAS `development` before using that profile. These
 environments keep the variable name `EXPO_PUBLIC_AI_PROXY_KEY`.
+
+### Application key transfer
+
+After the Bible-API release, run the following as a temporary Bash script from
+this repository's root. It reads the production Lampada key over SSH without
+printing it, replaces the local value, and creates or updates the EAS values.
+`--force` replaces an existing variable. The owner copies the key into the
+password manager manually; never put its value in git, chat, or logs.
+
+```bash
+set +x
+set -euo pipefail
+umask 077
+test -f .env.local
+lampada_key="$(ssh bible.garden "sed -n 's/^LAMPADA_API_KEY=//p' /root/cep/bible-api/.env")"
+trap 'unset lampada_key' EXIT
+test "${#lampada_key}" -ge 32
+printf '%s' "$lampada_key" | node -e '
+  const fs = require("node:fs");
+  const path = ".env.local";
+  const key = fs.readFileSync(0, "utf8");
+  let env = fs.readFileSync(path, "utf8").replace(/^EXPO_PUBLIC_AI_PROXY_KEY=.*(?:\r?\n|$)/gm, "");
+  if (env && !env.endsWith("\n")) env += "\n";
+  fs.writeFileSync(path, env + `EXPO_PUBLIC_AI_PROXY_KEY=${key}\n`);
+'
+chmod 600 .env.local
+for environment in preview production development; do
+  npx eas-cli@latest env:create --environment "$environment" \
+    --name EXPO_PUBLIC_AI_PROXY_KEY --visibility sensitive \
+    --value "$lampada_key" --force
+  npx eas-cli@latest env:list "$environment" --format short | cut -d= -f1
+done
+```
+
+The final command lists names only. For a build targeting the local API, read
+`LAMPADA_API_KEY` from the local `Bible-API/.env` instead, so it matches that
+server. Restart Metro for Debug; rebuild and reinstall local Release or EAS
+builds after any key change.
 
 ```bash
 npm run env:check:local     # check the local Release build
