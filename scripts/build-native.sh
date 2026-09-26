@@ -10,7 +10,7 @@ case "$PLATFORM" in
   *) echo "Usage: $0 ios|android [expo run options]" >&2; exit 2 ;;
 esac
 
-node scripts/bump-version.mjs
+node scripts/bump-version.mjs test
 # Обновляем нативную версию и при уже существующей папке платформы.
 npx expo prebuild --platform "$PLATFORM"
 exec npx expo "run:$PLATFORM" "$@"
