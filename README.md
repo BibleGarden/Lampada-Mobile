@@ -137,16 +137,18 @@ restarting Metro for Debug and rebuilding for Release.
 ### Automatic app versions
 
 `app.json` → `expo.version` is the source of the app version. Each invocation of
-`npm run iphone`, `npm run ios`, `npm run android`, `npm run eas:preview` or
-`npm run eas:production` reserves the next patch before building:
-`1.0.0` → `1.0.1` → `1.0.2`. The major and minor numbers remain manual.
+`npm run eas:production` reserves the next two-part store version before
+building: `1.1` → `1.2`, dropping any patch (`1.1.3` → `1.2`). `npm run iphone`,
+`npm run ios`, `npm run android` and `npm run eas:preview` are test builds and
+reserve the next patch of the current store version: `1.2` → `1.2.1` → `1.2.2`.
+The major number remains manual.
 Required environment checks run before reserving a version for iPhone and EAS
 builds. A later failure consumes the number; gaps are expected.
 
 The About screen reads the installed native version, with a config fallback for
 web and Expo Go. Local build commands synchronize native configuration before
 compilation. EAS receives the incremented config in its source archive.
-EAS remote build numbers are separate from this user-facing patch version;
+EAS remote build numbers are separate from this user-facing version;
 the existing production build-number auto-increment remains enabled.
 
 Run builds sequentially from one checkout and preserve the updated `app.json`
@@ -189,7 +191,7 @@ npm run iphone
 The `scripts/deploy-iphone.sh` script does the rest by itself:
 
 1. checks the required variables in `.env.local`;
-2. reserves the next patch version;
+2. reserves the next test patch version;
 3. synchronizes the `ios/` folder through `expo prebuild`;
 4. syncs CocoaPods with the installed Expo modules;
 5. finds the connected iPhone (the UDID is detected automatically) and sets the signing team;

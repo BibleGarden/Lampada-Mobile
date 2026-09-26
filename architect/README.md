@@ -616,8 +616,11 @@ crash logs.
 
 ### Build version allocation
 
-The npm native and EAS build entry points reserve the next `expo.version` patch
-in `app.json` through `scripts/bump-version.mjs` before compilation or upload.
+The npm native and EAS build entry points reserve the next `expo.version` in
+`app.json` through `scripts/bump-version.mjs` before compilation or upload:
+production raises the minor and drops the patch (`1.1.3` → `1.2`), test builds
+raise the patch of the current store version (`1.2` → `1.2.1`). See
+[ADR-0034](decisions/0034-store-minor-test-patch-versions.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo
 config fallback for web and Expo Go. This matches the installed version used

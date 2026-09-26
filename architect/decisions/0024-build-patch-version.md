@@ -1,6 +1,6 @@
 # ADR 0024: Allocate a patch version for each build
 
-Status: Accepted
+Status: Superseded by ADR-0034
 
 ## Context
 

@@ -18,7 +18,7 @@ MODULE_CACHE="$BUILD_DIR/ModuleCache.noindex"
 echo "▶︎ Checking runtime variables for the local Release build…"
 bash scripts/check-runtime-env.sh local
 
-node scripts/bump-version.mjs
+node scripts/bump-version.mjs test
 
 # --- нативная папка ------------------------------------------------------
 # Синхронизируем конфигурацию и переводы разрешений даже при существующей ios/.

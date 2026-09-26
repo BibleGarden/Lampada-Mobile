@@ -51,7 +51,7 @@ implementation details do not need one.
 
 - [0023: Send skipped questions and respect server novelty](0023-skipped-question-history.md)
 
-- [0024: Allocate a patch version for each build](0024-build-patch-version.md)
+- [0024: Allocate a patch version for each build](0024-build-patch-version.md) — superseded by ADR-0034
 
 - [0025: Configure one API origin](0025-single-api-origin.md)
 
@@ -70,3 +70,5 @@ implementation details do not need one.
 - [0032: Ignore the system font size](0032-ignore-system-font-size.md)
 
 - [0033: Bound the music, the duration and the streak day by the prayer time](0033-prayer-time-bounds-music-and-day.md)
+
+- [0034: Raise the minor for store builds and the patch for test builds](0034-store-minor-test-patch-versions.md)
