@@ -25,6 +25,10 @@ Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
 The flame's Reanimated clock stops when the app leaves the active state and
 restarts on activation, avoiding Skia path creation while it is backgrounded.
+The session timer halo is a static SVG gradient inside an `Animated.View`
+whose scale and opacity animate on the UI thread. A Skia halo stalled typing in
+the answer sheet: the screen re-renders every second with the timer, and each
+Canvas update competed with the text input for the frame.
 
 ## Technology outline
 

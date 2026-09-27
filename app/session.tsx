@@ -19,12 +19,16 @@ import Animated, {
   FadeOut,
   cancelAnimation,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Canvas, Circle, Group, RadialGradient, vec } from '@shopify/react-native-skia';
+import Svg, {
+  Circle as SvgCircle,
+  Defs,
+  RadialGradient as SvgRadialGradient,
+  Stop,
+} from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
@@ -785,7 +789,7 @@ function MusicPulse({ size }: { size: number }) {
 }
 
 // тёплое дыхание за кольцом — halo 7s из прототипа
-function TimerHalo({ size: ringSize }: { size: number }) {
+const TimerHalo = React.memo(function TimerHalo({ size: ringSize }: { size: number }) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withRepeat(
@@ -798,33 +802,39 @@ function TimerHalo({ size: ringSize }: { size: number }) {
   const haloPad = Math.min(sc(48), ringSize * 0.28);
   const size = ringSize + haloPad * 2;
   const r = size / 2;
-  const transform = useDerivedValue(() => [{ scale: 1 + t.value * 0.16 }]);
-  const opacity = useDerivedValue(() => 0.62 + t.value * 0.38);
-  const c = vec(r, r);
+  const gradientId = React.useId();
+  // Градиент статичен; на UI-потоке меняются только transform и opacity слоя.
+  const haloStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + t.value * 0.16 }],
+    opacity: 0.62 + t.value * 0.38,
+  }));
   return (
-    <Canvas
+    <Animated.View
       pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: -haloPad,
-        left: -haloPad,
-        width: size,
-        height: size,
-      }}
+      style={[
+        {
+          position: 'absolute',
+          top: -haloPad,
+          left: -haloPad,
+          width: size,
+          height: size,
+        },
+        haloStyle,
+      ]}
     >
-      <Group origin={c} transform={transform} opacity={opacity}>
-        <Circle cx={r} cy={r} r={r}>
-          <RadialGradient
-            c={c}
-            r={r}
-            colors={['rgba(230,162,60,.14)', 'rgba(230,162,60,0)']}
-            positions={[0, 0.68]}
-          />
-        </Circle>
-      </Group>
-    </Canvas>
+      <Svg width={size} height={size}>
+        <Defs>
+          <SvgRadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="#e6a23c" stopOpacity={0.14} />
+            <Stop offset="68%" stopColor="#e6a23c" stopOpacity={0} />
+            <Stop offset="100%" stopColor="#e6a23c" stopOpacity={0} />
+          </SvgRadialGradient>
+        </Defs>
+        <SvgCircle cx={r} cy={r} r={r} fill={`url(#${gradientId})`} />
+      </Svg>
+    </Animated.View>
   );
-}
+});
 
 function AdjustBtn({
   ringSize,
