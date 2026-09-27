@@ -106,7 +106,7 @@ upgrading it requires rebuilding the native app.
 | `lib/theme.ts` | Visual tokens, `useStyles` - rebuilding the styles when the window geometry changes (ADR-0011), `column()` - the content column of the single layout (ADR-0012) |
 | `assets/audio/` | The local music files and the record of their origin and licenses |
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
-| `store/` | App Store screenshots |
+| `store/` | App Store screenshots and preview videos |
 
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
@@ -636,6 +636,10 @@ test details. This is independent of Debug/Release optimization; local iPhone
 installs remain standalone Release builds. See [ADR-0026](decisions/0026-test-build-label.md).
 The App Store video build script sets `EXPO_PUBLIC_APPSTORE_VIDEO=1` in its
 isolated simulator Release build.
+The preview runner uses one capture and verification pipeline for iPhone and
+iPad. `store/video/pacing.json` selects the named simulator, portrait output
+size, HID typing interval, montage typing speed, and visual verification regions.
+AXe recalibrates tap coordinates for each locale and device before recording.
 On reflection, focus on the takeaway input then pauses the Skia flame at its
 current frame until blur, keeping hardware-keyboard typing responsive in the
 simulator video. Ordinary builds do not set this flag, so the flame continues

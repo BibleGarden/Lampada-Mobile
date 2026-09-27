@@ -5,14 +5,17 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 LOCALE="${1:-}"
-DEVICE_NAME='Lampada AppStore UK iPhone 17 Pro Max'
+DEVICE="${PRAY_VIDEO_DEVICE:?Set PRAY_VIDEO_DEVICE to a configured device}"
 FIXTURE='store/video/demo-content.json'
 MOCK_PORT=9086
 MOCK_URL="http://127.0.0.1:$MOCK_PORT"
-REVIEW_PADDING="$(python3 - <<'PY'
+IFS=$'\t' read -r DEVICE_NAME OUTPUT_WIDTH OUTPUT_HEIGHT REVIEW_PADDING <<< "$(python3 - "$DEVICE" <<'PY'
 import json
+import sys
 from pathlib import Path
-print(json.loads(Path('store/video/pacing.json').read_text())['review_tail_padding_seconds'])
+pacing = json.loads(Path('store/video/pacing.json').read_text())
+device = pacing['devices'][sys.argv[1]]
+print(device['simulator'], *device['output_size'], pacing['review_tail_padding_seconds'], sep='\t')
 PY
 )"
 CAPTURE_VALUES="$(python3 - "$LOCALE" <<'PY'
@@ -199,12 +202,19 @@ udid, output, expected_label = sys.argv[1:]
 deadline = time.monotonic() + 30
 while True:
     result = subprocess.run(
-        ['axe', 'describe-ui', '--udid', udid, '--point', '220,852'],
+        ['axe', 'describe-ui', '--udid', udid],
         capture_output=True, text=True,
     )
     if result.returncode == 0:
         data = json.loads(result.stdout)
-        if data.get('AXLabel') == expected_label and data.get('enabled'):
+        def nodes(value):
+            if isinstance(value, list):
+                for child in value:
+                    yield from nodes(child)
+            elif isinstance(value, dict):
+                yield value
+                yield from nodes(value.get('children', []))
+        if any(item.get('AXLabel') == expected_label and item.get('enabled') for item in nodes(data)):
             Path(output).write_text(result.stdout)
             time.sleep(1)
             break
@@ -256,7 +266,7 @@ await_home calibration
 record_stage boot_seed_calibration "$BOOT_SEED_START"
 CALIBRATION_START="$(now_seconds)"
 set +e
-python3 scripts/run-appstore-video-take.py --mode calibrate --locale "$LOCALE" --pacing store/video/pacing.json \
+python3 scripts/run-appstore-video-take.py --mode calibrate --locale "$LOCALE" --device "$DEVICE" --pacing store/video/pacing.json \
   --udid "$UDID" --log-dir "$LOG_DIR/calibration" --coords "$COORDS" --fixture "$FIXTURE" --keyboard-map "$KEYBOARD_MAP" \
   > "$LOG_DIR/calibration.log" 2>&1
 calibration_rc=$?
@@ -297,7 +307,7 @@ plutil -extract CFBundleShortVersionString raw -o - "$APP_PATH/Info.plist" > "$L
 plutil -extract CFBundleVersion raw -o - "$APP_PATH/Info.plist" > "$LOG_DIR/build-number.txt"
 shasum -a 256 "$APP_PATH/main.jsbundle" > "$LOG_DIR/build-jsbundle-sha256.txt"
 set +e
-python3 scripts/run-appstore-video-take.py --mode keyboard-preflight --locale "$LOCALE" --pacing store/video/pacing.json \
+python3 scripts/run-appstore-video-take.py --mode keyboard-preflight --locale "$LOCALE" --device "$DEVICE" --pacing store/video/pacing.json \
   --udid "$UDID" --log-dir "$LOG_DIR/keyboard-preflight" --coords "$COORDS" --fixture "$FIXTURE" --keyboard-map "$KEYBOARD_MAP" \
   > "$LOG_DIR/keyboard-preflight.log" 2>&1
 keyboard_rc=$?
@@ -332,7 +342,7 @@ for name in sys.argv[1:]:
 PY
   record_origin="$(python3 -c 'import time; print(time.monotonic())')"
   set +e
-  python3 scripts/run-appstore-video-take.py --mode record --locale "$LOCALE" --pacing store/video/pacing.json --udid "$UDID" \
+  python3 scripts/run-appstore-video-take.py --mode record --locale "$LOCALE" --device "$DEVICE" --pacing store/video/pacing.json --udid "$UDID" \
     --log-dir "$LOG_DIR/recorded" --coords "$COORDS" --fixture "$FIXTURE" --keyboard-map "$KEYBOARD_MAP" \
     --record-origin "$record_origin" --markers "$host_markers" > "$flow_log" 2>&1
   flow_rc=$?
@@ -351,7 +361,7 @@ PY
   record_stage record "$record_start"
   verify_start="$(now_seconds)"
   set +e
-  python3 scripts/run-appstore-video-take.py --mode verify --locale "$LOCALE" --pacing store/video/pacing.json --udid "$UDID" \
+  python3 scripts/run-appstore-video-take.py --mode verify --locale "$LOCALE" --device "$DEVICE" --pacing store/video/pacing.json --udid "$UDID" \
     --log-dir "$LOG_DIR/verification" --coords "$COORDS" --fixture "$FIXTURE" --keyboard-map "$KEYBOARD_MAP" > "$LOG_DIR/verification.log" 2>&1
   verify_rc=$?
   set -e
@@ -379,10 +389,10 @@ PY
   review_duration="$(python3 -c 'import sys; print(float(sys.argv[1]) + float(sys.argv[2]))' "$duration" "$REVIEW_PADDING")"
   printf '%s\n' "$review_duration" > "$LOG_DIR/${LOCALE}-full.review-duration"
   ffmpeg -y -v error -i "$raw" -f lavfi -i anullsrc=r=48000:cl=stereo \
-    -vf "fps=30,scale=886:1920:force_original_aspect_ratio=increase,crop=886:1920,setsar=1,tpad=stop_mode=clone:stop_duration=$REVIEW_PADDING" \
+    -vf "fps=30,scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=increase,crop=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT},setsar=1,tpad=stop_mode=clone:stop_duration=$REVIEW_PADDING" \
     -map 0:v:0 -map 1:a:0 -t "$review_duration" -c:v libx264 -preset slow -crf 18 \
-    -maxrate 12M -bufsize 16M -profile:v high -level 4.2 -pix_fmt yuv420p \
-    -c:a aac -b:a 128k -ac 2 -movflags +faststart "$review" \
+    -maxrate 12M -bufsize 16M -profile:v high -level 4.0 -pix_fmt yuv420p \
+    -c:a aac -b:a 256k -ac 2 -movflags +faststart "$review" \
     > "$LOG_DIR/${LOCALE}-full.review.log" 2>&1
   ffmpeg -v error -i "$review" -f null - > "$LOG_DIR/${LOCALE}-full.review-decode.log" 2>&1
   [ ! -s "$LOG_DIR/${LOCALE}-full.review-decode.log" ] || { cat "$LOG_DIR/${LOCALE}-full.review-decode.log" >&2; exit 1; }

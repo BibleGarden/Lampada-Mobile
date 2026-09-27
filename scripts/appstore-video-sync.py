@@ -57,6 +57,15 @@ def repaired_onset(raw_pts: float, original: list[float], repaired: list[float])
     return repaired[index]
 
 
+def measured_frame_interval(original: list[float]) -> float:
+    intervals = sorted(current - previous for previous, current in zip(original, original[1:])
+                       if current > previous)
+    if not intervals:
+        raise ValueError("Raw video has no forward frame intervals")
+    # Редкие паузы не должны расширять допуск; короткие пакетные кадры не должны его сужать.
+    return intervals[math.ceil(0.95 * len(intervals)) - 1]
+
+
 def tap_circle_onset(raw: Path, marker_time: float, point: list[float],
                      scale: float, settings: dict, log_dir: Path, label: str) -> dict:
     size = round(settings["crop_radius_points"] * scale * 2)
@@ -115,6 +124,8 @@ def main() -> None:
     if any(not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0
            for value in settings.values()):
         raise ValueError("Clock sync settings must be positive finite values")
+    if type(settings["sync_tolerance_frames"]) is not int:
+        raise ValueError("sync_tolerance_frames must be a positive integer")
     host = json.loads(args.host_markers.read_text())
     markers = {item["name"]: item["time"] for item in host["markers"]}
     calibrated = json.loads(args.coords.read_text())
@@ -125,19 +136,32 @@ def main() -> None:
         raise ValueError("Video pixels and calibrated accessibility points have different scales")
     log_dir = args.report.parent / "clock-sync"
     log_dir.mkdir(parents=True, exist_ok=False)
+    original_pts, repaired_pts, resets = repaired_frame_times(args.raw)
+    frame_interval = measured_frame_interval(original_pts)
+    max_disagreement = settings["sync_tolerance_frames"] * frame_interval
     taps = [
         tap_circle_onset(args.raw, markers[marker], calibrated["coordinates"][element],
                          scale, settings, log_dir, marker)
         for marker, element in TAPS
     ]
     disagreement = abs(taps[0]["offset_seconds"] - taps[1]["offset_seconds"])
-    max_disagreement = settings["max_offset_disagreement_frames"] / settings["frame_rate"]
+    report = {"status": "checking", "raw_size": [native_width, native_height],
+              "accessibility_scale": scale, "raw_pts_resets": resets,
+              "raw_frame_interval_p95_seconds": round(frame_interval, 6),
+              "sync_tolerance_frames": settings["sync_tolerance_frames"],
+              "sync_tolerance_seconds": round(max_disagreement, 6),
+              "first_tap_offset_seconds": round(taps[0]["offset_seconds"], 6),
+              "second_tap_offset_seconds": round(taps[1]["offset_seconds"], 6),
+              "second_tap_disagreement_seconds": round(disagreement, 6), "taps": taps}
     if disagreement > max_disagreement:
+        report.update(status="failed", failure="first two tap offsets disagree")
+        args.report.write_text(json.dumps(report, indent=2) + "\n")
         raise RuntimeError(
-            f"ShowTime clock offsets disagree by {disagreement:.4f}s "
-            f"(limit {max_disagreement:.4f}s); see {log_dir}"
+            f"ShowTime clock offsets {taps[0]['offset_seconds']:+.4f}s and "
+            f"{taps[1]['offset_seconds']:+.4f}s disagree by {disagreement:.4f}s "
+            f"(tolerance {max_disagreement:.4f}s from "
+            f"{settings['sync_tolerance_frames']} measured raw frames); see {args.report}"
         )
-    original_pts, repaired_pts, resets = repaired_frame_times(args.raw)
     offset = repaired_onset(taps[0]["video_pts_seconds"], original_pts, repaired_pts) - markers[TAPS[0][0]]
     answer = tap_circle_onset(
         args.raw, markers["answer_open_down"], calibrated["coordinates"]["dock-answer-button"],
@@ -145,17 +169,30 @@ def main() -> None:
     )
     answer_video_time = repaired_onset(answer["video_pts_seconds"], original_pts, repaired_pts)
     answer_adjustment = answer_video_time - (markers["answer_open_down"] + offset)
+    report.update(offset_seconds=round(offset, 6), answer_marker_adjustment_seconds=round(answer_adjustment, 6))
+    report["taps"].append(answer)
     if abs(answer_adjustment) > settings["max_first_outro_adjustment_seconds"]:
+        report.update(status="failed", failure="first tap after AXe batch split differs")
+        args.report.write_text(json.dumps(report, indent=2) + "\n")
         raise RuntimeError(f"First tap after AXe batch split differs by {answer_adjustment:.4f}s")
     later = tap_circle_onset(
         args.raw, markers["reflection_input_down"], calibrated["coordinates"]["reflection-input"],
         scale, settings, log_dir, "reflection_input_down",
     )
     later_video_time = repaired_onset(later["video_pts_seconds"], original_pts, repaired_pts)
-    later_disagreement = abs(later_video_time - (markers["reflection_input_down"] + offset))
+    later_offset = later_video_time - markers["reflection_input_down"]
+    later_disagreement = abs(later_offset - offset)
+    report.update(later_tap_offset_seconds=round(later_offset, 6),
+                  later_tap_disagreement_seconds=round(later_disagreement, 6))
+    report["taps"].append(later)
     if later_disagreement > max_disagreement:
-        raise RuntimeError(f"Later ShowTime circle differs from the aligned clock by "
-                           f"{later_disagreement:.4f}s (limit {max_disagreement:.4f}s)")
+        report.update(status="failed", failure="later tap offset differs")
+        args.report.write_text(json.dumps(report, indent=2) + "\n")
+        raise RuntimeError(f"Later ShowTime offset {later_offset:+.4f}s differs from "
+                           f"initial offset {offset:+.4f}s by {later_disagreement:.4f}s "
+                           f"(tolerance {max_disagreement:.4f}s from "
+                           f"{settings['sync_tolerance_frames']} measured raw frames); "
+                           f"see {args.report}")
     corrected = {**host, "source": "ShowTime-aligned monotonic video timeline",
                  "clock_offset_seconds": round(offset, 6),
                  "markers": [{**item, "time": round(item["time"] + offset +
@@ -163,13 +200,7 @@ def main() -> None:
                                                  {"answer_open_down", "answer_open_up"} else 0), 6)}
                              for item in host["markers"]]}
     args.video_markers.write_text(json.dumps(corrected, ensure_ascii=False, indent=2) + "\n")
-    report = {"offset_seconds": round(offset, 6),
-              "second_tap_disagreement_seconds": round(disagreement, 6),
-              "maximum_disagreement_seconds": round(max_disagreement, 6),
-              "raw_size": [native_width, native_height], "accessibility_scale": scale,
-              "raw_pts_resets": resets, "answer_marker_adjustment_seconds": round(answer_adjustment, 6),
-              "later_tap_disagreement_seconds": round(later_disagreement, 6),
-              "taps": [*taps, answer, later]}
+    report["status"] = "passed"
     args.report.write_text(json.dumps(report, indent=2) + "\n")
     print(f"Aligned AXe markers to video PTS by {offset:+.4f}s; "
           f"second tap differs by {disagreement:.4f}s")

@@ -58,8 +58,11 @@ class Driver:
         pacing = json.loads(args.pacing.read_text())
         if pacing.get("schema") != 1:
             raise ValueError("Unsupported video pacing schema")
+        device = pacing["devices"][args.device]
+        self.output_size = device["output_size"]
+        self.question_crop = device["verification_crops"]["first_question"]
         self.pause = pacing["recording_pause_seconds"]
-        self.typing_delay = pacing["typing_delay_seconds"]
+        self.typing_delay = device["typing_delay_seconds"]
         self.special_pause = pacing["special_key_pause_seconds"]
         self.threshold_hold = pacing["threshold_hold_seconds"]
         self.marker_settle = pacing["marker_settle_seconds"]
@@ -156,10 +159,12 @@ class Driver:
         image = path.read_bytes()
         if not image.startswith(b"\x89PNG"):
             raise RuntimeError(f"Question screenshot is not PNG: {path}")
-        x, y, width, height = self.question_capture["first_question_crop"]
+        x, y, width, height = self.question_crop
+        output_width, output_height = self.output_size
         decoded = subprocess.run(
             ["ffmpeg", "-v", "error", "-i", "pipe:0", "-vf",
-             f"scale=886:1920,crop={width}:{height}:{x}:{y},format=gray",
+             f"scale={output_width}:{output_height}:force_original_aspect_ratio=increase,"
+             f"crop={output_width}:{output_height},crop={width}:{height}:{x}:{y},format=gray",
              "-frames:v", "1", "-f", "rawvideo", "pipe:1"],
             input=image, capture_output=True,
         )
@@ -169,7 +174,7 @@ class Driver:
 
     def wait_question_visible(self) -> None:
         reference = self.question_reference_path.read_bytes()
-        width, height = self.question_capture["first_question_crop"][2:]
+        width, height = self.question_crop[2:]
         if len(reference) != width * height:
             raise RuntimeError("Calibrated first-question frame has an invalid size")
         deadline = time.monotonic() + self.question_capture["first_question_visibility_timeout_seconds"]
@@ -285,9 +290,6 @@ class Driver:
         self.tap("start-prayer-button")
         self.tap("setup-goal-input")
         self.ensure_keyboard_layout()
-        self.command("setup-back", ["axe", "tap", "-x", "45", "-y", "100",
-                                    "--tap-style", "physical", "--udid", self.udid])
-        self.locate("start-prayer-button", timeout=5)
 
     def calibrate(self):
         intention, answer, takeaway = self.copy
@@ -479,6 +481,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("calibrate", "keyboard-preflight", "record", "verify"), required=True)
     parser.add_argument("--locale", required=True)
+    parser.add_argument("--device", choices=("iphone", "ipad"), required=True)
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--pacing", type=Path, required=True)
     parser.add_argument("--keyboard-map", type=Path, required=True)

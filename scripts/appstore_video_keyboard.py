@@ -50,10 +50,11 @@ def validate_fixture(fixture: dict, layouts: dict, pacing: dict) -> None:
         expected_probe = item["capture"]["keyboard_probe"]
         if layout["plain"].get("22") != expected_probe:
             raise ValueError(f"Keyboard probe differs from the system layout for {locale}")
-        for field in ("intention", "answer", "takeaway"):
-            try:
-                typing_steps(item["typed"][field], layout,
-                             pacing["typing_delay_seconds"]["reflection" if field == "takeaway" else field],
-                             pacing["special_key_pause_seconds"])
-            except (KeyError, ValueError) as error:
-                raise ValueError(f"Unmappable {locale}.{field}: {error}") from error
+        for device, settings in pacing["devices"].items():
+            for field in ("intention", "answer", "takeaway"):
+                try:
+                    typing_steps(item["typed"][field], layout,
+                                 settings["typing_delay_seconds"]["reflection" if field == "takeaway" else field],
+                                 pacing["special_key_pause_seconds"])
+                except (KeyError, ValueError) as error:
+                    raise ValueError(f"Unmappable {device}.{locale}.{field}: {error}") from error
