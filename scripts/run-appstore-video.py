@@ -113,8 +113,10 @@ def preflight(work: Path, env: dict[str, str]) -> tuple[str, Path]:
         if shutil.which(name, path=env["PATH"]) is None:
             raise RuntimeError(f"Missing {name}; {hint}")
     if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
+        # pod install внутри prebuild падает на Encoding::CompatibilityError без UTF-8 локали
         run(["npx", "expo", "prebuild", "--platform", "ios"],
-            work / "preflight/prebuild.log", {**env, **MOCK_ENV})
+            work / "preflight/prebuild.log",
+            {**env, **MOCK_ENV, "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"})
         if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
             raise RuntimeError("Expo prebuild completed without creating ios/Lampada.xcworkspace")
     version = run(["axe", "--version"], work / "preflight/axe.log")
