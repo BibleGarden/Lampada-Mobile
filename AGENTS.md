@@ -13,6 +13,19 @@
   record a new significant architectural decision as an ADR in
   `architect/decisions/`.
 
+# Git workflow
+
+- Start changes on a branch from the latest `main`. Never commit or push
+  directly to `main`, including version bumps and other mechanical changes.
+- Submit every change through a PR. Review the final branch revision and
+  address actionable findings before asking the owner to approve the merge.
+- Give the owner the PR link, check results, and remaining risks. Do not merge
+  the PR, enable auto-merge, or otherwise put its changes into `main` until the
+  owner explicitly approves merging that PR. Approval to do the work or open
+  the PR is not merge approval.
+- After an approved merge, update local `main` and remove the merged local
+  branch and any worktree after checking for uncommitted or unmerged changes.
+
 # Testing changes
 
 - When app behavior changes, update the applicable unit tests, Maestro flows,
