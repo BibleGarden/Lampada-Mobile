@@ -5,13 +5,13 @@
       "simulator": "Lampada AppStore UK iPhone 17 Pro Max",
       "output_size": [886, 1920],
       "typing_delay_seconds": {
-        "intention": 0.065,
-        "answer": 0.065,
+        "intention": 0.085,
+        "answer": 0.085,
         "reflection": 0.12
       },
       "typing_montage_speed_after": {
-        "intention_typing_start": 2.5,
-        "answer_typing_start": 2.5,
+        "intention_typing_start": 3.25,
+        "answer_typing_start": 3.25,
         "reflection_typing_start": 2.8
       },
       "verification_crops": {

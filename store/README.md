@@ -56,13 +56,17 @@ range, H.264 High up to Level 4.0, 30 fps maximum, and stereo AAC in its
 [App preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-preview-specifications/)
 on 2026-09-27. The device profile supplies the simulator name, output size,
 and verification crops for the first question, three typing fields, and flame.
-It also sets HID key intervals and typing-only montage speed. iPad uses 100 ms
-for intention and answer input and 3.8× montage speed; iPhone keeps 65 ms and
-2.5×. On 2026-09-27, a short iPad recording of the Russian intention measured
+It also sets HID key intervals and typing-only montage speed. For intention
+and answer, iPad uses 100 ms and 3.8×; iPhone uses 85 ms and 3.25×. Both
+profiles display approximately 26 ms per typed character. On 2026-09-27, a
+short iPad recording of the Russian intention measured
 17, 25, 25, and 25 visible updates (19 required) at 65, 85, 100, and 120 ms,
 respectively. The 100 ms take had a 133 ms maximum gap, giving 117 ms of margin
-below the 250 ms gate; 85 ms had a 200 ms maximum gap. The two montage settings
-give approximately the same displayed interval per typed character.
+below the 250 ms gate; 85 ms had a 200 ms maximum gap. On the named iPhone,
+65, 85, and 100 ms yielded 25, 27, and 27 updates (19 required), with maximum
+gaps of 167, 133, and 133 ms. The 85 ms interval is the fastest with more than
+100 ms of margin to the gap gate; earlier full iPhone runs at 65 ms needed
+multiple takes.
 Raw footage, the uncut review copy, frames, full logs, exit codes, typing
 metrics, and `pipeline-report.json` are kept under the ignored
 `store/video/runs/<timestamp>/` directory, with separate attempt directories
@@ -121,8 +125,10 @@ App Store Connect.
 ### Known issues
 
 - Simulator recording can stall for 500–650 ms between visible typing updates,
-  most often in English (observed in raw typing metrics on 2026-09-27).
-  The quality gate automatically records up to three takes. If all fail,
+  historically most often in English at the 65 ms iPhone key interval
+  (raw typing metrics, 2026-09-27). With the 85 ms iPhone profile, ru, uk, and
+  en each passed their first full capture on 2026-09-27. The quality gate still
+  records up to three takes if a recording stalls. If all fail,
   inspect `pipeline-report.json` for each attempt's
   `quality_rejected` reasons and the typing metrics under `frames/<locale>/`;
   try again later on an idle machine or reboot the named simulator before a new
