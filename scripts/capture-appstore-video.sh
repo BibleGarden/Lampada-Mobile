@@ -79,8 +79,8 @@ print(items[0]["state"])
 
 stop_recording() {
   if [ -n "$RECORD_PID" ]; then
-    kill -INT "$RECORD_PID"
-    wait "$RECORD_PID"
+    kill -INT "$RECORD_PID" 2>/dev/null || true
+    wait "$RECORD_PID" || true
     RECORD_PID=''
   fi
 }
@@ -89,16 +89,17 @@ cleanup() {
   rc=$?
   trap - EXIT
   if [ -n "$RECORD_PID" ]; then
-    kill -INT "$RECORD_PID" 2>/dev/null
-    wait "$RECORD_PID" 2>/dev/null
+    kill -INT "$RECORD_PID" 2>/dev/null || true
+    wait "$RECORD_PID" 2>/dev/null || true
   fi
   if [ -n "$MOCK_PID" ]; then
     kill -TERM "$MOCK_PID" 2>/dev/null || true
     wait "$MOCK_PID" 2>/dev/null || true
   fi
-  if [ "$(sim_state)" = Booted ]; then
-    xcrun simctl status_bar "$UDID" clear
-    xcrun simctl shutdown "$UDID"
+  state="$(sim_state)" || state=''
+  if [ "$state" = Booted ]; then
+    xcrun simctl status_bar "$UDID" clear || true
+    xcrun simctl shutdown "$UDID" || true
   fi
   exit "$rc"
 }

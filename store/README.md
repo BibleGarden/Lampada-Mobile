@@ -15,15 +15,18 @@ python3 scripts/run-appstore-video.py ru
 
 Use `uk`, `en`, or `all` instead of `ru`. The script checks its tools,
 exports the current JS with the mock build variables and compares its SHA-256
-with the installed simulator app. A matching bundle skips the Release build
+and a fingerprint of the generated iOS project and locked native dependencies
+with the installed simulator app. Both must match to skip the Release build
 and installation. Otherwise it uses a matching cached app or rebuilds and
-installs. It creates and installs a SQLite fixture, calibrates AXe,
+installs. If the native iOS workspace is missing, the script runs
+`npx expo prebuild --platform ios` first and stops if prebuild fails. It creates
+and installs a SQLite fixture, calibrates AXe,
 records one continuous take, edits it, and verifies the final video. A take
 rejected only by recording quality checks is automatically recorded again,
 up to `verification.max_capture_attempts` in `video/pacing.json` (currently 3).
 Retakes reuse the build and calibration, restore the original seed database,
 and keep separate logs and results for every attempt. Build, seed, text,
-marker, sync, and App Store format failures stop immediately. A final MP4 is
+marker, sync, configured pause, and App Store format failures stop immediately. A final MP4 is
 replaced only after all hard checks pass. The simulator is shut down and the
 mock server and recorder are stopped on exit.
 
@@ -33,9 +36,6 @@ simulator, FFmpeg (`brew install ffmpeg`), and AXe **1.8.0**
 (`brew install cameroncooke/axe/axe`). The script builds ShowTime from
 commit `8fdd276e8cbf7281d6bb372e7caf990397d3c2e9` with the short-tap
 indicator patch; Git and network access are needed on the first run.
-The native `ios/` project must already exist. If it is missing, run
-`npx expo prebuild --platform ios` before the video command; the video script
-fails with this hint instead of generating native files.
 No EAS or `.env.local` values are used. The build sets a local mock URL,
 non-secret mock key, and `EXPO_PUBLIC_APPSTORE_VIDEO=1`.
 
@@ -83,7 +83,9 @@ must stay within the bounds in
 `video/pacing.json`. The montage can skip intermediate typing frames when it
 speeds up a segment. The report and final console summary record each field's
 raw and final maximum and p95 typing gaps, holds, and flame motion without
-failing on small timing differences. Simulator recording varies by about one
+failing on small timing differences. The 150 ms typing smoothness expectation
+in ANS-034 remains a reported metric, not the video pipeline's hard gate.
+Simulator recording varies by about one
 30 fps frame;
 question visibility detection is coarser still. Ordinary builds keep the
 animated flame. Review the uncut copy and final video before submitting to

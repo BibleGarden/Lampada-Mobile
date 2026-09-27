@@ -22,6 +22,7 @@ AXE_VERSION = "1.8.0"
 MOCK_ENV = {"EXPO_NO_DOTENV": "1", "EXPO_PUBLIC_API_URL": "http://127.0.0.1:9086",
             "EXPO_PUBLIC_AI_PROXY_KEY": "video-preview-mock", "EXPO_PUBLIC_BUILD_CHANNEL": "test",
             "EXPO_PUBLIC_APPSTORE_VIDEO": "1"}
+NATIVE_FINGERPRINT_FILE = "appstore-video-native.sha256"
 
 
 class QualityGateFailure(RuntimeError):
@@ -63,6 +64,26 @@ def source_hash() -> str:
     return digest.hexdigest()
 
 
+def native_hash() -> str:
+    """Fingerprint generated iOS sources and locked native dependencies."""
+    ios = ROOT / "ios"
+    if not (ios / "Lampada.xcworkspace").is_dir():
+        raise RuntimeError("Native iOS workspace is missing after prebuild")
+    paths = [path for path in ios.rglob("*") if path.is_file()
+             and not any(part in {"Pods", "build", "DerivedData", "xcuserdata"}
+                         for part in path.relative_to(ios).parts)
+             and path.name != ".DS_Store"]
+    paths += [ROOT / name for name in ("package.json", "package-lock.json", "app.json")]
+    paths += [path for path in (ROOT / "modules").rglob("*") if path.is_file()]
+    digest = hashlib.sha256()
+    for path in sorted(set(paths)):
+        if not path.is_file():
+            raise RuntimeError(f"Native dependency input is missing: {path}")
+        digest.update(str(path.relative_to(ROOT)).encode() + b"\0")
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
@@ -84,8 +105,6 @@ def pipeline_hash() -> str:
 
 
 def preflight(work: Path, env: dict[str, str]) -> tuple[str, Path]:
-    if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
-        raise RuntimeError("Missing ios/Lampada.xcworkspace. Run: npx expo prebuild --platform ios")
     for name, hint in (("axe", "brew install cameroncooke/axe/axe"),
                        ("ffmpeg", "brew install ffmpeg"), ("ffprobe", "brew install ffmpeg"),
                        ("xcrun", "install Xcode"), ("xcodebuild", "install Xcode"),
@@ -93,6 +112,11 @@ def preflight(work: Path, env: dict[str, str]) -> tuple[str, Path]:
                        ("grep", "install macOS command-line tools")):
         if shutil.which(name, path=env["PATH"]) is None:
             raise RuntimeError(f"Missing {name}; {hint}")
+    if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
+        run(["npx", "expo", "prebuild", "--platform", "ios"],
+            work / "preflight/prebuild.log", {**env, **MOCK_ENV})
+        if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
+            raise RuntimeError("Expo prebuild completed without creating ios/Lampada.xcworkspace")
     version = run(["axe", "--version"], work / "preflight/axe.log")
     if version != AXE_VERSION:
         raise RuntimeError(f"AXe {AXE_VERSION} required, found {version!r}; see store/README.md")
@@ -139,6 +163,8 @@ def installed_app(work: Path) -> Path | None:
 
 def get_app(work: Path, scratch: Path, env: dict[str, str]) -> tuple[Path, float, str, bool]:
     start = time.monotonic()
+    native = native_hash()
+    (work / "expected-native.sha256").write_text(native + "\n")
     probe = work / "bundle-probe"
     probe.mkdir()
     run(["npx", "expo", "export:embed", "--platform", "ios", "--dev", "false",
@@ -147,12 +173,16 @@ def get_app(work: Path, scratch: Path, env: dict[str, str]) -> tuple[Path, float
     expected = sha256(probe / "main.jsbundle")
     (work / "expected-jsbundle.sha256").write_text(expected + "\n")
     installed = installed_app(work)
-    if installed and sha256(installed / "main.jsbundle") == expected:
+    if (installed and sha256(installed / "main.jsbundle") == expected
+            and (installed / NATIVE_FINGERPRINT_FILE).is_file()
+            and (installed / NATIVE_FINGERPRINT_FILE).read_text().strip() == native):
         return installed, time.monotonic() - start, "installed_reused", True
-    fingerprint = source_hash()
+    fingerprint = hashlib.sha256((source_hash() + native).encode()).hexdigest()
     cache = scratch / "cache" / fingerprint
     app = cache / "Lampada-video-mock.app"
-    if (app / "main.jsbundle").is_file() and sha256(app / "main.jsbundle") == expected:
+    if ((app / "main.jsbundle").is_file() and sha256(app / "main.jsbundle") == expected
+            and (app / NATIVE_FINGERPRINT_FILE).is_file()
+            and (app / NATIVE_FINGERPRINT_FILE).read_text().strip() == native):
         return app, time.monotonic() - start, "cache_reused", False
     if cache.exists():
         raise RuntimeError(f"Incomplete build cache at {cache}; inspect it before removing")
@@ -161,6 +191,7 @@ def get_app(work: Path, scratch: Path, env: dict[str, str]) -> tuple[Path, float
         {**env, "PRAY_VIDEO_SCRATCH_DIR": str(cache)})
     if not (app / "main.jsbundle").is_file() or sha256(app / "main.jsbundle") != expected:
         raise RuntimeError("Release build bundle differs from current JS inputs and mock environment")
+    (app / NATIVE_FINGERPRINT_FILE).write_text(native + "\n")
     (cache / "source-sha256.txt").write_text(fingerprint + "\n")
     return app, time.monotonic() - start, "rebuilt", False
 
@@ -200,9 +231,13 @@ def shoot(locale: str, local: Path, app: Path, showtime: str, keyboard_map: Path
         quality_path = frames / "quality-failure.json"
         if summary_path.is_file():
             summary = json.loads(summary_path.read_text())
-            if summary["status"] == "failed" and summary["issues"]:
-                raise QualityGateFailure(summary["issues"], summary["metrics"],
-                                         summary["duration_seconds"]) from None
+            if summary["status"] == "failed":
+                if summary["configuration_issues"]:
+                    raise RuntimeError("Video pacing configuration failed: " +
+                                       "; ".join(summary["configuration_issues"])) from None
+                if summary["quality_issues"]:
+                    raise QualityGateFailure(summary["quality_issues"], summary["metrics"],
+                                             summary["duration_seconds"]) from None
         if quality_path.is_file():
             raise QualityGateFailure(json.loads(quality_path.read_text())["issues"]) from None
         raise

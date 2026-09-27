@@ -24,6 +24,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
+import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
 const ReflectionFlame = React.memo(Flame);
@@ -139,7 +140,7 @@ function ReflectScreen() {
             >
               {!keyboardOpen && (
                 <View style={styles.emberWrap}>
-                  <ReflectionFlame width={sc(104)} ember paused={process.env.EXPO_PUBLIC_APPSTORE_VIDEO === '1' && inputFocused} />
+                  <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
                 </View>
               )}
 

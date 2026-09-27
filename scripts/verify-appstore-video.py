@@ -202,16 +202,17 @@ def main():
         typing[field]["total_keystrokes"] = len(value)
         typing[field]["expected_visible_characters"] = sum(not char.isspace() for char in value)
     (frames / "typing-metrics.json").write_text(json.dumps(typing, indent=2) + "\n")
-    issues = []
+    quality_issues = []
+    configuration_issues = []
     for field, result in typing.items():
         if result["raw"]["characters_or_caret_updates"] < result["expected_visible_characters"]:
-            issues.append(f"{field} raw typing visible updates: {result['raw']['characters_or_caret_updates']} "
-                          f"< required {result['expected_visible_characters']}")
+            quality_issues.append(f"{field} raw typing visible updates: {result['raw']['characters_or_caret_updates']} "
+                                  f"< required {result['expected_visible_characters']}")
         for source, measured in (("raw", result["raw"]), ("final", result)):
             if measured["max_visible_gap_ms"] > limits["hard_typing_max_gap_ms"]:
-                issues.append(f"{field} {source} typing maximum gap: "
-                              f"{measured['max_visible_gap_ms']} ms "
-                              f"> limit {limits['hard_typing_max_gap_ms']} ms")
+                quality_issues.append(f"{field} {source} typing maximum gap: "
+                                      f"{measured['max_visible_gap_ms']} ms "
+                                      f"> limit {limits['hard_typing_max_gap_ms']} ms")
 
     motion = {
         "before_focus": flame_motion(video, output_time(markers["reflection_input_down"], segments) - 0.35, 0.3),
@@ -242,18 +243,18 @@ def main():
         tuple(limits["first_question_crop"]),
     )
     if not limits["min_clear_question_seconds"] <= clear_question["clear_read_seconds"] <= limits["max_clear_question_seconds"]:
-        issues.append(f"First question clear reading {clear_question['clear_read_seconds']} s is outside "
-                      f"{limits['min_clear_question_seconds']}–{limits['max_clear_question_seconds']} s")
+        quality_issues.append(f"First question clear reading {clear_question['clear_read_seconds']} s is outside "
+                              f"{limits['min_clear_question_seconds']}–{limits['max_clear_question_seconds']} s")
     for name in ("first_screen", "before_next_question", "before_reflection_typing", "after_reflection_typing"):
         if not limits["min_comprehension_pause_seconds"] <= holds[name]["montage_seconds"] <= limits["max_comprehension_pause_seconds"]:
-            issues.append(f"{name} comprehension pause: {holds[name]['montage_seconds']} s outside "
-                          f"{limits['min_comprehension_pause_seconds']}–{limits['max_comprehension_pause_seconds']} s")
+            configuration_issues.append(f"{name} comprehension pause: {holds[name]['montage_seconds']} s outside "
+                                        f"{limits['min_comprehension_pause_seconds']}–{limits['max_comprehension_pause_seconds']} s")
     if holds["home_total_before_journal"]["real_seconds"] < limits["min_home_hold_seconds"]:
-        issues.append(f"Home hold: {holds['home_total_before_journal']['real_seconds']} s "
-                      f"< minimum {limits['min_home_hold_seconds']} s")
+        configuration_issues.append(f"Home hold: {holds['home_total_before_journal']['real_seconds']} s "
+                                    f"< minimum {limits['min_home_hold_seconds']} s")
     if holds["threshold_hold"]["real_seconds"] < limits["min_threshold_hold_seconds"]:
-        issues.append(f"Threshold hold: {holds['threshold_hold']['real_seconds']} s "
-                      f"< minimum {limits['min_threshold_hold_seconds']} s")
+        configuration_issues.append(f"Threshold hold: {holds['threshold_hold']['real_seconds']} s "
+                                    f"< minimum {limits['min_threshold_hold_seconds']} s")
     (frames / "holds.json").write_text(json.dumps(holds, indent=2) + "\n")
 
     typing_metrics = {
@@ -282,6 +283,7 @@ def main():
                "flame_targets": {"frozen_max_change": limits["metric_flame_frozen_max_change"],
                                  "animated_min_change": limits["metric_flame_animated_min_change"]}}
     reflection = typing["reflection"]
+    issues = quality_issues + configuration_issues
     summary = {"video": str(video), "duration_seconds": duration,
                "review_copy": str(review), "question_next": fixture["questions"]["next"],
                "typed_intention": fixture["typed"]["intention"], "holds": holds,
@@ -301,7 +303,8 @@ def main():
                "warnings": ([f"Duration {duration:.3f}s is within {duration_margin:.3f}s of the "
                              f"{limits['max_duration_seconds']:g}s App Store limit"]
                             if duration_metrics["near_limit_warning"] else []),
-               "status": "failed" if issues else "passed", "issues": issues}
+               "status": "failed" if issues else "passed", "issues": issues,
+               "quality_issues": quality_issues, "configuration_issues": configuration_issues}
     (frames / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if issues:
         raise RuntimeError("Video verification failed: " + "; ".join(issues))
