@@ -18,8 +18,12 @@ exports the current JS with the mock build variables and compares its SHA-256
 and a fingerprint of the generated iOS project and locked native dependencies
 with the installed simulator app. Both must match to skip the Release build
 and installation. Otherwise it uses a matching cached app or rebuilds and
-installs. If the native iOS workspace is missing, the script runs
-`npx expo prebuild --platform ios` first and stops if prebuild fails. It creates
+installs. Before fingerprinting, the script always runs
+`npx expo prebuild --platform ios` without `--clean`, even when the workspace
+already exists. This keeps generated native files in sync with Expo config and
+plugins without maintaining a separate config cache. The report's `source_hash`
+is calculated after prebuild, so it includes the generated native files. The
+script stops if prebuild fails. It creates
 and installs a SQLite fixture, calibrates AXe,
 records one continuous take, edits it, and verifies the final video. A take
 rejected only by recording quality checks is automatically recorded again,

@@ -112,13 +112,12 @@ def preflight(work: Path, env: dict[str, str]) -> tuple[str, Path]:
                        ("grep", "install macOS command-line tools")):
         if shutil.which(name, path=env["PATH"]) is None:
             raise RuntimeError(f"Missing {name}; {hint}")
+    # pod install внутри prebuild падает на Encoding::CompatibilityError без UTF-8 локали
+    run(["npx", "expo", "prebuild", "--platform", "ios"],
+        work / "preflight/prebuild.log",
+        {**env, **MOCK_ENV, "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"})
     if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
-        # pod install внутри prebuild падает на Encoding::CompatibilityError без UTF-8 локали
-        run(["npx", "expo", "prebuild", "--platform", "ios"],
-            work / "preflight/prebuild.log",
-            {**env, **MOCK_ENV, "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"})
-        if not (ROOT / "ios/Lampada.xcworkspace").is_dir():
-            raise RuntimeError("Expo prebuild completed without creating ios/Lampada.xcworkspace")
+        raise RuntimeError("Expo prebuild completed without creating ios/Lampada.xcworkspace")
     version = run(["axe", "--version"], work / "preflight/axe.log")
     if version != AXE_VERSION:
         raise RuntimeError(f"AXe {AXE_VERSION} required, found {version!r}; see store/README.md")
@@ -301,12 +300,13 @@ def main() -> int:
     env = {**os.environ, "PATH": tool_path, "PRAY_VIDEO_SCRATCH_ROOT": str(scratch)}
     started = time.monotonic()
     report = {"source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-              "source_hash": source_hash(), "pipeline_hash": pipeline_hash(),
+              "pipeline_hash": pipeline_hash(),
               "locales": {}, "exit_code": 1}
     try:
         preflight_start = time.monotonic()
         showtime, keyboard_map = preflight(work, env)
         report["preflight_seconds"] = time.monotonic() - preflight_start
+        report["source_hash"] = source_hash()
         app, report["bundle_seconds"], report["bundle_mode"], skip_install = get_app(work, scratch, env)
         report["rebuilt"] = report["bundle_mode"] == "rebuilt"
         for locale in locales:

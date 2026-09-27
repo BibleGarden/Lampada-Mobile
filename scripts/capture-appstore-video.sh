@@ -96,10 +96,30 @@ cleanup() {
     kill -TERM "$MOCK_PID" 2>/dev/null || true
     wait "$MOCK_PID" 2>/dev/null || true
   fi
-  state="$(sim_state)" || state=''
-  if [ "$state" = Booted ]; then
-    xcrun simctl status_bar "$UDID" clear || true
-    xcrun simctl shutdown "$UDID" || true
+  if state="$(sim_state)"; then
+    case "$state" in
+      Booted)
+        if xcrun simctl status_bar "$UDID" clear; then :; else
+          echo "Simulator cleanup: status bar reset failed (exit $?)" >&2
+          [ "$rc" -ne 0 ] || rc=1
+        fi
+        ;;
+      Shutdown) ;;
+      *)
+        echo "Simulator cleanup: unexpected state $state" >&2
+        [ "$rc" -ne 0 ] || rc=1
+        ;;
+    esac
+  else
+    echo "Simulator cleanup: failed to read simulator state" >&2
+    [ "$rc" -ne 0 ] || rc=1
+    state=''
+  fi
+  if [ "$state" != Shutdown ]; then
+    if xcrun simctl shutdown "$UDID"; then :; else
+      echo "Simulator cleanup: shutdown failed (exit $?)" >&2
+      [ "$rc" -ne 0 ] || rc=1
+    fi
   fi
   exit "$rc"
 }
