@@ -634,6 +634,14 @@ origin. Local scripts and EAS development/preview select `test`; production
 selects `store` for both TestFlight and App Store. Missing channel values hide
 test details. This is independent of Debug/Release optimization; local iPhone
 installs remain standalone Release builds. See [ADR-0026](decisions/0026-test-build-label.md).
+The App Store video build script sets `EXPO_PUBLIC_APPSTORE_VIDEO=1` in its
+isolated simulator Release build.
+On reflection, focus on the takeaway input then pauses the Skia flame at its
+current frame until blur, keeping hardware-keyboard typing responsive in the
+simulator video. Ordinary builds do not set this flag, so the flame continues
+to animate normally. The reflection's flame component is memoized so a
+controlled input update does not rebuild the Skia subtree for each character.
+The capture procedure is in `store/README.md`.
 Allocation is sequential per checkout; failed attempts may leave gaps, and the updated config
 must be preserved in version control. See [ADR-0024](decisions/0024-build-patch-version.md).
 

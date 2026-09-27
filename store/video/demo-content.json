@@ -1,0 +1,222 @@
+{
+  "status": "Russian on-camera copy approved by owner; Ukrainian and English demo copy delegated to orchestrator on 2026-09-27. Scripture catalog and off-camera John 3:16 text checked against the real API GET endpoints on 2026-09-27.",
+  "version_check": {
+    "app": "lampada",
+    "update_type": "none",
+    "latest_version": "1.0.24",
+    "store_url": "https://example.com/lampada",
+    "message": null
+  },
+  "locales": {
+    "ru": {
+      "language_name_en": "Russian",
+      "language_name_national": "Русский",
+      "typed": {
+        "intention": "Благодарность за день",
+        "answer": "Как мы с сыном смеялись за ужином",
+        "takeaway": "Найти время для близких, даже если дел много"
+      },
+      "seed": {
+        "intention": "Перед трудным разговором",
+        "answer": "Мне хотелось сказать главное спокойно.",
+        "takeaway": "Смог выслушать и не торопиться с ответом."
+      },
+      "questions": {
+        "first": "Какой момент сегодня хочется удержать в памяти?",
+        "next": "Как ты думаешь, что этот вечер значил для твоего сына?",
+        "reflect": "Как не потерять эту радость в суете завтрашнего дня?"
+      },
+      "catalog": {
+        "translation": 1,
+        "translation_alias": "syn",
+        "translation_name": "Синодальный",
+        "voice": 1,
+        "voice_alias": "alexander",
+        "voice_name": "Александр",
+        "books": [
+          {
+            "book_number": 19,
+            "name": "Пс",
+            "alias": "psa",
+            "chapters_count": 150
+          },
+          {
+            "book_number": 43,
+            "name": "От Иоанна святое благовествование",
+            "alias": "jhn",
+            "chapters_count": 21
+          }
+        ]
+      },
+      "passages": [
+        {
+          "canonical_id": "v3:43.003.016-016",
+          "book_number": 43,
+          "chapter_number": 3,
+          "verse_start": 16,
+          "verse_end": 16,
+          "title": null,
+          "text": "Ибо так возлюбил Бог мир, что отдал Сына Своего Единородного, дабы всякий верующий в Него, не погиб, но имел жизнь вечную."
+        },
+        {
+          "canonical_id": "v3:19.118.024-024",
+          "book_number": 19,
+          "chapter_number": 117,
+          "verse_start": 24,
+          "verse_end": 24,
+          "title": null,
+          "expected_reference": "Пс 117:24",
+          "text": "Сей день сотворил Господь: возрадуемся и возвеселимся в оный!"
+        }
+      ],
+      "capture": {
+        "system_locale": "ru_RU",
+        "system_keyboard": "ru_RU@sw=Russian;hw=Automatic",
+        "home_label": "Начать молитву",
+        "next_question_label": "Следующий вопрос",
+        "keyboard_probe": "ы",
+        "host_keyboard_layout": "com.apple.keylayout.Russian"
+      }
+    },
+    "uk": {
+      "language_name_en": "Ukrainian",
+      "language_name_national": "Українська",
+      "typed": {
+        "intention": "Вдячність за день",
+        "answer": "Як ми з сином сміялися за вечерею",
+        "takeaway": "Знайти час для близьких, навіть коли справ багато"
+      },
+      "seed": {
+        "intention": "Перед важкою розмовою",
+        "answer": "Хотілося сказати головне спокійно.",
+        "takeaway": "Зміг вислухати й не поспішати з відповіддю."
+      },
+      "questions": {
+        "first": "Яку мить сьогодні хочеться зберегти в пам'яті?",
+        "next": "Як думаєш, що цей вечір означав для твого сина?",
+        "reflect": "Як не втратити цю радість у метушні завтрашнього дня?"
+      },
+      "catalog": {
+        "translation": 20,
+        "translation_alias": "ubh",
+        "translation_name": "UBH",
+        "voice": 130,
+        "voice_alias": "kozlov_uk",
+        "voice_name": "Ігор Козлов",
+        "books": [
+          {
+            "book_number": 19,
+            "name": "Псалми",
+            "alias": "psa",
+            "chapters_count": 150
+          },
+          {
+            "book_number": 43,
+            "name": "Євангелія від Йоана",
+            "alias": "jhn",
+            "chapters_count": 21
+          }
+        ]
+      },
+      "passages": [
+        {
+          "canonical_id": "v3:43.003.016-016",
+          "book_number": 43,
+          "chapter_number": 3,
+          "verse_start": 16,
+          "verse_end": 16,
+          "title": null,
+          "text": "Бог бо так полюбив світ, що Сина свого Єдинородного дав, щоб кожен, хто вірує в нього, не загинув, а жив життям вічним."
+        },
+        {
+          "canonical_id": "v3:19.118.024-024",
+          "book_number": 19,
+          "chapter_number": 118,
+          "verse_start": 24,
+          "verse_end": 24,
+          "title": null,
+          "text": "Цей день учинив Господь, радіймо й веселімся в ньому!",
+          "expected_reference": "Псалми 118:24"
+        }
+      ],
+      "capture": {
+        "system_locale": "uk_UA",
+        "system_keyboard": "uk_UA@sw=Ukrainian;hw=Automatic",
+        "home_label": "Почати молитву",
+        "next_question_label": "Наступне питання",
+        "keyboard_probe": "і",
+        "host_keyboard_layout": "com.apple.keylayout.Ukrainian-PC"
+      }
+    },
+    "en": {
+      "language_name_en": "English",
+      "language_name_national": "English",
+      "typed": {
+        "intention": "Gratitude for the day",
+        "answer": "My son and I laughing over dinner",
+        "takeaway": "Make time for loved ones, even on busy days"
+      },
+      "seed": {
+        "intention": "Before a hard conversation",
+        "answer": "I wanted to say what matters calmly.",
+        "takeaway": "I managed to listen without rushing to answer."
+      },
+      "questions": {
+        "first": "What moment from today do you want to hold on to?",
+        "next": "What do you think this evening meant to your son?",
+        "reflect": "How can you keep this joy in tomorrow's rush?"
+      },
+      "catalog": {
+        "translation": 16,
+        "translation_alias": "bsb",
+        "translation_name": "BSB",
+        "voice": 151,
+        "voice_alias": "bsb_souer",
+        "voice_name": "Bob Souer",
+        "books": [
+          {
+            "book_number": 19,
+            "name": "Psalms",
+            "alias": "psa",
+            "chapters_count": 150
+          },
+          {
+            "book_number": 43,
+            "name": "John",
+            "alias": "jhn",
+            "chapters_count": 21
+          }
+        ]
+      },
+      "passages": [
+        {
+          "canonical_id": "v3:43.003.016-016",
+          "book_number": 43,
+          "chapter_number": 3,
+          "verse_start": 16,
+          "verse_end": 16,
+          "title": null,
+          "text": "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life."
+        },
+        {
+          "canonical_id": "v3:19.118.024-024",
+          "book_number": 19,
+          "chapter_number": 118,
+          "verse_start": 24,
+          "verse_end": 24,
+          "title": null,
+          "text": "This is the day that the Lord has made; we will rejoice and be glad in it.",
+          "expected_reference": "Psalms 118:24"
+        }
+      ],
+      "capture": {
+        "system_locale": "en_US",
+        "system_keyboard": "en_US@sw=QWERTY;hw=Automatic",
+        "home_label": "Begin prayer",
+        "next_question_label": "Next question",
+        "keyboard_probe": "s",
+        "host_keyboard_layout": "com.apple.keylayout.US"
+      }
+    }
+  }
+}
