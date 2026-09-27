@@ -35,6 +35,8 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+__pycache__/
+*.pyc
 
 # generated native folders
 /ios
@@ -47,3 +49,9 @@ AGENTS.local.md
 # --test-output-dir (see testing/README.md#running) - never legitimate repo
 # content, only a root .gitignore is needed since nothing else lives at root.
 /*.png
+
+# Only video configuration and verified deliverables belong in git.
+/store/video/*
+!/store/video/demo-content.json
+!/store/video/pacing.json
+!/store/video/appstore-*.mp4

@@ -24,7 +24,10 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
+import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
+
+const ReflectionFlame = React.memo(Flame);
 
 export default function Reflect() {
   const sessionId = useSession((state) => state.sessionId);
@@ -58,6 +61,7 @@ function ReflectScreen() {
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   const completing = useRef(false);
 
   // Android «назад» тут некуда вести — только явное завершение
@@ -136,7 +140,7 @@ function ReflectScreen() {
             >
               {!keyboardOpen && (
                 <View style={styles.emberWrap}>
-                  <Flame width={sc(104)} ember />
+                  <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
                 </View>
               )}
 
@@ -159,6 +163,8 @@ function ReflectScreen() {
               <TextInput
                 value={takeaway}
                 onChangeText={setTakeaway}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
                 multiline
                 placeholder={t('screens.reflect.placeholder')}
                 placeholderTextColor={colors.placeholder}

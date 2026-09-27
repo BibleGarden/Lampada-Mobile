@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "typing_delay_seconds": {
+    "intention": 0.065,
+    "answer": 0.065,
+    "reflection": 0.12
+  },
+  "special_key_pause_seconds": {
+    "before_punctuation": 0.09,
+    "after_punctuation": 0.12,
+    "after_uppercase": 0.12
+  },
+  "threshold_hold_seconds": 1.5,
+  "review_tail_padding_seconds": 2.5,
+  "recording_pause_seconds": {
+    "home_before_start": 0.9,
+    "after_home_tap": 0.5,
+    "before_intention": 0.6,
+    "after_intention": 0.2,
+    "before_threshold_hold": 0.5,
+    "after_answer_open": 0.45,
+    "before_answer_typing": 0.45,
+    "after_answer_typing": 0.45,
+    "before_next_question": 0.48,
+    "second_question_before_scripture": 1.5,
+    "scripture_before_finish": 2.7,
+    "before_reflection_input": 0.7,
+    "before_reflection_typing": 0.7,
+    "after_reflection_typing": 0.42,
+    "after_reflection_return": 0.18,
+    "home_before_journal": 1.2,
+    "before_journal_expand": 0.65,
+    "journal_final_hold": 2.1,
+    "first_question_after_visible": 0.3
+  },
+  "montage": {
+    "start_marker": "home_ready",
+    "end_marker": "journal_end",
+    "default_speed": 1.0,
+    "speed_after": {
+      "threshold_hold_down": 2.0,
+      "intention_typing_start": 2.5,
+      "answer_typing_start": 2.5,
+      "reflection_typing_start": 2.8,
+      "home_tap_up": 1.5,
+      "setup_next_up": 1.5,
+      "threshold_hold_up": 1.5,
+      "answer_open_up": 1.5,
+      "scripture_open_up": 1.5,
+      "session_finish_up": 1.5,
+      "reflection_save_up": 1.5,
+      "journal_open_up": 1.5
+    }
+  },
+  "mock_delay_seconds": {
+    "question": 0.45,
+    "scripture": 0.5,
+    "catalog": 0.35,
+    "version": 0.3
+  },
+  "marker_settle_seconds": {
+    "next_question": 0.45,
+    "scripture": 0.4,
+    "reflection": 0.45,
+    "saved_notice": 0.45,
+    "journal": 0.3
+  },
+  "verification": {
+    "max_capture_attempts": 3,
+    "min_duration_seconds": 15.0,
+    "max_duration_seconds": 30.0,
+    "target_max_duration_seconds": 28.5,
+    "duration_warning_margin_seconds": 1.0,
+    "required_markers": [
+      "home_ready", "home_tap_down", "home_tap_up", "setup_input_down", "setup_input_up",
+      "intention_typing_start", "intention_typing_end", "setup_next_down", "setup_next_up",
+      "threshold_hold_down", "threshold_hold_up", "question_read_start",
+      "answer_open_down", "answer_open_up", "answer_input_down", "answer_input_up",
+      "answer_typing_start", "answer_typing_end", "answer_save_down", "answer_save_up",
+      "next_question_down", "next_question_up", "next_question_read_start",
+      "scripture_open_down", "scripture_open_up", "scripture_read_start",
+      "session_finish_down", "session_finish_up", "reflection_read_start",
+      "reflection_input_down", "reflection_input_up", "reflection_typing_start",
+      "reflection_typing_end", "reflection_save_down", "reflection_save_up",
+      "saved_notice_start", "journal_open_down", "journal_open_up",
+      "journal_expand_down", "journal_expand_up", "journal_read_start", "journal_end"
+    ],
+    "hard_typing_max_gap_ms": 250,
+    "metric_typing_target_gap_ms": 150,
+    "min_clear_question_seconds": 0.8,
+    "max_clear_question_seconds": 2.5,
+    "min_comprehension_pause_seconds": 0.3,
+    "max_comprehension_pause_seconds": 1.5,
+    "min_threshold_hold_seconds": 1.35,
+    "metric_flame_frozen_max_change": 0.05,
+    "metric_flame_animated_min_change": 0.1,
+    "frame_points": [
+      {
+        "name": "01-home",
+        "marker": "home_ready",
+        "offset_seconds": 0.15
+      },
+      {
+        "name": "02-intention",
+        "marker": "intention_typing_start",
+        "offset_seconds": 0.55
+      },
+      {
+        "name": "03-threshold",
+        "marker": "threshold_hold_down",
+        "offset_seconds": 0.7
+      },
+      {
+        "name": "04-first-question",
+        "marker": "question_read_start",
+        "offset_seconds": 0.42
+      },
+      {
+        "name": "05-answer",
+        "marker": "answer_typing_start",
+        "offset_seconds": 0.9
+      },
+      {
+        "name": "06-second-question",
+        "marker": "next_question_read_start",
+        "offset_seconds": 0.75
+      },
+      {
+        "name": "07-scripture",
+        "marker": "scripture_read_start",
+        "offset_seconds": 0.8
+      },
+      {
+        "name": "08-reflection-question",
+        "marker": "reflection_typing_start",
+        "offset_seconds": 0.25
+      },
+      {
+        "name": "09-reflection-typing",
+        "marker": "reflection_typing_start",
+        "offset_seconds": 1.25
+      },
+      {
+        "name": "10-saved",
+        "marker": "saved_notice_start",
+        "offset_seconds": 0.4
+      },
+      {
+        "name": "11-journal-opening",
+        "marker": "journal_open_up",
+        "offset_seconds": 0.3
+      },
+      {
+        "name": "12-journal-expanded",
+        "marker": "journal_expand_up",
+        "offset_seconds": 0.8
+      }
+    ],
+    "min_home_hold_seconds": 1.2,
+    "first_question_crop": [
+      90,
+      1250,
+      700,
+      230
+    ],
+    "first_question_reference_settle_seconds": 0.25,
+    "first_question_visibility_max_difference": 0.3,
+    "first_question_visibility_poll_seconds": 0.1,
+    "first_question_visibility_timeout_seconds": 12.0
+  },
+  "clock_sync": {
+    "crop_radius_points": 37,
+    "blue_pixel_min": 500,
+    "search_before_seconds": 1.5,
+    "search_after_seconds": 1.0,
+    "frame_rate": 30,
+    "max_offset_disagreement_frames": 1,
+    "max_first_outro_adjustment_seconds": 0.4
+  }
+}

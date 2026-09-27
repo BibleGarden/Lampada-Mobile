@@ -29,6 +29,8 @@ type Props = {
   lit?: boolean;
   /** Только пламя с гало, без чаши — тёплый уголёк на экране рефлексии */
   ember?: boolean;
+  /** Остановить анимацию на текущем кадре */
+  paused?: boolean;
 };
 
 // Детерминированный value-noise: гладкий фрактальный шум без периода.
@@ -74,7 +76,7 @@ const gust = (tt: number) => {
 // - высота дышит: пламя чуть подрастает и оседает вместе с порывами;
 // - ядро у фитиля почти неподвижно — танцует только оболочка;
 // - гало подсвечивается тем же сигналом, свет отзывается на вздрагивания.
-export default function Flame({ width = 240, lit = true, ember = false }: Props) {
+export default function Flame({ width = 240, lit = true, ember = false, paused = false }: Props) {
   const W = width;
   const H = ember ? width : width * 1.17;
   // холст больше занимаемого места: гало должно растворяться,
@@ -98,7 +100,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
   useEffect(() => {
     const onAppStateChange = (state: typeof AppState.currentState) => {
       cancelAnimation(t);
-      if (state !== 'active') return;
+      if (state !== 'active' || paused) return;
       t.value = 0;
       t.value = withRepeat(
         withTiming(Math.PI * 2 * 1000, { duration: 1000_000, easing: Easing.linear }),
@@ -112,7 +114,7 @@ export default function Flame({ width = 240, lit = true, ember = false }: Props)
       subscription.remove();
       cancelAnimation(t);
     };
-  }, [t]);
+  }, [t, paused]);
 
   // оболочка: яйцо с блуждающим кончиком и дышащей высотой.
   // Талия движется «сейчас», кончик — с запаздыванием 1.2 рад (~190 мс):
