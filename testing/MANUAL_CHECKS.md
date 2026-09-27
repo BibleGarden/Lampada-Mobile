@@ -107,11 +107,10 @@ person. Unit tests cover the date logic of `SCR-016`–`SCR-018`; they have not
 been run on a device (report `2026-09-13-scripture-timer-completion.md`).
 `ANS-034` has no Maestro assertion: Maestro types through XCTest and cannot
 see how many frames the field needed to show the text, so a batched field still
-ends with the right value. On the simulator it was measured once by typing 56
-characters through AXe (71 ms apart) and counting visible field updates in a
-60 fps screen recording: 56/56 updates, gap p95 117 ms, max 133 ms, against
-47/56 and a 367 ms max while the halo kept animating under the sheet. On a phone it is judged by
-eye.
+ends with the right value. On the simulator, type 56 characters through AXe
+(71 ms apart) with the timer running, record the screen at 60 fps and count
+visible field updates. Pass: 56 of 56 updates and no gap between updates above
+150 ms. On a phone it is judged by eye.
 
 ---
 
