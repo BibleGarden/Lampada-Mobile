@@ -93,7 +93,7 @@ session interruptions.
 | ANS-029 | Ten start → stop → play cycles without leaving the app. | Ten valid files; no stuck overlay. | — |
 | ANS-030 | Start a recording right after pausing scripture narration or a draft. | Duration matches the speech; playback does not jump to the end. | Ears |
 | ANS-031 | Two files; play 2, then 1, then 2. | Each starts at zero and is the right file. | Ears |
-| ANS-034 | Running session; open the answer; type ~50 characters at a steady pace. | Each keystroke shows at once, no batches or stalls; the halo still breathes. | — |
+| ANS-034 | Running session; open the answer; type ~50 characters at a steady pace. | Each keystroke shows at once, no batches or stalls; the halo pauses under the sheet and breathes again after closing. | — |
 | SCR-016 | Timer to zero during scripture narration, music on. | Passage finishes; then reflection after one second; both players stop. | Ears |
 | SCR-017 | Timer to zero while reading silently in the expanded reader; scroll; close. | Notice does not steal touches; reflection after the reader closes. | — |
 | SCR-018 | During the one-second delay: reopen the reader, pause/resume, open an answer, or add time. | Pending finish cancels; extra time resets expiry; completion runs once. | — |
@@ -110,7 +110,7 @@ see how many frames the field needed to show the text, so a batched field still
 ends with the right value. On the simulator it was measured once by typing 56
 characters through AXe (71 ms apart) and counting visible field updates in a
 60 fps screen recording: 56/56 updates, gap p95 117 ms, max 133 ms, against
-47/56 and a 367 ms max with the former Skia halo. On a phone it is judged by
+47/56 and a 367 ms max while the halo kept animating under the sheet. On a phone it is judged by
 eye.
 
 ---

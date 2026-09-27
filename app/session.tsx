@@ -19,16 +19,12 @@ import Animated, {
   FadeOut,
   cancelAnimation,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, {
-  Circle as SvgCircle,
-  Defs,
-  RadialGradient as SvgRadialGradient,
-  Stop,
-} from 'react-native-svg';
+import { Canvas, Circle, Group, RadialGradient, vec } from '@shopify/react-native-skia';
 import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
@@ -636,7 +632,7 @@ function SessionScreen() {
           </View>
 
           <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
-            <TimerHalo size={ringSize} />
+            <TimerHalo size={ringSize} active={!answerOpen} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
             <Pressable
               accessibilityLabel={t('screens.session.adjust')}
@@ -788,51 +784,54 @@ function MusicPulse({ size }: { size: number }) {
   );
 }
 
-// тёплое дыхание за кольцом — halo 7s из прототипа
-const TimerHalo = React.memo(function TimerHalo({ size: ringSize }: { size: number }) {
+// тёплое дыхание за кольцом — halo 7s из прототипа.
+// Под открытым листом ответа дыхание стоит: обновления Skia-сцены
+// отнимают кадры у поля ввода, и набор текста идёт рывками.
+const TimerHalo = React.memo(function TimerHalo({
+  size: ringSize,
+  active,
+}: {
+  size: number;
+  active: boolean;
+}) {
   const t = useSharedValue(0);
   useEffect(() => {
+    if (!active) return;
     t.value = withRepeat(
       withTiming(1, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
     return () => cancelAnimation(t);
-  }, [t]);
+  }, [active, t]);
   const haloPad = Math.min(sc(48), ringSize * 0.28);
   const size = ringSize + haloPad * 2;
   const r = size / 2;
-  const gradientId = React.useId();
-  // Градиент статичен; на UI-потоке меняются только transform и opacity слоя.
-  const haloStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + t.value * 0.16 }],
-    opacity: 0.62 + t.value * 0.38,
-  }));
+  const transform = useDerivedValue(() => [{ scale: 1 + t.value * 0.16 }]);
+  const opacity = useDerivedValue(() => 0.62 + t.value * 0.38);
+  const c = vec(r, r);
   return (
-    <Animated.View
+    <Canvas
       pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          top: -haloPad,
-          left: -haloPad,
-          width: size,
-          height: size,
-        },
-        haloStyle,
-      ]}
+      style={{
+        position: 'absolute',
+        top: -haloPad,
+        left: -haloPad,
+        width: size,
+        height: size,
+      }}
     >
-      <Svg width={size} height={size}>
-        <Defs>
-          <SvgRadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="#e6a23c" stopOpacity={0.14} />
-            <Stop offset="68%" stopColor="#e6a23c" stopOpacity={0} />
-            <Stop offset="100%" stopColor="#e6a23c" stopOpacity={0} />
-          </SvgRadialGradient>
-        </Defs>
-        <SvgCircle cx={r} cy={r} r={r} fill={`url(#${gradientId})`} />
-      </Svg>
-    </Animated.View>
+      <Group origin={c} transform={transform} opacity={opacity}>
+        <Circle cx={r} cy={r} r={r}>
+          <RadialGradient
+            c={c}
+            r={r}
+            colors={['rgba(230,162,60,.14)', 'rgba(230,162,60,0)']}
+            positions={[0, 0.68]}
+          />
+        </Circle>
+      </Group>
+    </Canvas>
   );
 });
 
