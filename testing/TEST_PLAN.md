@@ -231,6 +231,7 @@ tier of its e2e runs.
 | ANS-031 | On physical iOS, record two different files in a row and play the second, the first and the second in turn | every replace waits for its own AVPlayerItem to load, starts from zero and plays the correct file in full |
 | ANS-032 [main] | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
 | ANS-033 [ipad] | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
+| ANS-034 | With the session timer running, open the answer sheet and type a sentence of about 50 characters at a steady pace | every keystroke appears in the field without batching or visible stalls (measured: one update per keystroke, no gap above 150 ms); the halo behind the timer stops breathing while the sheet is open and resumes after it closes |
 
 ### The AI and the companion
 
@@ -385,6 +386,7 @@ are in
 
 - a cold start without a white or frozen screen;
 - no noticeable stutter in the timer and flame animations;
+- typing in the answer field during a running session stays smooth (ANS-034);
 - no memory growth after 10 sheet openings and playbacks;
 - correctness after background/foreground, screen lock and a system call;
 - no leftover timers, microphone recording or audio player after leaving a

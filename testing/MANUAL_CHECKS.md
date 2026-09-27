@@ -28,10 +28,10 @@ mode, or a server log. It also says nothing about the wrapper-script groups —
 `run-lng.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`, `run-ipad.sh` — unless
 those were run explicitly, with their prepared environments. See sitting 9.
 
-Of 176 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
+Of 177 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
 including `START-*` and `RPT-*`, plus `LNG-001`–`LNG-013`, which the plan does
 not catalogue yet and which live in the e2e flows and this file), automation on
-main fully covers 107, partially covers 24, and does not cover 45. Section 9
+main fully covers 107, partially covers 24, and does not cover 46. Section 9
 of the plan has no IDs and is outside the count. How the count was made is at
 the end of this file.
 
@@ -93,6 +93,7 @@ session interruptions.
 | ANS-029 | Ten start → stop → play cycles without leaving the app. | Ten valid files; no stuck overlay. | — |
 | ANS-030 | Start a recording right after pausing scripture narration or a draft. | Duration matches the speech; playback does not jump to the end. | Ears |
 | ANS-031 | Two files; play 2, then 1, then 2. | Each starts at zero and is the right file. | Ears |
+| ANS-034 | Running session; open the answer; type ~50 characters at a steady pace. | Each keystroke shows at once, no batches or stalls; the halo pauses under the sheet and breathes again after closing. | — |
 | SCR-016 | Timer to zero during scripture narration, music on. | Passage finishes; then reflection after one second; both players stop. | Ears |
 | SCR-017 | Timer to zero while reading silently in the expanded reader; scroll; close. | Notice does not steal touches; reflection after the reader closes. | — |
 | SCR-018 | During the one-second delay: reopen the reader, pause/resume, open an answer, or add time. | Pending finish cancels; extra time resets expiry; completion runs once. | — |
@@ -104,6 +105,12 @@ the sound, the files on disk, and resume-from-position / replay-after-end.
 `ios-answer-recordings-regression.yaml`; the empty-answer race still needs a
 person. Unit tests cover the date logic of `SCR-016`–`SCR-018`; they have not
 been run on a device (report `2026-09-13-scripture-timer-completion.md`).
+`ANS-034` has no Maestro assertion: Maestro types through XCTest and cannot
+see how many frames the field needed to show the text, so a batched field still
+ends with the right value. On the simulator, type 56 characters through AXe
+(71 ms apart) with the timer running, record the screen at 60 fps and count
+visible field updates. Pass: 56 of 56 updates and no gap between updates above
+150 ms. On a phone it is judged by eye.
 
 ---
 
@@ -375,14 +382,14 @@ slots.
 
 ---
 
-## How the 176 IDs were counted
+## How the 177 IDs were counted
 
 Every `PRE-*`, `SMK-*`, `NAV-*`, `SETUP-*`, `START-*`, `SES-*`, `MUS-*`,
 `ANS-*`, `AI-*`, `SCR-*`, `RPT-*`, `END-*`, `JRN-*`, `REM-*` and `LOCK-*` row
-in `TEST_PLAN.md` sections 6–8 (163 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
+in `TEST_PLAN.md` sections 6–8 (164 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
 which the plan has no section for yet — they are catalogued by the
 `ios-lng-*.yaml` flows and this file. Section 9 of the plan has no IDs and is
-not in the 176.
+not in the 177.
 
 - **Covered (107):** a flow asserts the outcome the plan names and runs in one
   of the automated paths on main: a tier tag run (`critical` / `main` /
@@ -394,7 +401,7 @@ not in the 176.
   or a wrapper are not proven by the tier runs alone — sitting 9 names them.
 - **Partial (24):** an automated flow asserts a slice (usually UI, or the unit
   tests of the logic) and the rest is in this file.
-- **Not covered (45):** no flow at all (physical-device, airplane-mode,
+- **Not covered (46):** no flow at all (physical-device, airplane-mode,
   backlog and deliberate items), a flow whose preparation is manual
   (`JRN-006`, `JRN-009`), or a documented negative check (`RPT-004`).
 

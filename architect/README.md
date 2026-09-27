@@ -25,6 +25,9 @@ Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
 The flame's Reanimated clock stops when the app leaves the active state and
 restarts on activation, avoiding Skia path creation while it is backgrounded.
+The Skia halo behind the session timer is memoized and pauses its breathing
+while the answer sheet is open: its scene updates took frames from the text
+input, and typing in the sheet showed up in batches.
 
 ## Technology outline
 

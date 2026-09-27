@@ -22,6 +22,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { Canvas, Circle, Group, RadialGradient, vec } from '@shopify/react-native-skia';
@@ -632,7 +633,7 @@ function SessionScreen() {
           </View>
 
           <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
-            <TimerHalo size={ringSize} />
+            <TimerHalo size={ringSize} active={!answerOpen} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
             <Pressable
               accessibilityLabel={t('screens.session.adjust')}
@@ -784,17 +785,39 @@ function MusicPulse({ size }: { size: number }) {
   );
 }
 
-// тёплое дыхание за кольцом — halo 7s из прототипа
-function TimerHalo({ size: ringSize }: { size: number }) {
-  const t = useSharedValue(0);
+// тёплое дыхание за кольцом — halo 7s из прототипа.
+// Под открытым листом ответа дыхание стоит: обновления Skia-сцены
+// отнимают кадры у поля ввода, и набор текста идёт рывками.
+const HALO_CYCLE_MS = 7000;
+const haloEasing = Easing.inOut(Easing.ease);
+
+const TimerHalo = React.memo(function TimerHalo({
+  size: ringSize,
+  active,
+}: {
+  size: number;
+  active: boolean;
+}) {
+  // Линейная фаза цикла 0..1: после паузы дыхание продолжается с того же
+  // места и в ту же сторону, а не начинает полувдох заново.
+  const phase = useSharedValue(0);
   useEffect(() => {
-    t.value = withRepeat(
-      withTiming(1, { duration: 3500, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
+    if (!active) return;
+    const linear = { easing: Easing.linear };
+    phase.value = withSequence(
+      withTiming(1, { ...linear, duration: (1 - phase.value) * HALO_CYCLE_MS }),
+      withRepeat(
+        withSequence(
+          withTiming(0, { duration: 0 }),
+          withTiming(1, { ...linear, duration: HALO_CYCLE_MS }),
+        ),
+        -1,
+      ),
     );
-    return () => cancelAnimation(t);
-  }, [t]);
+    return () => cancelAnimation(phase);
+  }, [active, phase]);
+  // вдох на первой половине фазы, выдох на второй
+  const t = useDerivedValue(() => haloEasing(1 - Math.abs(2 * phase.value - 1)));
   const haloPad = Math.min(sc(48), ringSize * 0.28);
   const size = ringSize + haloPad * 2;
   const r = size / 2;
@@ -824,7 +847,7 @@ function TimerHalo({ size: ringSize }: { size: number }) {
       </Group>
     </Canvas>
   );
-}
+});
 
 function AdjustBtn({
   ringSize,
