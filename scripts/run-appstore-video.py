@@ -373,7 +373,10 @@ def main() -> int:
     finally:
         try:
             udid = subprocess.check_output([str(ROOT / "testing/e2e/sim-udid.sh"), DEVICE], text=True).strip()
-            subprocess.run(["xcrun", "simctl", "shutdown", udid], capture_output=True)
+            shutdown = subprocess.run(["xcrun", "simctl", "shutdown", udid], capture_output=True, text=True)
+            # уже выключенный симулятор — не ошибка очистки
+            if shutdown.returncode != 0 and "current state: Shutdown" not in shutdown.stderr:
+                raise RuntimeError(f"simctl shutdown failed: {shutdown.stderr.strip()}")
         except Exception as error:
             report["cleanup_error"] = str(error)
             report["exit_code"] = 1

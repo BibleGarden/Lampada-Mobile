@@ -22,7 +22,9 @@ installs. Before fingerprinting, the script always runs
 `npx expo prebuild --platform ios` without `--clean`, even when the workspace
 already exists. This keeps generated native files in sync with Expo config and
 plugins without maintaining a separate config cache. The report's `source_hash`
-is calculated after prebuild, so it includes the generated native files. The
+is calculated after prebuild, so its `Info.plist` and `project.pbxproj` inputs
+are the generated ones; the rest of the native tree is covered by the native
+fingerprint. The
 script stops if prebuild fails. It creates
 and installs a SQLite fixture, calibrates AXe,
 records one continuous take, edits it, and verifies the final video. A take
