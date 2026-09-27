@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -70,7 +71,6 @@ def native_hash() -> str:
     paths = [path for path in ios.rglob("*") if path.is_file()
              and not any(part in {"Pods", "build", "DerivedData", "xcuserdata"}
                          for part in path.relative_to(ios).parts)
-             and path.relative_to(ios) != Path("Lampada.xcodeproj/project.pbxproj")
              and path.name != ".DS_Store"]
     paths += [ROOT / name for name in ("package.json", "package-lock.json", "app.json")]
     paths += [path for path in (ROOT / "modules").rglob("*") if path.is_file()]
@@ -79,8 +79,15 @@ def native_hash() -> str:
         if not path.is_file():
             raise RuntimeError(f"Native dependency input is missing: {path}")
         digest.update(str(path.relative_to(ROOT)).encode() + b"\0")
-        digest.update(path.read_bytes())
+        digest.update(pbxproj_fingerprint(path) if path.name == "project.pbxproj" else path.read_bytes())
     return digest.hexdigest()
+
+
+def pbxproj_fingerprint(path: Path) -> bytes:
+    """prebuild генерирует случайные 24-символьные PBX ID и сортирует записи по ним;
+    сравниваем содержимое без ID и без порядка строк."""
+    lines = re.sub(rb"\b[0-9A-F]{24}\b", b"ID", path.read_bytes()).splitlines()
+    return b"\n".join(sorted(lines))
 
 
 def sha256(path: Path) -> str:

@@ -26,10 +26,10 @@ installs. Before fingerprinting, the script always runs
 already exists. This keeps generated native files in sync with Expo config and
 plugins without maintaining a separate config cache. The report's `source_hash`
 is calculated after prebuild, so its `Info.plist` input is the generated one;
-the rest of the native tree is covered by the native fingerprint. The generated
-`project.pbxproj` is excluded from both hashes because prebuild assigns new
-random PBX IDs on each run. Its source inputs (`app.json`, locked packages,
-native modules, and generated files outside the project file) remain hashed.
+the rest of the native tree is covered by the native fingerprint. Prebuild
+assigns new random PBX IDs on each run, so the native fingerprint hashes
+`project.pbxproj` with those IDs replaced and its lines sorted: build settings,
+source lists and resources still count, the random IDs do not.
 The script stops if prebuild fails. It creates and installs a SQLite fixture, calibrates AXe,
 records one continuous take, edits it, and verifies the final video. A take
 rejected only by recording quality checks is automatically recorded again,
