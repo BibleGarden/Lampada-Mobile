@@ -56,7 +56,7 @@ export default function Setup() {
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
   if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
   const editingHeight = editing && slot
-    ? Math.max(slot.height, keyboardTop - sc(16) - slot.top)
+    ? Math.max(0, keyboardTop - sc(16) - slot.top)
     : null;
   const hiddenWhileEditing = editing
     ? {
@@ -151,7 +151,7 @@ export default function Setup() {
                 style={[
                   styles.topicInput,
                   styles.topicInputFill,
-                  editingHeight === null ? { bottom: 0 } : { height: editingHeight },
+                  editingHeight === null ? { bottom: 0 } : { height: editingHeight, minHeight: 0 },
                 ]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
