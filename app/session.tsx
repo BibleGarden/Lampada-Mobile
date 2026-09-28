@@ -639,7 +639,7 @@ function SessionScreen() {
               {t('screens.session.title')}
             </Kicker>
             <View style={styles.musicBtnWrap}>
-              {musicPlaying && <MusicPulse size={sc(34)} active={visible && !answerOpen && !readerOpen} />}
+              {musicPlaying && <MusicPulse size={sc(34)} active={visible && !answerOpen && !readerOpen && !reportOpen} />}
               <IconButton
                 onPress={s.toggleMusic}
                 bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
@@ -654,7 +654,7 @@ function SessionScreen() {
           </View>
 
           <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
-            <TimerHalo size={ringSize} active={visible && !answerOpen && !readerOpen} />
+            <TimerHalo size={ringSize} active={visible && !answerOpen && !readerOpen && !reportOpen} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
             <Pressable
               accessibilityLabel={t('screens.session.adjust')}

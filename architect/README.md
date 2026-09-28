@@ -26,8 +26,8 @@ canvas size on the UI thread so rotation does not wait for JavaScript updates.
 The flame's Reanimated clock stops when its route is covered or the app leaves
 the active state and restarts when exposed, avoiding hidden Skia path creation.
 The Skia halo behind the session timer is memoized and pauses its breathing
-while a sheet is open or the session is covered: its scene updates took frames
-from the text input, and typing in the sheet showed up in batches.
+while a sheet or a report dialog is open or the session is covered: its scene
+updates took frames from the text input, and typing showed up in batches.
 
 ## Technology outline
 
@@ -296,7 +296,7 @@ the app returns. Reflection waits until the session screen is exposed again.
 | Component or work | Hidden condition | Before | After |
 | --- | --- | --- | --- |
 | Home and reflection `Flame` | App background, another route above it, or the reflection input in an App Store video build | App background and the video input paused it; a covered Home kept animating | The flame runs only on a focused foreground screen; the video input pause still applies |
-| Session `TimerHalo`, `MusicPulse`, progress ring, keep-awake | App background, another route, or a sheet over the timer/music button | Halo paused under the answer sheet only; the pulse and keep-awake survived hidden screens | Repeating visuals run only while exposed; the ring animation and keep-awake stop when the screen hides |
+| Session `TimerHalo`, `MusicPulse`, progress ring, keep-awake | App background, another route, or a sheet or report dialog over the timer/music button | Halo paused under the answer sheet only; the pulse and keep-awake survived hidden screens | Repeating visuals run only while exposed; the ring animation and keep-awake stop when the screen hides |
 | `RecordingsSheet` wave, elapsed poll and slow transcription hint | Sheet closed, screen covered, or app background | Recording wave and 250 ms poll depended only on recording state; the hint timer could stay mounted in a closed sheet | All three require an open foreground sheet; recording continues until Done and transcription can finish |
 | Session UI tick and deadline | App background, another route or PIN/update overlay | One-second interval kept updating the store and deadline | One-second UI interval runs only while visible; every hidden finite session schedules one deadline wakeup, which ends music on time without navigating under an overlay |
 | Music players, crossfade and deadline fade | App background or lock screen | Music continued; crossfade and final fade drove the native players | Music continues as designed, with bounded fade work at track changes and the prayer deadline |
