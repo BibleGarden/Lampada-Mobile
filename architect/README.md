@@ -259,7 +259,8 @@ one session ID, all questions, answers and recordings, the scripture trail and
 current positions. A finite prayer gets a fresh interval of the selected duration;
 an untimed prayer remains untimed. The original start and cumulative wall-clock
 elapsed time are retained, including time on the reflection screen. Late reflection
-results are invalidated. Final completion writes to the same journal session.
+results are invalidated. A reflection request uses the state at the moment the
+prayer ends; a first question that arrives afterwards does not cancel it. Final completion writes to the same journal session.
 See [ADR-0027](decisions/0027-resume-current-prayer.md).
 
 After the reflection is saved (or skipped), completion returns directly Home with

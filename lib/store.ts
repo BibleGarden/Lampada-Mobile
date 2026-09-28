@@ -728,25 +728,17 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         set({ reflectGenerating: false });
         return;
       }
-      await pending;
-      if (
-        token !== reflectToken ||
-        get().sessionId !== sessionToken ||
-        reflectKey(get()) !== key
-      ) {
-        return;
-      }
-      q = reflectPool.takeReady(key);
-      if (q === undefined) {
-        set({ reflectGenerating: false });
-        return;
-      }
+      // Итоговый вопрос относится к состоянию на момент завершения: поздний
+      // первый вопрос, которого человек уже не увидел, не отменяет ожидание.
+      q = await pending;
+      reflectPool.takeReady(key);
+      if (token !== reflectToken || get().sessionId !== sessionToken) return;
     }
     if (q === null) {
       set({ reflectQ: '', reflectSource: null, reflectGenerating: true });
       q = await prepareReflectQuestion(s, false);
       reflectPool.takeReady(key);
-      if (token !== reflectToken || get().sessionId !== sessionToken || reflectKey(get()) !== key) return;
+      if (token !== reflectToken || get().sessionId !== sessionToken) return;
       if (!q) {
         set({ reflectGenerating: false });
         return;
@@ -756,10 +748,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     if (q.novel === false || wasQuestionShown(q.text, shown)) {
       q = localQuestion(shown, 'reflect');
     }
-    if (token === reflectToken && get().sessionId === sessionToken) {
-      set({ reflectQ: q.text, reflectSource: q.source, reflectGenerating: false,
-        shownQuestions: rememberShownQuestion(shown, q.text) });
-    }
+    set({ reflectQ: q.text, reflectSource: q.source, reflectGenerating: false,
+      shownQuestions: rememberShownQuestion(shown, q.text) });
   },
 
   complete: async (takeaway) => {

@@ -320,6 +320,7 @@ the stub; execution results belong in dated reports.
 | END-007 | Leave an expired prayer overnight, open the app the next day and finish it on reflection | the prayer counts for the day it started, not the day of "Done"; the streak stays unbroken |
 | END-006 [main, ipad] | Enter a takeaway with the keyboard open on iPhone and iPad; on iPad, rotate while typing | the input stays above the keyboard; on tablets the editing column widens and long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 | END-008 | Type a takeaway with a hardware keyboard in an App Store video build | while the input is focused, the visible flame stays on one frame and each non-whitespace character causes a visible text or caret update; after blur the flame animates again; ordinary builds never freeze the flame (`reflectionFlame.test.mjs`). The ANS-034 smoothness expectation is a 150 ms maximum visible gap, reported as a metric in the video pipeline; its gross recording rejection gate is 250 ms. |
+| END-009 | Finish the prayer while the first question is still loading | the reflection question appears; the late first question does not leave reflection loading |
 
 ### The journal and local data
 
