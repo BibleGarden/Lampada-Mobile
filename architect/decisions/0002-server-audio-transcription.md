@@ -1,6 +1,6 @@
 # ADR-0002: Transcribe voice answers through the server-side Gemini proxy
 
-- Status: Partly superseded by ADR-0017
+- Status: Partly superseded by ADR-0017 and ADR-0035
 - Date: 2026-08-23
 - Participants: product owner, project team
 

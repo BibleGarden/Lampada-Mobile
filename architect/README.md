@@ -180,10 +180,11 @@ The main flows:
 
 ```text
 Screen → useSession → lib/db.ts → SQLite / local audio files
-                   ↘ lib/ai.ts → lib/llm.ts → bible-api → self-hosted chat model
+                   ↘ lib/ai.ts → lib/llm.ts → bible-api → Google Gemini (paid API)
                                ↘ local curated fallback
-                   ↘ lib/transcription.ts → bible-api → self-hosted speech model
+                   ↘ lib/transcription.ts → bible-api → Whisper or Google Gemini (paid API)
                    ↘ lib/scriptureClient.ts → bible-api /api/ai/scripture
+                                               → Google Gemini + self-hosted bge-m3 search
                                             ↘ lib/scriptureRepository.ts → SQLite
                    ↘ lib/scriptureAudioClient.ts → bible-api /api/excerpt_with_alignment
                                                  ↘ /api/audio/...mp3
@@ -528,9 +529,11 @@ embedded settings. See [ADR-0025](decisions/0025-single-api-origin.md).
 ## AI and privacy
 
 The app talks to a `bible-api` server endpoint which owns model routing, model
-credentials and system prompts. Chat and speech models run on infrastructure
-managed by the individual app developer; changing a stage's model is a server configuration
-change and does not alter the client contract. Question requests use
+credentials and system prompts. In production, guiding questions and contextual
+Scripture selection use Google Gemini through Google's paid API. Current audio
+transcription uses Whisper on operator-managed servers; the consent also permits
+Google Gemini through Google's paid API as an alternative. Scripture search uses
+bge-m3 on operator-managed servers (ADR-0035). Question requests use
 `{ topic, stage, messages, skipped_questions?, default_language?, prefetch? }`
 (ADR-0019, ADR-0023, ADR-0030, ADR-0031). The topic is separate from conversation
 history; `stage` selects the server's first, next or reflection question prompt.
@@ -574,16 +577,19 @@ journal entries deliberately have no report action: the journal mixes generated
 questions with private answers, while reporting at the generation screens keeps
 the transferred boundary visible and unambiguous.
 
-Three independent SQLite records gate prayer-content transfers (ADR-0017): core
-prayer AI for the topic, answer context for typed answers and finished
-transcripts, and audio transcription for one selected M4A file. Every record has
+Three independent SQLite records gate prayer-content transfers (ADR-0017,
+ADR-0035): core prayer AI for the topic, answer context for typed answers and
+finished transcripts, and audio transcription for one selected M4A file. Every record has
 an `undecided`, `allowed` or `denied` decision, the disclosure version and the
 provider-contract identity. Missing, malformed, obsolete and legacy permissive
 values resolve to `undecided`; the old `share_answers=0` is retained as an
-answer-context denial. Settings expose every decision separately.
+answer-context denial. Settings expose every decision separately. The current
+notice version is 3 and the shared provider-contract identity is
+`google-gemini-paid-whisper-self-hosted-2026-09`; prior records require a new
+decision on load.
 
 Before the first core AI use, the setup flow names the application server,
-AI processing and the purposes of sending the topic.
+Google Gemini via its paid API and the purposes of sending the topic.
 Without an allowance, question
 generation uses the curated local pools and scripture selection sends neither
 `topic` nor `user_replies`, while the non-contextual server safe pool remains
@@ -591,8 +597,9 @@ available. Core permission does not open the answer gate. An answer is always
 saved locally first; the gate only decides whether it may leave the device. The
 save awaits one SQLite transaction for the text and recordings; on failure the
 sheet keeps the draft and shows an error. A save requested while another is in
-flight waits for it instead of writing again. The first manual save of an answer that could affect another request then
-shows its own disclosure while the prayer is still running. The automatic save
+flight waits for it instead of writing again. The first manual save of an answer
+that could affect another request then shows its own Google Gemini disclosure
+while the prayer is still running. The automatic save
 before reflection and a save after the time has run out never ask, so navigation
 is not blocked and an undecided gate stays closed until the next manual save. The
 request builder includes answer text and completed transcripts only when both
@@ -601,8 +608,12 @@ composition, limits and ordering are defined by `lib/answerContext.ts` and
 `lib/scripture.ts`.
 
 Pressing "Transcribe" requests the feature but is not consent. The first attempt
-explains that the selected audio file goes through Bible API to a speech model on
-developer-managed infrastructure only for a verbatim transcript. The UI checks the decision before it starts, and
+explains that the selected audio file goes through Bible API for a verbatim
+transcript by either Whisper on operator-managed servers or Google Gemini through
+Google's paid API. The shared version 3 provider contract names both processors;
+switching between them under those terms does not require renewed consent
+(ADR-0035). A different processor or changed processing terms does.
+The UI checks the decision before it starts, and
 `lib/transcription.ts` repeats the gate before opening or uploading the local
 file. The device locale remains a soft language hint. The returned transcript is
 local data and needs the separate answer-context consent before it can be sent in

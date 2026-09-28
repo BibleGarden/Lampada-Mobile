@@ -245,13 +245,14 @@ tier of its e2e runs.
 | AI-003 [main] | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, it is visibly labelled as a backup question, and there is no endless loading or unhandled rejection |
 | AI-004 | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
 | AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
-| AI-006 [main] | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; it says the data is used only for AI processing and is not stored on the server; both choices have equal weight |
+| AI-006 [main] | Allow core AI and save the first non-empty answer | a separate answer-context disclosure names Google Gemini through the paid API for the written answers and completed transcripts; our server does not store them; both choices have equal weight |
 | AI-007 [main] | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record |
 | AI-008 | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
 | AI-009 | Finish the prayer with a fast, a slow and an unavailable AI | the closing question is prepared 15 seconds before zero; a ready one is shown immediately, a pending one shows a loader without an intermediate fallback; changing the answer in the last 15 seconds updates the prefetch; a real fallback is explicitly marked as such |
-| AI-010 [critical] | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server, the transferred topic and both AI purposes, and says the topic is not stored on the server before any content request |
-| AI-011 [main] | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file, the AI transcription purpose and the server's no-storage rule; no upload starts and the recording stays usable |
+| AI-010 [critical] | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server, Google Gemini through its paid API, the transferred topic, question generation and Scripture selection; our server does not store the topic before any content request |
+| AI-011 [main] | Press "Transcribe" for the first time, deny it and retry | the disclosure names both possible processors for a verbatim transcript: Whisper on our own servers or Google Gemini through Google's paid API; our server does not store the recording; no upload starts and the recording stays usable |
 | AI-012 | Withdraw each allowed decision in settings immediately before its feature | the next question/scripture request or upload observes the denial without restarting the app |
+| AI-013 [main] | Upgrade with each of the three decisions stored under notice version 2 and `company-hosted-ai-2026-09` | every old decision resolves to `undecided`; no content is sent until a decision under notice version 3 and `google-gemini-paid-whisper-self-hosted-2026-09` is saved |
 
 ### Scripture
 
@@ -411,10 +412,15 @@ are in
   omits the field instead of sending an empty placeholder;
 - audio files are stored in the expected directory and reach the transcription
   endpoint only after both an explicit press and transcription consent;
+- before routing transcription to Google Gemini, the published Privacy Policy
+  names that audio route and the paid-API processing terms match the consent;
 - the server logs and persistent storage contain neither the audio, nor the file
   name, nor the transcript;
 - the logs contain no prayer answers, tokens or full network payloads;
 - the system description of the microphone permission matches its actual use.
+- before release, verify App Store App Privacy lists Other User Content,
+  Product Interaction, Performance Data and Other Diagnostic Data as not linked
+  to the user and confirms no tracking.
 
 ## 10. Automation plan
 
