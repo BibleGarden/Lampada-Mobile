@@ -78,7 +78,8 @@ export default function Threshold() {
 
   useEffect(() => clearTimers, []);
   useEffect(() => {
-    if (visible) return;
+    // Во время входа экран уходит сам: подпись загрузки и полное кольцо остаются.
+    if (visible || entering.current) return;
     clearTimers();
     cancelAnimation(progress);
     progress.value = 0;

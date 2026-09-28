@@ -99,7 +99,10 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
   // t — «часы» анимации; скрытый экран не создаёт новые Skia-пути.
   const t = useSharedValue(0);
   useEffect(() => {
+    // Пауза видео-сборки оставляет текущий кадр; сброс нужен лишь при запуске:
+    // повтор идёт от стартового значения, и без него пламя замедлялось бы.
     if (!visible || paused) return;
+    t.value = 0;
     t.value = withRepeat(
       withTiming(Math.PI * 2 * 1000, { duration: 1000_000, easing: Easing.linear }),
       -1,

@@ -286,8 +286,12 @@ Navigation focus, an active `AppState` and the absence of the PIN, privacy or
 update overlay jointly define whether a screen is visible. A sheet also needs
 to be open. The session's music, native lock-screen timer, narration and
 recording are functional work and retain their separate
-lifecycle. A hidden finite session still wakes once at its deadline, even when
-music is off. Reflection waits until the session screen is exposed again.
+lifecycle. A hidden finite session schedules one wakeup at its deadline. It
+fires on time while JavaScript runs: under an overlay in the active app, or in
+the background while music, narration or recording keeps the app alive. In the
+iOS background without such audio JavaScript is suspended: the lock-screen
+timer still shows the deadline, and the session expires on the first tick after
+the app returns. Reflection waits until the session screen is exposed again.
 
 | Component or work | Hidden condition | Before | After |
 | --- | --- | --- | --- |

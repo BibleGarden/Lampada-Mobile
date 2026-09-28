@@ -485,6 +485,8 @@ function WaveBar({ color, delay, active }: { color: string; delay: number; activ
   const k = useSharedValue(0.3);
   useEffect(() => {
     if (!active) return;
+    // Размах задаёт стартовое значение повтора: после паузы начинаем с 0.3.
+    k.value = 0.3;
     k.value = withDelay(
       delay,
       withRepeat(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }), -1, true),

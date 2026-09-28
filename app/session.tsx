@@ -778,6 +778,9 @@ function MusicPulse({ size, active }: { size: number; active: boolean }) {
   const pulse = useSharedValue(0);
   useEffect(() => {
     if (!active) return;
+    // withRepeat качается между стартовым значением и 1: без сброса пульс
+    // после паузы сужался бы до остатка хода.
+    pulse.value = 0;
     pulse.value = withRepeat(
       withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
       -1,
