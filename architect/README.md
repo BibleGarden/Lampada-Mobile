@@ -169,7 +169,8 @@ keyboard over the hidden duration and navigation, scrolling long text inside.
 An invisible copy of the goal sizes the input's slot, so the position follows
 rotation; while typing it holds the text from when the keyboard opened.
 A long goal shrinks the slot to the free space and scrolls inside, so "Next"
-stays on screen.
+stays on screen. A tap outside the input, a drag of the screen or "Done"
+closes the keyboard.
 Reflection uses a keyboard-avoiding, scrollable content area. While typing,
 the input fills the available space below the question and above the keyboard.
 The editing column expands to at most 960 pt on tablets. The decorative header

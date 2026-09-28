@@ -5,6 +5,7 @@ import {
   Keyboard,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -98,155 +99,163 @@ export default function Setup() {
     <View style={styles.root} onLayout={measureSlot}>
       <ScreenBg />
       {/* Область закрытия клавиатуры занимает весь экран, включая поля
-          по бокам ограниченной по ширине колонки на планшете. */}
+          по бокам ограниченной по ширине колонки на планшете. Клавиатуру
+          закрывает и тап вне поля, и протягивание экрана: поле при вводе
+          доходит до клавиатуры и занимает середину экрана. */}
       <Pressable
         onPress={Keyboard.dismiss}
         accessible={false}
         style={styles.dismissArea}
       >
-        <Animated.View
-          entering={FadeIn.duration(450)}
-          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
+        <ScrollView
+          contentContainerStyle={styles.dismissArea}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.headerRow}>
-            <IconButton
-              size={sc(30)}
-              accessibilityLabel={t('settings.back')}
-              onPress={() => router.back()}
-            >
-              <ChevronLeft size={18} color={colors.white65} />
-            </IconButton>
-            <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
-          </View>
-
-          <View style={styles.goal}>
-            <View style={styles.goalHeader}>
-              <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
-              <Pressable
-                onPress={() => setExamplesOpen(true)}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.setup.examples')}
-                accessibilityHint={t('screens.setup.openExamples')}
-                testID="setup-examples-button"
-                hitSlop={8}
-                style={({ pressed }) => [styles.helpBtn, pressed && { transform: [{ scale: 0.92 }] }]}
+          <Animated.View
+            entering={FadeIn.duration(450)}
+            style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
+          >
+            <View style={styles.headerRow}>
+              <IconButton
+                size={sc(30)}
+                accessibilityLabel={t('settings.back')}
+                onPress={() => router.back()}
               >
-                <Text style={styles.helpBtnLabel}>?</Text>
-              </Pressable>
+                <ChevronLeft size={18} color={colors.white65} />
+              </IconButton>
+              <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
             </View>
-            <View ref={inputSlot} style={styles.topicSlot} onLayout={measureSlot}>
-              <Text
-                style={[styles.topicInput, styles.topicSizer]}
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-              >
-                {editingStartTopic ?? s.topic}
-              </Text>
-              <TextInput
-                value={s.topic}
-                onChangeText={s.setTopic}
-                multiline
-                // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
-                // говорят достаточно, а любая подсказка навязывала тон
-                style={[
-                  styles.topicInput,
-                  styles.topicInputFill,
-                  editingHeight === null ? { bottom: 0 } : { height: editingHeight, minHeight: 0 },
-                ]}
-                accessibilityLabel={t('screens.setup.goal')}
-                accessibilityHint={t('screens.setup.goalHint')}
-                testID="setup-goal-input"
-                // цель — одна фраза, переносы строк не нужны: клавиша ввода
-                // становится синей «Готово» и закрывает клавиатуру
-                returnKeyType="done"
-                submitBehavior="blurAndSubmit"
-                onSubmitEditing={Keyboard.dismiss}
-                onFocus={measureSlot}
-              />
-            </View>
-          </View>
 
-          <View {...hiddenWhileEditing}>
-            <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
-              {t('screens.setup.duration')}
-            </Kicker>
-            <View style={styles.stepper}>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  s.decMinutes();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.setup.decreaseDuration')}
-                style={({ pressed }) => [
-                  styles.stepBtn,
-                  styles.stepBtnLeft,
-                  pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
-                ]}
-              >
-                <Minus color={colors.white65} />
-              </Pressable>
-              <View
-                accessible
-                accessibilityLabel={durationLabel(s.minutes)}
-                style={styles.stepValue}
-                testID="setup-duration-value"
-              >
-                <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
-                <Text style={styles.stepUnit}>{durationUnit}</Text>
+            <View style={styles.goal}>
+              <View style={styles.goalHeader}>
+                <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
+                <Pressable
+                  onPress={() => setExamplesOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('screens.setup.examples')}
+                  accessibilityHint={t('screens.setup.openExamples')}
+                  testID="setup-examples-button"
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.helpBtn, pressed && { transform: [{ scale: 0.92 }] }]}
+                >
+                  <Text style={styles.helpBtnLabel}>?</Text>
+                </Pressable>
               </View>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  s.incMinutes();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.setup.increaseDuration')}
-                style={({ pressed }) => [
-                  styles.stepBtn,
-                  styles.stepBtnRight,
-                  pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
-                ]}
-              >
-                <Plus color={colors.white65} />
-              </Pressable>
+              <View ref={inputSlot} style={styles.topicSlot} onLayout={measureSlot}>
+                <Text
+                  style={[styles.topicInput, styles.topicSizer]}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  {editingStartTopic ?? s.topic}
+                </Text>
+                <TextInput
+                  value={s.topic}
+                  onChangeText={s.setTopic}
+                  multiline
+                  // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
+                  // говорят достаточно, а любая подсказка навязывала тон
+                  style={[
+                    styles.topicInput,
+                    styles.topicInputFill,
+                    editingHeight === null ? { bottom: 0 } : { height: editingHeight, minHeight: 0 },
+                  ]}
+                  accessibilityLabel={t('screens.setup.goal')}
+                  accessibilityHint={t('screens.setup.goalHint')}
+                  testID="setup-goal-input"
+                  // цель — одна фраза, переносы строк не нужны: клавиша ввода
+                  // становится синей «Готово» и закрывает клавиатуру
+                  returnKeyType="done"
+                  submitBehavior="blurAndSubmit"
+                  onSubmitEditing={Keyboard.dismiss}
+                  onFocus={measureSlot}
+                />
+              </View>
             </View>
-            <View style={styles.presets}>
-              {PRESETS.map((p) => {
-                const active = s.minutes === p.v;
-                return (
-                  <Pressable
-                    key={p.v}
-                    testID={`setup-preset-${p.v}`}
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      s.setMinutes(p.v);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
-                    accessibilityState={{ selected: active }}
-                    hitSlop={touchSlop(presetHeight())}
-                    style={[styles.preset, active && styles.presetActive]}
-                  >
-                    <Text
-                      style={[
-                        styles.presetLabel,
-                        p.v === 0 && { fontSize: sc(18) },
-                        active && { color: colors.amberBright },
-                      ]}
-                    >
-                      {p.v === 60 ? t('screens.setup.hour') : p.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
 
-          <View {...hiddenWhileEditing}>
-            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
-          </View>
-        </Animated.View>
+            <View {...hiddenWhileEditing}>
+              <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
+                {t('screens.setup.duration')}
+              </Kicker>
+              <View style={styles.stepper}>
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    s.decMinutes();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('screens.setup.decreaseDuration')}
+                  style={({ pressed }) => [
+                    styles.stepBtn,
+                    styles.stepBtnLeft,
+                    pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
+                  ]}
+                >
+                  <Minus color={colors.white65} />
+                </Pressable>
+                <View
+                  accessible
+                  accessibilityLabel={durationLabel(s.minutes)}
+                  style={styles.stepValue}
+                  testID="setup-duration-value"
+                >
+                  <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
+                  <Text style={styles.stepUnit}>{durationUnit}</Text>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    s.incMinutes();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('screens.setup.increaseDuration')}
+                  style={({ pressed }) => [
+                    styles.stepBtn,
+                    styles.stepBtnRight,
+                    pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
+                  ]}
+                >
+                  <Plus color={colors.white65} />
+                </Pressable>
+              </View>
+              <View style={styles.presets}>
+                {PRESETS.map((p) => {
+                  const active = s.minutes === p.v;
+                  return (
+                    <Pressable
+                      key={p.v}
+                      testID={`setup-preset-${p.v}`}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        s.setMinutes(p.v);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
+                      accessibilityState={{ selected: active }}
+                      hitSlop={touchSlop(presetHeight())}
+                      style={[styles.preset, active && styles.presetActive]}
+                    >
+                      <Text
+                        style={[
+                          styles.presetLabel,
+                          p.v === 0 && { fontSize: sc(18) },
+                          active && { color: colors.amberBright },
+                        ]}
+                      >
+                        {p.v === 60 ? t('screens.setup.hour') : p.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View {...hiddenWhileEditing}>
+              <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+            </View>
+          </Animated.View>
+        </ScrollView>
       </Pressable>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
