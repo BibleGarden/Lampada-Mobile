@@ -10,6 +10,7 @@ duplicated here, otherwise the two pictures drift apart.
 | --- | --- | --- |
 | [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
 | `e2e/` | Executable Maestro scenarios | Living |
+| `reminder-fire/` | Clock-dependent Maestro flows run only by `e2e/run-rem-fire.sh` | Living |
 | `reports/` | Dated results of runs | Immutable: a new run means a new file |
 | `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |
 
@@ -58,9 +59,20 @@ The flows carry risk-tier tags (`critical` / `main` / `rare`, see the legend in
 npm run test:e2e:critical  # group 1: P0 paths, every build
 npm run test:e2e:main      # group 2: the main functionality, before a release
 npm run test:e2e:rare      # group 3: slow, destructive and edge scenarios
-npm run test:e2e:all       # everything except the iPad-only flows
+npm run test:e2e:all       # normal-build flows and self-contained ordered suites; excludes iPad and prepared flows
 npm run test:e2e:ipad      # iPad group, on the one booted iPad simulator (or UDID=)
 ```
+
+Tier commands scan `e2e/` only. The three clock-dependent reminder flows live
+in `reminder-fire/` and are run by `e2e/run-rem-fire.sh`, which creates their
+time-setting helper flow. A clean `/tmp` is sufficient for tier runs. The runner
+refuses a stale `/tmp/rem-set-time.yaml` helper and removes the helper it creates on exit.
+
+The `prepared` tag marks flows that need a stub build, seeded data, an earlier
+flow's state, a simulator setting or a wrapper script. `test:e2e:all` excludes
+both `prepared` and `ipad`; run prepared flows through their documented setup.
+The four ordered suites below start from a clean state, carry no tag and run
+in `test:e2e:all`; members that depend on an earlier member carry `prepared`.
 
 The tier runs use the iPhone 17 Pro simulator, so the device-agnostic
 `ios-ans-023-recordings-actions.yaml` (ANS-023) and
@@ -68,30 +80,51 @@ The tier runs use the iPhone 17 Pro simulator, so the device-agnostic
 with a Home Indicator and a Dynamic Island. The iPhone app is portrait-only, so
 the rotation flows `ios-ipad-*.yaml` carry only the `ipad` tag and run through
 `test:e2e:ipad`, together with ANS-023. On an iPhone SE, run ANS-023 directly:
-`maestro --device <udid> test testing/e2e/ios-ans-023-recordings-actions.yaml`.
+`maestro --device <udid> test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-ans-023-recordings-actions.yaml`.
 Maestro saves landscape screenshots unrotated.
 
 Some flows have interdependencies a tag run cannot guarantee (order is not
-deterministic) and are excluded from the tier tags. Run them as ordered
-suites, whole:
+deterministic) and are excluded from the tier tags. They run whole as ordered
+suites, in `test:e2e:all` or directly:
 
 ```bash
-maestro test testing/e2e/ios-lock-suite.yaml        # LOCK-001…007 (PIN state chain)
-maestro test testing/e2e/ios-jrn-suite.yaml         # JRN with shared journal data
-maestro test testing/e2e/ios-background-suite.yaml  # music/timer across backgrounding
-maestro test testing/e2e/ios-lock-006-suite.yaml    # forgot-pin prepare → wipe
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-lock-suite.yaml        # LOCK-001…007 (PIN state chain)
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-jrn-suite.yaml         # JRN with shared journal data
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-background-suite.yaml  # music/timer across backgrounding
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-lock-006-suite.yaml    # forgot-pin prepare → wipe
 ```
 
 A separate group needs a prepared environment (stub server, seeded data or a
-debug hook) and is tracked in ClickUp task 86cbj95j4. The scripture flows run
-against a Release build pointed at the stub:
+debug hook) and is tracked in ClickUp task 86cbj95j4. The four scripture
+context and highlight flows carry `prepared`, with no risk-tier tag. Run them
+against a Release build whose `EXPO_PUBLIC_API_URL` points at the stub:
 
 ```bash
 EXPO_PUBLIC_API_URL=http://localhost:9085 npx expo run:ios --configuration Release --no-bundler
-SCRIPTURE_STUB_MODE=privacy npm run scripture:stub
-maestro test testing/e2e/ios-scripture-context-privacy.yaml
-# …then reinstall the normal Release build (re-run without the URL override).
 ```
+
+Start the stub in a separate terminal in `main` mode. Run the two flows in
+order, resetting its passage counter between them:
+
+```bash
+SCRIPTURE_STUB_MODE=main npm run scripture:stub
+# In the original terminal:
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scripture-context-main.yaml
+curl -fsS -X POST http://localhost:9085/__control -H 'Content-Type: application/json' -d '{"resetScripture":true}'
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scripture-highlight.yaml
+```
+
+Stop the stub, start it again in `privacy` mode, and run its flow. Repeat for
+`fallback` mode. Run each Maestro command in the original terminal:
+
+```bash
+SCRIPTURE_STUB_MODE=privacy npm run scripture:stub
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scripture-context-privacy.yaml
+SCRIPTURE_STUB_MODE=fallback npm run scripture:stub
+maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scripture-context-fallback.yaml
+```
+
+Then reinstall the normal Release build without the URL override.
 
 The wider stub phase (update banners, journal transcription, delayed AI
 answers, scripture navigation, legacy favorites migration, the threshold

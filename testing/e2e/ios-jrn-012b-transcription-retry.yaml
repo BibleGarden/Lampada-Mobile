@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: перед прогоном скрипт переключил stub обратно в ok (run-jrn-transcription.sh).
 ---
 # JRN-012 (часть 2): повтор после ошибки сохраняет текст. Состояние ошибки не

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-ENV: требует сеятеля legacy-favorites в SQLite — задача 86cbj95j4
 ---
 # Precondition: legacy `favorites` contains known and unknown refs; migration marker is absent.

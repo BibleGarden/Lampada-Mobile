@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # Только через run-lock-biometrics.sh: скрипт шлёт pearl.match после холодного старта.
 ---
 # LOCK-009 (часть 2): холодный старт при включённой биометрии сразу показывает

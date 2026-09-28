@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # ADR-0033: a finite prayer with music reaches zero in the background.
 # Run through run-background-music-timer-end.sh: whether the music stopped is

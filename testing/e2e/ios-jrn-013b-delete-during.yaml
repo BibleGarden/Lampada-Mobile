@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: stub остаётся в режиме delay — ответ через 12 с (run-jrn-transcription.sh).
 ---
 # JRN-013 (часть 2): удаление молитвы во время расшифровки отменяет запрос —

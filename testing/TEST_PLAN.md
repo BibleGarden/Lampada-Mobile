@@ -122,7 +122,10 @@ e2e tier of the Maestro flow that covers it (the `tags:` of the files
 in `testing/e2e/`): `critical` runs on every build, `main` before every
 release, `rare` on demand or before a major release. `ipad` marks the
 iPad-only rotation flows run by `npm run test:e2e:ipad`. An ID without a
-suffix has no e2e flow and is checked manually. An ID can list both `main`
+suffix has no standard tier flow; it may run in a prepared stub phase or be
+checked manually. The `prepared` tag marks flows needing setup and excludes them
+from `npm run test:e2e:all`; the self-contained ordered suites (lock, lock-006,
+journal, background) carry no tag and run there. An ID can list both `main`
 and `ipad` when separate phone and tablet flows cover it.
 
 | ID | Actions | Expected result |
@@ -165,7 +168,7 @@ tier of its e2e runs.
 | START-001 [critical] | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
-| START-004 [main] | A SQLite error while creating the session | the button does not stay blocked forever, the error is diagnosable |
+| START-004 | A SQLite error while creating the session | the button does not stay blocked forever, the error is diagnosable |
 | START-005 [ipad] | Open the threshold on an iPad with a multi-line goal and rotate between portrait and landscape | landscape shows the briefing and hold-to-start button side by side; all three briefing items fit for a typical multi-line goal; longer content scrolls without covering the button; portrait returns to the vertical layout |
 
 ### The timer and the prayer flow
@@ -175,7 +178,7 @@ tier of its e2e runs.
 | SES-001 [critical] | A finite timer | it decreases to zero, waits for the reader, answer and narration, then opens reflection after one second on the unobstructed prayer screen |
 | SES-002 [main] | The ∞ mode | the elapsed time is displayed, there is no automatic finish |
 | SES-003 | Change the timer with the − / + buttons | the time changes by the expected step and never becomes invalid |
-| SES-004 [rare] | Background the app and come back after 10-60 seconds | the timer behaviour matches the chosen product policy; any divergence is recorded |
+| SES-004 | Background the app and come back after 10-60 seconds | the timer behaviour matches the chosen product policy; any divergence is recorded |
 | SES-005 | Finish early | an open answer is saved, then the reflection opens once |
 | SES-006 | Choose "Back to prayer" on the reflection | a new countdown starts with the same goal, without losing the already saved answers |
 | SES-007 | A very long goal | the text does not overlap the timer and the companion panel |
@@ -187,12 +190,12 @@ tier of its e2e runs.
 | MUS-001 [main] | Turn the music on and off with the button in the session | the button and the indicator change state, playback starts and stops |
 | MUS-002 | Launch the app with no network and turn the music on | the bundled pieces are fully available offline |
 | MUS-003 | Wait for the end of the playlist | fifteen tracks play in sequence and the loop starts again |
-| MUS-004 [rare] | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
+| MUS-004 | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
 | MUS-005 | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording |
 | MUS-006 [main] | Finish the prayer manually or after timer expiry | the music player stops and does not play on reflection or the next session screens |
 | MUS-007 [main] | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |
-| MUS-009 [rare] | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
+| MUS-009 | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
 
 ### Answers and audio
 
@@ -240,11 +243,11 @@ tier of its e2e runs.
 | AI-001 | The AI variables are missing | the local questions are used, the main flow works |
 | AI-002 [main] | Successful AI responses | the questions are not empty, the transitions are not blocked |
 | AI-003 [main] | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, it is visibly labelled as a backup question, and there is no endless loading or unhandled rejection |
-| AI-004 [main] | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
-| AI-005 [main] | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
+| AI-004 | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
+| AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
 | AI-006 [main] | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; it says the data is used only for AI processing and is not stored on the server; both choices have equal weight |
 | AI-007 [main] | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record |
-| AI-008 [main] | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
+| AI-008 | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
 | AI-009 | Finish the prayer with a fast, a slow and an unavailable AI | the closing question is prepared 15 seconds before zero; a ready one is shown immediately, a pending one shows a loader without an intermediate fallback; changing the answer in the last 15 seconds updates the prefetch; a real fallback is explicitly marked as such |
 | AI-010 [critical] | On a fresh or upgraded installation, start the first prayer | the core disclosure names the application server, the transferred topic and both AI purposes, and says the topic is not stored on the server before any content request |
 | AI-011 [main] | Press "Transcribe" for the first time, deny it and retry | the disclosure names the selected audio file, the AI transcription purpose and the server's no-storage rule; no upload starts and the recording stays usable |
@@ -254,13 +257,13 @@ tier of its e2e runs.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| SCR-001 [main] | Get the first server passage and move on | the first request shows loading, the next passage comes from the prefetch and differs |
-| SCR-002 [main] | Go back and forward again | the actual trail is shown, with no new network requests and no change to the exclusions |
-| SCR-003 [main] | Add and remove a favourite | the canonical snapshot changes immediately and survives a restart |
+| SCR-001 | Get the first server passage and move on | the first request shows loading, the next passage comes from the prefetch and differs |
+| SCR-002 | Go back and forward again | the actual trail is shown, with no new network requests and no change to the exclusions |
+| SCR-003 | Add and remove a favourite | the canonical snapshot changes immediately and survives a restart |
 | SCR-004 | Open a long passage with a nullable title | the paragraphs are preserved, a missing title does not break the reader |
 | SCR-005 | Turn "Use my answers" off and go through the dialogue | `user_replies` is absent from the serialized scripture request |
-| SCR-006 [main] | Get a `safe_pool` or a `retrieval_fallback` | the passage is displayed as an ordinary success, with no technical message |
-| SCR-007 [main] | 403, 422, 429, 503 and a timeout | no crash and no endless retry; the technical `detail` is not shown |
+| SCR-006 | Get a `safe_pool` or a `retrieval_fallback` | the passage is displayed as an ordinary success, with no technical message |
+| SCR-007 | 403, 422, 429, 503 and a timeout | no crash and no endless retry; the technical `detail` is not shown |
 | SCR-008 [main] | Choose a language, a translation and a narration, save and restart the app | the complete triple is restored, a new session sends the chosen `language` and `translation` |
 | SCR-009 | Change the language, then the translation | the child lists are cleared; an incompatible or incomplete triple cannot be saved |
 | SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is available, the previously saved choice is not damaged |
@@ -272,12 +275,12 @@ tier of its e2e runs.
 | SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
 | SCR-017 | Read silently in the expanded reader when time expires; continue scrolling, then close the reader | the notice does not intercept touches or close the passage; closing the reader returns to the timer, then reflection opens after one second |
 | SCR-018 | Reopen the reader, pause/resume narration, open an answer or add time during the one-second delay | the pending transition is cancelled; open activities and audio errors remain visible; extra time resets expiry; completion runs once |
-| SCR-019 [main] | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
+| SCR-019 | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
 | SCR-020 | A launch and navigation with no network | at most seven recently shown compatible passages are available; with an empty cache there is a neutral error and a retry |
 | SCR-021 | Recover the network while an offline passage is visible and press its retry label | a fresh server passage replaces the offline frontier without walking to the end of the saved history |
 | SCR-022 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
 | SCR-023 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
-| SCR-024 [main] | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
+| SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
 | SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 
 ### Content reports
@@ -300,7 +303,7 @@ so every scenario below is Not run and belongs to the `main` tier.
 | ID | Scenario | Expected result |
 |---|---|---|
 | END-001 [critical] | Finish without a takeaway | the session finishes and returns directly Home with a temporary saved notice |
-| END-002 [critical] | Finish with a takeaway | Home opens with a temporary saved notice; the text remains in the journal |
+| END-002 [critical] | Finish with a takeaway | Home opens with a temporary saved notice, checked immediately after finishing; the text remains in the journal |
 | END-003 [main] | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `sessionResume.test.mjs`) |
@@ -314,13 +317,13 @@ so every scenario below is Not run and belongs to the `main` tier.
 |---|---|---|
 | JRN-001 [critical] | An empty history | a clear empty state without an error |
 | JRN-002 [main] | An abandoned empty session | it is not shown in the journal |
-| JRN-003 [main] | Search by the goal, the takeaway, a question and an answer | the right records are found |
-| JRN-004 [main] | A Cyrillic search in a different case | the search stays case-insensitive |
+| JRN-003 | Search by the goal, the takeaway, a question and an answer | the right records are found |
+| JRN-004 | A Cyrillic search in a different case | the search stays case-insensitive |
 | JRN-005 [main] | Open the details of a text and of a voice prayer | the questions, the answers and the recordings are linked correctly |
-| JRN-006 [main] | Play an audio, close the details, start another one | two sources never play at once, the player UI is reset |
-| JRN-007 [main] | Delete a prayer | the session, the answers, the recording rows and the files are deleted; the streak day remains |
-| JRN-008 [rare] | A restart and installing a new build over the old one | SQLite and the audio files survive and are readable |
-| JRN-009 [main] | The recording file is missing but the database row remains | the screen does not crash, the problem is handled or clearly reported |
+| JRN-006 | Play an audio, close the details, start another one | two sources never play at once, the player UI is reset |
+| JRN-007 | Delete a prayer | the session, the answers, the recording rows and the files are deleted; the streak day remains |
+| JRN-008 | A restart and installing a new build over the old one | SQLite and the audio files survive and are readable |
+| JRN-009 | The recording file is missing but the database row remains | the screen does not crash, the problem is handled or clearly reported |
 | JRN-010 | Open a voice answer without text and press "Transcribe" | loading appears, then the text under the corresponding audio player; after reopening the text is still there |
 | JRN-011 | Search by a word from a transcript in a different case | the right prayer is found |
 | JRN-012 | Get a transcription error in the journal and retry | the audio stays available, a repeated attempt can save the text |
@@ -347,6 +350,10 @@ so every scenario below is Not run and belongs to the `main` tier.
 | REM-014 | Tap the trash button for a rule or time, then tap it again within three seconds | the first tap highlights the button without deleting; the second deletes only the selected item |
 | REM-015 | Arm deletion, then wait three seconds, edit the schedule, close the editor or background the app | confirmation clears; deleting again requires two taps; arming a different target cancels the previous one |
 
+REM-004/005/008 run through `e2e/run-rem-fire.sh`. Their clock-dependent flows
+are in `reminder-fire/`, outside the tier scan; the runner generates the required
+time-setting helper and captures the REM-008 screen at the scheduled time.
+
 ### App lock
 
 The protection is optional and off by default; the decision and its boundaries
@@ -356,12 +363,12 @@ are in
 | ID | Scenario | Expected result |
 |---|---|---|
 | LOCK-001 [main] | The protection was never enabled | no screen asks for a code, the settings have no line for changing it |
-| LOCK-002 [main] | Enable a six-digit PIN and restart the app | the input is finished only by the user's confirmation, a cold start opens the lock screen, the content is hidden |
-| LOCK-003 [main] | A wrong, then a correct code on the lock screen | the wrong one keeps the user on the screen with an error, the correct one lets them in without a separate confirmation |
-| LOCK-004 [main] | Change the PIN to a code of a different length | the change requires the current code, the new one lets the user in, the old one does not, the screen waits for the new number of digits |
-| LOCK-005 [main] | Disable the protection | cancelling and a wrong code do not remove it, the correct one does, a cold start no longer asks for a code |
-| LOCK-006 [rare] | "Forgot your PIN?" and two confirmations | cancelling at either of the two steps erases nothing, confirming wipes the journal and removes the protection |
-| LOCK-007 [main] | Returning from the background before and after a minute | a short switch does not ask for the code, more than a minute does; the app process is not restarted |
+| LOCK-002 | Enable a six-digit PIN and restart the app | the input is finished only by the user's confirmation, a cold start opens the lock screen, the content is hidden |
+| LOCK-003 | A wrong, then a correct code on the lock screen | the wrong one keeps the user on the screen with an error, the correct one lets them in without a separate confirmation |
+| LOCK-004 | Change the PIN to a code of a different length | the change requires the current code, the new one lets the user in, the old one does not, the screen waits for the new number of digits |
+| LOCK-005 | Disable the protection | cancelling and a wrong code do not remove it, the correct one does, a cold start no longer asks for a code |
+| LOCK-006 | "Forgot your PIN?" and two confirmations | cancelling at either of the two steps erases nothing, confirming wipes the journal and removes the protection |
+| LOCK-007 | Returning from the background before and after a minute | a short switch does not ask for the code, more than a minute does; the app process is not restarted |
 | LOCK-008 | The app snapshot in the task switcher | the privacy screen is shown instead of the content |
 | LOCK-009 | Entry by Face ID / Touch ID | the toggle is available only with the PIN enabled and a sample enrolled, a refusal leaves entry by code |
 | LOCK-010 | The biometric samples are removed in the system after the toggle was enabled | the lock screen does not offer biometrics, the code keeps working |

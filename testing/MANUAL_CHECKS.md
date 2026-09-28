@@ -251,7 +251,7 @@ or a server log) and static inspection.
 | LNG-011 | Allow core AI; start a prayer after choosing `en` / `ru` / `uk`. | Every question request carries `default_language` equal to the current interface language; a switch does not reuse a question prepared for another language. | A proxy log or a MITM of the request. Maestro cannot see the body. (`ios-lng-009-fallback-questions.yaml` covers the fallback-questions slice.) |
 | LNG-012 | Save an answer (or finish a prayer with a typed topic), then switch the interface language. | Stored user text and already shown questions stay in the language they arrived in. | The setup-draft path is unreachable: leaving setup clears the draft (`NAV-002`). Use a finished prayer or an answer already in the journal. |
 | ANS-012 | After the automated "do not press Transcribe" path, read the proxy. | No request, no tokens. | Proxy / server log |
-| AI-005 / SCR-005 | Core AI denied; request a passage. | `topic` and `user_replies` absent. `ios-scripture-context-privacy.yaml` is in the `critical` tier and the privacy stub returns 422 if a reply leaks; the proxy log is the independent proof. | Proxy log, or the stub with `SCRIPTURE_STUB_MODE=privacy` |
+| AI-005 / SCR-005 | Core AI denied; request a passage. | `topic` and `user_replies` absent. `ios-scripture-context-privacy.yaml` runs in the prepared stub group; the privacy stub returns 422 if a reply leaks, and the proxy log is independent proof. | Proxy log, or the stub with `SCRIPTURE_STUB_MODE=privacy` |
 | Section 9, security | Grep the Release bundle and the client logs. | No Google / server master key; no answers, tokens or full payloads in client logs; audio reaches the transcription URL only after an explicit press and consent. | The built `.app` and a session log. Do not print secret values. |
 
 `LOCK-011` used to live here; `run-lock-storage-check.sh` now greps the device
@@ -283,7 +283,8 @@ These flows exist and are automated, but a green `test:e2e:critical|main|rare`
 summary does not include them: they need a wrapper script, a prepared
 environment, or an explicit ordered run. Tag: prepared environment, not "not
 written". Do this sitting only when you want those IDs, not because the tier
-summary was green.
+summary was green. The lock, lock-006, journal and background suites also run
+in `npm run test:e2e:all`.
 
 | Group | Command | IDs / flows |
 | --- | --- | --- |
@@ -300,12 +301,10 @@ summary was green.
 
 Notes:
 
-- The stub-backed scripture flows `ios-scripture-context-privacy.yaml`
-  (`critical`), `ios-scripture-context-fallback.yaml`,
-  `ios-scripture-context-main.yaml` and `ios-scripture-highlight.yaml`
-  (`main`) sit inside the tier tags, but their deterministic assertions assume
-  the stub setup from `testing/README.md`; against a live server they prove
-  only the happy path.
+- The stub-backed scripture flows `ios-scripture-context-privacy.yaml`,
+  `ios-scripture-context-fallback.yaml`, `ios-scripture-context-main.yaml` and
+  `ios-scripture-highlight.yaml` carry `prepared`, not risk-tier tags. Run them
+  with the stub setup in `testing/README.md`.
 - `JRN-006` (`ios-stage06-jrn-006-audio-switch.yaml`) needs its recordings
   seeded by hand; `JRN-009` (`ios-stage06-jrn-009-missing-file.yaml`) needs a
   recording file deleted from the container. Both flows are written; the

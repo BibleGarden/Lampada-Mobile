@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # Только через run-lock-biometrics.sh: после тапа по тумблеру скрипт шлёт
 # сигнал совпадения Face ID (simctl spawn ... notifyutil -p ...pearl.match).
 ---

@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: run-stub-phase.sh сбрасывает счётчик stub между частями
 # (POST /__control {"resetScripture":true}) — обе сессии получают первую
 # фикстуру (Псалом 22), поэтому избранное сопоставимо. В теговые прогоны не входит.

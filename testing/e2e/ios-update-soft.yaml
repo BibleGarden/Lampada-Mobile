@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: stub /api/version-check с update_type=soft (run-stub-phase.sh).
 # В теговые прогоны не входит.
 ---

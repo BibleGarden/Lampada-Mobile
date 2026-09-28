@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # Гибридный сценарий: снапшот в переключателе приложений фиксирует
 # run-lock-appswitcher.sh (AppleScript → меню Simulator → App Switcher →
 # simctl io screenshot). В теговые прогоны не входит.

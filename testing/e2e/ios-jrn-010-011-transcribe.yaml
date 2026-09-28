@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: транскрипция детерминирована через stub :9085 (86cbj95j4).
 # В теговые прогоны не входит.
 ---

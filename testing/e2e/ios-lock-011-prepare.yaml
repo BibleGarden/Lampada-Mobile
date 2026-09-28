@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # Фрагмент для run-lock-storage-check.sh: включает защиту пином 123456.
 # Предусловие: защита выключена.
 ---

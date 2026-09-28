@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: stub в режиме delay — ответ через 12 с (run-jrn-transcription.sh).
 ---
 # JRN-013 (часть 1): закрытие деталей во время расшифровки отменяет запрос —

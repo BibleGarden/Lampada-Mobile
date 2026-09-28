@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: пейлоды жалоб принимает stub :9085 (run-stub-phase.sh или
 # вручную: npm run scripture:stub). В теговые прогоны не входит.
 ---

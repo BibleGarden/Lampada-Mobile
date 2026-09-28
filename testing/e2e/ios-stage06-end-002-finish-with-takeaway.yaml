@@ -47,14 +47,13 @@ tags:
 - takeScreenshot: END-002-reflect-filled
 - tapOn:
     id: "reflect-complete-button"
-- assertVisible:
-    id: "home-title-lit"
+# Остаточный риск: tapOn ждёт успокоения экрана, и долгий переход может съесть часть 4-секундного окна баннера.
 - assertVisible:
     id: "prayer-saved-notice"
 - assertVisible:
-    id: "journal-button"
-- assertVisible:
     id: "home-title-lit"
+- assertVisible:
+    id: "journal-button"
 - tapOn:
     id: "journal-button"
 - assertVisible:
