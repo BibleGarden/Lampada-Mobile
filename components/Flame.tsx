@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo } from 'react';
-import { AppState } from 'react-native';
 import {
   BlurMask,
   Canvas,
@@ -21,6 +20,7 @@ import {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { colors } from '../lib/theme';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
 
 type Props = {
   /** Ширина холста; всё масштабируется от неё */
@@ -77,6 +77,7 @@ const gust = (tt: number) => {
 // - ядро у фитиля почти неподвижно — танцует только оболочка;
 // - гало подсвечивается тем же сигналом, свет отзывается на вздрагивания.
 export default function Flame({ width = 240, lit = true, ember = false, paused = false }: Props) {
+  const visible = useVisibleScreen();
   const W = width;
   const H = ember ? width : width * 1.17;
   // холст больше занимаемого места: гало должно растворяться,
@@ -95,26 +96,17 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
   const flameBase = ember ? pad + H * 0.66 : bowlTop + W / 60;
   const flameMidY = flameBase - flameH * 0.5;
 
-  // t — «часы» анимации; в фоне не создаём новые Skia-пути.
+  // t — «часы» анимации; скрытый экран не создаёт новые Skia-пути.
   const t = useSharedValue(0);
   useEffect(() => {
-    const onAppStateChange = (state: typeof AppState.currentState) => {
-      cancelAnimation(t);
-      if (state !== 'active' || paused) return;
-      t.value = 0;
-      t.value = withRepeat(
-        withTiming(Math.PI * 2 * 1000, { duration: 1000_000, easing: Easing.linear }),
-        -1,
-        false,
-      );
-    };
-    onAppStateChange(AppState.currentState);
-    const subscription = AppState.addEventListener('change', onAppStateChange);
-    return () => {
-      subscription.remove();
-      cancelAnimation(t);
-    };
-  }, [t, paused]);
+    if (!visible || paused) return;
+    t.value = withRepeat(
+      withTiming(Math.PI * 2 * 1000, { duration: 1000_000, easing: Easing.linear }),
+      -1,
+      false,
+    );
+    return () => cancelAnimation(t);
+  }, [t, paused, visible]);
 
   // оболочка: яйцо с блуждающим кончиком и дышащей высотой.
   // Талия движется «сейчас», кончик — с запаздыванием 1.2 рад (~190 мс):

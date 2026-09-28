@@ -183,6 +183,7 @@ tier of its e2e runs.
 | SES-006 | Choose "Back to prayer" on the reflection | a new countdown starts with the same goal, without losing the already saved answers |
 | SES-007 | A very long goal | the text does not overlap the timer and the companion panel |
 | SES-008 [ipad] | Inspect the Question / Quote switcher on an iPad | both icons scale with their labels and stay aligned in the two tabs; inspect the landscape screenshot in the ANS-033 flow |
+| SES-009 | Move Home → Setup → Session → Reflection → Home, open and close the answer and recordings sheets, then background and foreground the app | only the exposed flame, halo, music pulse and recording wave animate; hidden screens and closed sheets have no visual loop or UI polling; animations resume when exposed, the timer catches up and background music retains its deadline fade. Energy measurement in Instruments is separate |
 
 ### Background music
 
@@ -404,6 +405,9 @@ are in
 - correctness after background/foreground, screen lock and a system call;
 - no leftover timers, microphone recording or audio player after leaving a
   screen.
+- covered routes (including the PIN, privacy and update overlays) and closed
+  sheets have no running visual work; music and the lock-screen timer retain
+  their intended background behavior (SES-009).
 
 ### Security and privacy
 

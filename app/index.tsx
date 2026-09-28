@@ -9,6 +9,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
 import { useSession } from '../lib/store';
 import { startHomeRefresh } from '../lib/homeRefresh';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { colors, column, fonts, sc, useStyles } from '../lib/theme';
 
 const greetingByHour = (t: ReturnType<typeof useI18n>['t']) => {
@@ -26,6 +27,7 @@ export default function Home() {
   const { streak, loadStreak, reset } = useSession();
   const { prayerSaved } = useLocalSearchParams<{ prayerSaved?: string }>();
   const [showSavedNotice, setShowSavedNotice] = useState(false);
+  const visible = useVisibleScreen();
 
   useEffect(() => {
     if (prayerSaved !== '1') return;
@@ -38,10 +40,10 @@ export default function Home() {
   }, [prayerSaved]);
 
   useEffect(() => {
-    if (!showSavedNotice) return;
+    if (!showSavedNotice || !visible) return;
     const timer = setTimeout(() => setShowSavedNotice(false), 4000);
     return () => clearTimeout(timer);
-  }, [showSavedNotice]);
+  }, [showSavedNotice, visible]);
 
   // Сброс сессии — только при переходе на Home; календарь обновляется и без навигации.
   useFocusEffect(

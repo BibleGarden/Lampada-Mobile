@@ -27,6 +27,7 @@ import { useLock } from '../lib/lock';
 import LockGate from '../components/LockGate';
 import UpdateGate from '../components/UpdateGate';
 import { screenReaderHiddenProps } from '../lib/a11y';
+import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
@@ -103,21 +104,23 @@ export default function RootLayout() {
           экрана: оверлеи — сиблинги навигации, а не её родитель, и пометить
           содержимое под ними больше неоткуда. Раскладку она не трогает:
           flex: 1 и никаких стилей сверх него. */}
-      <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered || updateVisible)}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#0e0a07' },
-            animation: 'fade',
-            animationDuration: 350,
-          }}
-        >
-          {/* из сессии и рефлексии нельзя выпасть случайным жестом:
-              выход — только явными кнопками (finishEarly / завершение) */}
-          <Stack.Screen name="session" options={{ gestureEnabled: false }} />
-          <Stack.Screen name="reflect" options={{ gestureEnabled: false }} />
-        </Stack>
-      </View>
+      <ScreenUncoveredContext.Provider value={!covered && !updateVisible}>
+        <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered || updateVisible)}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: '#0e0a07' },
+              animation: 'fade',
+              animationDuration: 350,
+            }}
+          >
+            {/* из сессии и рефлексии нельзя выпасть случайным жестом:
+                выход — только явными кнопками (finishEarly / завершение) */}
+            <Stack.Screen name="session" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="reflect" options={{ gestureEnabled: false }} />
+          </Stack>
+        </View>
+      </ScreenUncoveredContext.Provider>
       {/* Последним элементом, поверх всей навигации: экран блокировки и шторку
           приватности нельзя обойти ни переходом, ни диплинком. */}
       <UpdateGate covered={covered} onVisibleChange={setUpdateVisible} />

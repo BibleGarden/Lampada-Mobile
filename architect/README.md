@@ -277,6 +277,26 @@ deadline, and finishing or resetting removes the card. An infinite prayer create
 no system card. The media controls of the music stay independent: pausing a track
 does not change the prayer deadline.
 
+### Visible work lifecycle
+
+Navigation focus, an active `AppState` and the absence of the PIN, privacy or
+update overlay jointly define whether a screen is visible. A sheet also needs
+to be open. The session's music and native lock-screen
+timer are functional background work and retain their separate lifecycle.
+
+| Component or work | Hidden condition | Before | After |
+| --- | --- | --- | --- |
+| Home and reflection `Flame` | App background, another route above it, or the reflection input in an App Store video build | App background and the video input paused it; a covered Home kept animating | The flame runs only on a focused foreground screen; the video input pause still applies |
+| Session `TimerHalo`, `MusicPulse`, progress ring, keep-awake | App background, another route, or a sheet over the timer/music button | Halo paused under the answer sheet only; the pulse and keep-awake survived hidden screens | Repeating visuals run only while exposed; the ring animation and keep-awake stop when the screen hides |
+| `RecordingsSheet` wave, elapsed poll and slow transcription hint | Sheet closed, screen covered, or app background | Recording wave and 250 ms poll depended only on recording state; the hint timer could stay mounted in a closed sheet | All three require an open foreground sheet; an active recording stops when hidden, while an already requested transcription can finish |
+| Session UI tick | App background or session screen covered | One-second interval kept updating the store | One-second interval runs only on a visible session; background music schedules one deadline wakeup for its fade, and foreground return immediately reconciles elapsed time |
+| Music players, crossfade and deadline fade | App background or lock screen | Music continued; crossfade and final fade drove the native players | Music continues as designed, with bounded fade work at track changes and the prayer deadline |
+| Scripture, answer draft and journal audio | App background or their screen loses focus | Scripture stopped in the background; draft and journal players could keep playing behind a route | Transient playback stops when its screen or sheet hides; scripture also stops on route blur |
+| Home midnight refresh and saved notice | Home route covered or app background | Midnight refresh already stopped on route blur/background; the notice timeout did not | Midnight refresh remains focus scoped; the notice timeout pauses while Home is hidden |
+| Threshold hold feedback | Route covered or app background during a hold | Haptic timeouts and ring animation were cleared only on unmount or gesture finalization | Haptic timeouts and ring animation are canceled when the screen hides |
+| Settings permission/biometry listeners and delete confirmation | Settings route covered or app background | Foreground listeners remained mounted behind other routes; deletion timeout cleared on background | Listeners exist only while visible; confirmation clears when visibility ends |
+| `ScreenBg`, navigation transitions, lock gate and network request timeouts | Route covered or app background | Static gradient; finite transitions, global privacy listener and bounded request deadlines | Same finite or global behavior; none has a frame or polling loop |
+
 The main scripture selection is done by the server with AI, by the meaning of the
 prayer topic and of the person's replies that the setting allows, not by keyword
 match. The first request starts as prefetch on entering the session while the

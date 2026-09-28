@@ -48,6 +48,8 @@ import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
+import { backgroundDeadlineDelay } from '../lib/visibleActivity';
 import { hasSessionActivity, scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
   hastenMusicFadeOut,
@@ -98,7 +100,7 @@ export default function Session() {
 function SessionScreen() {
   const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
-  useKeepAwake(); // экран не гаснет во время молитвы
+  const visible = useVisibleScreen();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const ringSize = ringSizeFor(height);
@@ -409,7 +411,7 @@ function SessionScreen() {
   const scriptureAudio = useScriptureAudio({
     scripture: currentScripture,
     voice: s.scriptureVoice,
-    enabled: s.dockMode === 'scripture' && appState === 'active',
+    enabled: s.dockMode === 'scripture' && visible,
     onAudioBusyChange: handleTransientAudioChange,
   });
   const activityOpen = hasSessionActivity({
@@ -426,11 +428,20 @@ function SessionScreen() {
     [handleTransientAudioChange, scriptureAudio.stop],
   );
 
-  // секундный тик
+  // Секундный тик нужен лишь видимому интерфейсу. В фоне один таймер
+  // до дедлайна сохраняет затухание музыки без постоянного опроса.
   useEffect(() => {
-    const id = setInterval(() => useSession.getState().tick(), 1000);
-    return () => clearInterval(id);
-  }, []);
+    if (visible) {
+      useSession.getState().tick();
+      const id = setInterval(() => useSession.getState().tick(), 1000);
+      return () => clearInterval(id);
+    }
+    if (appState === 'active') return;
+    const delay = backgroundDeadlineDelay(Date.now(), s.endsAtMs, s.musicOn, timeExpired);
+    if (delay === null) return;
+    const id = setTimeout(() => useSession.getState().tick(), delay);
+    return () => clearTimeout(id);
+  }, [visible, appState, s.musicOn, s.endsAtMs, timeExpired]);
 
   // Android «назад» не должен срывать молитву — глотаем жест
   useEffect(() => {
@@ -559,6 +570,10 @@ function SessionScreen() {
 
   // кольцо: доля прошедшего времени (или минутный цикл в ∞-режиме)
   useEffect(() => {
+    if (!visible) {
+      cancelAnimation(ringProgress);
+      return;
+    }
     if (s.remaining === null) {
       const inMinute = s.elapsed % 60;
       if (inMinute === 0) {
@@ -572,7 +587,7 @@ function SessionScreen() {
         duration: 1000,
       });
     }
-  }, [s.remaining, s.elapsed]);
+  }, [s.remaining, s.elapsed, visible, ringProgress]);
 
   const finishEarly = () => { void goToReflect(); };
 
@@ -592,6 +607,7 @@ function SessionScreen() {
 
   return (
     <View style={styles.root}>
+      {visible && <KeepAwakeWhileVisible />}
       <ScreenBg />
       {/* пока открыта шторка ответа или читалка, экран под ней скрыт */}
       <Animated.View
@@ -624,7 +640,7 @@ function SessionScreen() {
               {t('screens.session.title')}
             </Kicker>
             <View style={styles.musicBtnWrap}>
-              {musicPlaying && <MusicPulse size={sc(34)} />}
+              {musicPlaying && <MusicPulse size={sc(34)} active={visible && !answerOpen && !readerOpen} />}
               <IconButton
                 onPress={s.toggleMusic}
                 bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
@@ -639,7 +655,7 @@ function SessionScreen() {
           </View>
 
           <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
-            <TimerHalo size={ringSize} active={!answerOpen} />
+            <TimerHalo size={ringSize} active={visible && !answerOpen && !readerOpen} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
             <Pressable
               accessibilityLabel={t('screens.session.adjust')}
@@ -752,18 +768,24 @@ function SessionScreen() {
 
 // Пока музыка звучит, кнопка тихо «дышит» тёплым ореолом — это и есть
 // индикатор вместо отдельного бейджа под шапкой.
-function MusicPulse({ size }: { size: number }) {
+function KeepAwakeWhileVisible() {
+  useKeepAwake();
+  return null;
+}
+
+function MusicPulse({ size, active }: { size: number; active: boolean }) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const pulse = useSharedValue(0);
   useEffect(() => {
+    if (!active) return;
     pulse.value = withRepeat(
       withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
     return () => cancelAnimation(pulse);
-  }, [pulse]);
+  }, [pulse, active]);
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + pulse.value * 0.36 }],
     opacity: 0.4 - pulse.value * 0.3,

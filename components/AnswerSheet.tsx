@@ -53,6 +53,7 @@ import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } fro
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { playAudioRecording } from '../lib/audioPlayerOperation';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
@@ -96,6 +97,7 @@ export default function AnswerSheet({
   onAudioBusyChange,
 }: Props) {
   const { t } = useI18n();
+  const screenVisible = useVisibleScreen();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   // подписка только на нужное — не ререндерим шторку от тика таймера
@@ -405,6 +407,15 @@ export default function AnswerSheet({
     }
   }, [playerStatus.didJustFinish, playerStatus.error, onAudioBusyChange]);
 
+  useEffect(() => {
+    if (screenVisible && recordingsSheetOpen) return;
+    if (playingId === null) return;
+    draftPlaybackGenerationRef.current += 1;
+    player.pause();
+    setPlayingId(null);
+    onAudioBusyChange?.(false);
+  }, [screenVisible, recordingsSheetOpen, playingId, player, onAudioBusyChange]);
+
   // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
   // и кнопки остались видны; спряталась — обратно на нижнюю.
   // Слушатель, а не onFocus: свой snap шторка перебивает при показе клавиатуры
@@ -664,6 +675,12 @@ export default function AnswerSheet({
     // не может удалить файл, уже сохранённый первым stop.
     return recordingOperation.runStop(performStopRecording).catch(() => null);
   };
+
+  useEffect(() => {
+    if (screenVisible && recordingsSheetOpen) return;
+    if (recordingPhase === 'starting') recordingOperation.cancelStart();
+    if (recordingPhase === 'recording') void stopRecording();
+  }, [screenVisible, recordingsSheetOpen, recordingPhase, recordingOperation]);
 
   // Тот же нативный durationMillis, из которого сохраняется длительность записи.
   const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
