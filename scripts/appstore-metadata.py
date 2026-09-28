@@ -12,6 +12,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -194,9 +195,9 @@ def current(client: Client) -> dict[str, Any]:
     app = client.request("GET", f"/v1/apps/{apple_id}")["data"]
     if app["id"] != apple_id:
         raise ValueError("ASC returned an unexpected app resource ID")
-    validate_content_rights(app["attributes"].get("contentRightsDeclaration"))
     infos = client.list(f"/v1/apps/{apple_id}/appInfos?limit=200")
-    info = unique(infos, "app info")
+    editable_infos = [item for item in infos if item.get("attributes", {}).get("state") in EDITABLE_STATES]
+    info = unique(editable_infos, "editable app info")
     versions = client.list(f"/v1/apps/{apple_id}/appStoreVersions?" +
                            urllib.parse.urlencode({"filter[platform]": "IOS", "limit": 200}))
     editable = [item for item in versions if item.get("attributes", {}).get("appStoreState") in EDITABLE_STATES]
@@ -226,8 +227,16 @@ def source_locales(initial: bool = False) -> list[str]:
     return locales
 
 
-def selected_attributes(item: dict[str, Any] | None, fields: tuple[str, ...]) -> dict[str, Any]:
-    attributes = item.get("attributes", {}) if item else {}
+def require_locales(state: dict[str, Any], locales: Iterable[str]) -> None:
+    for locale in locales:
+        for lookup, label in (("infoLocales", "app information"),
+                              ("versionLocales", "App Store version")):
+            if locale not in state[lookup]:
+                raise ValueError(f"{locale} is missing from ASC {label}; add the language in ASC first")
+
+
+def selected_attributes(item: dict[str, Any], fields: tuple[str, ...]) -> dict[str, Any]:
+    attributes = item["attributes"]
     return {field: attributes.get(field) for field in fields}
 
 
@@ -240,21 +249,22 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
 
 def pull(state: dict[str, Any]) -> None:
     locales = source_locales(initial=True)
+    require_locales(state, locales)
     extra = sorted((state["infoLocales"].keys() | state["versionLocales"].keys()) - set(locales))
     print(f"Editable iOS version: {state['version']['attributes'].get('versionString')} "
           f"({state['version']['attributes'].get('appStoreState')})")
     print("Extra ASC locales: " + (", ".join(extra) if extra else "none"))
     for locale in locales:
         write_json(SOURCE / f"{locale}.json", {
-            "appInfo": selected_attributes(state["infoLocales"].get(locale), INFO_FIELDS),
-            "appStoreVersion": selected_attributes(state["versionLocales"].get(locale), VERSION_FIELDS),
+            "appInfo": selected_attributes(state["infoLocales"][locale], INFO_FIELDS),
+            "appStoreVersion": selected_attributes(state["versionLocales"][locale], VERSION_FIELDS),
         })
         print(f"Wrote store/metadata/{locale}.json")
     write_json(SOURCE / "app.json", {
         "primaryCategory": state["primaryCategory"],
         "secondaryCategory": state["secondaryCategory"],
         "copyright": state["version"]["attributes"].get("copyright"),
-        "contentRightsDeclaration": state["app"]["attributes"]["contentRightsDeclaration"],
+        "contentRightsDeclaration": state["app"]["attributes"].get("contentRightsDeclaration"),
     })
     print("Wrote store/metadata/app.json")
 
@@ -338,13 +348,10 @@ def size_label(field: str, value: Any) -> str:
 def changes(state: dict[str, Any], locales: dict[str, dict[str, Any]],
             shared: dict[str, Any]) -> list[tuple[str, str, Any, Any]]:
     result = []
+    require_locales(state, locales)
     extra = sorted((state["infoLocales"].keys() | state["versionLocales"].keys()) - locales.keys())
     print("Extra ASC locales: " + (", ".join(extra) if extra else "none"))
     for locale, source in locales.items():
-        for lookup, label in (("infoLocales", "app information"),
-                              ("versionLocales", "App Store version")):
-            if locale not in state[lookup]:
-                raise ValueError(f"{locale} is missing from ASC {label}; add the language in ASC first")
         for section, remote, fields in (
             ("appInfo", state["infoLocales"][locale], INFO_FIELDS),
             ("appStoreVersion", state["versionLocales"][locale], VERSION_FIELDS),
@@ -360,7 +367,7 @@ def changes(state: dict[str, Any], locales: dict[str, dict[str, Any]],
     copyright_now = state["version"]["attributes"].get("copyright")
     if shared["copyright"] != copyright_now:
         result.append(("app", "copyright", copyright_now, shared["copyright"]))
-    rights_now = state["app"]["attributes"]["contentRightsDeclaration"]
+    rights_now = state["app"]["attributes"].get("contentRightsDeclaration")
     if shared["contentRightsDeclaration"] != rights_now:
         result.append(("app", "contentRightsDeclaration", rights_now,
                        shared["contentRightsDeclaration"]))
@@ -422,7 +429,7 @@ def push(client: Client, state: dict[str, Any], locales: dict[str, dict[str, Any
         patch(client, "appStoreVersions", state["version"], {"copyright": shared["copyright"]})
         print("Updated copyright")
         writes += 1
-    if shared["contentRightsDeclaration"] != state["app"]["attributes"]["contentRightsDeclaration"]:
+    if shared["contentRightsDeclaration"] != state["app"]["attributes"].get("contentRightsDeclaration"):
         patch(client, "apps", state["app"], {
             "contentRightsDeclaration": shared["contentRightsDeclaration"],
         })

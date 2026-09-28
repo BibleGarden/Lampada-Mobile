@@ -12,8 +12,8 @@ after visible interface changes.
 rights declaration. JSON keeps
 the whole page in one editable format, including descriptions. The locale
 files determine which locales are synced; the initial `pull` creates `en-US`,
-`ru`, and `uk` files. Add a missing language in ASC before using `diff` or
-`push`; other ASC locales are reported and left alone. Category IDs are
+`ru`, and `uk` files. Add a missing language in ASC before using any command;
+other ASC locales are reported and left alone. Category IDs are
 checked against Apple's iOS category list before any write.
 
 Set `ASC_ISSUER_ID` and `ASC_KEY_ID` in `~/.zshenv`. Find the Issuer ID and
@@ -29,10 +29,13 @@ python3 scripts/appstore-metadata.py diff
 python3 scripts/appstore-metadata.py push --yes
 ```
 
-`pull` replaces source files from the editable iOS version; `diff` only reads;
+`pull` replaces source files from editable app info and the iOS version;
+`diff` only reads;
 `push` prints differences and requires `--yes` before writing changed fields.
-It refuses to write without an editable version or when Apple's limits are
-exceeded: name/subtitle 30 characters, promotional text 170, description and
+Push is not atomic: it makes several PATCH requests; after a failure, run
+`diff` to see which changes remain.
+The script refuses to write without an editable version or when Apple's limits
+are exceeded: name/subtitle 30 characters, promotional text 170, description and
 What's New 4,000 each, keywords 100. Apple's reference says keywords are
 limited to 100 bytes, but ASC accepted 178-byte (94-character) Cyrillic
 keywords on 2026-09-28, so all limits are checked in characters.
