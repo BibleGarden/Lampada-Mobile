@@ -15,6 +15,7 @@ import { BookOpen, CircleQuestionMark } from 'lucide-react-native';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { buildScriptureCompactText } from '../lib/scripture';
+import { getContentReportTarget, type ContentReportTarget } from '../lib/contentReportTarget';
 import { colors, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { WindowDots } from './ui';
 import {
@@ -62,7 +63,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
   // Сколько строк отрывка реально помещается: карточка тянется по свободной
   // высоте экрана, поэтому лимит считаем по замеренной области, а не фиксируем.
   const [textAreaHeight, setTextAreaHeight] = React.useState(0);
-  const [reportOpen, setReportOpen] = React.useState(false);
+  const [reportTarget, setReportTarget] = React.useState<ContentReportTarget | null>(null);
   const scriptureLineLimit = textAreaHeight
     ? Math.max(2, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
     : 3;
@@ -114,6 +115,10 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
   const curFav = !!curScripture && s.scrFav.includes(curScripture.canonicalId);
   const onFrontier = s.qIndex === s.answeredCount;
   const questionText = s.questions[s.qIndex] ?? '';
+  const visibleScripture = s.scrStatus === 'loading' || s.scrStatus === 'retrying'
+    ? undefined
+    : curScripture;
+  const activeReportTarget = getContentReportTarget(s.dockMode, questionText, s.generating, visibleScripture);
 
   const onTextAreaLayout = React.useCallback((e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
@@ -140,7 +145,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             style={[styles.switchBtn, isQ && styles.switchBtnActive]}
           >
             <CircleQuestionMark
-              size={17}
+              size={sc(17)}
               strokeWidth={1.7}
               color={isQ ? '#f0e6c8' : colors.labelGold}
             />
@@ -156,23 +161,21 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
             style={[styles.switchBtn, !isQ && styles.switchBtnActive]}
           >
             <BookOpen
-              size={17}
+              size={sc(17)}
               strokeWidth={1.7}
               color={!isQ ? '#f0e6c8' : colors.labelGold}
             />
             <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>{t('components.reader.quote')}</Text>
           </Pressable>
         </View>
-        {/* Жалоба на вопрос живёт в углу карточки: кнопка сервисная и
-            намеренно малозаметная, чтобы не конкурировать с ответом.
-            Показывается только в режиме вопроса, когда текст уже загружен. */}
-        {isQ && !s.generating && !!questionText.trim() && (
+        {/* В углу одна кнопка жалобы на активный текст карточки. */}
+        {activeReportTarget && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t('components.contentReport.reportQuestion')}
-            onPress={tap(() => setReportOpen(true))}
+            accessibilityLabel={t(isQ ? 'components.contentReport.reportQuestion' : 'components.contentReport.reportScripture')}
+            onPress={tap(() => setReportTarget(activeReportTarget))}
             hitSlop={sc(8)}
-            testID="question-report-button"
+            testID={isQ ? 'question-report-button' : 'scripture-report-button'}
             style={({ pressed }) => [
               styles.reportBtn,
               pressed && styles.reportBtnPressed,
@@ -423,12 +426,14 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
           </View>
         </Animated.View>
       )}
-      <ContentReportDialog
-        visible={reportOpen}
-        contentType="question"
-        contentText={questionText}
-        onDismiss={() => setReportOpen(false)}
-      />
+      {reportTarget && (
+        <ContentReportDialog
+          visible
+          contentType={reportTarget.contentType}
+          contentText={reportTarget.contentText}
+          onDismiss={() => setReportTarget(null)}
+        />
+      )}
     </View>
   );
 }

@@ -5,9 +5,9 @@ tags:
 # вручную: npm run scripture:stub). В теговые прогоны не входит.
 ---
 # RPT-001: жалоба на вопрос без комментария.
-# RPT-002: жалоба на отрывок из полного ридера с комментарием.
+# RPT-002: жалоба на отрывок из карточки с комментарием.
 # RPT-003: сбой отправки — диалог и комментарий остаются, повтор успешен.
-# Предусловие: stub в режиме contentReports=fail-once (первый запрос 500).
+# Предусловие: stub в режиме contentReports=ok.
 - launchApp:
     stopApp: true
     clearState: true
@@ -48,20 +48,14 @@ tags:
 - tapOn:
     id: "content-report-done"
 
-# === RPT-002: отрывок из ридера с комментарием ===
+# === RPT-002: отрывок из карточки с комментарием ===
 - tapOn:
     id: "dock-scripture-tab"
 - extendedWaitUntil:
     visible:
-      id: "scripture-audio-button"
-    timeout: 20000
-# Тап по неполному тексту открывает полный ридер.
-- tapOn:
-    id: "scripture-read-full"
-- extendedWaitUntil:
-    visible:
       id: "scripture-report-button"
-    timeout: 10000
+    timeout: 20000
+- takeScreenshot: RPT-002-scripture-card
 - tapOn:
     id: "scripture-report-button"
 - assertVisible:
@@ -75,15 +69,3 @@ tags:
 - takeScreenshot: RPT-002-sent
 - tapOn:
     id: "content-report-done"
-# Возвращаемся из ридера в док (крепление сценария к молитве не важно,
-# дальше — только жалоба на вопрос).
-- tapOn:
-    point: "10%,11%"
-- runFlow:
-    when:
-      visible:
-        id: "session-title"
-    commands:
-      - tapOn:
-          id: "dock-scripture-tab"
-

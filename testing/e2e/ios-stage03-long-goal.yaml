@@ -64,6 +64,7 @@ tags:
     id: "setup-goal-input"
     text: "SETUP-004 very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
 - assertVisible: "ДЛИТЕЛЬНОСТЬ"
+- takeScreenshot: SETUP-004-actions-after-keyboard
 - tapOn:
     id: "setup-next-button"
 - runFlow:

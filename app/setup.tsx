@@ -45,7 +45,9 @@ export default function Setup() {
   // скрытых длительности и «Далее». Высоту в покое задаёт невидимая копия
   // текста в слоте поля: она пересчитывается при повороте, но на время ввода
   // держит текст на момент открытия клавиатуры, чтобы набор не сдвигал поле.
-  const keyboardTop = useKeyboardTop();
+  // LayoutAnimation двигает видимые блоки при закрытии клавиатуры: на Setup
+  // раскладка должна обновиться сразу, чтобы блоки появились на своих местах.
+  const keyboardTop = useKeyboardTop(false);
   const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
   const inputSlot = useRef<View>(null);
   const [slot, setSlot] = useState<{ top: number; height: number } | null>(null);

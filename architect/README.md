@@ -166,6 +166,8 @@ hold-to-start control. Portrait and phone windows retain a vertical layout.
 Setup keeps its layout while the goal is typed: the header, title and the
 input's top edge stay in place, and the input stretches down to just above the
 keyboard over the hidden duration and navigation, scrolling long text inside.
+Setup updates that layout without a keyboard-triggered layout animation, so
+duration and navigation reappear in place when the keyboard closes.
 An invisible copy of the goal sizes the input's slot, so the position follows
 rotation; while typing it holds the text from when the keyboard opened.
 A long goal shrinks the slot to the free space and scrolls inside, so "Next"
@@ -175,7 +177,8 @@ the input fills the available space below the question and above the keyboard.
 The editing column expands to at most 960 pt on tablets. The decorative header
 and completion actions return when the keyboard closes.
 Content can scroll when a long question or a small window needs more room.
-Both screens follow the keyboard through `lib/useKeyboardTop.ts`.
+Both screens follow the keyboard through `lib/useKeyboardTop.ts`; Reflection
+retains the keyboard-synchronized layout animation.
 
 ## State and the main data flow
 
@@ -183,6 +186,11 @@ Both screens follow the keyboard through `lib/useKeyboardTop.ts`.
 It holds the topic and the timer, the current questions and answers, the
 scripture state, the mode of the bottom panel, the reflection takeaway and the
 streak.
+
+The session card has one report control beside the Question / Quote switcher.
+It snapshots the active question or the full selected passage (reference,
+optional title and text) for `ContentReportDialog`; the expanded scripture
+reader has no separate report control.
 
 The main flows:
 
