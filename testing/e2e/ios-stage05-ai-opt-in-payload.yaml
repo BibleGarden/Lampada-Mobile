@@ -52,7 +52,7 @@ tags:
       visible:
         id: "privacy-consent-answer_context"
     commands:
-      - assertVisible: "Сервер приложения передаст твои ответы.*Google Gemini.*"
+      - assertVisible: "Чтобы следующие вопросы и отрывки учитывали сказанное.*Google Gemini.*"
       - tapOn:
           id: "privacy-consent-answer_context-allow"
 - assertVisible:
