@@ -14,7 +14,6 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 HELPER=/tmp/rem-set-time.yaml
-WAIT_HELPER=/tmp/rem-wait.yaml
 LOCK=/tmp/pray-rem-fire.lock
 if ! mkdir "$LOCK"; then
   echo "Reminder runner is already active or left a stale lock: $LOCK" >&2
@@ -24,23 +23,17 @@ helper_created=0
 cleanup() {
   local status=$?
   trap - EXIT
-  if [ "$helper_created" = 1 ]; then
-    for file in "$HELPER" "$WAIT_HELPER"; do
-      if [ -e "$file" ] || [ -L "$file" ]; then
-        rm -- "$file" || status=1
-      fi
-    done
+  if [ "$helper_created" = 1 ] && { [ -e "$HELPER" ] || [ -L "$HELPER" ]; }; then
+    rm -- "$HELPER" || status=1
   fi
   rmdir "$LOCK" || status=1
   exit "$status"
 }
 trap cleanup EXIT
-for file in "$HELPER" "$WAIT_HELPER"; do
-  if [ -e "$file" ] || [ -L "$file" ]; then
-    echo "Stale reminder helper blocks the run: $file" >&2
-    exit 1
-  fi
-done
+if [ -e "$HELPER" ] || [ -L "$HELPER" ]; then
+  echo "Stale reminder helper blocks the run: $HELPER" >&2
+  exit 1
+fi
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 EVIDENCE="${EVIDENCE_DIR:-${TMPDIR:-/tmp/}pray-e2e-output}"

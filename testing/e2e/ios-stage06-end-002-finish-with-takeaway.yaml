@@ -47,6 +47,7 @@ tags:
 - takeScreenshot: END-002-reflect-filled
 - tapOn:
     id: "reflect-complete-button"
+# Остаточный риск: tapOn ждёт успокоения экрана, и долгий переход может съесть часть 4-секундного окна баннера.
 - assertVisible:
     id: "prayer-saved-notice"
 - assertVisible:

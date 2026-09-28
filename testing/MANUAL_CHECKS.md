@@ -283,7 +283,8 @@ These flows exist and are automated, but a green `test:e2e:critical|main|rare`
 summary does not include them: they need a wrapper script, a prepared
 environment, or an explicit ordered run. Tag: prepared environment, not "not
 written". Do this sitting only when you want those IDs, not because the tier
-summary was green.
+summary was green. The lock, lock-006, journal and background suites also run
+in `npm run test:e2e:all`.
 
 | Group | Command | IDs / flows |
 | --- | --- | --- |

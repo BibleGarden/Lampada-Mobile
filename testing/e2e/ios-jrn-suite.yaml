@@ -1,6 +1,4 @@
 appId: twinkler
-tags:
-  - prepared
 ---
 # JRN-suite: jrn-флоу с данными-зависимостями исключены из теговых прогонов.
 # Запускать целиком: maestro test testing/e2e/ios-jrn-suite.yaml

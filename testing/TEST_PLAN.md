@@ -124,7 +124,8 @@ release, `rare` on demand or before a major release. `ipad` marks the
 iPad-only rotation flows run by `npm run test:e2e:ipad`. An ID without a
 suffix has no standard tier flow; it may run in a prepared stub phase or be
 checked manually. The `prepared` tag marks flows needing setup and excludes them
-from `npm run test:e2e:all`. An ID can list both `main`
+from `npm run test:e2e:all`; the self-contained ordered suites (lock, lock-006,
+journal, background) carry no tag and run there. An ID can list both `main`
 and `ipad` when separate phone and tablet flows cover it.
 
 | ID | Actions | Expected result |

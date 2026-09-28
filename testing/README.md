@@ -59,18 +59,20 @@ The flows carry risk-tier tags (`critical` / `main` / `rare`, see the legend in
 npm run test:e2e:critical  # group 1: P0 paths, every build
 npm run test:e2e:main      # group 2: the main functionality, before a release
 npm run test:e2e:rare      # group 3: slow, destructive and edge scenarios
-npm run test:e2e:all       # independent normal-build flows; excludes iPad and prepared flows
+npm run test:e2e:all       # normal-build flows and self-contained ordered suites; excludes iPad and prepared flows
 npm run test:e2e:ipad      # iPad group, on the one booted iPad simulator (or UDID=)
 ```
 
 Tier commands scan `e2e/` only. The three clock-dependent reminder flows live
 in `reminder-fire/` and are run by `e2e/run-rem-fire.sh`, which creates their
 time-setting helper flow. A clean `/tmp` is sufficient for tier runs. The runner
-refuses stale `/tmp/rem-*.yaml` helpers and removes the helper it creates on exit.
+refuses a stale `/tmp/rem-set-time.yaml` helper and removes the helper it creates on exit.
 
-The `prepared` tag marks flows that need a stub build, seeded data, an ordered
-suite, a simulator setting or a wrapper script. `test:e2e:all` excludes both
-`prepared` and `ipad`; run prepared flows through their documented setup.
+The `prepared` tag marks flows that need a stub build, seeded data, an earlier
+flow's state, a simulator setting or a wrapper script. `test:e2e:all` excludes
+both `prepared` and `ipad`; run prepared flows through their documented setup.
+The four ordered suites below start from a clean state, carry no tag and run
+in `test:e2e:all`; members that depend on an earlier member carry `prepared`.
 
 The tier runs use the iPhone 17 Pro simulator, so the device-agnostic
 `ios-ans-023-recordings-actions.yaml` (ANS-023) and
@@ -82,8 +84,8 @@ the rotation flows `ios-ipad-*.yaml` carry only the `ipad` tag and run through
 Maestro saves landscape screenshots unrotated.
 
 Some flows have interdependencies a tag run cannot guarantee (order is not
-deterministic) and are excluded from the tier tags. Run them as ordered
-suites, whole:
+deterministic) and are excluded from the tier tags. They run whole as ordered
+suites, in `test:e2e:all` or directly:
 
 ```bash
 maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-lock-suite.yaml        # LOCK-001…007 (PIN state chain)
