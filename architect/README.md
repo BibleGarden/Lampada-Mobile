@@ -584,14 +584,14 @@ rechecked before transfer. Only public Expo variables -
 the URL and the limited proxy key - may be embedded into a client build; server
 secrets and system instructions are not put into the app.
 
-The current question and the current selected passage each expose an explicit
-report action. Confirmation sends only the generated text, its kind, the UI
-language and an optional comment. The prayer topic, the person's answer,
-recordings and client identity are not part of the request. A failed request
-keeps both the unsaved answer and the report comment on screen for retry. Saved
-journal entries deliberately have no report action: the journal mixes generated
-questions with private answers, while reporting at the generation screens keeps
-the transferred boundary visible and unambiguous.
+The session card shows one report flag for its active Question or Quote tab.
+Confirmation sends the question text or the selected passage's full reference,
+optional title and text, together with `content_type`, the UI language and an
+optional comment. The prayer topic, the person's answer, recordings and client
+identity are not part of the request. An open report dialog holds the session
+at timer expiry until it closes; a failed request keeps its comment available
+for retry. Saved journal entries have no report action because they mix
+generated content with private answers.
 
 Three independent SQLite records gate prayer-content transfers (ADR-0017,
 ADR-0035): core prayer AI for the topic, answer context for typed answers and

@@ -37,6 +37,7 @@ import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
 type Props = {
   onOpenAnswer: () => void;
   onOpenReader: () => void;
+  onReportOpenChange: (open: boolean) => void;
   scriptureAudio: ScriptureAudioControl;
 };
 
@@ -53,7 +54,7 @@ const listenButtonHeight = () => sc(26);
 
 // Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
 // Механика следа/фронтира живёт в store; здесь только отображение.
-export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAudio }: Props) {
+export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpenChange, scriptureAudio }: Props) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const [measuredScripture, setMeasuredScripture] = React.useState<{
@@ -130,6 +131,16 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
     fn();
   };
 
+  const openReport = (target: ContentReportTarget) => {
+    setReportTarget(target);
+    onReportOpenChange(true);
+  };
+
+  const dismissReport = () => {
+    setReportTarget(null);
+    onReportOpenChange(false);
+  };
+
   return (
     <View style={styles.card}>
       {/* Подписи внутри переключателя делают отдельный заголовок избыточным. */}
@@ -173,7 +184,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t(isQ ? 'components.contentReport.reportQuestion' : 'components.contentReport.reportScripture')}
-            onPress={tap(() => setReportTarget(activeReportTarget))}
+            onPress={tap(() => openReport(activeReportTarget))}
             hitSlop={sc(8)}
             testID={isQ ? 'question-report-button' : 'scripture-report-button'}
             style={({ pressed }) => [
@@ -431,7 +442,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, scriptureAud
           visible
           contentType={reportTarget.contentType}
           contentText={reportTarget.contentText}
-          onDismiss={() => setReportTarget(null)}
+          onDismiss={dismissReport}
         />
       )}
     </View>

@@ -48,7 +48,7 @@ import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { scheduleSessionCompletion } from '../lib/sessionCompletion';
+import { hasSessionActivity, scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
   hastenMusicFadeOut,
   musicFadeOutVolume,
@@ -106,6 +106,7 @@ function SessionScreen() {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [readerOpen, setReaderOpen] = useState(false);
   const [answerOpen, setAnswerOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [showExpiryNotice, setShowExpiryNotice] = useState(false);
   const [transientAudioBusy, setTransientAudioBusy] = useState(false);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
@@ -411,7 +412,12 @@ function SessionScreen() {
     enabled: s.dockMode === 'scripture' && appState === 'active',
     onAudioBusyChange: handleTransientAudioChange,
   });
-  const activityOpen = readerOpen || answerOpen || scriptureAudio.phase !== 'idle';
+  const activityOpen = hasSessionActivity({
+    readerOpen,
+    answerOpen,
+    reportOpen,
+    scriptureAudioActive: scriptureAudio.phase !== 'idle',
+  });
   const handleAnswerAudioChange = useCallback(
     (busy: boolean) => {
       if (busy) scriptureAudio.stop();
@@ -708,6 +714,7 @@ function SessionScreen() {
                 setReaderOpen(true);
                 readerRef.current?.snapToIndex(0);
               }}
+              onReportOpenChange={setReportOpen}
               scriptureAudio={scriptureAudio}
             />
           </View>

@@ -301,6 +301,7 @@ the stub; execution results belong in dated reports.
 | RPT-002 | Switch to Quote, open the card-corner report dialog, add a comment and send | the reader has no report button; the request carries `content_type: "scripture"`, the full passage reference, title when present, text, the trimmed comment and the interface language; a success state is shown |
 | RPT-003 | Get a network, a timeout or a 5xx failure and retry | the dialog and the typed comment stay available, an error text is shown, a repeated attempt can succeed; the unsaved answer in the sheet is not mutated |
 | RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays in the active session card |
+| RPT-005 | Keep a Question or Quote report dialog open while the session timer expires; type a comment, then dismiss the dialog | the session and comment remain visible past expiry; after dismissal, reflection opens following the one-second delay |
 
 ### Reflection, finishing and the streak
 
