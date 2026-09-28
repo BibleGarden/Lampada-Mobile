@@ -302,8 +302,8 @@ Notes:
 
 - The stub-backed scripture flows `ios-scripture-context-privacy.yaml`,
   `ios-scripture-context-fallback.yaml`, `ios-scripture-context-main.yaml` and
-  `ios-scripture-highlight.yaml` have no tier tags. Run them with the stub
-  setup in `testing/README.md`.
+  `ios-scripture-highlight.yaml` carry `prepared`, not risk-tier tags. Run them
+  with the stub setup in `testing/README.md`.
 - `JRN-006` (`ios-stage06-jrn-006-audio-switch.yaml`) needs its recordings
   seeded by hand; `JRN-009` (`ios-stage06-jrn-009-missing-file.yaml`) needs a
   recording file deleted from the container. Both flows are written; the

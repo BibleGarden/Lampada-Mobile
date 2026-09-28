@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # Resume the existing process: the native player must still report active playback.
 - launchApp:

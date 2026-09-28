@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # Resume without stopping the process: an idle expired prayer opens reflection.
 - launchApp:

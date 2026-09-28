@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: режим fail выставлен через POST /__control (run-jrn-transcription.sh).
 ---
 # JRN-012 (часть 1): ошибка расшифровки — запись остаётся доступной,

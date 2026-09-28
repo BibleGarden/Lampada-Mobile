@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: продолжение ios-stage06-scr-002a; stub-счётчик сброшен раннером.
 # В теговые прогоны не входит.
 ---

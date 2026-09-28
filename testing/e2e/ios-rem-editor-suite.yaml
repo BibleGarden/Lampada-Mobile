@@ -1,6 +1,7 @@
 appId: twinkler
 tags:
   - reminders
+  - prepared
 ---
 # REM-014/REM-015: двухтактное удаление времён и правил напоминаний.
 # Предусловие: чистая установка (xcrun simctl uninstall/install Release).

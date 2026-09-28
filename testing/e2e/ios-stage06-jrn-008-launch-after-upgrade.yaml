@@ -1,6 +1,6 @@
 appId: twinkler
 tags:
-  - rare
+  - prepared
 ---
 - launchApp:
     stopApp: true

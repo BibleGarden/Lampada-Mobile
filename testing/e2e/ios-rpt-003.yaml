@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: непосредственно перед прогоном stub переводится в
 # contentReports=fail-once (run-stub-phase.sh). Самодостаточен: поднимает
 # новую сессию для жалобы на вопрос.

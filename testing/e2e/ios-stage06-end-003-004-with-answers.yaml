@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # Фрагмент для ios-jrn-suite.yaml, самостоятельно не запускать.
 # END-003/004 для jrn-suite: вариант ios-stage06-end-003-004-idempotency.yaml без

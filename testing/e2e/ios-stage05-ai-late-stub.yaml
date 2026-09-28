@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-STUB: questionDelayMs=15000 выставлен run-stub-phase.sh; ответ приходит
 # через 15 с — позже входа в сессию. В теговые прогоны не входит.
 ---

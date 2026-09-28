@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # JRN-007: delete a prayer after opening its details and confirming twice.
 - launchApp:

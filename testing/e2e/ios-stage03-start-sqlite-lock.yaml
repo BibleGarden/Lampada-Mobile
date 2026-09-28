@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 # NEEDS-ENV: сборка с EXPO_PUBLIC_FORCE_SESSION_ERROR=1 — e2e-хук в lib/store.ts
 # один раз падает на входе и воспроизводит путь generic-catch порога
 # (app/threshold.tsx:102) без внешней блокировки SQLite: с WAL (lib/db.ts:60)

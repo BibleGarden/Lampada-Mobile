@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # Background-suite: пары music/music-resume и timer-setup/timer-resume имеют
 # межфлоу-зависимости (приложение уходит в фон и не должно перезапускаться

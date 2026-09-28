@@ -1,4 +1,6 @@
 appId: twinkler
+tags:
+  - prepared
 ---
 # Build with EXPO_PUBLIC_API_URL=http://localhost:9085 and run
 # scripts/scripture-stub.mjs with SCRIPTURE_STUB_MODE=main.

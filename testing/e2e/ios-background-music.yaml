@@ -1,6 +1,6 @@
 appId: twinkler
 tags:
-  - rare
+  - prepared
 ---
 # Background music: playback registers a native media session before the app is backgrounded.
 - launchApp:
