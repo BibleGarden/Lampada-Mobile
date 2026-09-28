@@ -6,6 +6,7 @@ import { completePrayerContent, llmConfigured } from './llm';
 import { coreAiAllowedNow, useSettings } from './settings';
 import { fallbackQuestions } from './locales/fallbackQuestions';
 import { buildQuestionRequest } from './questionRequest';
+import { wasQuestionShown } from './questionNovelty';
 import type { AnswerContext } from './answerContext';
 
 export type QuestionSource = 'ai' | 'fallback';
@@ -20,10 +21,9 @@ export const getCuratedQuestions = (): string[] => [...currentFallbacks().first]
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Мгновенный локальный вопрос на случай, если фоновый слот ещё не готов. */
-export const pickFallbackQuestion = (asked: string[]): string => {
-  const questionPool = currentFallbacks().next;
-  const used = new Set(asked);
-  const fresh = questionPool.filter((q) => !used.has(q));
+export const pickFallbackQuestion = (asked: string[], stage: 'next' | 'reflect' = 'next'): string => {
+  const questionPool = currentFallbacks()[stage];
+  const fresh = questionPool.filter((q) => !wasQuestionShown(q, asked));
   return pickRandom(fresh.length ? fresh : questionPool);
 };
 
@@ -100,7 +100,7 @@ export async function generateReflectQuestion(
   skippedQuestions: string[] = [],
   prefetch = false,
 ): Promise<GeneratedQuestion | null> {
-  const fallback = () => prefetch ? null : fromFallback(pickRandom(currentFallbacks().reflect));
+  const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions], 'reflect'));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
@@ -109,7 +109,8 @@ export async function generateReflectQuestion(
     });
     const clean = tidy(q.text);
     if (!isQuestion(clean)) warn('reflect', 'Invalid question response', prefetch);
-    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fallback();
+    return isQuestion(clean) && q.novel !== false && !wasQuestionShown(clean, [...asked, ...skippedQuestions])
+      ? fromAi(clean) : fallback();
   } catch (e) {
     if (prefetch && e instanceof PrefetchDeniedError) return null;
     warn('reflect', e, prefetch);

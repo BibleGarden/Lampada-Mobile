@@ -255,6 +255,8 @@ tier of its e2e runs.
 | AI-011 [main] | Press "Transcribe" for the first time, deny it and retry | the disclosure names both possible processors for turning the recording into text: Whisper on our servers or Google Gemini through Google's paid API; we do not store the recording; no upload starts and the recording stays usable |
 | AI-012 | Withdraw each allowed decision in settings immediately before its feature | the next question/scripture request or upload observes the denial without restarting the app |
 | AI-013 [main] | Upgrade with each of the three decisions stored under notice version 2 and `company-hosted-ai-2026-09` | every old decision resolves to `undecided`; no content is sent until a decision under notice version 3 and `google-gemini-paid-whisper-self-hosted-2026-09` is saved |
+| AI-014 [main] | Save a voice-only answer without transcribing it, then request another question | the next visible question differs from every previously shown question while an unused local question exists; a repeated server response marked `novel: true` is rejected, using the local pool after an answer |
+| AI-015 | Replace an unanswered question after a prior replacement, with the server returning an earlier question with changed case, spacing or trailing punctuation | the current question remains visible; one explicit tap can request another replacement, with no automatic retry loop |
 
 ### Scripture
 

@@ -211,7 +211,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpen
                 showsVerticalScrollIndicator={false}
                 bounces={false}
               >
-                <Text style={styles.cardText}>{s.questions[s.qIndex]}</Text>
+                <Text style={styles.cardText} testID="dock-question-text">{s.questions[s.qIndex]}</Text>
                 {s.questionSources[s.qIndex] === 'fallback' && (
                   <Text style={styles.questionSourceLabel} testID="question-source-label">
                     {t('components.reader.backupQuestion')}
@@ -248,6 +248,7 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpen
             </Pressable>
             <SquareBtn
               accessibilityLabel={t('components.reader.nextQuestion')}
+              testID="dock-next-question-button"
               onPress={tap(() => s.nextQuestion())}
             >
               {/* Plus и Regen — сплошные фигуры на всю кегль, в отличие от

@@ -598,7 +598,16 @@ prayer. Requests include them in chronological order in `skipped_questions`,
 plus currently displayed unanswered questions so the one-ahead prefetch can
 avoid them before replacement. Actual answers, including untranscribed voice
 recordings, determine whether a question is unanswered before the privacy gate.
-Questions in assistant messages are excluded from the skipped list. First-stage
+Questions in assistant messages are excluded from the skipped list. A question
+answered only with an untranscribed recording therefore appears in neither
+`messages` nor `skipped_questions`. The client compares every next and reflection
+question with all questions shown in the session, including replaced ones, after
+trimming, collapsing whitespace, folding case and removing trailing punctuation.
+It treats a local match like `novel: false` even when the server says `true`.
+An unanswered replacement stays visible until another explicit tap; after an
+answer, the client selects an unused question from the local pool. Local pools
+are finite and may repeat once exhausted. The shown-question history remains in
+the pool keys so a stale prepared response cannot bypass this check. First-stage
 requests never include skipped history. Requests retain at most 40 messages and
 the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
 budget is 16,000 UTF-16 code units across topic, messages and skipped questions;

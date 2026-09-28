@@ -11,6 +11,7 @@ import {
 } from './settings';
 import type { ScriptureLanguage } from './scripture';
 import { createOneAheadPool } from './oneAheadPool';
+import { wasQuestionShown } from './questionNovelty';
 import {
   buildScriptureRequest,
   toScriptureDisplay,
@@ -558,7 +559,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       }
     }
 
-    if (q.novel === false) {
+    if (q.novel === false || wasQuestionShown(q.text, [...s.questions, ...s.skippedQuestions])) {
       if (!isAnswered(s.answers[frontier])) {
         // Слот уже забран: следующее нажатие попробует снова, без фонового цикла.
         set({ generating: false });
@@ -727,6 +728,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         set({ reflectGenerating: false });
         return;
       }
+    }
+    if (q.novel === false || wasQuestionShown(q.text, [...s.questions, ...s.skippedQuestions])) {
+      q = { text: ai.pickFallbackQuestion([...s.questions, ...s.skippedQuestions], 'reflect'), source: 'fallback' };
     }
     if (token === reflectToken && get().sessionId === sessionToken) {
       set({ reflectQ: q.text, reflectSource: q.source, reflectGenerating: false });
