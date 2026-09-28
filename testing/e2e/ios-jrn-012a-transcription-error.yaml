@@ -13,7 +13,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "JRN-012 повтор расшифровки"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

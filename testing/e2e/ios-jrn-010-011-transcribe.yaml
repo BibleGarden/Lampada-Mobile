@@ -15,7 +15,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "JRN-010 расшифровка"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

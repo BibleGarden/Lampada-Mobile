@@ -13,7 +13,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "RPT 003 retry"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

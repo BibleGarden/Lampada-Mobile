@@ -17,7 +17,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "STG sqlite ошибка входа"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

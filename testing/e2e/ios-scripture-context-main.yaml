@@ -12,7 +12,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "Нужна мудрость"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

@@ -18,7 +18,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "END-003 double finish"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
@@ -117,7 +117,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "END-004 second prayer"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

@@ -10,7 +10,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "SES-002 infinite timer"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-0"
 - tapOn:

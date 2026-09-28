@@ -1,5 +1,5 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   AppState,
   Keyboard,
@@ -18,6 +18,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
+import { useKeyboardTop } from '../lib/useKeyboardTop';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
@@ -39,6 +40,31 @@ export default function Setup() {
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
+  // Пока открыта клавиатура, раскладка экрана не меняется: верх поля цели
+  // остаётся на месте, а само поле тянется вниз до клавиатуры поверх
+  // скрытых длительности и «Далее». Высоту в покое задаёт невидимая копия
+  // текста в слоте поля: она пересчитывается при повороте, но на время ввода
+  // держит текст на момент открытия клавиатуры, чтобы набор не сдвигал поле.
+  const keyboardTop = useKeyboardTop();
+  const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
+  const inputSlot = useRef<View>(null);
+  const [slot, setSlot] = useState<{ top: number; height: number } | null>(null);
+  const measureSlot = useCallback(() => {
+    inputSlot.current?.measureInWindow((_x, top, _width, height) => setSlot({ top, height }));
+  }, []);
+  const editing = keyboardTop !== null;
+  if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
+  if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
+  const editingHeight = editing && slot
+    ? Math.max(0, keyboardTop - sc(16) - slot.top)
+    : null;
+  const hiddenWhileEditing = editing
+    ? {
+        style: styles.hiddenWhileEditing,
+        accessibilityElementsHidden: true,
+        importantForAccessibility: 'no-hide-descendants' as const,
+      }
+    : {};
 
   const durationUnitFor = (minutes: number) => minutes === 0
     ? t('screens.setup.untimed')
@@ -69,7 +95,7 @@ export default function Setup() {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={measureSlot}>
       <ScreenBg />
       {/* Область закрытия клавиатуры занимает весь экран, включая поля
           по бокам ограниченной по ширине колонки на планшете. */}
@@ -93,7 +119,7 @@ export default function Setup() {
             <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
           </View>
 
-          <View>
+          <View style={styles.goal}>
             <View style={styles.goalHeader}>
               <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
               <Pressable
@@ -108,25 +134,39 @@ export default function Setup() {
                 <Text style={styles.helpBtnLabel}>?</Text>
               </Pressable>
             </View>
-            <TextInput
-              value={s.topic}
-              onChangeText={s.setTopic}
-              multiline
-              // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
-              // говорят достаточно, а любая подсказка навязывала тон
-              style={styles.topicInput}
-              accessibilityLabel={t('screens.setup.goal')}
-              accessibilityHint={t('screens.setup.goalHint')}
-              testID="setup-goal-input"
-              // цель — одна фраза, переносы строк не нужны: клавиша ввода
-              // становится синей «Готово» и закрывает клавиатуру
-              returnKeyType="done"
-              submitBehavior="blurAndSubmit"
-              onSubmitEditing={Keyboard.dismiss}
-            />
+            <View ref={inputSlot} style={styles.topicSlot} onLayout={measureSlot}>
+              <Text
+                style={[styles.topicInput, styles.topicSizer]}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                {editingStartTopic ?? s.topic}
+              </Text>
+              <TextInput
+                value={s.topic}
+                onChangeText={s.setTopic}
+                multiline
+                // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
+                // говорят достаточно, а любая подсказка навязывала тон
+                style={[
+                  styles.topicInput,
+                  styles.topicInputFill,
+                  editingHeight === null ? { bottom: 0 } : { height: editingHeight, minHeight: 0 },
+                ]}
+                accessibilityLabel={t('screens.setup.goal')}
+                accessibilityHint={t('screens.setup.goalHint')}
+                testID="setup-goal-input"
+                // цель — одна фраза, переносы строк не нужны: клавиша ввода
+                // становится синей «Готово» и закрывает клавиатуру
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={Keyboard.dismiss}
+                onFocus={measureSlot}
+              />
+            </View>
           </View>
 
-          <View>
+          <View {...hiddenWhileEditing}>
             <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
               {t('screens.setup.duration')}
             </Kicker>
@@ -203,7 +243,9 @@ export default function Setup() {
             </View>
           </View>
 
-          <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+          <View {...hiddenWhileEditing}>
+            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+          </View>
         </Animated.View>
       </Pressable>
 
@@ -250,6 +292,10 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   dismissArea: { flex: 1 },
   body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
+  // поле, растянутое до клавиатуры, перекрывает нижние блоки; длинная цель
+  // ужимает слот поля до свободного места, чтобы «Далее» оставалась на экране
+  goal: { flexShrink: 1, zIndex: 1 },
+  hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -295,6 +341,9 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
   },
+  topicSlot: { flexShrink: 1, minHeight: sc(120) },
+  topicSizer: { opacity: 0 },
+  topicInputFill: { position: 'absolute', top: 0, left: 0, right: 0 },
   stepper: {
     flexDirection: 'row',
     alignItems: 'stretch',

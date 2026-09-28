@@ -11,7 +11,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "MUS timer finish regression"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

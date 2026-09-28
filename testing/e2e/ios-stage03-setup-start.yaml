@@ -37,7 +37,7 @@ tags:
 - assertVisible: "Подготовиться к разговору"
 - tapOn: "Подготовиться к разговору"
 - eraseText: 100
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - assertVisible:

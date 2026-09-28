@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
-  LayoutAnimation,
   Platform,
   Pressable,
   ScrollView,
@@ -13,7 +12,6 @@ import {
   Text,
   TextInput,
   View,
-  type KeyboardEvent,
 } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +22,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
+import { useKeyboardTop } from '../lib/useKeyboardTop';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -43,24 +42,13 @@ function questionTypography(question: string) {
   return { fontSize: sc(22), lineHeight: sc(29) };
 }
 
-function animateCompactLayout(event: KeyboardEvent) {
-  const duration = Math.max(event.duration ?? 0, 380);
-  LayoutAnimation.configureNext({
-    duration,
-    update: {
-      duration,
-      type: LayoutAnimation.Types.keyboard,
-    },
-  });
-}
-
 function ReflectScreen() {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const keyboardOpen = useKeyboardTop() !== null;
   const [inputFocused, setInputFocused] = useState(false);
   const completing = useRef(false);
 
@@ -68,23 +56,6 @@ function ReflectScreen() {
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEvent, (event: KeyboardEvent) => {
-      animateCompactLayout(event);
-      setKeyboardOpen(true);
-    });
-    const hide = Keyboard.addListener(hideEvent, (event: KeyboardEvent) => {
-      animateCompactLayout(event);
-      setKeyboardOpen(false);
-    });
-    return () => {
-      show.remove();
-      hide.remove();
-    };
   }, []);
 
   const complete = async (saveText: string) => {
