@@ -1,0 +1,16 @@
+{
+  "appInfo": {
+    "name": "Lampada",
+    "subtitle": "Prayer. Questions. Journal.",
+    "privacyPolicyUrl": "https://lampada.app/privacy?lang=en",
+    "privacyChoicesUrl": null
+  },
+  "appStoreVersion": {
+    "description": "Lampada is an app for personal prayer. It doesn't pray for you or hand you ready-made answers: it helps you pause, focus, and hear the quiet voice within.\n\nHOW IT WORKS\n• Name your topic in your own words — for example, gratitude for the day, a worry, a hard decision, or prayer for your family.\n• AI asks gentle questions. Each one builds on your previous answer, so prayer becomes a living conversation rather than a list of requests.\n• Answer by text or voice — or simply reflect in silence. Recording answers is optional, and you can skip any question.\n• Along the way, Lampada picks Bible passages that fit the meaning of your prayer. You can read them or listen to them.\n• At the end comes a closing question: what do you want to carry from this prayer into your day?\n\nJOURNAL\nYour answers and takeaways are saved in a journal. Come back to them in a week or a year and see how God has been leading you. Save Bible passages that speak to you to your favorites. The home screen shows your last seven days — a quiet reminder to return to prayer, with no streaks to lose.\n\nQUIET AND FOCUS\n• A prayer timer and calm background music.\n• Prayer reminders on the days and at the times that suit you.\n• Several Bible translations and audio narration of Scripture.\n\nWHAT'S PERSONAL STAYS PERSONAL\n• Your journal is stored on your device.\n• Protect the app with a PIN, Face ID, or Touch ID.\n• Your topic and answers are sent to tailor the questions only with your consent, which you can withdraw in Settings. Without consent the app still works; the questions are just more general.",
+    "keywords": "bible,scripture,christian,faith,god,gospel,psalms,devotional,reflection,ai,gratitude,meditation",
+    "promotionalText": "Prayer as a living conversation. Name your topic, and Lampada will guide you with gentle questions and fitting Bible passages, then keep your answers in a journal.",
+    "whatsNew": null,
+    "supportUrl": "https://lampada.app/support?lang=en",
+    "marketingUrl": "https://lampada.app/"
+  }
+}
