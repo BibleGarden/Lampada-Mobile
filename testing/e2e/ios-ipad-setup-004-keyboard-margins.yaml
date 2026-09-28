@@ -23,6 +23,12 @@ tags:
 - inputText: "4821"
 - assertVisible:
     id: "shift"
+- assertNotVisible:
+    id: "setup-next-button"
+- assertNotVisible:
+    id: "setup-duration-value"
+- assertVisible:
+    id: "setup-kicker"
 - tapOn:
     id: "setup-goal-input"
     retryTapIfNoChange: false
@@ -71,6 +77,17 @@ tags:
 - inputText: " 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
 - assertVisible:
     id: "shift"
+- setOrientation: PORTRAIT
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "setup-goal-input"
+    text: "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
+- assertNotVisible:
+    id: "setup-next-button"
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
 - tapOn:
     point: "97%,30%"
 - assertNotVisible:

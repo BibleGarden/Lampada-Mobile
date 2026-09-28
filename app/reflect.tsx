@@ -4,22 +4,18 @@ import {
   BackHandler,
   ActivityIndicator,
   Keyboard,
-  KeyboardAvoidingView,
-  LayoutAnimation,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  type KeyboardEvent,
 } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
+import KeyboardEditingView from '../components/KeyboardEditingView';
 import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
@@ -43,24 +39,12 @@ function questionTypography(question: string) {
   return { fontSize: sc(22), lineHeight: sc(29) };
 }
 
-function animateCompactLayout(event: KeyboardEvent) {
-  const duration = Math.max(event.duration ?? 0, 380);
-  LayoutAnimation.configureNext({
-    duration,
-    update: {
-      duration,
-      type: LayoutAnimation.Types.keyboard,
-    },
-  });
-}
-
 function ReflectScreen() {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const completing = useRef(false);
 
@@ -68,23 +52,6 @@ function ReflectScreen() {
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
-  }, []);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEvent, (event: KeyboardEvent) => {
-      animateCompactLayout(event);
-      setKeyboardOpen(true);
-    });
-    const hide = Keyboard.addListener(hideEvent, (event: KeyboardEvent) => {
-      animateCompactLayout(event);
-      setKeyboardOpen(false);
-    });
-    return () => {
-      show.remove();
-      hide.remove();
-    };
   }, []);
 
   const complete = async (saveText: string) => {
@@ -117,27 +84,15 @@ function ReflectScreen() {
     <View style={styles.root}>
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.fill}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.fill}
+        <KeyboardEditingView
+          contentStyle={styles.body}
+          editingContentStyle={styles.bodyEditing}
+          topPadding={insets.top + sc(16)}
+          bottomPadding={insets.bottom + sc(24)}
+          editingBottomPadding={sc(16)}
         >
-          <ScrollView
-            contentContainerStyle={[
-              styles.body,
-              keyboardOpen && styles.bodyEditing,
-              {
-                paddingTop: insets.top + sc(16),
-                paddingBottom: keyboardOpen ? sc(16) : insets.bottom + sc(24),
-              },
-            ]}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
-            <Pressable
-              onPress={Keyboard.dismiss}
-              accessible={false}
-              style={styles.content}
-            >
+          {(keyboardOpen) => (
+            <View style={styles.content}>
               {!keyboardOpen && (
                 <View style={styles.emberWrap}>
                   <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
@@ -199,9 +154,9 @@ function ReflectScreen() {
                   </Pressable>
                 </View>
               )}
-            </Pressable>
-          </ScrollView>
-        </KeyboardAvoidingView>
+            </View>
+          )}
+        </KeyboardEditingView>
       </Animated.View>
     </View>
   );
