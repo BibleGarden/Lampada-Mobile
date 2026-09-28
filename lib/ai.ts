@@ -6,7 +6,7 @@ import { completePrayerContent, llmConfigured } from './llm';
 import { coreAiAllowedNow, useSettings } from './settings';
 import { fallbackQuestions } from './locales/fallbackQuestions';
 import { buildQuestionRequest } from './questionRequest';
-import { wasQuestionShown } from './questionNovelty';
+import { normalizeQuestion, wasQuestionShown } from './questionNovelty';
 import type { AnswerContext } from './answerContext';
 
 export type QuestionSource = 'ai' | 'fallback';
@@ -17,6 +17,8 @@ const fromFallback = (text: string): GeneratedQuestion => ({ text, source: 'fall
 
 const currentFallbacks = () => fallbackQuestions[useSettings.getState().uiLanguage];
 export const getCuratedQuestions = (): string[] => [...currentFallbacks().first];
+export const hasUnseenFallbackQuestion = (shown: readonly string[], stage: 'next' | 'reflect'): boolean =>
+  currentFallbacks()[stage].some((question) => !wasQuestionShown(question, shown));
 
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -24,7 +26,13 @@ const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)
 export const pickFallbackQuestion = (asked: string[], stage: 'next' | 'reflect' = 'next'): string => {
   const questionPool = currentFallbacks()[stage];
   const fresh = questionPool.filter((q) => !wasQuestionShown(q, asked));
-  return pickRandom(fresh.length ? fresh : questionPool);
+  if (fresh.length) return pickRandom(fresh);
+  // Все варианты уже были показаны: берём тот, который видели раньше остальных.
+  const lastShown = new Map(asked.map((question, index) => [normalizeQuestion(question), index]));
+  return questionPool.reduce((oldest, candidate) =>
+    (lastShown.get(normalizeQuestion(candidate)) ?? -1)
+      < (lastShown.get(normalizeQuestion(oldest)) ?? -1) ? candidate : oldest,
+  );
 };
 
 // деградация тихая для человека, но не для разработчика: причина отката
