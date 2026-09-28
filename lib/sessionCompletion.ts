@@ -1,6 +1,6 @@
 type CompletionState = {
   timeExpired: boolean;
-  appActive: boolean;
+  screenVisible: boolean;
   activityOpen: boolean;
 };
 
@@ -22,10 +22,10 @@ export function hasSessionActivity({
 
 /** Переход планируется только для свободного экрана молитвы. */
 export function scheduleSessionCompletion(
-  { timeExpired, appActive, activityOpen }: CompletionState,
+  { timeExpired, screenVisible, activityOpen }: CompletionState,
   onFinish: () => void,
 ) {
-  if (!timeExpired || !appActive || activityOpen) return () => {};
+  if (!timeExpired || !screenVisible || activityOpen) return () => {};
   const timeout = setTimeout(onFinish, 1_000);
   return () => clearTimeout(timeout);
 }

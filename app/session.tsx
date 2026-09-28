@@ -112,7 +112,6 @@ function SessionScreen() {
   const [showExpiryNotice, setShowExpiryNotice] = useState(false);
   const [transientAudioBusy, setTransientAudioBusy] = useState(false);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
-  const [appState, setAppState] = useState(AppState.currentState);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
   const readerRef = useRef<BottomSheet>(null);
@@ -221,7 +220,6 @@ function SessionScreen() {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
-      setAppState(nextState);
       if (nextState === 'active') useSession.getState().tick();
     });
     return () => sub.remove();
@@ -402,16 +400,18 @@ function SessionScreen() {
       transientAudioBusyRef.current = busy;
       if (busy) {
         pauseMusicPlayers();
+      } else if (!useSession.getState().musicOn) {
+        void releaseMusicSession();
       }
       setTransientAudioBusy(busy);
     },
-    [pauseMusicPlayers],
+    [pauseMusicPlayers, releaseMusicSession],
   );
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
     scripture: currentScripture,
     voice: s.scriptureVoice,
-    enabled: s.dockMode === 'scripture' && visible,
+    enabled: s.dockMode === 'scripture',
     onAudioBusyChange: handleTransientAudioChange,
   });
   const activityOpen = hasSessionActivity({
@@ -428,20 +428,19 @@ function SessionScreen() {
     [handleTransientAudioChange, scriptureAudio.stop],
   );
 
-  // Секундный тик нужен лишь видимому интерфейсу. В фоне один таймер
-  // до дедлайна сохраняет затухание музыки без постоянного опроса.
+  // Секундный тик нужен лишь видимому интерфейсу. Скрытая сессия
+  // просыпается один раз у дедлайна для завершения времени и затухания музыки.
   useEffect(() => {
     if (visible) {
       useSession.getState().tick();
       const id = setInterval(() => useSession.getState().tick(), 1000);
       return () => clearInterval(id);
     }
-    if (appState === 'active') return;
-    const delay = backgroundDeadlineDelay(Date.now(), s.endsAtMs, s.musicOn, timeExpired);
+    const delay = backgroundDeadlineDelay(Date.now(), s.endsAtMs, timeExpired);
     if (delay === null) return;
     const id = setTimeout(() => useSession.getState().tick(), delay);
     return () => clearTimeout(id);
-  }, [visible, appState, s.musicOn, s.endsAtMs, timeExpired]);
+  }, [visible, s.endsAtMs, timeExpired]);
 
   // Android «назад» не должен срывать молитву — глотаем жест
   useEffect(() => {
@@ -461,7 +460,8 @@ function SessionScreen() {
     const stop = async () => {
       pauseMusicPlayers();
       if (useSession.getState().musicOn) useSession.getState().toggleMusic();
-      await releaseMusicSession();
+      // Активная озвучка владеет общей аудиосессией до конца отрывка.
+      if (!transientAudioBusyRef.current) await releaseMusicSession();
     };
     if (!useSession.getState().musicOn || transientAudioBusyRef.current) return stop();
 
@@ -497,13 +497,12 @@ function SessionScreen() {
     return stopped;
   }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicSession]);
 
-  // На заблокированном экране и в фоне переход к итогу ждёт возврата в
-  // приложение, а музыка заканчивается вместе со временем молитвы. Пока
-  // музыка играет, iOS не приостанавливает JS, и секундный тик доходит до нуля.
+  // На скрытом экране переход к итогу ждёт возвращения пользователя, а музыка
+  // заканчивается вместе со временем молитвы даже под PIN-оверлеем.
   useEffect(() => {
-    if (!timeExpired || appState === 'active') return;
+    if (!timeExpired || visible) return;
     void stopPrayerMusic(MUSIC_BACKGROUND_FADE_OUT_MS);
-  }, [timeExpired, appState, stopPrayerMusic]);
+  }, [timeExpired, visible, stopPrayerMusic]);
 
   // Продление истёкшего таймера, пока затухание у дедлайна ещё идёт, отменяет
   // его: молитва продолжается, и музыка возвращается к обычной громкости.
@@ -541,9 +540,9 @@ function SessionScreen() {
   goToReflectRef.current = goToReflect;
   useEffect(() => scheduleSessionCompletion({
     timeExpired,
-    appActive: appState === 'active',
+    screenVisible: visible,
     activityOpen,
-  }, () => { void goToReflectRef.current(); }), [timeExpired, appState, activityOpen]);
+  }, () => { void goToReflectRef.current(); }), [timeExpired, visible, activityOpen]);
 
   // Читалку, ответ и озвучку не обрываем. После фона показываем
   // ещё не увиденную плашку, а после возврата к таймеру завершаем сессию.
@@ -553,14 +552,14 @@ function SessionScreen() {
       setShowExpiryNotice(false);
       return;
     }
-    if (appState !== 'active' || expiryNotified.current) return;
+    if (!visible || expiryNotified.current) return;
     expiryNotified.current = true;
     setShowExpiryNotice(activityOpen);
     // Когда ничего не открыто и не звучит, сессия сразу уходит на экран
     // итога; иначе плашка сама не озвучивается ни на одной платформе.
     if (activityOpen) AccessibilityInfo.announceForAccessibility(t('screens.session.expiryNotice'));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [timeExpired, appState, activityOpen]);
+  }, [timeExpired, visible, activityOpen]);
 
   useEffect(() => {
     if (!showExpiryNotice) return;

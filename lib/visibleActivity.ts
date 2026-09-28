@@ -5,9 +5,8 @@ export function isVisibleScreen(focused: boolean, appState: string | null, uncov
 export function backgroundDeadlineDelay(
   nowMs: number,
   endsAtMs: number | null,
-  musicOn: boolean,
   expired: boolean,
 ): number | null {
-  if (!musicOn || endsAtMs === null || expired) return null;
+  if (endsAtMs === null || expired) return null;
   return Math.max(0, endsAtMs - nowMs);
 }

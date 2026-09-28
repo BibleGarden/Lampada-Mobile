@@ -17,7 +17,7 @@ export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'e
 const SCRIPTURE_PLAYBACK_MODE = {
   allowsRecording: false,
   playsInSilentMode: true,
-  shouldPlayInBackground: false,
+  shouldPlayInBackground: true,
   interruptionMode: 'doNotMix' as const,
 };
 

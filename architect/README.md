@@ -23,11 +23,11 @@ the app refreshes the calendar without resetting the session.
 
 Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
-The flame's Reanimated clock stops when the app leaves the active state and
-restarts on activation, avoiding Skia path creation while it is backgrounded.
+The flame's Reanimated clock stops when its route is covered or the app leaves
+the active state and restarts when exposed, avoiding hidden Skia path creation.
 The Skia halo behind the session timer is memoized and pauses its breathing
-while the answer sheet is open: its scene updates took frames from the text
-input, and typing in the sheet showed up in batches.
+while a sheet is open or the session is covered: its scene updates took frames
+from the text input, and typing in the sheet showed up in batches.
 
 ## Technology outline
 
@@ -228,6 +228,9 @@ waits for the app to return, and over 0.8 s on that transition otherwise (see
 draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.
+Scripture narration retains its position and continues playback when the screen
+is covered or the app is backgrounded. It stops when the user changes the
+scripture mode, the passage, or finishes the prayer.
 
 The prayer timer keeps the absolute moments of the start and of the planned end
 in the runtime session state. The one-second tick is only needed to update the
@@ -281,17 +284,19 @@ does not change the prayer deadline.
 
 Navigation focus, an active `AppState` and the absence of the PIN, privacy or
 update overlay jointly define whether a screen is visible. A sheet also needs
-to be open. The session's music and native lock-screen
-timer are functional background work and retain their separate lifecycle.
+to be open. The session's music, native lock-screen timer, narration and
+recording are functional work and retain their separate
+lifecycle. A hidden finite session still wakes once at its deadline, even when
+music is off. Reflection waits until the session screen is exposed again.
 
 | Component or work | Hidden condition | Before | After |
 | --- | --- | --- | --- |
 | Home and reflection `Flame` | App background, another route above it, or the reflection input in an App Store video build | App background and the video input paused it; a covered Home kept animating | The flame runs only on a focused foreground screen; the video input pause still applies |
 | Session `TimerHalo`, `MusicPulse`, progress ring, keep-awake | App background, another route, or a sheet over the timer/music button | Halo paused under the answer sheet only; the pulse and keep-awake survived hidden screens | Repeating visuals run only while exposed; the ring animation and keep-awake stop when the screen hides |
-| `RecordingsSheet` wave, elapsed poll and slow transcription hint | Sheet closed, screen covered, or app background | Recording wave and 250 ms poll depended only on recording state; the hint timer could stay mounted in a closed sheet | All three require an open foreground sheet; an active recording stops when hidden, while an already requested transcription can finish |
-| Session UI tick | App background or session screen covered | One-second interval kept updating the store | One-second interval runs only on a visible session; background music schedules one deadline wakeup for its fade, and foreground return immediately reconciles elapsed time |
+| `RecordingsSheet` wave, elapsed poll and slow transcription hint | Sheet closed, screen covered, or app background | Recording wave and 250 ms poll depended only on recording state; the hint timer could stay mounted in a closed sheet | All three require an open foreground sheet; recording continues until Done and transcription can finish |
+| Session UI tick and deadline | App background, another route or PIN/update overlay | One-second interval kept updating the store and deadline | One-second UI interval runs only while visible; every hidden finite session schedules one deadline wakeup, which ends music on time without navigating under an overlay |
 | Music players, crossfade and deadline fade | App background or lock screen | Music continued; crossfade and final fade drove the native players | Music continues as designed, with bounded fade work at track changes and the prayer deadline |
-| Scripture, answer draft and journal audio | App background or their screen loses focus | Scripture stopped in the background; draft and journal players could keep playing behind a route | Transient playback stops when its screen or sheet hides; scripture also stops on route blur |
+| Scripture, answer draft and journal audio | App background or their screen loses focus | Scripture stopped in the background; draft and journal players followed their own controls | Scripture continues until a user action or prayer completion; draft and journal playback retain their prior controls |
 | Home midnight refresh and saved notice | Home route covered or app background | Midnight refresh already stopped on route blur/background; the notice timeout did not | Midnight refresh remains focus scoped; the notice timeout pauses while Home is hidden |
 | Threshold hold feedback | Route covered or app background during a hold | Haptic timeouts and ring animation were cleared only on unmount or gesture finalization | Haptic timeouts and ring animation are canceled when the screen hides |
 | Settings permission/biometry listeners and delete confirmation | Settings route covered or app background | Foreground listeners remained mounted behind other routes; deletion timeout cleared on background | Listeners exist only while visible; confirmation clears when visibility ends |

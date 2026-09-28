@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
-import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -74,7 +73,6 @@ export default function Journal() {
     Record<number, 'loading' | 'error'>
   >({});
   const [playingUri, setPlayingUri] = useState<string | null>(null);
-  const visible = useVisibleScreen();
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
 
@@ -108,12 +106,6 @@ export default function Journal() {
   useEffect(() => {
     if (playerStatus.didJustFinish) setPlayingUri(null);
   }, [playerStatus.didJustFinish]);
-
-  useEffect(() => {
-    if (visible || playingUri === null) return;
-    player.pause();
-    setPlayingUri(null);
-  }, [visible, playingUri, player]);
 
   const toggleOpen = useCallback(async (id: number) => {
     for (const controller of transcriptionControllers.current.values()) controller.abort();
