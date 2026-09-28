@@ -12,7 +12,9 @@ after visible interface changes.
 rights declaration. JSON keeps
 the whole page in one editable format, including descriptions. The locale
 files determine which locales are synced; the initial `pull` creates `en-US`,
-`ru`, and `uk` files. Other ASC locales are reported and left alone.
+`ru`, and `uk` files. Add a missing language in ASC before using `diff` or
+`push`; other ASC locales are reported and left alone. Category IDs are
+checked against Apple's iOS category list before any write.
 
 Set `ASC_ISSUER_ID` and `ASC_KEY_ID` in `~/.zshenv`. Find the Issuer ID and
 active team key ID in ASC → Users and Access → Integrations → App Store

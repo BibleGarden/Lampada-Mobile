@@ -107,7 +107,7 @@ class Client:
         self.allow_writes = allow_writes
 
     def request(self, method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
-        if method not in {"GET", "POST", "PATCH"}:
+        if method not in {"GET", "PATCH"}:
             raise ValueError(f"Unsupported HTTP method: {method}")
         if method != "GET" and not self.allow_writes:
             raise ValueError("ASC writes are disabled for this command")
@@ -142,7 +142,11 @@ class Client:
         next_path: str | None = path
         while next_path:
             result = self.request("GET", next_path)
-            items.extend(result.get("data", []))
+            data = result.get("data") if isinstance(result, dict) else None
+            if not isinstance(data, list):
+                raise ValueError(f"ASC list response {urllib.parse.urlsplit(next_path).path} "
+                                 "must contain a data array")
+            items.extend(data)
             next_path = result.get("links", {}).get("next")
         return items
 
@@ -273,6 +277,10 @@ def read_sources() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
                          "contentRightsDeclaration")
     if any(value is not None and not isinstance(value, str) for value in shared.values()):
         raise ValueError("app.json values must be strings or null")
+    if not shared["primaryCategory"]:
+        raise ValueError("app.json primaryCategory must be a non-empty iOS category ID")
+    if shared["secondaryCategory"] == "":
+        raise ValueError("app.json secondaryCategory must be an iOS category ID or null")
     validate_content_rights(shared["contentRightsDeclaration"])
     return locales, shared
 
@@ -292,6 +300,24 @@ def validate(locales: dict[str, dict[str, Any]]) -> None:
                     violations.append(f"{locale}.keywords: empty comma-separated keyword")
     if violations:
         raise ValueError("Apple metadata limits violated:\n" + "\n".join(violations))
+
+
+def validate_categories(client: Client, shared: dict[str, Any]) -> None:
+    categories = client.list("/v1/appCategories?limit=200")
+    ios_ids = set()
+    for category in categories:
+        if not isinstance(category, dict) or not isinstance(category.get("id"), str):
+            raise ValueError("ASC app category is missing an ID")
+        attributes = category.get("attributes")
+        platforms = attributes.get("platforms") if isinstance(attributes, dict) else None
+        if not isinstance(platforms, list):
+            raise ValueError("ASC app category is missing a platforms array")
+        if "IOS" in platforms:
+            ios_ids.add(category["id"])
+    for field in ("primaryCategory", "secondaryCategory"):
+        identity = shared[field]
+        if identity is not None and identity not in ios_ids:
+            raise ValueError(f"app.json {field} is not a valid iOS App Store category ID: {identity}")
 
 
 def preview(value: Any) -> str:
@@ -315,9 +341,13 @@ def changes(state: dict[str, Any], locales: dict[str, dict[str, Any]],
     extra = sorted((state["infoLocales"].keys() | state["versionLocales"].keys()) - locales.keys())
     print("Extra ASC locales: " + (", ".join(extra) if extra else "none"))
     for locale, source in locales.items():
+        for lookup, label in (("infoLocales", "app information"),
+                              ("versionLocales", "App Store version")):
+            if locale not in state[lookup]:
+                raise ValueError(f"{locale} is missing from ASC {label}; add the language in ASC first")
         for section, remote, fields in (
-            ("appInfo", state["infoLocales"].get(locale), INFO_FIELDS),
-            ("appStoreVersion", state["versionLocales"].get(locale), VERSION_FIELDS),
+            ("appInfo", state["infoLocales"][locale], INFO_FIELDS),
+            ("appStoreVersion", state["versionLocales"][locale], VERSION_FIELDS),
         ):
             actual = selected_attributes(remote, fields)
             for field in fields:
@@ -356,24 +386,15 @@ def patch(client: Client, resource: str, item: dict[str, Any], attributes: dict[
 
 def sync_localizations(client: Client, state: dict[str, Any],
                        locales: dict[str, dict[str, Any]], section: str,
-                       fields: tuple[str, ...], lookup: str, resource: str,
-                       parent_resource: str, parent: dict[str, Any]) -> int:
+                       fields: tuple[str, ...], lookup: str, resource: str) -> int:
     writes = 0
     for locale, source in locales.items():
-        item = state[lookup].get(locale)
+        item = state[lookup][locale]
         actual = selected_attributes(item, fields)
         attributes = {field: value for field, value in source[section].items() if value != actual[field]}
         if not attributes:
             continue
-        if item:
-            patch(client, resource, item, attributes)
-        else:
-            attributes["locale"] = locale
-            client.request("POST", f"/v1/{resource}", {
-                "data": {"type": resource, "attributes": attributes,
-                         "relationships": {parent_resource: {"data": {
-                             "type": parent_resource, "id": parent["id"]}}}},
-            })
+        patch(client, resource, item, attributes)
         print(f"Updated {locale} {section}: {', '.join(field for field in fields if field in attributes)}")
         writes += 1
     return writes
@@ -382,10 +403,9 @@ def sync_localizations(client: Client, state: dict[str, Any],
 def push(client: Client, state: dict[str, Any], locales: dict[str, dict[str, Any]],
          shared: dict[str, Any]) -> None:
     writes = sync_localizations(client, state, locales, "appInfo", INFO_FIELDS, "infoLocales",
-                                "appInfoLocalizations", "appInfo", state["info"])
+                                "appInfoLocalizations")
     writes += sync_localizations(client, state, locales, "appStoreVersion", VERSION_FIELDS,
-                                 "versionLocales", "appStoreVersionLocalizations",
-                                 "appStoreVersion", state["version"])
+                                 "versionLocales", "appStoreVersionLocalizations")
     relationships = {}
     for field in ("primaryCategory", "secondaryCategory"):
         if shared[field] != state[field]:
@@ -434,6 +454,7 @@ def main() -> int:
         show_diff(result)
         if args.command == "push":
             validate(locales)
+            validate_categories(client, shared)
             if result:
                 push(client, state, locales, shared)
     return 0
