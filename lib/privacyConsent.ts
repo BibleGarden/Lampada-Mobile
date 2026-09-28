@@ -11,8 +11,8 @@ export type ConsentRecord = {
   providerContract: string;
 };
 
-export const PRIVACY_NOTICE_VERSION = 2;
-export const PRIVACY_PROVIDER_CONTRACT = 'company-hosted-ai-2026-09';
+export const PRIVACY_NOTICE_VERSION = 3;
+export const PRIVACY_PROVIDER_CONTRACT = 'google-gemini-paid-whisper-self-hosted-2026-09';
 
 const decisions = new Set<ConsentDecision>(['undecided', 'allowed', 'denied']);
 

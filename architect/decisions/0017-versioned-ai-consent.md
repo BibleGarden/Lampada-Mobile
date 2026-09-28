@@ -1,6 +1,6 @@
 # ADR-0017: Gate AI content transfers with independent versioned consent
 
-- Status: Accepted
+- Status: Partly superseded by ADR-0035
 - Date: 2026-09-03
 - Participants: product owner, project team
 

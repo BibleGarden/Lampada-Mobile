@@ -8,7 +8,7 @@ it was made, which options were considered and what it led to.
 | ADR | Status | Decision |
 | --- | --- | --- |
 | [0001](0001-architecture-documentation.md) | Accepted | Keep the architecture overview and the ADRs in the repository |
-| [0002](0002-server-audio-transcription.md) | Partly superseded by ADR-0017 | Transcribe voice answers through the server-side Gemini proxy |
+| [0002](0002-server-audio-transcription.md) | Partly superseded by ADR-0017 and ADR-0035 | Transcribe voice answers through the server-side Gemini proxy |
 | [0003](0003-contextual-scripture-selection.md) | Partly superseded by ADR-0004, ADR-0007 and ADR-0017 | Select scripture on the server with a single-flight prefetch, canonical history and offline snapshots |
 | [0004](0004-user-scripture-preferences.md) | Partly superseded by ADR-0005 | Pick the language, the translation and the narration from Bible API and freeze the choice for the session |
 | [0005](0005-device-scripture-language-default.md) | Accepted | Choose the first scripture language from the device locale, falling back to English |
@@ -23,7 +23,7 @@ it was made, which options were considered and what it led to.
 | [0014](0014-app-lock-pin-and-biometrics.md) | Accepted | Lock the app with a local PIN whose hash lives in the Keychain, with biometrics on top of it |
 | [0015](0015-answer-sheet-single-scroll.md) | Superseded by ADR-0016 | Pin the question and the buttons in the answer sheet and give the rest to a single scroll |
 | [0016](0016-separate-recordings-sheet.md) | Accepted | Separate voice recordings from the answer field and serialize recorder start/stop |
-| [0017](0017-versioned-ai-consent.md) | Accepted | Gate the three AI content transfers with independent versioned consent records |
+| [0017](0017-versioned-ai-consent.md) | Partly superseded by ADR-0035 | Gate the three AI content transfers with independent versioned consent records |
 | [0018](0018-latest-human-reply.md) | Superseded by ADR-0019 | Send the latest human reply separately from AI generation context |
 | [0019](0019-structured-question-history.md) | Accepted | Send structured question history with separate topic and stage |
 
@@ -72,3 +72,4 @@ implementation details do not need one.
 - [0033: Bound the music, the duration and the streak day by the prayer time](0033-prayer-time-bounds-music-and-day.md)
 
 - [0034: Raise the minor for store builds and the patch for test builds](0034-store-minor-test-patch-versions.md)
+- [0035: Name the production AI processors in consent](0035-name-production-ai-processors-in-consent.md)
