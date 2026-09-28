@@ -122,7 +122,8 @@ e2e tier of the Maestro flow that covers it (the `tags:` of the files
 in `testing/e2e/`): `critical` runs on every build, `main` before every
 release, `rare` on demand or before a major release. `ipad` marks the
 iPad-only rotation flows run by `npm run test:e2e:ipad`. An ID without a
-suffix has no e2e flow and is checked manually. An ID can list both `main`
+suffix has no standard tier flow; it may run in a prepared stub phase or be
+checked manually. An ID can list both `main`
 and `ipad` when separate phone and tablet flows cover it.
 
 | ID | Actions | Expected result |
@@ -241,7 +242,7 @@ tier of its e2e runs.
 | AI-002 [main] | Successful AI responses | the questions are not empty, the transitions are not blocked |
 | AI-003 [main] | A timeout, offline, HTTP 4xx/5xx and invalid JSON | there is a safe fallback, it is visibly labelled as a backup question, and there is no endless loading or unhandled rejection |
 | AI-004 [main] | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
-| AI-005 [main] | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
+| AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
 | AI-006 [main] | Allow core AI and save the first non-empty answer | a separate answer-context disclosure appears before the next request; it says the data is used only for AI processing and is not stored on the server; both choices have equal weight |
 | AI-007 [main] | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record |
 | AI-008 [main] | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
@@ -254,13 +255,13 @@ tier of its e2e runs.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| SCR-001 [main] | Get the first server passage and move on | the first request shows loading, the next passage comes from the prefetch and differs |
-| SCR-002 [main] | Go back and forward again | the actual trail is shown, with no new network requests and no change to the exclusions |
-| SCR-003 [main] | Add and remove a favourite | the canonical snapshot changes immediately and survives a restart |
+| SCR-001 | Get the first server passage and move on | the first request shows loading, the next passage comes from the prefetch and differs |
+| SCR-002 | Go back and forward again | the actual trail is shown, with no new network requests and no change to the exclusions |
+| SCR-003 | Add and remove a favourite | the canonical snapshot changes immediately and survives a restart |
 | SCR-004 | Open a long passage with a nullable title | the paragraphs are preserved, a missing title does not break the reader |
 | SCR-005 | Turn "Use my answers" off and go through the dialogue | `user_replies` is absent from the serialized scripture request |
-| SCR-006 [main] | Get a `safe_pool` or a `retrieval_fallback` | the passage is displayed as an ordinary success, with no technical message |
-| SCR-007 [main] | 403, 422, 429, 503 and a timeout | no crash and no endless retry; the technical `detail` is not shown |
+| SCR-006 | Get a `safe_pool` or a `retrieval_fallback` | the passage is displayed as an ordinary success, with no technical message |
+| SCR-007 | 403, 422, 429, 503 and a timeout | no crash and no endless retry; the technical `detail` is not shown |
 | SCR-008 [main] | Choose a language, a translation and a narration, save and restart the app | the complete triple is restored, a new session sends the chosen `language` and `translation` |
 | SCR-009 | Change the language, then the translation | the child lists are cleared; an incompatible or incomplete triple cannot be saved |
 | SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is available, the previously saved choice is not damaged |
@@ -272,12 +273,12 @@ tier of its e2e runs.
 | SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
 | SCR-017 | Read silently in the expanded reader when time expires; continue scrolling, then close the reader | the notice does not intercept touches or close the passage; closing the reader returns to the timer, then reflection opens after one second |
 | SCR-018 | Reopen the reader, pause/resume narration, open an answer or add time during the one-second delay | the pending transition is cancelled; open activities and audio errors remain visible; extra time resets expiry; completion runs once |
-| SCR-019 [main] | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
+| SCR-019 | Compare a compact quote with the full passage in the reader, favourites and journal | key verses retain the card's off-white colour; surrounding verses use the same colour at 55% opacity; narration uses a translucent white underline; passages without key verses remain at full opacity |
 | SCR-020 | A launch and navigation with no network | at most seven recently shown compatible passages are available; with an empty cache there is a neutral error and a retry |
 | SCR-021 | Recover the network while an offline passage is visible and press its retry label | a fresh server passage replaces the offline frontier without walking to the end of the saved history |
 | SCR-022 | A response with a canonical Psalm 23 and a translated Psalm 22 | the reference is built as "Psalm 22", from `passage` |
 | SCR-023 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
-| SCR-024 [main] | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
+| SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
 | SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 
 ### Content reports
@@ -300,7 +301,7 @@ so every scenario below is Not run and belongs to the `main` tier.
 | ID | Scenario | Expected result |
 |---|---|---|
 | END-001 [critical] | Finish without a takeaway | the session finishes and returns directly Home with a temporary saved notice |
-| END-002 [critical] | Finish with a takeaway | Home opens with a temporary saved notice; the text remains in the journal |
+| END-002 [critical] | Finish with a takeaway | Home opens with a temporary saved notice, checked immediately after finishing; the text remains in the journal |
 | END-003 [main] | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `sessionResume.test.mjs`) |
@@ -346,6 +347,10 @@ so every scenario below is Not run and belongs to the `main` tier.
 | REM-013 | Pray, then wait for the reminder time on the same day | the reminder arrives: it was agreed to remind unconditionally |
 | REM-014 | Tap the trash button for a rule or time, then tap it again within three seconds | the first tap highlights the button without deleting; the second deletes only the selected item |
 | REM-015 | Arm deletion, then wait three seconds, edit the schedule, close the editor or background the app | confirmation clears; deleting again requires two taps; arming a different target cancels the previous one |
+
+REM-004/005/008 run through `e2e/run-rem-fire.sh`. Their clock-dependent flows
+are in `reminder-fire/`, outside the tier scan; the runner generates the required
+time-setting helper and captures the REM-008 screen at the scheduled time.
 
 ### App lock
 

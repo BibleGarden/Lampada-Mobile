@@ -1,8 +1,7 @@
 appId: twinkler
-tags:
-  - critical
 ---
-# Run stub with SCRIPTURE_STUB_MODE=privacy. It returns 422 if any reply leaks.
+# Build with EXPO_PUBLIC_API_URL=http://localhost:9085 and run the stub with
+# SCRIPTURE_STUB_MODE=privacy. It returns 422 if any reply leaks.
 - launchApp:
     stopApp: true
     clearState: true

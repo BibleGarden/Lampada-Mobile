@@ -43,7 +43,12 @@ sleep_until() {
   local now_s=$((10#$(date +%H) * 3600 + 10#$(date +%M) * 60 + 10#$(date +%S)))
   local target_s=$((10#${t:0:2} * 3600 + 10#${t:3:2} * 60 + pad))
   if (( target_s <= now_s )); then target_s=$((target_s + 86400)); fi
-  sleep $((target_s - now_s))
+  local remaining=$((target_s - now_s))
+  if (( remaining > 900 )); then
+    echo "Reminder target $t is already past; refusing to wait until tomorrow" >&2
+    return 1
+  fi
+  sleep "$remaining"
 }
 shot() { xcrun simctl io "$UDID" screenshot "$EVIDENCE/$1.png" > /dev/null 2>&1; echo "  📸 $1"; }
 
@@ -51,7 +56,7 @@ T1=$(ceil_time 4)
 T2=$(ceil_time 9)
 echo "== REM-004/011/013: цель $T1 (строка сейчас $ROW0)"
 node testing/e2e/gen-rem-set-time.mjs --init "$ROW0" "$T1" > /tmp/rem-set-time.yaml
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-rem-fire.yaml
+maestro test --test-output-dir "$EVIDENCE" testing/reminder-fire/ios-rem-fire.yaml
 save_row0 "$T1"
 sleep_until "$T1" 4
 shot REM-004-011-013-banner
@@ -61,7 +66,7 @@ T1=$(ceil_time 4)
 T2=$(ceil_time 9)
 echo "== REM-005: цели $T1, $T2 (исходная строка $INIT1)"
 node testing/e2e/gen-rem-set-time.mjs --init "$INIT1" "$T1" "$T2" > /tmp/rem-set-time.yaml
-maestro test --test-output-dir "$EVIDENCE" -e REM_T1="$T1" -e REM_T2="$T2" testing/e2e/ios-rem-005-two-times.yaml
+maestro test --test-output-dir "$EVIDENCE" -e REM_T1="$T1" -e REM_T2="$T2" testing/reminder-fire/ios-rem-005-two-times.yaml
 save_row0 "$T1"
 sleep_until "$T1" 4
 shot REM-005-first
@@ -76,13 +81,8 @@ PREV=$T1
 T1=$(ceil_time 4)
 echo "== REM-008: цель $T1, выключение тумблера"
 node testing/e2e/gen-rem-set-time.mjs --init "$PREV" "$T1" > /tmp/rem-set-time.yaml
-# Флоу длится ~40 с; sleep внутри флоу (до цели + 90 с) считаем от запуска.
-NOW_S=$((10#$(date +%H) * 3600 + 10#$(date +%M) * 60 + 10#$(date +%S)))
-TGT_S=$((10#${T1:0:2} * 3600 + 10#${T1:3:2} * 60 + 90))
-WAIT_MS=$(( (TGT_S - NOW_S) * 1000 ))
-[ "$WAIT_MS" -lt 0 ] && WAIT_MS=1000
-printf 'appId: twinkler\n---\n- evalScript: "java.lang.Thread.sleep(%s)"\n' "$WAIT_MS" > /tmp/rem-wait.yaml
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-rem-008-toggle-off.yaml
+maestro test --test-output-dir "$EVIDENCE" testing/reminder-fire/ios-rem-008-toggle-off.yaml
+sleep_until "$T1" 4
 shot REM-008-no-banner
 
 echo "== Готово. Доказательства: $EVIDENCE"

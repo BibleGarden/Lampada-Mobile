@@ -48,13 +48,11 @@ tags:
 - tapOn:
     id: "reflect-complete-button"
 - assertVisible:
-    id: "home-title-lit"
-- assertVisible:
     id: "prayer-saved-notice"
 - assertVisible:
-    id: "journal-button"
-- assertVisible:
     id: "home-title-lit"
+- assertVisible:
+    id: "journal-button"
 - tapOn:
     id: "journal-button"
 - assertVisible:
