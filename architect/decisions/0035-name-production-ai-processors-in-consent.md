@@ -34,9 +34,9 @@ neither the disclosed provider contract nor its identity, so it does not require
 renewed consent. This is the narrow exception to ADR-0017's earlier rule that
 moving content to a third-party processor always changes the contract. Adding
 another processor or materially changing the Google terms still requires a new
-notice, contract identity and consent. The published Privacy Policy currently
-says that recordings do not reach Google; it must be updated before that route
-is used.
+notice, contract identity and consent. Until 2026-09-28 the published Privacy
+Policy said that recordings do not reach Google; on 2026-09-28 it was updated to
+name both transcription processors.
 
 ## Options considered
 
