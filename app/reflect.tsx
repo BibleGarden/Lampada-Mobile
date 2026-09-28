@@ -4,7 +4,10 @@ import {
   BackHandler,
   ActivityIndicator,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,11 +18,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import KeyboardEditingView from '../components/KeyboardEditingView';
 import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
+import { useKeyboardTop } from '../lib/useKeyboardTop';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -45,6 +48,7 @@ function ReflectScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
+  const keyboardOpen = useKeyboardTop() !== null;
   const [inputFocused, setInputFocused] = useState(false);
   const completing = useRef(false);
 
@@ -84,15 +88,27 @@ function ReflectScreen() {
     <View style={styles.root}>
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.fill}>
-        <KeyboardEditingView
-          contentStyle={styles.body}
-          editingContentStyle={styles.bodyEditing}
-          topPadding={insets.top + sc(16)}
-          bottomPadding={insets.bottom + sc(24)}
-          editingBottomPadding={sc(16)}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.fill}
         >
-          {(keyboardOpen) => (
-            <View style={styles.content}>
+          <ScrollView
+            contentContainerStyle={[
+              styles.body,
+              keyboardOpen && styles.bodyEditing,
+              {
+                paddingTop: insets.top + sc(16),
+                paddingBottom: keyboardOpen ? sc(16) : insets.bottom + sc(24),
+              },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
+            <Pressable
+              onPress={Keyboard.dismiss}
+              accessible={false}
+              style={styles.content}
+            >
               {!keyboardOpen && (
                 <View style={styles.emberWrap}>
                   <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
@@ -154,9 +170,9 @@ function ReflectScreen() {
                   </Pressable>
                 </View>
               )}
-            </View>
-          )}
-        </KeyboardEditingView>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Animated.View>
     </View>
   );

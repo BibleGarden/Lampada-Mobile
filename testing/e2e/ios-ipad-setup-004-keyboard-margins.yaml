@@ -4,7 +4,8 @@ tags:
 ---
 # SETUP-004 (iPad): in portrait and landscape, taps in both side margins
 # dismiss the keyboard without losing text. A tap inside keeps editing, the
-# field stays above the keyboard, and Next opens the threshold.
+# field stays above the keyboard through a rotation, "Done" brings duration
+# and Next back, and Next opens the threshold.
 #
 # The system keyboard's nonlocalized `shift` and `inputView` identifiers
 # establish visibility (see ios-stage03-long-goal.yaml). `inputText` raises
@@ -77,17 +78,49 @@ tags:
 - inputText: " 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
 - assertVisible:
     id: "shift"
+# Rotation while typing: the header and title stay visible, the field keeps
+# its place under the title and still ends above the keyboard; duration and
+# Next stay hidden until "Done" closes the keyboard.
 - setOrientation: PORTRAIT
 - waitForAnimationToEnd:
     timeout: 3000
 - assertVisible:
+    id: "shift"
+- assertVisible:
+    id: "setup-kicker"
+- assertVisible:
     id: "setup-goal-input"
     text: "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
+    below:
+      id: "setup-examples-button"
+    above:
+      id: "inputView"
 - assertNotVisible:
     id: "setup-next-button"
+- assertNotVisible:
+    id: "setup-duration-value"
+- pressKey: Enter
+- assertNotVisible:
+    id: "shift"
+- assertVisible:
+    id: "setup-next-button"
+- assertVisible:
+    id: "setup-duration-value"
+- assertVisible:
+    id: "setup-goal-input"
+    text: "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin."
 - setOrientation: LANDSCAPE_LEFT
 - waitForAnimationToEnd:
     timeout: 3000
+# Reopen the keyboard without changing the text: the tap may land inside the
+# long text, so the typed space is erased right away.
+- tapOn:
+    id: "setup-goal-input"
+    retryTapIfNoChange: false
+- inputText: " "
+- eraseText: 1
+- assertVisible:
+    id: "shift"
 - tapOn:
     point: "97%,30%"
 - assertNotVisible:

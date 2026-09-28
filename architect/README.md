@@ -163,13 +163,19 @@ the scenario is finished through explicit interface actions.
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
 
-Setup and reflection share a keyboard-avoiding, scrollable editor layout.
-While typing, the input stretches down to just above the keyboard. Setup keeps
-its header, title and the input's top edge where they were and hides duration
-and navigation. Reflection keeps its question above the input, hides the
-decorative header and completion actions, and widens the editing column to at
-most 960 pt on tablets. Hidden controls return when the keyboard closes.
-Long content and small windows can scroll.
+Setup keeps its layout while the goal is typed: the header, title and the
+input's top edge stay in place, and the input stretches down to just above the
+keyboard over the hidden duration and navigation, scrolling long text inside.
+An invisible copy of the goal sizes the input's slot, so the position follows
+rotation; while typing it holds the text from when the keyboard opened.
+A long goal shrinks the slot to the free space and scrolls inside, so "Next"
+stays on screen.
+Reflection uses a keyboard-avoiding, scrollable content area. While typing,
+the input fills the available space below the question and above the keyboard.
+The editing column expands to at most 960 pt on tablets. The decorative header
+and completion actions return when the keyboard closes.
+Content can scroll when a long question or a small window needs more room.
+Both screens follow the keyboard through `lib/useKeyboardTop.ts`.
 
 ## State and the main data flow
 

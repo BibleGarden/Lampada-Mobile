@@ -46,8 +46,14 @@ tags:
 - assertVisible:
     id: "shift"
 - inputText: " very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
+# длинный текст прокручивается внутри поля: шапка и заголовок остаются на
+# месте, поле по-прежнему заканчивается над клавиатурой
+- assertVisible:
+    id: "setup-kicker"
 - assertVisible:
     id: "setup-goal-input"
+    below:
+      id: "setup-examples-button"
     above:
       id: "inputView"
 - tapOn:

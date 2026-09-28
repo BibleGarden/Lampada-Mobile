@@ -1,5 +1,5 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   AppState,
   Keyboard,
@@ -15,10 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import KeyboardEditingView from '../components/KeyboardEditingView';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
+import { useKeyboardTop } from '../lib/useKeyboardTop';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
@@ -40,10 +40,31 @@ export default function Setup() {
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
-  // Позиции шапки и блока цели в раскладке без клавиатуры. Пока клавиатура
-  // открыта, блок цели держит тот же отступ от шапки, а растёт только вниз.
-  const [headerBottom, setHeaderBottom] = useState(0);
-  const [goalTop, setGoalTop] = useState(0);
+  // Пока открыта клавиатура, раскладка экрана не меняется: верх поля цели
+  // остаётся на месте, а само поле тянется вниз до клавиатуры поверх
+  // скрытых длительности и «Далее». Высоту в покое задаёт невидимая копия
+  // текста в слоте поля: она пересчитывается при повороте, но на время ввода
+  // держит текст на момент открытия клавиатуры, чтобы набор не сдвигал поле.
+  const keyboardTop = useKeyboardTop();
+  const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
+  const inputSlot = useRef<View>(null);
+  const [slot, setSlot] = useState<{ top: number; height: number } | null>(null);
+  const measureSlot = useCallback(() => {
+    inputSlot.current?.measureInWindow((_x, top, _width, height) => setSlot({ top, height }));
+  }, []);
+  const editing = keyboardTop !== null;
+  if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
+  if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
+  const editingHeight = editing && slot
+    ? Math.max(slot.height, keyboardTop - sc(16) - slot.top)
+    : null;
+  const hiddenWhileEditing = editing
+    ? {
+        style: styles.hiddenWhileEditing,
+        accessibilityElementsHidden: true,
+        importantForAccessibility: 'no-hide-descendants' as const,
+      }
+    : {};
 
   const durationUnitFor = (minutes: number) => minutes === 0
     ? t('screens.setup.untimed')
@@ -74,154 +95,159 @@ export default function Setup() {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={measureSlot}>
       <ScreenBg />
-      <Animated.View entering={FadeIn.duration(450)} style={styles.fill}>
-        <KeyboardEditingView
-          contentStyle={styles.body}
-          editingContentStyle={styles.bodyEditing}
-          topPadding={insets.top + sc(12)}
-          bottomPadding={insets.bottom + sc(24)}
-          editingBottomPadding={sc(16)}
+      {/* Область закрытия клавиатуры занимает весь экран, включая поля
+          по бокам ограниченной по ширине колонки на планшете. */}
+      <Pressable
+        onPress={Keyboard.dismiss}
+        accessible={false}
+        style={styles.dismissArea}
+      >
+        <Animated.View
+          entering={FadeIn.duration(450)}
+          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
         >
-          {(keyboardOpen) => (
-            <>
-              <View
-                style={styles.headerRow}
-                onLayout={(e) => {
-                  if (!keyboardOpen) setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height);
-                }}
-              >
-                <IconButton
-                  size={sc(30)}
-                  accessibilityLabel={t('settings.back')}
-                  onPress={() => router.back()}
-                >
-                  <ChevronLeft size={18} color={colors.white65} />
-                </IconButton>
-                <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
-              </View>
+          <View style={styles.headerRow}>
+            <IconButton
+              size={sc(30)}
+              accessibilityLabel={t('settings.back')}
+              onPress={() => router.back()}
+            >
+              <ChevronLeft size={18} color={colors.white65} />
+            </IconButton>
+            <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
+          </View>
 
-              <View
-                style={keyboardOpen && [styles.goalEditing, { marginTop: goalTop - headerBottom }]}
-                onLayout={(e) => {
-                  if (!keyboardOpen) setGoalTop(e.nativeEvent.layout.y);
-                }}
+          <View style={styles.goal}>
+            <View style={styles.goalHeader}>
+              <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
+              <Pressable
+                onPress={() => setExamplesOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.setup.examples')}
+                accessibilityHint={t('screens.setup.openExamples')}
+                testID="setup-examples-button"
+                hitSlop={8}
+                style={({ pressed }) => [styles.helpBtn, pressed && { transform: [{ scale: 0.92 }] }]}
               >
-                <View style={styles.goalHeader}>
-                  <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
-                  <Pressable
-                    onPress={() => setExamplesOpen(true)}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('screens.setup.examples')}
-                    accessibilityHint={t('screens.setup.openExamples')}
-                    testID="setup-examples-button"
-                    hitSlop={8}
-                    style={({ pressed }) => [styles.helpBtn, pressed && { transform: [{ scale: 0.92 }] }]}
-                  >
-                    <Text style={styles.helpBtnLabel}>?</Text>
-                  </Pressable>
-                </View>
-                <TextInput
-                  value={s.topic}
-                  onChangeText={s.setTopic}
-                  multiline
-                  // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
-                  // говорят достаточно, а любая подсказка навязывала тон
-                  style={[styles.topicInput, keyboardOpen && styles.topicInputEditing]}
-                  accessibilityLabel={t('screens.setup.goal')}
-                  accessibilityHint={t('screens.setup.goalHint')}
-                  testID="setup-goal-input"
-                  // цель — одна фраза, переносы строк не нужны: клавиша ввода
-                  // становится синей «Готово» и закрывает клавиатуру
-                  returnKeyType="done"
-                  submitBehavior="blurAndSubmit"
-                  onSubmitEditing={Keyboard.dismiss}
-                />
-              </View>
+                <Text style={styles.helpBtnLabel}>?</Text>
+              </Pressable>
+            </View>
+            <View ref={inputSlot} style={styles.topicSlot} onLayout={measureSlot}>
+              <Text
+                style={[styles.topicInput, styles.topicSizer]}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                {editingStartTopic ?? s.topic}
+              </Text>
+              <TextInput
+                value={s.topic}
+                onChangeText={s.setTopic}
+                multiline
+                // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
+                // говорят достаточно, а любая подсказка навязывала тон
+                style={[
+                  styles.topicInput,
+                  styles.topicInputFill,
+                  editingHeight === null ? { bottom: 0 } : { height: editingHeight },
+                ]}
+                accessibilityLabel={t('screens.setup.goal')}
+                accessibilityHint={t('screens.setup.goalHint')}
+                testID="setup-goal-input"
+                // цель — одна фраза, переносы строк не нужны: клавиша ввода
+                // становится синей «Готово» и закрывает клавиатуру
+                returnKeyType="done"
+                submitBehavior="blurAndSubmit"
+                onSubmitEditing={Keyboard.dismiss}
+                onFocus={measureSlot}
+              />
+            </View>
+          </View>
 
-              {!keyboardOpen && <View>
-                <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
-                  {t('screens.setup.duration')}
-                </Kicker>
-                <View style={styles.stepper}>
+          <View {...hiddenWhileEditing}>
+            <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
+              {t('screens.setup.duration')}
+            </Kicker>
+            <View style={styles.stepper}>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  s.decMinutes();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.setup.decreaseDuration')}
+                style={({ pressed }) => [
+                  styles.stepBtn,
+                  styles.stepBtnLeft,
+                  pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
+                ]}
+              >
+                <Minus color={colors.white65} />
+              </Pressable>
+              <View
+                accessible
+                accessibilityLabel={durationLabel(s.minutes)}
+                style={styles.stepValue}
+                testID="setup-duration-value"
+              >
+                <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
+                <Text style={styles.stepUnit}>{durationUnit}</Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  s.incMinutes();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('screens.setup.increaseDuration')}
+                style={({ pressed }) => [
+                  styles.stepBtn,
+                  styles.stepBtnRight,
+                  pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
+                ]}
+              >
+                <Plus color={colors.white65} />
+              </Pressable>
+            </View>
+            <View style={styles.presets}>
+              {PRESETS.map((p) => {
+                const active = s.minutes === p.v;
+                return (
                   <Pressable
+                    key={p.v}
+                    testID={`setup-preset-${p.v}`}
                     onPress={() => {
                       Haptics.selectionAsync();
-                      s.decMinutes();
+                      s.setMinutes(p.v);
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={t('screens.setup.decreaseDuration')}
-                    style={({ pressed }) => [
-                      styles.stepBtn,
-                      styles.stepBtnLeft,
-                      pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
-                    ]}
+                    accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
+                    accessibilityState={{ selected: active }}
+                    hitSlop={touchSlop(presetHeight())}
+                    style={[styles.preset, active && styles.presetActive]}
                   >
-                    <Minus color={colors.white65} />
+                    <Text
+                      style={[
+                        styles.presetLabel,
+                        p.v === 0 && { fontSize: sc(18) },
+                        active && { color: colors.amberBright },
+                      ]}
+                    >
+                      {p.v === 60 ? t('screens.setup.hour') : p.label}
+                    </Text>
                   </Pressable>
-                  <View
-                    accessible
-                    accessibilityLabel={durationLabel(s.minutes)}
-                    style={styles.stepValue}
-                    testID="setup-duration-value"
-                  >
-                    <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
-                    <Text style={styles.stepUnit}>{durationUnit}</Text>
-                  </View>
-                  <Pressable
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      s.incMinutes();
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('screens.setup.increaseDuration')}
-                    style={({ pressed }) => [
-                      styles.stepBtn,
-                      styles.stepBtnRight,
-                      pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
-                    ]}
-                  >
-                    <Plus color={colors.white65} />
-                  </Pressable>
-                </View>
-                <View style={styles.presets}>
-                  {PRESETS.map((p) => {
-                    const active = s.minutes === p.v;
-                    return (
-                      <Pressable
-                        key={p.v}
-                        testID={`setup-preset-${p.v}`}
-                        onPress={() => {
-                          Haptics.selectionAsync();
-                          s.setMinutes(p.v);
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
-                        accessibilityState={{ selected: active }}
-                        hitSlop={touchSlop(presetHeight())}
-                        style={[styles.preset, active && styles.presetActive]}
-                      >
-                        <Text
-                          style={[
-                            styles.presetLabel,
-                            p.v === 0 && { fontSize: sc(18) },
-                            active && { color: colors.amberBright },
-                          ]}
-                        >
-                          {p.v === 60 ? t('screens.setup.hour') : p.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>}
+                );
+              })}
+            </View>
+          </View>
 
-              {!keyboardOpen && <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />}
-            </>
-          )}
-        </KeyboardEditingView>
-      </Animated.View>
+          <View {...hiddenWhileEditing}>
+            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+          </View>
+        </Animated.View>
+      </Pressable>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
@@ -264,10 +290,12 @@ const presetHeight = () => sc(30);
 
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
-  fill: { flex: 1 },
-  body: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
-  bodyEditing: { justifyContent: 'flex-start' },
-  goalEditing: { flexGrow: 1 },
+  dismissArea: { flex: 1 },
+  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
+  // поле, растянутое до клавиатуры, перекрывает нижние блоки; длинная цель
+  // ужимает слот поля до свободного места, чтобы «Далее» оставалась на экране
+  goal: { flexShrink: 1, zIndex: 1 },
+  hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -313,7 +341,9 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
   },
-  topicInputEditing: { flexGrow: 1 },
+  topicSlot: { flexShrink: 1, minHeight: sc(120) },
+  topicSizer: { opacity: 0 },
+  topicInputFill: { position: 'absolute', top: 0, left: 0, right: 0 },
   stepper: {
     flexDirection: 'row',
     alignItems: 'stretch',
