@@ -120,7 +120,7 @@ export const componentMessages = {
     "components.reader.aiBody": "Щоб запропонувати запитання й дібрати уривки з Писання, ми надішлемо тему твоєї молитви до Google Gemini (через платний API Google). На своєму сервері ми її не зберігаємо.",
     "components.reader.answerKicker": "ВІДПОВІДІ ТА РОЗШИФРУВАННЯ",
     "components.reader.answerTitle": "Враховувати твої відповіді?",
-    "components.reader.answerBody": "Щоб наступні запитання й уривки враховували сказане тобою, ми надішлемо твої відповіді та розшифровані записи до Google Gemini (через платний API Google). На своєму сервері ми їх не зберігаємо.",
+    "components.reader.answerBody": "Щоб наступні запитання й уривки враховували сказане тобою, ми надішлемо твої відповіді та розшифровки до Google Gemini (через платний API Google). На своєму сервері ми їх не зберігаємо.",
     "components.reader.audioKicker": "РОЗШИФРУВАННЯ АУДІО",
     "components.reader.audioTitle": "Надіслати запис для розшифрування?",
     "components.reader.audioBody": "Щоб перетворити запис на текст, ми надішлемо його на розшифрування до Whisper на наших серверах або до Google Gemini (через платний API Google). Сам запис ми в себе не зберігаємо.",
