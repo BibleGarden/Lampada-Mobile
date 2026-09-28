@@ -1,6 +1,6 @@
 export const normalizeQuestion = (question: string): string =>
   question.normalize('NFKC').toLowerCase().replace(/ё/gu, 'е')
-    .replace(/[’'ʼ]/gu, '').replace(/\p{P}/gu, ' ').replace(/\s+/gu, ' ').trim();
+    .replace(/[’‘'ʼ`]/gu, '').replace(/\p{P}/gu, ' ').replace(/\s+/gu, ' ').trim();
 
 export const wasQuestionShown = (question: string, shown: readonly string[]): boolean => {
   const normalized = normalizeQuestion(question);

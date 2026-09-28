@@ -184,7 +184,7 @@ const poolKey = (
   s: SessionState,
   index: number,
   answers: Record<number, Answer> = s.answers,
-) => JSON.stringify([s.sessionId, index, s.topic, s.questions, s.shownQuestions, skippedForAi(s, answers), answersForAi(answers), useSettings.getState().uiLanguage]);
+) => JSON.stringify([s.sessionId, index, s.topic, s.questions, skippedForAi(s, answers), answersForAi(answers), useSettings.getState().uiLanguage]);
 
 // Текущий неотвеченный вопрос уже показан: prefetch должен исключить и его.
 // Проверяем реальные ответы до privacy gate, включая ещё не расшифрованный голос.
@@ -192,10 +192,6 @@ const skippedForAi = (s: SessionState, answers = s.answers) => [
   ...s.skippedQuestions,
   ...s.questions.filter((question, index) => question.trim() && !isAnswered(answers[index])),
 ];
-
-const shownInSession = (s: SessionState) => s.shownQuestions.length
-  ? s.shownQuestions
-  : [...s.skippedQuestions, ...s.questions, s.reflectQ].filter(Boolean);
 
 const localQuestion = (shown: string[], stage: 'next' | 'reflect'): ai.GeneratedQuestion => {
   const text = ai.pickFallbackQuestion(shown, stage);
@@ -219,7 +215,7 @@ const prepareQuestion = (
 };
 
 const reflectKey = (s: SessionState) =>
-  JSON.stringify([s.sessionId, s.topic, s.questions, s.shownQuestions, skippedForAi(s), answersForAi(s.answers), useSettings.getState().uiLanguage]);
+  JSON.stringify([s.sessionId, s.topic, s.questions, skippedForAi(s), answersForAi(s.answers), useSettings.getState().uiLanguage]);
 
 const prepareReflectQuestion = (s: SessionState, prefetch = true) => {
   if (s.sessionId === null) return null;
@@ -528,7 +524,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   prevQuestion: () =>
     set((s) => (!s.generating && s.qIndex > 0
-      ? { qIndex: s.qIndex - 1, shownQuestions: rememberShownQuestion(shownInSession(s), s.questions[s.qIndex - 1]) }
+      ? { qIndex: s.qIndex - 1, shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[s.qIndex - 1]) }
       : s)),
 
   nextQuestion: async () => {
@@ -536,7 +532,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     if (s.generating) return;
     if (s.qIndex < s.answeredCount) {
       set({ qIndex: s.qIndex + 1,
-        shownQuestions: rememberShownQuestion(shownInSession(s), s.questions[s.qIndex + 1]) }); // вперёд по открытым
+        shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[s.qIndex + 1]) }); // вперёд по открытым
       return;
     }
     const sessionToken = s.sessionId;
@@ -578,7 +574,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       }
     }
 
-    const shown = shownInSession(s);
+    const shown = s.shownQuestions;
     if (q.source === 'fallback' && wasQuestionShown(q.text, shown)) {
       q = localQuestion(shown, 'next');
     } else if (q.novel === false || wasQuestionShown(q.text, shown)) {
@@ -625,7 +621,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     set((s) => {
       if (s.generating) return s;
       const qIndex = Math.max(0, Math.min(pos, s.answeredCount));
-      return { qIndex, shownQuestions: rememberShownQuestion(shownInSession(s), s.questions[qIndex]) };
+      return { qIndex, shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[qIndex]) };
     }),
 
   saveAnswer: async (questionIndex, text, recordings) => {
@@ -756,7 +752,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         return;
       }
     }
-    const shown = shownInSession(s);
+    const shown = s.shownQuestions;
     if (q.novel === false || wasQuestionShown(q.text, shown)) {
       q = localQuestion(shown, 'reflect');
     }
@@ -799,7 +795,6 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       minutes: useSettings.getState().prayerMinutes,
       streak: s.streak,
       questions: ai.getCuratedQuestions(),
-      shownQuestions: [],
       questionSources: ai.getCuratedQuestions().map(() => 'fallback'),
     }));
   },

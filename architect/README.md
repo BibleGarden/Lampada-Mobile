@@ -611,10 +611,12 @@ allowed only when the server candidate, if available, and every question in the
 local pool for the current stage and language have already been shown. The client
 then chooses the least recently shown local question, never a more recent one.
 The session retains the order of shown questions across replacements, navigation
-and continued prayer; this history remains in pool keys so a stale prepared
-response cannot bypass the check. First-stage requests never include skipped
-history. Requests retain at most 40 messages and
-the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
+and continued prayer; a prepared response is checked against it when shown.
+Known limitation until requests carry `shown_questions`: a replacement for an
+unanswered question does not use the local pool, so a server that keeps
+returning an earlier voice-only question leaves the current question unchanged.
+First-stage requests never include skipped history. Requests retain at most 40
+messages and the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
 budget is 16,000 UTF-16 code units across topic, messages and skipped questions;
 messages have priority, oldest entries are dropped, and the latest human reply
 is never truncated. Pool keys include skipped context to reject stale prefetches.
