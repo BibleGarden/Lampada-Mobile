@@ -29,8 +29,9 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-- assertVisible: "идёт"
-- assertVisible: "0:0[2-9]"
+# кнопка таймера озвучивается одной строкой «0:21, ИДЁТ»: прошедшее время и
+# подпись «идёт» в стиле uppercase; обратного отсчёта без таймера нет
+- assertVisible: "\\d+:\\d\\d, ИДЁТ"
 - assertNotVisible:
     id: "reflect-kicker"
 - tapOn:
