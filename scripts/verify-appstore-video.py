@@ -12,13 +12,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-CROPS = {
-    "intention": (90, 550, 710, 220),
-    "answer": (70, 1110, 750, 230),
-    "reflection": (70, 790, 750, 330),
-}
-
-
 class RecordingQualityError(RuntimeError):
     """The recording lacks enough visible frames for a quality measurement."""
 
@@ -101,11 +94,12 @@ def typing_updates(video: Path, start: float, end: float, crop: tuple[int, int, 
             "updates": updates, "gaps_ms": gaps, "analyzed_frames": frame_count}
 
 
-def flame_motion(video: Path, start: float, duration: float) -> dict:
+def flame_motion(video: Path, start: float, duration: float,
+                 crop: tuple[int, int, int, int]) -> dict:
     previous = None
     first = None
     changes = []
-    for frame in video_frames(video, start, duration, (320, 180, 246, 280), grayscale=True):
+    for frame in video_frames(video, start, duration, crop, grayscale=True):
         if first is None:
             first = frame
         if previous is not None:
@@ -155,6 +149,7 @@ def main():
     raw_video = work / "raw" / f"{args.locale}-full.mp4"
     fixture = json.loads((ROOT / "store/video/demo-content.json").read_text())["locales"][args.locale]
     pacing = json.loads((ROOT / "store/video/pacing.json").read_text())
+    crops = pacing["devices"][os.environ["PRAY_VIDEO_DEVICE"]]["verification_crops"]
     limits = pacing["verification"]
     required_markers = set(limits["required_markers"])
     missing_markers = sorted(required_markers - markers.keys())
@@ -189,13 +184,14 @@ def main():
     (frames / "timeline.txt").write_text("\n".join(timeline) + "\n")
 
     typing = {}
-    for field in CROPS:
+    for field in ("intention", "answer", "reflection"):
+        crop = tuple(crops[field])
         start = output_time(markers[f"{field}_typing_start"], segments)
         end = output_time(markers[f"{field}_typing_end"], segments)
-        typing[field] = typing_updates(video, start, end, CROPS[field])
+        typing[field] = typing_updates(video, start, end, crop)
         raw_crop = tuple(round(value * raw_size["width" if index % 2 == 0 else "height"] /
                                output_size["width" if index % 2 == 0 else "height"])
-                         for index, value in enumerate(CROPS[field]))
+                         for index, value in enumerate(crop))
         typing[field]["raw"] = typing_updates(
             raw_video, markers[f"{field}_typing_start"], markers[f"{field}_typing_end"], raw_crop)
         value = fixture["typed"]["takeaway" if field == "reflection" else field]
@@ -215,9 +211,12 @@ def main():
                                       f"> limit {limits['hard_typing_max_gap_ms']} ms")
 
     motion = {
-        "before_focus": flame_motion(video, output_time(markers["reflection_input_down"], segments) - 0.35, 0.3),
-        "focused_typing": flame_motion(video, output_time(markers["reflection_typing_start"], segments) + 0.4, 1.5),
-        "after_blur": flame_motion(video, output_time(markers["reflection_save_down"], segments) - 0.4, 0.3),
+        "before_focus": flame_motion(video, output_time(markers["reflection_input_down"], segments) - 0.35, 0.3,
+                                      tuple(crops["flame"])),
+        "focused_typing": flame_motion(video, output_time(markers["reflection_typing_start"], segments) + 0.4, 1.5,
+                                        tuple(crops["flame"])),
+        "after_blur": flame_motion(video, output_time(markers["reflection_save_down"], segments) - 0.4, 0.3,
+                                   tuple(crops["flame"])),
     }
     (frames / "flame-motion.json").write_text(json.dumps(motion, indent=2) + "\n")
 
@@ -240,7 +239,7 @@ def main():
     clear_question = first_question_clear_hold(
         video, output_time(markers["threshold_hold_up"], segments),
         output_time(markers["answer_open_down"], segments),
-        tuple(limits["first_question_crop"]),
+        tuple(crops["first_question"]),
     )
     if not limits["min_clear_question_seconds"] <= clear_question["clear_read_seconds"] <= limits["max_clear_question_seconds"]:
         quality_issues.append(f"First question clear reading {clear_question['clear_read_seconds']} s is outside "

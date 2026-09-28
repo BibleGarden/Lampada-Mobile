@@ -49,7 +49,7 @@ def validate_markers(path: Path, locale: str):
     return dict(zip(names, times)), names
 
 
-def validate_plan(path: Path, markers: dict):
+def validate_plan(path: Path, markers: dict, device: str):
     pacing = json.loads(path.read_text())
     if pacing.get("schema") != 1 or not isinstance(pacing.get("montage"), dict):
         raise ValueError("Unsupported video pacing schema")
@@ -60,17 +60,20 @@ def validate_plan(path: Path, markers: dict):
         raise ValueError("Head or tail marker is missing or reversed")
     if plan.get("default_speed") != 1.0:
         raise ValueError("Unmarked motion must stay at real-time speed")
-    speeds = plan.get("speed_after")
-    if not isinstance(speeds, dict) or set(speeds) - (TRANSITIONS | TYPING_STARTS.keys() | {HOLD_START}):
+    base_speeds = plan.get("speed_after")
+    typing_speeds = pacing["devices"][device]["typing_montage_speed_after"]
+    if (not isinstance(base_speeds, dict) or set(base_speeds) - (TRANSITIONS | {HOLD_START}) or
+            set(typing_speeds) != set(TYPING_STARTS)):
         raise ValueError("Speed plan contains an unsupported segment")
+    speeds = {**base_speeds, **typing_speeds}
     if any(name not in markers or not isinstance(speed, (int, float)) or
-           not 1 < speed <= (3 if name in TYPING_STARTS else 2 if name == HOLD_START else 1.5)
+           not 1 < speed <= (4 if name in TYPING_STARTS else 2 if name == HOLD_START else 1.5)
            for name, speed in speeds.items()):
         raise ValueError("Speed must be >1 and within its segment limit")
     for start, end in TYPING_STARTS.items():
         if start not in markers or end not in markers or markers[start] >= markers[end]:
             raise ValueError(f"Typing marker pair missing or reversed: {start}, {end}")
-    return plan
+    return {**plan, "speed_after": speeds}
 
 
 def make_segments(markers: dict, names: list[str], plan: dict, raw_duration: float):
@@ -110,7 +113,8 @@ def filter_graph(segments: list[dict], pad: float):
     return tail + ",format=yuv420p[v]"
 
 
-def verify_output(path: Path, min_duration: float, max_duration: float):
+def verify_output(path: Path, min_duration: float, max_duration: float,
+                  output_size: tuple[int, int]):
     result = probe(path)
     duration = float(result["format"]["duration"])
     if not min_duration <= duration <= max_duration:
@@ -122,7 +126,7 @@ def verify_output(path: Path, min_duration: float, max_duration: float):
         raise ValueError("Expected one H.264 video and one AAC audio stream")
     video, audio = videos[0], audios[0]
     if (video["profile"] != "High" or video["pix_fmt"] != "yuv420p" or
-            (video["width"], video["height"]) != (886, 1920) or
+            (video["width"], video["height"]) != output_size or
             video["avg_frame_rate"] != "30/1" or audio["channels"] != 2):
         raise ValueError("App Store preview stream settings are invalid")
     if int(video.get("bit_rate", 0)) > 12_000_000:
@@ -138,12 +142,14 @@ def main():
     args.raw = work / "raw" / f"{args.locale}-full.mp4"
     args.markers = work / "raw" / f"{args.locale}-full.markers.json"
     args.plan = Path("store/video/pacing.json")
+    pacing = json.loads(args.plan.read_text())
+    output_width, output_height = pacing["devices"][os.environ["PRAY_VIDEO_DEVICE"]]["output_size"]
     args.output = work / "final" / f"appstore-{args.locale}.mp4"
     if not args.raw.is_file():
         parser.error(f"Raw take missing: {args.raw}")
     markers, names = validate_markers(args.markers, args.locale)
-    plan = validate_plan(args.plan, markers)
-    duration_limits = json.loads(args.plan.read_text())["verification"]
+    plan = validate_plan(args.plan, markers, os.environ["PRAY_VIDEO_DEVICE"])
+    duration_limits = pacing["verification"]
     min_duration = duration_limits["min_duration_seconds"]
     max_duration = duration_limits["max_duration_seconds"]
     raw_duration = float(probe(args.raw)["format"]["duration"])
@@ -156,8 +162,8 @@ def main():
             "ffmpeg", "-y", "-v", "error", "-i", str(args.raw),
             "-vf", "setpts=if(eq(N\\,0)\\,0\\,PREV_OUTPTS+"
             "if(lt(PTS\\,PREV_INPTS)\\,1/(60*TB)\\,PTS-PREV_INPTS)),"
-            "fps=30,scale=886:1920:force_original_aspect_ratio=increase,"
-            "crop=886:1920,setsar=1,format=yuv420p",
+            f"fps=30,scale={output_width}:{output_height}:force_original_aspect_ratio=increase,"
+            f"crop={output_width}:{output_height},setsar=1,format=yuv420p",
             "-an", "-c:v", "ffv1", str(normalized),
         ], stdout=log, stderr=subprocess.STDOUT)
     (build / "normalize.exit").write_text(f"{result.returncode}\n")
@@ -191,7 +197,7 @@ def main():
             "-filter_complex_script", str(graph), "-map", "[v]", "-map", "1:a:0",
             "-shortest", "-r", "30", "-c:v", "libx264", "-preset", "slow",
             "-crf", "18", "-maxrate", "12M", "-bufsize", "16M", "-profile:v", "high",
-            "-level", "4.2", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
+            "-level", "4.0", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k",
             "-ac", "2", "-movflags", "+faststart", str(pending),
         ], stdout=log, stderr=subprocess.STDOUT)
     (build / "ffmpeg.exit").write_text(f"{result.returncode}\n")
@@ -199,7 +205,8 @@ def main():
         raise RuntimeError(f"FFmpeg montage failed; see {build / 'ffmpeg.log'}")
     encode_seconds = time.monotonic() - encode_started
     verify_started = time.monotonic()
-    actual, metadata = verify_output(pending, min_duration, max_duration)
+    actual, metadata = verify_output(pending, min_duration, max_duration,
+                                     (output_width, output_height))
     (build / "ffprobe.json").write_text(json.dumps(metadata, indent=2) + "\n")
     with (build / "decode.log").open("w") as log:
         decoded = subprocess.run(["ffmpeg", "-v", "error", "-i", str(pending), "-f", "null", "-"],

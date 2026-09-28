@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,7 +17,6 @@ from pathlib import Path
 from appstore_video_keyboard import validate_fixture
 
 ROOT = Path(__file__).resolve().parent.parent
-DEVICE = "Lampada AppStore UK iPhone 17 Pro Max"
 DEFAULT_SCRATCH = ROOT / "store/video/runs"
 AXE_VERSION = "1.8.0"
 MOCK_ENV = {"EXPO_NO_DOTENV": "1", "EXPO_PUBLIC_API_URL": "http://127.0.0.1:9086",
@@ -54,8 +54,7 @@ def source_hash() -> str:
     paths = [Path(name.decode()) for name in listed.split(b"\0") if name]
     paths = [path for path in paths if path.parts[0] in source_dirs or str(path) in root_files
              or str(path) == "scripts/build-appstore-video-app.sh"]
-    paths += [Path(name) for name in ("ios/Lampada/Info.plist", "ios/Lampada.xcodeproj/project.pbxproj")
-              if (ROOT / name).is_file()]
+    paths += [Path("ios/Lampada/Info.plist")]
     digest = hashlib.sha256()
     for path in sorted(set(paths)):
         if (ROOT / path).is_file():
@@ -80,8 +79,15 @@ def native_hash() -> str:
         if not path.is_file():
             raise RuntimeError(f"Native dependency input is missing: {path}")
         digest.update(str(path.relative_to(ROOT)).encode() + b"\0")
-        digest.update(path.read_bytes())
+        digest.update(pbxproj_fingerprint(path) if path.name == "project.pbxproj" else path.read_bytes())
     return digest.hexdigest()
+
+
+def pbxproj_fingerprint(path: Path) -> bytes:
+    """prebuild генерирует случайные 24-символьные PBX ID и сортирует записи по ним;
+    сравниваем содержимое без ID и без порядка строк."""
+    lines = re.sub(rb"\b[0-9A-F]{24}\b", b"ID", path.read_bytes()).splitlines()
+    return b"\n".join(sorted(lines))
 
 
 def sha256(path: Path) -> str:
@@ -140,8 +146,8 @@ def preflight(work: Path, env: dict[str, str]) -> tuple[str, Path]:
     return str(showtime), keyboard_map
 
 
-def installed_app(work: Path) -> Path | None:
-    udid = run([str(ROOT / "testing/e2e/sim-udid.sh"), DEVICE], work / "preflight/simulator-id.log")
+def installed_app(work: Path, simulator: str) -> Path | None:
+    udid = run([str(ROOT / "testing/e2e/sim-udid.sh"), simulator], work / "preflight/simulator-id.log")
     state = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "devices", "-j"], text=True))
     devices = [item for group in state["devices"].values() for item in group if item["udid"] == udid]
     if len(devices) != 1:
@@ -162,7 +168,7 @@ def installed_app(work: Path) -> Path | None:
     return path
 
 
-def get_app(work: Path, scratch: Path, env: dict[str, str]) -> tuple[Path, float, str, bool]:
+def get_app(work: Path, scratch: Path, env: dict[str, str], simulator: str) -> tuple[Path, float, str, bool]:
     start = time.monotonic()
     native = native_hash()
     (work / "expected-native.sha256").write_text(native + "\n")
@@ -173,7 +179,7 @@ def get_app(work: Path, scratch: Path, env: dict[str, str]) -> tuple[Path, float
          "--assets-dest", str(probe / "assets")], work / "bundle-probe.log", {**env, **MOCK_ENV})
     expected = sha256(probe / "main.jsbundle")
     (work / "expected-jsbundle.sha256").write_text(expected + "\n")
-    installed = installed_app(work)
+    installed = installed_app(work, simulator)
     if (installed and sha256(installed / "main.jsbundle") == expected
             and (installed / NATIVE_FINGERPRINT_FILE).is_file()
             and (installed / NATIVE_FINGERPRINT_FILE).read_text().strip() == native):
@@ -210,12 +216,12 @@ def capture_times(work: Path) -> dict[str, float]:
     return values
 
 
-def shoot(locale: str, local: Path, app: Path, showtime: str, keyboard_map: Path,
+def shoot(locale: str, device: str, local: Path, app: Path, showtime: str, keyboard_map: Path,
           skip_install: bool, env: dict[str, str], retake_source: Path | None = None) -> dict:
     local.mkdir()
     local_env = {**env, "PRAY_VIDEO_SCRATCH_DIR": str(local), "PRAY_VIDEO_LOG_DIR": str(local / "logs"),
                  "PRAY_VIDEO_APP_PATH": str(app), "PRAY_VIDEO_SHOWTIME": showtime,
-                 "PRAY_VIDEO_KEYBOARD_MAP": str(keyboard_map),
+                 "PRAY_VIDEO_KEYBOARD_MAP": str(keyboard_map), "PRAY_VIDEO_DEVICE": device,
                  "PRAY_VIDEO_SKIP_INSTALL": "1" if skip_install else "0"}
     if retake_source is not None:
         local_env["PRAY_VIDEO_RETAKE_SOURCE"] = str(retake_source)
@@ -247,7 +253,8 @@ def shoot(locale: str, local: Path, app: Path, showtime: str, keyboard_map: Path
     duration = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries",
                                               "format=duration", "-of", "csv=p=0", str(final)], text=True).strip())
     summary = json.loads((local / "frames" / locale / "summary.json").read_text())
-    deliverable = ROOT / "store/video" / f"appstore-{locale}.mp4"
+    name = f"appstore-{locale}.mp4" if device == "iphone" else f"appstore-{device}-{locale}.mp4"
+    deliverable = ROOT / "store/video" / name
     pending = deliverable.with_name(deliverable.name + ".pending")
     if pending.exists():
         raise RuntimeError(f"Stale pending deliverable: {pending}")
@@ -274,11 +281,15 @@ def main() -> int:
         raise SystemExit("App Store video pipeline requires Python 3.9 or newer")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("locale", help="Locale in store/video/demo-content.json, or all")
+    parser.add_argument("--device", default="iphone", choices=("iphone", "ipad"),
+                        help="App Store preview device (default: iphone)")
     parser.add_argument("--work-root", type=Path, default=DEFAULT_SCRATCH,
                         help="Directory for ignored run logs and build cache (default: store/video/runs)")
     args = parser.parse_args()
     fixture = json.loads((ROOT / "store/video/demo-content.json").read_text())
-    max_attempts = json.loads((ROOT / "store/video/pacing.json").read_text())["verification"]["max_capture_attempts"]
+    pacing = json.loads((ROOT / "store/video/pacing.json").read_text())
+    max_attempts = pacing["verification"]["max_capture_attempts"]
+    simulator = pacing["devices"][args.device]["simulator"]
     if type(max_attempts) is not int or max_attempts < 1:
         parser.error("verification.max_capture_attempts must be a positive integer")
     locales = list(fixture["locales"]) if args.locale == "all" else [args.locale]
@@ -300,14 +311,14 @@ def main() -> int:
     env = {**os.environ, "PATH": tool_path, "PRAY_VIDEO_SCRATCH_ROOT": str(scratch)}
     started = time.monotonic()
     report = {"source_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-              "pipeline_hash": pipeline_hash(),
+              "pipeline_hash": pipeline_hash(), "device": args.device, "simulator": simulator,
               "locales": {}, "exit_code": 1}
     try:
         preflight_start = time.monotonic()
         showtime, keyboard_map = preflight(work, env)
         report["preflight_seconds"] = time.monotonic() - preflight_start
         report["source_hash"] = source_hash()
-        app, report["bundle_seconds"], report["bundle_mode"], skip_install = get_app(work, scratch, env)
+        app, report["bundle_seconds"], report["bundle_mode"], skip_install = get_app(work, scratch, env, simulator)
         report["rebuilt"] = report["bundle_mode"] == "rebuilt"
         for locale in locales:
             attempt_records = []
@@ -318,7 +329,7 @@ def main() -> int:
                 attempt_work = locale_work / f"attempt-{number:02d}"
                 calibration_source = locale_work / "attempt-01"
                 try:
-                    result = shoot(locale, attempt_work, app, showtime, keyboard_map,
+                    result = shoot(locale, args.device, attempt_work, app, showtime, keyboard_map,
                                    skip_install if number == 1 else True, env,
                                    calibration_source if number > 1 else None)
                 except QualityGateFailure as error:
@@ -372,7 +383,7 @@ def main() -> int:
         print(f"VIDEO PIPELINE FAILED: {error}", file=sys.stderr, flush=True)
     finally:
         try:
-            udid = subprocess.check_output([str(ROOT / "testing/e2e/sim-udid.sh"), DEVICE], text=True).strip()
+            udid = subprocess.check_output([str(ROOT / "testing/e2e/sim-udid.sh"), simulator], text=True).strip()
             shutdown = subprocess.run(["xcrun", "simctl", "shutdown", udid], capture_output=True, text=True)
             # уже выключенный симулятор — не ошибка очистки
             if shutdown.returncode != 0 and "current state: Shutdown" not in shutdown.stderr:

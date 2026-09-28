@@ -1,9 +1,48 @@
 {
   "schema": 1,
-  "typing_delay_seconds": {
-    "intention": 0.065,
-    "answer": 0.065,
-    "reflection": 0.12
+  "devices": {
+    "iphone": {
+      "simulator": "Lampada AppStore UK iPhone 17 Pro Max",
+      "output_size": [886, 1920],
+      "typing_delay_seconds": {
+        "intention": 0.085,
+        "answer": 0.085,
+        "reflection": 0.12
+      },
+      "typing_montage_speed_after": {
+        "intention_typing_start": 3.25,
+        "answer_typing_start": 3.25,
+        "reflection_typing_start": 2.8
+      },
+      "verification_crops": {
+        "first_question": [90, 1250, 700, 230],
+        "intention": [90, 550, 710, 220],
+        "answer": [70, 1110, 750, 230],
+        "reflection": [70, 790, 750, 330],
+        "flame": [320, 180, 246, 280]
+      }
+    },
+    "ipad": {
+      "simulator": "Lampada AppStore iPad Pro 13",
+      "output_size": [1200, 1600],
+      "typing_delay_seconds": {
+        "intention": 0.1,
+        "answer": 0.1,
+        "reflection": 0.12
+      },
+      "typing_montage_speed_after": {
+        "intention_typing_start": 3.8,
+        "answer_typing_start": 3.8,
+        "reflection_typing_start": 2.8
+      },
+      "verification_crops": {
+        "first_question": [220, 1200, 760, 140],
+        "intention": [210, 420, 780, 220],
+        "answer": [210, 875, 780, 280],
+        "reflection": [210, 590, 780, 260],
+        "flame": [475, 160, 250, 280]
+      }
+    }
   },
   "special_key_pause_seconds": {
     "before_punctuation": 0.09,
@@ -39,9 +78,6 @@
     "default_speed": 1.0,
     "speed_after": {
       "threshold_hold_down": 2.0,
-      "intention_typing_start": 2.5,
-      "answer_typing_start": 2.5,
-      "reflection_typing_start": 2.8,
       "home_tap_up": 1.5,
       "setup_next_up": 1.5,
       "threshold_hold_up": 1.5,
@@ -157,12 +193,6 @@
       }
     ],
     "min_home_hold_seconds": 1.2,
-    "first_question_crop": [
-      90,
-      1250,
-      700,
-      230
-    ],
     "first_question_reference_settle_seconds": 0.25,
     "first_question_visibility_max_difference": 0.3,
     "first_question_visibility_poll_seconds": 0.1,
@@ -173,8 +203,7 @@
     "blue_pixel_min": 500,
     "search_before_seconds": 1.5,
     "search_after_seconds": 1.0,
-    "frame_rate": 30,
-    "max_offset_disagreement_frames": 1,
+    "sync_tolerance_frames": 2,
     "max_first_outro_adjustment_seconds": 0.4
   }
 }

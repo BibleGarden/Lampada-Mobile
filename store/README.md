@@ -11,9 +11,12 @@ From the repository root:
 
 ```sh
 python3 scripts/run-appstore-video.py ru
+python3 scripts/run-appstore-video.py ru --device ipad
 ```
 
-Use `uk`, `en`, or `all` instead of `ru`. The script checks its tools,
+Use `uk`, `en`, or `all` instead of `ru`. iPhone is the default device;
+`--device ipad` uses the same build, capture, montage, and verification pipeline
+with the iPad device profile in `video/pacing.json`. The script checks its tools,
 exports the current JS with the mock build variables and compares its SHA-256
 and a fingerprint of the generated iOS project and locked native dependencies
 with the installed simulator app. Both must match to skip the Release build
@@ -22,11 +25,12 @@ installs. Before fingerprinting, the script always runs
 `npx expo prebuild --platform ios` without `--clean`, even when the workspace
 already exists. This keeps generated native files in sync with Expo config and
 plugins without maintaining a separate config cache. The report's `source_hash`
-is calculated after prebuild, so its `Info.plist` and `project.pbxproj` inputs
-are the generated ones; the rest of the native tree is covered by the native
-fingerprint. The
-script stops if prebuild fails. It creates
-and installs a SQLite fixture, calibrates AXe,
+is calculated after prebuild, so its `Info.plist` input is the generated one;
+the rest of the native tree is covered by the native fingerprint. Prebuild
+assigns new random PBX IDs on each run, so the native fingerprint hashes
+`project.pbxproj` with those IDs replaced and its lines sorted: build settings,
+source lists and resources still count, the random IDs do not.
+The script stops if prebuild fails. It creates and installs a SQLite fixture, calibrates AXe,
 records one continuous take, edits it, and verifies the final video. A take
 rejected only by recording quality checks is automatically recorded again,
 up to `verification.max_capture_attempts` in `video/pacing.json` (currently 3).
@@ -38,14 +42,31 @@ mock server and recorder are stopped on exit.
 
 Prerequisites: macOS, Xcode with command-line tools, Node dependencies
 (`npm ci`), CocoaPods, the named `Lampada AppStore UK iPhone 17 Pro Max`
-simulator, FFmpeg (`brew install ffmpeg`), and AXe **1.8.0**
+or `Lampada AppStore iPad Pro 13` simulator, FFmpeg (`brew install ffmpeg`), and AXe **1.8.0**
 (`brew install cameroncooke/axe/axe`). The script builds ShowTime from
 commit `8fdd276e8cbf7281d6bb372e7caf990397d3c2e9` with the short-tap
 indicator patch; Git and network access are needed on the first run.
 No EAS or `.env.local` values are used. The build sets a local mock URL,
 non-secret mock key, and `EXPO_PUBLIC_APPSTORE_VIDEO=1`.
 
-Verified deliverables are written to `store/video/appstore-<locale>.mp4`.
+Verified iPhone deliverables are written to `store/video/appstore-<locale>.mp4`;
+iPad deliverables use `store/video/appstore-ipad-<locale>.mp4`. The iPad profile
+records portrait 1200×1600 video. Apple confirmed this size, the 15–30 second
+range, H.264 High up to Level 4.0, 30 fps maximum, and stereo AAC in its
+[App preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-preview-specifications/)
+on 2026-09-27. The device profile supplies the simulator name, output size,
+and verification crops for the first question, three typing fields, and flame.
+It also sets HID key intervals and typing-only montage speed. For intention
+and answer, iPad uses 100 ms and 3.8×; iPhone uses 85 ms and 3.25×. Both
+profiles display approximately 26 ms per typed character. On 2026-09-27, a
+short iPad recording of the Russian intention measured
+17, 25, 25, and 25 visible updates (19 required) at 65, 85, 100, and 120 ms,
+respectively. The 100 ms take had a 133 ms maximum gap, giving 117 ms of margin
+below the 250 ms gate; 85 ms had a 200 ms maximum gap. On the named iPhone,
+65, 85, and 100 ms yielded 25, 27, and 27 updates (19 required), with maximum
+gaps of 167, 133, and 133 ms. The 85 ms interval is the fastest with more than
+100 ms of margin to the gap gate; earlier full iPhone runs at 65 ms needed
+multiple takes.
 Raw footage, the uncut review copy, frames, full logs, exit codes, typing
 metrics, and `pipeline-report.json` are kept under the ignored
 `store/video/runs/<timestamp>/` directory, with separate attempt directories
@@ -57,7 +78,8 @@ trackable by git.
 
 Change spoken and typed copy, journal seed, API responses, and locale capture
 labels in `video/demo-content.json`. Change typing rate, pauses, mock latency,
-montage speed, and verification thresholds in `video/pacing.json`. For a new
+montage speed, device profiles, and verification thresholds in
+`video/pacing.json`. For a new
 locale, first add the app's normal localization, then add a matching locale
 object with `capture`, `typed`, `seed`, `questions`, `catalog`, and
 `passages` fields. The mock validates the fixture before building. Russian
@@ -71,9 +93,12 @@ fully visible question frame saved during calibration. Its hold duration and
 visual-match settings live in `video/pacing.json`; mock response delays are
 fixed there as well. After recording, the runner detects the first two
 ShowTime tap circles in the raw video, rejects clock offsets that differ by
-more than one 30 fps frame, and repairs any backward raw PTS jump before
-montage. The clock-sync report includes the detected offsets, PTS jumps, and
-the first tap in the second AXe batch, whose verbose line arrives late.
+more than `clock_sync.sync_tolerance_frames` times the measured 95th-percentile
+raw frame interval, and repairs any backward raw PTS jump before montage.
+The clock-sync report records both tap offsets, the measured interval, the
+derived tolerance, PTS jumps, and the first tap in the second AXe batch,
+whose verbose line arrives late. Sync disagreement stops the run without a
+retake and saves the measured offsets and tolerance in that report.
 
 AXe sends physical hardware-keyboard events because simulator paste hides
 the typing animation. Before building, the script reads the installed Apple
@@ -91,11 +116,29 @@ speeds up a segment. The report and final console summary record each field's
 raw and final maximum and p95 typing gaps, holds, and flame motion without
 failing on small timing differences. The 150 ms typing smoothness expectation
 in ANS-034 remains a reported metric, not the video pipeline's hard gate.
-Simulator recording varies by about one
-30 fps frame;
-question visibility detection is coarser still. Ordinary builds keep the
+Each ShowTime tap onset is quantized to a raw frame, so two offset measurements
+can differ by two frame intervals; question visibility detection is coarser
+still. Ordinary builds keep the
 animated flame. Review the uncut copy and final video before submitting to
 App Store Connect.
+
+### Known issues
+
+- Simulator recording can stall for 500–650 ms between visible typing updates,
+  historically most often in English at the 65 ms iPhone key interval
+  (raw typing metrics, 2026-09-27). With the 85 ms iPhone profile, ru, uk, and
+  en each passed their first full capture on 2026-09-27. The quality gate still
+  records up to three takes if a recording stalls. If all fail,
+  inspect `pipeline-report.json` for each attempt's
+  `quality_rejected` reasons and the typing metrics under `frames/<locale>/`;
+  try again later on an idle machine or reboot the named simulator before a new
+  run. Do not retry a failed run without the owner's permission.
+- On iPad, the question and scripture share a centered lower card, while the
+  answer opens as a full-width bottom sheet. The journal uses a centered
+  column with wide side margins. Its portrait output and verification crops
+  differ from iPhone; check the saved review frames if
+  the layout changes. AXe may briefly fail immediately after app launch while
+  the iPad accessibility tree appears; the runner waits for the home control.
 
 The montage targets at most 28.5 seconds to leave room below Apple's 30-second
 limit. Its duration metric reports the remaining margin and warns within one
