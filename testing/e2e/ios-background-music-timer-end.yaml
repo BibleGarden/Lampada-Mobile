@@ -14,7 +14,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "Background music timer end"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

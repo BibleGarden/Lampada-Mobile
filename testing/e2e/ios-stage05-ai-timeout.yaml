@@ -17,7 +17,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "QA delayed AI"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-next-button"
 - runFlow:

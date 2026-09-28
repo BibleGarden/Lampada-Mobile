@@ -12,7 +12,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "Отмена продолжения аудио Писания"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

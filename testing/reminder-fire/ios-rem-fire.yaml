@@ -40,7 +40,7 @@ tags:
     point: "50%,37%"
 - eraseText
 - inputText: "REM 004 fire"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

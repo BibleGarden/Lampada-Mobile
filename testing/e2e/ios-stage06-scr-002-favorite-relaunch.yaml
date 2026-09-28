@@ -14,7 +14,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "SCR-002 favorite relaunch"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
@@ -52,7 +52,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "SCR-002 favorite restored"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
@@ -92,7 +92,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "SCR-002 favorite removed"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

@@ -22,7 +22,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "JRN-014 share"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

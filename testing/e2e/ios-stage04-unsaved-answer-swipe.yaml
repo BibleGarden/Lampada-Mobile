@@ -12,7 +12,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "ANS-003 swipe draft"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:

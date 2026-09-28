@@ -10,7 +10,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "PRV first use"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-next-button"
 - assertVisible:

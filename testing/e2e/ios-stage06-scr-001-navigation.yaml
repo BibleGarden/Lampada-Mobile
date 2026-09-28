@@ -15,7 +15,7 @@ tags:
 - tapOn:
     point: "50%,37%"
 - inputText: "SCR-001 navigation"
-- hideKeyboard
+- pressKey: Enter
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
