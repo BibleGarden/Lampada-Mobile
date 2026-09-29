@@ -1,3 +1,6 @@
+import { waitForAudioPlayerReady, type AudioPlayerReadyStatus } from './audioPlayerOperation.ts';
+import type { RecordingDraft } from './store.ts';
+
 const MIN_RECORDING_BYTES = 1_024;
 const FILE_READY_POLL_MILLIS = 50;
 const FILE_READY_ATTEMPTS = 10;
@@ -16,21 +19,44 @@ export function recordingFileIssue(
   return file.size === null || file.size < MIN_RECORDING_BYTES ? 'incomplete' : null;
 }
 
-export function recordingDurationMillis(
-  nativeDurationMillis: number,
-  startedAtMillis: number | null,
-  stoppedAtMillis: number,
-) {
-  if (Number.isFinite(nativeDurationMillis) && nativeDurationMillis > 0) {
-    return Math.round(nativeDurationMillis);
-  }
-  if (startedAtMillis === null) return 0;
-  return Math.max(0, Math.round(stoppedAtMillis - startedAtMillis));
-}
-
-/** Whole recorded seconds: the live timer and the saved card count the same way. */
+/** Целые секунды для текущего отсчёта записи. */
 export function recordedSeconds(durationMillis: number) {
   return Math.floor(durationMillis / 1000);
+}
+
+export const UNKNOWN_RECORDING_DURATION_SECONDS = 0;
+
+/** Дробные секунды из готового файла без округления для серверного предела. */
+export async function recordedFileDurationSeconds(
+  readStatus: () => AudioPlayerReadyStatus,
+  wait?: (millis: number) => Promise<void>,
+): Promise<number> {
+  await waitForAudioPlayerReady(readStatus, () => true, wait, 120);
+  const duration = readStatus().duration;
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new Error('Recorded audio file has no valid duration');
+  }
+  return duration;
+}
+
+/** Привязывает файл к черновику даже при сбое чтения длительности. */
+export async function createStoppedRecordingDraft(
+  uri: string,
+  readDuration: () => Promise<number>,
+  reportDurationError: (error: unknown) => void,
+  id = Date.now(),
+): Promise<RecordingDraft> {
+  let durationSec = UNKNOWN_RECORDING_DURATION_SECONDS;
+  try {
+    const duration = await readDuration();
+    if (!Number.isFinite(duration) || duration <= 0) {
+      throw new Error('Recorded audio file has no valid duration');
+    }
+    durationSec = Math.max(1, Math.round(duration));
+  } catch (error) {
+    reportDurationError(error);
+  }
+  return { id, uri, durationSec, transcript: null, transcriptState: 'idle' };
 }
 
 /** Waits for AVAudioRecorder to finish publishing stable file metadata. */

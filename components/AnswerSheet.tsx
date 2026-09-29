@@ -26,6 +26,10 @@ import {
 } from 'expo-audio';
 import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
+import { audioFileDurationSeconds } from '../lib/audioFileDuration';
+import { MAX_RECORDING_SECONDS, recordingLimitDisplay } from '../lib/transcriptionLimits';
+import { useRecordingLimit } from '../lib/useRecordingLimit';
+import { transcriptionFailureCode } from '../lib/transcriptionErrors';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import {
   createAnswerSaveFlight,
@@ -33,12 +37,7 @@ import {
   type AnswerSaveMode,
 } from '../lib/answerSave';
 import { recordDiagnostic } from '../lib/db';
-import {
-  recordedSeconds,
-  recordingDurationMillis,
-  recordingFileIssue,
-  waitForRecordingFile,
-} from '../lib/recordingFile';
+import { createStoppedRecordingDraft, recordingFileIssue, waitForRecordingFile } from '../lib/recordingFile';
 import {
   createRecordingOperation,
   recoverRecordingAfterTerminalError,
@@ -54,7 +53,8 @@ import {
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy } from '../lib/audioPlayerOperation';
+import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
@@ -62,6 +62,10 @@ import { GoldButton } from './ui';
 
 const RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
+  sampleRate: 22_050,
+  numberOfChannels: 1,
+  bitRate: 48_000,
+  web: { ...RecordingPresets.HIGH_QUALITY.web, bitsPerSecond: 48_000 },
   // Expo Audio otherwise uses cache, which iOS may clear at any time.
   directory: 'document' as const,
 };
@@ -86,6 +90,10 @@ const DRAFT_PLAYBACK_MODE = {
   shouldPlayInBackground: false,
   interruptionMode: 'doNotMix' as const,
 };
+const LIMIT_CUE_PLAYBACK_MODE = {
+  ...DRAFT_PLAYBACK_MODE,
+  interruptionMode: 'mixWithOthers' as const,
+};
 
 // Шторка ответа: текст ответа и счётчик голосовых записей. Сами записи живут
 // в отдельной шторке поверх (RecordingsSheet). Открывается на текущем вопросе,
@@ -97,7 +105,9 @@ export default function AnswerSheet({
   onOpenChange,
   onAudioBusyChange,
 }: Props) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const limitDisplay = recordingLimitDisplay(MAX_RECORDING_SECONDS, language);
+  const limitLabel = `${limitDisplay.count} ${t(limitDisplay.unitKey)}`;
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   // подписка только на нужное — не ререндерим шторку от тика таймера
@@ -141,6 +151,7 @@ export default function AnswerSheet({
   const answerIndexRef = useRef(0);
   const recorderErrorRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
+  const recordingsSheetGenerationRef = useRef(0);
   const recordingAudioModeLeaseRef = useRef<RecordingAudioModeLease | null>(null);
   const recordingSessionLeaseRef = useRef<AudioSessionLease | null>(null);
   const activeDraftIdRef = useRef<number | null>(null);
@@ -176,13 +187,9 @@ export default function AnswerSheet({
   const recorder = useAudioRecorder(RECORDING_OPTIONS, (status) => {
     const phase = recordingOperation.getPhase();
     if (
-      status.isFinished &&
-      !status.hasError &&
-      !status.mediaServicesDidReset &&
-      recorder.isRecording
-    ) {
-      return;
-    }
+      status.isFinished && !status.hasError &&
+      !status.mediaServicesDidReset && recorder.isRecording
+    ) return;
     if (!recorderStatusRequiresRecovery(phase, status)) return;
     const lease = recordingAudioModeLeaseRef.current;
     recorderErrorRef.current =
@@ -208,6 +215,43 @@ export default function AnswerSheet({
   });
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
+  const limitCuePlayer = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
+  const nativeAudioMountedRef = useRef(true);
+  const limitCueOperationRef = useRef(createPlaybackLeaseOperation());
+  const limitCueOperation = limitCueOperationRef.current;
+  const limitCueCompletionRef = useRef<(() => void) | null>(null);
+  const limitCueActiveRef = useRef(false);
+  const cancelLimitCue = (pausePlayer = true) => {
+    limitCueCompletionRef.current?.();
+    limitCueCompletionRef.current = null;
+    if (pausePlayer && nativeAudioMountedRef.current) limitCuePlayer.pause();
+    limitCueActiveRef.current = false;
+    return limitCueOperation.cancel();
+  };
+
+  const playLimitCue = async () => {
+    const generation = limitCueOperation.begin(() =>
+      audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false)),
+    );
+    limitCueActiveRef.current = true;
+    try {
+      const grant = await audioModeCoordinator.requestPlayback(setAudioModeAsync, LIMIT_CUE_PLAYBACK_MODE);
+      const isCurrent = () => limitCueOperation.isCurrent(generation) && !!grant?.isCurrent();
+      if (!isCurrent()) return;
+      limitCuePlayer.replace(require('../assets/audio/recording-limit.wav'));
+      if (!(await waitForAudioPlayerReady(() => limitCuePlayer.currentStatus, isCurrent))) return;
+      const playback = playCueUntilComplete(limitCuePlayer, isCurrent);
+      limitCueCompletionRef.current = playback.cancel;
+      await playback.promise;
+    } finally {
+      limitCueCompletionRef.current = null;
+      const ownsCue = limitCueOperation.isCurrent(generation);
+      limitCueActiveRef.current = false;
+      if (nativeAudioMountedRef.current) limitCuePlayer.pause();
+      await limitCueOperation.complete(generation);
+      if (ownsCue) onAudioBusyChange?.(false);
+    }
+  };
 
   // вторая точка — для открытой клавиатуры и для контента, который перестал
   // помещаться: keyboardBehavior="extend" поднимает шторку до верхней, и поле
@@ -261,11 +305,11 @@ export default function AnswerSheet({
       const controller = new AbortController();
       updateRecs((current) =>
         current.map((item) =>
-          item.id === recording.id ? { ...item, transcriptState: 'loading' } : item,
+          item.id === recording.id ? { ...item, transcriptState: 'loading', transcriptError: undefined } : item,
         ),
       );
 
-      const promise = transcribeRecording(recording.uri, recording.durationSec, controller.signal)
+      const promise = transcribeRecording(recording.uri, controller.signal)
         .then((transcript) => {
           if (pendingTranscriptions.current.get(recording.id)?.controller !== controller) return;
           updateRecs((current) =>
@@ -284,7 +328,9 @@ export default function AnswerSheet({
           );
           updateRecs((current) =>
             current.map((item) =>
-              item.id === recording.id ? { ...item, transcriptState: 'error' } : item,
+              item.id === recording.id
+                ? { ...item, transcriptState: 'error', transcriptError: transcriptionFailureCode(error) }
+                : item,
             ),
           );
         })
@@ -373,32 +419,27 @@ export default function AnswerSheet({
     };
   }, [openRef, handleOpen]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    nativeAudioMountedRef.current = true;
+    return () => {
+      // Expo уже мог освободить shared objects до cleanup этого эффекта.
+      nativeAudioMountedRef.current = false;
       recordingSheetOpenRef.current = false;
       cancelDraftPlayback();
+      observeRelease(cancelLimitCue(false));
       recordingOperation.cancelStart();
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       abortAllTranscriptions();
       const phase = recordingOperation.getPhase();
       if (phase === 'recording') {
-        // Hard navigation can unmount the sheet without onChange(-1). Stop the
-        // owned recorder explicitly; after unmount its native object is disposed,
-        // so the process-wide lease must not leak into the next Session.
-        void recorder
-          .stop()
-          .catch((error) => console.warn('Failed to stop recording on exit', error))
-          .finally(() => {
-            recordingAudioModeLeaseRef.current?.release();
-            recordingAudioModeLeaseRef.current = null;
-            observeRelease(releaseRecordingSession());
-            onAudioBusyChange?.(false);
-          });
+        // useAudioRecorder сам освобождает нативный recorder при unmount.
+        recordingAudioModeLeaseRef.current?.release();
+        recordingAudioModeLeaseRef.current = null;
+        observeRelease(releaseRecordingSession());
+        onAudioBusyChange?.(false);
       } else if (phase === 'stopping') {
-        // The in-flight stop owns the native call. After hard unmount the hook
-        // disposes its recorder, so release the singleton lease on either
-        // settlement path; otherwise a rejected stop poisons the next Session.
+        // Незавершённый stop сам освободит lease после ответа нативного слоя.
         const pendingStop = recordingOperation.getPendingStop();
         const releaseAfterUnmount = () => {
           recordingAudioModeLeaseRef.current?.release();
@@ -415,9 +456,8 @@ export default function AnswerSheet({
         observeRelease(releaseRecordingSession());
         onAudioBusyChange?.(false);
       }
-    },
-    [abortAllTranscriptions, onAudioBusyChange, recorder, recordingOperation],
-  );
+    };
+  }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
 
   // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
   // и кнопки остались видны; спряталась — обратно на нижнюю.
@@ -447,6 +487,7 @@ export default function AnswerSheet({
     const attempt = recordingOperation.beginStart();
     if (!attempt) return;
     cancelDraftPlayback();
+    observeRelease(cancelLimitCue());
     // Оверлей записи не должен остаться под открытой клавиатурой.
     Keyboard.dismiss();
     // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
@@ -475,7 +516,7 @@ export default function AnswerSheet({
       }
     };
     const startIsCurrent = () =>
-      attempt.isCurrent() && recordingSheetOpenRef.current;
+      nativeAudioMountedRef.current && attempt.isCurrent() && recordingSheetOpenRef.current;
     try {
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) return;
@@ -500,6 +541,10 @@ export default function AnswerSheet({
       await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
       prepared = true;
       if (!startIsCurrent()) {
+        if (!nativeAudioMountedRef.current) {
+          nativeStopConfirmed = true; // Нативный recorder уже удалён хуком Expo.
+          return;
+        }
         // Android не разрешает повторный prepare, пока предыдущий MediaRecorder
         // не reset. stop() после prepare освобождает его даже без record().
         await recorder.stop();
@@ -515,6 +560,10 @@ export default function AnswerSheet({
       // Шторку могли программно закрыть между последним await и record().
       // Тогда немедленно гасим нативную запись и не создаём черновик.
       if (!startIsCurrent()) {
+        if (!nativeAudioMountedRef.current) {
+          nativeStopConfirmed = true;
+          return;
+        }
         await recorder.stop();
         nativeStopConfirmed = true;
         const cancelledUri = recorder.uri;
@@ -528,7 +577,7 @@ export default function AnswerSheet({
         }
         return;
       }
-      started = attempt.commit();
+      started = recordingLimit.commitStart(attempt);
       if (!started) return;
       recordingOverlayActiveRef.current = true;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -546,14 +595,18 @@ export default function AnswerSheet({
           // Ошибка могла случиться после успешного prepare, но до record().
           // Освобождаем подготовленный Android-recorder для следующей попытки.
           if (prepared && !nativeStopConfirmed) {
-            try {
-              await recorder.stop();
-              nativeStopConfirmed = true;
-              discardPreparedFile();
-            } catch {
-              // Без подтверждённого stop lease остаётся активным: playback mode
-              // на iOS мог бы оборвать всё ещё живой нативный recorder.
-              nativeCleanupUncertain = true;
+            if (!nativeAudioMountedRef.current) {
+              nativeStopConfirmed = true; // Expo освободил recorder при unmount.
+            } else {
+              try {
+                await recorder.stop();
+                nativeStopConfirmed = true;
+                discardPreparedFile();
+              } catch {
+                // Без подтверждённого stop lease остаётся активным: playback mode
+                // на iOS мог бы оборвать всё ещё живой нативный recorder.
+                nativeCleanupUncertain = true;
+              }
             }
           }
           if (nativeCleanupUncertain && attempt.recoverAsRecording()) {
@@ -588,7 +641,9 @@ export default function AnswerSheet({
       } finally {
         // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
         attempt.finish();
-        if (!started) onAudioBusyChange?.(false);
+        if (!started) {
+          onAudioBusyChange?.(false);
+        }
       }
     }
   };
@@ -597,6 +652,7 @@ export default function AnswerSheet({
   // человек нажал микрофон, чтобы говорить, а не чтобы смотреть на пустоту.
   const openRecordings = () => {
     Keyboard.dismiss();
+    recordingsSheetGenerationRef.current += 1;
     setConfirmDeleteId(null);
     setRecordingsSheetOpen(true);
     recordingSheetOpenRef.current = true;
@@ -606,17 +662,17 @@ export default function AnswerSheet({
 
   const performStopRecording = async (
     confirmNativeStop: () => void,
+    keepAudioBusy = false,
   ): Promise<RecordingDraft | null> => {
-    const nativeDurationMillis = recorder.getStatus().durationMillis ?? 0;
-    const startedAtMillis = recordingStartedAtRef.current;
-    const stoppedAtMillis = Date.now();
     const uriBeforeStop = recorder.uri;
     let nativeStopped = false;
     try {
       await recorder.stop();
       nativeStopped = true;
       confirmNativeStop();
-      const uri = recorder.uri ?? uriBeforeStop;
+      const uri = nativeAudioMountedRef.current
+        ? recorder.uri ?? uriBeforeStop
+        : uriBeforeStop;
       if (!uri) {
         setAudioError('components.answers.saveFailed');
         return null;
@@ -626,12 +682,7 @@ export default function AnswerSheet({
         exists: file.exists,
         size: file.size,
       }));
-      const durationMillis = recordingDurationMillis(
-        nativeDurationMillis,
-        startedAtMillis,
-        stoppedAtMillis,
-      );
-      const issue = nativeDurationMillis > 0 ? recordingFileIssue(metadata) : 'incomplete';
+      const issue = recordingFileIssue(metadata);
       if (issue) {
         // Never destroy a candidate stopped recording from a heuristic. It may
         // still be a recoverable M4A whose metadata was late on physical iOS.
@@ -639,7 +690,6 @@ export default function AnswerSheet({
           'Audio recording was not finalized',
           JSON.stringify({
             issue,
-            durationMillis,
             fileSize: metadata.size,
             recorderError: recorderErrorRef.current,
           }),
@@ -647,13 +697,14 @@ export default function AnswerSheet({
         setAudioError('components.answers.saveFailed');
         return null;
       }
-      const draft: RecordingDraft = {
-        id: Date.now(),
+      const draft = await createStoppedRecordingDraft(
         uri,
-        durationSec: Math.max(1, recordedSeconds(durationMillis)),
-        transcript: null,
-        transcriptState: 'idle',
-      };
+        () => audioFileDurationSeconds(uri),
+        (error) => {
+          console.error('Failed to read recorded file duration', error);
+          setAudioError('components.answers.durationReadFailed');
+        },
+      );
       unsavedRecordingUris.current.add(uri);
       updateRecs((current) => [...current, draft]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -683,32 +734,84 @@ export default function AnswerSheet({
             playsInSilentMode: true,
           });
         } finally {
-          onAudioBusyChange?.(false);
+          if (!keepAudioBusy) onAudioBusyChange?.(false);
         }
       }
     }
   };
 
-  const stopRecording = (): Promise<RecordingDraft | null> => {
+  const stopRecording = (keepAudioBusy = false): Promise<RecordingDraft | null> => {
     // Все конкурирующие вызовы получают одну операцию. Поэтому второй catch
     // не может удалить файл, уже сохранённый первым stop.
-    return recordingOperation.runStop(performStopRecording).catch(() => null);
+    return recordingOperation.runStop((confirm) =>
+      performStopRecording(confirm, keepAudioBusy),
+    ).catch(() => null);
   };
 
-  // Тот же нативный durationMillis, из которого сохраняется длительность записи.
+  const finishLimitedRecording = async (): Promise<boolean> => {
+    if (recordingOperation.getPhase() !== 'recording') return true;
+    const sheetGeneration = recordingsSheetGenerationRef.current;
+    const releaseBusyIfIdle = () => {
+      if (
+        recordingOperation.getPhase() === 'idle' &&
+        activeDraftIdRef.current === null && !limitCueActiveRef.current
+      ) onAudioBusyChange?.(false);
+    };
+    const draft = await stopRecording(true);
+    if (!draft) {
+      releaseBusyIfIdle();
+      return recordingOperation.getPhase() !== 'recording';
+    }
+    if (
+      sheetGeneration !== recordingsSheetGenerationRef.current ||
+      !recordingSheetOpenRef.current || !openSheetRef.current
+    ) {
+      releaseBusyIfIdle();
+      return true;
+    }
+    setAudioError(draft.durationSec === 0
+      ? 'components.answers.recordingLimitDurationUnknown'
+      : 'components.answers.recordingLimitReached');
+    try {
+      await Promise.all([
+        playLimitCue(),
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+      ]);
+    } catch (error) {
+      console.error('Failed to play recording limit cue', error);
+      releaseBusyIfIdle();
+    }
+    return true;
+  };
+
+  // Нативный счётчик нужен только во время записи; итоговую длину берём из файла.
   const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
 
-  const stopRecordingFromUi = (): Promise<RecordingDraft | null> => {
-    const startedAt = recordingStartedAtRef.current;
-    if (
-      recordingOperation.getPhase() === 'recording' &&
-      startedAt !== null &&
-      Date.now() - startedAt < MIN_UI_RECORDING_MILLIS
-    ) {
-      return Promise.resolve(null);
-    }
-    return stopRecording();
-  };
+  const recordingLimit = useRecordingLimit({
+    recorder,
+    phase: recordingPhase,
+    isRecording: () => recordingOperation.getPhase() === 'recording',
+    stopAtLimit: finishLimitedRecording,
+    stopAfterStatusFailure: async () => {
+      const draft = await stopRecording();
+      setAudioError(draft
+        ? 'components.answers.limitCheckFailed'
+        : 'components.answers.saveFailed');
+      return recordingOperation.getPhase() !== 'recording';
+    },
+    canStopManually: () => {
+      const startedAt = recordingStartedAtRef.current;
+      return !(
+        recordingOperation.getPhase() === 'recording' &&
+        startedAt !== null &&
+        Date.now() - startedAt < MIN_UI_RECORDING_MILLIS
+      );
+    },
+    stopManually: () => stopRecording(),
+    reportFailure: (reason, error) => {
+      console.error('Recording limit failed', reason, error ?? new Error('Native stop was not confirmed'));
+    },
+  });
 
   const togglePlay = (r: RecordingDraft) => {
     if (playingId === r.id) {
@@ -782,6 +885,21 @@ export default function AnswerSheet({
   };
 
   const handleRecordingsDismiss = () => {
+    if (!nativeAudioMountedRef.current) return;
+    recordingsSheetGenerationRef.current += 1;
+    const dismissedGeneration = recordingsSheetGenerationRef.current;
+    const cueWasActive = limitCueActiveRef.current;
+    const cueRelease = cancelLimitCue();
+    if (cueWasActive) {
+      void cueRelease.then(() => {
+        if (
+          recordingsSheetGenerationRef.current === dismissedGeneration &&
+          recordingOperation.getPhase() === 'idle'
+        ) onAudioBusyChange?.(false);
+      }).catch(reportReleaseError);
+    } else {
+      observeRelease(cueRelease);
+    }
     const clearDraftAudioBusy = shouldClearDraftAudioBusy(
       activeDraftIdRef.current,
       playingId,
@@ -1024,11 +1142,14 @@ export default function AnswerSheet({
       // за ручку.
       enableContentPanningGesture={false}
       onChange={async (i) => {
+        if (!nativeAudioMountedRef.current) return;
         onIndexChange(i);
         const editing = i >= 0;
         openSheetRef.current = editing;
         if (editing) onOpenChange?.(true);
         if (i < 0) {
+          recordingsSheetGenerationRef.current += 1;
+          observeRelease(cancelLimitCue());
           cancelDraftPlayback();
           player.pause();
           setPausedId(null);
@@ -1173,15 +1294,15 @@ export default function AnswerSheet({
       recordings={recs}
       recording={recording}
       recordingPhase={recordingPhase}
+      {...recordingLimit.overlayProps}
       getRecordedMillis={getRecordedMillis}
       playingId={playingId}
       pausedId={pausedId}
       playProgress={playProgress}
-      audioError={audioError ? t(audioError) : null}
+      audioError={audioError ? t(audioError, { limit: limitLabel }) : null}
       confirmDeleteId={confirmDeleteId}
       expandedTranscripts={expandedTranscripts}
       onStartRecording={startRecording}
-      onStopRecording={stopRecordingFromUi}
       onTogglePlay={togglePlay}
       onDelete={askOrConfirmDelete}
       onTranscribe={(recording) => void startTranscription(recording)}

@@ -1,4 +1,15 @@
-# Music tracks
+# Bundled audio
+
+## Recording limit cue
+
+`recording-limit.wav` is an original 0.64-second mono PCM cue at 22.05 kHz.
+It was synthesized with Python 3's standard `math`, `struct`, and `wave`
+modules: two overlapping 523.25 Hz and 659.25 Hz sine notes, exponentially
+decaying, with 25 ms fade-in and 100 ms fade-out. The peak amplitude is 0.2 of
+full scale, chosen by the owner so the cue carries over the session music, which
+is normalised to -20 LUFS. It contains no sampled or third-party audio.
+
+## Session music
 
 All fifteen pieces come from OpenGameArt and are marked with the
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) license on their

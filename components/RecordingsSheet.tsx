@@ -14,6 +14,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RecordingDraft, fmtTime } from '../lib/store';
 import { recordedSeconds } from '../lib/recordingFile';
+import { recordingSecondsRemaining } from '../lib/transcriptionLimits';
+import { transcriptionErrorMessageKey } from '../lib/transcriptionErrors';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
@@ -37,6 +39,8 @@ type Props = {
   /** Идёт запись: поверх списка показывается оверлей с волной. */
   recording: boolean;
   recordingPhase: 'idle' | 'starting' | 'recording' | 'stopping';
+  limitReached: boolean;
+  limitError: string | null;
   /** Длительность записи по часам нативного рекордера. */
   getRecordedMillis: () => number;
   playingId: number | null;
@@ -69,6 +73,8 @@ export default function RecordingsSheet({
   recordings,
   recording,
   recordingPhase,
+  limitReached,
+  limitError,
   getRecordedMillis,
   playingId,
   pausedId,
@@ -127,6 +133,10 @@ export default function RecordingsSheet({
     return () => clearInterval(interval);
   }, [recording, recordingPhase, getRecordedMillis, visible, screenVisible]);
   const elapsedLabel = fmtTime(elapsedSec);
+  const remainingSeconds = recordingSecondsRemaining(elapsedSec, limitReached);
+  const timeLabel = remainingSeconds === null
+    ? elapsedLabel
+    : t('components.answers.recordingRemaining', { time: fmtTime(remainingSeconds) });
 
   // VoiceOver слышит подсказку о долгой расшифровке один раз на шторку, пока
   // хоть одна расшифровка идёт. Не озвучиваем за закрытой шторкой и во время
@@ -270,7 +280,12 @@ export default function RecordingsSheet({
                     >
                       {loading
                         ? t('components.answers.transcribing')
-                        : t('components.answers.recordingIndex', { index: i + 1, duration: fmtTime(hasProgress ? Math.round(playProgress * r.durationSec) : r.durationSec) })}
+                        : t('components.answers.recordingIndex', {
+                          index: i + 1,
+                          duration: r.durationSec === 0
+                            ? t('components.answers.durationUnknown')
+                            : fmtTime(hasProgress ? Math.round(playProgress * r.durationSec) : r.durationSec),
+                        })}
                     </Text>
                   </View>
                   {/* Кнопка расшифровки доступна, пока у записи нет текста. */}
@@ -313,7 +328,9 @@ export default function RecordingsSheet({
                 )}
 
                 {r.transcriptState === 'error' && (
-                  <Text style={styles.transcriptionError}>{t('components.answers.transcriptionFailed')}</Text>
+                  <Text style={styles.transcriptionError}>
+                    {t(transcriptionErrorMessageKey(r.transcriptError ?? 'unknown'))}
+                  </Text>
                 )}
 
                 {r.transcript !== null && (
@@ -411,13 +428,20 @@ export default function RecordingsSheet({
             </View>
             {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
             <Text
-              accessibilityLabel={t('components.answers.recordedTime', { time: elapsedLabel })}
-              style={styles.recElapsed}
+              accessibilityLabel={remainingSeconds === null
+                ? t('components.answers.recordedTime', { time: elapsedLabel })
+                : timeLabel}
+              style={[styles.recElapsed, remainingSeconds !== null && styles.recElapsedWarning]}
               testID="recording-elapsed"
             >
-              {elapsedLabel}
+              {timeLabel}
             </Text>
             <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
+            {limitError && (
+              <Text style={styles.recOverlayError} testID="recording-limit-error">
+                {t(limitError)}
+              </Text>
+            )}
           </View>
           <Pressable
             accessibilityLabel={t('components.answers.stop')}
@@ -757,10 +781,24 @@ const stylesFactory = () => StyleSheet.create({
     letterSpacing: sc(1),
     color: colors.warmHint,
   },
+  recElapsedWarning: {
+    color: '#f0c074',
+    backgroundColor: 'rgba(230,162,60,.14)',
+    borderRadius: radius.sm,
+    paddingHorizontal: sc(10),
+    paddingVertical: sc(5),
+  },
   recOverlayHint: {
     fontFamily: fonts.serifItalic,
     fontSize: sc(14),
     color: colors.creamDim,
+    textAlign: 'center',
+    paddingHorizontal: sc(24),
+  },
+  recOverlayError: {
+    fontFamily: fonts.sans,
+    fontSize: sc(12),
+    color: '#ec9b8e',
     textAlign: 'center',
     paddingHorizontal: sc(24),
   },
