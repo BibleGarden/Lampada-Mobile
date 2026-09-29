@@ -30,6 +30,11 @@ tags:
     id: "threshold-hold-button"
 - assertVisible:
     id: "session-title"
+- assertVisible:
+    id: "dock-question-tab"
+- assertVisible:
+    id: "dock-scripture-tab"
+- takeScreenshot: SES-008-switcher-icons-ipad-landscape
 - tapOn:
     id: "dock-answer-button"
 - assertVisible:

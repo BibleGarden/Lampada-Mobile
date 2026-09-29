@@ -164,7 +164,7 @@ tier of its e2e runs.
 | SETUP-001 [critical] | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 [critical] | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 [critical] | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the header, title and the field's top edge stay in place while the field stretches down to the keyboard and scrolls long text inside itself, also after a rotation; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions without losing text |
+| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the header, title and the field's top edge stay in place while the field stretches down to the keyboard and scrolls long text inside itself, also after a rotation; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
 | START-001 [critical] | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
@@ -182,6 +182,7 @@ tier of its e2e runs.
 | SES-005 | Finish early | an open answer is saved, then the reflection opens once |
 | SES-006 | Choose "Back to prayer" on the reflection | a new countdown starts with the same goal, without losing the already saved answers |
 | SES-007 | A very long goal | the text does not overlap the timer and the companion panel |
+| SES-008 [ipad] | Inspect the Question / Quote switcher on an iPad | both icons scale with their labels and stay aligned in the two tabs; inspect the landscape screenshot in the ANS-033 flow |
 
 ### Background music
 
@@ -288,16 +289,19 @@ tier of its e2e runs.
 
 A user-facing complaint about a generated question or a passage
 (`lib/contentReportClient.ts`, `components/ContentReportDialog.tsx`).
-Known coverage so far: the unit test `lib/__tests__/contentReportClient.test.mjs`
-and the manual report `reports/2026-09-19-content-reports.md`; no e2e flow yet,
-so every scenario below is Not run and belongs to the `main` tier.
+The client and active-tab target have unit coverage in
+`lib/__tests__/contentReportClient.test.mjs` and
+`lib/__tests__/contentReportTarget.test.mjs`. Prepared Maestro flows
+`ios-rpt-001-002.yaml` and `ios-rpt-003.yaml` cover sending and retrying with
+the stub; execution results belong in dated reports.
 
 | ID | Scenario | Expected result |
 |---|---|---|
 | RPT-001 | Open the report dialog from the companion dock for a generated question, send without a comment | one localized confirmation dialog; the request carries `content_type: "question"`, the question text, the interface language and no `user_comment`; a success state is shown; the request never contains the prayer topic or the answer |
-| RPT-002 | Open the report dialog from the full scripture reader, add a comment and send | the request carries `content_type: "scripture"`, the passage text, the trimmed comment and the interface language; a success state is shown |
+| RPT-002 | Switch to Quote, open the card-corner report dialog, add a comment and send | the reader has no report button; the request carries `content_type: "scripture"`, the full passage reference, title when present, text, the trimmed comment and the interface language; a success state is shown |
 | RPT-003 | Get a network, a timeout or a 5xx failure and retry | the dialog and the typed comment stay available, an error text is shown, a repeated attempt can succeed; the unsaved answer in the sheet is not mutated |
-| RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays only on the two generation screens |
+| RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays in the active session card |
+| RPT-005 | Keep a Question or Quote report dialog open while the session timer expires; type a comment, then dismiss the dialog | the session and comment remain visible past expiry; after dismissal, reflection opens following the one-second delay |
 
 ### Reflection, finishing and the streak
 

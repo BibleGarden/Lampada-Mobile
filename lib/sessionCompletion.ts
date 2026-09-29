@@ -4,6 +4,22 @@ type CompletionState = {
   activityOpen: boolean;
 };
 
+type SessionActivityState = {
+  readerOpen: boolean;
+  answerOpen: boolean;
+  reportOpen: boolean;
+  scriptureAudioActive: boolean;
+};
+
+export function hasSessionActivity({
+  readerOpen,
+  answerOpen,
+  reportOpen,
+  scriptureAudioActive,
+}: SessionActivityState): boolean {
+  return readerOpen || answerOpen || reportOpen || scriptureAudioActive;
+}
+
 /** Переход планируется только для свободного экрана молитвы. */
 export function scheduleSessionCompletion(
   { timeExpired, appActive, activityOpen }: CompletionState,

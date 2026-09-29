@@ -166,6 +166,8 @@ hold-to-start control. Portrait and phone windows retain a vertical layout.
 Setup keeps its layout while the goal is typed: the header, title and the
 input's top edge stay in place, and the input stretches down to just above the
 keyboard over the hidden duration and navigation, scrolling long text inside.
+Setup updates that layout without a keyboard-triggered layout animation, so
+duration and navigation reappear in place when the keyboard closes.
 An invisible copy of the goal sizes the input's slot, so the position follows
 rotation; while typing it holds the text from when the keyboard opened.
 A long goal shrinks the slot to the free space and scrolls inside, so "Next"
@@ -175,7 +177,8 @@ the input fills the available space below the question and above the keyboard.
 The editing column expands to at most 960 pt on tablets. The decorative header
 and completion actions return when the keyboard closes.
 Content can scroll when a long question or a small window needs more room.
-Both screens follow the keyboard through `lib/useKeyboardTop.ts`.
+Both screens follow the keyboard through `lib/useKeyboardTop.ts`; Reflection
+retains the keyboard-synchronized layout animation.
 
 ## State and the main data flow
 
@@ -183,6 +186,11 @@ Both screens follow the keyboard through `lib/useKeyboardTop.ts`.
 It holds the topic and the timer, the current questions and answers, the
 scripture state, the mode of the bottom panel, the reflection takeaway and the
 streak.
+
+The session card has one report control beside the Question / Quote switcher.
+It snapshots the active question or the full selected passage (reference,
+optional title and text) for `ContentReportDialog`; the expanded scripture
+reader has no separate report control.
 
 The main flows:
 
@@ -576,14 +584,14 @@ rechecked before transfer. Only public Expo variables -
 the URL and the limited proxy key - may be embedded into a client build; server
 secrets and system instructions are not put into the app.
 
-The current question and the current selected passage each expose an explicit
-report action. Confirmation sends only the generated text, its kind, the UI
-language and an optional comment. The prayer topic, the person's answer,
-recordings and client identity are not part of the request. A failed request
-keeps both the unsaved answer and the report comment on screen for retry. Saved
-journal entries deliberately have no report action: the journal mixes generated
-questions with private answers, while reporting at the generation screens keeps
-the transferred boundary visible and unambiguous.
+The session card shows one report flag for its active Question or Quote tab.
+Confirmation sends the question text or the selected passage's full reference,
+optional title and text, together with `content_type`, the UI language and an
+optional comment. The prayer topic, the person's answer, recordings and client
+identity are not part of the request. An open report dialog holds the session
+at timer expiry until it closes; a failed request keeps its comment available
+for retry. Saved journal entries have no report action because they mix
+generated content with private answers.
 
 Three independent SQLite records gate prayer-content transfers (ADR-0017,
 ADR-0035): core prayer AI for the topic, answer context for typed answers and
