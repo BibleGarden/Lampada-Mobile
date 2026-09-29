@@ -7,7 +7,8 @@ export function createRecordingLimitController(
   stop: () => Promise<boolean>,
   onFailure: (reason: 'status' | 'stop', error?: unknown) => void,
 ) {
-  let state: 'ready' | 'stopping' | 'failed' | 'disposed' = 'ready';
+  let state: 'ready' | 'manual' | 'stopping' | 'failed' | 'disposed' = 'ready';
+  let stateAfterManualFailure: 'ready' | 'failed' = 'ready';
   let generation = 0;
   const poll = (): boolean => {
     if (state !== 'ready' || !isRecording()) return false;
@@ -44,8 +45,14 @@ export function createRecordingLimitController(
     return true;
   };
   return {
-    reset() { generation += 1; state = 'ready'; },
-    suspend() { state = 'stopping'; },
+    reset() { generation += 1; state = 'ready'; stateAfterManualFailure = 'ready'; },
+    suspend() {
+      stateAfterManualFailure = state === 'failed' ? 'failed' : 'ready';
+      state = 'manual';
+    },
+    resumeAfterManualFailure() {
+      if (state === 'manual') state = stateAfterManualFailure;
+    },
     dispose() { generation += 1; state = 'disposed'; },
     getState: () => state,
     poll,
@@ -53,17 +60,17 @@ export function createRecordingLimitController(
       schedule: (callback: () => void, millis: number) => ReturnType<typeof setInterval> = setInterval,
       cancel: (timer: ReturnType<typeof setInterval>) => void = clearInterval,
     ): () => void {
-      if (state !== 'ready') return () => undefined;
+      if (state !== 'ready' && state !== 'manual') return () => undefined;
       let timer: ReturnType<typeof setInterval> | null = null;
       const tick = () => {
         poll();
-        if (state !== 'ready' && timer !== null) {
+        if (state !== 'ready' && state !== 'manual' && timer !== null) {
           cancel(timer);
           timer = null;
         }
       };
       tick();
-      if (state === 'ready') timer = schedule(tick, 250);
+      if (state === 'ready' || state === 'manual') timer = schedule(tick, 250);
       return () => { if (timer !== null) cancel(timer); };
     },
   };

@@ -11,6 +11,7 @@ type RecordingLimitInputs = {
   isRecording: () => boolean;
   stopAtLimit: () => Promise<boolean>;
   stopAfterStatusFailure: () => Promise<boolean>;
+  canStopManually: () => boolean;
   stopManually: () => Promise<RecordingDraft | null>;
   reportFailure: (reason: LimitFailure, error?: unknown) => void;
   schedule?: (callback: () => void, millis: number) => ReturnType<typeof setInterval>;
@@ -73,6 +74,18 @@ export function createUseRecordingLimit(runtime: HookRuntime) {
       controller.dispose();
     }, [controller]);
 
+    const manualStop = async (): Promise<RecordingDraft | null> => {
+      if (!inputsRef.current.canStopManually()) return null;
+      controller.suspend();
+      const draft = await inputsRef.current.stopManually();
+      if (!draft && inputsRef.current.isRecording()) {
+        controller.resumeAfterManualFailure();
+        inputsRef.current.reportFailure('stop');
+        setFailure('stop');
+      }
+      return draft;
+    };
+
     return {
       overlayProps: {
         limitReached,
@@ -81,6 +94,7 @@ export function createUseRecordingLimit(runtime: HookRuntime) {
           : failure === 'status'
             ? 'components.answers.limitStatusFailed'
             : 'components.answers.limitStopFailed',
+        onStopRecording: () => { void manualStop(); },
       },
       commitStart(attempt: RecordingStartAttempt): boolean {
         const started = attempt.commit();
@@ -91,15 +105,7 @@ export function createUseRecordingLimit(runtime: HookRuntime) {
         }
         return started;
       },
-      async manualStop(): Promise<RecordingDraft | null> {
-        controller.suspend();
-        const draft = await inputsRef.current.stopManually();
-        if (!draft && inputsRef.current.isRecording()) {
-          inputsRef.current.reportFailure('stop');
-          setFailure('stop');
-        }
-        return draft;
-      },
+      manualStop,
     };
   };
 }

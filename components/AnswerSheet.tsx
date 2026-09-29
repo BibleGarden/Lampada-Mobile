@@ -779,18 +779,6 @@ export default function AnswerSheet({
   // Нативный счётчик нужен только во время записи; итоговую длину берём из файла.
   const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
 
-  const stopRecordingFromUi = (): Promise<RecordingDraft | null> => {
-    const startedAt = recordingStartedAtRef.current;
-    if (
-      recordingOperation.getPhase() === 'recording' &&
-      startedAt !== null &&
-      Date.now() - startedAt < MIN_UI_RECORDING_MILLIS
-    ) {
-      return Promise.resolve(null);
-    }
-    return stopRecording();
-  };
-
   const recordingLimit = useRecordingLimit({
     recorder,
     phase: recordingPhase,
@@ -803,7 +791,15 @@ export default function AnswerSheet({
         : 'components.answers.saveFailed');
       return recordingOperation.getPhase() !== 'recording';
     },
-    stopManually: stopRecordingFromUi,
+    canStopManually: () => {
+      const startedAt = recordingStartedAtRef.current;
+      return !(
+        recordingOperation.getPhase() === 'recording' &&
+        startedAt !== null &&
+        Date.now() - startedAt < MIN_UI_RECORDING_MILLIS
+      );
+    },
+    stopManually: () => stopRecording(),
     reportFailure: (reason, error) => {
       console.error('Recording limit failed', reason, error ?? new Error('Native stop was not confirmed'));
     },
@@ -1297,7 +1293,6 @@ export default function AnswerSheet({
       confirmDeleteId={confirmDeleteId}
       expandedTranscripts={expandedTranscripts}
       onStartRecording={startRecording}
-      onStopRecording={() => { void recordingLimit.manualStop(); }}
       onTogglePlay={togglePlay}
       onDelete={askOrConfirmDelete}
       onTranscribe={(recording) => void startTranscription(recording)}

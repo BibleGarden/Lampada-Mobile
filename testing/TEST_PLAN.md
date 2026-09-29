@@ -248,6 +248,8 @@ tier of its e2e runs.
 | ANS-041 | Fail the file-duration reader after a successful native stop | the URI stays attached to a visible, playable draft marked with unknown duration; an error is logged, saving retains the recording, and transcription measures the file again |
 | ANS-042 | Close the recordings sheet while the automatic stop is finalizing or its cue is playing | the draft is retained, no late cue plays over resumed music, and the cue player and audio-session lease are released |
 | ANS-043 | Make the native stop or duration status fail repeatedly at the limit | automatic work attempts to stop once, an explicit error appears on the recording overlay and in the log, the Done control remains available, and no 250 ms retry loop runs |
+| ANS-044 | Tap the stop control within 1.5 seconds of starting, then keep recording until the limit | the early tap is ignored without an error, the duration limit remains active, and the recording stops normally at 9:59 recorded time |
+| ANS-045 | Make an attempted manual stop fail while the native recorder continues | the error is shown, the limit remains active, and a later limit stop still runs at 9:59 recorded time |
 
 ### The AI and the companion
 
