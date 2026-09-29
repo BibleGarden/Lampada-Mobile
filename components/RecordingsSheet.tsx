@@ -40,6 +40,7 @@ type Props = {
   recording: boolean;
   recordingPhase: 'idle' | 'starting' | 'recording' | 'stopping';
   limitReached: boolean;
+  limitError: string | null;
   /** Длительность записи по часам нативного рекордера. */
   getRecordedMillis: () => number;
   playingId: number | null;
@@ -73,6 +74,7 @@ export default function RecordingsSheet({
   recording,
   recordingPhase,
   limitReached,
+  limitError,
   getRecordedMillis,
   playingId,
   pausedId,
@@ -435,6 +437,11 @@ export default function RecordingsSheet({
               {timeLabel}
             </Text>
             <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
+            {limitError && (
+              <Text style={styles.recOverlayError} testID="recording-limit-error">
+                {t(limitError)}
+              </Text>
+            )}
           </View>
           <Pressable
             accessibilityLabel={t('components.answers.stop')}
@@ -785,6 +792,13 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifItalic,
     fontSize: sc(14),
     color: colors.creamDim,
+    textAlign: 'center',
+    paddingHorizontal: sc(24),
+  },
+  recOverlayError: {
+    fontFamily: fonts.sans,
+    fontSize: sc(12),
+    color: '#ec9b8e',
     textAlign: 'center',
     paddingHorizontal: sc(24),
   },

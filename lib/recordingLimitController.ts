@@ -4,31 +4,67 @@ import { recordingLimitReached } from './transcriptionLimits.ts';
 export function createRecordingLimitController(
   readRecordedMillis: () => number,
   isRecording: () => boolean,
-  stop: () => void,
+  stop: () => Promise<boolean>,
+  onFailure: (reason: 'status' | 'stop', error?: unknown) => void,
 ) {
-  let triggered = false;
+  let state: 'ready' | 'stopping' | 'failed' | 'disposed' = 'ready';
+  let generation = 0;
   const poll = (): boolean => {
-    if (triggered || !isRecording()) return false;
-    if (!recordingLimitReached(readRecordedMillis())) return false;
-    triggered = true;
-    stop();
+    if (state !== 'ready' || !isRecording()) return false;
+    try {
+      if (!recordingLimitReached(readRecordedMillis())) return false;
+    } catch (error) {
+      state = 'failed';
+      onFailure('status', error);
+      return false;
+    }
+    state = 'stopping';
+    const attempt = generation;
+    let operation: Promise<boolean>;
+    try {
+      operation = stop();
+    } catch (error) {
+      state = 'failed';
+      onFailure('stop', error);
+      return true;
+    }
+    void operation
+      .then((stopped) => {
+        if (generation !== attempt || state === 'disposed') return;
+        if (!stopped) {
+          state = 'failed';
+          onFailure('stop');
+        }
+      })
+      .catch((error) => {
+        if (generation !== attempt || state === 'disposed') return;
+        state = 'failed';
+        onFailure('stop', error);
+      });
     return true;
   };
   return {
-    reset() { triggered = false; },
+    reset() { generation += 1; state = 'ready'; },
+    suspend() { state = 'stopping'; },
+    dispose() { generation += 1; state = 'disposed'; },
+    getState: () => state,
     poll,
     startPolling(
-      onError: (error: unknown) => void,
       schedule: (callback: () => void, millis: number) => ReturnType<typeof setInterval> = setInterval,
       cancel: (timer: ReturnType<typeof setInterval>) => void = clearInterval,
     ): () => void {
+      if (state !== 'ready') return () => undefined;
+      let timer: ReturnType<typeof setInterval> | null = null;
       const tick = () => {
-        try { poll(); }
-        catch (error) { onError(error); }
+        poll();
+        if (state !== 'ready' && timer !== null) {
+          cancel(timer);
+          timer = null;
+        }
       };
       tick();
-      const timer = schedule(tick, 250);
-      return () => cancel(timer);
+      if (state === 'ready') timer = schedule(tick, 250);
+      return () => { if (timer !== null) cancel(timer); };
     },
   };
 }

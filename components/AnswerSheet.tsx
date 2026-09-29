@@ -28,7 +28,7 @@ import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { audioFileDurationSeconds } from '../lib/audioFileDuration';
 import { MAX_RECORDING_SECONDS, recordingLimitDisplay } from '../lib/transcriptionLimits';
-import { createRecordingLimitController } from '../lib/recordingLimitController';
+import { useRecordingLimit } from '../lib/useRecordingLimit';
 import { transcriptionFailureCode } from '../lib/transcriptionErrors';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import {
@@ -129,7 +129,6 @@ export default function AnswerSheet({
   const [recordingPhase, setRecordingPhase] = useState<
     'idle' | 'starting' | 'recording' | 'stopping'
   >('idle');
-  const [recordingLimitReached, setRecordingLimitReached] = useState(false);
   const [saving, setSaving] = useState(false);
   const [answerConsentOpen, setAnswerConsentOpen] = useState(false);
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
@@ -214,18 +213,6 @@ export default function AnswerSheet({
         throw error;
       });
   });
-  const recordingLimitControllerRef = useRef<ReturnType<typeof createRecordingLimitController> | null>(null);
-  if (!recordingLimitControllerRef.current) {
-    recordingLimitControllerRef.current = createRecordingLimitController(
-      () => recorder.getStatus().durationMillis,
-      () => recordingOperation.getPhase() === 'recording',
-      () => {
-        setRecordingLimitReached(true);
-        void finishLimitedRecording();
-      },
-    );
-  }
-  const recordingLimitController = recordingLimitControllerRef.current;
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
   const limitCuePlayer = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
@@ -505,7 +492,6 @@ export default function AnswerSheet({
 
     const attempt = recordingOperation.beginStart();
     if (!attempt) return;
-    setRecordingLimitReached(false);
     cancelDraftPlayback();
     observeRelease(cancelLimitCue());
     // Оверлей записи не должен остаться под открытой клавиатурой.
@@ -589,9 +575,8 @@ export default function AnswerSheet({
         }
         return;
       }
-      started = attempt.commit();
+      started = recordingLimit.commitStart(attempt);
       if (!started) return;
-      recordingLimitController.reset();
       recordingOverlayActiveRef.current = true;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
@@ -755,8 +740,8 @@ export default function AnswerSheet({
     ).catch(() => null);
   };
 
-  const finishLimitedRecording = async () => {
-    if (recordingOperation.getPhase() !== 'recording') return;
+  const finishLimitedRecording = async (): Promise<boolean> => {
+    if (recordingOperation.getPhase() !== 'recording') return true;
     const sheetGeneration = recordingsSheetGenerationRef.current;
     const releaseBusyIfIdle = () => {
       if (
@@ -766,20 +751,15 @@ export default function AnswerSheet({
     };
     const draft = await stopRecording(true);
     if (!draft) {
-      if (recordingOperation.getPhase() === 'recording') {
-        // Нативный stop не подтвердился: следующий опрос обязан попробовать снова.
-        setRecordingLimitReached(false);
-        recordingLimitController.reset();
-      }
       releaseBusyIfIdle();
-      return;
+      return recordingOperation.getPhase() !== 'recording';
     }
     if (
       sheetGeneration !== recordingsSheetGenerationRef.current ||
       !recordingSheetOpenRef.current || !openSheetRef.current
     ) {
       releaseBusyIfIdle();
-      return;
+      return true;
     }
     setAudioError(draft.durationSec === 0
       ? 'components.answers.recordingLimitDurationUnknown'
@@ -793,19 +773,8 @@ export default function AnswerSheet({
       console.error('Failed to play recording limit cue', error);
       releaseBusyIfIdle();
     }
+    return true;
   };
-
-  useEffect(() => {
-    if (recordingPhase !== 'recording') return;
-    return recordingLimitController.startPolling((error) => {
-      console.error('Failed to read the recording duration limit', error);
-      void stopRecording().then((draft) => {
-        setAudioError(draft
-          ? 'components.answers.limitCheckFailed'
-          : 'components.answers.saveFailed');
-      });
-    });
-  }, [recordingPhase, recordingLimitController]);
 
   // Нативный счётчик нужен только во время записи; итоговую длину берём из файла.
   const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
@@ -821,6 +790,24 @@ export default function AnswerSheet({
     }
     return stopRecording();
   };
+
+  const recordingLimit = useRecordingLimit({
+    recorder,
+    phase: recordingPhase,
+    isRecording: () => recordingOperation.getPhase() === 'recording',
+    stopAtLimit: finishLimitedRecording,
+    stopAfterStatusFailure: async () => {
+      const draft = await stopRecording();
+      setAudioError(draft
+        ? 'components.answers.limitCheckFailed'
+        : 'components.answers.saveFailed');
+      return recordingOperation.getPhase() !== 'recording';
+    },
+    stopManually: stopRecordingFromUi,
+    reportFailure: (reason, error) => {
+      console.error('Recording limit failed', reason, error ?? new Error('Native stop was not confirmed'));
+    },
+  });
 
   const togglePlay = (r: RecordingDraft) => {
     if (playingId === r.id) {
@@ -1301,7 +1288,7 @@ export default function AnswerSheet({
       recordings={recs}
       recording={recording}
       recordingPhase={recordingPhase}
-      limitReached={recordingLimitReached}
+      {...recordingLimit.overlayProps}
       getRecordedMillis={getRecordedMillis}
       playingId={playingId}
       pausedId={pausedId}
@@ -1310,7 +1297,7 @@ export default function AnswerSheet({
       confirmDeleteId={confirmDeleteId}
       expandedTranscripts={expandedTranscripts}
       onStartRecording={startRecording}
-      onStopRecording={stopRecordingFromUi}
+      onStopRecording={() => { void recordingLimit.manualStop(); }}
       onTogglePlay={togglePlay}
       onDelete={askOrConfirmDelete}
       onTranscribe={(recording) => void startTranscription(recording)}

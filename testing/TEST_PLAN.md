@@ -247,6 +247,7 @@ tier of its e2e runs.
 | ANS-040 | Suspend the app during a recording and return before the limit | Expo pauses the native recorder in the background; after return the same recorded-time counter resumes and the controller stops once at 9:59 accumulated recording time, without pausing or restarting the recorder itself |
 | ANS-041 | Fail the file-duration reader after a successful native stop | the URI stays attached to a visible, playable draft marked with unknown duration; an error is logged, saving retains the recording, and transcription measures the file again |
 | ANS-042 | Close the recordings sheet while the automatic stop is finalizing or its cue is playing | the draft is retained, no late cue plays over resumed music, and the cue player and audio-session lease are released |
+| ANS-043 | Make the native stop or duration status fail repeatedly at the limit | automatic work attempts to stop once, an explicit error appears on the recording overlay and in the log, the Done control remains available, and no 250 ms retry loop runs |
 
 ### The AI and the companion
 
