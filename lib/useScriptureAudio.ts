@@ -51,15 +51,21 @@ export function useScriptureAudio({
   const scriptureKeyRef = useRef<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const sessionLeaseRef = useRef<AudioSessionLease | null>(null);
-  const releaseSession = useCallback(() => {
+  const releaseSession = useCallback((ownedLease?: AudioSessionLease | null) => {
     const lease = sessionLeaseRef.current;
+    if (ownedLease && lease !== ownedLease) return;
     sessionLeaseRef.current = null;
-    if (lease) void lease.release();
+    if (lease) void lease.release().catch((error) => {
+      console.error('Failed to release audio session', error);
+    });
   }, []);
   const acquireSession = useCallback(() => {
-    sessionLeaseRef.current = audioModeCoordinator.acquireSession(
+    if (sessionLeaseRef.current) throw new Error('Scripture audio already owns a session lease');
+    const lease = audioModeCoordinator.acquireSession(
       () => setIsAudioActiveAsync(false),
     );
+    sessionLeaseRef.current = lease;
+    return lease;
   }, []);
   const playbackOperationRef = useRef<ReturnType<typeof createScriptureAudioOperation> | null>(null);
   if (!playbackOperationRef.current) {
@@ -127,28 +133,34 @@ export function useScriptureAudio({
     if ((phase === 'paused' || phase === 'idle') && clipRef.current) {
       const continuation = playbackOperation.begin();
       if (!continuation) return;
+      const lease = acquireSession();
       setPhase('loading');
       onAudioBusyChange(true);
-      acquireSession();
       void audioModeCoordinator
         .requestPlayback(setAudioModeAsync, SCRIPTURE_PLAYBACK_MODE)
         .then((grant) => {
-          if (!continuation.isCurrent()) return;
+          if (!continuation.isCurrent()) {
+            releaseSession(lease);
+            return;
+          }
           if (!grant?.isCurrent()) {
             setPhase(phase);
             onAudioBusyChange(false);
-            releaseSession();
+            releaseSession(lease);
             return;
           }
           player.play();
           setPhase('playing');
         })
         .catch((error) => {
-          if (!continuation.isCurrent()) return;
+          if (!continuation.isCurrent()) {
+            releaseSession(lease);
+            return;
+          }
           console.warn('Failed to restore Scripture audio mode', error);
           setPhase('error');
           onAudioBusyChange(false);
-          releaseSession();
+          releaseSession(lease);
         });
       return;
     }
@@ -160,28 +172,35 @@ export function useScriptureAudio({
     setPhase('loading');
     onAudioBusyChange(true);
     void (async () => {
+      let lease: AudioSessionLease | null = null;
       try {
         const clip = await fetchScriptureAudioClip(scripture, voice, controller.signal);
         if (requestRef.current !== controller) return;
-        acquireSession();
+        lease = acquireSession();
         const modeGrant = await audioModeCoordinator.requestPlayback(
           setAudioModeAsync,
           SCRIPTURE_PLAYBACK_MODE,
         );
-        if (requestRef.current !== controller) return;
+        if (requestRef.current !== controller) {
+          releaseSession(lease);
+          return;
+        }
         if (!modeGrant?.isCurrent()) {
           setPhase('idle');
           onAudioBusyChange(false);
-          releaseSession();
+          releaseSession(lease);
           return;
         }
         player.replace(clip.url);
         await player.seekTo(clip.startSeconds, 0, 0);
-        if (requestRef.current !== controller) return;
+        if (requestRef.current !== controller) {
+          releaseSession(lease);
+          return;
+        }
         if (!modeGrant.isCurrent()) {
           setPhase('idle');
           onAudioBusyChange(false);
-          releaseSession();
+          releaseSession(lease);
           return;
         }
         clipRef.current = clip;
@@ -189,14 +208,17 @@ export function useScriptureAudio({
         player.play();
         setPhase('playing');
       } catch (error) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          releaseSession(lease);
+          return;
+        }
         console.warn(
           'Failed to play Scripture passage',
           error instanceof Error ? error.message : 'unknown error',
         );
         setPhase('error');
         onAudioBusyChange(false);
-        releaseSession();
+        releaseSession(lease);
       } finally {
         if (requestRef.current === controller) requestRef.current = null;
       }

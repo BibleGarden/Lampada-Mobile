@@ -23,7 +23,9 @@ held until the existing visible retry or unmount cleanup resolves the recorder.
 The last release queues `setIsAudioActiveAsync(false)` behind earlier mode
 changes. A new lease acquired before that queued operation runs cancels the
 deactivation; its mode request remains serialized after the queue. Native
-deactivation errors reject the release operation and must remain visible.
+deactivation errors reject the release operation. Every consumer logs that
+rejection with `console.error`; cleanup never silently retries deactivation or
+shows a technical message to the person praying.
 
 Music keeps its lease through a crossfade and releases it after both players
 pause. A prayer without a deadline has no automatic expiry: music continues

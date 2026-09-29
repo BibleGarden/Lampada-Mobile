@@ -197,11 +197,15 @@ function SessionScreen() {
     await setAudioModeAsync(mode);
   }, []);
 
+  const reportReleaseError = useCallback((error: unknown) => {
+    console.error('Failed to release audio session', error);
+  }, []);
+
   const releaseMusicLease = useCallback(() => {
     const lease = musicLeaseRef.current;
     musicLeaseRef.current = null;
-    return lease?.release() ?? Promise.resolve();
-  }, []);
+    return lease?.release().catch(reportReleaseError) ?? Promise.resolve();
+  }, [reportReleaseError]);
 
   useEffect(() => {
     // Фоновое сопровождение должно оставаться заметно тише речи и системных звуков.
@@ -254,14 +258,14 @@ function SessionScreen() {
     });
     return () => {
       active = false;
-      pauseMusicPlayers();
-      void lease.release();
+      void lease.release().catch(reportReleaseError);
       if (musicLeaseRef.current === lease) musicLeaseRef.current = null;
     };
   }, [
     applyMusicAudioMode,
     musicPlayerForSlot,
     pauseMusicPlayers,
+    reportReleaseError,
     releaseMusicLease,
     s.musicOn,
     setMusicLockScreen,

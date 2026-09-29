@@ -131,7 +131,6 @@ export function createAudioModeCoordinator() {
     },
 
     hasRecordingLease: () => recordingLease !== null,
-    activeSessionLeases: () => sessionLeases.size,
   };
 }
 

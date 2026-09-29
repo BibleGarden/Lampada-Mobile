@@ -54,7 +54,7 @@ import {
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { playAudioRecording } from '../lib/audioPlayerOperation';
+import { createPlaybackLeaseOperation, playAudioRecording } from '../lib/audioPlayerOperation';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
@@ -143,25 +143,28 @@ export default function AnswerSheet({
   const recordingStartedAtRef = useRef<number | null>(null);
   const recordingAudioModeLeaseRef = useRef<RecordingAudioModeLease | null>(null);
   const recordingSessionLeaseRef = useRef<AudioSessionLease | null>(null);
-  const draftSessionLeaseRef = useRef<AudioSessionLease | null>(null);
-  const releaseDraftSession = () => {
-    const lease = draftSessionLeaseRef.current;
-    draftSessionLeaseRef.current = null;
-    if (lease) void lease.release().catch((error) => {
-      console.error('Failed to release draft audio session', error);
-      throw error;
-    });
+  const activeDraftIdRef = useRef<number | null>(null);
+  const draftPlaybackOperationRef = useRef<ReturnType<typeof createPlaybackLeaseOperation> | null>(null);
+  if (!draftPlaybackOperationRef.current) {
+    draftPlaybackOperationRef.current = createPlaybackLeaseOperation();
+  }
+  const draftPlaybackOperation = draftPlaybackOperationRef.current;
+  const reportReleaseError = (error: unknown) => {
+    console.error('Failed to release audio session', error);
+  };
+  const observeRelease = (operation: Promise<void>) => {
+    void operation.catch(reportReleaseError);
+  };
+  const cancelDraftPlayback = () => {
+    activeDraftIdRef.current = null;
+    observeRelease(draftPlaybackOperation.cancel());
   };
   const releaseRecordingSession = () => {
     const lease = recordingSessionLeaseRef.current;
     recordingSessionLeaseRef.current = null;
-    return lease?.release().catch((error) => {
-      console.error('Failed to release recording audio session', error);
-      throw error;
-    }) ?? Promise.resolve();
+    return lease?.release() ?? Promise.resolve();
   };
   const recordingSheetOpenRef = useRef(false);
-  const draftPlaybackGenerationRef = useRef(0);
   // Нативный recorderState обновляется с задержкой и не подходит как mutex.
   // Pure coordinator синхронно держит фазу, state только отражает её в UI.
   const recordingOperationRef = useRef<ReturnType<typeof createRecordingOperation> | null>(null);
@@ -187,7 +190,7 @@ export default function AnswerSheet({
     recordingStartedAtRef.current = null;
     recordingOverlayActiveRef.current = false;
     recoverRecordingAfterTerminalError(recordingOperation, lease);
-    void releaseRecordingSession();
+    observeRelease(releaseRecordingSession());
     if (recordingAudioModeLeaseRef.current === lease) {
       recordingAudioModeLeaseRef.current = null;
     }
@@ -373,7 +376,7 @@ export default function AnswerSheet({
   useEffect(
     () => () => {
       recordingSheetOpenRef.current = false;
-      draftPlaybackGenerationRef.current += 1;
+      cancelDraftPlayback();
       recordingOperation.cancelStart();
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
@@ -389,7 +392,7 @@ export default function AnswerSheet({
           .finally(() => {
             recordingAudioModeLeaseRef.current?.release();
             recordingAudioModeLeaseRef.current = null;
-            void releaseRecordingSession();
+            observeRelease(releaseRecordingSession());
             onAudioBusyChange?.(false);
           });
       } else if (phase === 'stopping') {
@@ -400,7 +403,7 @@ export default function AnswerSheet({
         const releaseAfterUnmount = () => {
           recordingAudioModeLeaseRef.current?.release();
           recordingAudioModeLeaseRef.current = null;
-          void releaseRecordingSession();
+          observeRelease(releaseRecordingSession());
           onAudioBusyChange?.(false);
         };
         if (pendingStop) {
@@ -409,31 +412,12 @@ export default function AnswerSheet({
           releaseAfterUnmount();
         }
       } else {
-        void releaseRecordingSession();
+        observeRelease(releaseRecordingSession());
         onAudioBusyChange?.(false);
       }
-      releaseDraftSession();
     },
     [abortAllTranscriptions, onAudioBusyChange, recorder, recordingOperation],
   );
-
-  // конец воспроизведения — вернуть иконку play
-  useEffect(() => {
-    if (playerStatus.error) {
-      releaseDraftSession();
-      setPlayingId(null);
-      setPausedId(null);
-      setAudioError('components.answers.playbackFailed');
-      onAudioBusyChange?.(false);
-      return;
-    }
-    if (playerStatus.didJustFinish) {
-      releaseDraftSession();
-      setPlayingId(null);
-      setPausedId(null);
-      onAudioBusyChange?.(false);
-    }
-  }, [playerStatus.didJustFinish, playerStatus.error, onAudioBusyChange]);
 
   // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
   // и кнопки остались видны; спряталась — обратно на нижнюю.
@@ -462,13 +446,12 @@ export default function AnswerSheet({
 
     const attempt = recordingOperation.beginStart();
     if (!attempt) return;
-    draftPlaybackGenerationRef.current += 1;
+    cancelDraftPlayback();
     // Оверлей записи не должен остаться под открытой клавиатурой.
     Keyboard.dismiss();
     // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
     // audio mode: иначе музыка может попасть в начало голосовой записи.
     player.pause();
-    releaseDraftSession();
     setPlayingId(null);
     setPausedId(null);
     onAudioBusyChange?.(true);
@@ -480,6 +463,7 @@ export default function AnswerSheet({
     let nativeStopConfirmed = false;
     let nativeCleanupUncertain = false;
     let audioModeLease: RecordingAudioModeLease | null = null;
+    let sessionLease: AudioSessionLease | null = null;
     const discardPreparedFile = () => {
       const uri = recorder.uri;
       if (!uri) return;
@@ -496,9 +480,13 @@ export default function AnswerSheet({
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) return;
       if (!startIsCurrent()) return;
-      recordingSessionLeaseRef.current = audioModeCoordinator.acquireSession(
+      if (recordingSessionLeaseRef.current) {
+        throw new Error('A recording already owns an audio session lease');
+      }
+      sessionLease = audioModeCoordinator.acquireSession(
         () => setIsAudioActiveAsync(false),
       );
+      recordingSessionLeaseRef.current = sessionLease;
       audioModeLease = audioModeCoordinator.acquireRecording(setAudioModeAsync, {
         allowsRecording: true,
         playsInSilentMode: true,
@@ -580,7 +568,9 @@ export default function AnswerSheet({
           if (audioModeEnabled) {
             if (!prepared || nativeStopConfirmed) {
               audioModeLease?.release();
-              await releaseRecordingSession();
+              if (recordingSessionLeaseRef.current === sessionLease) {
+                await releaseRecordingSession().catch(reportReleaseError);
+              }
               if (recordingAudioModeLeaseRef.current === audioModeLease) {
                 recordingAudioModeLeaseRef.current = null;
               }
@@ -591,7 +581,9 @@ export default function AnswerSheet({
                 });
             }
           }
-          if (!audioModeEnabled) await releaseRecordingSession();
+          if (sessionLease && !audioModeEnabled && recordingSessionLeaseRef.current === sessionLease) {
+            await releaseRecordingSession().catch(reportReleaseError);
+          }
         }
       } finally {
         // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
@@ -685,7 +677,7 @@ export default function AnswerSheet({
         recordingAudioModeLeaseRef.current?.release();
         recordingAudioModeLeaseRef.current = null;
         try {
-          await releaseRecordingSession();
+          await releaseRecordingSession().catch(reportReleaseError);
           await audioModeCoordinator.requestPlayback(setAudioModeAsync, {
             allowsRecording: false,
             playsInSilentMode: true,
@@ -720,53 +712,69 @@ export default function AnswerSheet({
 
   const togglePlay = (r: RecordingDraft) => {
     if (playingId === r.id) {
-      draftPlaybackGenerationRef.current += 1;
+      cancelDraftPlayback();
       player.pause();
-      releaseDraftSession();
       setPlayingId(null);
       setPausedId(r.id);
       onAudioBusyChange?.(false);
       return;
     }
     const resume = pausedId === r.id;
-    const generation = ++draftPlaybackGenerationRef.current;
+    cancelDraftPlayback();
     player.pause();
-    releaseDraftSession();
     setPlayingId(null);
     if (!resume) setPausedId(null);
     setAudioError(null);
     onAudioBusyChange?.(true);
-    draftSessionLeaseRef.current = audioModeCoordinator.acquireSession(
+    const generation = draftPlaybackOperation.begin(audioModeCoordinator.acquireSession(
       () => setIsAudioActiveAsync(false),
-    );
+    ));
+    activeDraftIdRef.current = r.id;
     void audioModeCoordinator
       .requestPlayback(setAudioModeAsync, DRAFT_PLAYBACK_MODE)
       .then(async (grant) => {
         const isCurrent = () =>
-          generation === draftPlaybackGenerationRef.current &&
+          draftPlaybackOperation.isCurrent(generation) &&
           recordingSheetOpenRef.current &&
           recsRef.current.some((item) => item.id === r.id && item.uri === r.uri) &&
           !!grant?.isCurrent();
-        if (generation !== draftPlaybackGenerationRef.current || !recordingSheetOpenRef.current) return;
+        if (!draftPlaybackOperation.isCurrent(generation)) return;
+        if (!recordingSheetOpenRef.current) {
+          cancelDraftPlayback();
+          return;
+        }
         if (!grant?.isCurrent()) {
-          releaseDraftSession();
+          cancelDraftPlayback();
           onAudioBusyChange?.(false);
           return;
         }
-        if (!(await playAudioRecording(player, r.uri, resume, isCurrent))) {
-          if (generation === draftPlaybackGenerationRef.current) {
-            releaseDraftSession();
+        if (!(await playAudioRecording(player, r.uri, resume, isCurrent, () => {
+          const subscription = player.addListener('playbackStatusUpdate', (status) => {
+            if (!draftPlaybackOperation.isCurrent(generation)) return;
+            if (!status.didJustFinish && !status.error) return;
+            activeDraftIdRef.current = null;
+            observeRelease(draftPlaybackOperation.complete(generation));
+            setPlayingId(null);
+            setPausedId(null);
+            if (status.error) setAudioError('components.answers.playbackFailed');
+            onAudioBusyChange?.(false);
+          });
+          draftPlaybackOperation.attachStatus(generation, subscription);
+        }))) {
+          if (draftPlaybackOperation.isCurrent(generation)) {
+            cancelDraftPlayback();
             onAudioBusyChange?.(false);
           }
           return;
         }
+        if (!draftPlaybackOperation.isCurrent(generation)) return;
         setPlayingId(r.id);
         setPausedId(null);
       })
       .catch((error) => {
-        if (generation !== draftPlaybackGenerationRef.current) return;
+        if (!draftPlaybackOperation.isCurrent(generation)) return;
         console.warn('Failed to play audio recording', error);
-        releaseDraftSession();
+        cancelDraftPlayback();
         setPausedId(null);
         setAudioError('components.answers.playbackFailed');
         onAudioBusyChange?.(false);
@@ -774,7 +782,9 @@ export default function AnswerSheet({
   };
 
   const handleRecordingsDismiss = () => {
-    draftPlaybackGenerationRef.current += 1;
+    cancelDraftPlayback();
+    player.pause();
+    if (recordingOperation.getPhase() === 'idle') onAudioBusyChange?.(false);
     setRecordingsSheetOpen(false);
     setPausedId(null);
     recordingSheetOpenRef.current = false;
@@ -793,8 +803,6 @@ export default function AnswerSheet({
       });
     }
     if (playingId !== null) {
-      player.pause();
-      releaseDraftSession();
       setPlayingId(null);
       onAudioBusyChange?.(false);
     }
@@ -817,9 +825,9 @@ export default function AnswerSheet({
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       setConfirmDeleteId(null);
       if (pausedId === id) setPausedId(null);
-      if (playingId === id) {
+      if (activeDraftIdRef.current === id) {
+        cancelDraftPlayback();
         player.pause();
-        releaseDraftSession();
         setPlayingId(null);
         onAudioBusyChange?.(false);
       }
@@ -1016,7 +1024,8 @@ export default function AnswerSheet({
         openSheetRef.current = editing;
         if (editing) onOpenChange?.(true);
         if (i < 0) {
-          draftPlaybackGenerationRef.current += 1;
+          cancelDraftPlayback();
+          player.pause();
           setPausedId(null);
           // Отменяем start до первого await: запись не сможет включиться уже
           // после начала закрытия родительской шторки.
@@ -1042,8 +1051,6 @@ export default function AnswerSheet({
           }
         }
         if (i < 0 && playingId !== null) {
-          player.pause();
-          releaseDraftSession();
           setPlayingId(null);
         }
         if (i < 0) {

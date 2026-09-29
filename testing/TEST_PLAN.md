@@ -194,11 +194,11 @@ tier of its e2e runs.
 | MUS-003 | Wait for the end of the playlist | fifteen tracks play in sequence and the loop starts again |
 | MUS-004 | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
 | MUS-005 | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording |
-| MUS-006 [main] | Finish the prayer manually or after timer expiry | the music player stops and does not play on reflection or the next session screens |
+| MUS-006 [main] | Finish a timed prayer early or after timer expiry with music on | the music player stops and does not play on reflection or the next session screens (`ios-music-finish-early.yaml` covers early finish) |
 | MUS-007 [main] | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |
 | MUS-009 | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
-| MUS-010 [main] | Start an untimed prayer, play music, then finish it explicitly | music fades out before reflection opens, its audio session is released, and playback does not restart (`ios-music-finish-early.yaml`) |
+| MUS-010 [main] | Start an untimed prayer, play music, then finish it explicitly | music fades out before reflection opens, its audio session is released, and playback does not restart (`ios-music-finish-untimed.yaml`) |
 | MUS-011 | With music never enabled, play and stop scripture narration, play and pause a voice draft, then finish a microphone recording | each action releases the audio session after it stops; on a physical iPad, the app becomes suspended in the background after the last sound; verify with Instruments or the system process report |
 
 ### Answers and audio
@@ -239,6 +239,7 @@ tier of its e2e runs.
 | ANS-032 [main] | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
 | ANS-033 [ipad] | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
 | ANS-034 | With the session timer running, open the answer sheet and type a sentence of about 50 characters at a steady pace | every keystroke appears in the field without batching or visible stalls (measured: one update per keystroke, no gap above 150 ms); the halo behind the timer stops breathing while the sheet is open and resumes after it closes |
+| ANS-035 | Start a voice draft, close the recordings sheet while it loads, then play a different draft | the cancelled draft never starts, its audio session is released, and a late completion or error cannot stop the new draft |
 
 ### The AI and the companion
 
