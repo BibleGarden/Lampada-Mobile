@@ -30,7 +30,7 @@ tags:
 - tapOn:
     id: "privacy-setting-answer_context-denied"
 - tapOn:
-    id: "privacy-sheet-done"
+    id: "privacy-sheet-close"
 - openLink: "lampada://"
 - runFlow:
     when:

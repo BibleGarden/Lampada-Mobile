@@ -11,6 +11,8 @@ tags:
     id: "privacy-settings-button"
 - assertVisible:
     id: "privacy-sheet"
+- assertNotVisible:
+    id: "privacy-sheet-done"
 - assertVisible:
     id: "privacy-setting-core_prayer_ai"
 - assertVisible:
@@ -22,7 +24,7 @@ tags:
 - tapOn:
     id: "privacy-setting-audio_transcription-allowed"
 - tapOn:
-    id: "privacy-sheet-done"
+    id: "privacy-sheet-close"
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"

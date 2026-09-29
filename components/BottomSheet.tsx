@@ -16,6 +16,7 @@ export default function BottomSheet({
   title,
   summary,
   closeLabel,
+  closeTestID,
   showCloseButton = true,
   doneLabel,
   doneTestID,
@@ -28,6 +29,7 @@ export default function BottomSheet({
   title: string;
   summary?: string;
   closeLabel: string;
+  closeTestID?: string;
   showCloseButton?: boolean;
   doneLabel?: string;
   doneTestID?: string;
@@ -61,7 +63,7 @@ export default function BottomSheet({
             <Text style={styles.title}>{title}</Text>
           </View>
           {showCloseButton ? (
-            <IconButton size={sc(28)} accessibilityLabel={closeLabel} onPress={onClose}>
+            <IconButton size={sc(28)} accessibilityLabel={closeLabel} testID={closeTestID} onPress={onClose}>
               <Close size={18} />
             </IconButton>
           ) : null}
