@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   setAudioModeAsync,
+  setIsAudioActiveAsync,
   useAudioPlayer,
   useAudioPlayerStatus,
 } from 'expo-audio';
@@ -9,6 +10,7 @@ import { fetchScriptureAudioClip, type ScriptureAudioClip } from './scriptureAud
 import {
   audioModeCoordinator,
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
+  type AudioSessionLease,
 } from './audioModeCoordinator';
 import { createScriptureAudioOperation } from './scriptureAudioOperation';
 
@@ -48,6 +50,17 @@ export function useScriptureAudio({
   const clipRef = useRef<ScriptureAudioClip | null>(null);
   const scriptureKeyRef = useRef<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const sessionLeaseRef = useRef<AudioSessionLease | null>(null);
+  const releaseSession = useCallback(() => {
+    const lease = sessionLeaseRef.current;
+    sessionLeaseRef.current = null;
+    if (lease) void lease.release();
+  }, []);
+  const acquireSession = useCallback(() => {
+    sessionLeaseRef.current = audioModeCoordinator.acquireSession(
+      () => setIsAudioActiveAsync(false),
+    );
+  }, []);
   const playbackOperationRef = useRef<ReturnType<typeof createScriptureAudioOperation> | null>(null);
   if (!playbackOperationRef.current) {
     playbackOperationRef.current = createScriptureAudioOperation();
@@ -63,11 +76,12 @@ export function useScriptureAudio({
     requestRef.current?.abort();
     requestRef.current = null;
     player.pause();
+    releaseSession();
     clipRef.current = null;
     scriptureKeyRef.current = null;
     setPhase(nextPhase);
     onAudioBusyChange(false);
-  }, [onAudioBusyChange, playbackOperation, player]);
+  }, [onAudioBusyChange, playbackOperation, player, releaseSession]);
 
   useEffect(() => {
     if (!enabled) stop();
@@ -86,16 +100,18 @@ export function useScriptureAudio({
     }
     if (status.currentTime + 0.03 < clip.endSeconds) return;
     player.pause();
+    releaseSession();
     setPhase('idle');
     onAudioBusyChange(false);
     void player.seekTo(clip.startSeconds, 0, 0).catch(() => setPhase('error'));
-  }, [onAudioBusyChange, phase, player, status.currentTime, status.playbackState, stop]);
+  }, [onAudioBusyChange, phase, player, releaseSession, status.currentTime, status.playbackState, stop]);
 
   useEffect(
     () => () => {
       requestRef.current?.abort();
+      releaseSession();
     },
-    [],
+    [releaseSession],
   );
 
   const toggle = useCallback(() => {
@@ -103,6 +119,7 @@ export function useScriptureAudio({
     if (phase === 'loading') return;
     if (phase === 'playing') {
       player.pause();
+      releaseSession();
       setPhase('paused');
       onAudioBusyChange(false);
       return;
@@ -112,6 +129,7 @@ export function useScriptureAudio({
       if (!continuation) return;
       setPhase('loading');
       onAudioBusyChange(true);
+      acquireSession();
       void audioModeCoordinator
         .requestPlayback(setAudioModeAsync, SCRIPTURE_PLAYBACK_MODE)
         .then((grant) => {
@@ -119,6 +137,7 @@ export function useScriptureAudio({
           if (!grant?.isCurrent()) {
             setPhase(phase);
             onAudioBusyChange(false);
+            releaseSession();
             return;
           }
           player.play();
@@ -129,6 +148,7 @@ export function useScriptureAudio({
           console.warn('Failed to restore Scripture audio mode', error);
           setPhase('error');
           onAudioBusyChange(false);
+          releaseSession();
         });
       return;
     }
@@ -143,6 +163,7 @@ export function useScriptureAudio({
       try {
         const clip = await fetchScriptureAudioClip(scripture, voice, controller.signal);
         if (requestRef.current !== controller) return;
+        acquireSession();
         const modeGrant = await audioModeCoordinator.requestPlayback(
           setAudioModeAsync,
           SCRIPTURE_PLAYBACK_MODE,
@@ -151,6 +172,7 @@ export function useScriptureAudio({
         if (!modeGrant?.isCurrent()) {
           setPhase('idle');
           onAudioBusyChange(false);
+          releaseSession();
           return;
         }
         player.replace(clip.url);
@@ -159,6 +181,7 @@ export function useScriptureAudio({
         if (!modeGrant.isCurrent()) {
           setPhase('idle');
           onAudioBusyChange(false);
+          releaseSession();
           return;
         }
         clipRef.current = clip;
@@ -173,11 +196,12 @@ export function useScriptureAudio({
         );
         setPhase('error');
         onAudioBusyChange(false);
+        releaseSession();
       } finally {
         if (requestRef.current === controller) requestRef.current = null;
       }
     })();
-  }, [enabled, onAudioBusyChange, phase, playbackOperation, player, scripture, scriptureKey, voice]);
+  }, [acquireSession, enabled, onAudioBusyChange, phase, playbackOperation, player, releaseSession, scripture, scriptureKey, voice]);
 
   let activeVerseNumber: number | null = null;
   const clip = clipRef.current;

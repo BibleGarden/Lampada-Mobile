@@ -19,6 +19,7 @@ import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
+  setIsAudioActiveAsync,
   useAudioPlayer,
   useAudioPlayerStatus,
   useAudioRecorder,
@@ -48,6 +49,7 @@ import {
   audioModeCoordinator,
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type RecordingAudioModeLease,
+  type AudioSessionLease,
 } from '../lib/audioModeCoordinator';
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
@@ -140,6 +142,24 @@ export default function AnswerSheet({
   const recorderErrorRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
   const recordingAudioModeLeaseRef = useRef<RecordingAudioModeLease | null>(null);
+  const recordingSessionLeaseRef = useRef<AudioSessionLease | null>(null);
+  const draftSessionLeaseRef = useRef<AudioSessionLease | null>(null);
+  const releaseDraftSession = () => {
+    const lease = draftSessionLeaseRef.current;
+    draftSessionLeaseRef.current = null;
+    if (lease) void lease.release().catch((error) => {
+      console.error('Failed to release draft audio session', error);
+      throw error;
+    });
+  };
+  const releaseRecordingSession = () => {
+    const lease = recordingSessionLeaseRef.current;
+    recordingSessionLeaseRef.current = null;
+    return lease?.release().catch((error) => {
+      console.error('Failed to release recording audio session', error);
+      throw error;
+    }) ?? Promise.resolve();
+  };
   const recordingSheetOpenRef = useRef(false);
   const draftPlaybackGenerationRef = useRef(0);
   // Нативный recorderState обновляется с задержкой и не подходит как mutex.
@@ -167,6 +187,7 @@ export default function AnswerSheet({
     recordingStartedAtRef.current = null;
     recordingOverlayActiveRef.current = false;
     recoverRecordingAfterTerminalError(recordingOperation, lease);
+    void releaseRecordingSession();
     if (recordingAudioModeLeaseRef.current === lease) {
       recordingAudioModeLeaseRef.current = null;
     }
@@ -177,7 +198,10 @@ export default function AnswerSheet({
         allowsRecording: false,
         playsInSilentMode: true,
       })
-      .catch((error) => console.warn('Failed to restore audio mode', error));
+      .catch((error) => {
+        console.error('Failed to restore audio mode', error);
+        throw error;
+      });
   });
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
@@ -365,6 +389,7 @@ export default function AnswerSheet({
           .finally(() => {
             recordingAudioModeLeaseRef.current?.release();
             recordingAudioModeLeaseRef.current = null;
+            void releaseRecordingSession();
             onAudioBusyChange?.(false);
           });
       } else if (phase === 'stopping') {
@@ -375,6 +400,7 @@ export default function AnswerSheet({
         const releaseAfterUnmount = () => {
           recordingAudioModeLeaseRef.current?.release();
           recordingAudioModeLeaseRef.current = null;
+          void releaseRecordingSession();
           onAudioBusyChange?.(false);
         };
         if (pendingStop) {
@@ -383,8 +409,10 @@ export default function AnswerSheet({
           releaseAfterUnmount();
         }
       } else {
+        void releaseRecordingSession();
         onAudioBusyChange?.(false);
       }
+      releaseDraftSession();
     },
     [abortAllTranscriptions, onAudioBusyChange, recorder, recordingOperation],
   );
@@ -392,6 +420,7 @@ export default function AnswerSheet({
   // конец воспроизведения — вернуть иконку play
   useEffect(() => {
     if (playerStatus.error) {
+      releaseDraftSession();
       setPlayingId(null);
       setPausedId(null);
       setAudioError('components.answers.playbackFailed');
@@ -399,6 +428,7 @@ export default function AnswerSheet({
       return;
     }
     if (playerStatus.didJustFinish) {
+      releaseDraftSession();
       setPlayingId(null);
       setPausedId(null);
       onAudioBusyChange?.(false);
@@ -438,6 +468,7 @@ export default function AnswerSheet({
     // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
     // audio mode: иначе музыка может попасть в начало голосовой записи.
     player.pause();
+    releaseDraftSession();
     setPlayingId(null);
     setPausedId(null);
     onAudioBusyChange?.(true);
@@ -465,6 +496,9 @@ export default function AnswerSheet({
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) return;
       if (!startIsCurrent()) return;
+      recordingSessionLeaseRef.current = audioModeCoordinator.acquireSession(
+        () => setIsAudioActiveAsync(false),
+      );
       audioModeLease = audioModeCoordinator.acquireRecording(setAudioModeAsync, {
         allowsRecording: true,
         playsInSilentMode: true,
@@ -519,49 +553,51 @@ export default function AnswerSheet({
     } finally {
       // После успешного старта режим вернёт stopRecording. Во всех остальных
       // исходах (отказ, ошибка, dismiss) восстанавливаем его здесь.
-      if (!started) {
-        // Ошибка могла случиться после успешного prepare, но до record().
-        // Освобождаем подготовленный Android-recorder для следующей попытки.
-        if (prepared && !nativeStopConfirmed) {
-          try {
-            await recorder.stop();
-            nativeStopConfirmed = true;
-            discardPreparedFile();
-          } catch {
-            // Без подтверждённого stop lease остаётся активным: playback mode
-            // на iOS мог бы оборвать всё ещё живой нативный recorder.
-            nativeCleanupUncertain = true;
-          }
-        }
-        if (nativeCleanupUncertain && attempt.recoverAsRecording()) {
-          // Не возвращаем idle при неизвестном нативном состоянии. Показываем
-          // управление stop снова и удерживаем recording lease/audio busy.
-          started = true;
-          recordingSheetOpenRef.current = true;
-          recordingOverlayActiveRef.current = true;
-          recSheetRef.current?.snapToIndex(0);
-          setAudioError('components.answers.cancelFailed');
-        }
-        if (audioModeEnabled) {
-          if (!prepared || nativeStopConfirmed) {
-            audioModeLease?.release();
-            if (recordingAudioModeLeaseRef.current === audioModeLease) {
-              recordingAudioModeLeaseRef.current = null;
+      try {
+        if (!started) {
+          // Ошибка могла случиться после успешного prepare, но до record().
+          // Освобождаем подготовленный Android-recorder для следующей попытки.
+          if (prepared && !nativeStopConfirmed) {
+            try {
+              await recorder.stop();
+              nativeStopConfirmed = true;
+              discardPreparedFile();
+            } catch {
+              // Без подтверждённого stop lease остаётся активным: playback mode
+              // на iOS мог бы оборвать всё ещё живой нативный recorder.
+              nativeCleanupUncertain = true;
             }
-            await audioModeCoordinator
-              .requestPlayback(setAudioModeAsync, {
-                allowsRecording: false,
-                playsInSilentMode: true,
-              })
-              .catch((modeError) =>
-                console.warn('Failed to restore audio mode', modeError),
-              );
           }
+          if (nativeCleanupUncertain && attempt.recoverAsRecording()) {
+            // Не возвращаем idle при неизвестном нативном состоянии. Показываем
+            // управление stop снова и удерживаем recording lease/audio busy.
+            started = true;
+            recordingSheetOpenRef.current = true;
+            recordingOverlayActiveRef.current = true;
+            recSheetRef.current?.snapToIndex(0);
+            setAudioError('components.answers.cancelFailed');
+          }
+          if (audioModeEnabled) {
+            if (!prepared || nativeStopConfirmed) {
+              audioModeLease?.release();
+              await releaseRecordingSession();
+              if (recordingAudioModeLeaseRef.current === audioModeLease) {
+                recordingAudioModeLeaseRef.current = null;
+              }
+              await audioModeCoordinator
+                .requestPlayback(setAudioModeAsync, {
+                  allowsRecording: false,
+                  playsInSilentMode: true,
+                });
+            }
+          }
+          if (!audioModeEnabled) await releaseRecordingSession();
         }
+      } finally {
+        // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
+        attempt.finish();
         if (!started) onAudioBusyChange?.(false);
       }
-      // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
-      attempt.finish();
     }
   };
 
@@ -648,13 +684,15 @@ export default function AnswerSheet({
         recordingOverlayActiveRef.current = false;
         recordingAudioModeLeaseRef.current?.release();
         recordingAudioModeLeaseRef.current = null;
-        await audioModeCoordinator
-          .requestPlayback(setAudioModeAsync, {
+        try {
+          await releaseRecordingSession();
+          await audioModeCoordinator.requestPlayback(setAudioModeAsync, {
             allowsRecording: false,
             playsInSilentMode: true,
-          })
-          .catch((error) => console.warn('Failed to restore audio mode', error));
-        onAudioBusyChange?.(false);
+          });
+        } finally {
+          onAudioBusyChange?.(false);
+        }
       }
     }
   };
@@ -684,6 +722,7 @@ export default function AnswerSheet({
     if (playingId === r.id) {
       draftPlaybackGenerationRef.current += 1;
       player.pause();
+      releaseDraftSession();
       setPlayingId(null);
       setPausedId(r.id);
       onAudioBusyChange?.(false);
@@ -692,10 +731,14 @@ export default function AnswerSheet({
     const resume = pausedId === r.id;
     const generation = ++draftPlaybackGenerationRef.current;
     player.pause();
+    releaseDraftSession();
     setPlayingId(null);
     if (!resume) setPausedId(null);
     setAudioError(null);
     onAudioBusyChange?.(true);
+    draftSessionLeaseRef.current = audioModeCoordinator.acquireSession(
+      () => setIsAudioActiveAsync(false),
+    );
     void audioModeCoordinator
       .requestPlayback(setAudioModeAsync, DRAFT_PLAYBACK_MODE)
       .then(async (grant) => {
@@ -706,11 +749,15 @@ export default function AnswerSheet({
           !!grant?.isCurrent();
         if (generation !== draftPlaybackGenerationRef.current || !recordingSheetOpenRef.current) return;
         if (!grant?.isCurrent()) {
+          releaseDraftSession();
           onAudioBusyChange?.(false);
           return;
         }
         if (!(await playAudioRecording(player, r.uri, resume, isCurrent))) {
-          if (generation === draftPlaybackGenerationRef.current) onAudioBusyChange?.(false);
+          if (generation === draftPlaybackGenerationRef.current) {
+            releaseDraftSession();
+            onAudioBusyChange?.(false);
+          }
           return;
         }
         setPlayingId(r.id);
@@ -719,6 +766,7 @@ export default function AnswerSheet({
       .catch((error) => {
         if (generation !== draftPlaybackGenerationRef.current) return;
         console.warn('Failed to play audio recording', error);
+        releaseDraftSession();
         setPausedId(null);
         setAudioError('components.answers.playbackFailed');
         onAudioBusyChange?.(false);
@@ -746,6 +794,7 @@ export default function AnswerSheet({
     }
     if (playingId !== null) {
       player.pause();
+      releaseDraftSession();
       setPlayingId(null);
       onAudioBusyChange?.(false);
     }
@@ -770,6 +819,7 @@ export default function AnswerSheet({
       if (pausedId === id) setPausedId(null);
       if (playingId === id) {
         player.pause();
+        releaseDraftSession();
         setPlayingId(null);
         onAudioBusyChange?.(false);
       }
@@ -993,6 +1043,7 @@ export default function AnswerSheet({
         }
         if (i < 0 && playingId !== null) {
           player.pause();
+          releaseDraftSession();
           setPlayingId(null);
         }
         if (i < 0) {
