@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, useSharedValue, withTiming, Easing, ReduceMotion } from 'react-native-reanimated';
+import Animated, { FadeIn, useSharedValue, withTiming, Easing, ReduceMotion, cancelAnimation } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
@@ -13,6 +13,7 @@ import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/ic
 import { useSession } from '../lib/store';
 import { useSettings } from '../lib/settings';
 import { recordDiagnostic } from '../lib/db';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
 
 export default function Threshold() {
@@ -63,6 +64,7 @@ export default function Threshold() {
     },
   ];
   const progress = useSharedValue(0);
+  const visible = useVisibleScreen();
   const [hint, setHint] = useState('screens.threshold.hold');
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -75,6 +77,14 @@ export default function Threshold() {
   };
 
   useEffect(() => clearTimers, []);
+  useEffect(() => {
+    // Во время входа экран уходит сам: подпись загрузки и полное кольцо остаются.
+    if (visible || entering.current) return;
+    clearTimers();
+    cancelAnimation(progress);
+    progress.value = 0;
+    setHint('screens.threshold.hold');
+  }, [visible, progress]);
 
   const enter = async () => {
     if (entering.current) return;

@@ -7,6 +7,8 @@ tags:
     clearState: true
 - tapOn:
     id: "start-prayer-button"
+- assertNotVisible:
+    id: "home-title"
 - tapOn:
     point: "50%,37%"
 - inputText: "SES-001 finite timer"
@@ -28,6 +30,8 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
+- assertNotVisible:
+    id: "home-title"
 - tapOn:
     point: "50%,29%"
 # у кнопок ±шаг голосовая подпись «Убавить/Добавить N минут», а не «−1»
@@ -49,6 +53,8 @@ tags:
     visible:
       id: "reflect-kicker"
     timeout: 10000
+- assertNotVisible:
+    id: "session-title"
 - tapOn:
     id: "reflect-return-button"
 - assertVisible:

@@ -48,6 +48,8 @@ import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
+import { backgroundDeadlineDelay } from '../lib/visibleActivity';
 import { hasSessionActivity, scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
   hastenMusicFadeOut,
@@ -98,7 +100,7 @@ export default function Session() {
 function SessionScreen() {
   const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
-  useKeepAwake(); // экран не гаснет во время молитвы
+  const visible = useVisibleScreen();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const ringSize = ringSizeFor(height);
@@ -110,7 +112,6 @@ function SessionScreen() {
   const [showExpiryNotice, setShowExpiryNotice] = useState(false);
   const [transientAudioBusy, setTransientAudioBusy] = useState(false);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
-  const [appState, setAppState] = useState(AppState.currentState);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
   const readerRef = useRef<BottomSheet>(null);
@@ -219,7 +220,6 @@ function SessionScreen() {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
-      setAppState(nextState);
       if (nextState === 'active') useSession.getState().tick();
     });
     return () => sub.remove();
@@ -400,16 +400,18 @@ function SessionScreen() {
       transientAudioBusyRef.current = busy;
       if (busy) {
         pauseMusicPlayers();
+      } else if (!useSession.getState().musicOn) {
+        void releaseMusicSession();
       }
       setTransientAudioBusy(busy);
     },
-    [pauseMusicPlayers],
+    [pauseMusicPlayers, releaseMusicSession],
   );
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
     scripture: currentScripture,
     voice: s.scriptureVoice,
-    enabled: s.dockMode === 'scripture' && appState === 'active',
+    enabled: s.dockMode === 'scripture',
     onAudioBusyChange: handleTransientAudioChange,
   });
   const activityOpen = hasSessionActivity({
@@ -426,11 +428,19 @@ function SessionScreen() {
     [handleTransientAudioChange, scriptureAudio.stop],
   );
 
-  // секундный тик
+  // Секундный тик нужен лишь видимому интерфейсу. Скрытая сессия
+  // просыпается один раз у дедлайна для завершения времени и затухания музыки.
   useEffect(() => {
-    const id = setInterval(() => useSession.getState().tick(), 1000);
-    return () => clearInterval(id);
-  }, []);
+    if (visible) {
+      useSession.getState().tick();
+      const id = setInterval(() => useSession.getState().tick(), 1000);
+      return () => clearInterval(id);
+    }
+    const delay = backgroundDeadlineDelay(Date.now(), s.endsAtMs, timeExpired);
+    if (delay === null) return;
+    const id = setTimeout(() => useSession.getState().tick(), delay);
+    return () => clearTimeout(id);
+  }, [visible, s.endsAtMs, timeExpired]);
 
   // Android «назад» не должен срывать молитву — глотаем жест
   useEffect(() => {
@@ -450,7 +460,8 @@ function SessionScreen() {
     const stop = async () => {
       pauseMusicPlayers();
       if (useSession.getState().musicOn) useSession.getState().toggleMusic();
-      await releaseMusicSession();
+      // Активная озвучка владеет общей аудиосессией до конца отрывка.
+      if (!transientAudioBusyRef.current) await releaseMusicSession();
     };
     if (!useSession.getState().musicOn || transientAudioBusyRef.current) return stop();
 
@@ -486,13 +497,12 @@ function SessionScreen() {
     return stopped;
   }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicSession]);
 
-  // На заблокированном экране и в фоне переход к итогу ждёт возврата в
-  // приложение, а музыка заканчивается вместе со временем молитвы. Пока
-  // музыка играет, iOS не приостанавливает JS, и секундный тик доходит до нуля.
+  // На скрытом экране переход к итогу ждёт возвращения пользователя, а музыка
+  // заканчивается вместе со временем молитвы даже под PIN-оверлеем.
   useEffect(() => {
-    if (!timeExpired || appState === 'active') return;
+    if (!timeExpired || visible) return;
     void stopPrayerMusic(MUSIC_BACKGROUND_FADE_OUT_MS);
-  }, [timeExpired, appState, stopPrayerMusic]);
+  }, [timeExpired, visible, stopPrayerMusic]);
 
   // Продление истёкшего таймера, пока затухание у дедлайна ещё идёт, отменяет
   // его: молитва продолжается, и музыка возвращается к обычной громкости.
@@ -530,9 +540,9 @@ function SessionScreen() {
   goToReflectRef.current = goToReflect;
   useEffect(() => scheduleSessionCompletion({
     timeExpired,
-    appActive: appState === 'active',
+    screenVisible: visible,
     activityOpen,
-  }, () => { void goToReflectRef.current(); }), [timeExpired, appState, activityOpen]);
+  }, () => { void goToReflectRef.current(); }), [timeExpired, visible, activityOpen]);
 
   // Читалку, ответ и озвучку не обрываем. После фона показываем
   // ещё не увиденную плашку, а после возврата к таймеру завершаем сессию.
@@ -542,14 +552,14 @@ function SessionScreen() {
       setShowExpiryNotice(false);
       return;
     }
-    if (appState !== 'active' || expiryNotified.current) return;
+    if (!visible || expiryNotified.current) return;
     expiryNotified.current = true;
     setShowExpiryNotice(activityOpen);
     // Когда ничего не открыто и не звучит, сессия сразу уходит на экран
     // итога; иначе плашка сама не озвучивается ни на одной платформе.
     if (activityOpen) AccessibilityInfo.announceForAccessibility(t('screens.session.expiryNotice'));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [timeExpired, appState, activityOpen]);
+  }, [timeExpired, visible, activityOpen]);
 
   useEffect(() => {
     if (!showExpiryNotice) return;
@@ -559,6 +569,10 @@ function SessionScreen() {
 
   // кольцо: доля прошедшего времени (или минутный цикл в ∞-режиме)
   useEffect(() => {
+    if (!visible) {
+      cancelAnimation(ringProgress);
+      return;
+    }
     if (s.remaining === null) {
       const inMinute = s.elapsed % 60;
       if (inMinute === 0) {
@@ -572,7 +586,7 @@ function SessionScreen() {
         duration: 1000,
       });
     }
-  }, [s.remaining, s.elapsed]);
+  }, [s.remaining, s.elapsed, visible, ringProgress]);
 
   const finishEarly = () => { void goToReflect(); };
 
@@ -592,6 +606,7 @@ function SessionScreen() {
 
   return (
     <View style={styles.root}>
+      {visible && <KeepAwakeWhileVisible />}
       <ScreenBg />
       {/* пока открыта шторка ответа или читалка, экран под ней скрыт */}
       <Animated.View
@@ -624,7 +639,7 @@ function SessionScreen() {
               {t('screens.session.title')}
             </Kicker>
             <View style={styles.musicBtnWrap}>
-              {musicPlaying && <MusicPulse size={sc(34)} />}
+              {musicPlaying && <MusicPulse size={sc(34)} active={visible && !answerOpen && !readerOpen && !reportOpen} />}
               <IconButton
                 onPress={s.toggleMusic}
                 bg={s.musicOn ? 'rgba(230,162,60,.16)' : colors.white05}
@@ -639,7 +654,7 @@ function SessionScreen() {
           </View>
 
           <View style={[styles.timerWrap, { width: ringSize, height: ringSize }]}>
-            <TimerHalo size={ringSize} active={!answerOpen} />
+            <TimerHalo size={ringSize} active={visible && !answerOpen && !readerOpen && !reportOpen} />
             <ProgressRing size={ringSize} strokeWidth={3} progress={ringProgress} />
             <Pressable
               accessibilityLabel={t('screens.session.adjust')}
@@ -752,18 +767,27 @@ function SessionScreen() {
 
 // Пока музыка звучит, кнопка тихо «дышит» тёплым ореолом — это и есть
 // индикатор вместо отдельного бейджа под шапкой.
-function MusicPulse({ size }: { size: number }) {
+function KeepAwakeWhileVisible() {
+  useKeepAwake();
+  return null;
+}
+
+function MusicPulse({ size, active }: { size: number; active: boolean }) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const pulse = useSharedValue(0);
   useEffect(() => {
+    if (!active) return;
+    // withRepeat качается между стартовым значением и 1: без сброса пульс
+    // после паузы сужался бы до остатка хода.
+    pulse.value = 0;
     pulse.value = withRepeat(
       withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
     return () => cancelAnimation(pulse);
-  }, [pulse]);
+  }, [pulse, active]);
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + pulse.value * 0.36 }],
     opacity: 0.4 - pulse.value * 0.3,

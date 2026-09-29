@@ -4,6 +4,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-nati
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -17,6 +18,7 @@ import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
 import { useSheetReflow } from '../lib/useSheetReflow';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -84,6 +86,7 @@ export default function RecordingsSheet({
   onDismiss,
 }: Props) {
   const { t } = useI18n();
+  const screenVisible = useVisibleScreen();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   // Expo safe-area padding can legitimately be zero on Home Button devices.
@@ -117,12 +120,12 @@ export default function RecordingsSheet({
       setElapsedSec(0);
       return;
     }
-    if (recordingPhase !== 'recording') return;
+    if (!visible || !screenVisible || recordingPhase !== 'recording') return;
     const update = () => setElapsedSec(recordedSeconds(getRecordedMillis()));
     update();
     const interval = setInterval(update, ELAPSED_POLL_MILLIS);
     return () => clearInterval(interval);
-  }, [recording, recordingPhase, getRecordedMillis]);
+  }, [recording, recordingPhase, getRecordedMillis, visible, screenVisible]);
   const elapsedLabel = fmtTime(elapsedSec);
 
   // VoiceOver слышит подсказку о долгой расшифровке один раз на шторку, пока
@@ -305,7 +308,9 @@ export default function RecordingsSheet({
                   </Pressable>
                 </View>
 
-                {loading && <SlowTranscriptionHint index={i} onShown={announceSlowTranscription} />}
+                {loading && visible && screenVisible && (
+                  <SlowTranscriptionHint index={i} onShown={announceSlowTranscription} />
+                )}
 
                 {r.transcriptState === 'error' && (
                   <Text style={styles.transcriptionError}>{t('components.answers.transcriptionFailed')}</Text>
@@ -401,7 +406,7 @@ export default function RecordingsSheet({
             <Text style={styles.recOverlayKicker}>{t('components.answers.recording')}</Text>
             <View style={styles.waveRow}>
               {WAVE_BARS.map((b, i) => (
-                <WaveBar key={i} color={b.color} delay={b.delay} />
+                <WaveBar key={i} color={b.color} delay={b.delay} active={visible && screenVisible} />
               ))}
             </View>
             {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
@@ -475,15 +480,19 @@ function SlowTranscriptionHint({ index, onShown }: { index: number; onShown: () 
 }
 
 // столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
-function WaveBar({ color, delay }: { color: string; delay: number }) {
+function WaveBar({ color, delay, active }: { color: string; delay: number; active: boolean }) {
   const styles = useStyles(stylesFactory);
   const k = useSharedValue(0.3);
   useEffect(() => {
+    if (!active) return;
+    // Размах задаёт стартовое значение повтора: после паузы начинаем с 0.3.
+    k.value = 0.3;
     k.value = withDelay(
       delay,
       withRepeat(withTiming(1, { duration: 500, easing: Easing.inOut(Easing.ease) }), -1, true),
     );
-  }, [delay, k]);
+    return () => cancelAnimation(k);
+  }, [delay, k, active]);
   const style = useAnimatedStyle(() => ({ transform: [{ scaleY: k.value }] }));
   return <Animated.View style={[styles.waveBar, { backgroundColor: color }, style]} />;
 }

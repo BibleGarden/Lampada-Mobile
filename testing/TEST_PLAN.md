@@ -183,6 +183,7 @@ tier of its e2e runs.
 | SES-006 | Choose "Back to prayer" on the reflection | a new countdown starts with the same goal, without losing the already saved answers |
 | SES-007 | A very long goal | the text does not overlap the timer and the companion panel |
 | SES-008 [ipad] | Inspect the Question / Quote switcher on an iPad | both icons scale with their labels and stay aligned in the two tabs; inspect the landscape screenshot in the ANS-033 flow |
+| SES-009 | Move Home → Setup → Session → Reflection → Home, open and close the answer and recordings sheets, then background and foreground the app | only the exposed flame, halo, music pulse and recording wave animate; hidden screens and closed sheets have no visual loop or UI polling; animations resume when exposed, the timer catches up and background music retains its deadline fade. Energy measurement in Instruments is separate |
 
 ### Background music
 
@@ -284,6 +285,7 @@ tier of its e2e runs.
 | SCR-023 | A response with `history_reset: true` | the exclusions are reset, the current ID is added again, the trail and the favourites are preserved |
 | SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
 | SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
+| SCR-026 | Start narration, cover the session with the PIN screen or background the app, then return | narration continues from its current position without restarting; the session timer expires on schedule, but reflection waits until the prayer screen is visible |
 
 ### Content reports
 
@@ -404,6 +406,9 @@ are in
 - correctness after background/foreground, screen lock and a system call;
 - no leftover timers, microphone recording or audio player after leaving a
   screen.
+- covered routes (including the PIN, privacy and update overlays) and closed
+  sheets have no running visual work; music and the lock-screen timer retain
+  their intended background behavior (SES-009).
 
 ### Security and privacy
 

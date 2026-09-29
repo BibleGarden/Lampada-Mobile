@@ -42,6 +42,7 @@ import {
 import BottomSheet from '../components/BottomSheet';
 import PinPrompt from '../components/PinPrompt';
 import { screenReaderHiddenProps } from '../lib/a11y';
+import { useVisibleScreen } from '../lib/useVisibleScreen';
 import {
   PIN_MAX_LENGTH,
   PIN_MIN_LENGTH,
@@ -300,6 +301,7 @@ function TimeRow({ time, ruleIndex, canRemove, confirmingRemove, onShift, onRemo
 }
 
 export default function Settings() {
+  const visible = useVisibleScreen();
   const { t, language: uiLanguage } = useI18n();
   const [interfaceLanguageOpen, setInterfaceLanguageOpen] = useState(false);
   const [languageSaveError, setLanguageSaveError] = useState(false);
@@ -341,6 +343,7 @@ export default function Settings() {
       setConfirmReminderDelete(null);
     };
     reset();
+    if (!visible) return;
     const subscription = AppState.addEventListener('change', (state) => {
       if (state !== 'active') reset();
     });
@@ -348,7 +351,7 @@ export default function Settings() {
       subscription.remove();
       if (reminderDeleteTimer.current) clearTimeout(reminderDeleteTimer.current);
     };
-  }, [reminderEditorRuleIndex, reminderSchedule]);
+  }, [reminderEditorRuleIndex, reminderSchedule, visible]);
 
   // Как в журнале и аудиозаписях: первый тап подсвечивает, второй удаляет.
   const askOrConfirmReminderDelete = (target: string, remove: () => void) => {
@@ -401,6 +404,7 @@ export default function Settings() {
   // Разрешение могло измениться в системных настройках, пока приложение было в
   // фоне: перечитываем его при каждом возвращении на передний план.
   useEffect(() => {
+    if (!visible) return;
     let alive = true;
     let known: ReminderPermission | null = null;
     const refresh = () => {
@@ -422,11 +426,12 @@ export default function Settings() {
       alive = false;
       sub.remove();
     };
-  }, []);
+  }, [visible]);
 
   // Биометрию могли зарегистрировать или удалить в системных настройках, пока
   // приложение было в фоне: тумблер должен появляться и исчезать вслед за этим.
   useEffect(() => {
+    if (!visible) return;
     let alive = true;
     const refresh = () => {
       void biometryInfo().then((info) => {
@@ -441,7 +446,7 @@ export default function Settings() {
       alive = false;
       sub.remove();
     };
-  }, [uiLanguage]);
+  }, [uiLanguage, visible]);
 
   const startEnableLock = () => setPinFlow({ kind: 'enable', step: 'create' });
   const startDisableLock = () => setPinFlow({ kind: 'disable', step: 'current' });
