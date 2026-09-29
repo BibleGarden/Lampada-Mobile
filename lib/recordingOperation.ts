@@ -1,5 +1,3 @@
-import { nativeRecordingStopSeconds, recordingReachedLimit, remainingNativeRecordingSeconds } from './transcriptionLimits.ts';
-
 export type RecordingOperationPhase = 'idle' | 'starting' | 'recording' | 'stopping';
 
 export type RecordingStartAttempt = {
@@ -17,13 +15,8 @@ export type RecordingLeaseRelease = {
 };
 
 export type PreparedRecorder = {
-  record: (options?: { forDuration: number }) => void;
+  record: () => void;
   readonly isRecording: boolean;
-};
-
-export type ResumableRecorder = PreparedRecorder & {
-  pause: () => void;
-  getStatus: () => { durationMillis: number };
 };
 
 export type RecorderTerminalStatus = {
@@ -40,46 +33,12 @@ export function recorderStatusRequiresRecovery(
   return status.isFinished && phase === 'recording';
 }
 
-/** Штатный нативный автостоп передаёт управление сохранению черновика. */
-export function handleRecorderTerminalStatus(
-  phase: RecordingOperationPhase,
-  status: RecorderTerminalStatus,
-  nativeIsRecording: boolean,
-  expectedStopAtMillis: number | null,
-  nowMillis: number,
-  onLimit: () => void,
-): boolean {
-  if (status.isFinished && !status.hasError && !status.mediaServicesDidReset) {
-    if (nativeIsRecording) return false;
-    if (phase === 'recording' && recordingReachedLimit(expectedStopAtMillis, nowMillis)) {
-      onLimit();
-      return false;
-    }
-  }
-  return recorderStatusRequiresRecovery(phase, status);
-}
-
 /** Starts once; a failed native start is cleaned up before the user retries. */
-export function startPreparedRecording(recorder: PreparedRecorder, limitSeconds?: number): number {
-  const duration = nativeRecordingStopSeconds(limitSeconds);
-  recorder.record({ forDuration: duration });
+export function startPreparedRecording(recorder: PreparedRecorder) {
+  recorder.record();
   if (!recorder.isRecording) {
     throw new Error('Native audio recorder did not enter recording state');
   }
-  return duration;
-}
-
-/** После фоновой паузы Expo возобновляет record() без прежнего forDuration. */
-export function rearmRecordingAfterForeground(
-  recorder: ResumableRecorder,
-  limitSeconds?: number,
-): number {
-  if (recorder.isRecording) recorder.pause();
-  const remaining = remainingNativeRecordingSeconds(recorder.getStatus().durationMillis, limitSeconds);
-  if (remaining === 0) return 0;
-  recorder.record({ forDuration: remaining });
-  if (!recorder.isRecording) throw new Error('Native recorder did not resume');
-  return remaining;
 }
 
 /**

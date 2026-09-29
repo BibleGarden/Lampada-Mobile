@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AccessibilityInfo,
   Alert,
-  AppState,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -28,10 +27,8 @@ import {
 import { useSession, RecordingDraft } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
 import { audioFileDurationSeconds } from '../lib/audioFileDuration';
-import {
-  MAX_RECORDING_SECONDS,
-  recordingLimitDisplay,
-} from '../lib/transcriptionLimits';
+import { MAX_RECORDING_SECONDS, recordingLimitDisplay } from '../lib/transcriptionLimits';
+import { createRecordingLimitController } from '../lib/recordingLimitController';
 import { transcriptionFailureCode } from '../lib/transcriptionErrors';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import {
@@ -43,9 +40,8 @@ import { recordDiagnostic } from '../lib/db';
 import { createStoppedRecordingDraft, recordingFileIssue, waitForRecordingFile } from '../lib/recordingFile';
 import {
   createRecordingOperation,
-  handleRecorderTerminalStatus,
-  rearmRecordingAfterForeground,
   recoverRecordingAfterTerminalError,
+  recorderStatusRequiresRecovery,
   startPreparedRecording,
 } from '../lib/recordingOperation';
 import {
@@ -133,6 +129,7 @@ export default function AnswerSheet({
   const [recordingPhase, setRecordingPhase] = useState<
     'idle' | 'starting' | 'recording' | 'stopping'
   >('idle');
+  const [recordingLimitReached, setRecordingLimitReached] = useState(false);
   const [saving, setSaving] = useState(false);
   const [answerConsentOpen, setAnswerConsentOpen] = useState(false);
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
@@ -155,7 +152,6 @@ export default function AnswerSheet({
   const answerIndexRef = useRef(0);
   const recorderErrorRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
-  const recordingNativeDeadlineRef = useRef<number | null>(null);
   const recordingsSheetGenerationRef = useRef(0);
   const recordingAudioModeLeaseRef = useRef<RecordingAudioModeLease | null>(null);
   const recordingSessionLeaseRef = useRef<AudioSessionLease | null>(null);
@@ -191,15 +187,15 @@ export default function AnswerSheet({
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS, (status) => {
     const phase = recordingOperation.getPhase();
-    if (!handleRecorderTerminalStatus(
-      phase, status, recorder.isRecording, recordingNativeDeadlineRef.current,
-      Date.now(), () => { void finishLimitedRecording(true); },
-    )) return;
+    if (
+      status.isFinished && !status.hasError &&
+      !status.mediaServicesDidReset && recorder.isRecording
+    ) return;
+    if (!recorderStatusRequiresRecovery(phase, status)) return;
     const lease = recordingAudioModeLeaseRef.current;
     recorderErrorRef.current =
       status.error || (status.isFinished ? 'Audio recorder finished unexpectedly' : 'Audio recorder was interrupted');
     recordingStartedAtRef.current = null;
-    recordingNativeDeadlineRef.current = null;
     recordingOverlayActiveRef.current = false;
     recoverRecordingAfterTerminalError(recordingOperation, lease);
     observeRelease(releaseRecordingSession());
@@ -218,6 +214,18 @@ export default function AnswerSheet({
         throw error;
       });
   });
+  const recordingLimitControllerRef = useRef<ReturnType<typeof createRecordingLimitController> | null>(null);
+  if (!recordingLimitControllerRef.current) {
+    recordingLimitControllerRef.current = createRecordingLimitController(
+      () => recorder.getStatus().durationMillis,
+      () => recordingOperation.getPhase() === 'recording',
+      () => {
+        setRecordingLimitReached(true);
+        void finishLimitedRecording();
+      },
+    );
+  }
+  const recordingLimitController = recordingLimitControllerRef.current;
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
   const limitCuePlayer = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
@@ -426,7 +434,6 @@ export default function AnswerSheet({
   useEffect(
     () => () => {
       recordingSheetOpenRef.current = false;
-      recordingNativeDeadlineRef.current = null;
       cancelDraftPlayback();
       observeRelease(cancelLimitCue());
       recordingOperation.cancelStart();
@@ -498,6 +505,7 @@ export default function AnswerSheet({
 
     const attempt = recordingOperation.beginStart();
     if (!attempt) return;
+    setRecordingLimitReached(false);
     cancelDraftPlayback();
     observeRelease(cancelLimitCue());
     // Оверлей записи не должен остаться под открытой клавиатурой.
@@ -563,9 +571,8 @@ export default function AnswerSheet({
       // Do not re-prepare this native recorder in-place after a failed start.
       // On iOS a late delegate callback from the replaced AVAudioRecorder can
       // reset the state/duration of the new recording and corrupt its stop.
-      const nativeStopAfterSeconds = startPreparedRecording(recorder);
+      startPreparedRecording(recorder);
       recordingStartedAtRef.current = Date.now();
-      recordingNativeDeadlineRef.current = Date.now() + nativeStopAfterSeconds * 1000;
       // Шторку могли программно закрыть между последним await и record().
       // Тогда немедленно гасим нативную запись и не создаём черновик.
       if (!startIsCurrent()) {
@@ -584,6 +591,7 @@ export default function AnswerSheet({
       }
       started = attempt.commit();
       if (!started) return;
+      recordingLimitController.reset();
       recordingOverlayActiveRef.current = true;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch (error) {
@@ -643,7 +651,6 @@ export default function AnswerSheet({
         // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
         attempt.finish();
         if (!started) {
-          recordingNativeDeadlineRef.current = null;
           onAudioBusyChange?.(false);
         }
       }
@@ -664,16 +671,13 @@ export default function AnswerSheet({
 
   const performStopRecording = async (
     confirmNativeStop: () => void,
-    nativeAlreadyStopped = false,
     keepAudioBusy = false,
   ): Promise<RecordingDraft | null> => {
     const uriBeforeStop = recorder.uri;
-    let nativeStopped = nativeAlreadyStopped;
+    let nativeStopped = false;
     try {
-      if (!nativeAlreadyStopped) {
-        await recorder.stop();
-        nativeStopped = true;
-      }
+      await recorder.stop();
+      nativeStopped = true;
       confirmNativeStop();
       const uri = recorder.uri ?? uriBeforeStop;
       if (!uri) {
@@ -727,7 +731,6 @@ export default function AnswerSheet({
       // возобновилась поверх потенциально продолжающейся записи.
       if (nativeStopped) {
         recordingStartedAtRef.current = null;
-        recordingNativeDeadlineRef.current = null;
         recordingOverlayActiveRef.current = false;
         recordingAudioModeLeaseRef.current?.release();
         recordingAudioModeLeaseRef.current = null;
@@ -744,15 +747,15 @@ export default function AnswerSheet({
     }
   };
 
-  const stopRecording = (nativeAlreadyStopped = false, keepAudioBusy = false): Promise<RecordingDraft | null> => {
+  const stopRecording = (keepAudioBusy = false): Promise<RecordingDraft | null> => {
     // Все конкурирующие вызовы получают одну операцию. Поэтому второй catch
     // не может удалить файл, уже сохранённый первым stop.
     return recordingOperation.runStop((confirm) =>
-      performStopRecording(confirm, nativeAlreadyStopped, keepAudioBusy),
+      performStopRecording(confirm, keepAudioBusy),
     ).catch(() => null);
   };
 
-  const finishLimitedRecording = async (nativeAlreadyStopped: boolean) => {
+  const finishLimitedRecording = async () => {
     if (recordingOperation.getPhase() !== 'recording') return;
     const sheetGeneration = recordingsSheetGenerationRef.current;
     const releaseBusyIfIdle = () => {
@@ -761,8 +764,13 @@ export default function AnswerSheet({
         activeDraftIdRef.current === null && !limitCueActiveRef.current
       ) onAudioBusyChange?.(false);
     };
-    const draft = await stopRecording(nativeAlreadyStopped, true);
+    const draft = await stopRecording(true);
     if (!draft) {
+      if (recordingOperation.getPhase() === 'recording') {
+        // Нативный stop не подтвердился: следующий опрос обязан попробовать снова.
+        setRecordingLimitReached(false);
+        recordingLimitController.reset();
+      }
       releaseBusyIfIdle();
       return;
     }
@@ -788,25 +796,16 @@ export default function AnswerSheet({
   };
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'active' || recordingOperation.getPhase() !== 'recording') return;
-      // Пока JS был приостановлен, Expo мог уже завершить нативную запись.
-      if (!recorder.getStatus().canRecord) return;
-      try {
-        const remaining = rearmRecordingAfterForeground(recorder);
-        if (remaining === 0) {
-          void finishLimitedRecording(false);
-          return;
-        }
-        recordingNativeDeadlineRef.current = Date.now() + remaining * 1000;
-      } catch (error) {
-        console.error('Failed to rearm recording limit after foreground', error);
-        recordingNativeDeadlineRef.current = null;
-        setAudioError('components.answers.resumeFailed');
-      }
+    if (recordingPhase !== 'recording') return;
+    return recordingLimitController.startPolling((error) => {
+      console.error('Failed to read the recording duration limit', error);
+      void stopRecording().then((draft) => {
+        setAudioError(draft
+          ? 'components.answers.limitCheckFailed'
+          : 'components.answers.saveFailed');
+      });
     });
-    return () => subscription.remove();
-  }, [recorder, recordingOperation]);
+  }, [recordingPhase, recordingLimitController]);
 
   // Нативный счётчик нужен только во время записи; итоговую длину берём из файла.
   const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
@@ -1302,6 +1301,7 @@ export default function AnswerSheet({
       recordings={recs}
       recording={recording}
       recordingPhase={recordingPhase}
+      limitReached={recordingLimitReached}
       getRecordedMillis={getRecordedMillis}
       playingId={playingId}
       pausedId={pausedId}

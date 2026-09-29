@@ -94,6 +94,7 @@ upgrading it requires rebuilding the native app.
 | `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
 | `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
+| `lib/recordingLimitController.ts` | The single stop decision from the recorder's accumulated recorded milliseconds |
 | `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
 | `lib/scriptureCatalogClient.ts` | The HTTP client of languages, translations and available narrations |
@@ -239,11 +240,13 @@ queue; keeping a screen mounted does not retain the session. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
-Voice notes use mono AAC at 22.05 kHz and 48 kbit/s. Expo Audio requests a
-native stop at 599 seconds, leaving one second for the final AAC frame before
-the server's 600-second limit. After Expo pauses a recording in the background,
-the app re-arms the remaining native duration on return. The UI shows the final
-minute and plays a leased, mixing cue with light haptics at the limit. The
+Voice notes use mono AAC at 22.05 kHz and 48 kbit/s. The recorder's native
+`durationMillis` is polled while recording; one controller stops it at 599
+recorded seconds, leaving one second for the final AAC frame before the server's
+600-second limit. Expo pauses recording in the background, so suspended JS does
+not miss recorded time; polling resumes with the same native counter. No native
+`forDuration` timer is used. The UI counts down to the same stop point and plays
+a leased, mixing cue with light haptics at the limit. The
 stopped file remains a draft even if duration loading fails; zero in the local
 recording row explicitly means that its duration is unknown. The displayed
 duration is rounded up from the decoded file, not from JS completion latency.

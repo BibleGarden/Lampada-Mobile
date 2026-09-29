@@ -39,6 +39,7 @@ type Props = {
   /** Идёт запись: поверх списка показывается оверлей с волной. */
   recording: boolean;
   recordingPhase: 'idle' | 'starting' | 'recording' | 'stopping';
+  limitReached: boolean;
   /** Длительность записи по часам нативного рекордера. */
   getRecordedMillis: () => number;
   playingId: number | null;
@@ -71,6 +72,7 @@ export default function RecordingsSheet({
   recordings,
   recording,
   recordingPhase,
+  limitReached,
   getRecordedMillis,
   playingId,
   pausedId,
@@ -129,7 +131,7 @@ export default function RecordingsSheet({
     return () => clearInterval(interval);
   }, [recording, recordingPhase, getRecordedMillis, visible, screenVisible]);
   const elapsedLabel = fmtTime(elapsedSec);
-  const remainingSeconds = recordingSecondsRemaining(elapsedSec);
+  const remainingSeconds = recordingSecondsRemaining(elapsedSec, limitReached);
   const timeLabel = remainingSeconds === null
     ? elapsedLabel
     : t('components.answers.recordingRemaining', { time: fmtTime(remainingSeconds) });

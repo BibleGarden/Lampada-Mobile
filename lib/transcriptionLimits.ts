@@ -3,25 +3,24 @@ import { pluralCategory, type UiLanguage } from './uiLanguage.ts';
 export const MAX_RECORDING_SECONDS = 600;
 export const MAX_TRANSCRIPTION_BYTES = 14 * 1024 * 1024;
 
-// AAC-LC кодирует по 1024 сэмпла: при 22 050 Гц кадр длится ~46 мс.
-// Одна секунда запаса больше 21 кадра и покрывает округление последнего кадра.
-export const NATIVE_STOP_HEADROOM_SECONDS = 1;
+// Останавливаем до серверных 600 с: последнему кадру AAC нужен запас.
+export const RECORDING_STOP_HEADROOM_SECONDS = 1;
 
-export function nativeRecordingStopSeconds(limitSeconds = MAX_RECORDING_SECONDS): number {
-  if (limitSeconds <= NATIVE_STOP_HEADROOM_SECONDS) {
-    throw new Error('Recording limit must exceed the native stop headroom');
+export function recordingStopSeconds(limitSeconds = MAX_RECORDING_SECONDS): number {
+  if (limitSeconds <= RECORDING_STOP_HEADROOM_SECONDS) {
+    throw new Error('Recording limit must exceed the stop headroom');
   }
-  return limitSeconds - NATIVE_STOP_HEADROOM_SECONDS;
+  return limitSeconds - RECORDING_STOP_HEADROOM_SECONDS;
 }
 
-export function remainingNativeRecordingSeconds(
+export function recordingLimitReached(
   recordedMillis: number,
   limitSeconds = MAX_RECORDING_SECONDS,
-): number {
+): boolean {
   if (!Number.isFinite(recordedMillis) || recordedMillis < 0) {
     throw new Error('Recorded duration is invalid');
   }
-  return Math.max(0, nativeRecordingStopSeconds(limitSeconds) - recordedMillis / 1000);
+  return recordedMillis >= recordingStopSeconds(limitSeconds) * 1000;
 }
 
 export function recordingLimitDisplay(
@@ -37,8 +36,12 @@ export function recordingLimitDisplay(
   return { count, unitKey: `${unit}.${pluralCategory(language, count)}` };
 }
 
-export function recordingSecondsRemaining(elapsedSeconds: number): number | null {
-  const remaining = MAX_RECORDING_SECONDS - elapsedSeconds;
+export function recordingSecondsRemaining(
+  elapsedSeconds: number,
+  stoppedAtLimit = false,
+): number | null {
+  if (stoppedAtLimit) return 0;
+  const remaining = recordingStopSeconds() - elapsedSeconds;
   return remaining <= 60 ? Math.max(0, remaining) : null;
 }
 
@@ -54,12 +57,4 @@ export function recordingExceedsDurationLimit(
     throw new Error('Audio duration is invalid');
   }
   return durationSeconds > limitSeconds;
-}
-
-// Между установкой нативного forDuration и меткой JS возможен небольшой сдвиг.
-export function recordingReachedLimit(
-  expectedStopAtMillis: number | null,
-  nowMillis: number,
-): boolean {
-  return expectedStopAtMillis !== null && nowMillis >= expectedStopAtMillis - 2_000;
 }
