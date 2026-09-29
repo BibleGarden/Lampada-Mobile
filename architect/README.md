@@ -617,7 +617,7 @@ Scripture selection use Google Gemini through Google's paid API. Current audio
 transcription uses Whisper on operator-managed servers; the consent also permits
 Google Gemini through Google's paid API as an alternative. Scripture search uses
 bge-m3 on operator-managed servers (ADR-0035). Question requests use
-`{ topic, stage, messages, skipped_questions?, default_language?, prefetch? }`
+`{ topic, stage, messages, skipped_questions?, shown_questions?, default_language?, prefetch? }`
 (ADR-0019, ADR-0023, ADR-0030, ADR-0031). The topic is separate from conversation
 history; `stage` selects the server's first, next or reflection question prompt.
 `lib/questionRequest.ts` pairs each answered question with its human reply in
@@ -636,9 +636,11 @@ prayer. Requests include them in chronological order in `skipped_questions`,
 plus currently displayed unanswered questions so the one-ahead prefetch can
 avoid them before replacement. Actual answers, including untranscribed voice
 recordings, determine whether a question is unanswered before the privacy gate.
-Questions in assistant messages are excluded from the skipped list. A question
-answered only with an untranscribed recording therefore appears in neither
-`messages` nor `skipped_questions`. The client compares every next and reflection
+Questions in assistant messages are excluded from the skipped list. For `next`
+and `reflect`, `shown_questions` carries answered questions absent from both
+`messages` and `skipped_questions`, even without answer-context consent. It
+includes untranscribed voice answers but no human reply text or recordings.
+The client compares every next and reflection
 question with all questions shown in the session, including replaced questions
 and earlier reflection questions. Comparison folds case and Russian `ё` to `е`,
 ignores apostrophe variants and punctuation anywhere, and collapses whitespace.
@@ -650,14 +652,13 @@ local pool for the current stage and language have already been shown. The clien
 then chooses the least recently shown local question, never a more recent one.
 The session retains the order of shown questions across replacements, navigation
 and continued prayer; a prepared response is checked against it when shown.
-Known limitation until requests carry `shown_questions`: a replacement for an
-unanswered question does not use the local pool, so a server that keeps
-returning an earlier voice-only question leaves the current question unchanged.
-First-stage requests never include skipped history. Requests retain at most 40
-messages and the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
-budget is 16,000 UTF-16 code units across topic, messages and skipped questions;
-messages have priority, oldest entries are dropped, and the latest human reply
-is never truncated. Pool keys include skipped context to reject stale prefetches.
+First-stage requests never include skipped or shown history. Requests retain at most 40
+messages and the newest 10 entries of each question list, each capped at 300 UTF-16 code units.
+The total budget is 16,000 UTF-16 code units across topic, messages, skipped and shown
+questions. Messages take priority, then skipped questions; older entries are dropped
+when space runs out. The latest human reply is never truncated. Pool keys include
+questions, answers and skipped context, which also determine `shown_questions`;
+navigation-only changes to the session's shown-question order do not discard a prepared slot.
 The transport preserves the optional `novel` response flag. A replacement with
 `novel: false` leaves the current question visible and retries only on the next
 explicit tap. Advancing after an answer, first-question generation and reflection

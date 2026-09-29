@@ -7,6 +7,7 @@ export type QuestionRequest = {
   topic: string;
   messages: QuestionMessage[];
   skipped_questions?: string[];
+  shown_questions?: string[];
   default_language?: UiLanguage | null;
   prefetch?: boolean;
 };
@@ -15,25 +16,35 @@ export type QuestionRequest = {
 export function buildQuestionRequest(
   stage: QuestionRequest['stage'],
   topic: string,
-  questions: readonly string[] = [],
-  answers: Record<number, AnswerContext> = {},
-  skippedQuestions: readonly string[] = [],
+  questions: readonly string[],
+  answers: Record<number, AnswerContext>,
+  skippedQuestions: readonly string[],
+  actualAnswers: Record<number, AnswerContext>,
 ): QuestionRequest {
+  if (stage !== 'first' && actualAnswers === undefined) {
+    throw new Error('Actual question answers are required');
+  }
   const messages: QuestionMessage[] = [];
+  const shownQuestions: string[] = [];
   if (stage !== 'first') {
     for (let index = 0; index < questions.length; index++) {
+      const question = questions[index].trim();
+      const actualAnswer = actualAnswers[index];
+      if (question && actualAnswer && (actualAnswer.text.trim() || actualAnswer.recordings.length)) {
+        shownQuestions.push(question);
+      }
       const answer = answers[index];
       if (!answer) continue;
       const text = [answer.text, ...answer.recordings.map((recording) => recording.transcript ?? '')]
         .map((part) => part.trim()).filter(Boolean).join('\n');
       if (!text) continue;
-      const question = questions[index].trim();
       if (question) messages.push({ role: 'assistant', text: question });
       messages.push({ role: 'user', text });
     }
   }
   return limitQuestionRequest({ stage, topic: topic.trim(), messages,
     ...(stage !== 'first' && skippedQuestions.length ? { skipped_questions: [...skippedQuestions] } : {}),
+    ...(shownQuestions.length ? { shown_questions: shownQuestions } : {}),
   });
 }
 
@@ -63,9 +74,23 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
     skipped.unshift(question);
     remaining -= question.length;
   }
+  // Показанные отвеченные вопросы без переданного ответа занимают остаток бюджета.
+  const sentQuestions = new Set(messages.filter((message) => message.role === 'assistant')
+    .map((message) => message.text.trim()));
+  const skippedSet = new Set(skipped);
+  const shown: string[] = [];
+  const shownCandidates = request.stage === 'first' ? [] : (request.shown_questions ?? [])
+    .map((q) => q.trim()).filter((q) => q && !sentQuestions.has(q) && !skippedSet.has(q.slice(0, 300))).slice(-10);
+  for (let index = shownCandidates.length - 1; index >= 0; index--) {
+    const question = shownCandidates[index].slice(0, 300);
+    if (question.length > remaining) break;
+    shown.unshift(question);
+    remaining -= question.length;
+  }
   return { stage: request.stage, topic: request.topic, messages,
     ...(request.prefetch ? { prefetch: true } : {}),
     ...(skipped.length ? { skipped_questions: skipped } : {}),
+    ...(shown.length ? { shown_questions: shown } : {}),
     ...(request.default_language !== undefined ? { default_language: request.default_language } : {}),
   };
 }

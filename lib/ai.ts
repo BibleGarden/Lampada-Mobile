@@ -57,7 +57,7 @@ export async function generateFirstQuestion(topic: string, prefetch = false): Pr
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
-      ...buildQuestionRequest('first', topic),
+      ...buildQuestionRequest('first', topic, [], {}, [], {}),
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
@@ -79,15 +79,17 @@ export async function generateFirstQuestion(topic: string, prefetch = false): Pr
 export async function generateQuestion(
   topic: string,
   asked: string[],
-  answers: Record<number, AnswerContext> = {},
-  skippedQuestions: string[] = [],
-  prefetch = false,
+  answers: Record<number, AnswerContext>,
+  skippedQuestions: string[],
+  prefetch: boolean,
+  actualAnswers: Record<number, AnswerContext>,
 ): Promise<GeneratedQuestion | null> {
+  if (actualAnswers === undefined) throw new Error('Actual question answers are required');
   const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions]));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
-      ...buildQuestionRequest('next', topic, asked, answers, skippedQuestions),
+      ...buildQuestionRequest('next', topic, asked, answers, skippedQuestions, actualAnswers),
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
@@ -105,14 +107,16 @@ export async function generateReflectQuestion(
   topic: string,
   asked: string[],
   answers: Record<number, AnswerContext>,
-  skippedQuestions: string[] = [],
-  prefetch = false,
+  skippedQuestions: string[],
+  prefetch: boolean,
+  actualAnswers: Record<number, AnswerContext>,
 ): Promise<GeneratedQuestion | null> {
+  if (actualAnswers === undefined) throw new Error('Actual question answers are required');
   const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions], 'reflect'));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
-      ...buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions),
+      ...buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions, actualAnswers),
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
