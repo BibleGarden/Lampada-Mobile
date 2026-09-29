@@ -16,11 +16,14 @@ export type QuestionRequest = {
 export function buildQuestionRequest(
   stage: QuestionRequest['stage'],
   topic: string,
-  questions: readonly string[] = [],
-  answers: Record<number, AnswerContext> = {},
-  skippedQuestions: readonly string[] = [],
-  actualAnswers: Record<number, AnswerContext> = answers,
+  questions: readonly string[],
+  answers: Record<number, AnswerContext>,
+  skippedQuestions: readonly string[],
+  actualAnswers: Record<number, AnswerContext>,
 ): QuestionRequest {
+  if (stage !== 'first' && actualAnswers === undefined) {
+    throw new Error('Actual question answers are required');
+  }
   const messages: QuestionMessage[] = [];
   const shownQuestions: string[] = [];
   if (stage !== 'first') {
@@ -74,10 +77,10 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
   // Показанные отвеченные вопросы без переданного ответа занимают остаток бюджета.
   const sentQuestions = new Set(messages.filter((message) => message.role === 'assistant')
     .map((message) => message.text.trim()));
-  const skippedSet = new Set((request.skipped_questions ?? []).map((q) => q.trim()));
+  const skippedSet = new Set(skipped);
   const shown: string[] = [];
   const shownCandidates = request.stage === 'first' ? [] : (request.shown_questions ?? [])
-    .map((q) => q.trim()).filter((q) => q && !sentQuestions.has(q) && !skippedSet.has(q)).slice(-10);
+    .map((q) => q.trim()).filter((q) => q && !sentQuestions.has(q) && !skippedSet.has(q.slice(0, 300))).slice(-10);
   for (let index = shownCandidates.length - 1; index >= 0; index--) {
     const question = shownCandidates[index].slice(0, 300);
     if (question.length > remaining) break;
