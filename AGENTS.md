@@ -13,6 +13,16 @@
   record a new significant architectural decision as an ADR in
   `architect/decisions/`.
 
+# Platform pitfalls
+
+- `useAudioPlayer` and `useAudioRecorder` from expo-audio release their native
+  objects in their own unmount cleanup, which runs before the cleanup of the
+  effects declared after them. Never call a player or recorder method from an
+  unmount cleanup: a synchronous call such as `pause()` throws
+  `ERR_NATIVE_SHARED_OBJECT_NOT_FOUND` and crashes the app. In that cleanup,
+  only settle pending promises, remove listeners and release audio-session
+  leases (ADR-0036).
+
 # Testing changes
 
 - When app behavior changes, update the applicable unit tests, Maestro flows,
