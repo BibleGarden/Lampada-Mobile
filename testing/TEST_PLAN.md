@@ -255,6 +255,9 @@ tier of its e2e runs.
 | AI-011 [main] | Press "Transcribe" for the first time, deny it and retry | the disclosure names both possible processors for turning the recording into text: Whisper on our servers or Google Gemini through Google's paid API; we do not store the recording; no upload starts and the recording stays usable |
 | AI-012 | Withdraw each allowed decision in settings immediately before its feature | the next question/scripture request or upload observes the denial without restarting the app |
 | AI-013 [main] | Upgrade with each of the three decisions stored under notice version 2 and `company-hosted-ai-2026-09` | every old decision resolves to `undecided`; no content is sent until a decision under notice version 3 and `google-gemini-paid-whisper-self-hosted-2026-09` is saved |
+| AI-014 [main] | Save a voice-only answer without transcribing it, then request another question | the next visible question differs from every previously shown question while an unused local question exists; a repeated server response marked `novel: true` is rejected, using the local pool after an answer |
+| AI-015 | Replace an unanswered question after a prior replacement, with the server returning an earlier question with changed case, spacing or trailing punctuation | the current question remains visible; one explicit tap can request another replacement, with no automatic retry loop |
+| AI-016 | Exhaust the next or reflection local pool, then request another question or continue prayer and finish again | an unseen local question always wins; only after the pool is exhausted can a question repeat, and the least recently shown one is chosen; a previous reflection question counts as shown |
 
 ### Scripture
 
@@ -317,6 +320,7 @@ the stub; execution results belong in dated reports.
 | END-007 | Leave an expired prayer overnight, open the app the next day and finish it on reflection | the prayer counts for the day it started, not the day of "Done"; the streak stays unbroken |
 | END-006 [main, ipad] | Enter a takeaway with the keyboard open on iPhone and iPad; on iPad, rotate while typing | the input stays above the keyboard; on tablets the editing column widens and long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 | END-008 | Type a takeaway with a hardware keyboard in an App Store video build | while the input is focused, the visible flame stays on one frame and each non-whitespace character causes a visible text or caret update; after blur the flame animates again; ordinary builds never freeze the flame (`reflectionFlame.test.mjs`). The ANS-034 smoothness expectation is a 150 ms maximum visible gap, reported as a metric in the video pipeline; its gross recording rejection gate is 250 ms. |
+| END-009 | Finish the prayer while the first question is still loading | the reflection question appears; the late first question does not leave reflection loading |
 
 ### The journal and local data
 

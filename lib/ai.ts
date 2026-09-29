@@ -6,6 +6,7 @@ import { completePrayerContent, llmConfigured } from './llm';
 import { coreAiAllowedNow, useSettings } from './settings';
 import { fallbackQuestions } from './locales/fallbackQuestions';
 import { buildQuestionRequest } from './questionRequest';
+import { normalizeQuestion, wasQuestionShown } from './questionNovelty';
 import type { AnswerContext } from './answerContext';
 
 export type QuestionSource = 'ai' | 'fallback';
@@ -16,15 +17,22 @@ const fromFallback = (text: string): GeneratedQuestion => ({ text, source: 'fall
 
 const currentFallbacks = () => fallbackQuestions[useSettings.getState().uiLanguage];
 export const getCuratedQuestions = (): string[] => [...currentFallbacks().first];
+export const hasUnseenFallbackQuestion = (shown: readonly string[], stage: 'next' | 'reflect'): boolean =>
+  currentFallbacks()[stage].some((question) => !wasQuestionShown(question, shown));
 
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Мгновенный локальный вопрос на случай, если фоновый слот ещё не готов. */
-export const pickFallbackQuestion = (asked: string[]): string => {
-  const questionPool = currentFallbacks().next;
-  const used = new Set(asked);
-  const fresh = questionPool.filter((q) => !used.has(q));
-  return pickRandom(fresh.length ? fresh : questionPool);
+export const pickFallbackQuestion = (asked: string[], stage: 'next' | 'reflect' = 'next'): string => {
+  const questionPool = currentFallbacks()[stage];
+  const fresh = questionPool.filter((q) => !wasQuestionShown(q, asked));
+  if (fresh.length) return pickRandom(fresh);
+  // Все варианты уже были показаны: берём тот, который видели раньше остальных.
+  const lastShown = new Map(asked.map((question, index) => [normalizeQuestion(question), index]));
+  return questionPool.reduce((oldest, candidate) =>
+    (lastShown.get(normalizeQuestion(candidate)) ?? -1)
+      < (lastShown.get(normalizeQuestion(oldest)) ?? -1) ? candidate : oldest,
+  );
 };
 
 // деградация тихая для человека, но не для разработчика: причина отката
@@ -100,7 +108,7 @@ export async function generateReflectQuestion(
   skippedQuestions: string[] = [],
   prefetch = false,
 ): Promise<GeneratedQuestion | null> {
-  const fallback = () => prefetch ? null : fromFallback(pickRandom(currentFallbacks().reflect));
+  const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions], 'reflect'));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
@@ -109,7 +117,8 @@ export async function generateReflectQuestion(
     });
     const clean = tidy(q.text);
     if (!isQuestion(clean)) warn('reflect', 'Invalid question response', prefetch);
-    return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fallback();
+    return isQuestion(clean) && q.novel !== false && !wasQuestionShown(clean, [...asked, ...skippedQuestions])
+      ? fromAi(clean) : fallback();
   } catch (e) {
     if (prefetch && e instanceof PrefetchDeniedError) return null;
     warn('reflect', e, prefetch);

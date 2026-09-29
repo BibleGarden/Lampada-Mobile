@@ -259,7 +259,8 @@ one session ID, all questions, answers and recordings, the scripture trail and
 current positions. A finite prayer gets a fresh interval of the selected duration;
 an untimed prayer remains untimed. The original start and cumulative wall-clock
 elapsed time are retained, including time on the reflection screen. Late reflection
-results are invalidated. Final completion writes to the same journal session.
+results are invalidated. A reflection request uses the state at the moment the
+prayer ends; a first question that arrives afterwards does not cancel it. Final completion writes to the same journal session.
 See [ADR-0027](decisions/0027-resume-current-prayer.md).
 
 After the reflection is saved (or skipped), completion returns directly Home with
@@ -598,9 +599,25 @@ prayer. Requests include them in chronological order in `skipped_questions`,
 plus currently displayed unanswered questions so the one-ahead prefetch can
 avoid them before replacement. Actual answers, including untranscribed voice
 recordings, determine whether a question is unanswered before the privacy gate.
-Questions in assistant messages are excluded from the skipped list. First-stage
-requests never include skipped history. Requests retain at most 40 messages and
-the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
+Questions in assistant messages are excluded from the skipped list. A question
+answered only with an untranscribed recording therefore appears in neither
+`messages` nor `skipped_questions`. The client compares every next and reflection
+question with all questions shown in the session, including replaced questions
+and earlier reflection questions. Comparison folds case and Russian `ё` to `е`,
+ignores apostrophe variants and punctuation anywhere, and collapses whitespace.
+It treats a local match like `novel: false` even when the server says `true`.
+An unanswered replacement stays visible until another explicit tap; after an
+answer, the client selects an unseen question from the local pool. A repeat is
+allowed only when the server candidate, if available, and every question in the
+local pool for the current stage and language have already been shown. The client
+then chooses the least recently shown local question, never a more recent one.
+The session retains the order of shown questions across replacements, navigation
+and continued prayer; a prepared response is checked against it when shown.
+Known limitation until requests carry `shown_questions`: a replacement for an
+unanswered question does not use the local pool, so a server that keeps
+returning an earlier voice-only question leaves the current question unchanged.
+First-stage requests never include skipped history. Requests retain at most 40
+messages and the newest 10 skipped questions, each capped at 300 UTF-16 code units. The total
 budget is 16,000 UTF-16 code units across topic, messages and skipped questions;
 messages have priority, oldest entries are dropped, and the latest human reply
 is never truncated. Pool keys include skipped context to reject stale prefetches.

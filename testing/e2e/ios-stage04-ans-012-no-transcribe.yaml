@@ -40,6 +40,9 @@ appId: twinkler
     duration: 1700
 - assertVisible:
     id: "session-title"
+- copyTextFrom:
+    id: "dock-question-text"
+- evalScript: ${output.firstQuestion = maestro.copiedText}
 - tapOn:
     id: "dock-answer-button"
 - runFlow:
@@ -75,3 +78,26 @@ appId: twinkler
     id: "recording-transcribing-0"
 - assertNotVisible: "РАСШИФРОВКА"
 - assertNotVisible: "Не удалось расшифровать"
+- tapOn:
+    id: "recordings-close-button"
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertVisible:
+    id: "dock-answer-edit-button"
+- tapOn:
+    id: "dock-next-question-button"
+- extendedWaitUntil:
+    visible:
+      id: "dock-answer-button"
+    timeout: 30000
+- copyTextFrom:
+    id: "dock-question-text"
+- evalScript: ${output.nextQuestion = maestro.copiedText}
+- assertTrue: ${output.nextQuestion != output.firstQuestion}

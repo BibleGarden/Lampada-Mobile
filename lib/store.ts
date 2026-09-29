@@ -11,6 +11,7 @@ import {
 } from './settings';
 import type { ScriptureLanguage } from './scripture';
 import { createOneAheadPool } from './oneAheadPool';
+import { rememberShownQuestion, wasQuestionShown } from './questionNovelty';
 import {
   buildScriptureRequest,
   toScriptureDisplay,
@@ -62,6 +63,7 @@ type SessionState = {
   // session runtime
   sessionId: number | null;
   questions: string[];
+  shownQuestions: string[];
   skippedQuestions: string[];
   questionSources: ai.QuestionSource[];
   qIndex: number;
@@ -191,6 +193,14 @@ const skippedForAi = (s: SessionState, answers = s.answers) => [
   ...s.questions.filter((question, index) => question.trim() && !isAnswered(answers[index])),
 ];
 
+const localQuestion = (shown: string[], stage: 'next' | 'reflect'): ai.GeneratedQuestion => {
+  const text = ai.pickFallbackQuestion(shown, stage);
+  if (wasQuestionShown(text, shown) && ai.hasUnseenFallbackQuestion(shown, stage)) {
+    throw new Error('Local question pool returned a repeated question while unseen questions remain');
+  }
+  return { text, source: 'fallback' };
+};
+
 const prepareQuestion = (
   s: SessionState,
   index: number,
@@ -262,6 +272,7 @@ const initial: SessionState = {
   topic: '',
   minutes: DEFAULT_PRAYER_MINUTES,
   sessionId: null,
+  shownQuestions: [],
   skippedQuestions: [],
   questions: ai.getCuratedQuestions(),
   questionSources: ai.getCuratedQuestions().map(() => 'fallback'),
@@ -385,6 +396,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     set({
       sessionId,
       questions: [firstQuestion?.text ?? ''],
+      shownQuestions: firstQuestion ? [firstQuestion.text] : [],
       skippedQuestions: [],
       questionSources: [firstQuestion?.source ?? 'ai'],
       qIndex: 0,
@@ -436,6 +448,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       if (!question || get().sessionId !== sessionId) return;
       set({
         questions: [question.text],
+        shownQuestions: [question.text],
         questionSources: [question.source],
         generating: false,
       });
@@ -510,13 +523,16 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   },
 
   prevQuestion: () =>
-    set((s) => (!s.generating && s.qIndex > 0 ? { qIndex: s.qIndex - 1 } : s)),
+    set((s) => (!s.generating && s.qIndex > 0
+      ? { qIndex: s.qIndex - 1, shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[s.qIndex - 1]) }
+      : s)),
 
   nextQuestion: async () => {
     const s = get();
     if (s.generating) return;
     if (s.qIndex < s.answeredCount) {
-      set({ qIndex: s.qIndex + 1 }); // вперёд по открытым
+      set({ qIndex: s.qIndex + 1,
+        shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[s.qIndex + 1]) }); // вперёд по открытым
       return;
     }
     const sessionToken = s.sessionId;
@@ -558,27 +574,32 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       }
     }
 
-    if (q.novel === false) {
+    const shown = s.shownQuestions;
+    if (q.source === 'fallback' && wasQuestionShown(q.text, shown)) {
+      q = localQuestion(shown, 'next');
+    } else if (q.novel === false || wasQuestionShown(q.text, shown)) {
       if (!isAnswered(s.answers[frontier])) {
         // Слот уже забран: следующее нажатие попробует снова, без фонового цикла.
         set({ generating: false });
         return;
       }
-      q = { text: ai.pickFallbackQuestion([...s.questions, ...s.skippedQuestions]), source: 'fallback' };
+      q = localQuestion(shown, 'next');
     }
 
     if (isAnswered(s.answers[frontier])) {
       // плюс: открыть следующий вопрос в след
       const nf = s.answeredCount + 1;
       if (s.questions[nf] !== undefined) {
-        set({ answeredCount: nf, qIndex: nf, generating: false });
+        set({ answeredCount: nf, qIndex: nf, generating: false,
+          shownQuestions: rememberShownQuestion(shown, s.questions[nf]) });
       } else {
         questionPool.invalidate();
         const questions = s.questions.slice();
         questions[nf] = q.text;
         const questionSources = s.questionSources.slice();
         questionSources[nf] = q.source;
-        set({ questions, questionSources, answeredCount: nf, qIndex: nf, generating: false });
+        set({ questions, questionSources, answeredCount: nf, qIndex: nf, generating: false,
+          shownQuestions: rememberShownQuestion(shown, q.text) });
       }
     } else {
       questionPool.invalidate();
@@ -587,6 +608,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       const questionSources = s.questionSources.slice();
       questionSources[frontier] = q.source;
       set({ questions, questionSources, generating: false,
+        shownQuestions: rememberShownQuestion(shown, q.text),
         skippedQuestions: [...s.skippedQuestions, s.questions[frontier]].filter(Boolean),
       });
     }
@@ -596,9 +618,11 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   },
 
   jumpQuestion: (pos) =>
-    set((s) =>
-      s.generating ? s : { qIndex: Math.max(0, Math.min(pos, s.answeredCount)) },
-    ),
+    set((s) => {
+      if (s.generating) return s;
+      const qIndex = Math.max(0, Math.min(pos, s.answeredCount));
+      return { qIndex, shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[qIndex]) };
+    }),
 
   saveAnswer: async (questionIndex, text, recordings) => {
     const s = get();
@@ -704,33 +728,28 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         set({ reflectGenerating: false });
         return;
       }
-      await pending;
-      if (
-        token !== reflectToken ||
-        get().sessionId !== sessionToken ||
-        reflectKey(get()) !== key
-      ) {
-        return;
-      }
-      q = reflectPool.takeReady(key);
-      if (q === undefined) {
-        set({ reflectGenerating: false });
-        return;
-      }
+      // Итоговый вопрос относится к состоянию на момент завершения: поздний
+      // первый вопрос, которого человек уже не увидел, не отменяет ожидание.
+      q = await pending;
+      reflectPool.takeReady(key);
+      if (token !== reflectToken || get().sessionId !== sessionToken) return;
     }
     if (q === null) {
       set({ reflectQ: '', reflectSource: null, reflectGenerating: true });
       q = await prepareReflectQuestion(s, false);
       reflectPool.takeReady(key);
-      if (token !== reflectToken || get().sessionId !== sessionToken || reflectKey(get()) !== key) return;
+      if (token !== reflectToken || get().sessionId !== sessionToken) return;
       if (!q) {
         set({ reflectGenerating: false });
         return;
       }
     }
-    if (token === reflectToken && get().sessionId === sessionToken) {
-      set({ reflectQ: q.text, reflectSource: q.source, reflectGenerating: false });
+    const shown = s.shownQuestions;
+    if (q.novel === false || wasQuestionShown(q.text, shown)) {
+      q = localQuestion(shown, 'reflect');
     }
+    set({ reflectQ: q.text, reflectSource: q.source, reflectGenerating: false,
+      shownQuestions: rememberShownQuestion(shown, q.text) });
   },
 
   complete: async (takeaway) => {
