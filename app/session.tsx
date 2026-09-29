@@ -60,6 +60,7 @@ import {
 import {
   audioModeCoordinator,
   type AudioModeRequest,
+  type AudioSessionLease,
 } from '../lib/audioModeCoordinator';
 
 const MUSIC_PLAYBACK_MODE = {
@@ -120,7 +121,7 @@ function SessionScreen() {
   const timeExpired = s.remaining === 0;
   const expiryNotified = useRef(false);
   const finished = useRef(false);
-  const musicSessionActive = useRef(false);
+  const musicLeaseRef = useRef<AudioSessionLease | null>(null);
   // React-effect cleanup happens later than the press handler. The ref lets an
   // already running music activation see recording/playback immediately.
   const transientAudioBusyRef = useRef(false);
@@ -192,24 +193,19 @@ function SessionScreen() {
     // AVAudioSession activation is process-wide too. Keep it in the same queue
     // as mode changes so a quick next recording cannot call record() while a
     // late music activation is still reconfiguring the native session.
-    musicSessionActive.current = true;
     await setIsAudioActiveAsync(true);
     await setAudioModeAsync(mode);
   }, []);
 
-  const releaseMusicSession = useCallback(() => {
-    // setIsAudioActiveAsync действует глобально, поэтому не трогаем сессию,
-    // если её не захватывал именно музыкальный плеер.
-    if (!musicSessionActive.current) return Promise.resolve();
-    musicPlayerA.clearLockScreenControls();
-    musicPlayerB.clearLockScreenControls();
-    return audioModeCoordinator
-      .requestDeactivation(() => setIsAudioActiveAsync(false))
-      .then((deactivated) => {
-        if (deactivated) musicSessionActive.current = false;
-      })
-      .catch((error) => console.warn('Failed to release audio session', error));
-  }, [musicPlayerA, musicPlayerB]);
+  const reportReleaseError = useCallback((error: unknown) => {
+    console.error('Failed to release audio session', error);
+  }, []);
+
+  const releaseMusicLease = useCallback(() => {
+    const lease = musicLeaseRef.current;
+    musicLeaseRef.current = null;
+    return lease?.release().catch(reportReleaseError) ?? Promise.resolve();
+  }, [reportReleaseError]);
 
   useEffect(() => {
     // Фоновое сопровождение должно оставаться заметно тише речи и системных звуков.
@@ -230,12 +226,12 @@ function SessionScreen() {
     const shouldPlay = s.musicOn && !transientAudioBusy;
     if (!shouldPlay) {
       pauseMusicPlayers();
-      // Keep the global session active while this screen is mounted. A late
-      // async deactivation can otherwise race with a newly started recorder.
       return () => {
         active = false;
       };
     }
+    const lease = audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false));
+    musicLeaseRef.current = lease;
     void (async () => {
       const modeGrant = await audioModeCoordinator.requestPlayback(
         applyMusicAudioMode,
@@ -258,16 +254,19 @@ function SessionScreen() {
       if (active && !transientAudioBusyRef.current && useSession.getState().musicOn) {
         useSession.getState().toggleMusic();
       }
-      if (active && !transientAudioBusyRef.current) void releaseMusicSession();
+      if (active && !transientAudioBusyRef.current) void releaseMusicLease();
     });
     return () => {
       active = false;
+      void lease.release().catch(reportReleaseError);
+      if (musicLeaseRef.current === lease) musicLeaseRef.current = null;
     };
   }, [
     applyMusicAudioMode,
     musicPlayerForSlot,
     pauseMusicPlayers,
-    releaseMusicSession,
+    reportReleaseError,
+    releaseMusicLease,
     s.musicOn,
     setMusicLockScreen,
     transientAudioBusy,
@@ -386,9 +385,9 @@ function SessionScreen() {
       if (musicCrossfadeTimer.current) clearInterval(musicCrossfadeTimer.current);
       musicCrossfadeTimer.current = null;
       musicCrossfadeRunning.current = false;
-      void releaseMusicSession();
+      void releaseMusicLease();
     },
-    [releaseMusicSession],
+    [releaseMusicLease],
   );
 
   const handleTransientAudioChange = useCallback(
@@ -400,12 +399,10 @@ function SessionScreen() {
       transientAudioBusyRef.current = busy;
       if (busy) {
         pauseMusicPlayers();
-      } else if (!useSession.getState().musicOn) {
-        void releaseMusicSession();
       }
       setTransientAudioBusy(busy);
     },
-    [pauseMusicPlayers, releaseMusicSession],
+    [pauseMusicPlayers],
   );
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
@@ -460,8 +457,7 @@ function SessionScreen() {
     const stop = async () => {
       pauseMusicPlayers();
       if (useSession.getState().musicOn) useSession.getState().toggleMusic();
-      // Активная озвучка владеет общей аудиосессией до конца отрывка.
-      if (!transientAudioBusyRef.current) await releaseMusicSession();
+      await releaseMusicLease();
     };
     if (!useSession.getState().musicOn || transientAudioBusyRef.current) return stop();
 
@@ -495,7 +491,7 @@ function SessionScreen() {
       stopped,
     };
     return stopped;
-  }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicSession]);
+  }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicLease]);
 
   // На скрытом экране переход к итогу ждёт возвращения пользователя, а музыка
   // заканчивается вместе со временем молитвы даже под PIN-оверлеем.

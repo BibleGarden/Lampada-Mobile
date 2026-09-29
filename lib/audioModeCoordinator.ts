@@ -6,6 +6,12 @@ export type AudioModeRequest = {
 };
 
 type ApplyAudioMode = (mode: AudioModeRequest) => Promise<void>;
+type DeactivateAudioSession = () => Promise<void>;
+
+export type AudioSessionLease = {
+  /** Повторный вызов безопасен; последний владелец дожидается деактивации. */
+  release: () => Promise<void>;
+};
 
 export type RecordingAudioModeLease = {
   /** Resolves after all older mode changes and this recording mode were applied. */
@@ -40,6 +46,7 @@ export function createAudioModeCoordinator() {
 
   let tail: Promise<void> = Promise.resolve();
   let recordingLease: LeaseToken | null = null;
+  const sessionLeases = new Set<LeaseToken>();
   let playbackGeneration = 0;
 
   const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
@@ -52,6 +59,24 @@ export function createAudioModeCoordinator() {
   };
 
   return {
+    acquireSession(deactivate: DeactivateAudioSession): AudioSessionLease {
+      const token: LeaseToken = { released: false };
+      sessionLeases.add(token);
+      return {
+        release: () => {
+          if (token.released) return Promise.resolve();
+          token.released = true;
+          sessionLeases.delete(token);
+          if (sessionLeases.size > 0) return Promise.resolve();
+          // Новый владелец может появиться до выполнения этой операции.
+          // Изменение его режима остаётся в той же нативной очереди.
+          return enqueue(async () => {
+            if (sessionLeases.size === 0) await deactivate();
+          });
+        },
+      };
+    },
+
     acquireRecording(
       applyAudioMode: ApplyAudioMode,
       mode: AudioModeRequest,
@@ -102,16 +127,6 @@ export function createAudioModeCoordinator() {
           isCurrent: () =>
             recordingLease === null && generation === playbackGeneration,
         };
-      });
-    },
-
-    requestDeactivation(deactivate: () => Promise<void>): Promise<boolean> {
-      const generation = ++playbackGeneration;
-      if (recordingLease) return Promise.resolve(false);
-      return enqueue(async () => {
-        if (recordingLease || generation !== playbackGeneration) return false;
-        await deactivate();
-        return true;
       });
     },
 

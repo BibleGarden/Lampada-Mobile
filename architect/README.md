@@ -88,8 +88,8 @@ upgrading it requires rebuilding the native app.
 | `lib/scriptureClient.ts` | The HTTP client of the contextual selection and the controlled retries |
 | `lib/scriptureAudioClient.ts` | Book aliases, verse-level timings and the public URLs of chapter audio |
 | `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
-| `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode and the priority recording lease |
-| `lib/audioPlayerOperation.ts` | Waiting for a replaced local AVPlayerItem to be ready and cancelling a stale play |
+| `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
+| `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
@@ -228,6 +228,14 @@ waits for the app to return, and over 0.8 s on that transition otherwise (see
 draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.
+The audio mode coordinator also owns the process-wide audio session through
+reference-counted leases. Music, narration, draft playback and recording acquire
+a lease for their active interval. Pausing the last player or stopping the last
+recorder releases it and deactivates AVAudioSession in the serialized native
+queue; keeping a screen mounted does not retain the session. An untimed prayer
+has no deadline: its music ends on the explicit prayer finish, after the normal
+fade, rather than on an invented timer (see
+[ADR-0036](decisions/0036-audio-session-leases.md)).
 Scripture narration retains its position and continues playback when the screen
 is covered or the app is backgrounded. It stops when the user changes the
 scripture mode, the passage, or finishes the prayer.
