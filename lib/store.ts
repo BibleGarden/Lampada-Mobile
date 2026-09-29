@@ -211,7 +211,7 @@ const prepareQuestion = (
   if (s.sessionId === null) return null;
   const key = poolKey(s, index, answers);
   return questionPool.prepare(key, () =>
-    ai.generateQuestion(s.topic, s.questions, answersForAi(answers), skippedForAi(s, answers), prefetch),
+    ai.generateQuestion(s.topic, s.questions, answersForAi(answers), skippedForAi(s, answers), prefetch, answers),
   );
 };
 
@@ -222,7 +222,7 @@ const prepareReflectQuestion = (s: SessionState, prefetch = true) => {
   if (s.sessionId === null) return null;
   const key = reflectKey(s);
   return reflectPool.prepare(key, () =>
-    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers), skippedForAi(s), prefetch),
+    ai.generateReflectQuestion(s.topic, s.questions, answersForAi(s.answers), skippedForAi(s), prefetch, s.answers),
   );
 };
 

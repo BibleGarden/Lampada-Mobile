@@ -82,12 +82,13 @@ export async function generateQuestion(
   answers: Record<number, AnswerContext> = {},
   skippedQuestions: string[] = [],
   prefetch = false,
+  actualAnswers: Record<number, AnswerContext> = answers,
 ): Promise<GeneratedQuestion | null> {
   const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions]));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
-      ...buildQuestionRequest('next', topic, asked, answers, skippedQuestions),
+      ...buildQuestionRequest('next', topic, asked, answers, skippedQuestions, actualAnswers),
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
@@ -107,12 +108,13 @@ export async function generateReflectQuestion(
   answers: Record<number, AnswerContext>,
   skippedQuestions: string[] = [],
   prefetch = false,
+  actualAnswers: Record<number, AnswerContext> = answers,
 ): Promise<GeneratedQuestion | null> {
   const fallback = () => prefetch ? null : fromFallback(pickFallbackQuestion([...asked, ...skippedQuestions], 'reflect'));
   if (!llmConfigured() || !coreAiAllowedNow()) return fallback();
   try {
     const q = await completePrayerContent({
-      ...buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions),
+      ...buildQuestionRequest('reflect', topic, asked, answers, skippedQuestions, actualAnswers),
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
