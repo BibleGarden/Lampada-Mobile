@@ -54,7 +54,7 @@ import {
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { createPlaybackLeaseOperation, playAudioRecording } from '../lib/audioPlayerOperation';
+import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy } from '../lib/audioPlayerOperation';
 import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
@@ -726,9 +726,9 @@ export default function AnswerSheet({
     if (!resume) setPausedId(null);
     setAudioError(null);
     onAudioBusyChange?.(true);
-    const generation = draftPlaybackOperation.begin(audioModeCoordinator.acquireSession(
-      () => setIsAudioActiveAsync(false),
-    ));
+    const generation = draftPlaybackOperation.begin(() =>
+      audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false)),
+    );
     activeDraftIdRef.current = r.id;
     void audioModeCoordinator
       .requestPlayback(setAudioModeAsync, DRAFT_PLAYBACK_MODE)
@@ -782,9 +782,14 @@ export default function AnswerSheet({
   };
 
   const handleRecordingsDismiss = () => {
+    const clearDraftAudioBusy = shouldClearDraftAudioBusy(
+      activeDraftIdRef.current,
+      playingId,
+      recordingOperation.getPhase() === 'idle',
+    );
     cancelDraftPlayback();
     player.pause();
-    if (recordingOperation.getPhase() === 'idle') onAudioBusyChange?.(false);
+    if (clearDraftAudioBusy) onAudioBusyChange?.(false);
     setRecordingsSheetOpen(false);
     setPausedId(null);
     recordingSheetOpenRef.current = false;

@@ -1,5 +1,11 @@
 import type { AudioSessionLease } from './audioModeCoordinator';
 
+export const shouldClearDraftAudioBusy = (
+  activeDraftId: number | null,
+  playingId: number | null,
+  recordingIdle: boolean,
+) => recordingIdle && (activeDraftId !== null || playingId !== null);
+
 /** Владеет одной попыткой воспроизведения, нативным слушателем и lease. */
 export function createPlaybackLeaseOperation() {
   let generation = 0;
@@ -16,9 +22,9 @@ export function createPlaybackLeaseOperation() {
   };
 
   return {
-    begin(nextLease: AudioSessionLease) {
+    begin(acquireSession: () => AudioSessionLease) {
       if (lease) throw new Error('A draft playback lease is already active');
-      lease = nextLease;
+      lease = acquireSession();
       generation += 1;
       return generation;
     },

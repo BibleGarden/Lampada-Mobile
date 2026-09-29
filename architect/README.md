@@ -89,7 +89,7 @@ upgrading it requires rebuilding the native app.
 | `lib/scriptureAudioClient.ts` | Book aliases, verse-level timings and the public URLs of chapter audio |
 | `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
-| `lib/audioPlayerOperation.ts` | Waiting for a replaced local AVPlayerItem to be ready and cancelling a stale play |
+| `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
