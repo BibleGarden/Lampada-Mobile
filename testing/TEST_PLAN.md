@@ -250,6 +250,8 @@ tier of its e2e runs.
 | ANS-043 | Make the native stop or duration status fail repeatedly at the limit | automatic work attempts to stop once, an explicit error appears on the recording overlay and in the log, the Done control remains available, and no 250 ms retry loop runs |
 | ANS-044 | Tap the stop control within 1.5 seconds of starting, then keep recording until the limit | the early tap is ignored without an error, the duration limit remains active, and the recording stops normally at 9:59 recorded time |
 | ANS-045 | Make an attempted manual stop fail while the native recorder continues | the error is shown, the limit remains active, and a later limit stop still runs at 9:59 recorded time |
+| ANS-046 | Play a finished file with a fractional duration, such as 39.3 seconds | its card shows the nearest whole second (0:39 in this example); upload validation still compares the exact fractional file duration |
+| ANS-047 | Leave the session while the recording-limit cue is pending or playing | the answer sheet unmounts without calling an already released native player or recorder; cue listeners and audio-session leases are released and the app does not crash |
 
 ### The AI and the companion
 

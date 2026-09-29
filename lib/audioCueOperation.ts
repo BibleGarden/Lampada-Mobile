@@ -21,22 +21,24 @@ export function playCueUntilComplete(
     let subscription: { remove: () => void } | null = null;
     let monitor: ReturnType<typeof setInterval> | null = null;
     let timeout: ReturnType<typeof setTimeout> | null = null;
-    const settle = (error?: Error) => {
+    const settle = (error?: Error, pausePlayer = true) => {
       if (settled) return;
       settled = true;
       if (monitor) clearInterval(monitor);
       if (timeout) clearTimeout(timeout);
       subscription?.remove();
-      try {
-        player.pause();
-      } catch (pauseError) {
-        reject(pauseError);
-        return;
+      if (pausePlayer) {
+        try {
+          player.pause();
+        } catch (pauseError) {
+          reject(pauseError);
+          return;
+        }
       }
       if (error) reject(error);
       else resolve();
     };
-    cancel = () => settle();
+    cancel = () => settle(undefined, false);
     monitor = setInterval(() => { if (!isCurrent()) settle(); }, checkIntervalMillis);
     timeout = setTimeout(() => {
       if (!isCurrent()) settle();

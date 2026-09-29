@@ -216,14 +216,15 @@ export default function AnswerSheet({
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
   const limitCuePlayer = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
+  const nativeAudioMountedRef = useRef(true);
   const limitCueOperationRef = useRef(createPlaybackLeaseOperation());
   const limitCueOperation = limitCueOperationRef.current;
   const limitCueCompletionRef = useRef<(() => void) | null>(null);
   const limitCueActiveRef = useRef(false);
-  const cancelLimitCue = () => {
+  const cancelLimitCue = (pausePlayer = true) => {
     limitCueCompletionRef.current?.();
     limitCueCompletionRef.current = null;
-    limitCuePlayer.pause();
+    if (pausePlayer && nativeAudioMountedRef.current) limitCuePlayer.pause();
     limitCueActiveRef.current = false;
     return limitCueOperation.cancel();
   };
@@ -246,7 +247,7 @@ export default function AnswerSheet({
       limitCueCompletionRef.current = null;
       const ownsCue = limitCueOperation.isCurrent(generation);
       limitCueActiveRef.current = false;
-      limitCuePlayer.pause();
+      if (nativeAudioMountedRef.current) limitCuePlayer.pause();
       await limitCueOperation.complete(generation);
       if (ownsCue) onAudioBusyChange?.(false);
     }
@@ -418,33 +419,27 @@ export default function AnswerSheet({
     };
   }, [openRef, handleOpen]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    nativeAudioMountedRef.current = true;
+    return () => {
+      // Expo уже мог освободить shared objects до cleanup этого эффекта.
+      nativeAudioMountedRef.current = false;
       recordingSheetOpenRef.current = false;
       cancelDraftPlayback();
-      observeRelease(cancelLimitCue());
+      observeRelease(cancelLimitCue(false));
       recordingOperation.cancelStart();
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       if (cancelTimer.current) clearTimeout(cancelTimer.current);
       abortAllTranscriptions();
       const phase = recordingOperation.getPhase();
       if (phase === 'recording') {
-        // Hard navigation can unmount the sheet without onChange(-1). Stop the
-        // owned recorder explicitly; after unmount its native object is disposed,
-        // so the process-wide lease must not leak into the next Session.
-        void recorder
-          .stop()
-          .catch((error) => console.warn('Failed to stop recording on exit', error))
-          .finally(() => {
-            recordingAudioModeLeaseRef.current?.release();
-            recordingAudioModeLeaseRef.current = null;
-            observeRelease(releaseRecordingSession());
-            onAudioBusyChange?.(false);
-          });
+        // useAudioRecorder сам освобождает нативный recorder при unmount.
+        recordingAudioModeLeaseRef.current?.release();
+        recordingAudioModeLeaseRef.current = null;
+        observeRelease(releaseRecordingSession());
+        onAudioBusyChange?.(false);
       } else if (phase === 'stopping') {
-        // The in-flight stop owns the native call. After hard unmount the hook
-        // disposes its recorder, so release the singleton lease on either
-        // settlement path; otherwise a rejected stop poisons the next Session.
+        // Незавершённый stop сам освободит lease после ответа нативного слоя.
         const pendingStop = recordingOperation.getPendingStop();
         const releaseAfterUnmount = () => {
           recordingAudioModeLeaseRef.current?.release();
@@ -461,9 +456,8 @@ export default function AnswerSheet({
         observeRelease(releaseRecordingSession());
         onAudioBusyChange?.(false);
       }
-    },
-    [abortAllTranscriptions, onAudioBusyChange, recorder, recordingOperation],
-  );
+    };
+  }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
 
   // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
   // и кнопки остались видны; спряталась — обратно на нижнюю.
@@ -522,7 +516,7 @@ export default function AnswerSheet({
       }
     };
     const startIsCurrent = () =>
-      attempt.isCurrent() && recordingSheetOpenRef.current;
+      nativeAudioMountedRef.current && attempt.isCurrent() && recordingSheetOpenRef.current;
     try {
       const perm = await AudioModule.requestRecordingPermissionsAsync();
       if (!perm.granted) return;
@@ -547,6 +541,10 @@ export default function AnswerSheet({
       await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
       prepared = true;
       if (!startIsCurrent()) {
+        if (!nativeAudioMountedRef.current) {
+          nativeStopConfirmed = true; // Нативный recorder уже удалён хуком Expo.
+          return;
+        }
         // Android не разрешает повторный prepare, пока предыдущий MediaRecorder
         // не reset. stop() после prepare освобождает его даже без record().
         await recorder.stop();
@@ -562,6 +560,10 @@ export default function AnswerSheet({
       // Шторку могли программно закрыть между последним await и record().
       // Тогда немедленно гасим нативную запись и не создаём черновик.
       if (!startIsCurrent()) {
+        if (!nativeAudioMountedRef.current) {
+          nativeStopConfirmed = true;
+          return;
+        }
         await recorder.stop();
         nativeStopConfirmed = true;
         const cancelledUri = recorder.uri;
@@ -593,14 +595,18 @@ export default function AnswerSheet({
           // Ошибка могла случиться после успешного prepare, но до record().
           // Освобождаем подготовленный Android-recorder для следующей попытки.
           if (prepared && !nativeStopConfirmed) {
-            try {
-              await recorder.stop();
-              nativeStopConfirmed = true;
-              discardPreparedFile();
-            } catch {
-              // Без подтверждённого stop lease остаётся активным: playback mode
-              // на iOS мог бы оборвать всё ещё живой нативный recorder.
-              nativeCleanupUncertain = true;
+            if (!nativeAudioMountedRef.current) {
+              nativeStopConfirmed = true; // Expo освободил recorder при unmount.
+            } else {
+              try {
+                await recorder.stop();
+                nativeStopConfirmed = true;
+                discardPreparedFile();
+              } catch {
+                // Без подтверждённого stop lease остаётся активным: playback mode
+                // на iOS мог бы оборвать всё ещё живой нативный recorder.
+                nativeCleanupUncertain = true;
+              }
             }
           }
           if (nativeCleanupUncertain && attempt.recoverAsRecording()) {
@@ -664,7 +670,9 @@ export default function AnswerSheet({
       await recorder.stop();
       nativeStopped = true;
       confirmNativeStop();
-      const uri = recorder.uri ?? uriBeforeStop;
+      const uri = nativeAudioMountedRef.current
+        ? recorder.uri ?? uriBeforeStop
+        : uriBeforeStop;
       if (!uri) {
         setAudioError('components.answers.saveFailed');
         return null;
@@ -877,6 +885,7 @@ export default function AnswerSheet({
   };
 
   const handleRecordingsDismiss = () => {
+    if (!nativeAudioMountedRef.current) return;
     recordingsSheetGenerationRef.current += 1;
     const dismissedGeneration = recordingsSheetGenerationRef.current;
     const cueWasActive = limitCueActiveRef.current;
@@ -1133,6 +1142,7 @@ export default function AnswerSheet({
       // за ручку.
       enableContentPanningGesture={false}
       onChange={async (i) => {
+        if (!nativeAudioMountedRef.current) return;
         onIndexChange(i);
         const editing = i >= 0;
         openSheetRef.current = editing;

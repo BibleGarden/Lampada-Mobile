@@ -241,6 +241,9 @@ queue; keeping a screen mounted does not retain the session. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
+On answer-sheet unmount, Expo Audio may release its native player and recorder
+before the sheet's effect cleanup. That cleanup cancels pending cue work and
+status listeners and releases leases without calling native audio methods.
 Voice notes use mono AAC at 22.05 kHz and 48 kbit/s. The recorder's native
 `durationMillis` is polled while recording; one mounted limit hook stops it at 599
 recorded seconds, leaving one second for the final AAC frame before the server's
@@ -254,7 +257,8 @@ error. The UI counts down to the same stop point and plays
 a leased, mixing cue with light haptics at the limit. The
 stopped file remains a draft even if duration loading fails; zero in the local
 recording row explicitly means that its duration is unknown. The displayed
-duration is rounded up from the decoded file, not from JS completion latency.
+duration is rounded to the nearest second from the decoded file, not from JS
+completion latency.
 Before transcription, the client reads the file duration again without rounding,
 including for older drafts whose stored durations came from the recorder clock. It rejects
 files above 14 MiB or recordings longer than 600 seconds without uploading

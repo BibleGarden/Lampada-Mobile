@@ -52,7 +52,7 @@ export async function createStoppedRecordingDraft(
     if (!Number.isFinite(duration) || duration <= 0) {
       throw new Error('Recorded audio file has no valid duration');
     }
-    durationSec = Math.ceil(duration);
+    durationSec = Math.max(1, Math.round(duration));
   } catch (error) {
     reportDurationError(error);
   }
