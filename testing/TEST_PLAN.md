@@ -320,7 +320,7 @@ the stub; execution results belong in dated reports.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| RPT-001 | Open the report dialog from the companion dock for a generated question in Russian, Ukrainian and English; send without a comment | the send label is centered with inner padding and fits in each language; one localized confirmation dialog appears; the request carries `content_type: "question"`, the question text, the interface language and no `user_comment`; a success state is shown; the request never contains the prayer topic or the answer |
+| RPT-001 | Open the report dialog from the companion dock for a generated question in Russian, Ukrainian and English; send without a comment | visual, checked manually on a device or simulator in each language: the send label is centered with inner padding and fits; one localized confirmation dialog appears; the request carries `content_type: "question"`, the question text, the interface language and no `user_comment`; a success state is shown; the request never contains the prayer topic or the answer |
 | RPT-002 | Switch to Quote, open the card-corner report dialog, add a comment and send | the reader has no report button; the request carries `content_type: "scripture"`, the full passage reference, title when present, text, the trimmed comment and the interface language; a success state is shown |
 | RPT-003 | Get a network, a timeout or a 5xx failure and retry | the dialog and the typed comment stay available, an error text is shown, a repeated attempt can succeed; the unsaved answer in the sheet is not mutated |
 | RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays in the active session card |
@@ -350,7 +350,7 @@ the stub; execution results belong in dated reports.
 | JRN-004 | A Cyrillic search in a different case | the search stays case-insensitive |
 | JRN-005 [main] | Open the details of a text and of a voice prayer | the questions, the answers and the recordings are linked correctly |
 | JRN-006 | Play an audio, close the details, start another one | two sources never play at once, the player UI is reset |
-| JRN-007 | Delete a prayer, including with a two-line confirmation label | the trash icon and both lines stay inside the confirmation button, and the adjacent Share button remains in place; the session, the answers, the recording rows and the files are deleted; the streak day remains |
+| JRN-007 | Delete a prayer, including with a two-line confirmation label | visual, checked manually: the trash icon and both lines stay inside the confirmation button, and the adjacent Share button remains in place; the session, the answers, the recording rows and the files are deleted; the streak day remains |
 | JRN-008 | A restart and installing a new build over the old one | SQLite and the audio files survive and are readable |
 | JRN-009 | The recording file is missing but the database row remains | the screen does not crash, the problem is handled or clearly reported |
 | JRN-010 | Open a voice answer without text and press "Transcribe" | loading appears, then the text under the corresponding audio player; after reopening the text is still there |
