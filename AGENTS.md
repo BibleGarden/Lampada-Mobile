@@ -28,6 +28,13 @@
   after the fixes and the reviews have converged. On intermediate revisions
   run only `npm run typecheck` and `npm test`. A Maestro run takes most of an
   hour, and a revision that will still change makes its result obsolete.
+- Stop a Maestro run at the first app crash, report the flow, the step and the
+  cause from the crash report, and fix it before running anything else. Flows
+  after a crash tend to fail the same way and add no information.
+- After fixing a failure that an end-to-end run found, first run the failed
+  scenario on a build of the fixed revision, then review, then the final run.
+  Running a scenario on a new revision verifies the fix; it is not a rerun of
+  the failed test.
 - Save each full command log and exit code as a PR or task artifact accessible
   to reviewers, and identify the tested commit and build. Put only selected
   final evidence in `testing/evidence/` as described in `testing/README.md`.
