@@ -276,7 +276,12 @@ export default function RecordingsSheet({
                     >
                       {loading
                         ? t('components.answers.transcribing')
-                        : t('components.answers.recordingIndex', { index: i + 1, duration: fmtTime(hasProgress ? Math.round(playProgress * r.durationSec) : r.durationSec) })}
+                        : t('components.answers.recordingIndex', {
+                          index: i + 1,
+                          duration: r.durationSec === 0
+                            ? t('components.answers.durationUnknown')
+                            : fmtTime(hasProgress ? Math.round(playProgress * r.durationSec) : r.durationSec),
+                        })}
                     </Text>
                   </View>
                   {/* Кнопка расшифровки доступна, пока у записи нет текста. */}

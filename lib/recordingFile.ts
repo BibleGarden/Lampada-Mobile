@@ -1,4 +1,5 @@
 import { waitForAudioPlayerReady, type AudioPlayerReadyStatus } from './audioPlayerOperation.ts';
+import type { RecordingDraft } from './store.ts';
 
 const MIN_RECORDING_BYTES = 1_024;
 const FILE_READY_POLL_MILLIS = 50;
@@ -23,8 +24,10 @@ export function recordedSeconds(durationMillis: number) {
   return Math.floor(durationMillis / 1000);
 }
 
-/** Длительность берём из готового файла; округление вверх не пропустит 600.1 с как 600 с. */
-export async function recordedFileSeconds(
+export const UNKNOWN_RECORDING_DURATION_SECONDS = 0;
+
+/** Дробные секунды из готового файла без округления для серверного предела. */
+export async function recordedFileDurationSeconds(
   readStatus: () => AudioPlayerReadyStatus,
   wait?: (millis: number) => Promise<void>,
 ): Promise<number> {
@@ -33,7 +36,27 @@ export async function recordedFileSeconds(
   if (!Number.isFinite(duration) || duration <= 0) {
     throw new Error('Recorded audio file has no valid duration');
   }
-  return Math.ceil(duration);
+  return duration;
+}
+
+/** Привязывает файл к черновику даже при сбое чтения длительности. */
+export async function createStoppedRecordingDraft(
+  uri: string,
+  readDuration: () => Promise<number>,
+  reportDurationError: (error: unknown) => void,
+  id = Date.now(),
+): Promise<RecordingDraft> {
+  let durationSec = UNKNOWN_RECORDING_DURATION_SECONDS;
+  try {
+    const duration = await readDuration();
+    if (!Number.isFinite(duration) || duration <= 0) {
+      throw new Error('Recorded audio file has no valid duration');
+    }
+    durationSec = Math.ceil(duration);
+  } catch (error) {
+    reportDurationError(error);
+  }
+  return { id, uri, durationSec, transcript: null, transcriptState: 'idle' };
 }
 
 /** Waits for AVAudioRecorder to finish publishing stable file metadata. */

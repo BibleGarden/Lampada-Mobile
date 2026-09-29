@@ -78,7 +78,7 @@ upgrading it requires rebuilding the native app.
 | `lib/contentReportClient.ts` | The bounded HTTP client for AI-content reports; it sends no prayer answer or topic |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
 | `lib/audioFileDuration.ts`, `lib/recordingFile.ts` | Reading the completed audio file's duration and validating the saved recording |
-| `lib/transcriptionLimits.ts`, `lib/transcriptionErrors.ts` | The recording and upload bounds and user-facing transcription failure categories |
+| `lib/transcriptionLimits.ts`, `lib/transcriptionPreflight.ts`, `lib/transcriptionErrors.ts` | The recording and upload bounds, upload validation and user-facing failure categories |
 | `lib/settings.ts` | Privacy settings, interface language, atomic scripture choice, reminder schedule and last prayer duration saves |
 | `lib/i18n.ts`, `lib/locales/` | Reactive English, Russian and Ukrainian interface translations |
 | `lib/privacyConsent.ts` | The versioned consent record, provider-contract identity and legacy migration rules |
@@ -92,6 +92,7 @@ upgrading it requires rebuilding the native app.
 | `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
 | `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
+| `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
@@ -238,13 +239,16 @@ queue; keeping a screen mounted does not retain the session. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
-Voice notes use mono AAC at 22.05 kHz and 48 kbit/s. Expo Audio stops each
-recording natively after 600 seconds; the UI shows the remaining minute from
-9:00 and plays a leased, quiet local cue with light haptics at the limit. The
-stopped file remains a normal draft. The saved duration comes from the decoded
-audio file, so native completion notification latency does not inflate it.
-Before transcription, the client checks the file duration again, including for
-older drafts whose stored durations came from the recorder clock. It rejects
+Voice notes use mono AAC at 22.05 kHz and 48 kbit/s. Expo Audio requests a
+native stop at 599 seconds, leaving one second for the final AAC frame before
+the server's 600-second limit. After Expo pauses a recording in the background,
+the app re-arms the remaining native duration on return. The UI shows the final
+minute and plays a leased, mixing cue with light haptics at the limit. The
+stopped file remains a draft even if duration loading fails; zero in the local
+recording row explicitly means that its duration is unknown. The displayed
+duration is rounded up from the decoded file, not from JS completion latency.
+Before transcription, the client reads the file duration again without rounding,
+including for older drafts whose stored durations came from the recorder clock. It rejects
 files above 14 MiB or recordings longer than 600 seconds without uploading
 them. HTTP 413, 429 and 5xx, transport
 timeouts, and lost connections have separate retry messages in both the answer

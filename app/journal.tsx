@@ -574,7 +574,9 @@ function RecordingRow({
       <Pressable
         onPress={onToggle}
         accessibilityRole="button"
-        accessibilityLabel={t('screens.journal.recording', { duration: fmtTime(durationSec) })}
+        accessibilityLabel={t('screens.journal.recording', {
+          duration: durationSec === 0 ? t('screens.journal.durationUnknown') : fmtTime(durationSec),
+        })}
         accessibilityState={{ selected: playing }}
         hitSlop={touchSlop(recPlaySize())}
         style={styles.recRow}
@@ -583,7 +585,9 @@ function RecordingRow({
         <View style={styles.recPlay}>
           {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
         </View>
-        <Text style={styles.recLabel}>{t('screens.journal.recording', { duration: fmtTime(durationSec) })}</Text>
+        <Text style={styles.recLabel}>{t('screens.journal.recording', {
+          duration: durationSec === 0 ? t('screens.journal.durationUnknown') : fmtTime(durationSec),
+        })}</Text>
       </Pressable>
       {!!transcript && <Text style={styles.recTranscript}>{transcript}</Text>}
       {!transcript && transcriptionState === 'loading' ? (

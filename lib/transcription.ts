@@ -2,11 +2,10 @@ import { fetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 import { deviceLocale } from './transcriptionConfig';
 import { apiPaths, resolveApiUrl } from './apiConfig';
-import { recordingFileIssue } from './recordingFile';
 import { audioFileDurationSeconds } from './audioFileDuration';
+import { validateTranscriptionFile } from './transcriptionPreflight';
 import { audioTranscriptionAllowedNow } from './settings';
-import { recordingExceedsDurationLimit, recordingExceedsUploadLimit } from './transcriptionLimits';
-import { TranscriptionError, transcriptionHttpError, transcriptionTransportError } from './transcriptionErrors';
+import { transcriptionHttpError, transcriptionTransportError } from './transcriptionErrors';
 
 const PROXY_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 const TIMEOUT_MS = 60_000;
@@ -33,13 +32,7 @@ export async function transcribeRecording(
 
   try {
     const audio = new File(uri);
-    const issue = recordingFileIssue(audio);
-    if (issue) throw new Error(`Recording file is ${issue}`);
-    if (audio.size === null) throw new Error('Recording file size is unavailable');
-    if (recordingExceedsUploadLimit(audio.size)) throw new TranscriptionError('too_long');
-    if (recordingExceedsDurationLimit(await audioFileDurationSeconds(uri))) {
-      throw new TranscriptionError('too_long');
-    }
+    await validateTranscriptionFile(audio, () => audioFileDurationSeconds(uri));
     const form = new FormData();
     form.append('file', audio, audio.name || 'recording.m4a');
     const locale = deviceLocale();
