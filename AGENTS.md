@@ -24,6 +24,10 @@
   `npm run test:e2e:critical` for every new build. Run the full `main` and
   `rare` tiers, ordered suites, and manual checks for release acceptance or
   when the change directly affects them.
+- Build the app and run Maestro and live checks once, on the final revision:
+  after the fixes and the reviews have converged. On intermediate revisions
+  run only `npm run typecheck` and `npm test`. A Maestro run takes most of an
+  hour, and a revision that will still change makes its result obsolete.
 - Save each full command log and exit code as a PR or task artifact accessible
   to reviewers, and identify the tested commit and build. Put only selected
   final evidence in `testing/evidence/` as described in `testing/README.md`.
