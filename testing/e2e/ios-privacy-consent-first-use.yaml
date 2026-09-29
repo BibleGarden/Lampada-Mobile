@@ -15,7 +15,7 @@ tags:
     id: "setup-next-button"
 - assertVisible:
     id: "privacy-consent-core_prayer_ai"
-- assertVisible: "Сервер приложения передаст тему твоей молитвы.*Google Gemini.*платный API Google.*"
+- assertVisible: "Чтобы задать вопросы.*тему твоей молитвы.*Google Gemini.*платный API Google.*"
 - assertVisible:
     id: "privacy-consent-core_prayer_ai-deny"
 - assertVisible:
