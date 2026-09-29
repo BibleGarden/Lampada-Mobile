@@ -218,7 +218,7 @@ tier of its e2e runs.
 | ANS-011 | Switch between questions and edit an old answer | the answer is saved under the correct question |
 | ANS-012 | Stop a recording and do not press "Transcribe" | the audio recording and the button appear; no network request is made and no tokens are spent |
 | ANS-013 | Press "Transcribe", then save while the request is in flight | a loading state appears, after 4 s a hint that the window can be closed; the save waits for the request, the audio and the text are restored after reopening |
-| ANS-014 | Get an offline, a timeout or an HTTP error from the transcription | the audio stays available, "Retry" is shown, a repeated attempt can succeed |
+| ANS-014 | Get HTTP 413, 429, 5xx, a timeout, or a disconnected network during transcription | each cause has its own plain-language message; the audio stays available, "Retry" is shown, and a repeated attempt can succeed |
 | ANS-015 | Delete or cancel a recording during transcription | the request is cancelled, a late response does not bring the deleted recording back into the UI or the database |
 | ANS-016 | Open a long transcript in the recordings sheet | the block shows three lines, "Show in full" expands and collapses it; the list of recordings stays scrollable |
 | ANS-017 | Press "Add to the answer" on an empty and on a filled answer | the recordings sheet closes, the transcript text is appended to the end of the answer field after a blank line, the transcript itself does not change |
@@ -240,6 +240,10 @@ tier of its e2e runs.
 | ANS-033 [ipad] | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
 | ANS-034 | With the session timer running, open the answer sheet and type a sentence of about 50 characters at a steady pace | every keystroke appears in the field without batching or visible stalls (measured: one update per keystroke, no gap above 150 ms); the halo behind the timer stops breathing while the sheet is open and resumes after it closes |
 | ANS-035 | Start a voice draft, close the recordings sheet while it loads, then play a different draft | the cancelled draft never starts, its audio session is released, and a late completion or error cannot stop the new draft |
+| ANS-036 [main] | Record until the 10-minute limit | the normal elapsed clock becomes a highlighted remaining-time clock at 9:00; native recording stops at 10:00, then a quiet cue and light haptic play; the saved duration comes from the decoded file, and the draft can be played and transcribed even if the JS completion event arrives later |
+| ANS-037 | Record a short new voice note, then play and transcribe it and a pre-existing 44.1 kHz stereo note | the new M4A is mono AAC at 22.05 kHz and 48 kbit/s; both notes remain playable and transcribable |
+| ANS-038 | Try to transcribe an older file one byte above 14 MiB or longer than 600 seconds | the upload does not start, a plain-language length message appears, and the audio remains playable |
+| ANS-039 | Stop a recording manually at 9:59 and request transcription | the saved duration comes from the decoded file, remains below the server limit, and the upload proceeds without a length warning |
 
 ### The AI and the companion
 
@@ -340,7 +344,7 @@ the stub; execution results belong in dated reports.
 | JRN-009 | The recording file is missing but the database row remains | the screen does not crash, the problem is handled or clearly reported |
 | JRN-010 | Open a voice answer without text and press "Transcribe" | loading appears, then the text under the corresponding audio player; after reopening the text is still there |
 | JRN-011 | Search by a word from a transcript in a different case | the right prayer is found |
-| JRN-012 | Get a transcription error in the journal and retry | the audio stays available, a repeated attempt can save the text |
+| JRN-012 | Get HTTP 413, 429, 5xx, a timeout, or a disconnected network in the journal and retry | the cause is explained in plain language, the audio stays available, and a repeated attempt can save the text |
 | JRN-013 | Close the details or delete the prayer during transcription | the request is cancelled, a late response does not bring the deleted data back into the UI or the database |
 | JRN-014 [rare] | Share an expanded prayer | the system share sheet opens with plain text carrying localized labels (`Topic:`, `Date:`, `Duration:`, `Question N:`, `Answer:`, `Voice note:`, `Saved passages:`, `Takeaway:`) and `———` separators between the meta block, the questions, the closing block and the app name; no audio file is attached and cancelling changes nothing |
 

@@ -14,6 +14,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RecordingDraft, fmtTime } from '../lib/store';
 import { recordedSeconds } from '../lib/recordingFile';
+import { recordingSecondsRemaining } from '../lib/transcriptionLimits';
+import { transcriptionErrorMessageKey } from '../lib/transcriptionErrors';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
@@ -127,6 +129,10 @@ export default function RecordingsSheet({
     return () => clearInterval(interval);
   }, [recording, recordingPhase, getRecordedMillis, visible, screenVisible]);
   const elapsedLabel = fmtTime(elapsedSec);
+  const remainingSeconds = recordingSecondsRemaining(elapsedSec);
+  const timeLabel = remainingSeconds === null
+    ? elapsedLabel
+    : t('components.answers.recordingRemaining', { time: fmtTime(remainingSeconds) });
 
   // VoiceOver слышит подсказку о долгой расшифровке один раз на шторку, пока
   // хоть одна расшифровка идёт. Не озвучиваем за закрытой шторкой и во время
@@ -313,7 +319,9 @@ export default function RecordingsSheet({
                 )}
 
                 {r.transcriptState === 'error' && (
-                  <Text style={styles.transcriptionError}>{t('components.answers.transcriptionFailed')}</Text>
+                  <Text style={styles.transcriptionError}>
+                    {t(transcriptionErrorMessageKey(r.transcriptError ?? 'unknown'))}
+                  </Text>
                 )}
 
                 {r.transcript !== null && (
@@ -411,11 +419,13 @@ export default function RecordingsSheet({
             </View>
             {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
             <Text
-              accessibilityLabel={t('components.answers.recordedTime', { time: elapsedLabel })}
-              style={styles.recElapsed}
+              accessibilityLabel={remainingSeconds === null
+                ? t('components.answers.recordedTime', { time: elapsedLabel })
+                : timeLabel}
+              style={[styles.recElapsed, remainingSeconds !== null && styles.recElapsedWarning]}
               testID="recording-elapsed"
             >
-              {elapsedLabel}
+              {timeLabel}
             </Text>
             <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
           </View>
@@ -756,6 +766,13 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(13),
     letterSpacing: sc(1),
     color: colors.warmHint,
+  },
+  recElapsedWarning: {
+    color: '#f0c074',
+    backgroundColor: 'rgba(230,162,60,.14)',
+    borderRadius: radius.sm,
+    paddingHorizontal: sc(10),
+    paddingVertical: sc(5),
   },
   recOverlayHint: {
     fontFamily: fonts.serifItalic,

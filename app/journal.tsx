@@ -29,6 +29,7 @@ import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
 import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
 import { transcribeRecording } from '../lib/transcription';
+import { transcriptionErrorMessageKey, transcriptionFailureCode, type TranscriptionErrorCode } from '../lib/transcriptionErrors';
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
@@ -70,7 +71,7 @@ export default function Journal() {
   const pendingConsentRecording = useRef<db.JournalDetail['recordings'][number] | null>(null);
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
   const [transcriptionStates, setTranscriptionStates] = useState<
-    Record<number, 'loading' | 'error'>
+    Record<number, 'loading' | TranscriptionErrorCode>
   >({});
   const [playingUri, setPlayingUri] = useState<string | null>(null);
   const player = useAudioPlayer();
@@ -146,7 +147,6 @@ export default function Journal() {
     try {
       const transcript = await transcribeRecording(
         recording.uri,
-        recording.durationSec,
         controller.signal,
       );
       if (transcriptionControllers.current.get(recording.id) !== controller) return;
@@ -173,7 +173,7 @@ export default function Journal() {
         'Failed to transcribe journal recording',
         error instanceof Error ? error.message : 'unknown error',
       );
-      setTranscriptionStates((current) => ({ ...current, [recording.id]: 'error' }));
+      setTranscriptionStates((current) => ({ ...current, [recording.id]: transcriptionFailureCode(error) }));
     } finally {
       if (transcriptionControllers.current.get(recording.id) === controller) {
         transcriptionControllers.current.delete(recording.id);
@@ -564,7 +564,7 @@ function RecordingRow({
   transcript: string | null;
   playing: boolean;
   onToggle: () => void;
-  transcriptionState?: 'loading' | 'error';
+  transcriptionState?: 'loading' | TranscriptionErrorCode;
   onTranscribe: () => void;
 }) {
   const { t } = useI18n();
@@ -590,9 +590,9 @@ function RecordingRow({
         <Text style={styles.recTranscriptionState} testID={`journal-recording-${index}-transcribing`}>
           {t('screens.journal.transcribing')}
         </Text>
-      ) : !transcript && transcriptionState === 'error' ? (
+      ) : !transcript && transcriptionState && transcriptionState !== 'loading' ? (
         <View style={styles.recTranscriptionErrorRow}>
-          <Text style={styles.recTranscriptionError}>{t('screens.journal.transcriptionFailed')}</Text>
+          <Text style={styles.recTranscriptionError}>{t(transcriptionErrorMessageKey(transcriptionState))}</Text>
           <Pressable
             onPress={onTranscribe}
             accessibilityRole="button"

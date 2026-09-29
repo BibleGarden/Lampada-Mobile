@@ -51,6 +51,7 @@ export type RecordingDraft = {
   durationSec: number;
   transcript: string | null;
   transcriptState?: 'idle' | 'loading' | 'error';
+  transcriptError?: import('./transcriptionErrors').TranscriptionErrorCode;
 };
 
 export type Answer = { text: string; recordings: RecordingDraft[] };

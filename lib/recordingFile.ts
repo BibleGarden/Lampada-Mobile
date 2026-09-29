@@ -1,3 +1,5 @@
+import { waitForAudioPlayerReady, type AudioPlayerReadyStatus } from './audioPlayerOperation.ts';
+
 const MIN_RECORDING_BYTES = 1_024;
 const FILE_READY_POLL_MILLIS = 50;
 const FILE_READY_ATTEMPTS = 10;
@@ -16,21 +18,22 @@ export function recordingFileIssue(
   return file.size === null || file.size < MIN_RECORDING_BYTES ? 'incomplete' : null;
 }
 
-export function recordingDurationMillis(
-  nativeDurationMillis: number,
-  startedAtMillis: number | null,
-  stoppedAtMillis: number,
-) {
-  if (Number.isFinite(nativeDurationMillis) && nativeDurationMillis > 0) {
-    return Math.round(nativeDurationMillis);
-  }
-  if (startedAtMillis === null) return 0;
-  return Math.max(0, Math.round(stoppedAtMillis - startedAtMillis));
-}
-
-/** Whole recorded seconds: the live timer and the saved card count the same way. */
+/** Целые секунды для текущего отсчёта записи. */
 export function recordedSeconds(durationMillis: number) {
   return Math.floor(durationMillis / 1000);
+}
+
+/** Длительность берём из готового файла; округление вверх не пропустит 600.1 с как 600 с. */
+export async function recordedFileSeconds(
+  readStatus: () => AudioPlayerReadyStatus,
+  wait?: (millis: number) => Promise<void>,
+): Promise<number> {
+  await waitForAudioPlayerReady(readStatus, () => true, wait, 120);
+  const duration = readStatus().duration;
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new Error('Recorded audio file has no valid duration');
+  }
+  return Math.ceil(duration);
 }
 
 /** Waits for AVAudioRecorder to finish publishing stable file metadata. */

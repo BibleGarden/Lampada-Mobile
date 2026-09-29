@@ -15,7 +15,7 @@ export type RecordingLeaseRelease = {
 };
 
 export type PreparedRecorder = {
-  record: () => void;
+  record: (options?: { forDuration: number }) => void;
   readonly isRecording: boolean;
 };
 
@@ -34,8 +34,8 @@ export function recorderStatusRequiresRecovery(
 }
 
 /** Starts once; a failed native start is cleaned up before the user retries. */
-export function startPreparedRecording(recorder: PreparedRecorder) {
-  recorder.record();
+export function startPreparedRecording(recorder: PreparedRecorder, maxSeconds?: number) {
+  recorder.record(maxSeconds === undefined ? undefined : { forDuration: maxSeconds });
   if (!recorder.isRecording) {
     throw new Error('Native audio recorder did not enter recording state');
   }

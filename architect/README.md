@@ -77,6 +77,8 @@ upgrading it requires rebuilding the native app.
 | `lib/llm.ts` | The HTTP client of the server-side AI proxy |
 | `lib/contentReportClient.ts` | The bounded HTTP client for AI-content reports; it sends no prayer answer or topic |
 | `lib/transcription.ts` | Sending a local audio recording for server-side transcription |
+| `lib/audioFileDuration.ts`, `lib/recordingFile.ts` | Reading the completed audio file's duration and validating the saved recording |
+| `lib/transcriptionLimits.ts`, `lib/transcriptionErrors.ts` | The recording and upload bounds and user-facing transcription failure categories |
 | `lib/settings.ts` | Privacy settings, interface language, atomic scripture choice, reminder schedule and last prayer duration saves |
 | `lib/i18n.ts`, `lib/locales/` | Reactive English, Russian and Ukrainian interface translations |
 | `lib/privacyConsent.ts` | The versioned consent record, provider-contract identity and legacy migration rules |
@@ -236,6 +238,17 @@ queue; keeping a screen mounted does not retain the session. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
+Voice notes use mono AAC at 22.05 kHz and 48 kbit/s. Expo Audio stops each
+recording natively after 600 seconds; the UI shows the remaining minute from
+9:00 and plays a leased, quiet local cue with light haptics at the limit. The
+stopped file remains a normal draft. The saved duration comes from the decoded
+audio file, so native completion notification latency does not inflate it.
+Before transcription, the client checks the file duration again, including for
+older drafts whose stored durations came from the recorder clock. It rejects
+files above 14 MiB or recordings longer than 600 seconds without uploading
+them. HTTP 413, 429 and 5xx, transport
+timeouts, and lost connections have separate retry messages in both the answer
+sheet and the journal. Existing recordings retain their original format.
 Scripture narration retains its position and continues playback when the screen
 is covered or the app is backgrounded. It stops when the user changes the
 scripture mode, the passage, or finishes the prayer.
