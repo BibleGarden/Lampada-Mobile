@@ -889,6 +889,7 @@ const stylesFactory = () => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: sc(6),
+    paddingHorizontal: sc(8),
     paddingVertical: sc(9),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.03)',
@@ -900,6 +901,8 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: 'rgba(220,90,70,.4)',
   },
   actionLabel: {
+    flexShrink: 1,
+    textAlign: 'center',
     fontFamily: fonts.sans,
     fontSize: sc(12),
     color: colors.creamDim,

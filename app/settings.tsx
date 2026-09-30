@@ -1086,9 +1086,8 @@ export default function Settings() {
       {privacyOpen ? (
         <BottomSheet
           title={t('settings.privacy')}
-          closeLabel={t('settings.done')}
-          doneLabel={t('settings.done')}
-          doneTestID="privacy-sheet-done"
+          closeLabel={t('settings.closePrivacy')}
+          closeTestID="privacy-sheet-close"
           testID="privacy-sheet"
           onClose={() => setPrivacyOpen(false)}
         >

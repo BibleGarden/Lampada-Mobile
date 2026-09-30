@@ -263,7 +263,7 @@ tier of its e2e runs.
 | AI-004 | Finish or reset the session quickly while a request is unfinished | a late response does not change the new session |
 | AI-005 | Core AI consent is undecided or denied | questions use the local pool; scripture sends neither `topic` nor `user_replies` |
 | AI-006 [main] | Allow core AI and save the first non-empty answer | a separate disclosure explains that answers and transcripts go to Google Gemini through Google's paid API so later questions and Scripture reflect them; our server does not store them; both choices have equal weight |
-| AI-007 [main] | Set different values for the three AI purposes and restart the app | every decision is restored independently from its versioned SQLite record; settings explain each transfer in plain language and the threshold says answers stay on the device and leave our server no stored copy |
+| AI-007 [main] | Set different values for the three AI purposes, close the privacy sheet with its cross, and restart the app | each choice applies immediately and is restored independently from its versioned SQLite record; the sheet has no Done button; settings explain each transfer in plain language and the threshold says answers stay on the device and leave our server no stored copy |
 | AI-008 | Slow the AI down and check the entry and several rotations | a ready question appears without a loader; a pending request waits for its own result without a second request and without a premature fallback; the refill starts after the display |
 | AI-009 | Finish the prayer with a fast, a slow and an unavailable AI | the closing question is prepared 15 seconds before zero; a ready one is shown immediately, a pending one shows a loader without an intermediate fallback; changing the answer in the last 15 seconds updates the prefetch; a real fallback is explicitly marked as such |
 | AI-010 [critical] | On a fresh or upgraded installation, start the first prayer | the core disclosure says the prayer topic goes to Google Gemini through Google's paid API for questions and Scripture passages; our server does not store the topic; it appears before any content request |
@@ -320,7 +320,7 @@ the stub; execution results belong in dated reports.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| RPT-001 | Open the report dialog from the companion dock for a generated question, send without a comment | one localized confirmation dialog; the request carries `content_type: "question"`, the question text, the interface language and no `user_comment`; a success state is shown; the request never contains the prayer topic or the answer |
+| RPT-001 | Open the report dialog from the companion dock for a generated question in Russian, Ukrainian and English; send without a comment | visual, checked manually on a device or simulator in each language: the send label is centered with inner padding and fits; one localized confirmation dialog appears; the request carries `content_type: "question"`, the question text, the interface language and no `user_comment`; a success state is shown; the request never contains the prayer topic or the answer |
 | RPT-002 | Switch to Quote, open the card-corner report dialog, add a comment and send | the reader has no report button; the request carries `content_type: "scripture"`, the full passage reference, title when present, text, the trimmed comment and the interface language; a success state is shown |
 | RPT-003 | Get a network, a timeout or a 5xx failure and retry | the dialog and the typed comment stay available, an error text is shown, a repeated attempt can succeed; the unsaved answer in the sheet is not mutated |
 | RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays in the active session card |
@@ -350,7 +350,7 @@ the stub; execution results belong in dated reports.
 | JRN-004 | A Cyrillic search in a different case | the search stays case-insensitive |
 | JRN-005 [main] | Open the details of a text and of a voice prayer | the questions, the answers and the recordings are linked correctly |
 | JRN-006 | Play an audio, close the details, start another one | two sources never play at once, the player UI is reset |
-| JRN-007 | Delete a prayer | the session, the answers, the recording rows and the files are deleted; the streak day remains |
+| JRN-007 | Delete a prayer, including with a two-line confirmation label | visual, checked manually: the trash icon and both lines stay inside the confirmation button, and the adjacent Share button remains in place; the session, the answers, the recording rows and the files are deleted; the streak day remains |
 | JRN-008 | A restart and installing a new build over the old one | SQLite and the audio files survive and are readable |
 | JRN-009 | The recording file is missing but the database row remains | the screen does not crash, the problem is handled or clearly reported |
 | JRN-010 | Open a voice answer without text and press "Transcribe" | loading appears, then the text under the corresponding audio player; after reopening the text is still there |

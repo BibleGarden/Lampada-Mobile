@@ -21,7 +21,7 @@ tags:
 - tapOn:
     id: "privacy-setting-core_prayer_ai-denied"
 - tapOn:
-    id: "privacy-sheet-done"
+    id: "privacy-sheet-close"
 - openLink: "lampada://setup"
 - runFlow:
     when:
