@@ -229,6 +229,26 @@ On Setup, flows close the keyboard with `pressKey: Enter` (the goal field's
 in the middle of the screen, which on Setup lands inside the goal field while
 typing and moves the cursor instead of closing the keyboard.
 
+### iOS runner prerequisites and cleanup
+
+Language flows match the complete accessibility label of the language picker.
+`run-lng.sh` changes locale settings on the booted simulator before rebooting,
+and stops at the first failed flow. Restore `ru_RU` / `ru` before another suite
+if a language run stops early. A successful run also restores the app interface
+to Russian with `ios-lng-restore-ru.yaml`.
+
+PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456;
+no temporary `/tmp/disable-pin.yaml` prerequisite is needed. Cleanup errors
+are failures. The biometric preflight scrolls to the protection section before
+checking the visible hierarchy.
+
+LOCK-008 is a manual Device Hub check. Run `run-lock-appswitcher.sh prepare`,
+open App Switcher using Device Hub's Home control, then run the script with
+`capture`. Inspect the screenshot for the privacy curtain before marking the
+scenario passed. Run `cleanup` afterward. Capturing a screenshot alone does
+not assert the privacy outcome.
+
+
 ## What to do with the result
 
 A run worth remembering is described by a file in `reports/` with the date in its

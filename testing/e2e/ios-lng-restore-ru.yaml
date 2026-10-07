@@ -1,0 +1,20 @@
+appId: twinkler
+tags:
+  - prepared
+---
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: interface-language-picker
+    direction: UP
+- tapOn:
+    id: interface-language-picker
+- tapOn:
+    id: interface-language-ru
+- assertVisible:
+    id: interface-language-picker
+    text: ".*Русский.*"
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: start-prayer-button

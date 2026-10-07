@@ -19,7 +19,9 @@ tags:
     id: "interface-language-picker"
 - tapOn:
     id: "interface-language-uk"
-- assertVisible: "Українська"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"
 - launchApp:
     stopApp: true
@@ -28,5 +30,7 @@ tags:
     id: "settings-button"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "Українська"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"

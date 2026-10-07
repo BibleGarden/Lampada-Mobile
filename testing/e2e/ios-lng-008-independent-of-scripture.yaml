@@ -17,7 +17,9 @@ tags:
     id: "settings-button"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "English"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*English.*"
 - assertVisible:
     id: "scripture-language-picker"
 - assertVisible: ".*BSB.*"
@@ -28,8 +30,12 @@ tags:
     id: "interface-language-ru"
 - assertVisible: "НАСТРОЙКИ"
 - assertVisible: "ЯЗЫК ИНТЕРФЕЙСА"
-- assertVisible: "Русский"
-- assertVisible: "Язык цитат"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*Русский.*"
+- assertVisible:
+    id: "scripture-language-picker"
+    text: ".*Язык цитат.*"
 - assertVisible:
     id: "scripture-language-picker"
 - assertVisible: ".*English.*"

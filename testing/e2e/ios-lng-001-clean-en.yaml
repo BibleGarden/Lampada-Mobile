@@ -20,4 +20,6 @@ tags:
 - assertVisible: "INTERFACE LANGUAGE"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "English"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*English.*"

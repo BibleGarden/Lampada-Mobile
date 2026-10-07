@@ -21,7 +21,9 @@ tags:
     id: "interface-language-sheet"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "Українська"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"
 # Кнопка назад — по testID: её подпись переключается вслед за языком.

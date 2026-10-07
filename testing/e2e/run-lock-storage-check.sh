@@ -68,5 +68,5 @@ fi
 echo "OK: строка пина в системном логе не найдена ($(wc -l < "$LOG" | tr -d ' ') строк проверено)"
 
 echo "== Снимаем защиту"
-maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" /tmp/disable-pin.yaml > /tmp/lock-011-disable.log 2>&1 || true
+maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-cleanup.yaml > /tmp/lock-011-disable.log 2>&1
 echo "== LOCK-011: все проверки пройдены"

@@ -63,6 +63,10 @@ appId: twinkler
     optional: true
 - waitForAnimationToEnd:
     timeout: 3000
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
 EOF
 probe_biometrics_row() {
   maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-nav.yaml > /dev/null 2>&1
