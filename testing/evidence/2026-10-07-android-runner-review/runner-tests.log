@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: runtime metadata records the explicit build channel and normalized API origin, without a key
+ok 1 - runtime metadata records the explicit build channel and normalized API origin, without a key
+  ---
+  duration_ms: 1.481954
+  type: 'test'
+  ...
+# Subtest: installed test APK must match the expected test API
+ok 2 - installed test APK must match the expected test API
+  ---
+  duration_ms: 1.16193
+  type: 'test'
+  ...
+# Subtest: a non-debuggable store release is rejected independently of local test configuration
+ok 3 - a non-debuggable store release is rejected independently of local test configuration
+  ---
+  duration_ms: 0.175566
+  type: 'test'
+  ...
+# Subtest: old APKs without metadata and duplicate metadata are rejected
+ok 4 - old APKs without metadata and duplicate metadata are rejected
+  ---
+  duration_ms: 0.209662
+  type: 'test'
+  ...
+# Subtest: a stale test build using another API is rejected
+ok 5 - a stale test build using another API is rejected
+  ---
+  duration_ms: 0.2349
+  type: 'test'
+  ...
+# Subtest: production API is rejected even when both local configuration and test-labelled APK target it
+ok 6 - production API is rejected even when both local configuration and test-labelled APK target it
+  ---
+  duration_ms: 0.225087
+  type: 'test'
+  ...
+# Subtest: individual Android flows reject unsafe installed APKs before Maestro and remove the APK copy
+ok 7 - individual Android flows reject unsafe installed APKs before Maestro and remove the APK copy
+  ---
+  duration_ms: 845.016498
+  type: 'test'
+  ...
+# Subtest: a valid individual flow reaches Maestro only after installed metadata validation
+ok 8 - a valid individual flow reaches Maestro only after installed metadata validation
+  ---
+  duration_ms: 221.602864
+  type: 'test'
+  ...
+# Subtest: critical wrapper uses the same preflight, preserves all ten entries and smoke/relaunch order
+ok 9 - critical wrapper uses the same preflight, preserves all ten entries and smoke/relaunch order
+  ---
+  duration_ms: 501.092447
+  type: 'test'
+  ...
+# Subtest: missing environment and invalid flow names never reach Maestro
+ok 10 - missing environment and invalid flow names never reach Maestro
+  ---
+  duration_ms: 65.128335
+  type: 'test'
+  ...
+# Subtest: shared runner stops at the first failure without invoking subsequent flows
+ok 11 - shared runner stops at the first failure without invoking subsequent flows
+  ---
+  duration_ms: 226.988924
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2007.394715

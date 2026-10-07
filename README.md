@@ -49,6 +49,8 @@ emulator's primary language to Russian, then run:
 
 ```bash
 npm run test:e2e:android:critical
+# An individual Android flow, with the same installed-APK verification:
+npm run test:e2e:android -- android-ans-024-recordings-keyboard
 ```
 
 The 10 Android flows live in `testing/android-e2e/` and use

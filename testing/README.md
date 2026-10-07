@@ -32,13 +32,15 @@ without starting the app. Its recorded channel must be `test` and its API origin
 must match `.env.local` and differ from production. An APK predating this metadata
 must be rebuilt. The temporary APK copy is removed on success and on failure.
 
+Individual Android flows use the same installed-APK preflight and sequential
+runner as the critical tier. Pass flow names without a path or `.yaml` extension.
 The Android ANS-024 regression flow is separate from the critical tier. It opens
 existing voice recordings while the answer keyboard is visible and checks that
 the keyboard closes, the recording actions are reachable, and returning to the
 answer preserves text and restores editing:
 
 ```bash
-maestro --device emulator-5554 test --test-output-dir "$TMPDIR/pray-e2e-output" testing/android-e2e/android-ans-024-recordings-keyboard.yaml
+npm run test:e2e:android -- android-ans-024-recordings-keyboard
 ```
 
 Build and launch the app the way the root [`README.md`](../README.md) describes.

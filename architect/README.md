@@ -158,6 +158,9 @@ sheet's side margins and handle dismiss the keyboard without discarding drafts.
 Opening voice recordings blurs the answer input and disables editing while the
 recordings sheet covers it. Closing recordings restores editing with the draft
 text intact, so the covered input cannot keep or regain Android keyboard focus.
+The critical Android tier and individual Android flows share
+`scripts/test-android.sh`, which validates the installed Release APK's test
+channel and API origin before invoking Maestro.
 
 ## Screens and navigation
 

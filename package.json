@@ -56,6 +56,7 @@
     "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs",
     "test:e2e:critical": "MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=critical --test-output-dir \"${TMPDIR:-/tmp/}pray-e2e-output\" testing/e2e/",
     "test:e2e:android:critical": "bash scripts/test-android-critical.sh",
+    "test:e2e:android": "bash scripts/test-android.sh",
     "test:e2e:main": "MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=main --test-output-dir \"${TMPDIR:-/tmp/}pray-e2e-output\" testing/e2e/",
     "test:e2e:rare": "MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=rare --test-output-dir \"${TMPDIR:-/tmp/}pray-e2e-output\" testing/e2e/",
     "test:e2e:ipad": "bash testing/e2e/run-ipad.sh",

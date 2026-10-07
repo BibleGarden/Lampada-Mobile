@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-07",
+  "reviewed_head": "eae886e5345485bb0187e2717f606a7756fd0247",
+  "checks": {
+    "runner-tests": 0,
+    "typecheck": 0,
+    "unit": 0,
+    "shell-syntax": 0
+  },
+  "method": "Isolated subprocess integration tests with fake adb/apkanalyzer/Maestro executables and the real installed-manifest validator; no emulator, app launch, state clearing or API requests.",
+  "commands": {
+    "runner-tests": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/androidRunner.test.mjs lib/__tests__/androidInstalledBuild.test.mjs",
+    "typecheck": "npm run typecheck",
+    "unit": "npm test",
+    "shell-syntax": "bash -n scripts/test-android.sh scripts/test-android-critical.sh"
+  },
+  "native_e2e": "not rerun; application code and APK unchanged"
+}
