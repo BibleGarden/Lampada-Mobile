@@ -651,7 +651,7 @@ export default function AnswerSheet({
   // Микрофон в шторке ответа ведёт в записи. Пустой список — сразу пишем:
   // человек нажал микрофон, чтобы говорить, а не чтобы смотреть на пустоту.
   const openRecordings = () => {
-    Keyboard.dismiss();
+    answerInputRef.current?.blur();
     recordingsSheetGenerationRef.current += 1;
     setConfirmDeleteId(null);
     setRecordingsSheetOpen(true);
@@ -1229,6 +1229,7 @@ export default function AnswerSheet({
             <BottomSheetTextInput
               ref={answerInputRef}
               testID="answer-input"
+              editable={!recordingsSheetOpen}
               value={text}
               onChangeText={setText}
               multiline
