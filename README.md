@@ -22,6 +22,47 @@ Refresh and looks healthy, so the crash is only visible on a cold start. For
 Maestro flows the `appId` of the custom build is `twinkler`, not
 `host.exp.Exponent`.
 
+## Running locally on Android
+
+Use Node.js 22.13 or newer, Java and Android SDK 36 with Build Tools 36.0.0,
+NDK 27.1.12297006 and CMake 3.22.1. Start an existing Android emulator and
+configure `.env.local` with the **test** API origin and its dedicated Lampada
+key before running tests. Keep production credentials in a separate file
+outside Expo's automatic dotenv loading.
+
+```bash
+npm ci
+npm run env:check:local
+npm run android -- --variant release --device Pixel_9_Pro_API_35 --no-bundler
+```
+
+This installs a standalone Release build with test-build metadata. Metro is
+not required after installation. The local build script reserves a test patch
+version. The Android build plugin sets a 4 GiB Gradle heap for the Release DEX
+merge. An HTTP test API is supported by the same plugin;
+HTTPS disables cleartext traffic, and a non-test build rejects an HTTP origin.
+Changing `.env.local` requires rebuilding and reinstalling Release.
+
+Install Maestro and add it, Android platform-tools and command-line tools
+(`apkanalyzer`) to `PATH`. Set the
+emulator's primary language to Russian, then run:
+
+```bash
+npm run test:e2e:android:critical
+```
+
+The 10 Android flows live in `testing/android-e2e/` and use
+`com.nf404.twinkler`, Android selectors and keyboard commands. The runner
+requires Release, preserves smoke → relaunch order, stops at the first failure
+and records full logs and exit codes in a temporary output directory. Override
+`ANDROID_TEST_DEVICE` or `ANDROID_TEST_OUTPUT_DIR` when needed. The original iOS
+commands still scan only `testing/e2e/` and use `twinkler`.
+Before launching any flow or clearing app data, it reads the installed APK's
+manifest offline and requires test-channel metadata with the API origin matching
+`.env.local`. Store builds, old APKs without metadata, mismatched origins and
+the production API are rejected. Rebuild and reinstall after updating this
+configuration; editing `.env.local` alone does not change an installed Release.
+
 ## AI
 
 AI requests go through `https://api.bible.garden/api/ai/question` to an existing

@@ -1,0 +1,26 @@
+appId: com.nf404.twinkler
+tags:
+  - critical
+---
+# JRN-001: an empty journal shows a clear empty state and no error.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible:
+    id: "start-prayer-button"
+- tapOn:
+    id: "journal-button"
+- assertVisible:
+    id: "journal-title"
+- assertVisible:
+    id: "journal-empty-state"
+- takeScreenshot: JRN-001-empty-history
+# search over an empty history must not error either
+- tapOn:
+    id: "journal-search-input"
+- inputText: "тревога"
+- assertVisible: "тревога"
+# Поле поиска однострочное: Enter завершает ввод, не вызывая системный Back.
+- pressKey: Enter
+- assertVisible: "Ничего не нашлось — попробуй другое слово"
+- takeScreenshot: JRN-001-empty-search

@@ -47,6 +47,15 @@ updates took frames from the text input, and typing showed up in batches.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
+The Android build plugin permits cleartext traffic only when the build
+channel is `test` and its API origin uses HTTP. HTTPS builds disable cleartext;
+an HTTP origin without the test channel fails native configuration explicitly.
+It also reserves a 4 GiB Gradle heap and 1 GiB metaspace for the Release DEX merge.
+The manifest records the build channel and normalized API origin without the
+client key. Android e2e reads these fields from the installed APK before launching
+the app or clearing its data and requires a test channel with the expected
+non-production origin.
+
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
 
@@ -148,6 +157,9 @@ centered text column. Text fields retain their own touch handling; the answer
 sheet's side margins and handle dismiss the keyboard without discarding drafts.
 
 ## Screens and navigation
+
+Home enters `/setup` with `router.navigate`, so repeated Start presses reuse
+the setup route rather than adding duplicate entries to the back stack.
 
 | Route | Role |
 | --- | --- |

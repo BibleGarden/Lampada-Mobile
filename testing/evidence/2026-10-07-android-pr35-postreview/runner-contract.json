@@ -1,0 +1,37 @@
+{
+  "matching": {
+    "exit": 0,
+    "scenarios_started": 10,
+    "expected_behavior": true
+  },
+  "store": {
+    "exit": 1,
+    "scenarios_started": 0,
+    "expected_behavior": true
+  },
+  "old_apk": {
+    "exit": 1,
+    "scenarios_started": 0,
+    "expected_behavior": true
+  },
+  "wrong_api": {
+    "exit": 1,
+    "scenarios_started": 0,
+    "expected_behavior": true
+  },
+  "production": {
+    "exit": 1,
+    "scenarios_started": 0,
+    "expected_behavior": true
+  },
+  "invalid_env": {
+    "exit": 1,
+    "scenarios_started": 0,
+    "expected_behavior": true
+  },
+  "failed_flow": {
+    "exit": 17,
+    "scenarios_started": 3,
+    "expected_behavior": true
+  }
+}

@@ -1,0 +1,1975 @@
+
+> pray@1.0.0 test
+> node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs
+
+TAP version 13
+# Subtest: Android test builds can use the local HTTP API
+ok 1 - Android test builds can use the local HTTP API
+  ---
+  duration_ms: 1.430018
+  type: 'test'
+  ...
+# Subtest: HTTPS builds keep cleartext traffic disabled
+ok 2 - HTTPS builds keep cleartext traffic disabled
+  ---
+  duration_ms: 0.339853
+  type: 'test'
+  ...
+# Subtest: HTTP without an explicit test channel cannot enter a store build
+ok 3 - HTTP without an explicit test channel cannot enter a store build
+  ---
+  duration_ms: 0.639454
+  type: 'test'
+  ...
+# Subtest: missing or malformed API origins stop Android configuration
+ok 4 - missing or malformed API origins stop Android configuration
+  ---
+  duration_ms: 0.47975
+  type: 'test'
+  ...
+# Subtest: runtime metadata records the explicit build channel and normalized API origin, without a key
+ok 5 - runtime metadata records the explicit build channel and normalized API origin, without a key
+  ---
+  duration_ms: 3.48496
+  type: 'test'
+  ...
+# Subtest: installed test APK must match the expected test API
+ok 6 - installed test APK must match the expected test API
+  ---
+  duration_ms: 2.242679
+  type: 'test'
+  ...
+# Subtest: a non-debuggable store release is rejected independently of local test configuration
+ok 7 - a non-debuggable store release is rejected independently of local test configuration
+  ---
+  duration_ms: 0.313703
+  type: 'test'
+  ...
+# Subtest: old APKs without metadata and duplicate metadata are rejected
+ok 8 - old APKs without metadata and duplicate metadata are rejected
+  ---
+  duration_ms: 0.335044
+  type: 'test'
+  ...
+# Subtest: a stale test build using another API is rejected
+ok 9 - a stale test build using another API is rejected
+  ---
+  duration_ms: 0.554461
+  type: 'test'
+  ...
+# Subtest: production API is rejected even when both local configuration and test-labelled APK target it
+ok 10 - production API is rejected even when both local configuration and test-labelled APK target it
+  ---
+  duration_ms: 0.460719
+  type: 'test'
+  ...
+# Subtest: voice answer transcripts contribute alongside text
+ok 11 - voice answer transcripts contribute alongside text
+  ---
+  duration_ms: 2.574255
+  type: 'test'
+  ...
+# Subtest: a recording without a transcript adds nothing to the context
+ok 12 - a recording without a transcript adds nothing to the context
+  ---
+  duration_ms: 0.38097
+  type: 'test'
+  ...
+# Subtest: answer text precedes its recording transcripts
+ok 13 - answer text precedes its recording transcripts
+  ---
+  duration_ms: 0.248216
+  type: 'test'
+  ...
+# Subtest: answers are collected in ascending question index order
+ok 14 - answers are collected in ascending question index order
+  ---
+  duration_ms: 0.31634
+  type: 'test'
+  ...
+# Subtest: whitespace-only entries are discarded and remaining entries are trimmed
+ok 15 - whitespace-only entries are discarded and remaining entries are trimmed
+  ---
+  duration_ms: 0.224044
+  type: 'test'
+  ...
+# Subtest: a session without answers produces an empty context
+ok 16 - a session without answers produces an empty context
+  ---
+  duration_ms: 0.206385
+  type: 'test'
+  ...
+# Subtest: auto-save before reflection keeps a typed answer with an unanswered consent
+ok 17 - auto-save before reflection keeps a typed answer with an unanswered consent
+  ---
+  duration_ms: 2.281611
+  type: 'test'
+  ...
+# Subtest: manual save stores the answer before asking the undecided answer consent
+ok 18 - manual save stores the answer before asking the undecided answer consent
+  ---
+  duration_ms: 0.243658
+  type: 'test'
+  ...
+# Subtest: manual save after the prayer ended does not open a consent the reflection would unmount
+ok 19 - manual save after the prayer ended does not open a consent the reflection would unmount
+  ---
+  duration_ms: 0.207125
+  type: 'test'
+  ...
+# Subtest: a failed local save propagates and never asks the consent
+ok 20 - a failed local save propagates and never asks the consent
+  ---
+  duration_ms: 0.810691
+  type: 'test'
+  ...
+# Subtest: manual save asks nothing once the answer consent is decided
+ok 21 - manual save asks nothing once the answer consent is decided
+  ---
+  duration_ms: 23.835151
+  type: 'test'
+  ...
+# Subtest: manual save asks nothing when no answer can reach a request
+ok 22 - manual save asks nothing when no answer can reach a request
+  ---
+  duration_ms: 5.126034
+  type: 'test'
+  ...
+# Subtest: auto-save during an in-flight manual save waits for it and does not write twice
+ok 23 - auto-save during an in-flight manual save waits for it and does not write twice
+  ---
+  duration_ms: 0.503682
+  type: 'test'
+  ...
+# Subtest: a failed save releases the flight for a retry
+ok 24 - a failed save releases the flight for a retry
+  ---
+  duration_ms: 1.655325
+  type: 'test'
+  ...
+# Subtest: a failed recording write rolls back the answer text as well
+ok 25 - a failed recording write rolls back the answer text as well
+  ---
+  duration_ms: 4.590751
+  type: 'test'
+  ...
+# Subtest: answer text and recordings are committed together in the exclusive transaction only
+ok 26 - answer text and recordings are committed together in the exclusive transaction only
+  ---
+  duration_ms: 1.538068
+  type: 'test'
+  ...
+# Subtest: both connections wait for the write lock and the transaction writes before it reads
+ok 27 - both connections wait for the write lock and the transaction writes before it reads
+  ---
+  duration_ms: 0.554845
+  type: 'test'
+  ...
+# Subtest: all endpoints share one origin, with or without its trailing slash
+ok 28 - all endpoints share one origin, with or without its trailing slash
+  ---
+  duration_ms: 4.811049
+  type: 'test'
+  ...
+# Subtest: missing or invalid origins cannot route requests or expose URL credentials
+ok 29 - missing or invalid origins cannot route requests or expose URL credentials
+  ---
+  duration_ms: 0.499115
+  type: 'test'
+  ...
+# Subtest: runtime uses only EXPO_PUBLIC_API_URL and ignores legacy endpoint variables
+ok 30 - runtime uses only EXPO_PUBLIC_API_URL and ignores legacy endpoint variables
+  ---
+  duration_ms: 0.440055
+  type: 'test'
+  ...
+# Subtest: catalogs, selection, contacts and audio use the configured origin and client key
+ok 31 - catalogs, selection, contacts and audio use the configured origin and client key
+  ---
+  duration_ms: 228.783174
+  type: 'test'
+  ...
+# Subtest: a completed cue pauses the player and removes its listener
+ok 32 - a completed cue pauses the player and removes its listener
+  ---
+  duration_ms: 33.679552
+  type: 'test'
+  ...
+# Subtest: cancelling or losing the grant settles without a timeout error
+ok 33 - cancelling or losing the grant settles without a timeout error
+  ---
+  duration_ms: 10.304877
+  type: 'test'
+  ...
+# Subtest: a real cue timeout rejects after pausing and releasing the listener
+ok 34 - a real cue timeout rejects after pausing and releasing the listener
+  ---
+  duration_ms: 6.211624
+  type: 'test'
+  ...
+# Subtest: unmount cancellation never calls an already released native player
+ok 35 - unmount cancellation never calls an already released native player
+  ---
+  duration_ms: 1.076443
+  type: 'test'
+  ...
+# Subtest: transient players never schedule global session deactivation on pause
+ok 36 - transient players never schedule global session deactivation on pause
+  ---
+  duration_ms: 1.8818
+  type: 'test'
+  ...
+# Subtest: recording waits for playback work that was already queued
+ok 37 - recording waits for playback work that was already queued
+  ---
+  duration_ms: 1.406155
+  type: 'test'
+  ...
+# Subtest: recording lease synchronously skips newer playback requests
+ok 38 - recording lease synchronously skips newer playback requests
+  ---
+  duration_ms: 0.358779
+  type: 'test'
+  ...
+# Subtest: playback is allowed after the recording lease is released
+ok 39 - playback is allowed after the recording lease is released
+  ---
+  duration_ms: 0.339191
+  type: 'test'
+  ...
+# Subtest: lease remains active until its owner explicitly confirms release
+ok 40 - lease remains active until its owner explicitly confirms release
+  ---
+  duration_ms: 0.385363
+  type: 'test'
+  ...
+# Subtest: a recording invalidates a playback continuation after its mode call
+ok 41 - a recording invalidates a playback continuation after its mode call
+  ---
+  duration_ms: 0.402048
+  type: 'test'
+  ...
+# Subtest: failed recording-mode acquisition does not retain a lease
+ok 42 - failed recording-mode acquisition does not retain a lease
+  ---
+  duration_ms: 6.37512
+  type: 'test'
+  ...
+# Subtest: the last session lease deactivates after recording release
+ok 43 - the last session lease deactivates after recording release
+  ---
+  duration_ms: 0.611926
+  type: 'test'
+  ...
+# Subtest: a new owner cancels a queued deactivation
+ok 44 - a new owner cancels a queued deactivation
+  ---
+  duration_ms: 0.893398
+  type: 'test'
+  ...
+# Subtest: native deactivation failure is observable to the last owner
+ok 45 - native deactivation failure is observable to the last owner
+  ---
+  duration_ms: 2.760201
+  type: 'test'
+  ...
+# Subtest: recordings dismissal clears shared busy only for its own draft playback
+ok 46 - recordings dismissal clears shared busy only for its own draft playback
+  ---
+  duration_ms: 2.084174
+  type: 'test'
+  ...
+# Subtest: a duplicate draft start cannot acquire an untracked session lease
+ok 47 - a duplicate draft start cannot acquire an untracked session lease
+  ---
+  duration_ms: 5.692957
+  type: 'test'
+  ...
+# Subtest: closing a sheet while draft audio loads releases its lease and ignores completion
+ok 48 - closing a sheet while draft audio loads releases its lease and ignores completion
+  ---
+  duration_ms: 25.143367
+  type: 'test'
+  ...
+# Subtest: a late status from an old draft cannot release the next draft lease
+ok 49 - a late status from an old draft cannot release the next draft lease
+  ---
+  duration_ms: 0.899956
+  type: 'test'
+  ...
+# Subtest: waits for a replaced player item to load with a real duration
+ok 50 - waits for a replaced player item to load with a real duration
+  ---
+  duration_ms: 1.025404
+  type: 'test'
+  ...
+# Subtest: cancels readiness wait when recording or sheet dismissal supersedes playback
+ok 51 - cancels readiness wait when recording or sheet dismissal supersedes playback
+  ---
+  duration_ms: 0.257632
+  type: 'test'
+  ...
+# Subtest: surfaces native player load errors
+ok 52 - surfaces native player load errors
+  ---
+  duration_ms: 0.42376
+  type: 'test'
+  ...
+# Subtest: resumes the paused item at its native position without reloading or seeking
+ok 53 - resumes the paused item at its native position without reloading or seeking
+  ---
+  duration_ms: 0.386213
+  type: 'test'
+  ...
+# Subtest: starts a different or completed recording from the beginning
+ok 54 - starts a different or completed recording from the beginning
+  ---
+  duration_ms: 0.745031
+  type: 'test'
+  ...
+# Subtest: does not resume after the sheet closes while readiness is being checked
+ok 55 - does not resume after the sheet closes while readiness is being checked
+  ---
+  duration_ms: 0.56807
+  type: 'test'
+  ...
+# Subtest: does not start after a recording operation supersedes the initial seek
+ok 56 - does not start after a recording operation supersedes the initial seek
+  ---
+  duration_ms: 0.413405
+  type: 'test'
+  ...
+# Subtest: test builds reserve patches of the current release and preserve unrelated config
+ok 57 - test builds reserve patches of the current release and preserve unrelated config
+  ---
+  duration_ms: 252.717436
+  type: 'test'
+  ...
+# Subtest: a release build drops the patch and raises the minor
+ok 58 - a release build drops the patch and raises the minor
+  ---
+  duration_ms: 466.266312
+  type: 'test'
+  ...
+# Subtest: components increment beyond nine without changing major
+ok 59 - components increment beyond nine without changing major
+  ---
+  duration_ms: 236.831846
+  type: 'test'
+  ...
+# Subtest: invalid version 1 fails without changing config
+ok 60 - invalid version 1 fails without changing config
+  ---
+  duration_ms: 112.039437
+  type: 'test'
+  ...
+# Subtest: invalid version 1.2.beta fails without changing config
+ok 61 - invalid version 1.2.beta fails without changing config
+  ---
+  duration_ms: 74.249686
+  type: 'test'
+  ...
+# Subtest: invalid version 1.2.3.4 fails without changing config
+ok 62 - invalid version 1.2.3.4 fails without changing config
+  ---
+  duration_ms: 66.111275
+  type: 'test'
+  ...
+# Subtest: invalid version 1.2.9007199254740991 fails without changing config
+ok 63 - invalid version 1.2.9007199254740991 fails without changing config
+  ---
+  duration_ms: 64.478382
+  type: 'test'
+  ...
+# Subtest: invalid version null fails without changing config
+ok 64 - invalid version null fails without changing config
+  ---
+  duration_ms: 71.156463
+  type: 'test'
+  ...
+# Subtest: missing or unknown mode (none) fails without changing config
+ok 65 - missing or unknown mode (none) fails without changing config
+  ---
+  duration_ms: 68.310641
+  type: 'test'
+  ...
+# Subtest: missing or unknown mode patch fails without changing config
+ok 66 - missing or unknown mode patch fails without changing config
+  ---
+  duration_ms: 68.2873
+  type: 'test'
+  ...
+# Subtest: sends the exact report contract with the shared API key
+ok 67 - sends the exact report contract with the shared API key
+  ---
+  duration_ms: 3.697523
+  type: 'test'
+  ...
+# Subtest: reports configuration, authorization, validation and malformed responses explicitly
+ok 68 - reports configuration, authorization, validation and malformed responses explicitly
+  ---
+  duration_ms: 1.434264
+  type: 'test'
+  ...
+# Subtest: distinguishes timeout from a network failure
+ok 69 - distinguishes timeout from a network failure
+  ---
+  duration_ms: 1.375596
+  type: 'test'
+  ...
+# Subtest: the question tab reports only its displayed question
+ok 70 - the question tab reports only its displayed question
+  ---
+  duration_ms: 15.886494
+  type: 'test'
+  ...
+# Subtest: the scripture tab reports the full passage shown in the reader
+ok 71 - the scripture tab reports the full passage shown in the reader
+  ---
+  duration_ms: 0.439895
+  type: 'test'
+  ...
+# Subtest: every part carries a label and the sections are split by separators
+ok 72 - every part carries a label and the sections are split by separators
+  ---
+  duration_ms: 206.292242
+  type: 'test'
+  ...
+# Subtest: a recording without a transcript adds nothing
+ok 73 - a recording without a transcript adds nothing
+  ---
+  duration_ms: 0.839816
+  type: 'test'
+  ...
+# Subtest: an empty topic falls back to the localized prayer label
+ok 74 - an empty topic falls back to the localized prayer label
+  ---
+  duration_ms: 0.646925
+  type: 'test'
+  ...
+# Subtest: a broken start date drops the date line instead of printing Invalid Date
+ok 75 - a broken start date drops the date line instead of printing Invalid Date
+  ---
+  duration_ms: 0.197386
+  type: 'test'
+  ...
+# Subtest: a multi-line answer keeps its own line breaks
+ok 76 - a multi-line answer keeps its own line breaks
+  ---
+  duration_ms: 0.639146
+  type: 'test'
+  ...
+# Subtest: the Russian and Ukrainian exports use their own labels
+ok 77 - the Russian and Ukrainian exports use their own labels
+  ---
+  duration_ms: 6.345149
+  type: 'test'
+  ...
+# Subtest: the share title stays the topic and falls back to the prayer label
+ok 78 - the share title stays the topic and falls back to the prayer label
+  ---
+  duration_ms: 0.254657
+  type: 'test'
+  ...
+# (node:28478) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: returning to Home the next day moves yesterday’s prayer out of today
+ok 79 - returning to Home the next day moves yesterday’s prayer out of today
+  ---
+  duration_ms: 8.175421
+  type: 'test'
+  ...
+# Subtest: Home advances at each local midnight without navigation
+ok 80 - Home advances at each local midnight without navigation
+  ---
+  duration_ms: 0.928355
+  type: 'test'
+  ...
+# Subtest: backgrounding cancels the timer and resuming catches up after several days
+ok 81 - backgrounding cancels the timer and resuming catches up after several days
+  ---
+  duration_ms: 0.822458
+  type: 'test'
+  ...
+# Subtest: leaving Home removes both the app listener and midnight timer
+ok 82 - leaving Home removes both the app listener and midnight timer
+  ---
+  duration_ms: 0.552561
+  type: 'test'
+  ...
+# Subtest: Home mounted in the background waits until the app becomes active
+ok 83 - Home mounted in the background waits until the app becomes active
+  ---
+  duration_ms: 1.29877
+  type: 'test'
+  ...
+# Subtest: local midnight follows the 23-hour spring daylight-saving day
+ok 84 - local midnight follows the 23-hour spring daylight-saving day
+  ---
+  duration_ms: 5.964634
+  type: 'test'
+  ...
+# Subtest: local midnight follows the 25-hour autumn daylight-saving day
+ok 85 - local midnight follows the 25-hour autumn daylight-saving day
+  ---
+  duration_ms: 2.910419
+  type: 'test'
+  ...
+# Subtest: AI proxy sends only the structured question contract
+ok 86 - AI proxy sends only the structured question contract
+  ---
+  duration_ms: 118.339295
+  type: 'test'
+  ...
+# Subtest: HTTP 422 rejects once without removing or retrying an invalid default language
+ok 87 - HTTP 422 rejects once without removing or retrying an invalid default language
+  ---
+  duration_ms: 9.403025
+  type: 'test'
+  ...
+# Subtest: locks once the background interval reaches the grace window
+ok 88 - locks once the background interval reaches the grace window
+  ---
+  duration_ms: 2.120884
+  type: 'test'
+  ...
+# Subtest: keeps a short trip to the background unlocked
+ok 89 - keeps a short trip to the background unlocked
+  ---
+  duration_ms: 0.216968
+  type: 'test'
+  ...
+# Subtest: locks after a longer background interval
+ok 90 - locks after a longer background interval
+  ---
+  duration_ms: 0.205159
+  type: 'test'
+  ...
+# Subtest: never locks when the app has not been backgrounded
+ok 91 - never locks when the app has not been backgrounded
+  ---
+  duration_ms: 0.184485
+  type: 'test'
+  ...
+# Subtest: keeps a zero-length background interval unlocked
+ok 92 - keeps a zero-length background interval unlocked
+  ---
+  duration_ms: 0.813161
+  type: 'test'
+  ...
+# Subtest: accepts digit-only pins of the allowed length
+ok 93 - accepts digit-only pins of the allowed length
+  ---
+  duration_ms: 0.300003
+  type: 'test'
+  ...
+# Subtest: rejects pins that are too short or too long
+ok 94 - rejects pins that are too short or too long
+  ---
+  duration_ms: 0.264839
+  type: 'test'
+  ...
+# Subtest: rejects pins containing anything but digits
+ok 95 - rejects pins containing anything but digits
+  ---
+  duration_ms: 13.003718
+  type: 'test'
+  ...
+# Subtest: rejects a pin with a newline at either end
+ok 96 - rejects a pin with a newline at either end
+  ---
+  duration_ms: 3.795241
+  type: 'test'
+  ...
+# Subtest: treats an enabled flag without a hash as disabled
+ok 97 - treats an enabled flag without a hash as disabled
+  ---
+  duration_ms: 3.400218
+  type: 'test'
+  ...
+# Subtest: treats an enabled flag without a salt as disabled
+ok 98 - treats an enabled flag without a salt as disabled
+  ---
+  duration_ms: 0.319198
+  type: 'test'
+  ...
+# Subtest: treats a stored hash and salt without the flag as disabled
+ok 99 - treats a stored hash and salt without the flag as disabled
+  ---
+  duration_ms: 0.196195
+  type: 'test'
+  ...
+# Subtest: enables the lock only for a complete record
+ok 100 - enables the lock only for a complete record
+  ---
+  duration_ms: 0.931201
+  type: 'test'
+  ...
+# Subtest: ignores biometrics while the lock itself is off
+ok 101 - ignores biometrics while the lock itself is off
+  ---
+  duration_ms: 1.679233
+  type: 'test'
+  ...
+# Subtest: reports biometrics on top of an enabled lock
+ok 102 - reports biometrics on top of an enabled lock
+  ---
+  duration_ms: 0.161819
+  type: 'test'
+  ...
+# Subtest: keeps the stored pin length
+ok 103 - keeps the stored pin length
+  ---
+  duration_ms: 0.151686
+  type: 'test'
+  ...
+# Subtest: falls back to the minimum length for an unreadable record
+ok 104 - falls back to the minimum length for an unreadable record
+  ---
+  duration_ms: 0.146428
+  type: 'test'
+  ...
+# Subtest: clamps an out-of-range stored length to the allowed bounds
+ok 105 - clamps an out-of-range stored length to the allowed bounds
+  ---
+  duration_ms: 0.125308
+  type: 'test'
+  ...
+# Subtest: fades the music volume out to silence over the requested time
+ok 106 - fades the music volume out to silence over the requested time
+  ---
+  duration_ms: 6.264663
+  type: 'test'
+  ...
+# Subtest: a shorter request hastens a running fade without a volume jump
+ok 107 - a shorter request hastens a running fade without a volume jump
+  ---
+  duration_ms: 0.273915
+  type: 'test'
+  ...
+# Subtest: a longer request does not postpone a running fade
+ok 108 - a longer request does not postpone a running fade
+  ---
+  duration_ms: 0.200768
+  type: 'test'
+  ...
+# Subtest: returns all 15 tracks exactly once starting at the selected position
+ok 109 - returns all 15 tracks exactly once starting at the selected position
+  ---
+  duration_ms: 4.121673
+  type: 'test'
+  ...
+# Subtest: does not repeat the starting track of the previous prayer
+ok 110 - does not repeat the starting track of the previous prayer
+  ---
+  duration_ms: 2.210588
+  type: 'test'
+  ...
+# Subtest: handles an empty catalog and a single track
+ok 111 - handles an empty catalog and a single track
+  ---
+  duration_ms: 0.232456
+  type: 'test'
+  ...
+# Subtest: a ready value is retrieved synchronously and clears the slot
+ok 112 - a ready value is retrieved synchronously and clears the slot
+  ---
+  duration_ms: 4.54979
+  type: 'test'
+  ...
+# Subtest: repeated prepare calls with the same key do not start another request
+ok 113 - repeated prepare calls with the same key do not start another request
+  ---
+  duration_ms: 0.295592
+  type: 'test'
+  ...
+# Subtest: wait returns the existing pending request
+ok 114 - wait returns the existing pending request
+  ---
+  duration_ms: 0.380222
+  type: 'test'
+  ...
+# Subtest: a late result from a stale request does not replace the new slot
+ok 115 - a late result from a stale request does not replace the new slot
+  ---
+  duration_ms: 0.317158
+  type: 'test'
+  ...
+# Subtest: refill remains in the background after displaying a ready value
+ok 116 - refill remains in the background after displaying a ready value
+  ---
+  duration_ms: 0.339065
+  type: 'test'
+  ...
+# Subtest: first launch without a stored duration keeps the default
+ok 117 - first launch without a stored duration keeps the default
+  ---
+  duration_ms: 1.277119
+  type: 'test'
+  ...
+# Subtest: presets, stepper values and the untimed prayer survive a round trip
+ok 118 - presets, stepper values and the untimed prayer survive a round trip
+  ---
+  duration_ms: 0.378001
+  type: 'test'
+  ...
+# Subtest: an out-of-range or non-integer duration is refused on save
+ok 119 - an out-of-range or non-integer duration is refused on save
+  ---
+  duration_ms: 0.831854
+  type: 'test'
+  ...
+# Subtest: a corrupted stored duration fails loudly instead of falling back
+ok 120 - a corrupted stored duration fails loudly instead of falling back
+  ---
+  duration_ms: 0.386839
+  type: 'test'
+  ...
+# Subtest: weekday numbering maps ISO Monday to Expo 2 and Sunday to 1
+ok 121 - weekday numbering maps ISO Monday to Expo 2 and Sunday to 1
+  ---
+  duration_ms: 3.283025
+  type: 'test'
+  ...
+# Subtest: normalization removes invalid entries, sorts, and deduplicates
+ok 122 - normalization removes invalid entries, sorts, and deduplicates
+  ---
+  duration_ms: 0.735979
+  type: 'test'
+  ...
+# Subtest: normalization merges rules with identical weekdays and drops empty rules
+ok 123 - normalization merges rules with identical weekdays and drops empty rules
+  ---
+  duration_ms: 0.459568
+  type: 'test'
+  ...
+# Subtest: normalization caps the number of times in a rule
+ok 124 - normalization caps the number of times in a rule
+  ---
+  duration_ms: 0.38358
+  type: 'test'
+  ...
+# Subtest: normalization rejects values that are not schedules
+ok 125 - normalization rejects values that are not schedules
+  ---
+  duration_ms: 0.222543
+  type: 'test'
+  ...
+# Subtest: corrupted stored values are not treated as schedules
+ok 126 - corrupted stored values are not treated as schedules
+  ---
+  duration_ms: 0.822701
+  type: 'test'
+  ...
+# Subtest: expands rules into WEEKLY triggers using Expo weekday numbering
+ok 127 - expands rules into WEEKLY triggers using Expo weekday numbering
+  ---
+  duration_ms: 3.537267
+  type: 'test'
+  ...
+# Subtest: overlapping rules do not create duplicate notifications at the same time
+ok 128 - overlapping rules do not create duplicate notifications at the same time
+  ---
+  duration_ms: 0.304359
+  type: 'test'
+  ...
+# Subtest: a disabled schedule produces no triggers
+ok 129 - a disabled schedule produces no triggers
+  ---
+  duration_ms: 2.207404
+  type: 'test'
+  ...
+# Subtest: the maximum schedule allowed by the UI fits within the iOS limit
+ok 130 - the maximum schedule allowed by the UI fits within the iOS limit
+  ---
+  duration_ms: 0.828221
+  type: 'test'
+  ...
+# Subtest: schedules exceeding the iOS limit are capped before scheduling
+ok 131 - schedules exceeding the iOS limit are capped before scheduling
+  ---
+  duration_ms: 0.49995
+  type: 'test'
+  ...
+# Subtest: renders a schedule as a readable string
+ok 132 - renders a schedule as a readable string
+  ---
+  duration_ms: 0.534162
+  type: 'test'
+  ...
+# Subtest: groups weekdays into ranges and labels a full week
+ok 133 - groups weekdays into ranges and labels a full week
+  ---
+  duration_ms: 0.209482
+  type: 'test'
+  ...
+# Subtest: times use leading zeros and an empty schedule renders an empty string
+ok 134 - times use leading zeros and an empty schedule renders an empty string
+  ---
+  duration_ms: 0.477068
+  type: 'test'
+  ...
+# Subtest: shuffling preserves every pool item and changes their order
+ok 135 - shuffling preserves every pool item and changes their order
+  ---
+  duration_ms: 1.291917
+  type: 'test'
+  ...
+# Subtest: shuffling stays within pool bounds at random value extremes
+ok 136 - shuffling stays within pool bounds at random value extremes
+  ---
+  duration_ms: 0.347811
+  type: 'test'
+  ...
+# Subtest: current versioned consent round-trips
+ok 137 - current versioned consent round-trips
+  ---
+  duration_ms: 3.511542
+  type: 'test'
+  ...
+# Subtest: missing and permissive legacy answer values remain undecided
+ok 138 - missing and permissive legacy answer values remain undecided
+  ---
+  duration_ms: 0.289367
+  type: 'test'
+  ...
+# Subtest: an explicit legacy answer opt-out migrates to denied
+ok 139 - an explicit legacy answer opt-out migrates to denied
+  ---
+  duration_ms: 0.162937
+  type: 'test'
+  ...
+# Subtest: malformed and obsolete records cannot allow a transfer
+ok 140 - malformed and obsolete records cannot allow a transfer
+  ---
+  duration_ms: 0.643412
+  type: 'test'
+  ...
+# Subtest: a former Gemini-era allowance does not carry over
+ok 141 - a former Gemini-era allowance does not carry over
+  ---
+  duration_ms: 14.090702
+  type: 'test'
+  ...
+# Subtest: every decision under the company-hosted notice requires a new decision
+ok 142 - every decision under the company-hosted notice requires a new decision
+  ---
+  duration_ms: 0.657417
+  type: 'test'
+  ...
+# Subtest: each locale names the processors in the consent dialog and settings
+ok 143 - each locale names the processors in the consent dialog and settings
+  ---
+  duration_ms: 0.856345
+  type: 'test'
+  ...
+# Subtest: answer consent describes transcripts as text, not recordings
+ok 144 - answer consent describes transcripts as text, not recordings
+  ---
+  duration_ms: 0.399103
+  type: 'test'
+  ...
+# Subtest: only allowed opens a content-transfer gate
+ok 145 - only allowed opens a content-transfer gate
+  ---
+  duration_ms: 0.785773
+  type: 'test'
+  ...
+# Subtest: history preserves question associations, conversation order and complete voice turns
+ok 146 - history preserves question associations, conversation order and complete voice turns
+  ---
+  duration_ms: 6.433857
+  type: 'test'
+  ...
+# Subtest: untranscribed voice answers are sent as shown questions, including without answer consent
+ok 147 - untranscribed voice answers are sent as shown questions, including without answer consent
+  ---
+  duration_ms: 1.505893
+  type: 'test'
+  ...
+# Subtest: a question displaced from skipped history remains in shown history after it is answered
+ok 148 - a question displaced from skipped history remains in shown history after it is answered
+  ---
+  duration_ms: 0.576547
+  type: 'test'
+  ...
+# Subtest: shown questions retain the latest ten, respect the 300-character cap and the shared budget
+ok 149 - shown questions retain the latest ten, respect the 300-character cap and the shared budget
+  ---
+  duration_ms: 4.01396
+  type: 'test'
+  ...
+# Subtest: context retains newest messages within both limits without mutating or truncating the latest reply
+ok 150 - context retains newest messages within both limits without mutating or truncating the latest reply
+  ---
+  duration_ms: 1.454449
+  type: 'test'
+  ...
+# Subtest: local question pools use unseen candidates before the least recently shown repeat
+ok 151 - local question pools use unseen candidates before the least recently shown repeat
+  ---
+  duration_ms: 25.106005
+  type: 'test'
+  ...
+# Subtest: all prayer stages send structured messages and respect consent withdrawal
+ok 152 - all prayer stages send structured messages and respect consent withdrawal
+  ---
+  duration_ms: 9.619326
+  type: 'test'
+  ...
+# Subtest: prayer requests follow the current interface language independently of Scripture and prayer text
+ok 153 - prayer requests follow the current interface language independently of Scripture and prayer text
+  ---
+  duration_ms: 4.601363
+  type: 'test'
+  ...
+# Subtest: session first, replace, next and reflect requests use UI language and discard prefetches from another language
+ok 154 - session first, replace, next and reflect requests use UI language and discard prefetches from another language
+  ---
+  duration_ms: 182.532504
+  type: 'test'
+  ...
+# Subtest: finish sends answered questions without answer consent in the reflection request
+ok 155 - finish sends answered questions without answer consent in the reflection request
+  ---
+  duration_ms: 5.171428
+  type: 'test'
+  ...
+# Subtest: real session and transport recover from both prefetch denials without dropping the interface language
+ok 156 - real session and transport recover from both prefetch denials without dropping the interface language
+  ---
+  duration_ms: 21.425515
+  type: 'test'
+  ...
+# Subtest: rapid replacement waits once, archives only displayed questions, and prefetch includes the current question
+ok 157 - rapid replacement waits once, archives only displayed questions, and prefetch includes the current question
+  ---
+  duration_ms: 34.295629
+  type: 'test'
+  ...
+# Subtest: novel false keeps the current question and allows an explicit retry without background looping
+ok 158 - novel false keeps the current question and allows an explicit retry without background looping
+  ---
+  duration_ms: 1.030738
+  type: 'test'
+  ...
+# Subtest: novel false after an answer advances with a fallback and does not mark the answered question as skipped
+ok 159 - novel false after an answer advances with a fallback and does not mark the answered question as skipped
+  ---
+  duration_ms: 0.885202
+  type: 'test'
+  ...
+# Subtest: voice-only answer without a transcript rejects a repeated question despite novel true
+ok 160 - voice-only answer without a transcript rejects a repeated question despite novel true
+  ---
+  duration_ms: 0.730865
+  type: 'test'
+  ...
+# Subtest: store passes actual answered questions without answer consent
+ok 161 - store passes actual answered questions without answer consent
+  ---
+  duration_ms: 2.503155
+  type: 'test'
+  ...
+# Subtest: navigating answered questions keeps a prepared next question in the pool
+ok 162 - navigating answered questions keeps a prepared next question in the pool
+  ---
+  duration_ms: 1.437509
+  type: 'test'
+  ...
+# Subtest: navigating answered questions keeps a prepared reflection question in the pool
+ok 163 - navigating answered questions keeps a prepared reflection question in the pool
+  ---
+  duration_ms: 3.66845
+  type: 'test'
+  ...
+# Subtest: a normalized repeat of a replaced question keeps the current one until the next tap
+ok 164 - a normalized repeat of a replaced question keeps the current one until the next tap
+  ---
+  duration_ms: 1.139173
+  type: 'test'
+  ...
+# Subtest: question comparison collapses whitespace, casing and trailing punctuation
+ok 165 - question comparison collapses whitespace, casing and trailing punctuation
+  ---
+  duration_ms: 11.27534
+  type: 'test'
+  ...
+# Subtest: a repeated local-pool result is checked before the store displays it
+ok 166 - a repeated local-pool result is checked before the store displays it
+  ---
+  duration_ms: 1.549386
+  type: 'test'
+  ...
+# Subtest: the store permits only the least recent local repeat after pool exhaustion
+ok 167 - the store permits only the least recent local repeat after pool exhaustion
+  ---
+  duration_ms: 0.873237
+  type: 'test'
+  ...
+# Subtest: reflection cannot repeat a question already shown in the session
+ok 168 - reflection cannot repeat a question already shown in the session
+  ---
+  duration_ms: 0.52786
+  type: 'test'
+  ...
+# Subtest: a first question arriving after finish does not leave the reflection loading
+ok 169 - a first question arriving after finish does not leave the reflection loading
+  ---
+  duration_ms: 2.399123
+  type: 'test'
+  ...
+# Subtest: continuing a prayer retains prior reflection questions for novelty checks
+ok 170 - continuing a prayer retains prior reflection questions for novelty checks
+  ---
+  duration_ms: 0.920495
+  type: 'test'
+  ...
+# Subtest: a response from a reset prayer cannot replace a question or restore skipped history
+ok 171 - a response from a reset prayer cannot replace a question or restore skipped history
+  ---
+  duration_ms: 0.387478
+  type: 'test'
+  ...
+# Subtest: question denial stays silent and pending demand switches to an ordinary request
+ok 172 - question denial stays silent and pending demand switches to an ordinary request
+  ---
+  duration_ms: 0.76318
+  type: 'test'
+  ...
+# Subtest: reflection denial is memoized across timer ticks and demand while pending is ordinary
+ok 173 - reflection denial is memoized across timer ticks and demand while pending is ordinary
+  ---
+  duration_ms: 1.128992
+  type: 'test'
+  ...
+# Subtest: first question and hidden initial scripture are prefetch; demand after their denial is ordinary
+ok 174 - first question and hidden initial scripture are prefetch; demand after their denial is ordinary
+  ---
+  duration_ms: 12.640334
+  type: 'test'
+  ...
+# Subtest: opening scripture during pending initial denial issues one demand request
+ok 175 - opening scripture during pending initial denial issues one demand request
+  ---
+  duration_ms: 2.800387
+  type: 'test'
+  ...
+# Subtest: next scripture demand waits for denied prefetch and then loads without the marker
+ok 176 - next scripture demand waits for denied prefetch and then loads without the marker
+  ---
+  duration_ms: 7.805103
+  type: 'test'
+  ...
+# Subtest: a failed SQLite answer write rejects and leaves the in-memory answer and prefetch untouched
+ok 177 - a failed SQLite answer write rejects and leaves the in-memory answer and prefetch untouched
+  ---
+  duration_ms: 3.227839
+  type: 'test'
+  ...
+# Subtest: rejects a missing or header-only recording
+ok 178 - rejects a missing or header-only recording
+  ---
+  duration_ms: 12.053986
+  type: 'test'
+  ...
+# Subtest: accepts a complete file regardless of effective AAC bitrate
+ok 179 - accepts a complete file regardless of effective AAC bitrate
+  ---
+  duration_ms: 0.24284
+  type: 'test'
+  ...
+# Subtest: reads duration from the finished audio file, not a delayed JS completion event
+ok 180 - reads duration from the finished audio file, not a delayed JS completion event
+  ---
+  duration_ms: 1.385047
+  type: 'test'
+  ...
+# Subtest: keeps fractional file duration for the server check
+ok 181 - keeps fractional file duration for the server check
+  ---
+  duration_ms: 0.440795
+  type: 'test'
+  ...
+# Subtest: rounds only the draft label and keeps the recorded URI if duration loading fails
+ok 182 - rounds only the draft label and keeps the recorded URI if duration loading fails
+  ---
+  duration_ms: 1.355633
+  type: 'test'
+  ...
+# Subtest: shows the file duration rounded to the nearest whole second
+ok 183 - shows the file duration rounded to the nearest whole second
+  ---
+  duration_ms: 0.339856
+  type: 'test'
+  ...
+# Subtest: counts only whole recorded seconds
+ok 184 - counts only whole recorded seconds
+  ---
+  duration_ms: 0.21444
+  type: 'test'
+  ...
+# Subtest: waits for recording metadata to become present and stable
+ok 185 - waits for recording metadata to become present and stable
+  ---
+  duration_ms: 2.838317
+  type: 'test'
+  ...
+# Subtest: recorded milliseconds trigger one stop at 599 seconds
+ok 186 - recorded milliseconds trigger one stop at 599 seconds
+  ---
+  duration_ms: 2.52999
+  type: 'test'
+  ...
+# Subtest: background wall time does not advance the native recorded-time limit
+ok 187 - background wall time does not advance the native recorded-time limit
+  ---
+  duration_ms: 0.308629
+  type: 'test'
+  ...
+# Subtest: polling uses one interval and stops scheduling after the limit
+ok 188 - polling uses one interval and stops scheduling after the limit
+  ---
+  duration_ms: 15.619621
+  type: 'test'
+  ...
+# Subtest: a persistent stop failure becomes terminal until a new recording
+ok 189 - a persistent stop failure becomes terminal until a new recording
+  ---
+  duration_ms: 0.99406
+  type: 'test'
+  ...
+# Subtest: a persistent status failure is reported once and halts polling
+ok 190 - a persistent status failure is reported once and halts polling
+  ---
+  duration_ms: 0.387091
+  type: 'test'
+  ...
+# Subtest: manual stop and unmount block late automatic work
+ok 191 - manual stop and unmount block late automatic work
+  ---
+  duration_ms: 0.757182
+  type: 'test'
+  ...
+# Subtest: a failed manual stop resumes the same polling interval
+ok 192 - a failed manual stop resumes the same polling interval
+  ---
+  duration_ms: 2.191266
+  type: 'test'
+  ...
+# Subtest: a second start is dropped while the first start is pending
+ok 193 - a second start is dropped while the first start is pending
+  ---
+  duration_ms: 13.914522
+  type: 'test'
+  ...
+# Subtest: a prepared recorder starts once without changing its native timer after pauses
+ok 194 - a prepared recorder starts once without changing its native timer after pauses
+  ---
+  duration_ms: 0.300598
+  type: 'test'
+  ...
+# Subtest: cancelling a pending start prevents it from publishing a recording
+ok 195 - cancelling a pending start prevents it from publishing a recording
+  ---
+  duration_ms: 0.299149
+  type: 'test'
+  ...
+# Subtest: failed native cleanup keeps cancelled start visible as a recording
+ok 196 - failed native cleanup keeps cancelled start visible as a recording
+  ---
+  duration_ms: 0.248847
+  type: 'test'
+  ...
+# Subtest: concurrent stop callers share one native stop and one result
+ok 197 - concurrent stop callers share one native stop and one result
+  ---
+  duration_ms: 1.656263
+  type: 'test'
+  ...
+# Subtest: a failed stop keeps the recording visible and allows a stop retry
+ok 198 - a failed stop keeps the recording visible and allows a stop retry
+  ---
+  duration_ms: 5.070215
+  type: 'test'
+  ...
+# Subtest: a processing error after confirmed native stop leaves the operation idle
+ok 199 - a processing error after confirmed native stop leaves the operation idle
+  ---
+  duration_ms: 0.768183
+  type: 'test'
+  ...
+# Subtest: media-services reset makes recording idle and releases its audio-mode lease
+ok 200 - media-services reset makes recording idle and releases its audio-mode lease
+  ---
+  duration_ms: 5.830125
+  type: 'test'
+  ...
+# Subtest: a failed native start is attempted once without in-place re-prepare
+ok 201 - a failed native start is attempted once without in-place re-prepare
+  ---
+  duration_ms: 0.89855
+  type: 'test'
+  ...
+# Subtest: a terminal recorder error releases the lease and allows a fresh start
+ok 202 - a terminal recorder error releases the lease and allows a fresh start
+  ---
+  duration_ms: 0.74517
+  type: 'test'
+  ...
+# Subtest: unexpected native finish is terminal only before an expected stop
+ok 203 - unexpected native finish is terminal only before an expected stop
+  ---
+  duration_ms: 0.282786
+  type: 'test'
+  ...
+# Subtest: native recorder error or reset is terminal for every active phase
+ok 204 - native recorder error or reset is terminal for every active phase
+  ---
+  duration_ms: 0.176508
+  type: 'test'
+  ...
+# Subtest: late failed stop cannot resurrect recording after media-services reset
+ok 205 - late failed stop cannot resurrect recording after media-services reset
+  ---
+  duration_ms: 0.350263
+  type: 'test'
+  ...
+# Subtest: legacy iOS URI resolves against the current Documents container
+ok 206 - legacy iOS URI resolves against the current Documents container
+  ---
+  duration_ms: 1.747457
+  type: 'test'
+  ...
+# Subtest: plain simulator app-container path migrates to the current Documents URI
+ok 207 - plain simulator app-container path migrates to the current Documents URI
+  ---
+  duration_ms: 0.279073
+  type: 'test'
+  ...
+# Subtest: new Documents URI is stored without the changeable container path
+ok 208 - new Documents URI is stored without the changeable container path
+  ---
+  duration_ms: 0.263847
+  type: 'test'
+  ...
+# Subtest: already migrated URI remains idempotent
+ok 209 - already migrated URI remains idempotent
+  ---
+  duration_ms: 0.312414
+  type: 'test'
+  ...
+# Subtest: cache and external URIs are not incorrectly moved into Documents
+ok 210 - cache and external URIs are not incorrectly moved into Documents
+  ---
+  duration_ms: 0.393656
+  type: 'test'
+  ...
+# Subtest: unsafe or malformed relative values are never rebased
+ok 211 - unsafe or malformed relative values are never rebased
+  ---
+  duration_ms: 0.227875
+  type: 'test'
+  ...
+# Subtest: ordinary builds never freeze the reflection flame
+ok 212 - ordinary builds never freeze the reflection flame
+  ---
+  duration_ms: 2.550179
+  type: 'test'
+  ...
+# Subtest: video builds freeze the reflection flame only while input is focused
+ok 213 - video builds freeze the reflection flame only while input is focused
+  ---
+  duration_ms: 0.270358
+  type: 'test'
+  ...
+# Subtest: build preflight requires the shared origin and key without leaking their values
+ok 214 - build preflight requires the shared origin and key without leaking their values
+  ---
+  duration_ms: 794.815724
+  type: 'test'
+  ...
+# Subtest: privacy boundary omits replies from the serialized request
+ok 215 - privacy boundary omits replies from the serialized request
+  ---
+  duration_ms: 3.979052
+  type: 'test'
+  ...
+# Subtest: privacy boundary omits the prayer topic and replies without core consent
+ok 216 - privacy boundary omits the prayer topic and replies without core consent
+  ---
+  duration_ms: 0.300178
+  type: 'test'
+  ...
+# Subtest: request uses the language and translation chosen in settings
+ok 217 - request uses the language and translation chosen in settings
+  ---
+  duration_ms: 0.248701
+  type: 'test'
+  ...
+# Subtest: request builder applies server limits and keeps 30 newest valid unique ids
+ok 218 - request builder applies server limits and keeps 30 newest valid unique ids
+  ---
+  duration_ms: 6.382072
+  type: 'test'
+  ...
+# Subtest: displayed reference uses translated passage coordinates, not canonical coordinates
+ok 219 - displayed reference uses translated passage coordinates, not canonical coordinates
+  ---
+  duration_ms: 5.836869
+  type: 'test'
+  ...
+# Subtest: parser accepts nullable title, missing fallback reason and unknown future source
+ok 220 - parser accepts nullable title, missing fallback reason and unknown future source
+  ---
+  duration_ms: 1.135031
+  type: 'test'
+  ...
+# Subtest: parser accepts structured verses and highlights only translated passage coordinates
+ok 221 - parser accepts structured verses and highlights only translated passage coordinates
+  ---
+  duration_ms: 1.173615
+  type: 'test'
+  ...
+# Subtest: compact card text keeps only the highlighted verses
+ok 222 - compact card text keeps only the highlighted verses
+  ---
+  duration_ms: 0.3564
+  type: 'test'
+  ...
+# Subtest: compact card text falls back to the whole passage without a usable highlight
+ok 223 - compact card text falls back to the whole passage without a usable highlight
+  ---
+  duration_ms: 0.629788
+  type: 'test'
+  ...
+# Subtest: verse rendering falls back to passage text when verses are absent or inconsistent
+ok 224 - verse rendering falls back to passage text when verses are absent or inconsistent
+  ---
+  duration_ms: 7.863702
+  type: 'test'
+  ...
+# Subtest: structured verses render without highlight and ranges tolerate numbering gaps
+ok 225 - structured verses render without highlight and ranges tolerate numbering gaps
+  ---
+  duration_ms: 0.435536
+  type: 'test'
+  ...
+# Subtest: parser rejects malformed canonical ids and incomplete passages
+ok 226 - parser rejects malformed canonical ids and incomplete passages
+  ---
+  duration_ms: 0.183252
+  type: 'test'
+  ...
+# Subtest: cached Scripture resume does not play after stop
+ok 227 - cached Scripture resume does not play after stop
+  ---
+  duration_ms: 1.845226
+  type: 'test'
+  ...
+# Subtest: cached Scripture resume does not play after excerpt changes
+ok 228 - cached Scripture resume does not play after excerpt changes
+  ---
+  duration_ms: 0.262012
+  type: 'test'
+  ...
+# Subtest: cached Scripture resume does not play after audio is disabled
+ok 229 - cached Scripture resume does not play after audio is disabled
+  ---
+  duration_ms: 0.236484
+  type: 'test'
+  ...
+# Subtest: language catalog keeps API order and national labels
+ok 230 - language catalog keeps API order and national labels
+  ---
+  duration_ms: 2.662841
+  type: 'test'
+  ...
+# Subtest: translation catalog exposes only active translations and voices
+ok 231 - translation catalog exposes only active translations and voices
+  ---
+  duration_ms: 0.597695
+  type: 'test'
+  ...
+# Subtest: catalog parser rejects a broken contract instead of saving invalid ids
+ok 232 - catalog parser rejects a broken contract instead of saving invalid ids
+  ---
+  duration_ms: 0.186503
+  type: 'test'
+  ...
+# Subtest: book catalog URL preserves the injected test server
+ok 233 - book catalog URL preserves the injected test server
+  ---
+  duration_ms: 4.80159
+  type: 'test'
+  ...
+# Subtest: loads and validates translation book names for exact passage references
+ok 234 - loads and validates translation book names for exact passage references
+  ---
+  duration_ms: 60.060649
+  type: 'test'
+  ...
+# Subtest: book catalog fetch is bounded by the same 25 second timeout
+ok 235 - book catalog fetch is bounded by the same 25 second timeout
+  ---
+  duration_ms: 0.821604
+  type: 'test'
+  ...
+# Subtest: single request sends the configured public key and accepts an unknown source
+ok 236 - single request sends the configured public key and accepts an unknown source
+  ---
+  duration_ms: 19.440911
+  type: 'test'
+  ...
+# Subtest: single request accepts optional verse data, highlight and coverage fallback
+ok 237 - single request accepts optional verse data, highlight and coverage fallback
+  ---
+  duration_ms: 1.291653
+  type: 'test'
+  ...
+# Subtest: 403 and 422 are discriminated and never retried
+    # Subtest: 403
+    ok 1 - 403
+      ---
+      duration_ms: 5.702592
+      type: 'test'
+      ...
+    # Subtest: 422
+    ok 2 - 422
+      ---
+      duration_ms: 0.760376
+      type: 'test'
+      ...
+    1..2
+ok 238 - 403 and 422 are discriminated and never retried
+  ---
+  duration_ms: 7.71836
+  type: 'test'
+  ...
+# Subtest: 429 reads Retry-After case-insensitively and performs one delayed retry
+ok 239 - 429 reads Retry-After case-insensitively and performs one delayed retry
+  ---
+  duration_ms: 13.225055
+  type: 'test'
+  ...
+# Subtest: 429 uses the 30 second default and stops after the single retry
+ok 240 - 429 uses the 30 second default and stops after the single retry
+  ---
+  duration_ms: 1.624539
+  type: 'test'
+  ...
+# Subtest: 503 is retried at most twice and requests remain sequential
+ok 241 - 503 is retried at most twice and requests remain sequential
+  ---
+  duration_ms: 22.163604
+  type: 'test'
+  ...
+# Subtest: network failure gets one retry without exposing the request body
+ok 242 - network failure gets one retry without exposing the request body
+  ---
+  duration_ms: 13.601116
+  type: 'test'
+  ...
+# Subtest: timeout aborts at 25 seconds and gets one retry without real waiting
+ok 243 - timeout aborts at 25 seconds and gets one retry without real waiting
+  ---
+  duration_ms: 2.489567
+  type: 'test'
+  ...
+# Subtest: malformed success response is rejected without retry
+ok 244 - malformed success response is rejected without retry
+  ---
+  duration_ms: 0.830708
+  type: 'test'
+  ...
+# Subtest: external session cancellation aborts transport and suppresses further retries
+ok 245 - external session cancellation aborts transport and suppresses further retries
+  ---
+  duration_ms: 0.529883
+  type: 'test'
+  ...
+# Subtest: prefetch prefetch_disabled is silent, marked and never retried
+ok 246 - prefetch prefetch_disabled is silent, marked and never retried
+  ---
+  duration_ms: 14.805469
+  type: 'test'
+  ...
+# Subtest: prefetch prefetch_limit_exceeded is silent, marked and never retried
+ok 247 - prefetch prefetch_limit_exceeded is silent, marked and never retried
+  ---
+  duration_ms: 0.48067
+  type: 'test'
+  ...
+# Subtest: prefetch never retries ordinary quota or transport failures
+ok 248 - prefetch never retries ordinary quota or transport failures
+  ---
+  duration_ms: 1.079385
+  type: 'test'
+  ...
+# Subtest: migrates a known legacy favorite with its local text and exact legacy payload
+ok 249 - migrates a known legacy favorite with its local text and exact legacy payload
+  ---
+  duration_ms: 2.169909
+  type: 'test'
+  ...
+# Subtest: retains an unknown legacy favorite instead of dropping or inventing data
+ok 250 - retains an unknown legacy favorite instead of dropping or inventing data
+  ---
+  duration_ms: 0.297598
+  type: 'test'
+  ...
+# Subtest: migration planning is idempotent and de-duplicates duplicate legacy rows
+ok 251 - migration planning is idempotent and de-duplicates duplicate legacy rows
+  ---
+  duration_ms: 0.327648
+  type: 'test'
+  ...
+# Subtest: empty legacy storage produces no migration writes
+ok 252 - empty legacy storage produces no migration writes
+  ---
+  duration_ms: 0.168047
+  type: 'test'
+  ...
+# Subtest: missing storage remains distinguishable from a saved user selection
+ok 253 - missing storage remains distinguishable from a saved user selection
+  ---
+  duration_ms: 1.605914
+  type: 'test'
+  ...
+# Subtest: stored dependent selection is parsed as one atomic value
+ok 254 - stored dependent selection is parsed as one atomic value
+  ---
+  duration_ms: 2.208294
+  type: 'test'
+  ...
+# Subtest: catalog selection rejects a voice from another translation
+ok 255 - catalog selection rejects a voice from another translation
+  ---
+  duration_ms: 0.187199
+  type: 'test'
+  ...
+# Subtest: malformed persisted settings are treated as an absent selection
+ok 256 - malformed persisted settings are treated as an absent selection
+  ---
+  duration_ms: 0.245366
+  type: 'test'
+  ...
+# Subtest: primary device language is matched against server aliases before English fallback
+ok 257 - primary device language is matched against server aliases before English fallback
+  ---
+  duration_ms: 0.50943
+  type: 'test'
+  ...
+# Subtest: default selection prefers known translation and voice codes
+ok 258 - default selection prefers known translation and voice codes
+  ---
+  duration_ms: 0.336665
+  type: 'test'
+  ...
+# Subtest: English remains deterministic when the server catalog cannot confirm a device language
+ok 259 - English remains deterministic when the server catalog cannot confirm a device language
+  ---
+  duration_ms: 0.297062
+  type: 'test'
+  ...
+# Subtest: a completed Next is deferred when the user navigated back while waiting
+ok 260 - a completed Next is deferred when the user navigated back while waiting
+  ---
+  duration_ms: 1.315049
+  type: 'test'
+  ...
+# Subtest: offline fallback preserves the current trail and appends older cached snapshots
+ok 261 - offline fallback preserves the current trail and appends older cached snapshots
+  ---
+  duration_ms: 1.260769
+  type: 'test'
+  ...
+# Subtest: offline fallback exposes only the latest seven saved passages
+ok 262 - offline fallback exposes only the latest seven saved passages
+  ---
+  duration_ms: 0.412552
+  type: 'test'
+  ...
+# Subtest: existing session passages count toward the offline trail limit
+ok 263 - existing session passages count toward the offline trail limit
+  ---
+  duration_ms: 0.246524
+  type: 'test'
+  ...
+# (node:28509) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reading past expiry is unlimited, then closing the reader starts a one-second delay
+ok 264 - reading past expiry is unlimited, then closing the reader starts a one-second delay
+  ---
+  duration_ms: 8.806724
+  type: 'test'
+  ...
+# Subtest: a report dialog holds the expired session until its comment is dismissed
+ok 265 - a report dialog holds the expired session until its comment is dismissed
+  ---
+  duration_ms: 0.625198
+  type: 'test'
+  ...
+# Subtest: reopening an activity during the delay cancels navigation and closing starts a fresh second
+ok 266 - reopening an activity during the delay cancels navigation and closing starts a fresh second
+  ---
+  duration_ms: 0.650186
+  type: 'test'
+  ...
+# Subtest: extending the timer cancels completion until the new deadline
+ok 267 - extending the timer cancels completion until the new deadline
+  ---
+  duration_ms: 0.841524
+  type: 'test'
+  ...
+# Subtest: backgrounding cancels navigation and foregrounding gives a fresh second
+ok 268 - backgrounding cancels navigation and foregrounding gives a fresh second
+  ---
+  duration_ms: 1.126504
+  type: 'test'
+  ...
+# Subtest: a PIN overlay cancels navigation until the prayer screen is exposed again
+ok 269 - a PIN overlay cancels navigation until the prayer screen is exposed again
+  ---
+  duration_ms: 0.711593
+  type: 'test'
+  ...
+# Subtest: returning from the background with an activity still open keeps waiting
+ok 270 - returning from the background with an activity still open keeps waiting
+  ---
+  duration_ms: 0.351878
+  type: 'test'
+  ...
+# Subtest: leaving the screen cancels pending completion
+ok 271 - leaving the screen cancels pending completion
+  ---
+  duration_ms: 6.72696
+  type: 'test'
+  ...
+# Subtest: an unexpired or untimed prayer does not schedule completion
+ok 272 - an unexpired or untimed prayer does not schedule completion
+  ---
+  duration_ms: 0.900509
+  type: 'test'
+  ...
+# Subtest: return from timeout retains the same session, answers, recordings and scripture trail
+ok 273 - return from timeout retains the same session, answers, recordings and scripture trail
+  ---
+  duration_ms: 4.378412
+  type: 'test'
+  ...
+# Subtest: return after early finish renews the timer without replacing existing history
+ok 274 - return after early finish renews the timer without replacing existing history
+  ---
+  duration_ms: 1.818894
+  type: 'test'
+  ...
+# Subtest: untimed continuation preserves elapsed time and remains untimed
+ok 275 - untimed continuation preserves elapsed time and remains untimed
+  ---
+  duration_ms: 1.334517
+  type: 'test'
+  ...
+# Subtest: late reflection response cannot overwrite resumed session state
+ok 276 - late reflection response cannot overwrite resumed session state
+  ---
+  duration_ms: 1.250322
+  type: 'test'
+  ...
+# Subtest: resume without an active session does not create one or start a timer
+ok 277 - resume without an active session does not create one or start a timer
+  ---
+  duration_ms: 0.733017
+  type: 'test'
+  ...
+# Subtest: a prayer confirmed the next morning counts for the day it started
+ok 278 - a prayer confirmed the next morning counts for the day it started
+  ---
+  duration_ms: 0.817413
+  type: 'test'
+  ...
+# Subtest: a prayer crossing midnight counts for the day it started
+ok 279 - a prayer crossing midnight counts for the day it started
+  ---
+  duration_ms: 0.572531
+  type: 'test'
+  ...
+# Subtest: completion without an active session fails without marking a day
+ok 280 - completion without an active session fails without marking a day
+  ---
+  duration_ms: 0.722389
+  type: 'test'
+  ...
+# Subtest: an expired prayer finished the next day saves the time up to its deadline
+ok 281 - an expired prayer finished the next day saves the time up to its deadline
+  ---
+  duration_ms: 0.756976
+  type: 'test'
+  ...
+# Subtest: an extended prayer saves the time up to the extended deadline
+ok 282 - an extended prayer saves the time up to the extended deadline
+  ---
+  duration_ms: 1.113934
+  type: 'test'
+  ...
+# Subtest: a resumed prayer counts reflection time and caps at the renewed deadline
+ok 283 - a resumed prayer counts reflection time and caps at the renewed deadline
+  ---
+  duration_ms: 0.62571
+  type: 'test'
+  ...
+# Subtest: the journal and the prayer day share one start moment
+ok 284 - the journal and the prayer day share one start moment
+  ---
+  duration_ms: 1.203643
+  type: 'test'
+  ...
+# Subtest: setup opens with the default duration until a prayer has been started
+ok 285 - setup opens with the default duration until a prayer has been started
+  ---
+  duration_ms: 0.482329
+  type: 'test'
+  ...
+# Subtest: a started prayer remembers its stepper duration for the next setup
+ok 286 - a started prayer remembers its stepper duration for the next setup
+  ---
+  duration_ms: 0.53906
+  type: 'test'
+  ...
+# Subtest: an untimed prayer is remembered as untimed
+ok 287 - an untimed prayer is remembered as untimed
+  ---
+  duration_ms: 0.533386
+  type: 'test'
+  ...
+# Subtest: a duration chosen on setup without starting the prayer is not remembered
+ok 288 - a duration chosen on setup without starting the prayer is not remembered
+  ---
+  duration_ms: 0.425237
+  type: 'test'
+  ...
+# Subtest: extending and resuming a prayer keep the duration chosen at its start
+ok 289 - extending and resuming a prayer keep the duration chosen at its start
+  ---
+  duration_ms: 0.635359
+  type: 'test'
+  ...
+# Subtest: a failed duration save leaves no journal entry, so a retry creates exactly one
+ok 290 - a failed duration save leaves no journal entry, so a retry creates exactly one
+  ---
+  duration_ms: 0.556012
+  type: 'test'
+  ...
+# Subtest: derives elapsed and remaining time from the wall clock
+ok 291 - derives elapsed and remaining time from the wall clock
+  ---
+  duration_ms: 2.420424
+  type: 'test'
+  ...
+# Subtest: catches up after a background interval and stops at zero
+ok 292 - catches up after a background interval and stops at zero
+  ---
+  duration_ms: 0.340224
+  type: 'test'
+  ...
+# Subtest: caps the elapsed time of an expired prayer at its deadline
+ok 293 - caps the elapsed time of an expired prayer at its deadline
+  ---
+  duration_ms: 0.270132
+  type: 'test'
+  ...
+# Subtest: keeps an untimed prayer on elapsed wall-clock time
+ok 294 - keeps an untimed prayer on elapsed wall-clock time
+  ---
+  duration_ms: 0.218113
+  type: 'test'
+  ...
+# Subtest: adjusts the live deadline and preserves the five-second minimum
+ok 295 - adjusts the live deadline and preserves the five-second minimum
+  ---
+  duration_ms: 0.238193
+  type: 'test'
+  ...
+# Subtest: different scripture loads never overlap and retain their own results
+ok 296 - different scripture loads never overlap and retain their own results
+  ---
+  duration_ms: 5.017839
+  type: 'test'
+  ...
+# Subtest: a rejected request releases the next queued request
+ok 297 - a rejected request releases the next queued request
+  ---
+  duration_ms: 1.174371
+  type: 'test'
+  ...
+# Subtest: replacement history is chronological, separate from answered turns, and absent on first stage
+ok 298 - replacement history is chronological, separate from answered turns, and absent on first stage
+  ---
+  duration_ms: 2.997277
+  type: 'test'
+  ...
+# Subtest: wire history retains the ten most recent skipped questions and bounds each entry
+ok 299 - wire history retains the ten most recent skipped questions and bounds each entry
+  ---
+  duration_ms: 0.601975
+  type: 'test'
+  ...
+# Subtest: skipped questions share the total budget without displacing the latest human reply
+ok 300 - skipped questions share the total budget without displacing the latest human reply
+  ---
+  duration_ms: 0.539528
+  type: 'test'
+  ...
+# Subtest: answered texts remain excluded even when their messages exceed the retained history
+ok 301 - answered texts remain excluded even when their messages exceed the retained history
+  ---
+  duration_ms: 10.583927
+  type: 'test'
+  ...
+# Subtest: future prayed_days do not remove actual days from the week
+ok 302 - future prayed_days do not remove actual days from the week
+  ---
+  duration_ms: 6.324688
+  type: 'test'
+  ...
+# Subtest: transcription includes the device locale when available
+ok 303 - transcription includes the device locale when available
+  ---
+  duration_ms: 76.779386
+  type: 'test'
+  ...
+# Subtest: HTTP errors preserve the reasons people can act on
+ok 304 - HTTP errors preserve the reasons people can act on
+  ---
+  duration_ms: 5.644779
+  type: 'test'
+  ...
+# Subtest: timeout, disconnected network, and deliberate cancellation remain distinct
+ok 305 - timeout, disconnected network, and deliberate cancellation remain distinct
+  ---
+  duration_ms: 0.722781
+  type: 'test'
+  ...
+# Subtest: the recording warning counts down to the actual stop point
+ok 306 - the recording warning counts down to the actual stop point
+  ---
+  duration_ms: 4.764654
+  type: 'test'
+  ...
+# Subtest: the native duration threshold reserves one second, and the server check stays fractional
+ok 307 - the native duration threshold reserves one second, and the server check stays fractional
+  ---
+  duration_ms: 31.162733
+  type: 'test'
+  ...
+# Subtest: the limit message uses localized human duration and correct plural forms
+ok 308 - the limit message uses localized human duration and correct plural forms
+  ---
+  duration_ms: 20.486451
+  type: 'test'
+  ...
+# Subtest: the upload accepts the server maximum and rejects larger legacy files
+ok 309 - the upload accepts the server maximum and rejects larger legacy files
+  ---
+  duration_ms: 0.535714
+  type: 'test'
+  ...
+# Subtest: the real transcription entry point uploads an admissible file
+ok 310 - the real transcription entry point uploads an admissible file
+  ---
+  duration_ms: 44.65937
+  type: 'test'
+  ...
+# Subtest: the real transcription entry point cannot upload an oversized or overlong file
+ok 311 - the real transcription entry point cannot upload an oversized or overlong file
+  ---
+  duration_ms: 1.87304
+  type: 'test'
+  ...
+# Subtest: recorded-time limit → file-backed draft → upload preflight accepts 599.98 seconds
+ok 312 - recorded-time limit → file-backed draft → upload preflight accepts 599.98 seconds
+  ---
+  duration_ms: 4.747326
+  type: 'test'
+  ...
+# Subtest: the same path refuses a real 600.02-second file and an oversized file
+ok 313 - the same path refuses a real 600.02-second file and an oversized file
+  ---
+  duration_ms: 0.900377
+  type: 'test'
+  ...
+# Subtest: a saved draft survives duration reader failure and can be checked again
+ok 314 - a saved draft survives duration reader failure and can be checked again
+  ---
+  duration_ms: 0.432124
+  type: 'test'
+  ...
+# Subtest: hook wires start, scheduled poll, limit stop, a second recording, manual stop and unmount
+ok 315 - hook wires start, scheduled poll, limit stop, a second recording, manual stop and unmount
+  ---
+  duration_ms: 4.052949
+  type: 'test'
+  ...
+# Subtest: a persistent native stop failure produces one visible error without retrying
+ok 316 - a persistent native stop failure produces one visible error without retrying
+  ---
+  duration_ms: 0.816906
+  type: 'test'
+  ...
+# Subtest: a persistent native status failure stops once and reports its cause
+ok 317 - a persistent native status failure stops once and reports its cause
+  ---
+  duration_ms: 0.617642
+  type: 'test'
+  ...
+# Subtest: an ignored early stop tap leaves the limit active and shows no error
+ok 318 - an ignored early stop tap leaves the limit active and shows no error
+  ---
+  duration_ms: 0.539492
+  type: 'test'
+  ...
+# Subtest: a failed attempted manual stop reports its error but keeps the duration limit active
+ok 319 - a failed attempted manual stop reports its error but keeps the duration limit active
+  ---
+  duration_ms: 0.701316
+  type: 'test'
+  ...
+# Subtest: unmount disposes an active controller before a stale interval can stop recording
+ok 320 - unmount disposes an active controller before a stale interval can stop recording
+  ---
+  duration_ms: 0.381021
+  type: 'test'
+  ...
+# Subtest: accepts update decisions and rejects unsafe blocking responses
+ok 321 - accepts update decisions and rejects unsafe blocking responses
+  ---
+  duration_ms: 0.999048
+  type: 'test'
+  ...
+# Subtest: sends app and installed version and fails open on network errors
+ok 322 - sends app and installed version and fails open on network errors
+  ---
+  duration_ms: 1.054412
+  type: 'test'
+  ...
+# Subtest: visual work needs both navigation focus and an active app
+ok 323 - visual work needs both navigation focus and an active app
+  ---
+  duration_ms: 2.128785
+  type: 'test'
+  ...
+# Subtest: a hidden finite session schedules one deadline wakeup regardless of music
+ok 324 - a hidden finite session schedules one deadline wakeup regardless of music
+  ---
+  duration_ms: 0.19425
+  type: 'test'
+  ...
+1..324
+# tests 326
+# suites 0
+# pass 326
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1740.473832

@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-07",
+  "build": "Release",
+  "version": "1.3.5",
+  "device": "Pixel_9_Pro_API_35",
+  "flows": {
+    "android-stage06-jrn-001-empty-history": 0,
+    "android-stage03-setup-start": 0,
+    "android-stage03-navigation": 0,
+    "android-stage03-session-finite": 0,
+    "android-stage04-answers-text": 0,
+    "android-stage06-end-001-finish-without-takeaway": 0,
+    "android-stage06-end-002-finish-with-takeaway": 0,
+    "android-privacy-consent-first-use": 0,
+    "android-smoke-full": 0,
+    "android-smoke-full-relaunch": 0
+  },
+  "checks": {
+    "typecheck": 0,
+    "unit": 0,
+    "release_build": 0,
+    "critical_suite": 0
+  },
+  "installed_metadata": {
+    "garden.lampada.API_ORIGIN": "http://192.168.127.133:9084",
+    "garden.lampada.BUILD_CHANNEL": "test"
+  },
+  "source_sha256": {
+    "plugins/withAndroidBuild.js": "5ff02bd7ed989b643d29f1a44251a3d1585b61398d93a2d925f70df664b7129e",
+    "scripts/test-android-critical.sh": "609d1270c27cefd639f4b826f9b727d748a1b7ff00e70ae98029fa7a77aa87df",
+    "scripts/validate-installed-android.mjs": "08dbc6349bc90ac02f3865e6544d983c056abc57f6db3677fde9bd0bc8dbf792",
+    "testing/android-e2e/android-smoke-full.yaml": "c133c210e5f0af7012c640615d3025b6ac5a7dd31be5493c8372570a342d9672",
+    "app.json": "d7b102e205c53a0a454d69dee2535baf30f3b5521ffcdd7781edb527921b91fa"
+  },
+  "flow_sha256": {
+    "testing/android-e2e/android-stage03-setup-start.yaml": "b626e6bccf567d7e9d056e32975def23154488d7c4e5e3c79ce9ff41aba46d59",
+    "testing/android-e2e/android-privacy-consent-first-use.yaml": "a8ae54b4471ce4e8bfe0479273eb1bc8c061fed5bab2441739103094a31665f0",
+    "testing/android-e2e/android-smoke-full-relaunch.yaml": "ba43dea81d63124ca4b68382220faeac65a3bc47138b91bfa260a8ca1d37bc04",
+    "testing/android-e2e/android-stage04-answers-text.yaml": "58592aad3295453057f74d6ed8e4e94f96549eee13ce6adec8119120321c5829",
+    "testing/android-e2e/android-smoke-full.yaml": "c133c210e5f0af7012c640615d3025b6ac5a7dd31be5493c8372570a342d9672",
+    "testing/android-e2e/android-stage06-end-002-finish-with-takeaway.yaml": "f65496e3568c3f55c4ffdfa65c97f420d6c45b7f346066342c8c6d642b9672dc",
+    "testing/android-e2e/android-stage06-jrn-001-empty-history.yaml": "3d4c1ea51e0c743624c4117582b4a9ba3d7177e281a656c948f892f16db28a37",
+    "testing/android-e2e/android-stage03-session-finite.yaml": "f0947f319f5bc5a4ed117f23ae542d9860eff77e759cb7c636cd957ec11c95bd",
+    "testing/android-e2e/android-stage03-navigation.yaml": "4410624526a2beec1bf4c7f853afc2cf72c53d5979d2f7de81628ea4ae47934d",
+    "testing/android-e2e/android-stage06-end-001-finish-without-takeaway.yaml": "785b9d36dc9820c4e95109b60a036b3763af55ce6941400f2ee0af69ae75ca79"
+  }
+}

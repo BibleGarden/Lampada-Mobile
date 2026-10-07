@@ -1,0 +1,21 @@
+Running on Pixel_9_Pro_API_35
+ > Flow android-privacy-consent-first-use
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text PRV first use... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Assert that id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that "Чтобы задать вопросы.*тему твоей молитвы.*Google Gemini.*платный API Google.*" is visible... COMPLETED
+Assert that id: privacy-consent-core_prayer_ai-deny is visible... COMPLETED
+Assert that id: privacy-consent-core_prayer_ai-allow is visible... COMPLETED
+Tap on id: privacy-consent-core_prayer_ai-deny... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Run flow when "Open|Открыть" is visible...
+Run flow when "Open|Открыть" is visible... SKIPPED
+Scrolling DOWN until id: privacy-settings-button is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: privacy-settings-button... COMPLETED
+Scrolling DOWN until id: privacy-setting-core_prayer_ai is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: privacy-setting-core_prayer_ai-denied is visible... COMPLETED

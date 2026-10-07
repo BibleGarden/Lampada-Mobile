@@ -1,0 +1,1016 @@
+
+> pray@1.0.0 android
+> bash scripts/build-native.sh android --variant release --device Pixel_9_Pro_API_35 --no-bundler
+
+App version: 1.3.4 -> 1.3.5
+env: load .env.local
+env: export EXPO_PUBLIC_AI_PROXY_KEY EXPO_PUBLIC_API_URL
+- Clearing android
+✔ Cleared android code
+- Creating native directory (./android)
+✔ Created native directory
+- Updating package.json
+✔ Updated package.json | no changes
+- Running prebuild
+✔ Finished prebuild
+env: load .env.local
+env: export EXPO_PUBLIC_AI_PROXY_KEY EXPO_PUBLIC_API_URL
+› Using --device Pixel_9_Pro_API_35
+› Building app...
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:22073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+Android Bundled 14317ms node_modules/expo-router/entry.js (4244 modules)
+Writing bundle output to: /var/folders/zl/28znks2x7sv4qmzc4wk2frtc0000gn/T/4w4t370vue/index.js
+Copying 93 asset files
+Done writing bundle output
+Configuration on demand is an incubating feature.
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:jar UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-module-gradle-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-max-sdk-override-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-module-gradle-plugin:classes UP-TO-DATE
+> Task :expo-module-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :
+[32m[ExpoRootProject][0m Using the following versions:
+  - buildTools:  [32m36.0.0[0m
+  - minSdk:      [32m24[0m
+  - compileSdk:  [32m36[0m
+  - targetSdk:   [32m36[0m
+  - ndk:         [32m27.1.12297006[0m
+  - kotlin:      [32m2.1.20[0m
+  - ksp:         [32m2.1.20-2.0.1[0m
+
+> Configure project :app
+ ℹ️  [33mApplying gradle plugin[0m '[32mexpo-max-sdk-override-plugin[0m'
+  [expo-max-sdk-override-plugin] This plugin will find all permissions declared with `android:maxSdkVersion`. If there exists a declaration with the `android:maxSdkVersion` annotation and another one without, the plugin will remove the annotation from the final merged manifest. In order to see a log with the changes run a clean build of the app.
+
+> Configure project :shopify_react-native-skia
+react-native-skia: SK_GRAPHITE: false
+react-native-skia: Skia libs: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules/@shopify/react-native-skia/android/../libs/android
+react-native-skia: node_modules/ found at: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules
+react-native-skia: RN Version: 86 / 0.86.3
+react-native-skia: isSourceBuild: false
+react-native-skia: PrebuiltDir: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules/@shopify/react-native-skia/android/build/react-native-0*/jni
+react-native-skia: buildType: release
+react-native-skia: buildDir: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules/@shopify/react-native-skia/android/build
+react-native-skia: node_modules: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules
+react-native-skia: Enable Prefab: true
+react-native-skia: aar state post 70, do nothing
+
+> Configure project :expo-modules-core
+Linking react-native-worklets native libs into expo-modules-core build tasks
+task ':react-native-worklets:mergeDebugNativeLibs'
+task ':react-native-worklets:mergeReleaseNativeLibs'
+
+> Configure project :expo
+
+Using expo modules
+  - [32mexpo-log-box[0m (57.0.4)
+  - [32mexpo-constants[0m (57.0.16)
+  - [32mexpo-modules-core[0m (57.0.14)
+  - [32mexpo-widgets[0m (57.0.15)
+  - [32mprayer-timer-notification[0m (0.1.0)
+  - [33m[📦][0m [32mexpo-dom-webview[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-ui[0m (57.0.14)
+  - [33m[📦][0m [32mexpo-application[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-asset[0m (57.0.15)
+  - [33m[📦][0m [32mexpo-audio[0m (57.0.4)
+  - [33m[📦][0m [32mexpo-crypto[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-file-system[0m (57.0.6)
+  - [33m[📦][0m [32mexpo-font[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-haptics[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-keep-awake[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-linear-gradient[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-linking[0m (57.0.8)
+  - [33m[📦][0m [32mexpo-local-authentication[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-localization[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-notifications[0m (57.0.15)
+  - [33m[📦][0m [32mexpo-router[0m (57.0.17)
+  - [33m[📦][0m [32mexpo-secure-store[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-sqlite[0m (57.0.2)
+  - [33m[📦][0m [32mexpo-status-bar[0m (57.0.1)
+  - [33m[📦][0m [32mexpo-system-ui[0m (57.0.3)
+
+
+> Task :prayer-timer-notification:preBuild UP-TO-DATE
+> Task :expo-widgets:preBuild UP-TO-DATE
+> Task :expo-log-box:preBuild UP-TO-DATE
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :react-native-masked-view_masked-view:preBuild UP-TO-DATE
+> Task :expo-modules-core:preReleaseBuild UP-TO-DATE
+> Task :expo-widgets:preReleaseBuild UP-TO-DATE
+> Task :prayer-timer-notification:preReleaseBuild UP-TO-DATE
+> Task :expo-log-box:preReleaseBuild UP-TO-DATE
+> Task :react-native-masked-view_masked-view:preReleaseBuild UP-TO-DATE
+> Task :shopify_react-native-skia:extractAARHeaders
+> Task :expo:generatePackagesList
+> Task :shopify_react-native-skia:extractJNIFiles
+> Task :expo:preBuild
+> Task :expo:preReleaseBuild
+> Task :app:generateAutolinkingNewArchitectureFiles
+> Task :expo:mergeReleaseJniLibFolders
+> Task :app:generateAutolinkingPackageList
+> Task :expo-widgets:mergeReleaseJniLibFolders
+> Task :expo-log-box:mergeReleaseJniLibFolders
+> Task :prayer-timer-notification:mergeReleaseJniLibFolders
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :react-native-masked-view_masked-view:mergeReleaseJniLibFolders
+> Task :expo-modules-core:mergeReleaseJniLibFolders
+> Task :expo-modules-core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint
+> Task :expo:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-masked-view_masked-view:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-log-box:mergeReleaseNativeLibs NO-SOURCE
+> Task :prayer-timer-notification:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-widgets:mergeReleaseNativeLibs NO-SOURCE
+> Task :app:preBuild
+> Task :app:preReleaseBuild
+> Task :expo-log-box:copyReleaseJniLibsProjectOnly
+> Task :react-native-masked-view_masked-view:copyReleaseJniLibsProjectOnly
+> Task :expo-log-box:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-widgets:copyReleaseJniLibsProjectOnly
+> Task :prayer-timer-notification:copyReleaseJniLibsProjectOnly
+> Task :expo:copyReleaseJniLibsProjectOnly
+> Task :expo-widgets:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :prayer-timer-notification:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-modules-core:generateReleaseBuildConfig FROM-CACHE
+> Task :app:mergeReleaseJniLibFolders
+> Task :react-native-masked-view_masked-view:generateReleaseBuildConfig FROM-CACHE
+> Task :expo-modules-core:generateReleaseResValues FROM-CACHE
+> Task :expo-log-box:generateReleaseBuildConfig FROM-CACHE
+> Task :expo:generateReleaseBuildConfig FROM-CACHE
+> Task :prayer-timer-notification:generateReleaseBuildConfig FROM-CACHE
+> Task :expo-widgets:generateReleaseBuildConfig FROM-CACHE
+> Task :expo-log-box:generateReleaseResValues FROM-CACHE
+> Task :prayer-timer-notification:generateReleaseResValues FROM-CACHE
+> Task :react-native-masked-view_masked-view:generateReleaseResValues FROM-CACHE
+> Task :expo-modules-core:generateReleaseResources FROM-CACHE
+> Task :expo:generateReleaseResValues FROM-CACHE
+> Task :expo-widgets:generateReleaseResValues FROM-CACHE
+> Task :expo:generateReleaseResources FROM-CACHE
+> Task :react-native-masked-view_masked-view:generateReleaseResources FROM-CACHE
+> Task :expo-log-box:generateReleaseResources FROM-CACHE
+> Task :expo-widgets:generateReleaseResources FROM-CACHE
+> Task :prayer-timer-notification:generateReleaseResources FROM-CACHE
+> Task :expo-modules-core:packageReleaseResources FROM-CACHE
+> Task :expo:packageReleaseResources FROM-CACHE
+> Task :expo-log-box:packageReleaseResources FROM-CACHE
+> Task :expo-widgets:packageReleaseResources FROM-CACHE
+> Task :prayer-timer-notification:packageReleaseResources FROM-CACHE
+> Task :react-native-masked-view_masked-view:packageReleaseResources FROM-CACHE
+> Task :react-native-masked-view_masked-view:parseReleaseLocalResources FROM-CACHE
+> Task :prayer-timer-notification:parseReleaseLocalResources FROM-CACHE
+> Task :expo-widgets:parseReleaseLocalResources FROM-CACHE
+> Task :expo:parseReleaseLocalResources FROM-CACHE
+> Task :expo-log-box:parseReleaseLocalResources FROM-CACHE
+> Task :expo:generateReleaseRFile FROM-CACHE
+> Task :prayer-timer-notification:generateReleaseRFile FROM-CACHE
+> Task :expo-log-box:generateReleaseRFile FROM-CACHE
+> Task :react-native-masked-view_masked-view:generateReleaseRFile FROM-CACHE
+> Task :expo-widgets:generateReleaseRFile FROM-CACHE
+> Task :expo-modules-core:parseReleaseLocalResources FROM-CACHE
+> Task :expo-widgets:javaPreCompileRelease FROM-CACHE
+> Task :react-native-masked-view_masked-view:javaPreCompileRelease FROM-CACHE
+> Task :expo:javaPreCompileRelease FROM-CACHE
+> Task :prayer-timer-notification:javaPreCompileRelease FROM-CACHE
+> Task :expo-log-box:javaPreCompileRelease FROM-CACHE
+> Task :expo-log-box:writeReleaseAarMetadata
+> Task :app:buildKotlinToolingMetadata
+> Task :expo:writeReleaseAarMetadata
+> Task :expo-widgets:writeReleaseAarMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo:extractDeepLinksRelease FROM-CACHE
+> Task :expo-log-box:extractDeepLinksRelease FROM-CACHE
+> Task :prayer-timer-notification:writeReleaseAarMetadata
+> Task :app:generateReleaseBuildConfig
+> Task :expo-widgets:extractDeepLinksRelease FROM-CACHE
+> Task :expo:processReleaseManifest FROM-CACHE
+> Task :expo-log-box:processReleaseManifest FROM-CACHE
+> Task :expo-widgets:processReleaseManifest FROM-CACHE
+> Task :expo:compileReleaseLibraryResources FROM-CACHE
+> Task :prayer-timer-notification:extractDeepLinksRelease FROM-CACHE
+> Task :expo-widgets:compileReleaseLibraryResources FROM-CACHE
+> Task :expo-log-box:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+> Task :expo:prepareReleaseArtProfile
+> Task :expo-log-box:prepareReleaseArtProfile
+> Task :prayer-timer-notification:processReleaseManifest FROM-CACHE
+> Task :expo-widgets:prepareReleaseArtProfile
+> Task :expo:mergeReleaseShaders
+> Task :expo:compileReleaseShaders NO-SOURCE
+> Task :expo:generateReleaseAssets UP-TO-DATE
+> Task :prayer-timer-notification:compileReleaseLibraryResources FROM-CACHE
+> Task :expo-log-box:mergeReleaseShaders
+> Task :prayer-timer-notification:prepareReleaseArtProfile
+> Task :expo-log-box:compileReleaseShaders NO-SOURCE
+> Task :expo-log-box:generateReleaseAssets UP-TO-DATE
+> Task :expo:mergeReleaseAssets
+> Task :expo-modules-core:generateReleaseRFile FROM-CACHE
+> Task :expo-widgets:mergeReleaseShaders
+> Task :expo-modules-core:javaPreCompileRelease FROM-CACHE
+> Task :prayer-timer-notification:mergeReleaseShaders
+> Task :expo-widgets:compileReleaseShaders NO-SOURCE
+> Task :expo-widgets:generateReleaseAssets UP-TO-DATE
+> Task :expo-modules-core:writeReleaseAarMetadata
+> Task :prayer-timer-notification:compileReleaseShaders NO-SOURCE
+> Task :prayer-timer-notification:generateReleaseAssets UP-TO-DATE
+> Task :expo-modules-core:extractDeepLinksRelease FROM-CACHE
+> Task :prayer-timer-notification:mergeReleaseAssets
+> Task :expo-widgets:mergeReleaseAssets
+> Task :expo-modules-core:processReleaseManifest FROM-CACHE
+> Task :expo-modules-core:compileReleaseLibraryResources FROM-CACHE
+> Task :expo-widgets:extractProguardFiles
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :expo:extractProguardFiles
+> Task :expo-modules-core:prepareReleaseArtProfile
+> Task :expo-widgets:prepareLintJarForPublish
+> Task :expo:prepareLintJarForPublish
+> Task :expo:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-modules-core:mergeReleaseShaders
+> Task :expo-modules-core:compileReleaseShaders NO-SOURCE
+> Task :expo-modules-core:generateReleaseAssets UP-TO-DATE
+> Task :expo:copyReleaseJniLibsProjectAndLocalJars
+> Task :prayer-timer-notification:extractProguardFiles
+> Task :expo:extractDeepLinksForAarRelease FROM-CACHE
+> Task :expo-widgets:stripReleaseDebugSymbols NO-SOURCE
+> Task :prayer-timer-notification:prepareLintJarForPublish
+> Task :prayer-timer-notification:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-widgets:copyReleaseJniLibsProjectAndLocalJars
+> Task :expo-modules-core:mergeReleaseAssets
+> Task :expo-widgets:extractDeepLinksForAarRelease FROM-CACHE
+> Task :prayer-timer-notification:copyReleaseJniLibsProjectAndLocalJars
+> Task :app:checkReleaseDuplicateClasses
+> Task :expo-modules-core:extractProguardFiles
+> Task :expo-widgets:writeReleaseLintModelMetadata
+> Task :prayer-timer-notification:extractDeepLinksForAarRelease FROM-CACHE
+> Task :expo-modules-core:prepareLintJarForPublish
+> Task :expo:writeReleaseLintModelMetadata
+> Task :prayer-timer-notification:writeReleaseLintModelMetadata
+> Task :expo-modules-core:extractDeepLinksForAarRelease FROM-CACHE
+> Task :expo-modules-core:writeReleaseLintModelMetadata
+> Task :expo-log-box:mergeReleaseAssets
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :expo-log-box:extractProguardFiles
+> Task :expo-log-box:prepareLintJarForPublish
+> Task :expo-log-box:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-log-box:copyReleaseJniLibsProjectAndLocalJars
+> Task :expo-log-box:extractDeepLinksForAarRelease FROM-CACHE
+> Task :expo-log-box:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript
+> Task :shopify_react-native-skia:generateCodegenSchemaFromJavaScript
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript
+> Task :react-native-svg:generateCodegenSchemaFromJavaScript
+> Task :react-native-screens:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript
+> Task :expo-constants:createExpoConfig
+> Task :expo-constants:preBuild
+> Task :expo-constants:preReleaseBuild
+> Task :expo-constants:mergeReleaseJniLibFolders
+> Task :expo-constants:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-constants:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-constants:copyReleaseJniLibsProjectOnly
+> Task :expo-constants:generateReleaseBuildConfig FROM-CACHE
+> Task :expo-constants:generateReleaseResValues FROM-CACHE
+> Task :expo-constants:generateReleaseResources FROM-CACHE
+> Task :expo-constants:packageReleaseResources FROM-CACHE
+> Task :expo-constants:parseReleaseLocalResources FROM-CACHE
+> Task :expo-constants:generateReleaseRFile FROM-CACHE
+> Task :expo-constants:javaPreCompileRelease FROM-CACHE
+> Task :expo-constants:writeReleaseAarMetadata
+> Task :expo-constants:extractDeepLinksRelease FROM-CACHE
+> Task :expo-constants:processReleaseManifest FROM-CACHE
+> Task :expo-constants:compileReleaseLibraryResources FROM-CACHE
+> Task :expo-constants:prepareReleaseArtProfile
+> Task :expo-constants:mergeReleaseShaders
+> Task :expo-constants:compileReleaseShaders NO-SOURCE
+> Task :expo-constants:generateReleaseAssets UP-TO-DATE
+> Task :expo-constants:mergeReleaseAssets
+> Task :expo-constants:extractProguardFiles
+> Task :expo-constants:prepareLintJarForPublish
+> Task :expo-constants:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-constants:copyReleaseJniLibsProjectAndLocalJars
+> Task :expo-constants:extractDeepLinksForAarRelease FROM-CACHE
+> Task :expo-constants:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema
+> Task :react-native-async-storage_async-storage:preBuild
+> Task :react-native-async-storage_async-storage:preReleaseBuild
+> Task :shopify_react-native-skia:generateCodegenArtifactsFromSchema
+> Task :react-native-async-storage_async-storage:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-async-storage_async-storage:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-async-storage_async-storage:generateReleaseResValues FROM-CACHE
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema
+> Task :react-native-gesture-handler:preBuild
+> Task :react-native-gesture-handler:preReleaseBuild
+> Task :react-native-async-storage_async-storage:generateReleaseResources FROM-CACHE
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema
+> Task :react-native-safe-area-context:preBuild
+> Task :react-native-safe-area-context:preReleaseBuild
+> Task :react-native-async-storage_async-storage:packageReleaseResources FROM-CACHE
+> Task :react-native-gesture-handler:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-gesture-handler:generateReleaseResValues FROM-CACHE
+> Task :react-native-async-storage_async-storage:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema
+> Task :react-native-gesture-handler:generateReleaseResources FROM-CACHE
+> Task :react-native-safe-area-context:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-async-storage_async-storage:generateReleaseRFile FROM-CACHE
+> Task :react-native-safe-area-context:generateReleaseResValues FROM-CACHE
+> Task :react-native-async-storage_async-storage:javaPreCompileRelease FROM-CACHE
+> Task :react-native-gesture-handler:packageReleaseResources FROM-CACHE
+> Task :react-native-safe-area-context:generateReleaseResources FROM-CACHE
+> Task :react-native-gesture-handler:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-safe-area-context:packageReleaseResources FROM-CACHE
+> Task :react-native-gesture-handler:generateReleaseRFile FROM-CACHE
+> Task :react-native-gesture-handler:javaPreCompileRelease FROM-CACHE
+> Task :react-native-safe-area-context:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-gesture-handler:writeReleaseAarMetadata
+> Task :react-native-gesture-handler:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-safe-area-context:generateReleaseRFile FROM-CACHE
+> Task :react-native-gesture-handler:processReleaseManifest FROM-CACHE
+> Task :react-native-gesture-handler:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-gesture-handler:prepareReleaseArtProfile
+> Task :react-native-gesture-handler:mergeReleaseShaders
+> Task :react-native-gesture-handler:compileReleaseShaders NO-SOURCE
+> Task :react-native-gesture-handler:generateReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseAssets
+> Task :react-native-gesture-handler:extractProguardFiles
+> Task :react-native-gesture-handler:prepareLintJarForPublish
+> Task :react-native-gesture-handler:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-gesture-handler:writeReleaseLintModelMetadata
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs
+> Task :react-native-worklets:preBuild
+> Task :react-native-worklets:preReleaseBuild
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema
+> Task :react-native-safe-area-context:compileReleaseKotlin FROM-CACHE
+> Task :react-native-safe-area-context:javaPreCompileRelease FROM-CACHE
+> Task :react-native-svg:generateCodegenArtifactsFromSchema
+> Task :react-native-svg:preBuild
+> Task :react-native-svg:preReleaseBuild
+> Task :react-native-masked-view_masked-view:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-svg:mergeReleaseJniLibFolders
+> Task :react-native-svg:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-svg:copyReleaseJniLibsProjectOnly
+> Task :react-native-svg:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-svg:generateReleaseResValues FROM-CACHE
+> Task :react-native-masked-view_masked-view:writeReleaseAarMetadata
+> Task :react-native-svg:generateReleaseResources FROM-CACHE
+> Task :react-native-masked-view_masked-view:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-masked-view_masked-view:bundleLibRuntimeToDirRelease
+> Task :react-native-svg:packageReleaseResources FROM-CACHE
+> Task :react-native-masked-view_masked-view:processReleaseManifest FROM-CACHE
+> Task :react-native-masked-view_masked-view:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-svg:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-masked-view_masked-view:prepareReleaseArtProfile
+> Task :react-native-svg:generateReleaseRFile FROM-CACHE
+> Task :react-native-masked-view_masked-view:bundleLibCompileToJarRelease
+> Task :react-native-svg:javaPreCompileRelease FROM-CACHE
+> Task :react-native-masked-view_masked-view:bundleLibRuntimeToJarRelease
+> Task :react-native-masked-view_masked-view:mergeReleaseShaders
+> Task :react-native-masked-view_masked-view:compileReleaseShaders NO-SOURCE
+> Task :react-native-masked-view_masked-view:generateReleaseAssets UP-TO-DATE
+> Task :react-native-masked-view_masked-view:mergeReleaseAssets
+> Task :react-native-masked-view_masked-view:processReleaseJavaRes NO-SOURCE
+> Task :react-native-masked-view_masked-view:createFullJarRelease
+> Task :react-native-masked-view_masked-view:extractProguardFiles
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs
+> Task :react-native-reanimated:preBuild
+> Task :react-native-reanimated:preReleaseBuild
+> Task :react-native-reanimated:mergeReleaseJniLibFolders
+> Task :react-native-reanimated:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-reanimated:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-reanimated:generateReleaseResValues FROM-CACHE
+> Task :react-native-reanimated:generateReleaseResources FROM-CACHE
+> Task :react-native-reanimated:packageReleaseResources FROM-CACHE
+> Task :react-native-reanimated:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-reanimated:generateReleaseRFile FROM-CACHE
+> Task :react-native-reanimated:javaPreCompileRelease FROM-CACHE
+> Task :react-native-reanimated:writeReleaseAarMetadata
+> Task :react-native-reanimated:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-reanimated:processReleaseManifest FROM-CACHE
+> Task :react-native-reanimated:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-reanimated:prepareReleaseArtProfile
+> Task :react-native-reanimated:mergeReleaseShaders
+> Task :react-native-reanimated:compileReleaseShaders NO-SOURCE
+> Task :react-native-reanimated:generateReleaseAssets UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseAssets
+> Task :react-native-reanimated:extractProguardFiles
+> Task :react-native-reanimated:prepareLintJarForPublish
+> Task :react-native-reanimated:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-screens:generateCodegenArtifactsFromSchema
+> Task :react-native-reanimated:writeReleaseLintModelMetadata
+> Task :react-native-screens:preBuild
+> Task :react-native-screens:preReleaseBuild
+> Task :react-native-svg:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-svg:bundleLibCompileToJarRelease
+> Task :react-native-async-storage_async-storage:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-svg:writeReleaseAarMetadata
+> Task :react-native-svg:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-svg:processReleaseManifest FROM-CACHE
+> Task :react-native-svg:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-svg:prepareReleaseArtProfile
+> Task :react-native-async-storage_async-storage:writeReleaseAarMetadata
+> Task :react-native-async-storage_async-storage:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-svg:mergeReleaseShaders
+> Task :react-native-svg:compileReleaseShaders NO-SOURCE
+> Task :react-native-svg:generateReleaseAssets UP-TO-DATE
+> Task :react-native-svg:mergeReleaseAssets
+> Task :react-native-svg:processReleaseJavaRes NO-SOURCE
+> Task :react-native-async-storage_async-storage:processReleaseManifest FROM-CACHE
+> Task :react-native-async-storage_async-storage:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-svg:extractProguardFiles
+> Task :react-native-async-storage_async-storage:prepareReleaseArtProfile
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirRelease
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarRelease
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarRelease
+> Task :react-native-svg:bundleLibRuntimeToJarRelease
+> Task :react-native-async-storage_async-storage:mergeReleaseShaders
+> Task :react-native-async-storage_async-storage:compileReleaseShaders NO-SOURCE
+> Task :react-native-async-storage_async-storage:generateReleaseAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeReleaseAssets
+> Task :react-native-async-storage_async-storage:processReleaseJavaRes NO-SOURCE
+> Task :react-native-async-storage_async-storage:createFullJarRelease
+> Task :react-native-async-storage_async-storage:extractProguardFiles
+> Task :react-native-svg:bundleLibRuntimeToDirRelease
+
+> Task :app:createBundleReleaseJsAndAssets
+env: export EXPO_PUBLIC_AI_PROXY_KEY EXPO_PUBLIC_API_URL
+  Eager key: {"bundleEncoding":"utf8","dev":false,"entryFile":"/Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules/expo-router/entry.js","minify":false,"platform":"android","sourcemapUseAbsolutePath":false}
+Request key: {"bundleEncoding":"utf8","dev":false,"entryFile":"/Users/mac/Desktop/Dev/cep/Lampada-Mobile/node_modules/expo-router/entry.js","minify":false,"platform":"android","skipServer":false,"sourcemapOutput":"/Users/mac/Desktop/Dev/cep/Lampada-Mobile/android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map","sourcemapUseAbsolutePath":false}
+warning: Eager bundle does not match new options, bundling again.
+
+> Task :react-native-safe-area-context:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-safe-area-context:writeReleaseAarMetadata
+> Task :react-native-safe-area-context:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-safe-area-context:processReleaseManifest FROM-CACHE
+> Task :react-native-safe-area-context:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-safe-area-context:prepareReleaseArtProfile
+> Task :react-native-safe-area-context:bundleLibCompileToJarRelease
+> Task :react-native-safe-area-context:mergeReleaseShaders
+> Task :react-native-safe-area-context:compileReleaseShaders NO-SOURCE
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarRelease
+> Task :react-native-safe-area-context:generateReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseAssets
+> Task :react-native-safe-area-context:processReleaseJavaRes
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirRelease
+> Task :react-native-safe-area-context:createFullJarRelease
+> Task :react-native-safe-area-context:extractProguardFiles
+> Task :react-native-masked-view_masked-view:generateReleaseLintModel
+> Task :react-native-masked-view_masked-view:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-masked-view_masked-view:prepareLintJarForPublish
+> Task :react-native-masked-view_masked-view:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-masked-view_masked-view:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-masked-view_masked-view:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-masked-view_masked-view:mergeReleaseGeneratedProguardFiles
+> Task :react-native-masked-view_masked-view:mergeReleaseConsumerProguardFiles
+> Task :react-native-masked-view_masked-view:lintVitalAnalyzeRelease FROM-CACHE
+> Task :react-native-masked-view_masked-view:mergeReleaseJavaResource
+> Task :react-native-masked-view_masked-view:writeReleaseLintModelMetadata
+> Task :react-native-masked-view_masked-view:syncReleaseLibJars FROM-CACHE
+> Task :react-native-masked-view_masked-view:bundleReleaseLocalLintAar
+> Task :react-native-masked-view_masked-view:generateReleaseLintVitalModel
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-svg:generateReleaseLintModel
+> Task :react-native-async-storage_async-storage:generateReleaseLintModel
+> Task :react-native-async-storage_async-storage:prepareLintJarForPublish
+> Task :react-native-svg:createFullJarRelease
+> Task :react-native-async-storage_async-storage:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-svg:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-svg:prepareLintJarForPublish
+> Task :react-native-svg:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-svg:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-async-storage_async-storage:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-svg:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-svg:mergeReleaseGeneratedProguardFiles
+> Task :react-native-svg:mergeReleaseConsumerProguardFiles
+> Task :react-native-async-storage_async-storage:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-async-storage_async-storage:mergeReleaseGeneratedProguardFiles
+> Task :react-native-async-storage_async-storage:mergeReleaseConsumerProguardFiles
+> Task :react-native-async-storage_async-storage:mergeReleaseJavaResource
+> Task :react-native-async-storage_async-storage:lintVitalAnalyzeRelease FROM-CACHE
+> Task :react-native-async-storage_async-storage:syncReleaseLibJars FROM-CACHE
+> Task :shopify_react-native-skia:prepareHeaders
+> Task :react-native-screens:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :shopify_react-native-skia:preBuild
+> Task :shopify_react-native-skia:preReleaseBuild
+> Task :react-native-async-storage_async-storage:bundleReleaseLocalLintAar
+> Task :react-native-svg:writeReleaseLintModelMetadata
+> Task :react-native-svg:mergeReleaseJavaResource
+> Task :react-native-svg:lintVitalAnalyzeRelease FROM-CACHE
+> Task :shopify_react-native-skia:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-svg:syncReleaseLibJars FROM-CACHE
+> Task :shopify_react-native-skia:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-svg:bundleReleaseLocalLintAar
+> Task :shopify_react-native-skia:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-svg:generateReleaseLintVitalModel
+> Task :shopify_react-native-skia:configureCMakeRelWithDebInfo[x86_64]
+> Task :shopify_react-native-skia:generateJsonModelRelease
+> Task :react-native-async-storage_async-storage:writeReleaseLintModelMetadata
+> Task :shopify_react-native-skia:prefabReleaseConfigurePackage
+> Task :react-native-async-storage_async-storage:generateReleaseLintVitalModel
+> Task :react-native-safe-area-context:generateReleaseLintModel
+> Task :react-native-safe-area-context:prepareLintJarForPublish
+> Task :react-native-safe-area-context:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-safe-area-context:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-safe-area-context:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-safe-area-context:mergeReleaseGeneratedProguardFiles
+> Task :react-native-safe-area-context:mergeReleaseConsumerProguardFiles
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease FROM-CACHE
+> Task :react-native-safe-area-context:mergeReleaseJavaResource
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata
+> Task :react-native-safe-area-context:syncReleaseLibJars FROM-CACHE
+> Task :react-native-safe-area-context:bundleReleaseLocalLintAar
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel
+> Task :react-native-screens:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[arm64-v8a][worklets]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86_64]
+
+> Task :app:createBundleReleaseJsAndAssets
+Starting Metro Bundler
+
+
+> Task :shopify_react-native-skia:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:mergeReleaseJniLibFolders
+> Task :react-native-screens:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-screens:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-screens:generateReleaseResValues FROM-CACHE
+> Task :react-native-screens:generateReleaseResources FROM-CACHE
+> Task :react-native-screens:mergeReleaseNativeLibs
+> Task :react-native-screens:packageReleaseResources FROM-CACHE
+> Task :react-native-screens:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-screens:generateReleaseRFile FROM-CACHE
+> Task :react-native-screens:copyReleaseJniLibsProjectOnly
+> Task :react-native-screens:compileReleaseKotlin FROM-CACHE
+> Task :react-native-screens:javaPreCompileRelease FROM-CACHE
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[armeabi-v7a][worklets]
+> Task :react-native-screens:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-screens:writeReleaseAarMetadata
+> Task :react-native-screens:extractDeepLinksRelease FROM-CACHE
+> Task :shopify_react-native-skia:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:processReleaseManifest FROM-CACHE
+> Task :react-native-screens:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-screens:prepareReleaseArtProfile
+> Task :react-native-screens:mergeReleaseShaders
+> Task :react-native-screens:compileReleaseShaders NO-SOURCE
+> Task :react-native-screens:generateReleaseAssets UP-TO-DATE
+> Task :react-native-screens:mergeReleaseAssets
+> Task :react-native-screens:processReleaseJavaRes
+> Task :react-native-screens:extractProguardFiles
+> Task :react-native-screens:bundleLibCompileToJarRelease
+> Task :react-native-screens:bundleLibRuntimeToJarRelease
+> Task :react-native-screens:generateReleaseLintModel
+> Task :react-native-screens:createFullJarRelease
+> Task :react-native-screens:prepareLintJarForPublish
+> Task :react-native-screens:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-screens:stripReleaseDebugSymbols
+> Task :react-native-screens:bundleLibRuntimeToDirRelease
+> Task :react-native-screens:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-screens:mergeReleaseGeneratedProguardFiles
+> Task :react-native-screens:mergeReleaseConsumerProguardFiles
+> Task :react-native-screens:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-screens:mergeReleaseJavaResource
+> Task :react-native-screens:lintVitalAnalyzeRelease FROM-CACHE
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:syncReleaseLibJars FROM-CACHE
+> Task :react-native-screens:bundleReleaseLocalLintAar
+> Task :react-native-screens:writeReleaseLintModelMetadata
+> Task :react-native-screens:generateReleaseLintVitalModel
+> Task :shopify_react-native-skia:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[x86][worklets]
+
+> Task :app:createBundleReleaseJsAndAssets
+Android Bundled 3695ms node_modules/expo-router/entry.js (4244 modules)
+Writing bundle output to: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/android/app/build/generated/assets/react/release/index.android.bundle
+Writing sourcemap output to: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map
+Copying 93 asset files
+Done writing bundle output
+Done writing sourcemap output
+
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[x86_64]
+> Task :shopify_react-native-skia:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[x86_64][worklets]
+> Task :shopify_react-native-skia:externalNativeBuildRelease
+> Task :react-native-worklets:externalNativeBuildRelease
+> Task :react-native-worklets:generateJsonModelRelease
+> Task :react-native-worklets:prefabReleaseConfigurePackage
+> Task :shopify_react-native-skia:prefabReleasePackage
+> Task :react-native-worklets:prefabReleasePackage
+> Task :react-native-worklets:mergeReleaseJniLibFolders
+> Task :react-native-worklets:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-worklets:generateReleaseBuildConfig FROM-CACHE
+> Task :react-native-worklets:mergeReleaseNativeLibs
+> Task :react-native-worklets:generateReleaseResValues FROM-CACHE
+> Task :react-native-worklets:generateReleaseResources FROM-CACHE
+> Task :react-native-worklets:packageReleaseResources FROM-CACHE
+> Task :react-native-worklets:parseReleaseLocalResources FROM-CACHE
+> Task :react-native-worklets:copyReleaseJniLibsProjectOnly
+> Task :react-native-worklets:generateReleaseRFile FROM-CACHE
+> Task :shopify_react-native-skia:mergeReleaseJniLibFolders
+> Task :shopify_react-native-skia:generateReleaseBuildConfig FROM-CACHE
+> Task :shopify_react-native-skia:generateReleaseResValues FROM-CACHE
+> Task :shopify_react-native-skia:generateReleaseResources FROM-CACHE
+> Task :shopify_react-native-skia:packageReleaseResources FROM-CACHE
+> Task :shopify_react-native-skia:parseReleaseLocalResources FROM-CACHE
+> Task :shopify_react-native-skia:generateReleaseRFile FROM-CACHE
+> Task :shopify_react-native-skia:javaPreCompileRelease FROM-CACHE
+> Task :react-native-worklets:compileReleaseKotlin FROM-CACHE
+> Task :react-native-worklets:javaPreCompileRelease FROM-CACHE
+> Task :react-native-worklets:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-worklets:bundleLibCompileToJarRelease
+> Task :react-native-worklets:writeReleaseAarMetadata
+> Task :react-native-worklets:extractDeepLinksRelease FROM-CACHE
+> Task :shopify_react-native-skia:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-worklets:processReleaseManifest FROM-CACHE
+> Task :react-native-worklets:compileReleaseLibraryResources FROM-CACHE
+> Task :react-native-worklets:bundleLibRuntimeToDirRelease
+> Task :react-native-worklets:prepareReleaseArtProfile
+> Task :react-native-worklets:bundleLibRuntimeToJarRelease
+> Task :react-native-worklets:mergeReleaseShaders
+> Task :react-native-worklets:compileReleaseShaders NO-SOURCE
+> Task :react-native-worklets:generateReleaseAssets UP-TO-DATE
+> Task :shopify_react-native-skia:writeReleaseAarMetadata
+> Task :shopify_react-native-skia:extractDeepLinksRelease FROM-CACHE
+> Task :react-native-worklets:mergeReleaseAssets
+> Task :shopify_react-native-skia:processReleaseManifest FROM-CACHE
+> Task :react-native-worklets:processReleaseJavaRes
+> Task :shopify_react-native-skia:compileReleaseLibraryResources FROM-CACHE
+> Task :shopify_react-native-skia:prepareReleaseArtProfile
+> Task :react-native-worklets:createFullJarRelease
+> Task :shopify_react-native-skia:bundleLibCompileToJarRelease
+> Task :react-native-worklets:extractProguardFiles
+> Task :shopify_react-native-skia:mergeReleaseShaders
+> Task :shopify_react-native-skia:compileReleaseShaders NO-SOURCE
+> Task :shopify_react-native-skia:bundleLibRuntimeToJarRelease
+> Task :shopify_react-native-skia:generateReleaseAssets UP-TO-DATE
+> Task :shopify_react-native-skia:bundleLibRuntimeToDirRelease
+> Task :shopify_react-native-skia:mergeReleaseAssets
+> Task :shopify_react-native-skia:processReleaseJavaRes NO-SOURCE
+> Task :shopify_react-native-skia:createFullJarRelease
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :shopify_react-native-skia:extractProguardFiles
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-worklets:generateReleaseLintModel
+> Task :react-native-worklets:prepareLintJarForPublish
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-worklets:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-worklets:extractReleaseAnnotations FROM-CACHE
+> Task :shopify_react-native-skia:generateReleaseLintModel
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-worklets:mergeReleaseGeneratedProguardFiles
+> Task :shopify_react-native-skia:prepareLintJarForPublish
+> Task :shopify_react-native-skia:extractDeepLinksForAarRelease FROM-CACHE
+> Task :react-native-worklets:mergeReleaseConsumerProguardFiles
+> Task :shopify_react-native-skia:extractReleaseAnnotations FROM-CACHE
+> Task :shopify_react-native-skia:mergeReleaseGeneratedProguardFiles
+> Task :react-native-worklets:writeReleaseLintModelMetadata
+> Task :react-native-worklets:mergeReleaseJavaResource
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-reanimated:generateJsonModelRelease
+> Task :shopify_react-native-skia:mergeReleaseConsumerProguardFiles
+> Task :react-native-worklets:syncReleaseLibJars FROM-CACHE
+> Task :react-native-worklets:lintVitalAnalyzeRelease SKIPPED
+> Task :react-native-reanimated:prefabReleaseConfigurePackage
+> Task :shopify_react-native-skia:mergeReleaseJavaResource
+> Task :shopify_react-native-skia:lintVitalAnalyzeRelease FROM-CACHE
+> Task :react-native-worklets:generateReleaseLintVitalModel
+> Task :shopify_react-native-skia:syncReleaseLibJars FROM-CACHE
+> Task :shopify_react-native-skia:writeReleaseLintModelMetadata
+> Task :shopify_react-native-skia:generateReleaseLintVitalModel
+> Task :react-native-worklets:stripReleaseDebugSymbols
+> Task :react-native-worklets:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-worklets:bundleReleaseLocalLintAar
+> Task :shopify_react-native-skia:mergeReleaseNativeLibs
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :shopify_react-native-skia:stripReleaseDebugSymbols
+> Task :shopify_react-native-skia:copyReleaseJniLibsProjectAndLocalJars
+> Task :shopify_react-native-skia:copyReleaseJniLibsProjectOnly
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[x86]
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[x86]
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[x86_64]
+> Task :shopify_react-native-skia:bundleReleaseLocalLintAar
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[x86_64]
+> Task :expo-modules-core:mergeReleaseNativeLibs
+> Task :expo-modules-core:compileReleaseKotlin FROM-CACHE
+> Task :expo-modules-core:copyReleaseJniLibsProjectOnly
+> Task :expo-modules-core:compileReleaseJavaWithJavac FROM-CACHE
+> Task :expo-modules-core:bundleLibCompileToJarRelease
+> Task :expo-widgets:compileReleaseKotlin FROM-CACHE
+> Task :prayer-timer-notification:compileReleaseKotlin FROM-CACHE
+> Task :expo-constants:compileReleaseKotlin FROM-CACHE
+> Task :expo-modules-core:processReleaseJavaRes
+> Task :expo-log-box:compileReleaseKotlin FROM-CACHE
+> Task :expo-modules-core:generateReleaseLintModel
+> Task :expo-modules-core:extractReleaseAnnotations FROM-CACHE
+> Task :expo-modules-core:mergeReleaseGeneratedProguardFiles
+> Task :expo-widgets:compileReleaseJavaWithJavac FROM-CACHE
+> Task :expo-modules-core:mergeReleaseConsumerProguardFiles
+> Task :prayer-timer-notification:compileReleaseJavaWithJavac FROM-CACHE
+> Task :expo-widgets:bundleLibRuntimeToJarRelease
+> Task :prayer-timer-notification:bundleLibCompileToJarRelease
+> Task :expo-widgets:bundleLibRuntimeToDirRelease
+> Task :expo-widgets:processReleaseJavaRes
+> Task :expo-widgets:createFullJarRelease
+> Task :prayer-timer-notification:processReleaseJavaRes
+> Task :expo-widgets:extractReleaseAnnotations FROM-CACHE
+> Task :prayer-timer-notification:extractReleaseAnnotations FROM-CACHE
+> Task :expo-widgets:mergeReleaseGeneratedProguardFiles
+> Task :prayer-timer-notification:mergeReleaseGeneratedProguardFiles
+> Task :expo-widgets:mergeReleaseConsumerProguardFiles
+> Task :prayer-timer-notification:mergeReleaseConsumerProguardFiles
+> Task :expo-log-box:compileReleaseJavaWithJavac FROM-CACHE
+> Task :expo-modules-core:lintVitalAnalyzeRelease FROM-CACHE
+> Task :expo-widgets:mergeReleaseJavaResource
+> Task :prayer-timer-notification:bundleLibRuntimeToDirRelease
+> Task :prayer-timer-notification:mergeReleaseJavaResource
+> Task :expo-widgets:syncReleaseLibJars FROM-CACHE
+> Task :expo-log-box:bundleLibCompileToJarRelease
+> Task :prayer-timer-notification:syncReleaseLibJars FROM-CACHE
+> Task :expo-widgets:bundleReleaseLocalLintAar
+> Task :prayer-timer-notification:bundleReleaseLocalLintAar
+> Task :expo-log-box:bundleLibRuntimeToJarRelease
+> Task :expo-modules-core:mergeReleaseJavaResource
+> Task :expo-log-box:processReleaseJavaRes
+> Task :expo-widgets:bundleLibCompileToJarRelease
+> Task :expo-log-box:createFullJarRelease
+> Task :expo-modules-core:generateReleaseLintVitalModel
+> Task :expo-log-box:bundleLibRuntimeToDirRelease
+> Task :expo-log-box:extractReleaseAnnotations FROM-CACHE
+> Task :expo-log-box:mergeReleaseGeneratedProguardFiles
+> Task :prayer-timer-notification:bundleLibRuntimeToJarRelease
+> Task :expo-log-box:mergeReleaseConsumerProguardFiles
+> Task :prayer-timer-notification:createFullJarRelease
+> Task :expo-modules-core:stripReleaseDebugSymbols
+> Task :expo-log-box:mergeReleaseJavaResource
+> Task :expo-log-box:syncReleaseLibJars FROM-CACHE
+> Task :expo-constants:compileReleaseJavaWithJavac FROM-CACHE
+> Task :expo-log-box:bundleReleaseLocalLintAar
+> Task :expo-constants:bundleLibCompileToJarRelease
+> Task :expo-constants:bundleLibRuntimeToJarRelease
+> Task :expo-constants:processReleaseJavaRes
+> Task :expo-constants:bundleLibRuntimeToDirRelease
+> Task :expo-constants:createFullJarRelease
+> Task :expo-constants:extractReleaseAnnotations FROM-CACHE
+> Task :expo-constants:mergeReleaseGeneratedProguardFiles
+> Task :expo-constants:mergeReleaseConsumerProguardFiles
+> Task :expo-constants:mergeReleaseJavaResource
+> Task :expo-constants:syncReleaseLibJars FROM-CACHE
+> Task :expo-constants:bundleReleaseLocalLintAar
+> Task :expo-modules-core:syncReleaseLibJars FROM-CACHE
+> Task :expo-modules-core:bundleLibRuntimeToJarRelease
+> Task :expo-modules-core:copyReleaseJniLibsProjectAndLocalJars
+> Task :expo-modules-core:createFullJarRelease
+> Task :expo:compileReleaseKotlin FROM-CACHE
+> Task :expo-modules-core:bundleReleaseLocalLintAar
+> Task :prayer-timer-notification:generateReleaseLintModel
+> Task :expo-constants:generateReleaseLintModel
+> Task :expo-widgets:generateReleaseLintModel
+> Task :expo-log-box:generateReleaseLintModel
+> Task :expo-widgets:generateReleaseLintVitalModel
+> Task :expo-constants:generateReleaseLintVitalModel
+> Task :expo:compileReleaseJavaWithJavac FROM-CACHE
+> Task :expo-log-box:generateReleaseLintVitalModel
+> Task :prayer-timer-notification:generateReleaseLintVitalModel
+> Task :expo:bundleLibCompileToJarRelease
+> Task :expo:processReleaseJavaRes
+> Task :expo:bundleLibRuntimeToJarRelease
+> Task :expo:bundleLibRuntimeToDirRelease
+> Task :prayer-timer-notification:lintVitalAnalyzeRelease FROM-CACHE
+> Task :expo-log-box:lintVitalAnalyzeRelease FROM-CACHE
+> Task :expo-constants:lintVitalAnalyzeRelease FROM-CACHE
+> Task :expo-widgets:lintVitalAnalyzeRelease FROM-CACHE
+> Task :expo:generateReleaseLintModel
+> Task :expo:createFullJarRelease
+> Task :expo:extractReleaseAnnotations FROM-CACHE
+> Task :expo:mergeReleaseGeneratedProguardFiles
+> Task :expo:mergeReleaseConsumerProguardFiles
+> Task :expo:mergeReleaseJavaResource
+> Task :expo:syncReleaseLibJars FROM-CACHE
+> Task :expo:bundleReleaseLocalLintAar
+> Task :expo:generateReleaseLintVitalModel
+> Task :expo-modules-core:bundleLibRuntimeToDirRelease
+> Task :expo:lintVitalAnalyzeRelease
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[arm64-v8a][reanimated]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[armeabi-v7a][reanimated]
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86][reanimated]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86_64][reanimated]
+> Task :react-native-reanimated:externalNativeBuildRelease
+> Task :react-native-reanimated:prefabReleasePackage
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-reanimated:compileReleaseKotlin FROM-CACHE
+> Task :react-native-reanimated:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-reanimated:bundleLibCompileToJarRelease
+> Task :react-native-reanimated:bundleLibRuntimeToJarRelease
+> Task :react-native-reanimated:processReleaseJavaRes
+> Task :react-native-reanimated:createFullJarRelease
+> Task :react-native-reanimated:generateReleaseLintModel
+> Task :react-native-reanimated:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-reanimated:mergeReleaseGeneratedProguardFiles
+> Task :react-native-reanimated:mergeReleaseConsumerProguardFiles
+> Task :react-native-reanimated:bundleLibRuntimeToDirRelease
+> Task :react-native-reanimated:lintVitalAnalyzeRelease SKIPPED
+> Task :react-native-reanimated:generateReleaseLintVitalModel
+> Task :react-native-reanimated:mergeReleaseJavaResource
+> Task :react-native-reanimated:syncReleaseLibJars FROM-CACHE
+> Task :react-native-gesture-handler:compileReleaseKotlin FROM-CACHE
+> Task :react-native-reanimated:mergeReleaseNativeLibs
+> Task :react-native-reanimated:stripReleaseDebugSymbols
+> Task :react-native-reanimated:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-reanimated:bundleReleaseLocalLintAar
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-gesture-handler:mergeReleaseNativeLibs
+> Task :react-native-gesture-handler:compileReleaseJavaWithJavac FROM-CACHE
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:processReleaseJavaRes
+> Task :react-native-gesture-handler:bundleLibCompileToJarRelease
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarRelease
+> Task :react-native-gesture-handler:generateReleaseLintModel
+> Task :react-native-gesture-handler:createFullJarRelease
+> Task :react-native-gesture-handler:extractReleaseAnnotations FROM-CACHE
+> Task :react-native-gesture-handler:mergeReleaseGeneratedProguardFiles
+> Task :react-native-gesture-handler:mergeReleaseConsumerProguardFiles
+> Task :react-native-gesture-handler:mergeReleaseJavaResource
+> Task :react-native-gesture-handler:lintVitalAnalyzeRelease FROM-CACHE
+> Task :react-native-gesture-handler:syncReleaseLibJars FROM-CACHE
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirRelease
+> Task :react-native-gesture-handler:generateReleaseLintVitalModel
+> Task :react-native-gesture-handler:stripReleaseDebugSymbols
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-gesture-handler:bundleReleaseLocalLintAar
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :app:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:configureCMakeRelWithDebInfo[x86]
+> Task :app:buildCMakeRelWithDebInfo[x86]
+> Task :app:configureCMakeRelWithDebInfo[x86_64]
+> Task :app:buildCMakeRelWithDebInfo[x86_64]
+> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :app:mergeReleaseResources FROM-CACHE
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+
+> Task :app:processReleaseMainManifest
+/Users/mac/Desktop/Dev/cep/Lampada-Mobile/android/app/src/main/AndroidManifest.xml Warning:
+	provider#expo.modules.filesystem.FileSystemFileProvider@android:authorities was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:expoReleaseOverrideMaxSdkConflicts
+[33m---------- Expo Max Sdk Override Plugin ----------[0m
+[32m>>> No 'android:maxSdkVersion' conflicts found[0m
+[33m--------------------------------------------------[0m
+
+> Task :app:processReleaseManifest
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:desugarReleaseFileDependencies FROM-CACHE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeExtDexRelease FROM-CACHE
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :app:compressReleaseAssets
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:processReleaseResources
+> Task :app:compileReleaseKotlin
+> Task :app:optimizeReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics FROM-CACHE
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:processReleaseJavaRes
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:mergeReleaseJavaResource
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///Users/mac/Desktop/Dev/cep/Lampada-Mobile/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 6m 22s
+732 actionable tasks: 460 executed, 244 from cache, 28 up-to-date
+Waiting on http://localhost:8081
+› Installing /Users/mac/Desktop/Dev/cep/Lampada-Mobile/android/app/build/outputs/apk/release/app-release.apk
+› Opening lampada://expo-development-client/?url=http%3A%2F%2F100.119.110.100%3A8081 on Pixel_9_Pro_API_35

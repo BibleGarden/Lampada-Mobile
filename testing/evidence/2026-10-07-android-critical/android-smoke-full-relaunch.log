@@ -1,0 +1,10 @@
+Running on Pixel_9_Pro_API_35
+ > Flow ios-smoke-full-relaunch
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that ".*Финальный smoke.*" is visible... COMPLETED
+Tap on ".*Финальный smoke.*"... COMPLETED
+Assert that ".*Финальный ответ.*" is visible... COMPLETED
+Assert that ".*Финальный вывод.*" is visible... COMPLETED
