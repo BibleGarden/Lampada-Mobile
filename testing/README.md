@@ -240,7 +240,10 @@ to Russian with `ios-lng-restore-ru.yaml`.
 PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456;
 no temporary `/tmp/disable-pin.yaml` prerequisite is needed. Cleanup errors
 are failures. The biometric preflight scrolls to the protection section before
-checking the visible hierarchy.
+checking the visible hierarchy. It sets the simulator notification state
+`com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and
+0 for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID
+on the current runtime.
 
 LOCK-008 is a manual Device Hub check. Run `run-lock-appswitcher.sh prepare`,
 open App Switcher using Device Hub's Home control, then run the script with
