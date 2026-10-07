@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-07",
+  "version": "1.3.4",
+  "build": "Release",
+  "device": "Pixel_9_Pro_API_35",
+  "flows": {
+    "android-stage03-navigation": 0,
+    "android-stage03-session-finite": 0,
+    "android-stage06-jrn-001-empty-history": 0,
+    "android-stage03-setup-start": 0,
+    "android-stage04-answers-text": 0,
+    "android-stage06-end-001-finish-without-takeaway": 0,
+    "android-stage06-end-002-finish-with-takeaway": 0,
+    "android-privacy-consent-first-use": 0,
+    "android-smoke-full": 0,
+    "android-smoke-full-relaunch": 0
+  },
+  "flow_sha256": {
+    "android-stage03-setup-start.yaml": "b626e6bccf567d7e9d056e32975def23154488d7c4e5e3c79ce9ff41aba46d59",
+    "android-privacy-consent-first-use.yaml": "a8ae54b4471ce4e8bfe0479273eb1bc8c061fed5bab2441739103094a31665f0",
+    "android-smoke-full-relaunch.yaml": "ba43dea81d63124ca4b68382220faeac65a3bc47138b91bfa260a8ca1d37bc04",
+    "android-stage04-answers-text.yaml": "58592aad3295453057f74d6ed8e4e94f96549eee13ce6adec8119120321c5829",
+    "android-smoke-full.yaml": "16f55d384ca070c229eb99730852643c046d7ddfe7390fa9a19399da30e80a4b",
+    "android-stage06-end-002-finish-with-takeaway.yaml": "f65496e3568c3f55c4ffdfa65c97f420d6c45b7f346066342c8c6d642b9672dc",
+    "android-stage06-jrn-001-empty-history.yaml": "3d4c1ea51e0c743624c4117582b4a9ba3d7177e281a656c948f892f16db28a37",
+    "android-stage03-session-finite.yaml": "f0947f319f5bc5a4ed117f23ae542d9860eff77e759cb7c636cd957ec11c95bd",
+    "android-stage03-navigation.yaml": "4410624526a2beec1bf4c7f853afc2cf72c53d5979d2f7de81628ea4ae47934d",
+    "android-stage06-end-001-finish-without-takeaway.yaml": "785b9d36dc9820c4e95109b60a036b3763af55ce6941400f2ee0af69ae75ca79"
+  },
+  "source_sha256": {
+    "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+    "plugins/withAndroidBuild.js": "1c2415ff5c21a65dbe4daca2d5dfa4c989ff4de08be702393f7a30bf809f8d44",
+    "app.json": "9d55f565c7a320e3480f1425205b18d462809356a3d6ac379b5bd2d68884b099"
+  },
+  "checks": {
+    "typecheck": 0,
+    "unit": 0,
+    "android_release_build": 0
+  }
+}

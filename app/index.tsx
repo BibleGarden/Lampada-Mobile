@@ -137,7 +137,7 @@ export default function Home() {
               {t('screens.home.prayerSaved')}
             </Text>
           )}
-          <GoldButton label={t('screens.home.start')} testID="start-prayer-button" onPress={() => router.push('/setup')} />
+          <GoldButton label={t('screens.home.start')} testID="start-prayer-button" onPress={() => router.navigate('/setup')} />
         </View>
       </View>
     </View>

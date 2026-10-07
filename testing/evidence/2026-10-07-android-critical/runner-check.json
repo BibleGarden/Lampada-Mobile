@@ -1,0 +1,12 @@
+{
+  "success": {
+    "exit": 0,
+    "invocations": 10,
+    "passed": true
+  },
+  "first_failure": {
+    "exit": 17,
+    "invocations": 3,
+    "passed": true
+  }
+}

@@ -1,0 +1,50 @@
+appId: com.nf404.twinkler
+tags:
+  - critical
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "PRV first use"
+- pressKey: Enter
+- tapOn:
+    id: "setup-next-button"
+- assertVisible:
+    id: "privacy-consent-core_prayer_ai"
+- assertVisible: "Чтобы задать вопросы.*тему твоей молитвы.*Google Gemini.*платный API Google.*"
+- assertVisible:
+    id: "privacy-consent-core_prayer_ai-deny"
+- assertVisible:
+    id: "privacy-consent-core_prayer_ai-allow"
+- tapOn:
+    id: "privacy-consent-core_prayer_ai-deny"
+# После отказа приложение идёт на пороговый экран «Перед началом»
+# (screens.threshold.before/title); отдельного экрана «Прежде чем войти» больше нет.
+- assertVisible:
+    id: "threshold-kicker"
+- openLink: "lampada://settings"
+# iOS 26 подтверждает переход по схеме системным диалогом на языке
+# симулятора; неотвеченный, он переживает перезапуск и валит следующие флоу.
+- runFlow:
+    when:
+      visible: "Open|Открыть"
+    commands:
+      - tapOn: "Open|Открыть"
+# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+# На iPhone SE строка ниже первого экрана, а невидимых узлов XCTest не отдаёт.
+- scrollUntilVisible:
+    element:
+      id: "privacy-settings-button"
+    direction: DOWN
+- tapOn:
+    id: "privacy-settings-button"
+- scrollUntilVisible:
+    element:
+      id: "privacy-setting-core_prayer_ai"
+    direction: DOWN
+- assertVisible:
+    id: "privacy-setting-core_prayer_ai-denied"

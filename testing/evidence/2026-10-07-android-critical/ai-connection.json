@@ -1,0 +1,6 @@
+{
+  "endpoint": "/api/ai/question",
+  "status": 200,
+  "elapsed_ms": 957,
+  "nonempty_text": true
+}

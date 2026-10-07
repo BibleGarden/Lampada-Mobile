@@ -1,0 +1,14 @@
+Running on Pixel_9_Pro_API_35
+ > Flow ios-stage06-jrn-001-empty-history
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that id: journal-empty-state is visible... COMPLETED
+Take screenshot JRN-001-empty-history... COMPLETED
+Tap on id: journal-search-input... COMPLETED
+Input text тревога... COMPLETED
+Assert that "тревога" is visible... COMPLETED
+Press Enter key... COMPLETED
+Assert that "Ничего не нашлось — попробуй другое слово" is visible... COMPLETED
+Take screenshot JRN-001-empty-search... COMPLETED

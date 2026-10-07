@@ -1,0 +1,103 @@
+appId: com.nf404.twinkler
+tags:
+  - critical
+---
+# Клавиатура закрывается клавишей ввода (returnKeyType="done" +
+# submitBehavior="blurAndSubmit" у поля цели: ввод снимает фокус, а не
+# вставляет перенос; подпись клавиши зависит от раскладки), а не `hideKeyboard`: на iOS 26.5 / Maestro 2.6.1 тот закрывает свайпом вниз и
+# уводит вместе с клавиатурой сам лист настройки молитвы. Тот же приём — в
+# testing/e2e/ios-lock-*.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+- assertVisible:
+    id: "start-prayer-button"
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "Финальный smoke"
+- pressKey: Enter
+- assertVisible: "Финальный smoke"
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- assertVisible: ".*5 минут.*финальный smoke.*"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 450
+- assertVisible:
+    id: "threshold-hold-button"
+- swipe:
+    start: "50%,78%"
+    end: "50%,78%"
+    duration: 1700
+- assertVisible:
+    id: "session-title"
+- assertVisible:
+    id: "dock-answer-button"
+# Повтор тапа — защита от дефекта dev-сборки: баннер LogBox поверх нижней
+# части экрана съедает первый тап. Оба известных источника предупреждений
+# устранены (устаревший Skia-API на главной, односторонний dashed-бордер на
+# молитвенном экране, 86cbbqzcj), обычно ветка пропускается; ретрай оставлен
+# на случай новых предупреждений. Именно повтор, а не `doubleTapOn`: два
+# быстрых тапа успевают и открыть шторку, и закрыть её обратно.
+- tapOn:
+    id: "dock-answer-button"
+- runFlow:
+    when:
+      notVisible:
+        id: "answer-input"
+    commands:
+      - tapOn:
+          id: "dock-answer-button"
+- assertVisible:
+    id: "answer-input"
+- tapOn:
+    id: "answer-input"
+- inputText: "Финальный ответ"
+# Кнопки шторки видны и с открытой клавиатурой, гасить её отдельно не нужно.
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertVisible:
+    id: "dock-answer-edit-button"
+- tapOn:
+    id: "session-finish-button"
+- assertVisible:
+    id: "reflect-kicker"
+- tapOn:
+    id: "reflection-input"
+- inputText: "Финальный вывод"
+- pressKey: Enter
+- tapOn:
+    id: "reflect-complete-button"
+- assertVisible:
+    id: "home-title-lit"
+# Цитата takeaway на Home больше не показывается (ADR-0028: завершение сразу
+# на Home); её наличие проверяется ниже в дневнике и в smoke-full-relaunch.
+- assertVisible:
+    id: "journal-button"
+- tapOn:
+    id: "journal-button"
+- assertVisible:
+    id: "journal-title"
+- assertVisible: ".*Финальный smoke.*"
+- tapOn: ".*Финальный smoke.*"
+- assertVisible: ".*Финальный ответ.*"
+- assertVisible: ".*Финальный вывод.*"

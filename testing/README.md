@@ -19,6 +19,14 @@ report and the ClickUp task. Everything is tied together through it.
 
 ## Running
 
+Android critical flows are kept separately in `android-e2e/`, so they are not
+picked up by the existing iOS tier commands. Build Android Release with test
+API variables, use Russian as the emulator's primary locale, and run
+`npm run test:e2e:android:critical`. Its sequential runner preserves the full
+smoke → relaunch pair and stops at the first failure. Full logs, per-flow exit
+codes and Maestro artifacts are saved in the printed output directory; use
+`ANDROID_TEST_OUTPUT_DIR` to choose a stable location.
+
 Build and launch the app the way the root [`README.md`](../README.md) describes.
 Expo Go is not suitable: the project uses native modules it does not have.
 

@@ -1,0 +1,29 @@
+Running on Pixel_9_Pro_API_35
+ > Flow ios-stage03-session-finite
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Assert that id: home-title is not visible... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SES-001 finite timer... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that id: home-title is not visible... COMPLETED
+Tap on id: session-timer-button... COMPLETED
+Assert that id: session-time-subtract is visible... COMPLETED
+Assert that id: session-time-add is visible... COMPLETED
+Repeat while id: session-time-subtract is visible (up to 5 times)...
+  Tap on id: session-time-subtract... COMPLETED
+Repeat while id: session-time-subtract is visible (up to 5 times)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Assert that id: session-title is not visible... COMPLETED
+Tap on id: reflect-return-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that ".*SES-001 finite timer", Child of: id: session-goal is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED

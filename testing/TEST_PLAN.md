@@ -109,6 +109,7 @@ are recorded.
 | PRE-002 | Run `npm run typecheck` | exit code 0, the full log is stored in the report |
 | PRE-003 | Run `npx expo-doctor` | no unexplained SDK 57 incompatibilities |
 | PRE-004 | Build the app the supported way | the Release build installs and launches |
+| PRE-004A | Build Android test Release against an HTTP API; inspect the generated manifest and open its catalog | test builds allow HTTP and load the catalog; HTTPS builds disable cleartext, and store builds reject an HTTP origin |
 | PRE-005 | Compare `expo.version` with the About footer after a local or preview build and after a production build | a test build shows the next patch of the current store version (`1.1` → `1.1.1`); a production build in TestFlight shows two components with the next minor (`1.1.1` → `1.2`); the update check treats `1.2` and `1.2.0` as equal |
 
 Expo Go is not to be used: it lacks some of the native modules of the project.
@@ -149,7 +150,7 @@ tier of its e2e runs.
 | ID | Scenario | Expected result |
 |---|---|---|
 | NAV-001 | The first launch with a clean database | a correct greeting, an empty week, the journal, the settings and the start available |
-| NAV-002 [critical] | Returning Home after an unfinished setup | the draft session is reset, the app does not hang |
+| NAV-002 [critical] | Double-tap Start on Home, then return after an unfinished setup on iOS and Android | one Back press returns Home; no duplicate setup route remains, the draft session is reset, and the app does not hang |
 | NAV-003 [main] | Opening screens by a deep link with no navigation history | the back button leads Home or closes the screen safely |
 | NAV-004 | Android Back during the prayer and the reflection | the system gesture does not break the mandatory flow |
 | NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created |
