@@ -1,0 +1,17 @@
+
+> pray@1.0.0 test:e2e:android:critical
+> bash scripts/test-android-critical.sh
+
+Android test output: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/.expo/test-runs/2026-10-07-ans024-fix/critical
+Installed APK test channel and API origin verified.
+Starting android-stage06-jrn-001-empty-history
+android-stage06-jrn-001-empty-history exit=0
+Starting android-stage03-setup-start
+android-stage03-setup-start exit=0
+Starting android-stage03-navigation
+android-stage03-navigation exit=0
+Starting android-stage03-session-finite
+android-stage03-session-finite exit=0
+Starting android-stage04-answers-text
+android-stage04-answers-text exit=1
+Stopped at first failure; full log: /Users/mac/Desktop/Dev/cep/Lampada-Mobile/.expo/test-runs/2026-10-07-ans024-fix/critical/android-stage04-answers-text.log
