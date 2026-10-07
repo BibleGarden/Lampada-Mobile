@@ -4,7 +4,7 @@
 # Face ID в iOS Simulator недоступен в принципе (ограничение Apple), поэтому
 # прогон идёт на iPhone SE (3rd generation) с Touch ID. Управление сигналами
 # BiometricKit (notifyutil):
-#   enrollment — com.apple.BiometricKit_Sim.fingerTouch.enrollment (переключатель)
+#   enrollment — состояние com.apple.BiometricKit.enrollmentChanged (0/1)
 #   совпадение — com.apple.BiometricKit_Sim.fingerTouch.match
 #   отказ      — com.apple.BiometricKit_Sim.fingerTouch.nomatch
 # Maestro не умеет слать эти сигналы из флоу: флоу засыпает на evalScript-sleep,
@@ -27,24 +27,17 @@ BIO="com.apple.BiometricKit_Sim.$SIG"
 
 signal() { xcrun simctl spawn "$UDID" notifyutil -p "$1"; }
 
-# Прошлые прогоны могли оставить системный диалог «Open in "Lampada"?» поверх
-# приложения. Текстовые матчеры его не видят (SpringBoard): снимаем тапом по
-# координате кнопки Cancel (~22%,52% на 750×1334). Без диалога тап попадает в
-# пустую область экрана блокировки — безвредно.
-cat > /tmp/bio-dismiss.yaml <<'EOF'
-appId: twinkler
----
-- tapOn:
-    point: "22%,52%"
-- waitForAnimationToEnd:
-    timeout: 2000
-EOF
-maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-dismiss.yaml > /dev/null 2>&1 || true
+# Явное состояние регистрации вместо устаревшего сигнала-переключателя.
+set_enrolled() {
+  xcrun simctl spawn "$UDID" notifyutil -s com.apple.BiometricKit.enrollmentChanged "$1"
+  xcrun simctl spawn "$UDID" notifyutil -p com.apple.BiometricKit.enrollmentChanged
+}
+set_enrolled 1
 
 echo "== Подготовка: включаем пин 123456"
 maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-bio-prepare.log 2>&1 || { echo "FAIL: подготовка пина"; exit 1; }
 
-# Enrollment — переключатель без чтения состояния. Экран настроек опрашивает
+# Экран настроек опрашивает
 # биометрию при монтировании: возвращаемся home и открываем настройки заново
 # через Maestro openLink (simctl openurl показывает системный диалог «Open in
 # Lampada?» — поэтому только openLink). Возможный диалог «Open» снимаем.
@@ -68,21 +61,11 @@ appId: twinkler
       id: lock-toggle
     direction: DOWN
 EOF
-probe_biometrics_row() {
-  maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-nav.yaml > /dev/null 2>&1
-  maestro hierarchy "${DEV[@]}" 2>/dev/null | grep -q "biometrics-toggle"
-}
-echo "== Проверяем enrollment ($SIG)"
-if ! probe_biometrics_row; then
-  echo "   строки биометрии нет — посылаем enrollment"
-  signal "$BIO.enrollment"
-  sleep 1
-fi
-if ! probe_biometrics_row; then
-  echo "   всё ещё нет — переворачиваем enrollment ещё раз"
-  signal "$BIO.enrollment"
-  sleep 1
-  probe_biometrics_row || { echo "FAIL: биометрия симулятора недоступна"; exit 1; }
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-nav.yaml
+maestro hierarchy "${DEV[@]}" > "$EVIDENCE/biometrics-hierarchy.json"
+if ! grep -q 'biometrics-toggle' "$EVIDENCE/biometrics-hierarchy.json"; then
+  echo "FAIL: enrolled biometrics are absent from the visible protection section" >&2
+  exit 1
 fi
 echo "   биометрия доступна"
 
@@ -108,7 +91,7 @@ signal "$BIO.nomatch"
 wait $M || { echo "LOCK-009c FAILED, см. /tmp/lock-009c.log"; exit 1; }
 
 echo "== LOCK-010: образцы удалены, вход пином"
-signal "$BIO.enrollment"  # unenroll
+set_enrolled 0
 maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-010-biometrics-removed.yaml > /tmp/lock-010.log 2>&1
 echo "LOCK-010 exit=$?"
 
