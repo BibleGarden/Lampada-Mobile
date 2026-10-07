@@ -1,0 +1,50 @@
+[
+  {
+    "command": {
+      "copyTextCommand": {
+        "selector": {
+          "idRegex": "answer-input",
+          "optional": false
+        },
+        "optional": false
+      }
+    },
+    "metadata": {
+      "status": "COMPLETED",
+      "timestamp": 1791398304501,
+      "duration": 2867,
+      "evaluatedCommand": {
+        "copyTextCommand": {
+          "selector": {
+            "idRegex": "answer-input",
+            "optional": false
+          },
+          "optional": false
+        }
+      }
+    }
+  },
+  {
+    "command": {
+      "assertConditionCommand": {
+        "condition": {
+          "scriptCondition": "${ maestro.copiedText.replace('1', '') === 'Keyboard text stays' && maestro.copiedText.includes('1') }"
+        },
+        "optional": false
+      }
+    },
+    "metadata": {
+      "status": "COMPLETED",
+      "timestamp": 1791398307369,
+      "duration": 2114,
+      "evaluatedCommand": {
+        "assertConditionCommand": {
+          "condition": {
+            "scriptCondition": "true"
+          },
+          "optional": false
+        }
+      }
+    }
+  }
+]

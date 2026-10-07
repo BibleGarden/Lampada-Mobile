@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-07",
+  "app_code_commit": "ce58ebaab5777cabfa4b109c29869ed426c46fd6",
+  "input_commit": "eb1abd772f47b1c0f427464b89ad3e25369e2495",
+  "version": "1.3.6",
+  "apk_sha256": "81c5b5ccda7ea5a7de2a9d3b443708057598044db00b9231424fa1064ca1b760",
+  "latest_critical_results": {
+    "android-stage06-jrn-001-empty-history": 0,
+    "android-stage03-setup-start": 0,
+    "android-stage03-navigation": 0,
+    "android-stage03-session-finite": 0,
+    "android-stage04-answers-text": 0,
+    "android-stage06-end-001-finish-without-takeaway": 0,
+    "android-stage06-end-002-finish-with-takeaway": 0,
+    "android-privacy-consent-first-use": 0,
+    "android-smoke-full": 0,
+    "android-smoke-full-relaunch": 0
+  },
+  "critical_covered": 10,
+  "latest_success_count": 10,
+  "approved_checks": [
+    {
+      "flow": "android-ans-024-recordings-keyboard",
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "emulator-5554",
+        "test",
+        "--test-output-dir",
+        "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/.expo/test-runs/2026-10-07-ans024-fix/approved-two/android-ans-024-recordings-keyboard",
+        "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/testing/android-e2e/android-ans-024-recordings-keyboard.yaml"
+      ],
+      "started_utc": "2026-10-07T18:33:23Z",
+      "finished_utc": "2026-10-07T18:38:38Z"
+    },
+    {
+      "flow": "android-stage04-answers-text",
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "emulator-5554",
+        "test",
+        "--test-output-dir",
+        "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/.expo/test-runs/2026-10-07-ans024-fix/approved-two/android-stage04-answers-text",
+        "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/testing/android-e2e/android-stage04-answers-text.yaml"
+      ],
+      "started_utc": "2026-10-07T18:38:39Z",
+      "finished_utc": "2026-10-07T18:46:06Z"
+    }
+  ],
+  "original_failed_invocations_retained": true,
+  "critical_runs": "First four success, text-answer failure, five unstarted entries success, explicitly approved corrected text-answer success; no new full-suite rerun.",
+  "source_unchanged_since_build": true,
+  "cleanup": "all exit 0"
+}

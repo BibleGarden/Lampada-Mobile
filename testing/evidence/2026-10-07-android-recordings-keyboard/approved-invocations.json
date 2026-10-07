@@ -1,0 +1,32 @@
+[
+  {
+    "flow": "android-ans-024-recordings-keyboard",
+    "exit": 0,
+    "command": [
+      "maestro",
+      "--device",
+      "emulator-5554",
+      "test",
+      "--test-output-dir",
+      "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/.expo/test-runs/2026-10-07-ans024-fix/approved-two/android-ans-024-recordings-keyboard",
+      "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/testing/android-e2e/android-ans-024-recordings-keyboard.yaml"
+    ],
+    "started_utc": "2026-10-07T18:33:23Z",
+    "finished_utc": "2026-10-07T18:38:38Z"
+  },
+  {
+    "flow": "android-stage04-answers-text",
+    "exit": 0,
+    "command": [
+      "maestro",
+      "--device",
+      "emulator-5554",
+      "test",
+      "--test-output-dir",
+      "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/.expo/test-runs/2026-10-07-ans024-fix/approved-two/android-stage04-answers-text",
+      "/Users/mac/Desktop/Dev/cep/Lampada-Mobile/testing/android-e2e/android-stage04-answers-text.yaml"
+    ],
+    "started_utc": "2026-10-07T18:38:39Z",
+    "finished_utc": "2026-10-07T18:46:06Z"
+  }
+]

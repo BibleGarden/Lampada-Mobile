@@ -1,0 +1,99 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# ANS-024: the answer input must release native keyboard focus while covered.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: ANS-024 keyboard focus
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-card-0
+- tapOn:
+    id: recordings-close-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: Keyboard text stays
+- assertVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- assertVisible:
+    id: recording-card-0
+- assertVisible:
+    id: recordings-record-button
+- takeScreenshot: ANS-024-recordings-without-keyboard
+- tapOn:
+    id: recordings-close-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: answer-input
+    text: Keyboard text stays
+- tapOn:
+    id: answer-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- inputText: "1"
+- copyTextFrom:
+    id: answer-input
+- assertTrue: ${ maestro.copiedText.replace('1', '') === 'Keyboard text stays' && maestro.copiedText.includes('1') }
+- takeScreenshot: ANS-024-editing-restored
