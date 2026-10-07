@@ -110,6 +110,8 @@ are recorded.
 | PRE-003 | Run `npx expo-doctor` | no unexplained SDK 57 incompatibilities |
 | PRE-004 | Build the app the supported way | the Release build installs and launches |
 | PRE-004A | Build Android test Release against an HTTP API; inspect the generated manifest and open its catalog | test builds allow HTTP and load the catalog; HTTPS builds disable cleartext, and store builds reject an HTTP origin |
+| PRE-004B | Run Android preflight against store, old and wrong-API APKs with a valid local test configuration | all are rejected before app launch or data clearing; installed test-channel/API metadata must match the expected test environment |
+| PRE-004C | Run Android preflight with missing runtime variables | exit nonzero, with the output directory and missing names visible in the console; no scenarios start |
 | PRE-005 | Compare `expo.version` with the About footer after a local or preview build and after a production build | a test build shows the next patch of the current store version (`1.1` → `1.1.1`); a production build in TestFlight shows two components with the next minor (`1.1.1` → `1.2`); the update check treats `1.2` and `1.2.0` as equal |
 
 Expo Go is not to be used: it lacks some of the native modules of the project.

@@ -45,21 +45,8 @@ tags:
     id: "session-title"
 - assertVisible:
     id: "dock-answer-button"
-# Повтор тапа — защита от дефекта dev-сборки: баннер LogBox поверх нижней
-# части экрана съедает первый тап. Оба известных источника предупреждений
-# устранены (устаревший Skia-API на главной, односторонний dashed-бордер на
-# молитвенном экране, 86cbbqzcj), обычно ветка пропускается; ретрай оставлен
-# на случай новых предупреждений. Именно повтор, а не `doubleTapOn`: два
-# быстрых тапа успевают и открыть шторку, и закрыть её обратно.
 - tapOn:
     id: "dock-answer-button"
-- runFlow:
-    when:
-      notVisible:
-        id: "answer-input"
-    commands:
-      - tapOn:
-          id: "dock-answer-button"
 - assertVisible:
     id: "answer-input"
 - tapOn:

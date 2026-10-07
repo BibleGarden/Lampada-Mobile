@@ -43,7 +43,8 @@ merge. An HTTP test API is supported by the same plugin;
 HTTPS disables cleartext traffic, and a non-test build rejects an HTTP origin.
 Changing `.env.local` requires rebuilding and reinstalling Release.
 
-Install Maestro and add it and Android platform-tools to `PATH`. Set the
+Install Maestro and add it, Android platform-tools and command-line tools
+(`apkanalyzer`) to `PATH`. Set the
 emulator's primary language to Russian, then run:
 
 ```bash
@@ -56,6 +57,11 @@ requires Release, preserves smoke → relaunch order, stops at the first failure
 and records full logs and exit codes in a temporary output directory. Override
 `ANDROID_TEST_DEVICE` or `ANDROID_TEST_OUTPUT_DIR` when needed. The original iOS
 commands still scan only `testing/e2e/` and use `twinkler`.
+Before launching any flow or clearing app data, it reads the installed APK's
+manifest offline and requires test-channel metadata with the API origin matching
+`.env.local`. Store builds, old APKs without metadata, mismatched origins and
+the production API are rejected. Rebuild and reinstall after updating this
+configuration; editing `.env.local` alone does not change an installed Release.
 
 ## AI
 

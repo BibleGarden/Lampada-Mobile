@@ -26,6 +26,11 @@ API variables, use Russian as the emulator's primary locale, and run
 smoke → relaunch pair and stops at the first failure. Full logs, per-flow exit
 codes and Maestro artifacts are saved in the printed output directory; use
 `ANDROID_TEST_OUTPUT_DIR` to choose a stable location.
+Preflight prints this directory first and shows failed environment diagnostics.
+It then pulls the installed base APK and reads its manifest with `apkanalyzer`,
+without starting the app. Its recorded channel must be `test` and its API origin
+must match `.env.local` and differ from production. An APK predating this metadata
+must be rebuilt. The temporary APK copy is removed on success and on failure.
 
 Build and launch the app the way the root [`README.md`](../README.md) describes.
 Expo Go is not suitable: the project uses native modules it does not have.

@@ -51,6 +51,10 @@ The Android build plugin permits cleartext traffic only when the build
 channel is `test` and its API origin uses HTTP. HTTPS builds disable cleartext;
 an HTTP origin without the test channel fails native configuration explicitly.
 It also reserves a 4 GiB Gradle heap and 1 GiB metaspace for the Release DEX merge.
+The manifest records the build channel and normalized API origin without the
+client key. Android e2e reads these fields from the installed APK before launching
+the app or clearing its data and requires a test channel with the expected
+non-production origin.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
