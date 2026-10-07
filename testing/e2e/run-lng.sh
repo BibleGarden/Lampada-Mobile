@@ -20,26 +20,25 @@ cd "$(dirname "$0")/../.."
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 
-UDID="${UDID:-$(xcrun simctl list devices booted -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print([x["udid"] for k in d for x in d[k] if x["state"]=="Booted"][0])')}"
+UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
 
 set_locale() { # $1 = locale (en_US), $2 = language (en)
   echo "== Локаль симулятора -> $1 ($2)"
-  xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
-  xcrun simctl spawn "$UDID" defaults write -g AppleLocale -string "$1" || true
-  xcrun simctl spawn "$UDID" defaults write -g AppleLanguages -array "$2" || true
-  xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
-  xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1
+  xcrun simctl spawn "$UDID" defaults write -g AppleLocale -string "$1"
+  xcrun simctl spawn "$UDID" defaults write -g AppleLanguages -array "$2"
+  xcrun simctl shutdown "$UDID"
+  xcrun simctl boot "$UDID"
+  xcrun simctl bootstatus "$UDID" -b
 }
 
 run() { # $1 = flow
   echo "== maestro: $1"
-  maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" "testing/e2e/$1"
+  maestro --device "$UDID" test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" "testing/e2e/$1"
 }
 
-FAILED=0
 step() { # $1 = locale, $2 = language, $3 = flow
   set_locale "$1" "$2"
-  run "$3" || FAILED=1
+  run "$3"
 }
 
 step en_US en ios-lng-001-clean-en.yaml
@@ -54,9 +53,6 @@ step en_US en ios-lng-008-independent-of-scripture.yaml
 step ru_RU ru ios-lng-009-fallback-questions.yaml
 
 set_locale ru_RU ru
+run ios-lng-restore-ru.yaml
 
-if [ "$FAILED" != "0" ]; then
-  echo "!! Есть упавшие LNG-флоу"
-  exit 1
-fi
 echo "== Все LNG-флоу зелёные"
