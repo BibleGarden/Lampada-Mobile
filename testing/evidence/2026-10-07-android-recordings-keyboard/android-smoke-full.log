@@ -1,0 +1,43 @@
+Running on Pixel_9_Pro_API_35
+ > Flow android-smoke-full
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text Финальный smoke... COMPLETED
+Press Enter key... COMPLETED
+Assert that "Финальный smoke" is visible... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that ".*5 минут.*финальный smoke.*" is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 450 ms... COMPLETED
+Assert that id: threshold-hold-button is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that id: dock-answer-button is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Assert that id: answer-input is visible... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text Финальный ответ... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text Финальный вывод... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Assert that id: journal-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that ".*Финальный smoke.*" is visible... COMPLETED
+Tap on ".*Финальный smoke.*"... COMPLETED
+Assert that ".*Финальный ответ.*" is visible... COMPLETED
+Assert that ".*Финальный вывод.*" is visible... COMPLETED

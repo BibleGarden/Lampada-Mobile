@@ -1,0 +1,13 @@
+{
+  "exit": 1,
+  "keyboard_dismissal_assertion": "passed",
+  "recording_card_and_footer": "passed",
+  "original_text_retention": "passed",
+  "refocus_and_keyboard_visible": "passed",
+  "final_edit_assertion": "failed",
+  "actual_text": "Keyboard editing restoredys",
+  "cause": "eraseText deletes before caret; tapping the input placed the caret before the final ys, so suffix was retained. The test wrongly assumed eraseText clears the whole field.",
+  "correction": "Insert one digit at the actual caret and copy the resulting field; require the marker to be present and removing it to restore the exact original text. No keyboard/retention assertions removed.",
+  "corrected_flow_sha256": "7ba3056f49125efd2743ea81a109f46b5fbe929c4c0fe95f02e99dff5a0dfae0",
+  "rerun": "not started; permission required"
+}

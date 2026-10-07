@@ -1,0 +1,10 @@
+Starting previously unstarted new-build entry android-stage06-end-001-finish-without-takeaway
+android-stage06-end-001-finish-without-takeaway exit=0; no retry
+Starting previously unstarted new-build entry android-stage06-end-002-finish-with-takeaway
+android-stage06-end-002-finish-with-takeaway exit=0; no retry
+Starting previously unstarted new-build entry android-privacy-consent-first-use
+android-privacy-consent-first-use exit=0; no retry
+Starting previously unstarted new-build entry android-smoke-full
+android-smoke-full exit=0; no retry
+Starting previously unstarted new-build entry android-smoke-full-relaunch
+android-smoke-full-relaunch exit=0; no retry

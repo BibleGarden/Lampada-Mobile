@@ -92,8 +92,8 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
-- inputText: " editable"
-- assertVisible:
+- inputText: "1"
+- copyTextFrom:
     id: answer-input
-    text: Keyboard text stays editable
+- assertTrue: ${ maestro.copiedText.replace('1', '') === 'Keyboard text stays' && maestro.copiedText.includes('1') }
 - takeScreenshot: ANS-024-editing-restored

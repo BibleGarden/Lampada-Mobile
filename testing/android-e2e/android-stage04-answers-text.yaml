@@ -3,6 +3,7 @@ tags:
   - critical
 ---
 # ANS-001: a saved text answer is restored when the same question is reopened.
+# Use an untimed fixture: deadline expiry is covered by SES-001, not this check.
 - launchApp:
     stopApp: true
     clearState: true
@@ -13,7 +14,7 @@ tags:
 - inputText: "ANS text persistence"
 - pressKey: Enter
 - tapOn:
-    id: "setup-preset-5"
+    id: "setup-preset-0"
 - tapOn:
     id: "setup-next-button"
 - runFlow:

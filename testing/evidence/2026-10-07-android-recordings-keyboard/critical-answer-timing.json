@@ -1,0 +1,339 @@
+[
+  {
+    "command": {
+      "defineVariablesCommand": {
+        "env": {
+          "MAESTRO_DRIVER_STARTUP_TIMEOUT": "180000",
+          "MAESTRO_FILENAME": "android-stage04-answers-text",
+          "MAESTRO_DEVICE_UDID": "emulator-5554",
+          "MAESTRO_SHARD_ID": "1",
+          "MAESTRO_SHARD_INDEX": "0"
+        },
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390789478,
+    "duration_ms": 9
+  },
+  {
+    "command": {
+      "applyConfigurationCommand": {
+        "config": {
+          "appId": "com.nf404.twinkler",
+          "tags": [
+            "critical"
+          ]
+        },
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390789489,
+    "duration_ms": 2
+  },
+  {
+    "command": {
+      "launchAppCommand": {
+        "appId": "com.nf404.twinkler",
+        "clearState": true,
+        "stopApp": true,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390789492,
+    "duration_ms": 6918
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "start-prayer-button",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390796411,
+    "duration_ms": 8163
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "setup-goal-input",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390804575,
+    "duration_ms": 2944
+  },
+  {
+    "command": {
+      "inputTextCommand": {
+        "text": "ANS text persistence",
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390807520,
+    "duration_ms": 9204
+  },
+  {
+    "command": {
+      "pressKeyCommand": {
+        "code": "ENTER",
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390816725,
+    "duration_ms": 1496
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "setup-preset-5",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390818222,
+    "duration_ms": 2602
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "setup-next-button",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390820825,
+    "duration_ms": 2637
+  },
+  {
+    "command": {
+      "runFlowCommand": {
+        "commands": [
+          {
+            "tapOnElement": {
+              "selector": {
+                "idRegex": "privacy-consent-core_prayer_ai-allow",
+                "optional": false
+              },
+              "retryIfNoChange": false,
+              "waitUntilVisible": false,
+              "longPress": false,
+              "optional": false
+            }
+          }
+        ],
+        "condition": {
+          "visible": {
+            "idRegex": "privacy-consent-core_prayer_ai",
+            "optional": false
+          }
+        },
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390823464,
+    "duration_ms": 2847
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "privacy-consent-core_prayer_ai-allow",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390823553,
+    "duration_ms": 2757
+  },
+  {
+    "command": {
+      "swipeCommand": {
+        "startRelative": "50%,78%",
+        "endRelative": "50%,78%",
+        "duration": 1700,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390826313,
+    "duration_ms": 38414
+  },
+  {
+    "command": {
+      "assertConditionCommand": {
+        "condition": {
+          "visible": {
+            "idRegex": "session-title",
+            "optional": false
+          }
+        },
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390864729,
+    "duration_ms": 2722
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "dock-answer-button",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390867452,
+    "duration_ms": 62226
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "answer-input",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791390929680,
+    "duration_ms": 77339
+  },
+  {
+    "command": {
+      "inputTextCommand": {
+        "text": "ANS-001 сохранённый текст",
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791391007020,
+    "duration_ms": 51160
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "answer-save-button",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791391058182,
+    "duration_ms": 53770
+  },
+  {
+    "command": {
+      "runFlowCommand": {
+        "commands": [
+          {
+            "tapOnElement": {
+              "selector": {
+                "idRegex": "privacy-consent-answer_context-allow",
+                "optional": false
+              },
+              "retryIfNoChange": false,
+              "waitUntilVisible": false,
+              "longPress": false,
+              "optional": false
+            }
+          }
+        ],
+        "condition": {
+          "visible": {
+            "idRegex": "privacy-consent-answer_context",
+            "optional": false
+          }
+        },
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791391111953,
+    "duration_ms": 20274
+  },
+  {
+    "command": {
+      "tapOnElement": {
+        "selector": {
+          "idRegex": "privacy-consent-answer_context-allow",
+          "optional": false
+        },
+        "retryIfNoChange": false,
+        "waitUntilVisible": false,
+        "longPress": false,
+        "optional": false
+      }
+    },
+    "status": "COMPLETED",
+    "timestamp_ms": 1791391112366,
+    "duration_ms": 19860
+  },
+  {
+    "command": {
+      "assertConditionCommand": {
+        "condition": {
+          "visible": {
+            "idRegex": "dock-answer-edit-button",
+            "optional": false
+          }
+        },
+        "optional": false
+      }
+    },
+    "status": "FAILED",
+    "timestamp_ms": 1791391132228,
+    "duration_ms": 17918
+  }
+]
