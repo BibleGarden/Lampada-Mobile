@@ -198,6 +198,11 @@ maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scriptu
 
 Then reinstall the normal Release build without the URL override.
 
+SCR-002 uses `ios-stage06-scr-002a-favorite-relaunch.yaml` followed by
+`ios-stage06-scr-002b-favorite-relaunch.yaml`, with the stub passage counter
+reset between them. The runner guarantees both prayers receive the same
+fixture before checking persisted favorite state.
+
 The wider stub phase (update banners, journal transcription, delayed AI
 answers, scripture navigation, legacy favorites migration, the threshold
 error path) runs under one orchestrated session. The build additionally needs

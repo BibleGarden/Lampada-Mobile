@@ -10,7 +10,7 @@ tags:
 # (прогон ios-lock-009a через run-lock-biometrics.sh).
 - launchApp:
     stopApp: true
-# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+# Системный запрос скрывает AX-дерево приложения: ждём сам запрос.
 - extendedWaitUntil:
     visible:
       id: "com.apple.localauthentication.ax.authentication.alert"
