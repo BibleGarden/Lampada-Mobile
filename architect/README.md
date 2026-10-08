@@ -143,6 +143,11 @@ This prevents a repeated Home press from passing through to the primary action
 at the same screen position. Home and Setup use idempotent navigation to avoid
 stacking duplicate Setup or Threshold routes.
 
+On Android, the lock gate and privacy curtain occupy a native modal window.
+This excludes relocated native-stack screens from TalkBack while locked; a
+React Native wrapper's accessibility flag alone does not cover that hierarchy.
+iOS keeps the root overlay with modal accessibility semantics.
+
 Screen readers. Under Fabric iOS a VoiceOver double tap reaches JS only through
 `onAccessibilityTap`, and adjustable swipes reach `onAccessibilityAction` by the
 `adjustable` role alone; TalkBack knows only declared `accessibilityActions`.
