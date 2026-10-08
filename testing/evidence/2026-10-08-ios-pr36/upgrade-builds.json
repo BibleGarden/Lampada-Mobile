@@ -1,0 +1,16 @@
+[
+  {
+    "label": "previous",
+    "path": "/tmp/pray-ios-2026-10-07-pr35/builds/Lampada-normal.app",
+    "version": "1.3.6",
+    "bundleId": "twinkler",
+    "jsBundleSha256": "fc5f17cfddc2d1ece552175c63e19d654957e3e56c83e2bbf680755664d32d54"
+  },
+  {
+    "label": "current",
+    "path": "/tmp/pray-ios-pr36/builds/Lampada-normal.app",
+    "version": "1.3.7",
+    "bundleId": "twinkler",
+    "jsBundleSha256": "50d61a62966980f53297c043731c925e62427cea9de926a45c78a6fb38db288c"
+  }
+]

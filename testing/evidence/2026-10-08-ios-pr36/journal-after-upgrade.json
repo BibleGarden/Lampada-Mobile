@@ -1,0 +1,14 @@
+[
+  [
+    "JRN-008 upgrade retest",
+    "lampada-document:validation-recordings/first.wav"
+  ],
+  [
+    "JRN-006 second audio",
+    "lampada-document:validation-recordings/second.wav"
+  ],
+  [
+    "JRN-009 missing file",
+    "lampada-document:validation-recordings/missing.wav"
+  ]
+]

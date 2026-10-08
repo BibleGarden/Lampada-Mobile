@@ -1,0 +1,21 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-scripture-highlight
+Launch app "twinkler" with clear state... COMPLETED
+Tap on (Optional) "Open|Открыть"... WARNED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Нужна поддержка... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that ".*22:1.*6.*" is visible... COMPLETED
+Assert that id: scripture-preview-highlight-2 is visible... COMPLETED
+Take screenshot preview-highlight... COMPLETED
+Tap on id: scripture-read-full... COMPLETED
+Take screenshot reader-highlight... COMPLETED

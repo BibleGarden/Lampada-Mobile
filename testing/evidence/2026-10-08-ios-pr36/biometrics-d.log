@@ -1,0 +1,28 @@
+Running on Pray SE - iOS 26.5 - 18FBF907-60BB-48EF-9BE8-1DB2767465F5
+ > Flow ios-lock-010-biometrics-removed
+Launch app "twinkler"... COMPLETED
+Assert that id: lock-screen is visible... COMPLETED
+Assert that id: lock-pin-title is visible... COMPLETED
+Assert that id: pin-key-biometry is not visible... COMPLETED
+Tap on id: pin-key-1... COMPLETED
+Tap on id: pin-key-2... COMPLETED
+Tap on id: pin-key-3... COMPLETED
+Tap on id: pin-key-4... COMPLETED
+Tap on id: pin-key-5... COMPLETED
+Tap on id: pin-key-6... COMPLETED
+Assert that id: lock-screen is not visible... COMPLETED
+Assert that id: settings-button is visible... COMPLETED
+Take screenshot LOCK-010-pin-after-unenroll... COMPLETED
+Tap on id: settings-button... COMPLETED
+Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: lock-toggle... COMPLETED
+Assert that id: pin-prompt-disable-current is visible... COMPLETED
+Tap on id: pin-key-1... COMPLETED
+Tap on id: pin-key-2... COMPLETED
+Tap on id: pin-key-3... COMPLETED
+Tap on id: pin-key-4... COMPLETED
+Tap on id: pin-key-5... COMPLETED
+Tap on id: pin-key-6... COMPLETED
+Assert that id: change-pin-button is not visible... COMPLETED
+Assert that id: biometrics-toggle is not visible... COMPLETED
+Take screenshot LOCK-010-lock-disabled... COMPLETED

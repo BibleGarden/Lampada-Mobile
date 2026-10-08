@@ -1,0 +1,10 @@
+
+Waiting for flows to complete...
+[Passed] ios-background-suite (1m 55s)
+[Passed] ios-lock-006-suite (2m 45s)
+[Passed] ios-lock-suite (5m 34s)
+[Passed] ios-jrn-suite (9m)
+[Passed] ios-stage04-ans-012-no-transcribe (1m 51s)
+[Passed] ios-stage04-ans-015-delete-during (1m 41s)
+
+6/6 Flows Passed in 22m 46s

@@ -1,0 +1,39 @@
+
+> pray@1.0.0 test:e2e:main
+> MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=main --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" testing/e2e/
+
+
+Waiting for flows to complete...
+[Passed] ios-lock-001-disabled-by-default (17s)
+[Passed] ios-scripture-default-language (11s)
+[Passed] ios-ans-023-recordings-actions (1m 32s)
+[Passed] ios-stage05-ai-opt-in-payload (55s)
+[Passed] ios-keyboard-reflect-journal (1m 14s)
+[Passed] ios-stage05-ai-timeout (26s)
+[Passed] ios-stage05-privacy-setting (19s)
+[Passed] ios-privacy-audio-consent (1m 27s)
+[Passed] ios-stage05-first-question-no-topic (20s)
+[Passed] ios-stage03-session-infinite (30s)
+[Passed] ios-end-006-takeaway-keyboard (1m 7s)
+[Passed] ios-answer-recordings-persistence (4m 4s)
+[Passed] ios-stage03-long-goal (43s)
+[Passed] ios-scripture-settings (22s)
+[Passed] ios-music-finish-early (40s)
+[Passed] ios-stage06-end-003-004-idempotency (1m 32s)
+[Passed] ios-answer-recordings-regression (3m 10s)
+[Passed] ios-scripture-user-choice-overrides-locale (24s)
+[Passed] ios-stage03-deep-links (14s)
+[Passed] ios-stage04-unsaved-answer-swipe (1m 2s)
+[Passed] ios-music-finish-untimed (40s)
+[Passed] ios-stage05-first-question-error-fallback (23s)
+[Passed] ios-music-toggle (47s)
+[Passed] ios-stage06-jrn-002-abandoned-session (38s)
+[Passed] ios-stage05-ai-success-payload (26s)
+[Passed] ios-scr-025-reader-dynamic-island (56s)
+[Passed] ios-music-timer-finish (3m 25s)
+[Passed] ios-stage06-jrn-005-prayer-a (2m 9s)
+[Passed] ios-stage05-first-question-spinner (27s)
+[Passed] ios-ans-032-recordings-keyboard (2m 43s)
+[Passed] ios-stage06-scr-003-small-reader (1m 54s)
+
+31/31 Flows Passed in 34m 57s

@@ -1,0 +1,22 @@
+Running on Pray SE - iOS 26.5 - 18FBF907-60BB-48EF-9BE8-1DB2767465F5
+ > Flow ios-lock-009a-enable-biometrics
+Launch app "twinkler"... COMPLETED
+Run java.lang.Thread.sleep(2500)... COMPLETED
+Run flow when id: lock-screen is visible...
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+Run flow when id: lock-screen is visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Scrolling DOWN until id: biometrics-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: change-pin-button is visible... COMPLETED
+Assert that id: biometrics-toggle is visible... COMPLETED
+Tap on id: biometrics-toggle... COMPLETED
+Assert that id: com.apple.localauthentication.ax.authentication.alert is visible... COMPLETED
+Run java.lang.Thread.sleep(20000)... COMPLETED
+Assert that id: biometrics-toggle is visible... COMPLETED
+Take screenshot LOCK-009-biometrics-enabled... COMPLETED

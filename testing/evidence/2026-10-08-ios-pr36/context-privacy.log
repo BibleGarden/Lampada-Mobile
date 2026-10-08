@@ -1,0 +1,28 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-scripture-context-privacy
+Launch app "twinkler" with clear state... COMPLETED
+Open lampada://settings... COMPLETED
+Run flow when "Open|Открыть" is visible...
+Run flow when "Open|Открыть" is visible... SKIPPED
+Scrolling DOWN until id: privacy-settings-button is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: privacy-settings-button... COMPLETED
+Scrolling DOWN until id: privacy-setting-answer_context-denied is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: privacy-setting-answer_context-denied... COMPLETED
+Tap on id: privacy-sheet-close... COMPLETED
+Open lampada://... COMPLETED
+Run flow when "Open|Открыть" is visible...
+Run flow when "Open|Открыть" is visible... SKIPPED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Приватная молитва... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that ".*22:1.*6.*" is visible... COMPLETED
+Assert that "Сейчас не удалось подобрать отрывок." is not visible... COMPLETED
