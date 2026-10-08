@@ -1,0 +1,13 @@
+
+> pray@1.0.0 test:e2e:android:ordered
+> bash scripts/test-android-ordered.sh
+
+Android test output: /tmp/pray-android-2026-10-08/ordered-restored-normal
+Installed APK test channel and API origin verified.
+Starting android-lock-suite
+android-lock-suite exit=0
+Starting android-lock-006-suite
+android-lock-006-suite exit=0
+Starting android-rem-editor-suite
+android-rem-editor-suite exit=1
+Stopped at first failure; full log: /tmp/pray-android-2026-10-08/ordered-restored-normal/android-rem-editor-suite.log

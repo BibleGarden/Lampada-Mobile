@@ -1,0 +1,27 @@
+Running on Pray_Pixel_API_35
+ > Flow android-rpt-003
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text RPT 003 retry... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: question-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Tap on id: content-report-comment... COMPLETED
+Input text Черновик комментария RPT-003... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Сейчас не удалось отправить жалобу. Попробуйте ещё раз." is visible... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Assert that id: content-report-comment is visible... COMPLETED
+Take screenshot RPT-003-error... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Take screenshot RPT-003-retry-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED

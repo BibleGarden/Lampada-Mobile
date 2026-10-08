@@ -1,0 +1,20 @@
+[
+  {
+    "command": {
+      "evalScriptCommand": {
+        "scriptString": "${ const until = Date.now() + 10000; while (Date.now() < until) {} }",
+        "optional": false
+      }
+    },
+    "durationMs": 10599
+  },
+  {
+    "command": {
+      "evalScriptCommand": {
+        "scriptString": "${ const until = Date.now() + 70000; while (Date.now() < until) {} }",
+        "optional": false
+      }
+    },
+    "durationMs": 70009
+  }
+]

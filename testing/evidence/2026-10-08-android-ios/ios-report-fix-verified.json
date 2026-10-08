@@ -1,0 +1,18 @@
+{
+  "command": [
+    "maestro",
+    "--device",
+    "05F697B7-36CD-4050-9D57-FC9316AA093C",
+    "test",
+    "--test-output-dir",
+    "/tmp/pray-android-2026-10-08/ios-report-fix-verified",
+    "testing/e2e/ios-rpt-006-keyboard.yaml"
+  ],
+  "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+  "exit": 0,
+  "started": "2026-10-08T14:25:28.523725+00:00",
+  "ended": "2026-10-08T14:26:46.196278+00:00",
+  "appCrash": null,
+  "sourceCommit": "26bc5d531ae338f702ee293fa8a08fca97710204",
+  "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+}

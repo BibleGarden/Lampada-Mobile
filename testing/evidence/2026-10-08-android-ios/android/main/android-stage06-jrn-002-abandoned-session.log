@@ -1,0 +1,23 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage06-jrn-002-abandoned-session
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text JRN-002 брошенная сессия... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Take screenshot JRN-002-session-started... COMPLETED
+Stop com.nf404.twinkler... COMPLETED
+Launch app "com.nf404.twinkler" without stopping app... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that id: journal-empty-state is visible... COMPLETED
+Assert that "JRN-002 брошенная сессия" is not visible... COMPLETED
+Take screenshot JRN-002-journal-after-abandon... COMPLETED

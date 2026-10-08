@@ -1,0 +1,36 @@
+Running on Pray_Pixel_API_35
+ > Flow android-rpt-001-002
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text RPT content reports... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: question-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Take screenshot RPT-001-dialog... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Take screenshot RPT-001-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-report-button is visible... COMPLETED
+Take screenshot RPT-002-scripture-card... COMPLETED
+Tap on id: scripture-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Tap on id: content-report-comment... COMPLETED
+Input text Тестовый комментарий RPT-002... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Take screenshot RPT-002-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED
+Tap on id: scripture-read-full... COMPLETED
+Assert that id: scripture-reader-close is visible... COMPLETED
+Assert that id: scripture-report-button, Left of id: scripture-reader-close, Right of id: scripture-reader-favorite.*, Child of: Contains child: id: scripture-reader-close is not visible... COMPLETED
+Tap on id: scripture-reader-close... COMPLETED

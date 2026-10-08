@@ -1,0 +1,66 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-editor-suite
+Launch app "twinkler"... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text REM editor... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-deny... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Tap on id: reminder-add-time-0... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00-confirm... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is not visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Assert that id: reminder-rule-0-time-09:00 is visible... COMPLETED
+Tap on id: reminder-add-time-0... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Run java.lang.Thread.sleep(3600)... COMPLETED
+Assert that id: reminder-delete-time-10:00 is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00 is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Tap on id: reminder-delete-time-09:00... COMPLETED
+Assert that id: reminder-delete-time-09:00-confirm is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Tap on id: reminder-time-09:00-minutes-forward... COMPLETED
+Assert that id: reminder-delete-time-09:00-confirm is not visible... COMPLETED
+Assert that id: reminder-delete-time-09:05 is visible... COMPLETED
+Tap on id: reminder-time-09:05-minutes-back... COMPLETED
+Assert that id: reminder-rule-0-time-09:00 is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Tap on id: reminder-delete-time-10:00-confirm... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is not visible... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Tap on id: reminders-add-rule... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Assert that id: reminder-rule-1 is visible... COMPLETED
+Assert that id: reminder-rule-1-day-6, selected is visible... COMPLETED
+Assert that id: reminder-rule-1-day-7, selected is visible... COMPLETED
+Assert that id: reminder-rule-1-time-10:00 is visible... COMPLETED
+Tap on id: reminders-delete-rule... COMPLETED
+Assert that id: reminders-delete-rule-confirm is visible... COMPLETED
+Tap on id: reminders-delete-rule-confirm... COMPLETED
+Wait for animation to end within 5000 ms... COMPLETED
+Assert that id: reminders-summary-1 is not visible... COMPLETED
+Assert that id: reminders-summary is visible... COMPLETED
+Assert that ".*Настроить расписание 1: Каждый день: 09:00.*" is visible... COMPLETED

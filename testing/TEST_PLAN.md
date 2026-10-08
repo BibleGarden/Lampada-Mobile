@@ -155,7 +155,7 @@ tier of its e2e runs.
 | NAV-002 [critical] | Double-tap Start on Home, then return after an unfinished setup on iOS and Android | one Back press returns Home; no duplicate setup route remains, the draft session is reset, and the app does not hang |
 | NAV-003 [main] | Opening screens by a deep link with no navigation history | the back button leads Home or closes the screen safely |
 | NAV-004 | Android Back during the prayer and the reflection | the system gesture does not break the mandatory flow |
-| NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created |
+| NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created; the second Home tap cannot activate Next during Setup entrance |
 | NAV-006 | Leave Home in the background after praying, then reopen the app on a later day without navigating | the last dot represents the current local day, yesterday's prayer moves left, and the flame and greeting refresh |
 | NAV-007 | Keep Home open across local midnight, including a daylight-saving transition | the calendar advances at local midnight; today's unprayed dot becomes an outline and the previous prayer remains on its actual date |
 | NAV-008 [ipad] | Rotate an iPad between portrait and landscape on Home and another screen, including while JavaScript is briefly busy | the background covers the entire canvas during and after rotation; no strip retains the previous width or height |
@@ -239,7 +239,7 @@ tier of its e2e runs.
 | ANS-029 | On physical iOS, perform 10 cycles of start → stop → play without restarting the app | every cycle creates one new valid M4A; there is no save error, no stuck overlay and no unavailable next start |
 | ANS-030 | On physical iOS, start a recording right after pausing or finishing a draft or the scripture narration | the deferred deactivation of the player does not cut the recorder; the M4A duration matches the speech and playback does not jump to the end |
 | ANS-031 | On physical iOS, record two different files in a row and play the second, the first and the second in turn | every replace waits for its own AVPlayerItem to load, starts from zero and plays the correct file in full |
-| ANS-032 [main] | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
+| ANS-032 [main] | Let the answer sheet settle, open recordings, play and pause, then close recordings with the chevron; repeat after opening and closing the keyboard | the answer field and actions remain visible and usable; tapping the question or handle closes the keyboard without losing the draft; closing the answer removes the backdrop; no stale closed position or dark blocked screen appears |
 | ANS-033 [ipad] | Open a multi-line question on a landscape iPad, focus the answer, type and rotate to portrait and back | the question and form use separate columns in landscape; the field remains tall enough for multiple lines above the keyboard; actions stay visible; rotation preserves the text and restores the portrait layout |
 | ANS-034 | With the session timer running, open the answer sheet and type a sentence of about 50 characters at a steady pace | every keystroke appears in the field without batching or visible stalls (measured: one update per keystroke, no gap above 150 ms); the halo behind the timer stops breathing while the sheet is open and resumes after it closes |
 | ANS-035 | Start a voice draft, close the recordings sheet while it loads, then play a different draft | the cancelled draft never starts, its audio session is released, and a late completion or error cannot stop the new draft |
@@ -293,7 +293,7 @@ tier of its e2e runs.
 | SCR-007 | 403, 422, 429, 503 and a timeout | no crash and no endless retry; the technical `detail` is not shown |
 | SCR-008 [main] | Choose a language, a translation and a narration, save and restart the app | the complete triple is restored, a new session sends the chosen `language` and `translation` |
 | SCR-009 | Change the language, then the translation | the child lists are cleared; an incompatible or incomplete triple cannot be saved |
-| SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is available, the previously saved choice is not damaged |
+| SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is visible and reachable next to wrapped error text, the previously saved choice is not damaged |
 | SCR-011 | Switch the language or the translation once an offline cache exists | the offline fallback does not show a snapshot of another language or translation |
 | SCR-012 | A clean installation with a supported primary device language | the server language of the device and a valid translation/voice triple are chosen |
 | SCR-013 [main] | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |
@@ -328,6 +328,7 @@ the stub; execution results belong in dated reports.
 | RPT-003 | Get a network, a timeout or a 5xx failure and retry | the dialog and the typed comment stay available, an error text is shown, a repeated attempt can succeed; the unsaved answer in the sheet is not mutated |
 | RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays in the active session card |
 | RPT-005 | Keep a Question or Quote report dialog open while the session timer expires; type a comment, then dismiss the dialog | the session and comment remain visible past expiry; after dismissal, reflection opens following the one-second delay |
+| RPT-006 [main] | On iOS and Android, type a report comment, dismiss and reopen the keyboard, then send without closing the keyboard | the comment and Send/Cancel actions stay above the keyboard; a backdrop tap closes the keyboard and preserves the exact draft; Send reaches the success state, dismisses the keyboard and returns to the session |
 
 ### Reflection, finishing and the streak
 

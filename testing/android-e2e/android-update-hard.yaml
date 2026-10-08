@@ -1,0 +1,35 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-update-hard.yaml.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- extendedWaitUntil:
+    visible:
+      id: update-hard
+    timeout: 20000
+- assertVisible:
+    id: update-hard
+- assertNotVisible:
+    id: update-later
+- takeScreenshot: UPDATE-hard-banner
+- openLink: lampada://settings
+- assertVisible:
+    id: update-hard
+- openLink: lampada://
+- assertVisible:
+    id: update-hard
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- extendedWaitUntil:
+    visible:
+      id: update-hard
+    timeout: 20000
+- takeScreenshot: UPDATE-hard-relaunch

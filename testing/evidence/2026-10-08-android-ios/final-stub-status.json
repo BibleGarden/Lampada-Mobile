@@ -1,0 +1,50 @@
+{
+  "requestCount": 30,
+  "privacySafe": true,
+  "transcriptionMode": "ok",
+  "questionDelayMs": 0,
+  "versionResponse": {
+    "app": "lampada",
+    "update_type": "none",
+    "latest_version": "1.0.23",
+    "store_url": "https://example.com/lampada",
+    "message": null
+  },
+  "contentReportMode": "ok",
+  "contentReports": [
+    {
+      "content_type": "question",
+      "content_text": "STUB вопрос с опозданием: что ты чувствуешь?",
+      "language": "ru"
+    },
+    {
+      "content_type": "scripture",
+      "content_text": "Псалом 22:1–6\n\nГосподь — Пастырь мой.\n\nОн покоит меня.\n\nОн ведёт меня.\n\nНе убоюсь зла, потому что Ты со мной.\n\nТы приготовил предо мною трапезу.\n\nИ я пребуду с Ним.",
+      "user_comment": "Тестовый комментарий RPT-002",
+      "language": "ru"
+    },
+    {
+      "content_type": "question",
+      "content_text": "STUB вопрос с опозданием: что ты чувствуешь?",
+      "language": "ru"
+    },
+    {
+      "content_type": "scripture",
+      "content_text": "Псалом 22:1–6\n\nГосподь — Пастырь мой.\n\nОн покоит меня.\n\nОн ведёт меня.\n\nНе убоюсь зла, потому что Ты со мной.\n\nТы приготовил предо мною трапезу.\n\nИ я пребуду с Ним.",
+      "user_comment": "Тестовый комментарий RPT-002",
+      "language": "ru"
+    },
+    {
+      "content_type": "question",
+      "content_text": "STUB вопрос с опозданием: что ты чувствуешь?",
+      "user_comment": "Черновик комментария RPT-003",
+      "language": "ru"
+    },
+    {
+      "content_type": "question",
+      "content_text": "STUB вопрос с опозданием: что ты чувствуешь?",
+      "user_comment": "Черновик комментария RPT-003",
+      "language": "ru"
+    }
+  ]
+}

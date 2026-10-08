@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import ScreenBg from './ScreenBg';
@@ -208,13 +208,19 @@ export default function LockGate() {
 
   // До чтения конфигурации контент не показывается: иначе при включённой защите
   // дневник успел бы мелькнуть на первом кадре.
-  if (!ready) return <PrivacyCurtain />;
   // Экран блокировки приватного содержимого не показывает, поэтому при уходе в
   // фон он остаётся на месте: подменять его шторкой значило бы размонтировать
   // его и заново запрашивать Face ID на каждом возврате.
-  if (locked) return <LockScreen />;
-  if (obscured) return <PrivacyCurtain />;
-  return null;
+  const content = locked && ready ? <LockScreen />
+    : !ready || obscured ? <PrivacyCurtain /> : null;
+  if (!content || Platform.OS !== 'android') return content;
+  // Отдельное нативное окно исключает Stack из дерева TalkBack: обычная
+  // View-обёртка не скрывает перенесённые native-stack экраны на Android.
+  return (
+    <Modal visible statusBarTranslucent navigationBarTranslucent onRequestClose={() => {}}>
+      {content}
+    </Modal>
+  );
 }
 
 const stylesFactory = () => StyleSheet.create({

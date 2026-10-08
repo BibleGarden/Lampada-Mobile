@@ -1,0 +1,9 @@
+
+> pray@1.0.0 test:e2e:android
+> bash scripts/test-android.sh android-lock-007-background-timeout
+
+Android test output: /tmp/pray-android-2026-10-08/lock-background-timed
+Installed APK test channel and API origin verified.
+Starting android-lock-007-background-timeout
+android-lock-007-background-timeout exit=0
+All 1 selected Android scenarios passed.

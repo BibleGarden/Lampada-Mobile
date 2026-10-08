@@ -1,0 +1,192 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android ordered counterpart of ios-rem-editor-suite.yaml.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+    clearState: true
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: REM editor
+- pressKey: Enter
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+# Чистое состояние гарантирует undecided; ждём кнопку, а не мгновенный when.
+- tapOn:
+    id: privacy-consent-core_prayer_ai-deny
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: threshold-kicker
+- openLink: lampada://settings
+- scrollUntilVisible:
+    element:
+      id: reminders-toggle
+    direction: DOWN
+- tapOn:
+    id: reminders-settings-button-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminders-editor-modal
+- tapOn:
+    id: reminder-add-time-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-rule-0-time-10:00
+- tapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-rule-0-time-10:00
+- assertVisible:
+    id: reminder-delete-time-10:00-confirm
+# Отдельные AX-проверки могут занять больше трёх секунд подтверждения.
+# Возвращаем исходное состояние и посылаем оба пользовательских тапа вместе.
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertNotVisible:
+    id: reminder-delete-time-10:00-confirm
+- doubleTapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: reminder-rule-0-time-10:00
+- assertNotVisible:
+    id: reminder-delete-time-10:00-confirm
+- assertVisible:
+    id: reminder-rule-0-time-09:00
+- tapOn:
+    id: reminder-add-time-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-rule-0-time-10:00
+- tapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-delete-time-10:00-confirm
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertVisible:
+    id: reminder-delete-time-10:00
+- assertNotVisible:
+    id: reminder-delete-time-10:00-confirm
+- tapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-delete-time-10:00-confirm
+- tapOn:
+    id: reminders-editor-done
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: reminders-settings-button-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminders-editor-modal
+- assertVisible:
+    id: reminder-delete-time-10:00
+- assertNotVisible:
+    id: reminder-delete-time-10:00-confirm
+- tapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-delete-time-10:00-confirm
+- tapOn:
+    id: reminder-delete-time-09:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-delete-time-09:00-confirm
+- assertNotVisible:
+    id: reminder-delete-time-10:00-confirm
+- tapOn:
+    id: reminder-time-09:00-minutes-forward
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: reminder-delete-time-09:00-confirm
+- assertVisible:
+    id: reminder-delete-time-09:05
+- tapOn:
+    id: reminder-time-09:05-minutes-back
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminder-rule-0-time-09:00
+- tapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+# Отдельные AX-проверки могут занять больше трёх секунд подтверждения.
+# Возвращаем исходное состояние и посылаем оба пользовательских тапа вместе.
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertNotVisible:
+    id: reminder-delete-time-10:00-confirm
+- doubleTapOn:
+    id: reminder-delete-time-10:00
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: reminder-rule-0-time-10:00
+- tapOn:
+    id: reminders-editor-done
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: reminders-add-rule
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminders-editor-modal
+- assertVisible:
+    id: reminder-rule-1
+- assertVisible:
+    id: reminder-rule-1-day-6
+    selected: true
+- assertVisible:
+    id: reminder-rule-1-day-7
+    selected: true
+- assertVisible:
+    id: reminder-rule-1-time-10:00
+- tapOn:
+    id: reminders-delete-rule
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reminders-delete-rule-confirm
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertNotVisible:
+    id: reminders-delete-rule-confirm
+- doubleTapOn:
+    id: reminders-delete-rule
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible:
+    id: reminders-summary-1
+- assertVisible:
+    id: reminders-summary
+- assertVisible: ".*Настроить расписание 1: Каждый день: 09:00.*"

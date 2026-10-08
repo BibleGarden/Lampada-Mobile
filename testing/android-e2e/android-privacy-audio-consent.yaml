@@ -1,0 +1,87 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-privacy-audio-consent.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: PRV audio consent
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: privacy-consent-core_prayer_ai-deny
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible: OK
+    commands:
+      - tapOn: OK
+- runFlow:
+    when:
+      visible: Allow
+    commands:
+      - tapOn: Allow
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-card-0
+- tapOn:
+    id: recording-transcribe-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: privacy-consent-audio_transcription
+- assertVisible: Чтобы превратить запись в текст.*Whisper.*Google Gemini.*Саму
+    запись мы у себя не храним.*
+- assertVisible:
+    id: privacy-consent-audio_transcription-deny
+- assertVisible:
+    id: privacy-consent-audio_transcription-allow
+- tapOn:
+    id: privacy-consent-audio_transcription-deny
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-transcribe-0
+- assertNotVisible:
+    id: recording-transcribing-0
+- tapOn:
+    id: recording-transcribe-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: Расшифровка отключена в настройках конфиденциальности

@@ -1,0 +1,36 @@
+Running on Pray_Pixel_API_35
+ > Flow android-rpt-006-keyboard
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text RPT-006 keyboard... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that id: question-report-button is visible... COMPLETED
+Tap on id: question-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Tap on id: content-report-comment... COMPLETED
+Input text RPT-006 draft stays editable... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Take screenshot RPT-006-keyboard-actions... COMPLETED
+Assert that id: content-report-send, Above id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Assert that id: content-report-cancel, Above id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Assert that id: content-report-comment, Above id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Assert that id: content-report-backdrop is visible... COMPLETED
+Tap on point (3%,10%)... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is not visible... COMPLETED
+Assert that "RPT-006 draft stays editable", id: content-report-comment is visible... COMPLETED
+Tap on id: content-report-comment... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that id: content-report-done is visible... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is not visible... COMPLETED
+Take screenshot RPT-006-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED
+Assert that id: content-report-dialog is not visible... COMPLETED
+Assert that id: session-title is visible... COMPLETED

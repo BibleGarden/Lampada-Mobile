@@ -1,0 +1,20 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage05-ai-late-stub
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text AI late stub... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that "(?s).*STUB вопрос с опозданием.*" is visible... COMPLETED
+Take screenshot AI-late-question-arrived... COMPLETED
+Run android-stage05-ai-late-response.yaml...
+  Assert that id: dock-answer-button is visible... COMPLETED
+Run android-stage05-ai-late-response.yaml... COMPLETED

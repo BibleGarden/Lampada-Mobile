@@ -1,0 +1,43 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage04-ans-013-save-in-flight
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Run flow when id: setup-kicker is not visible...
+Run flow when id: setup-kicker is not visible... SKIPPED
+Tap on id: setup-goal-input... COMPLETED
+Input text ANS-013 сохранение в полёте... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Run flow when id: answer-record-button is not visible...
+Run flow when id: answer-record-button is not visible... SKIPPED
+Tap on id: answer-record-button... COMPLETED
+Run flow when "OK" is visible...
+Run flow when "OK" is visible... SKIPPED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Tap on id: recording-transcribe-0... COMPLETED
+Assert that id: privacy-consent-audio_transcription is visible... COMPLETED
+Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Assert that id: recording-transcribing-0 is visible... COMPLETED
+Assert that id: recording-transcription-hint-0 is visible... COMPLETED
+Take screenshot ANS-013-transcription-hint... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: dock-answer-edit-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Assert that ".*Стабильная расшифровка лампады номер семь.*" is visible... COMPLETED

@@ -1,0 +1,34 @@
+Running on Pray_Pixel_API_35
+ > Flow android-ans-023-recordings-actions
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text ANS-023 кнопки записей... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 2500 ms... COMPLETED
+Assert that id: recordings-stop-button is visible... COMPLETED
+Copy text from element with id: recording-elapsed... COMPLETED
+Run ${output.elapsed = maestro.copiedText}... COMPLETED
+Assert that ${/\d+:\d\d$/.test(output.elapsed)} is true... COMPLETED
+Assert that "${output.elapsed}", id: recording-elapsed is not visible... COMPLETED
+Take screenshot ANS-023-recording-done... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Assert that id: recordings-record-button is visible... COMPLETED
+Assert that id: recordings-close-button is visible... COMPLETED
+Take screenshot ANS-023-record-another... COMPLETED
+Tap on id: recordings-record-button... COMPLETED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-1 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Assert that id: answer-save-button is visible... COMPLETED

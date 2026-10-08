@@ -1,0 +1,81 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-stage05-ai-opt-in-payload.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- openLink: lampada://settings
+- runFlow:
+    when:
+      visible: Open|Открыть
+    commands:
+      - tapOn: Open|Открыть
+- tapOn:
+    id: privacy-settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: privacy-sheet
+- assertVisible:
+    id: privacy-setting-answer_context-allowed
+- tapOn:
+    id: privacy-setting-answer_context-allowed
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- openLink: lampada://setup
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: QA opt-in payload
+- pressKey: Enter
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: dock-answer-button
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: QA private answer
+- tapOn:
+    id: answer-save-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-answer_context
+    commands:
+      - assertVisible: Чтобы следующие вопросы.*твои ответы и расшифровки.*Google Gemini.*
+      - tapOn:
+          id: privacy-consent-answer_context-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: dock-answer-edit-button

@@ -1,0 +1,7 @@
+Running on Pray_Pixel_API_35
+ > Flow android-scripture-default-language
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that ".*Русский.*" is visible... COMPLETED
+Assert that ".*SYNO.*" is visible... COMPLETED
+Assert that ".*Александр Бондаренко.*" is visible... COMPLETED

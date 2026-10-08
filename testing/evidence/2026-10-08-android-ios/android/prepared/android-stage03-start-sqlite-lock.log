@@ -1,0 +1,22 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage03-start-sqlite-lock
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text STG sqlite ошибка входа... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that "Не удалось начать молитву" is visible... COMPLETED
+Assert that "Попробуй ещё раз." is visible... COMPLETED
+Take screenshot STG-sqlite-error... COMPLETED
+Tap on "Понятно"... COMPLETED
+Assert that id: threshold-hold-button is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Take screenshot STG-sqlite-retry-ok... COMPLETED

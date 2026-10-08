@@ -1,0 +1,9 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android ordered counterpart of ios-lock-006-suite.yaml.
+- runFlow:
+    file: android-lock-006-forgot-pin-prepare.yaml
+- runFlow:
+    file: android-lock-006-forgot-pin-wipe.yaml

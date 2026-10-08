@@ -1,0 +1,69 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-music-timer-finish.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: MUS timer finish regression
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-music-off
+- tapOn:
+    id: session-music-off
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: music-playing
+- tapOn:
+    id: session-timer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: session-time-subtract
+- tapOn:
+    id: session-time-subtract
+    retryTapIfNoChange: false
+    waitToSettleTimeoutMs: 500
+- tapOn:
+    id: session-time-subtract
+    retryTapIfNoChange: false
+    waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible:
+      id: reflect-kicker
+    timeout: 360000
+- assertNotVisible:
+    id: music-playing

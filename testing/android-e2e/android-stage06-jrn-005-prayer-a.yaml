@@ -1,0 +1,132 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-stage06-jrn-005-prayer-a.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: Тревога перед разговором с отцом
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    point: 92%,95%
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: Первый ответ молитвы А про страх и надежду
+- tapOn:
+    id: answer-question
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible: OK
+    commands:
+      - tapOn: OK
+- runFlow:
+    when:
+      visible: Allow
+    commands:
+      - tapOn: Allow
+- takeScreenshot: JRN-005-recording-overlay-a
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-card-0
+- tapOn:
+    id: recordings-close-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- takeScreenshot: JRN-005-recording-saved-a
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: answer-save-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-answer_context
+    commands:
+      - tapOn:
+          id: privacy-consent-answer_context-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: dock-answer-edit-button
+- tapOn:
+    id: session-finish-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reflect-kicker
+- tapOn:
+    id: reflect-complete-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: home-title-lit
+- assertVisible:
+    id: journal-button
+- tapOn:
+    id: journal-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: journal-title
+- assertVisible: .*Тревога перед разговором с отцом.*
+- tapOn: .*Тревога перед разговором с отцом.*
+- assertVisible: .*Первый ответ молитвы А про страх и надежду.*
+- assertVisible:
+    id: journal-recording-0
+- takeScreenshot: JRN-005-journal-detail-text-audio

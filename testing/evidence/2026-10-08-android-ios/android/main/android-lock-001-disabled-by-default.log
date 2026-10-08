@@ -1,0 +1,10 @@
+Running on Pray_Pixel_API_35
+ > Flow android-lock-001-disabled-by-default
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Assert that id: lock-screen is not visible... COMPLETED
+Assert that id: privacy-curtain is not visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: change-pin-button is not visible... COMPLETED
+Assert that id: pin-prompt is not visible... COMPLETED

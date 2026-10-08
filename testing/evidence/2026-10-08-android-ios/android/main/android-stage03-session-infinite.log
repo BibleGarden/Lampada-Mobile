@@ -1,0 +1,23 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage03-session-infinite
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SES-002 infinite timer... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that ".*Без таймера и спешки.*" is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that "ИДЁТ", Below id: session-title is visible... COMPLETED
+Copy text from element with "[0-9]+:[0-9][0-9]", Below id: session-title... COMPLETED
+Run ${ output.elapsed = maestro.copiedText }... COMPLETED
+Assert that ${ /^[0-9]+:[0-9][0-9]$/.test(output.elapsed) } is true... COMPLETED
+Assert that "${ output.elapsed }", Below id: session-title is not visible... COMPLETED
+Assert that id: reflect-kicker is not visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED

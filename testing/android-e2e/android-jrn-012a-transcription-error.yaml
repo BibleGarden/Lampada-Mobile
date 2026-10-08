@@ -1,0 +1,122 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-jrn-012a-transcription-error.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: JRN-012 повтор расшифровки
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-card-0
+- tapOn:
+    id: recordings-close-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: answer-save-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-answer_context
+    commands:
+      - tapOn:
+          id: privacy-consent-answer_context-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    id: session-finish-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reflect-kicker
+- tapOn:
+    id: reflect-complete-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: prayer-saved-notice
+- tapOn:
+    id: journal-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: journal-title
+- tapOn: .*JRN-012 повтор расшифровки.*
+- assertVisible:
+    id: journal-recording-0
+- tapOn:
+    id: journal-recording-0-transcribe
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-audio_transcription
+    commands:
+      - tapOn:
+          id: privacy-consent-audio_transcription-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: Сервис расшифровки сейчас недоступен. Попробуй позже.
+    timeout: 30000
+- assertVisible:
+    id: journal-recording-0-transcribe
+- assertVisible:
+    id: journal-recording-0
+- takeScreenshot: JRN-012-error

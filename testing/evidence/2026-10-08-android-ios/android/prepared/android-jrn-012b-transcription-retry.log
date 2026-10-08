@@ -1,0 +1,15 @@
+Running on Pray_Pixel_API_35
+ > Flow android-jrn-012b-transcription-retry
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Assert that id: journal-recording-0-transcribe is visible... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+Take screenshot JRN-012-retry-saved... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED

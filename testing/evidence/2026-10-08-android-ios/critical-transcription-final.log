@@ -1,0 +1,28 @@
+
+> pray@1.0.0 test:e2e:android:critical
+> bash scripts/test-android-critical.sh
+
+Android test output: /tmp/pray-android-2026-10-08/critical-transcription-final
+Installed APK test channel and API origin verified.
+Starting android-stage06-jrn-001-empty-history
+android-stage06-jrn-001-empty-history exit=0
+Starting android-stage03-setup-start
+android-stage03-setup-start exit=0
+Starting android-stage03-navigation
+android-stage03-navigation exit=0
+Starting android-stage03-session-finite
+android-stage03-session-finite exit=0
+Starting android-stage04-answers-text
+android-stage04-answers-text exit=0
+Starting android-stage06-end-001-finish-without-takeaway
+android-stage06-end-001-finish-without-takeaway exit=0
+Starting android-stage06-end-002-finish-with-takeaway
+android-stage06-end-002-finish-with-takeaway exit=0
+Starting android-privacy-consent-first-use
+android-privacy-consent-first-use exit=0
+Starting android-smoke-full
+android-smoke-full exit=0
+Starting android-smoke-full-relaunch
+android-smoke-full-relaunch exit=0
+All 10 selected Android scenarios passed.
+All 10 Android critical scenarios passed.

@@ -43,6 +43,7 @@ export function GoldButton({
   style,
   testID,
   compact,
+  disabled = false,
 }: {
   label: string;
   onPress: () => void;
@@ -50,6 +51,7 @@ export function GoldButton({
   testID?: string;
   /** Низкий вариант: высота как у кнопок карточки-спутника */
   compact?: boolean;
+  disabled?: boolean;
 }) {
   const styles = useStyles(stylesFactory);
   return (
@@ -57,6 +59,8 @@ export function GoldButton({
       accessibilityLabel={label}
       accessibilityRole="button"
       testID={testID}
+      disabled={disabled}
+      accessibilityState={{ disabled }}
       hitSlop={compact ? touchSlop(sc(32)) : undefined}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

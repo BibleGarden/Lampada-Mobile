@@ -1,0 +1,70 @@
+Running on Pray_Pixel_API_35
+ > Flow android-rem-editor-suite
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text REM editor... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Tap on id: privacy-consent-core_prayer_ai-deny... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Tap on id: reminder-add-time-0... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Run ${ const until = Date.now() + 3600; while (Date.now() < until) {} }... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Double tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is not visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Assert that id: reminder-rule-0-time-09:00 is visible... COMPLETED
+Tap on id: reminder-add-time-0... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Run ${ const until = Date.now() + 3600; while (Date.now() < until) {} }... COMPLETED
+Assert that id: reminder-delete-time-10:00 is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00 is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is visible... COMPLETED
+Tap on id: reminder-delete-time-09:00... COMPLETED
+Assert that id: reminder-delete-time-09:00-confirm is visible... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Tap on id: reminder-time-09:00-minutes-forward... COMPLETED
+Assert that id: reminder-delete-time-09:00-confirm is not visible... COMPLETED
+Assert that id: reminder-delete-time-09:05 is visible... COMPLETED
+Tap on id: reminder-time-09:05-minutes-back... COMPLETED
+Assert that id: reminder-rule-0-time-09:00 is visible... COMPLETED
+Tap on id: reminder-delete-time-10:00... COMPLETED
+Run ${ const until = Date.now() + 3600; while (Date.now() < until) {} }... COMPLETED
+Assert that id: reminder-delete-time-10:00-confirm is not visible... COMPLETED
+Double tap on id: reminder-delete-time-10:00... COMPLETED
+Assert that id: reminder-rule-0-time-10:00 is not visible... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Tap on id: reminders-add-rule... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Assert that id: reminder-rule-1 is visible... COMPLETED
+Assert that id: reminder-rule-1-day-6, selected is visible... COMPLETED
+Assert that id: reminder-rule-1-day-7, selected is visible... COMPLETED
+Assert that id: reminder-rule-1-time-10:00 is visible... COMPLETED
+Tap on id: reminders-delete-rule... COMPLETED
+Assert that id: reminders-delete-rule-confirm is visible... COMPLETED
+Run ${ const until = Date.now() + 3600; while (Date.now() < until) {} }... COMPLETED
+Assert that id: reminders-delete-rule-confirm is not visible... COMPLETED
+Double tap on id: reminders-delete-rule... COMPLETED
+Wait for animation to end within 5000 ms... COMPLETED
+Assert that id: reminders-summary-1 is not visible... COMPLETED
+Assert that id: reminders-summary is visible... COMPLETED
+Assert that ".*Настроить расписание 1: Каждый день: 09:00.*" is visible... COMPLETED

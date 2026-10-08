@@ -1,0 +1,17 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-scripture-default-language.yaml; native selectors and untimed fixtures.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: .*Русский.*
+- assertVisible: .*SYNO.*
+- assertVisible: .*Александр Бондаренко.*

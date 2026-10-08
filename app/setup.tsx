@@ -1,5 +1,5 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
   Keyboard,
@@ -40,6 +40,13 @@ export default function Setup() {
   const s = useSession();
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
+  const [entranceReady, setEntranceReady] = useState(false);
+  useEffect(() => {
+    // Второй тап по Home не должен попасть в «Далее» на том же месте
+    // во время появления нового экрана. Окно совпадает с переходом Stack.
+    const timer = setTimeout(() => setEntranceReady(true), 350);
+    return () => clearTimeout(timer);
+  }, []);
   // Пока открыта клавиатура, раскладка экрана не меняется: верх поля цели
   // остаётся на месте, а само поле тянется вниз до клавиатуры поверх
   // скрытых длительности и «Далее». Высоту в покое задаёт невидимая копия
@@ -78,10 +85,11 @@ export default function Setup() {
 
   const continueToThreshold = () => {
     s.prepareThreshold();
-    router.push('/threshold');
+    router.navigate('/threshold');
   };
 
   const next = async () => {
+    if (!entranceReady) return;
     await ensureSettingsLoaded();
     if (useSettings.getState().coreAiConsent === 'undecided') {
       setCoreConsentOpen(true);
@@ -246,7 +254,7 @@ export default function Setup() {
           </View>
 
           <View {...hiddenWhileEditing}>
-            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" onPress={() => void next()} />
+            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" disabled={!entranceReady} onPress={() => void next()} />
           </View>
         </Animated.View>
       </Pressable>

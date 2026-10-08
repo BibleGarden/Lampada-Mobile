@@ -1,0 +1,28 @@
+appId: com.nf404.twinkler
+tags:
+  - rare
+---
+# Android counterpart of ios-scripture-translation-labels.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-language-picker
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-language-en
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: .*BSB.*
+- assertVisible: .*Berean Standard Bible.*
+- assertVisible: .*WEBUS.*
+- assertVisible: .*World English Bible – US Edition.*
+- assertVisible: .*WEBBE.*
+- assertVisible: .*World English Bible – British Edition.*

@@ -1,0 +1,9 @@
+
+> pray@1.0.0 test:e2e:android
+> bash scripts/test-android.sh android-rpt-006-keyboard
+
+Android test output: /tmp/pray-android-2026-10-08/report-fix-verified
+Installed APK test channel and API origin verified.
+Starting android-rpt-006-keyboard
+android-rpt-006-keyboard exit=0
+All 1 selected Android scenarios passed.

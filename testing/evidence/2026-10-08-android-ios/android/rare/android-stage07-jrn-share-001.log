@@ -1,0 +1,44 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage07-jrn-share-001
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Run flow when id: journal-title is visible...
+Run flow when id: journal-title is visible... SKIPPED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text JRN-014 share... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text JRN-014 answer... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Run flow when id: dock-answer-button is visible...
+Run flow when id: dock-answer-button is visible... SKIPPED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-014 share.*"... COMPLETED
+Assert that id: journal-share is visible... COMPLETED
+Assert that id: journal-delete is visible... COMPLETED
+Tap on id: journal-share... COMPLETED
+Wait for animation to end within 4000 ms... COMPLETED
+Assert that ".*(Скопировать|Копировать|Copy|Ещё|More|Отменить|Cancel).*" is visible... COMPLETED
+Take screenshot JRN-014-share-sheet... COMPLETED
+Press Back key... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that id: journal-share is visible... COMPLETED

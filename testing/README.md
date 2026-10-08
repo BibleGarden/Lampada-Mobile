@@ -32,6 +32,54 @@ without starting the app. Its recorded channel must be `test` and its API origin
 must match `.env.local` and differ from production. An APK predating this metadata
 must be rebuilt. The temporary APK copy is removed on success and on failure.
 
+Android `main` and `rare` counterparts also live in `android-e2e/`:
+
+```bash
+npm run test:e2e:android:main
+npm run test:e2e:android:rare
+npm run test:e2e:android:ordered
+```
+
+The ordered command covers PIN enable/unlock/change/disable, short and long
+background returns, forgotten-PIN cancellation and wiping real journal data,
+and reminder-editor confirmations. It preserves each suite's prerequisite order.
+
+These suites use Gboard keyboard selectors, Android share-sheet dismissal and
+stable app IDs. Maestro's Unicode `inputText` temporarily replaces Gboard
+with its own IME, so it must not be used to establish focus preconditions.
+Keyboard gesture fixtures use ASCII input; ANS-032 also taps a real Russian
+Gboard key and verifies that its Cyrillic character survives saving/reopening.
+Unicode persistence and search checks remain separate from focus checks. After a cold launch or relaunch,
+assert that Home is ready before issuing a Settings/Setup deep link; Android
+launch completion alone does not establish a mounted router. Non-deadline fixtures are untimed; finite completion and early
+music completion retain timed prayers. Display-size changes used to reduce
+emulator screenshot cost must preserve the logical viewport and be reset after
+testing. The tier runner stops at the first failure and records each flow's
+full output and exit code, just like the critical tier.
+
+Controlled Android scenarios use a separate Release build with
+`EXPO_PUBLIC_API_URL=http://10.0.2.2:9085` in `.env.local` and
+`EXPO_PUBLIC_FORCE_SESSION_ERROR=1` for the build. Start `npm run scripture:stub`
+on the host, build Android Release, and run its critical gate before the
+prepared phase. The host control endpoint remains `http://localhost:9085`.
+
+Database checks and legacy-favorite seeding use a small instrumentation APK
+signed with the same local test key. It operates inside the test app's database
+context, without root or a Debug build. Both its host wrapper and native code
+reject physical devices; native code also rejects missing test-channel metadata
+and the production API origin. Build and install it only on the test emulator:
+
+```bash
+ANDROID_PROBE_OUTPUT=/tmp/lampada-database-probe bash scripts/build-android-test-probe.sh
+adb -s emulator-5554 install -r /tmp/lampada-database-probe/LampadaTestProbe.apk
+npm run test:e2e:android:prepared -- --device emulator-5554 --output /tmp/lampada-android-prepared
+```
+
+The prepared runner preserves dependent transcription/favorite order, stops on
+failure and records full logs and exits. It checks orphaned recordings and
+seeds the legacy format through the signed probe. Restore the normal API
+configuration and normal Release APK afterward; uninstall the probe when done.
+
 Individual Android flows use the same installed-APK preflight and sequential
 runner as the critical tier. Pass flow names without a path or `.yaml` extension.
 The Android ANS-024 regression flow is separate from the critical tier. It opens

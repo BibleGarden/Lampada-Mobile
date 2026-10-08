@@ -1,0 +1,74 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-rpt-003.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: RPT 003 retry
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: question-report-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: content-report-dialog
+- tapOn:
+    id: content-report-comment
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: Черновик комментария RPT-003
+- tapOn:
+    id: content-report-send
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: Сейчас не удалось отправить жалобу. Попробуйте ещё раз.
+- assertVisible:
+    id: content-report-dialog
+- assertVisible:
+    id: content-report-comment
+- takeScreenshot: RPT-003-error
+- tapOn:
+    id: content-report-send
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: Спасибо. Жалоба отправлена на проверку.
+- takeScreenshot: RPT-003-retry-sent
+- tapOn:
+    id: content-report-done
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false

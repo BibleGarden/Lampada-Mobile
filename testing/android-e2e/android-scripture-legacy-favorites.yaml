@@ -1,0 +1,22 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-scripture-legacy-favorites.yaml.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- openLink: lampada://favorites
+- extendedWaitUntil:
+    visible: Колоссянам 3:23
+    timeout: 10000
+- assertVisible: И всё, что делаете.*
+- scrollUntilVisible:
+    element:
+      text: Неизвестная старая ссылка
+    direction: DOWN
+- assertVisible: Сохранено ранее

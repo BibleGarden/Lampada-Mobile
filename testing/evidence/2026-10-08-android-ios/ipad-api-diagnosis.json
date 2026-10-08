@@ -1,0 +1,12 @@
+[
+  {
+    "origin": "https://api.bible.garden",
+    "status": 403,
+    "nonemptyQuestion": false
+  },
+  {
+    "origin": "http://192.168.127.133:9084",
+    "status": 200,
+    "nonemptyQuestion": true
+  }
+]

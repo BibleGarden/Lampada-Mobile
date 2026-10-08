@@ -1,0 +1,17 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage05-ai-success-payload
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Run flow when "Open|Открыть" is visible...
+Run flow when "Open|Открыть" is visible... SKIPPED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text QA payload control... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that ".*QA payload control.*" is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED

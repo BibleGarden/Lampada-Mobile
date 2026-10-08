@@ -74,3 +74,4 @@ implementation details do not need one.
 - [0034: Raise the minor for store builds and the patch for test builds](0034-store-minor-test-patch-versions.md)
 - [0035: Name the production AI processors in consent](0035-name-production-ai-processors-in-consent.md)
 - [0036: Release the iOS audio session when its last consumer stops](0036-audio-session-leases.md)
+- [0037: Native window for the Android lock gate](0037-android-lock-native-window.md)

@@ -97,10 +97,8 @@ tags:
 # the system share sheet is outside the app, so match its own labels
 - assertVisible: ".*(Скопировать|Copy|Ещё|More|Отменить|Cancel).*"
 - takeScreenshot: JRN-014-share-sheet
-# В шите iOS 26 нет кнопки «Отменить» — закрывается тапом по затемнённой
-# области над шитом.
-- tapOn:
-    point: "50%,12%"
+# Нативное действие закрытия системного меню доступно в AX-дереве.
+- tapOn: "закрыть всплывающее меню|Dismiss Popover"
 - assertVisible:
     id: "journal-title"
 - assertVisible:

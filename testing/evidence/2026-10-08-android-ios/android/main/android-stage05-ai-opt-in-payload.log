@@ -1,0 +1,28 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage05-ai-opt-in-payload
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Run flow when "Open|Открыть" is visible...
+Run flow when "Open|Открыть" is visible... SKIPPED
+Tap on id: privacy-settings-button... COMPLETED
+Assert that id: privacy-sheet is visible... COMPLETED
+Assert that id: privacy-setting-answer_context-allowed is visible... COMPLETED
+Tap on id: privacy-setting-answer_context-allowed... COMPLETED
+Open lampada://setup... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text QA opt-in payload... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: dock-answer-button is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text QA private answer... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
