@@ -1,0 +1,14 @@
+Running on Pray_Pixel_API_35
+ > Flow android-update-hard
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Assert that id: update-later is not visible... COMPLETED
+Take screenshot UPDATE-hard-banner... COMPLETED
+Open lampada://settings... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Take screenshot UPDATE-hard-relaunch... COMPLETED

@@ -1,0 +1,14 @@
+Running on Pray_Pixel_API_35
+ > Flow android-scripture-user-choice-overrides-locale
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: scripture-language-picker... COMPLETED
+Tap on id: scripture-language-ru... COMPLETED
+Tap on id: scripture-translation-1... COMPLETED
+Tap on id: scripture-voice-1... COMPLETED
+Stop com.nf404.twinkler... COMPLETED
+Launch app "com.nf404.twinkler"... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that ".*Русский.*" is visible... COMPLETED
+Assert that ".*SYNO.*" is visible... COMPLETED
+Assert that ".*Александр Бондаренко.*" is visible... COMPLETED

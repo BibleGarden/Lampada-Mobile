@@ -1,0 +1,44 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage06-scr-001-navigation
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SCR-001 navigation... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Take screenshot SCR-001-00-initial-scripture... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Take screenshot SCR-001-A1-next... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Take screenshot SCR-001-A6-prev-after-noop-forward... COMPLETED
+Tap on id: dock-scripture-favorite... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-B00-favorited... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-favorite... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-B10-next-catalog-exhausted... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-C10-prev-at-start... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-C11-prev-boundary-noop... COMPLETED

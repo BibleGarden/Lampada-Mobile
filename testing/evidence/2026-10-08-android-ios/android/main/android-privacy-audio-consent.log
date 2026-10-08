@@ -1,0 +1,30 @@
+Running on Pray_Pixel_API_35
+ > Flow android-privacy-audio-consent
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text PRV audio consent... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Tap on id: privacy-consent-core_prayer_ai-deny... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Run flow when "OK" is visible...
+Run flow when "OK" is visible... SKIPPED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recording-transcribe-0... COMPLETED
+Assert that id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that "Чтобы превратить запись в текст.*Whisper.*Google Gemini.*Саму запись мы у себя не храним.*" is visible... COMPLETED
+Assert that id: privacy-consent-audio_transcription-deny is visible... COMPLETED
+Assert that id: privacy-consent-audio_transcription-allow is visible... COMPLETED
+Tap on id: privacy-consent-audio_transcription-deny... COMPLETED
+Assert that id: recording-transcribe-0 is visible... COMPLETED
+Assert that id: recording-transcribing-0 is not visible... COMPLETED
+Tap on id: recording-transcribe-0... COMPLETED
+Assert that "Расшифровка отключена в настройках конфиденциальности" is visible... COMPLETED

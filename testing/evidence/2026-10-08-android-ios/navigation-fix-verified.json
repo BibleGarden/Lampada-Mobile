@@ -1,0 +1,23 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:android",
+    "--",
+    "android-stage03-navigation"
+  ],
+  "exit": 0,
+  "started": "2026-10-08T17:16:22.431241+00:00",
+  "ended": "2026-10-08T17:17:10.654017+00:00",
+  "appCrash": false,
+  "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+  "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+  "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+  "applicationSources": {
+    "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+    "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+    "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+    "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+    "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+  }
+}

@@ -1,0 +1,224 @@
+[
+  {
+    "tier": "main",
+    "flow": "android-rpt-006-keyboard",
+    "exit": 0,
+    "evidence": "android/main/android-rpt-006-keyboard.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-ans-024-recordings-keyboard",
+    "exit": 0,
+    "evidence": "android/main/android-ans-024-recordings-keyboard.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-ans-023-recordings-actions",
+    "exit": 0,
+    "evidence": "android/main/android-ans-023-recordings-actions.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-ans-032-recordings-keyboard",
+    "exit": 0,
+    "evidence": "android/main/android-ans-032-recordings-keyboard.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-answer-recordings-persistence",
+    "exit": 0,
+    "evidence": "android/main/android-answer-recordings-persistence.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-answer-recordings-regression",
+    "exit": 0,
+    "evidence": "android/main/android-answer-recordings-regression.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-end-006-takeaway-keyboard",
+    "exit": 0,
+    "evidence": "android/main/android-end-006-takeaway-keyboard.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-keyboard-reflect-journal",
+    "exit": 0,
+    "evidence": "android/main/android-keyboard-reflect-journal.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-lock-001-disabled-by-default",
+    "exit": 0,
+    "evidence": "android/main/android-lock-001-disabled-by-default.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-music-finish-early",
+    "exit": 0,
+    "evidence": "android/main/android-music-finish-early.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-music-finish-untimed",
+    "exit": 0,
+    "evidence": "android/main/android-music-finish-untimed.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-music-timer-finish",
+    "exit": 0,
+    "evidence": "android/main/android-music-timer-finish.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-music-toggle",
+    "exit": 0,
+    "evidence": "android/main/android-music-toggle.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-privacy-audio-consent",
+    "exit": 0,
+    "evidence": "android/main/android-privacy-audio-consent.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-scr-025-reader-safe-area",
+    "exit": 0,
+    "evidence": "android/main/android-scr-025-reader-safe-area.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-scripture-default-language",
+    "exit": 0,
+    "evidence": "android/main/android-scripture-default-language.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-scripture-settings",
+    "exit": 0,
+    "evidence": "android/main/android-scripture-settings.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-scripture-user-choice-overrides-locale",
+    "exit": 0,
+    "evidence": "android/main/android-scripture-user-choice-overrides-locale.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage03-deep-links",
+    "exit": 0,
+    "evidence": "android/main/android-stage03-deep-links.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage03-long-goal",
+    "exit": 0,
+    "evidence": "android/main/android-stage03-long-goal.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage03-session-infinite",
+    "exit": 0,
+    "evidence": "android/main/android-stage03-session-infinite.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage04-unsaved-answer-swipe",
+    "exit": 0,
+    "evidence": "android/main/android-stage04-unsaved-answer-swipe.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-ai-opt-in-payload",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-ai-opt-in-payload.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-ai-success-payload",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-ai-success-payload.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-ai-timeout",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-ai-timeout.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-first-question-error-fallback",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-first-question-error-fallback.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-first-question-no-topic",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-first-question-no-topic.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-first-question-spinner",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-first-question-spinner.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage05-privacy-setting",
+    "exit": 0,
+    "evidence": "android/main/android-stage05-privacy-setting.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage06-end-003-004-idempotency",
+    "exit": 0,
+    "evidence": "android/main/android-stage06-end-003-004-idempotency.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage06-jrn-002-abandoned-session",
+    "exit": 0,
+    "evidence": "android/main/android-stage06-jrn-002-abandoned-session.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage06-jrn-005-prayer-a",
+    "exit": 0,
+    "evidence": "android/main/android-stage06-jrn-005-prayer-a.log"
+  },
+  {
+    "tier": "main",
+    "flow": "android-stage06-scr-003-small-reader",
+    "exit": 0,
+    "evidence": "android/main/android-stage06-scr-003-small-reader.log"
+  },
+  {
+    "tier": "rare",
+    "flow": "android-scripture-audio-resume-cancel",
+    "exit": 0,
+    "evidence": "android/rare/android-scripture-audio-resume-cancel.log"
+  },
+  {
+    "tier": "rare",
+    "flow": "android-scripture-translation-labels",
+    "exit": 0,
+    "evidence": "android/rare/android-scripture-translation-labels.log"
+  },
+  {
+    "tier": "rare",
+    "flow": "android-stage06-scr-003-long-reader",
+    "exit": 0,
+    "evidence": "android/rare/android-stage06-scr-003-long-reader.log"
+  },
+  {
+    "tier": "rare",
+    "flow": "android-stage07-jrn-share-001",
+    "exit": 0,
+    "evidence": "android/rare/android-stage07-jrn-share-001.log"
+  }
+]

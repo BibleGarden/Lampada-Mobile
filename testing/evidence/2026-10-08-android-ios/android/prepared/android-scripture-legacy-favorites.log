@@ -1,0 +1,9 @@
+Running on Pray_Pixel_API_35
+ > Flow android-scripture-legacy-favorites
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://favorites... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Assert that "И всё, что делаете.*" is visible... COMPLETED
+Scrolling DOWN until "Неизвестная старая ссылка" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that "Сохранено ранее" is visible... COMPLETED

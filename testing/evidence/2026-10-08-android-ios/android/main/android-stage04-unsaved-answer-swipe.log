@@ -1,0 +1,22 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage04-unsaved-answer-swipe
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text ANS-003 swipe draft... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text ANS-003 unsaved draft... COMPLETED
+Tap on id: answer-question... COMPLETED
+Swipe from (50%,42%) to (50%,92%) in 500 ms... COMPLETED
+Assert that ".*ANS-003.*" is visible... COMPLETED
+Double tap on "Отмена"... COMPLETED
+Assert that id: session-title is visible... COMPLETED

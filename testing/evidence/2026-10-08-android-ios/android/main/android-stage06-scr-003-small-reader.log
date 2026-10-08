@@ -1,0 +1,22 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage06-scr-003-small-reader
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SCR-003 long reader... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Repeat while id: scripture-read-full is not visible (up to 12 times)...
+Repeat while id: scripture-read-full is not visible (up to 12 times)... SKIPPED
+Assert that id: scripture-read-full is visible... COMPLETED
+Tap on id: scripture-read-full... COMPLETED
+Take screenshot SCR-003-small-reader-top... COMPLETED
+Swipe from (50%,78%) to (50%,30%) in 800 ms... COMPLETED
+Take screenshot SCR-003-small-reader-bottom... COMPLETED

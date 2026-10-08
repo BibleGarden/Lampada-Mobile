@@ -1,0 +1,19 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage06-scr-002a-favorite-relaunch
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SCR-002 favorite relaunch... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Tap on id: dock-scripture-favorite... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-002-before-relaunch... COMPLETED

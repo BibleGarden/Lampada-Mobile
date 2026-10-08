@@ -23,15 +23,11 @@ tags:
     id: setup-next-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- runFlow:
-    when:
-      visible:
-        id: privacy-consent-core_prayer_ai
-    commands:
-      - tapOn:
-          id: privacy-consent-core_prayer_ai-deny
-          waitToSettleTimeoutMs: 500
-          retryTapIfNoChange: false
+# Чистое состояние гарантирует undecided; ждём кнопку, а не мгновенный when.
+- tapOn:
+    id: privacy-consent-core_prayer_ai-deny
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
 - assertVisible:
     id: threshold-kicker
 - openLink: lampada://settings
@@ -59,8 +55,13 @@ tags:
     id: reminder-rule-0-time-10:00
 - assertVisible:
     id: reminder-delete-time-10:00-confirm
-- tapOn:
+# Отдельные AX-проверки могут занять больше трёх секунд подтверждения.
+# Возвращаем исходное состояние и посылаем оба пользовательских тапа вместе.
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertNotVisible:
     id: reminder-delete-time-10:00-confirm
+- doubleTapOn:
+    id: reminder-delete-time-10:00
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertNotVisible:
@@ -138,8 +139,13 @@ tags:
     id: reminder-delete-time-10:00
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- tapOn:
+# Отдельные AX-проверки могут занять больше трёх секунд подтверждения.
+# Возвращаем исходное состояние и посылаем оба пользовательских тапа вместе.
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertNotVisible:
     id: reminder-delete-time-10:00-confirm
+- doubleTapOn:
+    id: reminder-delete-time-10:00
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertNotVisible:
@@ -170,8 +176,11 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: reminders-delete-rule-confirm
-- tapOn:
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
+- assertNotVisible:
     id: reminders-delete-rule-confirm
+- doubleTapOn:
+    id: reminders-delete-rule
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - waitForAnimationToEnd:

@@ -1,0 +1,11 @@
+
+> pray@1.0.0 test:e2e:android
+> bash scripts/test-android.sh android-lock-006-suite android-rem-editor-suite
+
+Android test output: /tmp/pray-android-2026-10-08/forgot-pin-verified
+Installed APK test channel and API origin verified.
+Starting android-lock-006-suite
+android-lock-006-suite exit=0
+Starting android-rem-editor-suite
+android-rem-editor-suite exit=0
+All 2 selected Android scenarios passed.

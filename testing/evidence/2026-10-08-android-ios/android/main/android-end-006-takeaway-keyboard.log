@@ -1,0 +1,34 @@
+Running on Pray_Pixel_API_35
+ > Flow android-end-006-takeaway-keyboard
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text END-006 phone takeaway... COMPLETED
+Tap on id: setup-kicker... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text 4821... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Assert that id: reflect-complete-button is not visible... COMPLETED
+Assert that id: reflect-return-button is not visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Input text  takeaway stays editable above the keyboard... COMPLETED
+Assert that "4821 takeaway stays editable above the keyboard", id: reflection-input, Above id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Tap on id: reflect-question... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is not visible... COMPLETED
+Assert that "4821 takeaway stays editable above the keyboard", id: reflection-input is visible... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Assert that id: reflect-return-button is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that ".*4821 takeaway stays editable above the keyboard.*" is visible... COMPLETED

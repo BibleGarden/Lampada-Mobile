@@ -1,0 +1,9 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage03-deep-links
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Open lampada://session... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://reflect... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://done... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:android",
+    "--",
+    "android-rpt-006-keyboard"
+  ],
+  "exit": 0,
+  "started": "2026-10-08T14:07:36.457047+00:00",
+  "ended": "2026-10-08T14:08:35.939349+00:00",
+  "appCrash": false,
+  "sourceCommit": "57eb9e51012978a925c1dc194bd05225435ca7e9",
+  "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+}

@@ -1,0 +1,12 @@
+Running on Pray_Pixel_API_35
+ > Flow android-scripture-translation-labels
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: scripture-language-picker... COMPLETED
+Tap on id: scripture-language-en... COMPLETED
+Assert that ".*BSB.*" is visible... COMPLETED
+Assert that ".*Berean Standard Bible.*" is visible... COMPLETED
+Assert that ".*WEBUS.*" is visible... COMPLETED
+Assert that ".*World English Bible – US Edition.*" is visible... COMPLETED
+Assert that ".*WEBBE.*" is visible... COMPLETED
+Assert that ".*World English Bible – British Edition.*" is visible... COMPLETED

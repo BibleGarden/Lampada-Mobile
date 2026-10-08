@@ -1,0 +1,202 @@
+Running on Pray_Pixel_API_35
+ > Flow android-lock-suite
+Run android-lock-001-disabled-by-default.yaml...
+  Launch app "com.nf404.twinkler" with clear state... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Assert that id: privacy-curtain is not visible... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Assert that id: change-pin-button is not visible... COMPLETED
+  Assert that id: pin-prompt is not visible... COMPLETED
+Run android-lock-001-disabled-by-default.yaml... COMPLETED
+Run android-lock-002-enable-pin.yaml...
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Tap on id: lock-toggle... COMPLETED
+  Assert that id: pin-prompt-enable-create is visible... COMPLETED
+  Assert that id: pin-prompt is visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Assert that id: pin-prompt-enable-create is visible... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt-enable-repeat is visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt is not visible... COMPLETED
+  Assert that id: change-pin-button is visible... COMPLETED
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Wait for animation to end within 5000 ms... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Assert that id: lock-pin-title is visible... COMPLETED
+  Assert that id: forgot-pin is visible... COMPLETED
+Run android-lock-002-enable-pin.yaml... COMPLETED
+Run android-lock-003-wrong-and-correct-pin.yaml...
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Assert that "Неверный пин-код" is visible... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Assert that id: start-prayer-button is not visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+Run android-lock-003-wrong-and-correct-pin.yaml... COMPLETED
+Run android-lock-004-change-pin.yaml...
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: change-pin-button is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Tap on id: change-pin-button... COMPLETED
+  Assert that id: pin-prompt-change-current is visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-5... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: pin-prompt-change-create is visible... COMPLETED
+  Tap on id: pin-key-9... COMPLETED
+  Tap on id: pin-key-8... COMPLETED
+  Tap on id: pin-key-7... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt-change-repeat is visible... COMPLETED
+  Tap on id: pin-key-9... COMPLETED
+  Tap on id: pin-key-8... COMPLETED
+  Tap on id: pin-key-7... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt is not visible... COMPLETED
+  Assert that id: change-pin-button is visible... COMPLETED
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Assert that "Неверный пин-код" is visible... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: pin-key-9... COMPLETED
+  Tap on id: pin-key-8... COMPLETED
+  Tap on id: pin-key-7... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+Run android-lock-004-change-pin.yaml... COMPLETED
+Run android-lock-005-disable-pin.yaml...
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: pin-key-9... COMPLETED
+  Tap on id: pin-key-8... COMPLETED
+  Tap on id: pin-key-7... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Tap on id: lock-toggle... COMPLETED
+  Assert that id: pin-prompt-disable-current is visible... COMPLETED
+  Assert that "Подтвердите, что защиту выключаете вы" is visible... COMPLETED
+  Tap on id: pin-prompt-cancel... COMPLETED
+  Run flow when id: pin-prompt is visible...
+  Run flow when id: pin-prompt is visible... SKIPPED
+  Assert that id: pin-prompt is not visible... COMPLETED
+  Assert that id: change-pin-button is visible... COMPLETED
+  Tap on id: lock-toggle... COMPLETED
+  Assert that id: pin-prompt-disable-current is visible... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Assert that "Неверный пин-код" is visible... COMPLETED
+  Assert that id: pin-prompt is visible... COMPLETED
+  Tap on id: pin-key-9... COMPLETED
+  Tap on id: pin-key-8... COMPLETED
+  Tap on id: pin-key-7... COMPLETED
+  Tap on id: pin-key-6... COMPLETED
+  Assert that id: pin-prompt is not visible... COMPLETED
+  Assert that id: change-pin-button is not visible... COMPLETED
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+Run android-lock-005-disable-pin.yaml... COMPLETED
+Run android-lock-007-background-timeout.yaml...
+  Launch app "com.nf404.twinkler" with clear state... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Tap on id: lock-toggle... COMPLETED
+  Assert that id: pin-prompt-enable-create is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt-enable-repeat is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: change-pin-button is visible... COMPLETED
+  Tap on "Назад"... COMPLETED
+  Tap on id: journal-button... COMPLETED
+  Run flow when id: journal-title is not visible...
+  Run flow when id: journal-title is not visible... SKIPPED
+  Assert that id: journal-title is visible... COMPLETED
+  Press Home key... COMPLETED
+  Run ${ const until = Date.now() + 10000; while (Date.now() < until) {} }... COMPLETED
+  Launch app "com.nf404.twinkler" without stopping app... COMPLETED
+  Assert that id: journal-title is visible... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Press Home key... COMPLETED
+  Run ${ const until = Date.now() + 70000; while (Date.now() < until) {} }... COMPLETED
+  Launch app "com.nf404.twinkler" without stopping app... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Assert that id: lock-pin-title is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Assert that id: journal-title is visible... COMPLETED
+  Tap on "Назад"... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Tap on id: lock-toggle... COMPLETED
+  Assert that id: pin-prompt-disable-current is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Assert that id: pin-prompt is not visible... COMPLETED
+  Assert that id: change-pin-button is not visible... COMPLETED
+Run android-lock-007-background-timeout.yaml... COMPLETED

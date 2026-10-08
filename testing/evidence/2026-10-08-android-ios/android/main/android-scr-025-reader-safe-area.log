@@ -1,0 +1,30 @@
+Running on Pray_Pixel_API_35
+ > Flow android-scr-025-reader-safe-area
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SCR-025 длинный отрывок... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Repeat while id: scripture-read-full is not visible (up to 10 times)...
+  Tap on id: dock-scripture-next... COMPLETED
+Repeat while id: scripture-read-full is not visible (up to 10 times)... COMPLETED
+Tap on id: scripture-read-full... COMPLETED
+Assert that id: scripture-reader-reference is visible... COMPLETED
+Swipe from (50%,20%) to (50%,2%) in 800 ms... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Assert that id: scripture-reader-reference is visible... COMPLETED
+Assert that id: scripture-reader-close is visible... COMPLETED
+Take screenshot SCR-025-reader-expanded... COMPLETED
+Tap on id: scripture-reader-favorite... COMPLETED
+Assert that id: scripture-reader-favorite-active is visible... COMPLETED
+Tap on id: scripture-reader-close... COMPLETED
+Assert that id: scripture-reader-close is not visible... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED

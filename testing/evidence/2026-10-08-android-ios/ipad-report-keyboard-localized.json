@@ -1,0 +1,19 @@
+{
+  "command": [
+    "maestro",
+    "--device",
+    "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+    "test",
+    "--test-output-dir",
+    "/tmp/pray-android-2026-10-08/ipad-report-keyboard-localized",
+    "testing/e2e/ios-rpt-006-keyboard.yaml"
+  ],
+  "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+  "exit": 0,
+  "started": "2026-10-08T17:02:38.542485+00:00",
+  "ended": "2026-10-08T17:04:01.950636+00:00",
+  "appCrash": null,
+  "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+  "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+  "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+}

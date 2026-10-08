@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-08",
+  "failedScenario": "ipad-final-normal-report",
+  "nativeErrorDomain": "NSURLErrorDomain",
+  "nativeErrorCode": -1009,
+  "nativePath": "unsatisfied (No network route)",
+  "authenticatedHostChecks": {
+    "question": 200,
+    "contentReport": 201
+  },
+  "recovery": "Restarted the same named iPad simulator, unchanged app binary",
+  "verifiedScenario": "ipad-final-normal-report-route-verified",
+  "verifiedExit": 0
+}

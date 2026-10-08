@@ -1,0 +1,41 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-jrn-012a-transcription-error
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text JRN-012 повтор расшифровки... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: prayer-saved-notice is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible...
+  Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that "Сервис расшифровки сейчас недоступен. Попробуй позже." is visible... COMPLETED
+Assert that id: journal-recording-0-transcribe is visible... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Take screenshot JRN-012-error... COMPLETED

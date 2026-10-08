@@ -1,0 +1,9 @@
+
+> pray@1.0.0 test:e2e:android
+> bash scripts/test-android.sh android-stage03-navigation
+
+Android test output: /tmp/pray-android-2026-10-08/navigation-fix-verified
+Installed APK test channel and API origin verified.
+Starting android-stage03-navigation
+android-stage03-navigation exit=0
+All 1 selected Android scenarios passed.

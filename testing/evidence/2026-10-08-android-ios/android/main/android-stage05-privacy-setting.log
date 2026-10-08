@@ -1,0 +1,21 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage05-privacy-setting
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Tap on id: privacy-settings-button... COMPLETED
+Assert that id: privacy-sheet is visible... COMPLETED
+Assert that id: privacy-sheet-done is not visible... COMPLETED
+Assert that id: privacy-setting-core_prayer_ai is visible... COMPLETED
+Assert that id: privacy-setting-answer_context is visible... COMPLETED
+Tap on id: privacy-setting-core_prayer_ai-allowed... COMPLETED
+Tap on id: privacy-setting-answer_context-denied... COMPLETED
+Tap on id: privacy-setting-audio_transcription-allowed... COMPLETED
+Tap on id: privacy-sheet-close... COMPLETED
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Tap on id: privacy-settings-button... COMPLETED
+Assert that id: privacy-setting-core_prayer_ai-allowed is visible... COMPLETED
+Assert that id: privacy-setting-answer_context-denied is visible... COMPLETED
+Assert that id: privacy-setting-audio_transcription-allowed is visible... COMPLETED

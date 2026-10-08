@@ -1,0 +1,14 @@
+Running on Pray_Pixel_API_35
+ > Flow android-scripture-settings
+Launch app "com.nf404.twinkler"... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: scripture-language-picker... COMPLETED
+Tap on id: scripture-language-en... COMPLETED
+Tap on id: scripture-translation-16... COMPLETED
+Tap on id: scripture-voice-151... COMPLETED
+Stop com.nf404.twinkler... COMPLETED
+Launch app "com.nf404.twinkler"... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that ".*English.*" is visible... COMPLETED
+Assert that ".*BSB.*" is visible... COMPLETED
+Assert that ".*Bob Souer.*" is visible... COMPLETED

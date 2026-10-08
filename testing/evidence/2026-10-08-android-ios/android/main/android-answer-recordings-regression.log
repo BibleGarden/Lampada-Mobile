@@ -1,0 +1,53 @@
+Running on Pray_Pixel_API_35
+ > Flow android-answer-recordings-regression
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text Регрессия голосовых ответов... COMPLETED
+Tap on id: setup-kicker... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Run flow when "OK" is visible...
+Run flow when "OK" is visible... SKIPPED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text Клавиатура должна закрыться... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is not visible... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Assert that id: recordings-record-button is visible... COMPLETED
+Double tap on id: recordings-record-button... COMPLETED
+Wait for animation to end within 2500 ms... COMPLETED
+Assert that id: recordings-stop-button is visible... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-1 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: dock-next-question-button... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Assert that id: dock-answer-edit-button is visible... COMPLETED

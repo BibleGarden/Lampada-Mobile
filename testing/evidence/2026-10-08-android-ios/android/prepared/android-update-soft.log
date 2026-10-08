@@ -1,0 +1,16 @@
+Running on Pray_Pixel_API_35
+ > Flow android-update-soft
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: update-soft is visible... COMPLETED
+Assert that id: update-soft is visible... COMPLETED
+Assert that id: update-later is visible... COMPLETED
+Take screenshot UPDATE-soft-banner... COMPLETED
+Tap on id: update-later... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Open lampada://settings... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Launch app "com.nf404.twinkler"... COMPLETED
+Assert that id: update-soft is visible... COMPLETED
+Take screenshot UPDATE-soft-relaunch... COMPLETED

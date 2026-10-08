@@ -1,0 +1,48 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage06-jrn-005-prayer-a
+Launch app "com.nf404.twinkler"... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text Тревога перед разговором с отцом... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+Run flow when id: privacy-consent-core_prayer_ai is visible... SKIPPED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on point (92%,95%)... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text Первый ответ молитвы А про страх и надежду... COMPLETED
+Tap on id: answer-question... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Run flow when "OK" is visible...
+Run flow when "OK" is visible... SKIPPED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Take screenshot JRN-005-recording-overlay-a... COMPLETED
+Wait for animation to end within 4000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Take screenshot JRN-005-recording-saved-a... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Assert that id: journal-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Assert that ".*Тревога перед разговором с отцом.*" is visible... COMPLETED
+Tap on ".*Тревога перед разговором с отцом.*"... COMPLETED
+Assert that ".*Первый ответ молитвы А про страх и надежду.*" is visible... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Take screenshot JRN-005-journal-detail-text-audio... COMPLETED

@@ -1,0 +1,26 @@
+{
+  "command": [
+    "maestro",
+    "--device",
+    "05F697B7-36CD-4050-9D57-FC9316AA093C",
+    "test",
+    "--test-output-dir",
+    "/tmp/pray-android-2026-10-08/ios-transcription-error-verified",
+    "testing/e2e/ios-jrn-012a-transcription-error.yaml"
+  ],
+  "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+  "exit": 0,
+  "started": "2026-10-08T19:48:47.859975+00:00",
+  "ended": "2026-10-08T19:51:11.297242+00:00",
+  "appCrash": null,
+  "sourceCommit": "b022601fecdafa80d2a6a31ad6d37c5907f551ed",
+  "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+  "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+  "applicationSources": {
+    "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+    "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+    "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+    "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+    "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+  }
+}

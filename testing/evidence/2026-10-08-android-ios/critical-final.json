@@ -1,0 +1,13 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:android:critical"
+  ],
+  "exit": 0,
+  "started": "2026-10-08T14:09:52.599764+00:00",
+  "ended": "2026-10-08T14:19:13.033238+00:00",
+  "appCrash": false,
+  "sourceCommit": "ae3153a0ae1e396703ea1270b17aac0eaa079e59",
+  "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+}

@@ -1,0 +1,48 @@
+Running on Pray_Pixel_API_35
+ > Flow android-jrn-010-011-transcribe
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text JRN-010 расшифровка... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: prayer-saved-notice is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible...
+  Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+Take screenshot JRN-010-transcript... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Tap on id: journal-search-input... COMPLETED
+Input text стабильная... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that ".*JRN-010 расшифровка.*" is visible... COMPLETED
+Take screenshot JRN-011-search-transcript... COMPLETED

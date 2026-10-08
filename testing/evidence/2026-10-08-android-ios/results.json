@@ -1,0 +1,1645 @@
+{
+  "date": "2026-10-08",
+  "invocations": [
+    {
+      "name": "ipad-final-normal-report-route-verified",
+      "command": [
+        "maestro",
+        "--device",
+        "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ipad-final-normal-report-route-verified",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+      "exit": 0,
+      "started": "2026-10-08T20:21:10.953583+00:00",
+      "ended": "2026-10-08T20:22:47.023134+00:00",
+      "appCrash": null,
+      "sourceCommit": "8b634585756d90b90a57c6858bd937c7824daf1c",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "report-keyboard-before",
+      "command": [
+        "maestro",
+        "--device",
+        "emulator-5554",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/report-keyboard-before",
+        "/tmp/pray-android-2026-10-08/report-keyboard-before.yaml"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T13:57:48.533805+00:00",
+      "ended": "2026-10-08T13:58:53.100779+00:00",
+      "appCrash": false,
+      "sourceCommit": "57eb9e51012978a925c1dc194bd05225435ca7e9",
+      "appSourceSha256": "019ba8433508362416e1ba99fad84106458475020243f725e53db34f64099527"
+    },
+    {
+      "name": "maestro-js-probe",
+      "command": [
+        "maestro",
+        "--device",
+        "emulator-5554",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/maestro-js-probe",
+        "/tmp/pray-android-2026-10-08/maestro-js-probe.yaml"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T15:03:45.417382+00:00",
+      "ended": "2026-10-08T15:03:59.176687+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "ios-critical-navigation-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=critical",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-critical-navigation-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T17:43:35.163764+00:00",
+      "ended": "2026-10-08T17:52:46.887506+00:00",
+      "appCrash": null,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ipad-report-keyboard-verified",
+      "command": [
+        "maestro",
+        "--device",
+        "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ipad-report-keyboard-verified",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+      "exit": 1,
+      "started": "2026-10-08T17:01:26.293401+00:00",
+      "ended": "2026-10-08T17:01:29.853322+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-rem-editor-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-rem-editor-final",
+        "testing/e2e/ios-rem-editor-suite.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T16:43:23.168994+00:00",
+      "ended": "2026-10-08T16:44:27.721386+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "answer-fix-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-ans-032-recordings-keyboard"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T15:28:58.998041+00:00",
+      "ended": "2026-10-08T15:30:30.309206+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "3c4de20e883366140112c38819e689d5c6b1f77119f1da2d7546c85e58c61304"
+    },
+    {
+      "name": "ios-main-navigation-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=main",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-main-navigation-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T18:15:05.601578+00:00",
+      "ended": "2026-10-08T18:54:14.806259+00:00",
+      "appCrash": null,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "main-final",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:main"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T14:23:21.180695+00:00",
+      "ended": "2026-10-08T14:25:22.749433+00:00",
+      "appCrash": false,
+      "sourceCommit": "26bc5d531ae338f702ee293fa8a08fca97710204",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "ipad-final-normal-report",
+      "command": [
+        "maestro",
+        "--device",
+        "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ipad-final-normal-report",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+      "exit": 1,
+      "started": "2026-10-08T20:12:18.301362+00:00",
+      "ended": "2026-10-08T20:14:16.085810+00:00",
+      "appCrash": null,
+      "sourceCommit": "8b634585756d90b90a57c6858bd937c7824daf1c",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "critical-normal-18",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T17:20:31.614826+00:00",
+      "ended": "2026-10-08T17:32:20.302610+00:00",
+      "appCrash": false,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-ordered-navigation-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-ordered-navigation-final",
+        "testing/e2e/ios-jrn-suite.yaml",
+        "testing/e2e/ios-lock-suite.yaml",
+        "testing/e2e/ios-lock-006-suite.yaml",
+        "testing/e2e/ios-background-suite.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T19:02:36.814812+00:00",
+      "ended": "2026-10-08T19:23:28.011920+00:00",
+      "appCrash": null,
+      "sourceCommit": "83929a86c6296c9ff54d5948dd5d24643932c090",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "critical-lock-window",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T18:44:05.491982+00:00",
+      "ended": "2026-10-08T18:53:24.583069+00:00",
+      "appCrash": false,
+      "sourceCommit": "83929a86c6296c9ff54d5948dd5d24643932c090",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-critical-restored-normal",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=critical",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-critical-restored-normal",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T20:02:08.875212+00:00",
+      "ended": "2026-10-08T20:11:19.927885+00:00",
+      "appCrash": null,
+      "sourceCommit": "b022601fecdafa80d2a6a31ad6d37c5907f551ed",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ordered-restored-normal",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:ordered"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T20:04:21.296759+00:00",
+      "ended": "2026-10-08T20:14:50.872289+00:00",
+      "appCrash": false,
+      "sourceCommit": "b022601fecdafa80d2a6a31ad6d37c5907f551ed",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "infinite-timer-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage03-session-infinite"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:24:46.811827+00:00",
+      "ended": "2026-10-08T16:25:46.667054+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "critical-transcription-final",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T19:39:14.469379+00:00",
+      "ended": "2026-10-08T19:48:10.164927+00:00",
+      "appCrash": false,
+      "sourceCommit": "05c5acd04614162c01289d81aab4424484cdc044",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "report-fix",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-rpt-006-keyboard"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T14:05:18.046635+00:00",
+      "ended": "2026-10-08T14:06:33.198922+00:00",
+      "appCrash": false,
+      "sourceCommit": "57eb9e51012978a925c1dc194bd05225435ca7e9",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "critical-final",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T14:09:52.599764+00:00",
+      "ended": "2026-10-08T14:19:13.033238+00:00",
+      "appCrash": false,
+      "sourceCommit": "ae3153a0ae1e396703ea1270b17aac0eaa079e59",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "ipad-final",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:ipad"
+      ],
+      "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+      "exit": 0,
+      "started": "2026-10-08T16:45:14.329540+00:00",
+      "ended": "2026-10-08T16:55:40.326498+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-ordered-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-ordered-final",
+        "testing/e2e/ios-jrn-suite.yaml",
+        "testing/e2e/ios-lock-suite.yaml",
+        "testing/e2e/ios-lock-006-suite.yaml",
+        "testing/e2e/ios-background-suite.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T16:21:21.293106+00:00",
+      "ended": "2026-10-08T16:41:58.553015+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "main-continuation",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-ans-023-recordings-actions",
+        "android-ans-032-recordings-keyboard",
+        "android-answer-recordings-persistence",
+        "android-answer-recordings-regression",
+        "android-end-006-takeaway-keyboard",
+        "android-keyboard-reflect-journal",
+        "android-lock-001-disabled-by-default",
+        "android-music-finish-early",
+        "android-music-finish-untimed",
+        "android-music-timer-finish",
+        "android-music-toggle",
+        "android-privacy-audio-consent",
+        "android-scr-025-reader-safe-area",
+        "android-scripture-default-language",
+        "android-scripture-settings",
+        "android-scripture-user-choice-overrides-locale",
+        "android-stage03-deep-links",
+        "android-stage03-long-goal",
+        "android-stage03-session-infinite",
+        "android-stage04-unsaved-answer-swipe",
+        "android-stage05-ai-opt-in-payload",
+        "android-stage05-ai-success-payload",
+        "android-stage05-ai-timeout",
+        "android-stage05-first-question-error-fallback",
+        "android-stage05-first-question-no-topic",
+        "android-stage05-first-question-spinner",
+        "android-stage05-privacy-setting",
+        "android-stage06-end-003-004-idempotency",
+        "android-stage06-jrn-002-abandoned-session",
+        "android-stage06-jrn-005-prayer-a",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T15:12:56.488487+00:00",
+      "ended": "2026-10-08T15:15:41.904999+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "rare-remaining-18",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage06-scr-003-long-reader",
+        "android-stage07-jrn-share-001"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T17:48:54.856063+00:00",
+      "ended": "2026-10-08T17:52:24.690922+00:00",
+      "appCrash": false,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "reminder-final-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-rem-editor-suite"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T20:18:22.693466+00:00",
+      "ended": "2026-10-08T20:19:22.777561+00:00",
+      "appCrash": false,
+      "sourceCommit": "8b634585756d90b90a57c6858bd937c7824daf1c",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-navigation-fix-verified",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-navigation-fix-verified",
+        "testing/e2e/ios-stage03-navigation.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T17:35:31.795622+00:00",
+      "ended": "2026-10-08T17:36:25.263764+00:00",
+      "appCrash": null,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "lock-window-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-lock-003-wrong-and-correct-pin"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T18:24:26.202770+00:00",
+      "ended": "2026-10-08T18:25:15.564665+00:00",
+      "appCrash": false,
+      "sourceCommit": "5836cdf258740bcd5f510d17e8d4f37ca55f1dd0",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "critical-restored-normal",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T19:51:30.407262+00:00",
+      "ended": "2026-10-08T20:03:43.829032+00:00",
+      "appCrash": false,
+      "sourceCommit": "b022601fecdafa80d2a6a31ad6d37c5907f551ed",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "question-ascii-control",
+      "command": [
+        "maestro",
+        "--device",
+        "emulator-5554",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/question-ascii-control",
+        "/tmp/pray-android-2026-10-08/question-ascii-control.yaml"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T15:52:42.294552+00:00",
+      "ended": "2026-10-08T15:53:46.301603+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "8bee92c5cef2b41443eaee9eecea16291cbbfbd26da974accfba5c53dcc36196"
+    },
+    {
+      "name": "ai-opt-in-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage05-ai-opt-in-payload"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T16:34:48.231258+00:00",
+      "ended": "2026-10-08T16:36:07.031988+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "rare-normal-18",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:rare"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T17:39:02.443451+00:00",
+      "ended": "2026-10-08T17:41:57.369623+00:00",
+      "appCrash": false,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "main-final-four",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage06-end-003-004-idempotency",
+        "android-stage06-jrn-002-abandoned-session",
+        "android-stage06-jrn-005-prayer-a",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:44:58.466615+00:00",
+      "ended": "2026-10-08T16:47:23.052133+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-critical-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=critical",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-critical-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T14:31:03.833328+00:00",
+      "ended": "2026-10-08T14:40:03.486251+00:00",
+      "appCrash": null,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "privacy-persistence-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage05-privacy-setting"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T16:43:20.581055+00:00",
+      "ended": "2026-10-08T16:43:57.621719+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "critical-prepared",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T18:58:39.930449+00:00",
+      "ended": "2026-10-08T19:07:47.573779+00:00",
+      "appCrash": false,
+      "sourceCommit": "83929a86c6296c9ff54d5948dd5d24643932c090",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "abandoned-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage06-jrn-002-abandoned-session",
+        "android-stage06-jrn-005-prayer-a",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:48:49.861090+00:00",
+      "ended": "2026-10-08T16:52:16.815449+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-report-fix-verified",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-report-fix-verified",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T14:25:28.523725+00:00",
+      "ended": "2026-10-08T14:26:46.196278+00:00",
+      "appCrash": null,
+      "sourceCommit": "26bc5d531ae338f702ee293fa8a08fca97710204",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "native-input-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-ans-032-recordings-keyboard"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T15:47:11.511795+00:00",
+      "ended": "2026-10-08T15:48:40.268795+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "8bee92c5cef2b41443eaee9eecea16291cbbfbd26da974accfba5c53dcc36196"
+    },
+    {
+      "name": "navigation-fix-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage03-navigation"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T17:16:22.431241+00:00",
+      "ended": "2026-10-08T17:17:10.654017+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "reminder-final-timed",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-rem-editor-suite"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T20:21:05.563670+00:00",
+      "ended": "2026-10-08T20:23:21.070115+00:00",
+      "appCrash": false,
+      "sourceCommit": "8b634585756d90b90a57c6858bd937c7824daf1c",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "forgot-pin-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-lock-006-suite",
+        "android-rem-editor-suite"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T18:38:39.318292+00:00",
+      "ended": "2026-10-08T18:43:21.634579+00:00",
+      "appCrash": false,
+      "sourceCommit": "0ef45b9196a839b90952cccf649f36aad6d1676b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ordered-lock-window",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:ordered"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T18:25:29.926625+00:00",
+      "ended": "2026-10-08T18:30:43.598877+00:00",
+      "appCrash": false,
+      "sourceCommit": "5836cdf258740bcd5f510d17e8d4f37ca55f1dd0",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "prepared-continuation",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:prepared",
+        "--",
+        "--device",
+        "emulator-5554",
+        "--output",
+        "/tmp/pray-android-2026-10-08/prepared-continuation",
+        "--stub",
+        "http://localhost:9085",
+        "--start-at",
+        "android-jrn-012a-transcription-error"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T19:16:38.213322+00:00",
+      "ended": "2026-10-08T19:23:30.006704+00:00",
+      "appCrash": false,
+      "sourceCommit": "db0db83ead6db3dfd231032098b35654835ac1aa",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "lock-background-timed",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-lock-007-background-timeout"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T18:33:36.443034+00:00",
+      "ended": "2026-10-08T18:36:37.496914+00:00",
+      "appCrash": false,
+      "sourceCommit": "2e41a40c9f8c0694c1f1a92d31bdb03649165f70",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ans032-real-ime",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-ans-032-recordings-keyboard"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T15:58:45.138633+00:00",
+      "ended": "2026-10-08T16:00:31.027525+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-report-fix",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-report-fix",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 1,
+      "started": "2026-10-08T14:20:54.752767+00:00",
+      "ended": "2026-10-08T14:22:20.689659+00:00",
+      "appCrash": null,
+      "sourceCommit": "ae3153a0ae1e396703ea1270b17aac0eaa079e59",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "prepared-last",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:prepared",
+        "--",
+        "--device",
+        "emulator-5554",
+        "--output",
+        "/tmp/pray-android-2026-10-08/prepared-last",
+        "--stub",
+        "http://localhost:9085",
+        "--start-at",
+        "android-scripture-legacy-favorites"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T19:32:27.981789+00:00",
+      "ended": "2026-10-08T19:35:17.495567+00:00",
+      "appCrash": false,
+      "sourceCommit": "05c5acd04614162c01289d81aab4424484cdc044",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "reports-final",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:prepared",
+        "--",
+        "--device",
+        "emulator-5554",
+        "--output",
+        "/tmp/pray-android-2026-10-08/reports-final",
+        "--stub",
+        "http://localhost:9085",
+        "--start-at",
+        "android-rpt-001-002"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T19:36:20.904167+00:00",
+      "ended": "2026-10-08T19:38:23.730405+00:00",
+      "appCrash": false,
+      "sourceCommit": "05c5acd04614162c01289d81aab4424484cdc044",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-main-continuation",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-main-continuation",
+        "testing/e2e/ios-ans-032-recordings-keyboard.yaml",
+        "testing/e2e/ios-stage05-first-question-spinner.yaml",
+        "testing/e2e/ios-stage06-scr-003-small-reader.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T16:02:06.306489+00:00",
+      "ended": "2026-10-08T16:07:43.022334+00:00",
+      "appCrash": null,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "main-last",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage04-unsaved-answer-swipe",
+        "android-stage05-ai-opt-in-payload",
+        "android-stage05-ai-success-payload",
+        "android-stage05-ai-timeout",
+        "android-stage05-first-question-error-fallback",
+        "android-stage05-first-question-no-topic",
+        "android-stage05-first-question-spinner",
+        "android-stage05-privacy-setting",
+        "android-stage06-end-003-004-idempotency",
+        "android-stage06-jrn-002-abandoned-session",
+        "android-stage06-jrn-005-prayer-a",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:29:52.039295+00:00",
+      "ended": "2026-10-08T16:31:33.227478+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "critical-normal-17",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:critical"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:59:29.701764+00:00",
+      "ended": "2026-10-08T17:01:50.715215+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "report-fix-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-rpt-006-keyboard"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T14:07:36.457047+00:00",
+      "ended": "2026-10-08T14:08:35.939349+00:00",
+      "appCrash": false,
+      "sourceCommit": "57eb9e51012978a925c1dc194bd05225435ca7e9",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "lock-background-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-lock-007-background-timeout"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T18:32:04.363169+00:00",
+      "ended": "2026-10-08T18:33:09.905694+00:00",
+      "appCrash": false,
+      "sourceCommit": "2e41a40c9f8c0694c1f1a92d31bdb03649165f70",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "prepared-final",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:prepared",
+        "--",
+        "--device",
+        "emulator-5554",
+        "--output",
+        "/tmp/pray-android-2026-10-08/prepared-final",
+        "--stub",
+        "http://localhost:9085"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T19:08:20.297272+00:00",
+      "ended": "2026-10-08T19:12:17.587453+00:00",
+      "appCrash": false,
+      "sourceCommit": "83929a86c6296c9ff54d5948dd5d24643932c090",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "question-focus-probe",
+      "command": [
+        "maestro",
+        "--device",
+        "emulator-5554",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/question-focus-probe",
+        "/tmp/pray-android-2026-10-08/question-focus-probe.yaml"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T15:39:04.311218+00:00",
+      "ended": "2026-10-08T15:40:27.504856+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "284776f7b4d5268f609f9edb6d8ad154ffbd127640e474fff8e93ba328c35de0"
+    },
+    {
+      "name": "ios-main-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=main",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-main-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 143,
+      "started": "2026-10-08T14:54:49.393016+00:00",
+      "ended": "2026-10-08T15:26:59.048555+00:00",
+      "appCrash": null,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "main-last-ten",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage05-ai-success-payload",
+        "android-stage05-ai-timeout",
+        "android-stage05-first-question-error-fallback",
+        "android-stage05-first-question-no-topic",
+        "android-stage05-first-question-spinner",
+        "android-stage05-privacy-setting",
+        "android-stage06-end-003-004-idempotency",
+        "android-stage06-jrn-002-abandoned-session",
+        "android-stage06-jrn-005-prayer-a",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:37:08.469723+00:00",
+      "ended": "2026-10-08T16:41:11.470892+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "prepared-remaining",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:prepared",
+        "--",
+        "--device",
+        "emulator-5554",
+        "--output",
+        "/tmp/pray-android-2026-10-08/prepared-remaining",
+        "--stub",
+        "http://localhost:9085",
+        "--start-at",
+        "android-stage05-ai-late-stub"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T19:24:30.470508+00:00",
+      "ended": "2026-10-08T19:31:53.976776+00:00",
+      "appCrash": false,
+      "sourceCommit": "d0893820a4da169b6631a113a3242eee30abb034",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-rare-navigation-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=rare",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-rare-navigation-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T18:54:39.168028+00:00",
+      "ended": "2026-10-08T19:02:26.238242+00:00",
+      "appCrash": null,
+      "sourceCommit": "83929a86c6296c9ff54d5948dd5d24643932c090",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-transcription-error-verified",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-transcription-error-verified",
+        "testing/e2e/ios-jrn-012a-transcription-error.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T19:48:47.859975+00:00",
+      "ended": "2026-10-08T19:51:11.297242+00:00",
+      "appCrash": null,
+      "sourceCommit": "b022601fecdafa80d2a6a31ad6d37c5907f551ed",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "main-rest",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-answer-recordings-persistence",
+        "android-answer-recordings-regression",
+        "android-end-006-takeaway-keyboard",
+        "android-keyboard-reflect-journal",
+        "android-lock-001-disabled-by-default",
+        "android-music-finish-early",
+        "android-music-finish-untimed",
+        "android-music-timer-finish",
+        "android-music-toggle",
+        "android-privacy-audio-consent",
+        "android-scr-025-reader-safe-area",
+        "android-scripture-default-language",
+        "android-scripture-settings",
+        "android-scripture-user-choice-overrides-locale",
+        "android-stage03-deep-links",
+        "android-stage03-long-goal",
+        "android-stage03-session-infinite",
+        "android-stage04-unsaved-answer-swipe",
+        "android-stage05-ai-opt-in-payload",
+        "android-stage05-ai-success-payload",
+        "android-stage05-ai-timeout",
+        "android-stage05-first-question-error-fallback",
+        "android-stage05-first-question-no-topic",
+        "android-stage05-first-question-spinner",
+        "android-stage05-privacy-setting",
+        "android-stage06-end-003-004-idempotency",
+        "android-stage06-jrn-002-abandoned-session",
+        "android-stage06-jrn-005-prayer-a",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T16:03:00.408436+00:00",
+      "ended": "2026-10-08T16:22:27.481572+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "small-reader-verified",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage06-scr-003-small-reader"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T16:56:39.132947+00:00",
+      "ended": "2026-10-08T16:57:32.465343+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ordered-normal-18",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android:ordered"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T18:14:50.106952+00:00",
+      "ended": "2026-10-08T18:16:39.623923+00:00",
+      "appCrash": false,
+      "sourceCommit": "d0a35079f46bd25e49bccfbac017b9b08f10f154",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "infinite-timer-verified-2",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-stage03-session-infinite"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T16:26:44.191455+00:00",
+      "ended": "2026-10-08T16:27:32.995974+00:00",
+      "appCrash": false,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-critical-transcription-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=critical",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-critical-transcription-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T19:39:13.683522+00:00",
+      "ended": "2026-10-08T19:48:28.257847+00:00",
+      "appCrash": null,
+      "sourceCommit": "05c5acd04614162c01289d81aab4424484cdc044",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ipad-report-keyboard",
+      "command": [
+        "maestro",
+        "--device",
+        "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ipad-report-keyboard",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+      "exit": 1,
+      "started": "2026-10-08T16:57:06.547170+00:00",
+      "ended": "2026-10-08T16:58:30.385330+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "reminder-final-complete",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-rem-editor-suite"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T20:24:32.494219+00:00",
+      "ended": "2026-10-08T20:26:20.078523+00:00",
+      "appCrash": false,
+      "sourceCommit": "8b634585756d90b90a57c6858bd937c7824daf1c",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ans024-env-recovery",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-ans-024-recordings-keyboard"
+      ],
+      "exit": 0,
+      "started": "2026-10-08T15:04:52.420415+00:00",
+      "ended": "2026-10-08T15:06:14.652507+00:00",
+      "appCrash": false,
+      "sourceCommit": "25efec333d9003e85424516326b6fff76c13246b",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+    },
+    {
+      "name": "ordered-remaining-window",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:android",
+        "--",
+        "android-lock-006-suite",
+        "android-rem-editor-suite"
+      ],
+      "exit": 1,
+      "started": "2026-10-08T18:36:50.693757+00:00",
+      "ended": "2026-10-08T18:37:58.808255+00:00",
+      "appCrash": false,
+      "sourceCommit": "2e41a40c9f8c0694c1f1a92d31bdb03649165f70",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ipad-report-keyboard-localized",
+      "command": [
+        "maestro",
+        "--device",
+        "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ipad-report-keyboard-localized",
+        "testing/e2e/ios-rpt-006-keyboard.yaml"
+      ],
+      "device": "B037F1A1-E59D-4AD2-933A-CA1C03F46A53",
+      "exit": 0,
+      "started": "2026-10-08T17:02:38.542485+00:00",
+      "ended": "2026-10-08T17:04:01.950636+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    },
+    {
+      "name": "ios-transcription-retry-verified",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-transcription-retry-verified",
+        "testing/e2e/ios-jrn-012b-transcription-retry.yaml"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T19:51:29.575334+00:00",
+      "ended": "2026-10-08T19:51:57.358439+00:00",
+      "appCrash": null,
+      "sourceCommit": "b022601fecdafa80d2a6a31ad6d37c5907f551ed",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4",
+      "applicationSources": {
+        "app/index.tsx": "cfb40149581779f0642debcb26cec1883bf5b46c1735d7f439d1e04cfbfb0c65",
+        "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+        "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+        "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+        "components/AnswerSheet.tsx": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+      }
+    },
+    {
+      "name": "ios-rare-final",
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--include-tags=rare",
+        "--test-output-dir",
+        "/tmp/pray-android-2026-10-08/ios-rare-final",
+        "testing/e2e/"
+      ],
+      "device": "05F697B7-36CD-4050-9D57-FC9316AA093C",
+      "exit": 0,
+      "started": "2026-10-08T16:10:15.639011+00:00",
+      "ended": "2026-10-08T16:16:33.261277+00:00",
+      "appCrash": null,
+      "sourceCommit": "0936aa59f864dc72718bf08f58cd5a925aa93579",
+      "appSourceSha256": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17",
+      "answerSourceSha256": "076cb2dd5cb0ecff14a561c02d637f6c96307cf02f82bafbbdb3c24ccee732b4"
+    }
+  ],
+  "rawLogDirectory": "/tmp/pray-android-2026-10-08",
+  "sourceHashes": {
+    "app/setup.tsx": "8560884d7fc9f93d0cd23903bd3d3a8df3fa79cdd444b32fb76768c5ff33cffa",
+    "app/journal.tsx": "7b81e364b400094bedddefe5a385e36521d1bd46c92c45bb43044d955fc4c945",
+    "components/ui.tsx": "373142ad5f8ad84f68621173b29207d1dcd8b3833a6e47e6ead4dbaa804d6426",
+    "components/LockGate.tsx": "1bf67f7600d2981681906f895c68fbab71288333a2a669f0458aac2ae2dce135",
+    "components/ContentReportDialog.tsx": "877be6c913fdb259ec444c8ec2a59ecc005db376158946e766142258f407cb17"
+  },
+  "normalRestoration": {
+    "androidVersion": "1.3.24",
+    "iosVersion": "1.3.25",
+    "apiOrigin": "http://192.168.127.133:9084",
+    "stubStopped": true,
+    "probeRemoved": true,
+    "simulatorsShutDown": true
+  }
+}

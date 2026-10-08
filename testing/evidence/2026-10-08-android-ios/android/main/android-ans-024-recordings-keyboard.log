@@ -1,0 +1,36 @@
+Running on Pray_Pixel_API_35
+ > Flow android-ans-024-recordings-keyboard
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text ANS-024 keyboard focus... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Tap on id: answer-input... COMPLETED
+Input text Keyboard text stays... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is not visible... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Assert that id: recordings-record-button is visible... COMPLETED
+Take screenshot ANS-024-recordings-without-keyboard... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Assert that "Keyboard text stays", id: answer-input is visible... COMPLETED
+Tap on id: answer-input... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Input text 1... COMPLETED
+Copy text from element with id: answer-input... COMPLETED
+Assert that ${ maestro.copiedText.replace('1', '') === 'Keyboard text stays' && maestro.copiedText.includes('1') } is true... COMPLETED
+Take screenshot ANS-024-editing-restored... COMPLETED

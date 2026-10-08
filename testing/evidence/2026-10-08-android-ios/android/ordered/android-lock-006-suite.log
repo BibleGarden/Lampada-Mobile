@@ -1,0 +1,98 @@
+Running on Pray_Pixel_API_35
+ > Flow android-lock-006-suite
+Run android-lock-006-forgot-pin-prepare.yaml...
+  Launch app "com.nf404.twinkler" with clear state... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Tap on id: start-prayer-button... COMPLETED
+  Run flow when id: setup-kicker is not visible...
+  Run flow when id: setup-kicker is not visible... SKIPPED
+  Assert that id: setup-kicker is visible... COMPLETED
+  Tap on id: setup-goal-input... COMPLETED
+  Input text LOCK-006 запись... COMPLETED
+  Press Enter key... COMPLETED
+  Assert that "LOCK-006 запись" is visible... COMPLETED
+  Tap on id: setup-preset-5... COMPLETED
+  Tap on id: setup-next-button... COMPLETED
+  Run flow when id: privacy-consent-core_prayer_ai is visible...
+    Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+  Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+  Assert that ".*5 минут.*LOCK-006 запись.*" is visible... COMPLETED
+  Tap on id: threshold-hold-button... COMPLETED
+  Assert that id: threshold-hold-button is visible... COMPLETED
+  Long press on id: threshold-hold-button... COMPLETED
+  Assert that id: session-title is visible... COMPLETED
+  Tap on id: session-finish-button... COMPLETED
+  Assert that id: reflect-kicker is visible... COMPLETED
+  Tap on id: reflection-input... COMPLETED
+  Input text LOCK-006 вывод... COMPLETED
+  Tap on id: reflect-question... COMPLETED
+  Tap on id: reflect-complete-button... COMPLETED
+  Assert that id: home-title-lit is visible... COMPLETED
+  Assert that id: journal-button is visible... COMPLETED
+  Tap on id: journal-button... COMPLETED
+  Assert that id: journal-title is visible... COMPLETED
+  Assert that ".*LOCK-006 запись.*" is visible... COMPLETED
+  Tap on "Назад"... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Tap on id: lock-toggle... COMPLETED
+  Assert that id: pin-prompt-enable-create is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt-enable-repeat is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Tap on id: pin-key-confirm... COMPLETED
+  Assert that id: pin-prompt is not visible... COMPLETED
+  Assert that id: change-pin-button is visible... COMPLETED
+Run android-lock-006-forgot-pin-prepare.yaml... COMPLETED
+Run android-lock-006-forgot-pin-wipe.yaml...
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: forgot-pin... COMPLETED
+  Run flow when "Стереть данные" is not visible...
+  Run flow when "Стереть данные" is not visible... SKIPPED
+  Assert that "Стереть данные" is visible... COMPLETED
+  Tap on "Отмена"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: forgot-pin... COMPLETED
+  Tap on "Стереть данные"... COMPLETED
+  Assert that "Точно стереть всё?" is visible... COMPLETED
+  Tap on "Отмена"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: pin-key-4... COMPLETED
+  Tap on id: pin-key-3... COMPLETED
+  Tap on id: pin-key-2... COMPLETED
+  Tap on id: pin-key-1... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Tap on id: journal-button... COMPLETED
+  Assert that ".*LOCK-006 запись.*" is visible... COMPLETED
+  Tap on "Назад"... COMPLETED
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: lock-screen is visible... COMPLETED
+  Tap on id: forgot-pin... COMPLETED
+  Run flow when "Стереть данные" is not visible...
+  Run flow when "Стереть данные" is not visible... SKIPPED
+  Tap on "Стереть данные"... COMPLETED
+  Assert that "Точно стереть всё?" is visible... COMPLETED
+  Tap on "Да, стереть"... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Tap on id: journal-button... COMPLETED
+  Assert that id: journal-title is visible... COMPLETED
+  Assert that id: journal-empty-state is visible... COMPLETED
+  Assert that ".*LOCK-006 запись.*" is not visible... COMPLETED
+  Tap on "Назад"... COMPLETED
+  Tap on id: settings-button... COMPLETED
+  Scrolling DOWN until id: lock-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+  Assert that id: change-pin-button is not visible... COMPLETED
+  Launch app "com.nf404.twinkler"... COMPLETED
+  Assert that id: start-prayer-button is visible... COMPLETED
+  Assert that id: lock-screen is not visible... COMPLETED
+Run android-lock-006-forgot-pin-wipe.yaml... COMPLETED
