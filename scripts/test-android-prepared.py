@@ -12,12 +12,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--device', required=True)
 parser.add_argument('--output', required=True)
 parser.add_argument('--stub', default='http://localhost:9085')
+parser.add_argument('--start-at', help='Resume from a diagnosed and corrected scenario')
 arguments = parser.parse_args()
 if not arguments.device.startswith('emulator-'):
     parser.error('Prepared Android tests require an emulator')
 output = Path(arguments.output).resolve()
 output.mkdir(parents=True, exist_ok=True)
 results = []
+started = arguments.start_at is None
 
 
 def control(payload):
@@ -41,6 +43,11 @@ def run(name, command):
 
 
 def flow(name):
+    global started
+    if not started:
+        if name != arguments.start_at:
+            return
+        started = True
     run(name, ['npm', 'run', 'test:e2e:android', '--', name])
 
 
@@ -93,4 +100,6 @@ control({'contentReports': 'ok'})
 with urllib.request.urlopen(arguments.stub + '/__status', timeout=20) as response:
     status = json.load(response)
 (output / 'stub-status.json').write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')
-print('All 16 Android controlled scenarios and database checks passed.', flush=True)
+if not started:
+    sys.exit('Requested starting scenario does not exist')
+print('All selected Android controlled scenarios and database checks passed.', flush=True)

@@ -293,7 +293,7 @@ tier of its e2e runs.
 | SCR-007 | 403, 422, 429, 503 and a timeout | no crash and no endless retry; the technical `detail` is not shown |
 | SCR-008 [main] | Choose a language, a translation and a narration, save and restart the app | the complete triple is restored, a new session sends the chosen `language` and `translation` |
 | SCR-009 | Change the language, then the translation | the child lists are cleared; an incompatible or incomplete triple cannot be saved |
-| SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is available, the previously saved choice is not damaged |
+| SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is visible and reachable next to wrapped error text, the previously saved choice is not damaged |
 | SCR-011 | Switch the language or the translation once an offline cache exists | the offline fallback does not show a snapshot of another language or translation |
 | SCR-012 | A clean installation with a supported primary device language | the server language of the device and a valid translation/voice triple are chosen |
 | SCR-013 [main] | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |

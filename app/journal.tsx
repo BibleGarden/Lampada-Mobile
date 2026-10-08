@@ -601,6 +601,7 @@ function RecordingRow({
             onPress={onTranscribe}
             accessibilityRole="button"
             accessibilityLabel={t('screens.journal.retry')}
+            style={{ flexShrink: 0 }}
             hitSlop={touchSlop(sc(15))} // по высоте строки подписи
             testID={`journal-recording-${index}-transcribe`}
           >
@@ -802,6 +803,8 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(10),
   },
   recTranscriptionError: {
+    flex: 1,
+    minWidth: 0,
     fontFamily: fonts.sans,
     fontSize: sc(11.5),
     color: '#ec9b8e',
