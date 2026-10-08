@@ -12,14 +12,21 @@ tags:
 # LockGate поднимается асинхронно: ждём появления экрана блокировки.
 - extendedWaitUntil:
     visible:
-      id: "lock-screen"
+      id: "com.apple.localauthentication.ax.authentication.alert"
     timeout: 10000
 # Скрипт шлёт несовпадение, пока флоу спит.
 - evalScript: "java.lang.Thread.sleep(20000)"
-# Экран блокировки остался; показан понятный текст про нераспознанное лицо.
+# iOS оставляет запрос открытым после несовпадения и предлагает повтор.
 - assertVisible:
-    id: "lock-screen"
-- assertVisible: "Не удалось распознать лицо или отпечаток. Попробуйте ещё раз."
+    id: "com.apple.localauthentication.ax.authentication.alert"
+    text: "Повторите|Try Again"
+- takeScreenshot: LOCK-009-native-refusal
+- tapOn:
+    id: "com.apple.localauthentication.ax.authentication.button.cancel"
+- extendedWaitUntil:
+    visible:
+      id: "lock-screen"
+    timeout: 10000
 - assertVisible:
     id: "lock-pin-title"
 # Запасной вход — пин: ошибочный не пускает, верный пускает.

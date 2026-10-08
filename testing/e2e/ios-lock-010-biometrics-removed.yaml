@@ -51,7 +51,7 @@ tags:
 - tapOn:
     id: "lock-toggle"
 - assertVisible:
-    id: "lock-pin-title"
+    id: "pin-prompt-disable-current"
 - tapOn:
     id: "pin-key-1"
 - tapOn:
