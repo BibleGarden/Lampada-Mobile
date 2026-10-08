@@ -1,0 +1,88 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-scr-025-reader-dynamic-island.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: SCR-025 длинный отрывок
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: dock-scripture-tab
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- repeat:
+    times: 10
+    while:
+      notVisible:
+        id: scripture-read-full
+    commands:
+      - tapOn:
+          id: dock-scripture-next
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- tapOn:
+    id: scripture-read-full
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: scripture-reader-reference
+- swipe:
+    start: 50%,20%
+    end: 50%,2%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 2000
+- assertVisible:
+    id: scripture-reader-reference
+- assertVisible:
+    id: scripture-reader-close
+- takeScreenshot: SCR-025-reader-expanded
+- tapOn:
+    id: scripture-reader-favorite
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: scripture-reader-favorite-active
+- tapOn:
+    id: scripture-reader-close
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: scripture-reader-close
+- assertVisible:
+    id: dock-scripture-favorite-active

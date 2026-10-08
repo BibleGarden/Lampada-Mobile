@@ -1,0 +1,29 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-lock-001-disabled-by-default.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- assertNotVisible:
+    id: lock-screen
+- assertNotVisible:
+    id: privacy-curtain
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
+- assertNotVisible:
+    id: change-pin-button
+- assertNotVisible:
+    id: pin-prompt

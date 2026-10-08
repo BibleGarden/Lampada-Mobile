@@ -1,0 +1,35 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-scripture-settings.yaml; native selectors and untimed fixtures.
+- launchApp
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-language-picker
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-language-en
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-translation-16
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-voice-151
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- stopApp
+- launchApp
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: .*English.*
+- assertVisible: .*BSB.*
+- assertVisible: .*Bob Souer.*

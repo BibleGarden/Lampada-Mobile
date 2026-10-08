@@ -1,0 +1,125 @@
+appId: com.nf404.twinkler
+tags:
+  - rare
+---
+# Android counterpart of ios-stage07-jrn-share-001.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- runFlow:
+    when:
+      visible:
+        id: journal-title
+    commands:
+      - tapOn:
+          point: 10%,8%
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: start-prayer-button
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: JRN-014 share
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- waitForAnimationToEnd:
+    timeout: 9000
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: JRN-014 answer
+- tapOn:
+    id: answer-save-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-answer_context
+    commands:
+      - tapOn:
+          id: privacy-consent-answer_context-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: dock-answer-edit-button
+- tapOn:
+    id: session-finish-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: dock-answer-button
+    commands:
+      - tapOn:
+          id: session-finish-button
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: reflect-kicker
+- tapOn:
+    id: reflect-complete-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: home-title-lit
+- tapOn:
+    id: journal-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: journal-title
+- tapOn: .*JRN-014 share.*
+- assertVisible:
+    id: journal-share
+- assertVisible:
+    id: journal-delete
+- tapOn:
+    id: journal-share
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 4000
+- assertVisible: .*(Скопировать|Копировать|Copy|Ещё|More|Отменить|Cancel).*
+- takeScreenshot: JRN-014-share-sheet
+- pressKey: Back
+- assertVisible:
+    id: journal-title
+- assertVisible:
+    id: journal-share

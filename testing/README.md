@@ -32,6 +32,20 @@ without starting the app. Its recorded channel must be `test` and its API origin
 must match `.env.local` and differ from production. An APK predating this metadata
 must be rebuilt. The temporary APK copy is removed on success and on failure.
 
+Android `main` and `rare` counterparts also live in `android-e2e/`:
+
+```bash
+npm run test:e2e:android:main
+npm run test:e2e:android:rare
+```
+
+These suites use Gboard keyboard selectors, Android share-sheet dismissal and
+stable app IDs. Non-deadline fixtures are untimed; finite completion and early
+music completion retain timed prayers. Display-size changes used to reduce
+emulator screenshot cost must preserve the logical viewport and be reset after
+testing. The tier runner stops at the first failure and records each flow's
+full output and exit code, just like the critical tier.
+
 Individual Android flows use the same installed-APK preflight and sequential
 runner as the critical tier. Pass flow names without a path or `.yaml` extension.
 The Android ANS-024 regression flow is separate from the critical tier. It opens

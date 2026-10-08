@@ -1,0 +1,105 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# RPT-006: actions stay above the keyboard; dismissal retains the comment.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: RPT-006 keyboard
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: privacy-consent-core_prayer_ai-allow
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- extendedWaitUntil:
+    visible:
+      id: question-report-button
+    timeout: 30000
+- tapOn:
+    id: question-report-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: content-report-dialog
+- tapOn:
+    id: content-report-comment
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: RPT-006 draft stays editable
+- assertVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- takeScreenshot: RPT-006-keyboard-actions
+- assertVisible:
+    id: content-report-send
+    above:
+      id: com.google.android.inputmethod.latin:id/keyboard_holder
+- assertVisible:
+    id: content-report-cancel
+    above:
+      id: com.google.android.inputmethod.latin:id/keyboard_holder
+- assertVisible:
+    id: content-report-comment
+    above:
+      id: com.google.android.inputmethod.latin:id/keyboard_holder
+- assertVisible:
+    id: content-report-backdrop
+# Тап по открытой левой кромке фона, а не по его центру под карточкой.
+- tapOn:
+    point: "3%,10%"
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- assertVisible:
+    id: content-report-comment
+    text: RPT-006 draft stays editable
+- tapOn:
+    id: content-report-comment
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- tapOn:
+    id: content-report-send
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: content-report-done
+    timeout: 20000
+- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- assertNotVisible:
+    id: com.google.android.inputmethod.latin:id/keyboard_holder
+- takeScreenshot: RPT-006-sent
+- tapOn:
+    id: content-report-done
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: content-report-dialog
+- assertVisible:
+    id: session-title

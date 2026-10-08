@@ -1,0 +1,53 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-stage03-session-infinite.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: SES-002 infinite timer
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible: .*Без таймера и спешки.*
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- assertVisible: \d+:\d\d, ИДЁТ
+- assertNotVisible:
+    id: reflect-kicker
+- tapOn:
+    id: session-finish-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: reflect-kicker

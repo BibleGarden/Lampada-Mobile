@@ -328,6 +328,7 @@ the stub; execution results belong in dated reports.
 | RPT-003 | Get a network, a timeout or a 5xx failure and retry | the dialog and the typed comment stay available, an error text is shown, a repeated attempt can succeed; the unsaved answer in the sheet is not mutated |
 | RPT-004 | Look for a report action in the saved journal | there is none: the journal shows generated questions beside private answers, so reporting stays in the active session card |
 | RPT-005 | Keep a Question or Quote report dialog open while the session timer expires; type a comment, then dismiss the dialog | the session and comment remain visible past expiry; after dismissal, reflection opens following the one-second delay |
+| RPT-006 [main] | On iOS and Android, type a report comment, dismiss and reopen the keyboard, then send without closing the keyboard | the comment and Send/Cancel actions stay above the keyboard; a backdrop tap closes the keyboard and preserves the exact draft; Send reaches the success state, dismisses the keyboard and returns to the session |
 
 ### Reflection, finishing and the streak
 

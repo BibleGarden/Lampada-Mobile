@@ -1,0 +1,39 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-scripture-user-choice-overrides-locale.yaml; native selectors and untimed fixtures.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-language-picker
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-language-ru
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-translation-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: scripture-voice-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- stopApp
+- launchApp
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: .*Русский.*
+- assertVisible: .*SYNO.*
+- assertVisible: .*Александр Бондаренко.*

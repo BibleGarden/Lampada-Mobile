@@ -1,0 +1,20 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-stage03-deep-links.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- openLink: lampada://session
+- assertVisible:
+    id: start-prayer-button
+- openLink: lampada://reflect
+- assertVisible:
+    id: start-prayer-button
+- openLink: lampada://done
+- assertVisible:
+    id: start-prayer-button

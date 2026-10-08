@@ -97,7 +97,7 @@ export default function ContentReportDialog({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={[
           styles.backdrop,
           { paddingTop: insets.top + sc(20), paddingBottom: insets.bottom + sc(20) },
@@ -107,6 +107,7 @@ export default function ContentReportDialog({
             набранный комментарий пропадал бы вместе с ним */}
         <Pressable
           accessible={false}
+          testID="content-report-backdrop"
           onPress={() => Keyboard.dismiss()}
           style={StyleSheet.absoluteFill}
         />
@@ -161,6 +162,7 @@ export default function ContentReportDialog({
               <>
                 <Pressable
                   accessibilityRole="button"
+                  testID="content-report-cancel"
                   disabled={submitting}
                   onPress={dismiss}
                   style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}

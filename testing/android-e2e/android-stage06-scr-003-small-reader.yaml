@@ -1,0 +1,119 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-stage06-scr-003-small-reader.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- runFlow:
+    when:
+      visible: Open in.*
+    commands:
+      - tapOn: Open|Открыть
+- runFlow:
+    when:
+      visible: Open in.*
+    commands:
+      - tapOn: Cancel
+- tapOn:
+    point: 92%,93%
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: start-prayer-button
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - tapOn:
+          id: start-prayer-button
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: start-prayer-button
+    commands:
+      - tapOn:
+          id: start-prayer-button
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: setup-kicker
+- tapOn:
+    id: setup-examples-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    point: 50%,34%
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- tapOn:
+    id: dock-scripture-tab
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-favorite
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-favorite
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-favorite
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 20000
+- assertVisible:
+    id: scripture-read-full
+- tapOn:
+    id: scripture-read-full
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- takeScreenshot: SCR-003-small-reader-top
+- swipe:
+    start: 50%,78%
+    end: 50%,30%
+    duration: 800
+- takeScreenshot: SCR-003-small-reader-bottom

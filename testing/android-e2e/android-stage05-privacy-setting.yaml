@@ -1,0 +1,56 @@
+appId: com.nf404.twinkler
+tags:
+  - main
+---
+# Android counterpart of ios-stage05-privacy-setting.yaml; native selectors and untimed fixtures.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- openLink: lampada://settings
+- tapOn:
+    id: privacy-settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: privacy-sheet
+- assertNotVisible:
+    id: privacy-sheet-done
+- assertVisible:
+    id: privacy-setting-core_prayer_ai
+- assertVisible:
+    id: privacy-setting-answer_context
+- tapOn:
+    id: privacy-setting-core_prayer_ai-allowed
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: privacy-setting-answer_context-denied
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: privacy-setting-audio_transcription-allowed
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: privacy-sheet-close
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- openLink: lampada://settings
+- tapOn:
+    id: privacy-settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: privacy-setting-core_prayer_ai-allowed
+- assertVisible:
+    id: privacy-setting-answer_context-denied
+- assertVisible:
+    id: privacy-setting-audio_transcription-allowed

@@ -694,6 +694,9 @@ identity are not part of the request. An open report dialog holds the session
 at timer expiry until it closes; a failed request keeps its comment available
 for retry. Saved journal entries have no report action because they mix
 generated content with private answers.
+The report dialog uses keyboard padding on iOS and reduces its available
+height on Android. Its comment scrolls while the footer stays above the
+keyboard; tapping the backdrop dismisses the keyboard and preserves the draft.
 
 Three independent SQLite records gate prayer-content transfers (ADR-0017,
 ADR-0035): core prayer AI for the topic, answer context for typed answers and

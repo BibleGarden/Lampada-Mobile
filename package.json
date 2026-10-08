@@ -67,7 +67,9 @@
     "env:check:preview": "bash scripts/check-runtime-env.sh eas preview",
     "eas:preview": "bash scripts/build-preview.sh",
     "eas:production": "bash scripts/build-production.sh",
-    "iphone": "bash scripts/deploy-iphone.sh"
+    "iphone": "bash scripts/deploy-iphone.sh",
+    "test:e2e:android:main": "bash scripts/test-android-tier.sh main",
+    "test:e2e:android:rare": "bash scripts/test-android-tier.sh rare"
   },
   "private": true
 }
