@@ -49,7 +49,7 @@ tags:
     id: content-report-comment
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: RPT-006 draft stays editable
+- inputText: 6217
 - assertVisible:
     id: inputView
 - takeScreenshot: RPT-006-keyboard-actions
@@ -74,11 +74,17 @@ tags:
     id: inputView
 - assertVisible:
     id: content-report-comment
-    text: RPT-006 draft stays editable
+    text: 6217
 - tapOn:
     id: content-report-comment
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+# inputText поднимает экранную клавиатуру и при подключённой аппаратной.
+# Цифры не вызывают меню проверки орфографии при повторном тапе.
+- inputText: "x"
+- copyTextFrom:
+    id: content-report-comment
+- assertTrue: ${ maestro.copiedText.replace('x', '') === '6217' && maestro.copiedText.includes('x') }
 - assertVisible:
     id: inputView
 - tapOn:
