@@ -113,7 +113,7 @@ tags:
 - assertVisible:
     id: journal-recording-0-transcribing
 - tapOn: .*JRN-013 закрытие.*
-- evalScript: java.lang.Thread.sleep(16000)
+- evalScript: ${ const until = Date.now() + 16000; while (Date.now() < until) {} }
 - tapOn: .*JRN-013 закрытие.*
 - assertNotVisible: Стабильная расшифровка лампады номер семь
 - assertNotVisible:

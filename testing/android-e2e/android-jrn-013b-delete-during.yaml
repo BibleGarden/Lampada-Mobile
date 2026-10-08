@@ -123,7 +123,7 @@ tags:
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertNotVisible: .*JRN-013 удаление.*
-- evalScript: java.lang.Thread.sleep(16000)
+- evalScript: ${ const until = Date.now() + 16000; while (Date.now() < until) {} }
 - assertNotVisible: .*JRN-013 удаление.*
 - assertNotVisible:
     id: journal-recording-0-transcribing

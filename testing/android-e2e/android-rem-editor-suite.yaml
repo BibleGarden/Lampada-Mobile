@@ -81,7 +81,7 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: reminder-delete-time-10:00-confirm
-- evalScript: java.lang.Thread.sleep(3600)
+- evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
 - assertVisible:
     id: reminder-delete-time-10:00
 - assertNotVisible:

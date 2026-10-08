@@ -91,7 +91,7 @@ tags:
 - assertVisible:
     id: journal-title
 - pressKey: Home
-- evalScript: java.lang.Thread.sleep(10000)
+- evalScript: ${ const until = Date.now() + 10000; while (Date.now() < until) {} }
 - launchApp:
     stopApp: false
 - assertVisible:
@@ -99,7 +99,7 @@ tags:
 - assertNotVisible:
     id: lock-screen
 - pressKey: Home
-- evalScript: java.lang.Thread.sleep(70000)
+- evalScript: ${ const until = Date.now() + 70000; while (Date.now() < until) {} }
 - launchApp:
     stopApp: false
 - extendedWaitUntil:
