@@ -1,0 +1,41 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-update-soft.yaml.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- extendedWaitUntil:
+    visible:
+      id: update-soft
+    timeout: 20000
+- assertVisible:
+    id: update-soft
+- assertVisible:
+    id: update-later
+- takeScreenshot: UPDATE-soft-banner
+- tapOn:
+    id: update-later
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: update-soft
+- openLink: lampada://settings
+- assertNotVisible:
+    id: update-soft
+- openLink: lampada://
+- assertNotVisible:
+    id: update-soft
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- extendedWaitUntil:
+    visible:
+      id: update-soft
+    timeout: 20000
+- takeScreenshot: UPDATE-soft-relaunch

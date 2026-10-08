@@ -1,13 +1,14 @@
 appId: com.nf404.twinkler
 tags:
-  - rare
+  - prepared
 ---
-# Избранное сохраняем, длинный отрывок выбираем по доступности раскрытия.
+# Android-версия управляемого сценария ios-stage06-scr-001-navigation.yaml.
 - launchApp:
     stopApp: true
     clearState: true
     permissions:
       notifications: allow
+      microphone: allow
 - tapOn:
     id: start-prayer-button
     waitToSettleTimeoutMs: 500
@@ -16,10 +17,10 @@ tags:
     id: setup-goal-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: SCR-003 long reader
+- inputText: SCR-001 navigation
 - pressKey: Enter
 - tapOn:
-    id: setup-preset-0
+    id: setup-preset-5
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - tapOn:
@@ -38,6 +39,8 @@ tags:
 - longPressOn:
     id: threshold-hold-button
     waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
 - tapOn:
     id: dock-scripture-tab
     waitToSettleTimeoutMs: 500
@@ -46,14 +49,48 @@ tags:
     visible:
       id: scripture-audio-button
     timeout: 20000
-- assertVisible:
-    id: dock-scripture-favorite
+- takeScreenshot: SCR-001-00-initial-scripture
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 20000
+- takeScreenshot: SCR-001-A1-next
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 20000
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-next
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: dock-scripture-prev
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- takeScreenshot: SCR-001-A6-prev-after-noop-forward
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertVisible:
     id: dock-scripture-favorite-active
+- takeScreenshot: SCR-001-B00-favorited
 - tapOn:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
@@ -68,41 +105,26 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- assertVisible:
+    id: dock-scripture-favorite-active
+- takeScreenshot: SCR-001-B10-next-catalog-exhausted
 - tapOn:
-    id: dock-scripture-favorite
+    id: dock-scripture-prev
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertVisible:
     id: dock-scripture-favorite-active
 - tapOn:
-    id: dock-scripture-next
+    id: dock-scripture-prev
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertVisible:
-    id: scripture-audio-button
-- repeat:
-    times: 12
-    while:
-      notVisible:
-        id: scripture-read-full
-    commands:
-      - tapOn:
-          id: dock-scripture-next
-          waitToSettleTimeoutMs: 500
-          retryTapIfNoChange: false
-      - extendedWaitUntil:
-          visible:
-            id: scripture-audio-button
-          timeout: 20000
-- assertVisible:
-    id: scripture-read-full
+    id: dock-scripture-favorite-active
+- takeScreenshot: SCR-001-C10-prev-at-start
 - tapOn:
-    id: scripture-read-full
+    id: dock-scripture-prev
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- takeScreenshot: SCR-003-long-reader-top
-- swipe:
-    start: 50%,78%
-    end: 50%,30%
-    duration: 800
-- takeScreenshot: SCR-003-long-reader-bottom
+- assertVisible:
+    id: dock-scripture-favorite-active
+- takeScreenshot: SCR-001-C11-prev-boundary-noop

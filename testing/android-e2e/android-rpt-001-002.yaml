@@ -1,13 +1,14 @@
 appId: com.nf404.twinkler
 tags:
-  - rare
+  - prepared
 ---
-# Избранное сохраняем, длинный отрывок выбираем по доступности раскрытия.
+# Android-версия управляемого сценария ios-rpt-001-002.yaml.
 - launchApp:
     stopApp: true
     clearState: true
     permissions:
       notifications: allow
+      microphone: allow
 - tapOn:
     id: start-prayer-button
     waitToSettleTimeoutMs: 500
@@ -16,10 +17,10 @@ tags:
     id: setup-goal-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: SCR-003 long reader
+- inputText: RPT content reports
 - pressKey: Enter
 - tapOn:
-    id: setup-preset-0
+    id: setup-preset-5
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - tapOn:
@@ -38,71 +39,70 @@ tags:
 - longPressOn:
     id: threshold-hold-button
     waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: question-report-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: content-report-dialog
+- takeScreenshot: RPT-001-dialog
+- tapOn:
+    id: content-report-send
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: Спасибо. Жалоба отправлена на проверку.
+- takeScreenshot: RPT-001-sent
+- tapOn:
+    id: content-report-done
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
 - tapOn:
     id: dock-scripture-tab
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - extendedWaitUntil:
     visible:
-      id: scripture-audio-button
+      id: scripture-report-button
     timeout: 20000
-- assertVisible:
-    id: dock-scripture-favorite
+- takeScreenshot: RPT-002-scripture-card
 - tapOn:
-    id: dock-scripture-favorite
+    id: scripture-report-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertVisible:
-    id: dock-scripture-favorite-active
+    id: content-report-dialog
 - tapOn:
-    id: dock-scripture-next
+    id: content-report-comment
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- inputText: Тестовый комментарий RPT-002
 - tapOn:
-    id: dock-scripture-favorite
+    id: content-report-send
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible:
-    id: dock-scripture-favorite-active
+- assertVisible: Спасибо. Жалоба отправлена на проверку.
+- takeScreenshot: RPT-002-sent
 - tapOn:
-    id: dock-scripture-next
+    id: content-report-done
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-favorite
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- assertVisible:
-    id: dock-scripture-favorite-active
-- tapOn:
-    id: dock-scripture-next
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- assertVisible:
-    id: scripture-audio-button
-- repeat:
-    times: 12
-    while:
-      notVisible:
-        id: scripture-read-full
-    commands:
-      - tapOn:
-          id: dock-scripture-next
-          waitToSettleTimeoutMs: 500
-          retryTapIfNoChange: false
-      - extendedWaitUntil:
-          visible:
-            id: scripture-audio-button
-          timeout: 20000
-- assertVisible:
-    id: scripture-read-full
 - tapOn:
     id: scripture-read-full
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- takeScreenshot: SCR-003-long-reader-top
-- swipe:
-    start: 50%,78%
-    end: 50%,30%
-    duration: 800
-- takeScreenshot: SCR-003-long-reader-bottom
+- extendedWaitUntil:
+    visible:
+      id: scripture-reader-close
+    timeout: 10000
+- assertNotVisible:
+    id: scripture-report-button
+    rightOf:
+      id: scripture-reader-favorite.*
+    leftOf:
+      id: scripture-reader-close
+- tapOn:
+    id: scripture-reader-close
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false

@@ -1,0 +1,136 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-stage04-ans-013-save-in-flight.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      notVisible:
+        id: setup-kicker
+    commands:
+      - tapOn:
+          id: start-prayer-button
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: ANS-013 сохранение в полёте
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      notVisible:
+        id: answer-record-button
+    commands:
+      - tapOn:
+          id: dock-answer-button
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible: OK
+    commands:
+      - tapOn: OK
+- runFlow:
+    when:
+      visible: Allow
+    commands:
+      - tapOn: Allow
+- waitForAnimationToEnd:
+    timeout: 2500
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: recording-transcribe-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: privacy-consent-audio_transcription
+- tapOn:
+    id: privacy-consent-audio_transcription-allow
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-transcribing-0
+- extendedWaitUntil:
+    visible:
+      id: recording-transcription-hint-0
+    timeout: 8000
+- takeScreenshot: ANS-013-transcription-hint
+- tapOn:
+    id: recordings-close-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-save-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-answer_context
+    commands:
+      - tapOn:
+          id: privacy-consent-answer_context-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: dock-answer-edit-button
+    timeout: 70000
+- tapOn:
+    id: dock-answer-edit-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-card-0
+- assertVisible: .*Стабильная расшифровка лампады номер семь.*

@@ -1,0 +1,51 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android-версия управляемого сценария ios-stage05-ai-late-stub.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: AI late stub
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: threshold-kicker
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- assertVisible:
+    id: session-title
+- extendedWaitUntil:
+    visible: (?s).*STUB вопрос с опозданием.*
+    timeout: 40000
+- takeScreenshot: AI-late-question-arrived
+- runFlow:
+    file: ios-stage05-ai-late-response.yaml
