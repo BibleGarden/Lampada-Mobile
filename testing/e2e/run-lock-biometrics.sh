@@ -1,8 +1,7 @@
 #!/bin/bash
 # Прогон LOCK-009/010 (биометрия).
 #
-# Face ID в iOS Simulator недоступен в принципе (ограничение Apple), поэтому
-# прогон идёт на iPhone SE (3rd generation) с Touch ID. Управление сигналами
+# По умолчанию прогон идёт на Pray SE с Touch ID. Управление симулятором
 # BiometricKit (notifyutil):
 #   enrollment — состояние com.apple.BiometricKit.enrollmentChanged (0/1)
 #   совпадение — com.apple.BiometricKit_Sim.fingerTouch.match
@@ -58,37 +57,57 @@ appId: twinkler
     timeout: 3000
 - scrollUntilVisible:
     element:
-      id: lock-toggle
+      id: biometrics-toggle
     direction: DOWN
 EOF
 maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" /tmp/bio-nav.yaml
-maestro hierarchy "${DEV[@]}" > "$EVIDENCE/biometrics-hierarchy.json"
+maestro "${DEV[@]}" hierarchy > "$EVIDENCE/biometrics-hierarchy.json"
 if ! grep -q 'biometrics-toggle' "$EVIDENCE/biometrics-hierarchy.json"; then
   echo "FAIL: enrolled biometrics are absent from the visible protection section" >&2
   exit 1
 fi
 echo "   биометрия доступна"
 
+# Сигнал посылается после подтверждённого системного диалога: флоу
+# входит в специальную паузу, которую видно в полном командном логе.
+run_biometric_flow() {
+  local name="$1" result_signal="$2"
+  local log="$EVIDENCE/$name.log"
+  : > "$log"
+  maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" "testing/e2e/$name.yaml" > "$log" 2>&1 &
+  local worker=$!
+  local ready=0
+  for ((attempt=0; attempt<240; attempt++)); do
+    if grep -Fq 'Run java.lang.Thread.sleep(20000)' "$log"; then
+      ready=1
+      break
+    fi
+    if ! kill -0 "$worker" 2>/dev/null; then
+      wait "$worker"
+      echo "FAIL: flow exited before its authentication wait: $log" >&2
+      return 1
+    fi
+    sleep 1
+  done
+  if [ "$ready" != 1 ]; then
+    echo "FAIL: authentication wait timed out: $log" >&2
+    kill "$worker"
+    wait "$worker"
+    return 1
+  fi
+  echo "Authentication ready: $name"
+  signal "$BIO.$result_signal"
+  wait "$worker"
+}
+
 echo "== LOCK-009a: включение биометрии"
-maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-009a-enable-biometrics.yaml > /tmp/lock-009a.log 2>&1 &
-M=$!
-sleep 30
-signal "$BIO.match"
-wait $M || { echo "LOCK-009a FAILED, см. /tmp/lock-009a.log"; exit 1; }
+run_biometric_flow ios-lock-009a-enable-biometrics match
 
 echo "== LOCK-009b: холодный старт, вход по биометрии"
-maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-009b-cold-start-faceid.yaml > /tmp/lock-009b.log 2>&1 &
-M=$!
-sleep 30
-signal "$BIO.match"
-wait $M || { echo "LOCK-009b FAILED, см. /tmp/lock-009b.log"; exit 1; }
+run_biometric_flow ios-lock-009b-cold-start-faceid match
 
 echo "== LOCK-009c: отказ, запасной вход пином"
-maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-009c-refusal.yaml > /tmp/lock-009c.log 2>&1 &
-M=$!
-sleep 30
-signal "$BIO.nomatch"
-wait $M || { echo "LOCK-009c FAILED, см. /tmp/lock-009c.log"; exit 1; }
+run_biometric_flow ios-lock-009c-refusal nomatch
 
 echo "== LOCK-010: образцы удалены, вход пином"
 set_enrolled 0

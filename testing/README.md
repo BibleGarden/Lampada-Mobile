@@ -243,7 +243,9 @@ are failures. The biometric preflight scrolls to the protection section before
 checking the visible hierarchy. It sets the simulator notification state
 `com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and
 0 for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID
-on the current runtime.
+on the current runtime. Biometric signals are synchronized with the flow
+reaching its wait after the native authentication prompt appears. A mismatch
+keeps the iOS retry prompt open; select its PIN action to verify code entry.
 
 LOCK-008 is a manual Device Hub check. Run `run-lock-appswitcher.sh prepare`,
 open App Switcher using Device Hub's Home control, then run the script with
