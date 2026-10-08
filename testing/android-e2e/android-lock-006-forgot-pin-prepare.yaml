@@ -69,7 +69,7 @@ tags:
 - assertVisible:
     id: session-title
 - tapOn:
-    text: Назад
+    id: session-finish-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertVisible:
