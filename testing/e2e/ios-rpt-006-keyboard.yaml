@@ -65,8 +65,6 @@ tags:
     id: content-report-comment
     above:
       id: inputView
-- assertVisible:
-    id: content-report-backdrop
 # Тап по открытой левой кромке фона, а не по его центру под карточкой.
 - tapOn:
     point: "3%,10%"

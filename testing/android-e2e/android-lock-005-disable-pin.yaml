@@ -1,0 +1,120 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android ordered counterpart of ios-lock-005-disable-pin.yaml.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: lock-screen
+- tapOn:
+    id: pin-key-9
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-8
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-7
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-6
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: start-prayer-button
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
+- tapOn:
+    id: lock-toggle
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-disable-current
+- assertVisible: Подтвердите, что защиту выключаете вы
+- tapOn:
+    id: pin-prompt-cancel
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: pin-prompt
+    commands:
+      - tapOn:
+          id: pin-prompt-cancel
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertNotVisible:
+    id: pin-prompt
+- assertVisible:
+    id: change-pin-button
+- tapOn:
+    id: lock-toggle
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-disable-current
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: Неверный пин-код
+    timeout: 5000
+- assertVisible:
+    id: pin-prompt
+- tapOn:
+    id: pin-key-9
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-8
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-7
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-6
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    notVisible:
+      id: pin-prompt
+    timeout: 5000
+- assertNotVisible:
+    id: change-pin-button
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- assertNotVisible:
+    id: lock-screen

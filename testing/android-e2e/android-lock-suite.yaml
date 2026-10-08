@@ -1,0 +1,17 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android ordered counterpart of ios-lock-suite.yaml.
+- runFlow:
+    file: android-lock-001-disabled-by-default.yaml
+- runFlow:
+    file: android-lock-002-enable-pin.yaml
+- runFlow:
+    file: android-lock-003-wrong-and-correct-pin.yaml
+- runFlow:
+    file: android-lock-004-change-pin.yaml
+- runFlow:
+    file: android-lock-005-disable-pin.yaml
+- runFlow:
+    file: android-lock-007-background-timeout.yaml

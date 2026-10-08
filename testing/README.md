@@ -37,7 +37,12 @@ Android `main` and `rare` counterparts also live in `android-e2e/`:
 ```bash
 npm run test:e2e:android:main
 npm run test:e2e:android:rare
+npm run test:e2e:android:ordered
 ```
+
+The ordered command covers PIN enable/unlock/change/disable, short and long
+background returns, forgotten-PIN cancellation and wiping real journal data,
+and reminder-editor confirmations. It preserves each suite's prerequisite order.
 
 These suites use Gboard keyboard selectors, Android share-sheet dismissal and
 stable app IDs. Non-deadline fixtures are untimed; finite completion and early

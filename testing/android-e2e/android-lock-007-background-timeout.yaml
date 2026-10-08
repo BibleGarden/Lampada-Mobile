@@ -1,0 +1,172 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android ordered counterpart of ios-lock-007-background-timeout.yaml.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- assertNotVisible:
+    id: lock-screen
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
+- tapOn:
+    id: lock-toggle
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-enable-create
+- tapOn:
+    id: pin-key-4
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-3
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-2
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-confirm
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-enable-repeat
+- tapOn:
+    id: pin-key-4
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-3
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-2
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-confirm
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: change-pin-button
+- tapOn:
+    text: Назад
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: journal-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      notVisible:
+        id: journal-title
+    commands:
+      - tapOn:
+          id: journal-button
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- assertVisible:
+    id: journal-title
+- pressKey: Home
+- evalScript: java.lang.Thread.sleep(10000)
+- launchApp:
+    stopApp: false
+- assertVisible:
+    id: journal-title
+- assertNotVisible:
+    id: lock-screen
+- pressKey: Home
+- evalScript: java.lang.Thread.sleep(70000)
+- launchApp:
+    stopApp: false
+- extendedWaitUntil:
+    visible:
+      id: lock-screen
+    timeout: 10000
+- assertVisible:
+    id: lock-pin-title
+- tapOn:
+    id: pin-key-4
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-3
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-2
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    notVisible:
+      id: lock-screen
+    timeout: 5000
+- assertVisible:
+    id: journal-title
+- tapOn:
+    text: Назад
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
+- tapOn:
+    id: lock-toggle
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-disable-current
+- tapOn:
+    id: pin-key-4
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-3
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-2
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    notVisible:
+      id: pin-prompt
+    timeout: 5000
+- assertNotVisible:
+    id: change-pin-button

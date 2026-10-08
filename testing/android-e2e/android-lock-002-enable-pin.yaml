@@ -1,0 +1,103 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android ordered counterpart of ios-lock-002-enable-pin.yaml.
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
+- tapOn:
+    id: lock-toggle
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-enable-create
+- assertVisible:
+    id: pin-prompt
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-2
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-3
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-4
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-enable-create
+- tapOn:
+    id: pin-key-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-6
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-confirm
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: pin-prompt-enable-repeat
+- tapOn:
+    id: pin-key-1
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-2
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-3
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-4
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-5
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-6
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: pin-key-confirm
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: pin-prompt
+- assertVisible:
+    id: change-pin-button
+- launchApp:
+    stopApp: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    id: lock-screen
+- assertVisible:
+    id: lock-pin-title
+- assertVisible:
+    id: forgot-pin
