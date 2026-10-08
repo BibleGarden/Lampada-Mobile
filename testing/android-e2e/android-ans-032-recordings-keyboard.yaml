@@ -88,7 +88,7 @@ tags:
     id: answer-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: "3217"
+- inputText: "3217x"
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
 - tapOn:
@@ -97,10 +97,16 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
-- inputText: " ответ"
+# Unicode inputText переключает IME Maestro и теряет фокус RN.
+# Кириллицу вводим настоящей клавишей Gboard, сохраняя пользовательский путь.
+- tapOn:
+    id: com.google.android.inputmethod.latin:id/key_pos_1_3
+    text: "а"
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
 - assertVisible:
     id: answer-input
-    text: 3217 ответ
+    text: 3217xа
     above:
       id: com.google.android.inputmethod.latin:id/keyboard_holder
 - assertVisible:
@@ -115,12 +121,12 @@ tags:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
 - assertVisible:
     id: answer-input
-    text: 3217 ответ
+    text: 3217xа
 - tapOn:
     id: answer-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: " дальше"
+- inputText: "b"
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
 - tapOn:
@@ -131,14 +137,14 @@ tags:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
 - assertVisible:
     id: answer-input
-    text: 3217 ответ дальше
+    text: 3217xаb
 - tapOn:
     point: 50%,20%
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - assertVisible:
     id: answer-input
-    text: 3217 ответ дальше
+    text: 3217xаb
 - tapOn:
     id: answer-record-button
     waitToSettleTimeoutMs: 500
@@ -169,7 +175,7 @@ tags:
     id: recordings-close-button
 - assertVisible:
     id: answer-input
-    text: 3217 ответ дальше
+    text: 3217xаb
 - tapOn:
     id: answer-save-button
     waitToSettleTimeoutMs: 500
@@ -189,6 +195,6 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: answer-input
-    text: 3217 ответ дальше
+    text: 3217xаb
 - assertVisible:
     id: answer-record-badge

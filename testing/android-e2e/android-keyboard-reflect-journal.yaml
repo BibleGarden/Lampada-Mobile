@@ -65,10 +65,10 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
-- inputText: " вывод"
+- inputText: " note"
 - assertVisible:
     id: reflection-input
-    text: 4821 вывод
+    text: 4821 note
     above:
       id: com.google.android.inputmethod.latin:id/keyboard_holder
 - assertVisible:
@@ -83,7 +83,7 @@ tags:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
 - assertVisible:
     id: reflection-input
-    text: 4821 вывод
+    text: 4821 note
 - assertVisible:
     id: reflect-return-button
 - tapOn:
@@ -109,10 +109,10 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
-- inputText: " вывод"
+- inputText: " note"
 - assertVisible:
     id: journal-search-input
-    text: 4821 вывод
+    text: 4821 note
     above:
       id: com.google.android.inputmethod.latin:id/keyboard_holder
 - tapOn:
@@ -123,5 +123,5 @@ tags:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
 - assertVisible:
     id: journal-search-input
-    text: 4821 вывод
+    text: 4821 note
 - assertVisible: .*Клавиатура в размышлении.*

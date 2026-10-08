@@ -45,7 +45,11 @@ background returns, forgotten-PIN cancellation and wiping real journal data,
 and reminder-editor confirmations. It preserves each suite's prerequisite order.
 
 These suites use Gboard keyboard selectors, Android share-sheet dismissal and
-stable app IDs. Non-deadline fixtures are untimed; finite completion and early
+stable app IDs. Maestro's Unicode `inputText` temporarily replaces Gboard
+with its own IME, so it must not be used to establish focus preconditions.
+Keyboard gesture fixtures use ASCII input; ANS-032 also taps a real Russian
+Gboard key and verifies that its Cyrillic character survives saving/reopening.
+Unicode persistence and search checks remain separate from focus checks. Non-deadline fixtures are untimed; finite completion and early
 music completion retain timed prayers. Display-size changes used to reduce
 emulator screenshot cost must preserve the logical viewport and be reset after
 testing. The tier runner stops at the first failure and records each flow's

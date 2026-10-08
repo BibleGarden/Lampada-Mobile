@@ -49,7 +49,7 @@ tags:
     id: answer-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: ANS-003 несохранённый текст
+- inputText: ANS-003 unsaved draft
 - tapOn:
     id: answer-question
     waitToSettleTimeoutMs: 500
