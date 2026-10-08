@@ -42,7 +42,23 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: session-title
-- assertVisible: \d+:\d\d, ИДЁТ
+# Android отдаёт время и подпись отдельными дочерними элементами.
+- assertVisible:
+    text: "ИДЁТ"
+    below:
+      id: session-title
+- copyTextFrom:
+    text: "[0-9]+:[0-9][0-9]"
+    below:
+      id: session-title
+- evalScript: ${ output.elapsed = maestro.copiedText }
+- assertTrue: ${ /^[0-9]+:[0-9][0-9]$/.test(output.elapsed) }
+- extendedWaitUntil:
+    notVisible:
+      text: ${ output.elapsed }
+      below:
+        id: session-title
+    timeout: 3500
 - assertNotVisible:
     id: reflect-kicker
 - tapOn:

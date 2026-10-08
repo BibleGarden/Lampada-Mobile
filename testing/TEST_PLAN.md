@@ -155,7 +155,7 @@ tier of its e2e runs.
 | NAV-002 [critical] | Double-tap Start on Home, then return after an unfinished setup on iOS and Android | one Back press returns Home; no duplicate setup route remains, the draft session is reset, and the app does not hang |
 | NAV-003 [main] | Opening screens by a deep link with no navigation history | the back button leads Home or closes the screen safely |
 | NAV-004 | Android Back during the prayer and the reflection | the system gesture does not break the mandatory flow |
-| NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created |
+| NAV-005 | Fast repeated presses on the transitions | no duplicate screens or sessions are created; the second Home tap cannot activate Next during Setup entrance |
 | NAV-006 | Leave Home in the background after praying, then reopen the app on a later day without navigating | the last dot represents the current local day, yesterday's prayer moves left, and the flame and greeting refresh |
 | NAV-007 | Keep Home open across local midnight, including a daylight-saving transition | the calendar advances at local midnight; today's unprayed dot becomes an outline and the previous prayer remains on its actual date |
 | NAV-008 [ipad] | Rotate an iPad between portrait and landscape on Home and another screen, including while JavaScript is briefly busy | the background covers the entire canvas during and after rotation; no strip retains the previous width or height |

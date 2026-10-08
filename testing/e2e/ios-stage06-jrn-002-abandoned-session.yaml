@@ -5,7 +5,7 @@ tags:
 # JRN-002: a prayer abandoned with no answers and no takeaway never reaches the journal.
 - launchApp:
     stopApp: true
-    clearState: false
+    clearState: true
 - tapOn:
     id: "start-prayer-button"
 - tapOn:

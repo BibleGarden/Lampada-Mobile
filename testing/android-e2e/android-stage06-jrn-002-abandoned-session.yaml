@@ -5,7 +5,7 @@ tags:
 # Android counterpart of ios-stage06-jrn-002-abandoned-session.yaml; native selectors and untimed fixtures.
 - launchApp:
     stopApp: true
-    clearState: false
+    clearState: true
     permissions:
       notifications: allow
       microphone: allow

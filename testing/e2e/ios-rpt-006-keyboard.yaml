@@ -95,7 +95,7 @@ tags:
     visible:
       id: content-report-done
     timeout: 20000
-- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- assertVisible: "Спасибо. Жалоба отправлена на проверку.|Thank you. The report was sent for review.|Дякуємо. Скаргу надіслано на перевірку."
 - assertNotVisible:
     id: inputView
 - takeScreenshot: RPT-006-sent

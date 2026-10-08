@@ -2,57 +2,22 @@ appId: com.nf404.twinkler
 tags:
   - main
 ---
-# Android counterpart of ios-stage06-scr-003-small-reader.yaml; native selectors and untimed fixtures.
+# Выбираем длинный отрывок по доступности раскрытия, а не по его номеру.
 - launchApp:
     stopApp: true
     clearState: true
     permissions:
       notifications: allow
-      microphone: allow
-- runFlow:
-    when:
-      visible: Open in.*
-    commands:
-      - tapOn: Open|Открыть
-- runFlow:
-    when:
-      visible: Open in.*
-    commands:
-      - tapOn: Cancel
 - tapOn:
-    point: 92%,93%
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- runFlow:
-    when:
-      visible:
-        id: start-prayer-button
-    commands:
-      - waitForAnimationToEnd:
-          timeout: 5000
-      - tapOn:
-          id: start-prayer-button
-          waitToSettleTimeoutMs: 500
-          retryTapIfNoChange: false
-- runFlow:
-    when:
-      visible:
-        id: start-prayer-button
-    commands:
-      - tapOn:
-          id: start-prayer-button
-          waitToSettleTimeoutMs: 500
-          retryTapIfNoChange: false
-- assertVisible:
-    id: setup-kicker
-- tapOn:
-    id: setup-examples-button
+    id: start-prayer-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - tapOn:
-    point: 50%,34%
+    id: setup-goal-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- inputText: SCR-003 long reader
+- pressKey: Enter
 - tapOn:
     id: setup-preset-0
     waitToSettleTimeoutMs: 500
@@ -77,34 +42,24 @@ tags:
     id: dock-scripture-tab
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-favorite
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-next
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-favorite
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-next
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-favorite
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- tapOn:
-    id: dock-scripture-next
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
 - extendedWaitUntil:
     visible:
       id: scripture-audio-button
     timeout: 20000
+- repeat:
+    times: 12
+    while:
+      notVisible:
+        id: scripture-read-full
+    commands:
+      - tapOn:
+          id: dock-scripture-next
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+      - extendedWaitUntil:
+          visible:
+            id: scripture-audio-button
+          timeout: 20000
 - assertVisible:
     id: scripture-read-full
 - tapOn:

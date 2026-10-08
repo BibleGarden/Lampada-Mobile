@@ -138,6 +138,11 @@ animations are skipped and `withRepeat` loops (flame, halos, recording wave)
 freeze; Reanimated reads the setting at app start. The hold-to-start ring opts
 out with `ReduceMotion.Never` because it is progress feedback.
 
+Setup's Next action is disabled during the initial 350 ms Stack transition.
+This prevents a repeated Home press from passing through to the primary action
+at the same screen position. Home and Setup use idempotent navigation to avoid
+stacking duplicate Setup or Threshold routes.
+
 Screen readers. Under Fabric iOS a VoiceOver double tap reaches JS only through
 `onAccessibilityTap`, and adjustable swipes reach `onAccessibilityAction` by the
 `adjustable` role alone; TalkBack knows only declared `accessibilityActions`.
