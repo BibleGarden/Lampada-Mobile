@@ -9,7 +9,7 @@ tags:
 # Предусловия: пин 123456, биометрия включена (прогон 009a/009b).
 - launchApp:
     stopApp: true
-# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+# Системный запрос скрывает AX-дерево приложения: ждём сам запрос.
 - extendedWaitUntil:
     visible:
       id: "com.apple.localauthentication.ax.authentication.alert"
