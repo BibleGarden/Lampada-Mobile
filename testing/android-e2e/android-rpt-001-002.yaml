@@ -98,6 +98,9 @@ tags:
     timeout: 10000
 - assertNotVisible:
     id: scripture-report-button
+    childOf:
+      containsChild:
+        id: scripture-reader-close
     rightOf:
       id: scripture-reader-favorite.*
     leftOf:

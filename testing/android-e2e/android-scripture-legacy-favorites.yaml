@@ -8,6 +8,8 @@ tags:
     permissions:
       notifications: allow
       microphone: allow
+- assertVisible:
+    id: start-prayer-button
 - openLink: lampada://favorites
 - extendedWaitUntil:
     visible: Колоссянам 3:23
