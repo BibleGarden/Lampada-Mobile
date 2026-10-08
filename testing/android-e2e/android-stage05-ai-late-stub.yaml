@@ -48,4 +48,4 @@ tags:
     timeout: 40000
 - takeScreenshot: AI-late-question-arrived
 - runFlow:
-    file: ios-stage05-ai-late-response.yaml
+    file: android-stage05-ai-late-response.yaml
