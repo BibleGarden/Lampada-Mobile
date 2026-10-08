@@ -27,6 +27,8 @@ it was made, which options were considered and what it led to.
 | [0018](0018-latest-human-reply.md) | Superseded by ADR-0019 | Send the latest human reply separately from AI generation context |
 | [0019](0019-structured-question-history.md) | Accepted | Send structured question history with separate topic and stage |
 
+| [0037](0037-android-lock-native-window.md) | Accepted | Isolate the Android lock screen and privacy curtain in a native modal window |
+
 ## Rules
 
 1. Copy [`template.md`](template.md) into a file named `NNNN-short-name.md`.
