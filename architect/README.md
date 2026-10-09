@@ -44,6 +44,8 @@ updates took frames from the text input, and typing showed up in batches.
 - Expo Secure Store, Expo Local Authentication and Expo Crypto for the optional
   app lock with a PIN and biometrics.
 - Expo Localization for initial interface and scripture language selection.
+- Expo Splash Screen for the launch screen: the app background `#0e0a07` with
+  the flame from `assets/splash.png` on both platforms.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
@@ -52,7 +54,9 @@ channel is `test` and its API origin uses HTTP. HTTPS builds disable cleartext;
 an HTTP origin without the test channel fails native configuration explicitly.
 It also reserves a 4 GiB Gradle heap and 1 GiB metaspace for the Release DEX merge.
 The manifest records the build channel and normalized API origin without the
-client key. Android e2e reads these fields from the installed APK before launching
+client key. `android.blockedPermissions` removes the template permissions
+`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`;
+recordings and the journal stay in app storage and prayers are shared as text. Android e2e reads these fields from the installed APK before launching
 the app or clearing its data and requires a test channel with the expected
 non-production origin.
 
@@ -466,8 +470,10 @@ not throw them out of it.
 
 The protection is optional and off by default (ADR-0014): until the user turns it
 on in the settings, the behaviour of the app does not change. The base method is
-a PIN of 4 to 8 digits, with the length chosen by the user. Face ID, Touch ID or
-a fingerprint is a separate toggle strictly on top of the PIN, available only
+a PIN of 4 to 8 digits, with the length chosen by the user. Biometrics is a
+separate toggle strictly on top of the PIN. `biometryLabel` in `lib/lockPolicy.ts`
+names it Face ID or Touch ID only on iOS; Android uses localized words for face
+recognition, fingerprint or biometrics. The toggle is available only
 when the sensor exists and a sample is enrolled in the system; the PIN stays the
 only fallback way in.
 
@@ -610,11 +616,29 @@ the result of a server selection.
 ## Application updates
 
 `components/UpdateGate.tsx` checks the installed native version once per root
-mount through `lib/versionCheck.ts`. The shared API receives `app=lampada`;
-only matching responses may trigger optional or mandatory update screens.
-The overlay sits above navigation and below `LockGate`, with accessible content
-isolation. Network errors leave the app usable. Lampada updates remain disabled
-server-side until its App Store listing is published. See ADR 0020.
+mount through `lib/versionCheck.ts`. The shared API receives `app=lampada`
+and `platform=ios|android`; only responses with the same `app` and `platform`
+may trigger optional or mandatory update screens, so Android never opens an
+App Store URL. The client does not construct store URLs. Web builds skip the
+check. The overlay sits above navigation and below `LockGate`, with accessible content
+isolation. Network errors leave the app usable. See ADR 0020 and
+[ADR-0039](decisions/0039-google-play-release.md).
+
+Required Bible-API contract for `GET /api/version-check` with `app=lampada`:
+
+- `platform` accepts `ios` or `android`; other values are rejected with 422.
+  A request without `platform` comes from an iOS build released before
+  ADR-0039 and is answered for `ios`.
+- Minimum supported version, latest version, enable switch and store URL are
+  configured per platform. Android uses
+  `https://play.google.com/store/apps/details?id=com.nf404.twinkler`, iOS
+  `https://apps.apple.com/app/id6806024678`. Each platform's switch stays off
+  until its store listing is public.
+- The response adds `"platform": "<ios|android>"` for the platform it was
+  decided for; the other fields keep their current meaning.
+
+Until Bible-API returns `platform`, builds containing this client show no
+update notices.
 
 ## Shared API configuration
 
@@ -766,6 +790,11 @@ The npm native and EAS build entry points reserve the next `expo.version` in
 production raises the minor and drops the patch (`1.1.3` → `1.2`), test builds
 raise the patch of the current store version (`1.2` → `1.2.1`). See
 [ADR-0034](decisions/0034-store-minor-test-patch-versions.md).
+`scripts/build-production.sh` requires `android`, `ios` or `all` and reserves
+one store version per release for both platforms; `--keep-version` builds the
+other platform of an already reserved release. The EAS submit profile sends
+Android builds to the internal track as drafts with the service account key
+held in EAS credentials. See [ADR-0039](decisions/0039-google-play-release.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo
 config fallback for web and Expo Go. This matches the installed version used
@@ -773,7 +802,7 @@ by the update gate. EAS remote build numbers remain independent.
 The About footer always renders the installed version. A separate build-time
 `EXPO_PUBLIC_BUILD_CHANNEL=test` adds a localized "Test build" label and API
 origin. Local scripts and EAS development/preview select `test`; production
-selects `store` for both TestFlight and App Store. Missing channel values hide
+selects `store` for TestFlight, the App Store and Google Play. Missing channel values hide
 test details. This is independent of Debug/Release optimization; local iPhone
 installs remain standalone Release builds. See [ADR-0026](decisions/0026-test-build-label.md).
 The App Store video build script sets `EXPO_PUBLIC_APPSTORE_VIDEO=1` in its

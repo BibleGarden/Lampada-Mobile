@@ -75,3 +75,4 @@ implementation details do not need one.
 - [0035: Name the production AI processors in consent](0035-name-production-ai-processors-in-consent.md)
 - [0036: Release the iOS audio session when its last consumer stops](0036-audio-session-leases.md)
 - [0037: Native window for the Android lock gate](0037-android-lock-native-window.md)
+- [0039: Release on Google Play alongside the App Store](0039-google-play-release.md)
