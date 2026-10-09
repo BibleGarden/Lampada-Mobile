@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the SCR-013 Bible catalog phases on a named iOS test simulator.
+"""Run the SCR-013 and SCR-027 Bible catalog phases on a named iOS test simulator.
 
 Install a Release build with EXPO_PUBLIC_API_URL=http://127.0.0.1:9085, start
 scripts/scripture-stub.mjs, and boot the named simulator with Russian as its
@@ -68,7 +68,7 @@ def expect_english_bible(values, ui_language, phase):
     selection = json.loads(values['scripture_preferences'])
     if (selection['language'], selection['translationCode'], selection['voiceCode']) != ('en', 16, 151):
         fail(phase + ': expected en/16/151, got ' + repr(selection))
-    if values.get('ui_language') != ui_language:
+    if ui_language is not None and values.get('ui_language') != ui_language:
         fail(phase + ': expected ui_language=' + ui_language + ', got ' + repr(values.get('ui_language')))
 
 
@@ -79,7 +79,10 @@ language = primary_language()
 if not language.startswith('ru'):
     fail('the simulator primary language must be Russian, got ' + language)
 
-for phase, mode in [('failure', 'fail'), ('recovery', 'ok'), ('saved-offline', 'fail')]:
+# failure → recovery → saved-offline — одна цепочка над общим состоянием
+# приложения; no-default начинается с чистой установки.
+phases = [('failure', 'fail'), ('recovery', 'ok'), ('saved-offline', 'fail'), ('no-default', 'unvoiced-ru')]
+for phase, mode in phases:
     control(mode)
     name = 'ios-scripture-catalog-' + phase
     command = ['maestro', '--device', device, 'test', '--test-output-dir', str(output / name),
@@ -97,9 +100,9 @@ for phase, mode in [('failure', 'fail'), ('recovery', 'ok'), ('saved-offline', '
         if values.get('ui_language') != 'en':
             fail('expected ui_language=en after the failure phase, got ' + repr(values.get('ui_language')))
     else:
-        expect_english_bible(values, 'en' if phase == 'recovery' else 'ru', phase)
+        expect_english_bible(values, {'recovery': 'en', 'saved-offline': 'ru', 'no-default': None}[phase], phase)
     subprocess.run(['xcrun', 'simctl', 'io', device, 'screenshot', str(output / (name + '.png'))],
                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print(phase + ' SQLite checkpoint passed', flush=True)
 control('ok')
-print('All SCR-013 catalog phases and SQLite checkpoints passed', flush=True)
+print('All SCR-013/SCR-027 catalog phases and SQLite checkpoints passed', flush=True)

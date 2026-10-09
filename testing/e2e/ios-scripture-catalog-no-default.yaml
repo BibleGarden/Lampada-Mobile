@@ -1,0 +1,72 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# SCR-027: scripts/test-scripture-initialization.py sets catalog=unvoiced-ru
+# (the Russian translation has no narration) on a simulator whose primary
+# language is Russian. The scripture block sends the user to Settings instead
+# of offering a useless retry; a manual pick there revives the block in the same
+# session. The runner then reads SQLite: en/16/151.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- inputText: "SCR-027 no default Bible"
+- pressKey: Enter
+- tapOn:
+    id: "setup-preset-5"
+- tapOn:
+    id: "setup-next-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-core_prayer_ai"
+    commands:
+      - tapOn:
+          id: "privacy-consent-core_prayer_ai-allow"
+- longPressOn:
+    id: "threshold-hold-button"
+- assertVisible:
+    id: "session-title"
+- tapOn:
+    id: "dock-scripture-tab"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-open-settings-button"
+    timeout: 30000
+- assertVisible: ".*Для языка интерфейса нет Библии.*"
+- assertNotVisible:
+    id: "scripture-retry-button"
+- tapOn:
+    id: "scripture-open-settings-button"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-default-unavailable"
+    timeout: 30000
+- tapOn:
+    id: "scripture-language-picker"
+- tapOn:
+    id: "scripture-language-en"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-translation-16"
+    timeout: 30000
+- tapOn:
+    id: "scripture-translation-16"
+- tapOn:
+    id: "scripture-voice-151"
+- assertNotVisible:
+    id: "scripture-default-unavailable"
+- assertNotVisible:
+    id: "scripture-save-error"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"
+- tapOn:
+    id: "settings-back-button"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 30000

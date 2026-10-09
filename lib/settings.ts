@@ -277,6 +277,20 @@ export const ensureSettingsLoaded = async () => {
   if (!useSettings.getState().loaded) await useSettings.getState().load();
 };
 
+/** Каталог Библии недоступен: сеть, ответ сервера или неверный формат. */
+export class ScriptureCatalogUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super(`Scripture catalog unavailable: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
+    this.name = 'ScriptureCatalogUnavailableError';
+  }
+}
+
+// Отделяем сбой каталога от ошибок SQLite: экран должен назвать настоящую причину.
+const fromCatalog = <T>(request: Promise<T>) =>
+  request.catch((error: unknown) => {
+    throw new ScriptureCatalogUnavailableError(error);
+  });
+
 /** Каталог доступен, но не даёт полной тройки для языка интерфейса. */
 export class ScriptureDefaultUnavailableError extends Error {
   constructor(message: string, readonly languages: ScriptureLanguageOption[]) {
@@ -332,12 +346,12 @@ async function initializeScripturePreferences(): Promise<ScriptureInitialization
   // для нового языка, старый дефолт не сохраняется.
   for (;;) {
     const interfaceLanguage = useSettings.getState().uiLanguage;
-    const languages = await fetchScriptureLanguages();
+    const languages = await fromCatalog(fetchScriptureLanguages());
     const language = resolveInitialScriptureLanguage(interfaceLanguage, languages);
     if (!language) {
       throw new ScriptureDefaultUnavailableError('Scripture catalog does not contain the interface language', languages);
     }
-    const translations = await fetchScriptureTranslations(language.alias);
+    const translations = await fromCatalog(fetchScriptureTranslations(language.alias));
     const preferences = defaultPreferencesFromCatalog(language, translations);
     if (!preferences) {
       throw new ScriptureDefaultUnavailableError('Scripture catalog has no valid translation and voice', languages);

@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { BookOpen, CircleQuestionMark } from 'lucide-react-native';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
+import { useSettings } from '../lib/settings';
 import { buildScriptureCompactText } from '../lib/scripture';
 import { getContentReportTarget, type ContentReportTarget } from '../lib/contentReportTarget';
 import { colors, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
@@ -37,6 +38,7 @@ import type { ScriptureAudioControl } from '../lib/useScriptureAudio';
 type Props = {
   onOpenAnswer: () => void;
   onOpenReader: () => void;
+  onOpenSettings: () => void;
   onReportOpenChange: (open: boolean) => void;
   scriptureAudio: ScriptureAudioControl;
 };
@@ -54,7 +56,13 @@ const listenButtonHeight = () => sc(26);
 
 // Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
 // Механика следа/фронтира живёт в store; здесь только отображение.
-export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpenChange, scriptureAudio }: Props) {
+export default function CompanionDock({
+  onOpenAnswer,
+  onOpenReader,
+  onOpenSettings,
+  onReportOpenChange,
+  scriptureAudio,
+}: Props) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const [measuredScripture, setMeasuredScripture] = React.useState<{
@@ -96,6 +104,11 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpen
     })),
   );
   const isQ = s.dockMode === 'question';
+  // Выбор Библии, сделанный в настройках поверх сессии, сразу оживляет блок цитат.
+  const bibleChosen = useSettings((state) => state.scripturePreferences !== null);
+  React.useEffect(() => {
+    if (bibleChosen && s.scrError === 'no_default_bible') void s.retryScripture();
+  }, [bibleChosen, s.scrError, s.retryScripture]);
 
   const answered = (() => {
     const a = s.answers[s.qIndex];
@@ -336,21 +349,36 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpen
               </>
             ) : (
               // Подпись не задаём: VoiceOver должен прочитать и причину, и действие.
-              <Pressable
-                accessibilityRole="button"
-                onPress={tap(() => void s.retryScripture())}
-                style={styles.retryWrap}
-                testID="scripture-retry-button"
-              >
-                <Text style={styles.cardText}>
-                  {s.scrError === 'catalog_unavailable'
-                    ? t('components.reader.catalogUnavailable')
-                    : t('components.reader.unavailable')}
-                </Text>
-                <Text style={styles.retryLabel}>
-                  {s.scrError === 'not_configured' ? t('components.reader.checkSettings') : t('components.reader.tryAgain')}
-                </Text>
-              </Pressable>
+              // Без Библии для языка интерфейса повтор бесполезен: ведём в настройки.
+              s.scrError === 'no_default_bible' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={tap(onOpenSettings)}
+                  style={styles.retryWrap}
+                  testID="scripture-open-settings-button"
+                >
+                  <Text style={styles.cardText}>{t('components.reader.noDefaultBible')}</Text>
+                  <Text style={styles.retryLabel}>{t('components.reader.openSettings')}</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={tap(() => void s.retryScripture())}
+                  style={styles.retryWrap}
+                  testID="scripture-retry-button"
+                >
+                  <Text style={styles.cardText}>
+                    {s.scrError === 'catalog_unavailable'
+                      ? t('components.reader.catalogUnavailable')
+                      : s.scrError === 'selection_failed'
+                        ? t('components.reader.selectionFailed')
+                        : t('components.reader.unavailable')}
+                  </Text>
+                  <Text style={styles.retryLabel}>
+                    {s.scrError === 'not_configured' ? t('components.reader.checkSettings') : t('components.reader.tryAgain')}
+                  </Text>
+                </Pressable>
+              )
             )}
           </View>
           {curScripture && (

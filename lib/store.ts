@@ -3,6 +3,8 @@ import * as ai from './ai';
 import { replyTexts } from './answerContext';
 import * as db from './db';
 import {
+  ScriptureCatalogUnavailableError,
+  ScriptureDefaultUnavailableError,
   answerContextAllowedNow,
   coreAiAllowedNow,
   ensureScripturePreferences,
@@ -92,7 +94,15 @@ type SessionState = {
   // Снимок выбора на входе в сессию; null, пока каталог не подтвердил первый выбор.
   scriptureSelection: ScriptureSelection | null;
   scrStatus: 'idle' | 'loading' | 'ready' | 'retrying' | 'error' | 'offline_fallback';
-  scrError: 'not_configured' | 'unavailable' | 'catalog_unavailable' | null;
+  // catalog_unavailable — каталог не ответил; no_default_bible — для языка
+  // интерфейса нет Библии с озвучкой; selection_failed — сбой на устройстве.
+  scrError:
+    | 'not_configured'
+    | 'unavailable'
+    | 'catalog_unavailable'
+    | 'no_default_bible'
+    | 'selection_failed'
+    | null;
 
   dockMode: 'question' | 'scripture';
   musicOn: boolean;
@@ -885,11 +895,17 @@ async function confirmScriptureSelection(sessionId: number, token: number, foreg
     preferences = (await ensureScripturePreferences()).preferences;
   } catch (error) {
     if (!sessionIsCurrent(sessionId, token)) return false;
-    console.warn('Bible catalog unavailable', error instanceof Error ? error.message : error);
+    const scrError = error instanceof ScriptureCatalogUnavailableError
+      ? 'catalog_unavailable'
+      : error instanceof ScriptureDefaultUnavailableError
+        ? 'no_default_bible'
+        : 'selection_failed';
+    if (scrError === 'selection_failed') db.recordDiagnostic('scripture_selection_failed', error);
+    else console.warn('Bible selection is not confirmed', error instanceof Error ? error.message : error);
     // Скрытая попытка на входе не показывает ошибку: её покажет первое открытие блока.
     useSession.setState(
       foreground || useSession.getState().dockMode === 'scripture'
-        ? { scrStatus: 'error', scrError: 'catalog_unavailable' }
+        ? { scrStatus: 'error', scrError }
         : { scrStatus: 'idle', scrError: null },
     );
     return false;

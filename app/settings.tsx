@@ -10,6 +10,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
 import { ScriptureDefaultUnavailableError, ensureScripturePreferences, useSettings } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
+import { recordDiagnostic } from '../lib/db';
 import {
   DEFAULT_REMINDER_SCHEDULE,
   MAX_REMINDER_RULES,
@@ -334,6 +335,9 @@ export default function Settings() {
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
   const [defaultUnavailable, setDefaultUnavailable] = useState(false);
+  const [scriptureSaveError, setScriptureSaveError] = useState(false);
+  const hydrateRequest = useRef(0);
+  const hydratedLanguage = useRef(uiLanguage);
   const translationRequest = useRef(0);
   const preferenceSave = useRef<Promise<void>>(Promise.resolve());
 
@@ -372,11 +376,15 @@ export default function Settings() {
   };
 
   const hydrate = async () => {
+    // Повторный hydrate (смена языка интерфейса, Retry) отменяет результат прежнего.
+    const request = ++hydrateRequest.current;
+    const current = () => request === hydrateRequest.current;
     setLoadingCatalog(true);
     setCatalogError(false);
     setDefaultUnavailable(false);
     try {
       await load();
+      if (!current()) return;
       let saved = useSettings.getState().scripturePreferences;
       let languageCatalog: ScriptureLanguageOption[] | null = null;
       let translationCatalog: ScriptureTranslation[] | null = null;
@@ -386,6 +394,7 @@ export default function Settings() {
             await ensureScripturePreferences());
         } catch (error) {
           if (!(error instanceof ScriptureDefaultUnavailableError)) throw error;
+          if (!current()) return;
           // Каталог доступен, но не подходит к языку интерфейса: выбор остаётся
           // за человеком, ошибка видна рядом с открытыми списками.
           setLanguages(error.languages);
@@ -397,6 +406,7 @@ export default function Settings() {
         languageCatalog ?? fetchScriptureLanguages(),
         translationCatalog ?? fetchScriptureTranslations(saved.language),
       ]);
+      if (!current()) return;
       const savedLanguage = languageResult.find((item) => item.alias === saved.language) ?? null;
       const savedTranslation = translationResult.find(
         (item) => item.code === saved.translationCode,
@@ -408,15 +418,23 @@ export default function Settings() {
       setTranslation(savedTranslation);
       setVoice(savedVoice);
     } catch {
-      setCatalogError(true);
+      if (current()) setCatalogError(true);
     } finally {
-      setLoadingCatalog(false);
+      if (current()) setLoadingCatalog(false);
     }
   };
 
   useEffect(() => {
     void hydrate();
   }, []);
+
+  // Без сохранённой Библии начальный выбор зависит от языка интерфейса:
+  // после его смены на этом же экране проверяем каталог заново.
+  useEffect(() => {
+    if (hydratedLanguage.current === uiLanguage) return;
+    hydratedLanguage.current = uiLanguage;
+    if (!useSettings.getState().scripturePreferences) void hydrate();
+  }, [uiLanguage]);
 
   // Разрешение могло измениться в системных настройках, пока приложение было в
   // фоне: перечитываем его при каждом возвращении на передний план.
@@ -750,13 +768,21 @@ export default function Settings() {
     setOpen(null);
     if (!language || !translation) return;
     const preferences = preferencesFromCatalog(language, translation, next);
-    if (!preferences) return;
+    if (!preferences) {
+      recordDiagnostic('scripture_preferences_save_failed', new Error('Incompatible Bible triple'));
+      setScriptureSaveError(true);
+      return;
+    }
+    setScriptureSaveError(false);
     // Записи идут последовательно: при быстром выборе нескольких голосов
     // последним в SQLite гарантированно останется последний выбор пользователя.
     preferenceSave.current = preferenceSave.current
       .catch(() => undefined)
       .then(() => setScripturePreferences(preferences))
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        recordDiagnostic('scripture_preferences_save_failed', error);
+        setScriptureSaveError(true);
+      });
   };
 
   const openPicker = (id: Exclude<OpenPicker, null>) => setOpen(id);
@@ -843,6 +869,15 @@ export default function Settings() {
             />
           </View>
           {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
+          {scriptureSaveError ? (
+            <Text
+              accessibilityRole="alert"
+              style={[styles.settingHint, styles.reminderWarning]}
+              testID="scripture-save-error"
+            >
+              {t('settings.bibleSaveError')}
+            </Text>
+          ) : null}
           {defaultUnavailable && !scripturePreferences ? (
             <Text accessibilityRole="alert" style={styles.catalogMessage} testID="scripture-default-unavailable">
               {t('settings.bibleDefaultUnavailable')}

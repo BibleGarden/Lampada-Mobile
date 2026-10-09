@@ -310,7 +310,7 @@ tier of its e2e runs.
 | SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
 | SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 | SCR-026 | Start narration, cover the session with the PIN screen or background the app, then return | narration continues from its current position without restarting; the session timer expires on schedule, but reflection waits until the prayer screen is visible |
-| SCR-027 | A clean installation whose catalog has no complete translation/voice for the interface language; open Settings and start a prayer | Settings show the Bible language list with "No Bible matches the interface language"; a manual language/translation/voice choice is saved; until then the prayer starts and the scripture block shows the catalog error; nothing is substituted (unit: `scriptureInitialization.test.mjs`) |
+| SCR-027 [prepared] | A clean installation whose catalog has no narrated translation for the interface language (stub `catalog=unvoiced-ru`, Russian system language): start a prayer, open the scripture block, follow its action to Settings, pick English / BSB / Bob Souer, return | the block says there is no Bible for the interface language and offers "Open settings" instead of a retry; Settings show the Bible language list with "No Bible matches the interface language"; the manual triple is saved (`en/16/151` in SQLite) and the block shows a passage in the same session; manual checks: a failed save of the pick is shown, and switching the interface to English on the same Settings screen rechecks the catalog and replaces the message with the English default (unit: `scriptureInitialization.test.mjs`, `sessionResume.test.mjs`; flows: `*-scripture-catalog-no-default`) |
 
 ### Content reports
 
@@ -520,4 +520,7 @@ absent. It sets `catalog=ok` and runs `*-scripture-catalog-recovery` (Retry in
 the same session shows a passage), then confirms the saved `en/16/151`: the
 choice follows the interface, not the system locale. It sets `catalog=fail` and
 runs `*-scripture-catalog-saved-offline` (cold start, interface back to Russian),
-then confirms `en/16/151` with `ui_language=ru`.
+then confirms `en/16/151` with `ui_language=ru`. SCR-027 runs next with
+`catalog=unvoiced-ru` through `*-scripture-catalog-no-default` from a clean
+install, then confirms the manually chosen `en/16/151`. On Android the three
+SCR-013 phases are one chain: `--start-at` accepts only its first phase.

@@ -725,6 +725,7 @@ function SessionScreen() {
                 setReaderOpen(true);
                 readerRef.current?.snapToIndex(0);
               }}
+              onOpenSettings={() => router.push('/settings')}
               onReportOpenChange={setReportOpen}
               scriptureAudio={scriptureAudio}
             />

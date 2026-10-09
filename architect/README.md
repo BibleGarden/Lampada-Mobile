@@ -426,10 +426,14 @@ language is matched against the server catalogue. Local settings load independen
 of this network initialization, with a nullable Bible selection until a complete
 valid triple is confirmed. Catalog errors and missing matches never substitute
 English or write a preference. A prayer starts without waiting for the catalogue:
-the session snapshot stays null, the scripture block confirms it in the
-background and otherwise shows "Bible catalog unavailable" with Retry, which
-reruns initialization within the same session. Settings show the language list
-for a manual choice when the catalogue has no triple for the interface language.
+the session snapshot stays null, and the scripture block confirms it in the
+background. On failure the block names the cause: an unreachable catalogue shows
+"Bible catalog unavailable" with Retry, which reruns initialization within the
+same session; a catalogue with no triple for the interface language sends the
+user to Settings, where a manual choice revives the block; a storage error has
+its own message and a diagnostic. Settings show the language list for a manual
+choice when the catalogue has no triple for the interface language, recheck it
+after an interface-language change, and show a failed save.
 A successful initial triple is persisted atomically; a saved selection is used
 without a catalog request and is not overridden. A concurrent explicit selection
 wins over initialization, and an interface language changed during it restarts

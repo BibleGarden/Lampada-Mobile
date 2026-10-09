@@ -265,7 +265,9 @@ output, exits and screenshots, and reads SQLite in read-only mode after each
 phase. A failure must write no Bible preference while the prayer still starts
 and its scripture block shows the catalog error; Retry after recovery must show
 a passage in the same session; the saved English choice must survive a Russian
-interface and a later catalog failure. It resolves only named simulators and
+interface and a later catalog failure. The SCR-027 phase then uses a catalog
+without a narrated Russian translation: the scripture block must send the user
+to Settings, and the manual choice made there must be saved. It resolves only named simulators and
 cannot target a physical phone. On Android the same phases run as part of
 `npm run test:e2e:android:prepared`. Never run these clear-state fixtures on an
 owner's phone.

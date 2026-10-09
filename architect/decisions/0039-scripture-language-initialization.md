@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-10-09
-- Partly supersedes: ADR-0005, items 1–3
+- Partly supersedes: ADR-0005, items 1–3, item 5 and the offline English start
 
 ## Context
 
@@ -25,16 +25,23 @@ still not depend on the network.
    An interface language changed during initialization restarts it for the new
    language instead of failing.
 4. Starting a prayer never waits for the catalog. Without a confirmed selection
-   the session starts with a null Bible snapshot. The scripture block confirms
-   it in the background; if that fails, it shows "Bible catalog unavailable"
-   with Retry. Retry reruns initialization, and on success the block works
-   normally in the same session. The offline passage cache is not used without
-   a confirmed language and translation.
+   the session starts with a null Bible snapshot, and the scripture block
+   confirms it in the background. The block names the real cause of a failure.
+   An unreachable catalog shows "Bible catalog unavailable" with Retry; Retry
+   reruns initialization and, on success, the block works normally in the same
+   session. A reachable catalog without a complete triple for the interface
+   language shows a message with an action that opens Settings, and no retry; a
+   choice saved there revives the block in the same session. A local storage
+   error shows its own message with Retry and is written to diagnostics. The
+   offline passage cache is not used without a confirmed language and
+   translation.
 5. Settings show the catalog error with Retry when the catalog is unreachable.
    When the catalog is reachable but has no complete triple for the interface
    language, Settings show the language list with a specific message, so the
-   user can pick a Bible manually. An initialization that produced the
-   selection hands its catalogs to Settings, which does not fetch them again.
+   user can pick a Bible manually; the check reruns when the interface language
+   changes on the same screen. A failed save of a manual pick is shown and
+   written to diagnostics. An initialization that produced the selection hands
+   its catalogs to Settings, which does not fetch them again.
 6. A malformed `meta.scripture_preferences` record is not a selection. It is
    reported to the local diagnostics log as `scripture_preferences_invalid` and
    is replaced only by a confirmed triple.
@@ -53,5 +60,7 @@ missing catalog options with the language list returned, saved choices while
 offline, concurrent initialization, explicit choice and interface-language races,
 and the malformed-record diagnostic. The real session store is tested for an
 offline first launch: the prayer starts, the scripture block shows
-`catalog_unavailable`, and Retry confirms the selection in the same session.
-Maestro prepared phases on iOS and Android cover the same path on a build.
+`catalog_unavailable`, and Retry confirms the selection in the same session;
+the missing-triple and storage errors keep their own causes. Maestro prepared
+phases on iOS and Android cover the offline path (SCR-013) and the manual choice
+when the interface language has no voiced Bible (SCR-027).
