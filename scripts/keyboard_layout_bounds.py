@@ -111,7 +111,9 @@ def main():
     parser.add_argument('--absent', nargs='*', default=[])
     parser.add_argument('--mode', choices=['hidden', 'hardware', 'floating', 'docked'], required=True)
     parser.add_argument('--output', required=True)
-    parser.add_argument('--unfocused', action='store_true')
+    focus = parser.add_mutually_exclusive_group()
+    focus.add_argument('--unfocused', action='store_true')
+    focus.add_argument('--focused', action='store_true')
     args = parser.parse_args()
     def adb(*command):
         return subprocess.check_output(['adb', '-s', args.device, *command], text=True, timeout=30)
@@ -130,7 +132,7 @@ def main():
               'observed_mode': observation['mode'],
               'elements': {key: observation['elements'].get(key) for key in ([args.input_id] if args.input_id else []) + args.actions + args.below_input + args.absent}}
     Path(args.output).write_text(json.dumps(result, indent=2) + '\n')
-    validate(observation, args.input_id, args.actions, args.absent, args.mode, args.below_input, False if args.unfocused else None)
+    validate(observation, args.input_id, args.actions, args.absent, args.mode, args.below_input, True if args.focused else False if args.unfocused else None)
     print('Native OS bounds contract passed')
 
 

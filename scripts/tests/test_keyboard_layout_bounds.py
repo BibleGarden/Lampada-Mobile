@@ -72,3 +72,8 @@ class LayoutContractTests(unittest.TestCase):
             validate(s, 'field', ['save'], [], 'hidden', expected_focus=False)
         s = self.snapshot('[50,350][850,1300]', '[50,2000][850,2100]', focused=False)
         validate(s, 'field', ['save'], [], 'hidden', expected_focus=False)
+
+    def test_window_resize_cannot_pass_after_losing_editor_focus(self):
+        s = self.snapshot('[50,350][850,1300]', '[50,1350][850,1400]', '[0,1450][904,2316]', focused=False)
+        with self.assertRaisesRegex(AssertionError, 'Expected input focus=True'):
+            validate(s, 'field', ['save'], [], 'docked', expected_focus=True)

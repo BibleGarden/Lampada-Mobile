@@ -27,3 +27,6 @@ echo 'All 10 Android critical scenarios passed.'
 # Native geometry is part of the build gate, not an optional visual check.
 python3 scripts/run-keyboard-contract.py --device "$device" \
   --mode docked --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-contract-docked"
+
+python3 scripts/run-keyboard-resize-contract.py --device "$device" \
+  --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-window-resize"

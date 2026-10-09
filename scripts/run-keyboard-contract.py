@@ -75,13 +75,17 @@ def main():
             restoring = f'android-keyboard-contract-{form}-restore'
             command(restoring, ['maestro', '--device', args.device, 'test', '-e', f'KEYBOARD_MODE={mode}',
                                 '--test-output-dir', str(output / restoring), f'testing/android-e2e/{restoring}.yaml'])
-            if mode == 'hardware' and form in ('setup', 'answer', 'journal'):
+            if mode == 'hardware' and form in ('setup', 'answer'):
                 argv = ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device, '--input-id', input_id,
                         '--mode', 'hidden', '--unfocused', '--absent', f'{form}-keyboard-dismiss',
                         '--output', str(output / f'{form}-finished-native-bounds.json')]
                 if lower_actions or deferred:
                     argv += ['--actions', *lower_actions, *deferred]
                 command(f'{form}-finished-bounds', argv)
+            if mode == 'hardware' and form == 'journal':
+                command('journal-cleared-bounds', ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device,
+                        '--input-id', input_id, '--mode', 'hardware', '--absent', 'journal-keyboard-dismiss',
+                        '--output', str(output / 'journal-cleared-native-bounds.json')])
             print(f'{form}: native {mode} bounds and restoration passed', flush=True)
     finally:
         if args.mode == 'hardware':

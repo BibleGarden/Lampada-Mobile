@@ -536,6 +536,15 @@ the same five forms. It rejects a partly clipped action even if its center is
 visible. UIKit safe-area insets and physical external-keyboard use remain
 separate live checks.
 
-Hardware submission regression: Enter must release editor focus even when the
+Hardware submission regression: goal/reflection Enter and answer Save must release
+editor focus even when the
 IME is already hidden; an orphaned IME must also hide when RN focus is absent.
 `keyboardDismiss.test.mjs` executes the real helper against both native states.
+
+Clearing the journal query continues editing: hardware input remains focused
+with no IME, so another query can be typed directly. The staged journal
+checkpoint verifies this continuation instead of treating Clear as Finish typing.
+
+KBD window resize: Android critical changes only the emulator width with the
+keyboard/editor open, checks full native bounds and retained focus, restores
+the original dimensions, then saves and reopens the exact draft.

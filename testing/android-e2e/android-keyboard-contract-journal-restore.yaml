@@ -9,12 +9,6 @@ tags:
     commands:
       - tapOn:
           id: journal-keyboard-dismiss
-# Clearing a query intentionally retains focus. Finish hardware editing first.
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE == 'hardware'}
-    commands:
-      - pressKey: Enter
 - assertVisible:
     id: journal-search-input
     text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix journal"}'

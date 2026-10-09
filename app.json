@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lampada",
     "slug": "pray",
-    "version": "1.3.38",
+    "version": "1.3.40",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
