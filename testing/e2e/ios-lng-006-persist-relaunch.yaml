@@ -13,6 +13,12 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
+    # Lampada не использует геолокацию; явный список не даёт Maestro
+    # дёргать locationd (simctl privacy location) сразу после холодной
+    # перезагрузки, где locationd зависает.
+    permissions:
+      notifications: allow
+      microphone: allow
 - tapOn:
     id: "settings-button"
 - tapOn:
@@ -25,6 +31,12 @@ tags:
 - assertVisible: "НАЛАШТУВАННЯ"
 - launchApp:
     stopApp: true
+    # Lampada не использует геолокацию; явный список не даёт Maestro
+    # дёргать locationd (simctl privacy location) сразу после холодной
+    # перезагрузки, где locationd зависает.
+    permissions:
+      notifications: allow
+      microphone: allow
 - assertVisible: "Почати молитву"
 - tapOn:
     id: "settings-button"
