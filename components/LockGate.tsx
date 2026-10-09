@@ -11,6 +11,7 @@ import { useSettings } from '../lib/settings';
 import {
   authenticateWithBiometrics,
   biometryInfo,
+  biometryText,
   useLock,
   verifyPin,
   wipeEverything,
@@ -157,14 +158,14 @@ function LockScreen() {
           titleTestID="lock-pin-title"
           subtitle={
             canUseBiometry
-              ? biometryError ?? t('components.security.orBiometrics', { name: biometry?.label ?? '' })
+              ? biometryError ?? biometryText(Platform.OS, biometry?.kind ?? 'other', 'orUnlock', t)
               : t('components.security.pinProtected')
           }
           expectedLength={pinLength}
           onSubmit={submitPin}
           biometry={
             canUseBiometry && biometry
-              ? { label: t('components.security.useBiometrics', { name: biometry.label }), onPress: () => void runBiometrics() }
+              ? { label: biometryText(Platform.OS, biometry.kind, 'unlock', t), onPress: () => void runBiometrics() }
               : null
           }
           footer={
