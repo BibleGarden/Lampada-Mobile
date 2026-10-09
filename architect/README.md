@@ -45,7 +45,8 @@ updates took frames from the text input, and typing showed up in batches.
   app lock with a PIN and biometrics.
 - Expo Localization for initial interface and scripture language selection.
 - Expo Splash Screen for the launch screen: the app background `#0e0a07` with
-  the flame from `assets/splash.png` on both platforms.
+  the flame from `assets/splash.png` on both platforms. The root layout keeps
+  it until fonts and the interface language are loaded.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
@@ -54,11 +55,13 @@ channel is `test` and its API origin uses HTTP. HTTPS builds disable cleartext;
 an HTTP origin without the test channel fails native configuration explicitly.
 It also reserves a 4 GiB Gradle heap and 1 GiB metaspace for the Release DEX merge.
 The manifest records the build channel and normalized API origin without the
-client key. `android.blockedPermissions` removes the template permissions
-`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`;
-recordings and the journal stay in app storage and prayers are shared as text. Android e2e reads these fields from the installed APK before launching
+client key. Android e2e reads these fields from the installed APK before launching
 the app or clearing its data and requires a test channel with the expected
 non-production origin.
+
+`android.blockedPermissions` removes the template permissions
+`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`:
+recordings and the journal stay in app storage and prayers are shared as text.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
@@ -471,9 +474,11 @@ not throw them out of it.
 The protection is optional and off by default (ADR-0014): until the user turns it
 on in the settings, the behaviour of the app does not change. The base method is
 a PIN of 4 to 8 digits, with the length chosen by the user. Biometrics is a
-separate toggle strictly on top of the PIN. `biometryLabel` in `lib/lockPolicy.ts`
-names it Face ID or Touch ID only on iOS; Android uses localized words for face
-recognition, fingerprint or biometrics. The toggle is available only
+separate toggle strictly on top of the PIN. `biometryText` in `lib/lockPolicy.ts`
+builds every biometric text: iOS puts Face ID or Touch ID into the shared
+templates; Android uses a complete localized phrase per method and names face
+or fingerprint only when the system reports exactly one biometric type,
+otherwise "biometrics". The toggle is available only
 when the sensor exists and a sample is enrolled in the system; the PIN stays the
 only fallback way in.
 
@@ -620,25 +625,31 @@ mount through `lib/versionCheck.ts`. The shared API receives `app=lampada`
 and `platform=ios|android`; only responses with the same `app` and `platform`
 may trigger optional or mandatory update screens, so Android never opens an
 App Store URL. The client does not construct store URLs. Web builds skip the
-check. The overlay sits above navigation and below `LockGate`, with accessible content
-isolation. Network errors leave the app usable. See ADR 0020 and
-[ADR-0039](decisions/0039-google-play-release.md).
+check. The overlay sits above navigation and below `LockGate`, with accessible
+content isolation. A failed or unrecognized check leaves the app usable and
+writes a `version_check_ignored` record with the reason (`unconfigured`,
+`network`, `status` with the HTTP code, `invalid`, `app-mismatch` or
+`platform-mismatch`) to the local diagnostics log `lampada-diagnostics.log`.
+See ADR 0020 and [ADR-0040](decisions/0040-google-play-release.md).
 
 Required Bible-API contract for `GET /api/version-check` with `app=lampada`:
 
 - `platform` accepts `ios` or `android`; other values are rejected with 422.
   A request without `platform` comes from an iOS build released before
-  ADR-0039 and is answered for `ios`.
+  ADR-0040 and is answered for `ios`. `app=bible-garden` ignores `platform`
+  and its response does not change.
 - Minimum supported version, latest version, enable switch and store URL are
   configured per platform. Android uses
   `https://play.google.com/store/apps/details?id=com.nf404.twinkler`, iOS
   `https://apps.apple.com/app/id6806024678`. Each platform's switch stays off
   until its store listing is public.
 - The response adds `"platform": "<ios|android>"` for the platform it was
-  decided for; the other fields keep their current meaning.
+  decided for; `VersionCheckModel` must declare the field, otherwise FastAPI's
+  `response_model` drops it. The other fields keep their current meaning.
 
 Until Bible-API returns `platform`, builds containing this client show no
-update notices.
+update notices and record `platform-mismatch`. Deploy the Bible-API change
+before releasing a store build of this client.
 
 ## Shared API configuration
 
@@ -791,10 +802,11 @@ production raises the minor and drops the patch (`1.1.3` → `1.2`), test builds
 raise the patch of the current store version (`1.2` → `1.2.1`). See
 [ADR-0034](decisions/0034-store-minor-test-patch-versions.md).
 `scripts/build-production.sh` requires `android`, `ios` or `all` and reserves
-one store version per release for both platforms; `--keep-version` builds the
-other platform of an already reserved release. The EAS submit profile sends
+one store version per release for both platforms; `--keep-version` builds one
+platform of an already reserved release (the other platform or a retry) and is
+refused with `all`. The EAS submit profile sends
 Android builds to the internal track as drafts with the service account key
-held in EAS credentials. See [ADR-0039](decisions/0039-google-play-release.md).
+held in EAS credentials. See [ADR-0040](decisions/0040-google-play-release.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo
 config fallback for web and Expo Go. This matches the installed version used
