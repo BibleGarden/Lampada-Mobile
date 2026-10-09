@@ -42,7 +42,7 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - inputText: "Keyboard matrix report"
-      - assertVisible:
+      - assertNotVisible:
           id: report-keyboard-dismiss
 - assertVisible:
     id: content-report-send

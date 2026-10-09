@@ -16,8 +16,7 @@ in accessibility without proving that its entire native rectangle was usable.
 
 Separate software visibility from occupied space and field focus in a single
 application provider. A show or zero-height frame never implies hide; deferred
-actions wait for didHide. Dismiss controls follow software visibility, never
-field focus. Keyboard Controller owns native dismissal, including blur before
+actions wait for didHide, independently of field focus. Keyboard Controller owns native dismissal, including blur before
 IME hide. React Native responder release is unconditional because Controller
 dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display.
 
@@ -34,9 +33,9 @@ settles, without remounting live editors. Closed presentation and hit testing
 remain disabled even if a vendor animation retains an old closed position.
 
 Keep action policy explicit: preparation/reflection defer, answers/reports keep.
-Use compact floating inputs and a localized Finish typing control rather than
-inventing coordinates for an Android floating panel that reports no occupied
-bottom strip. Preserve transactional save and audio lifecycle ownership.
+Use compact floating inputs for an Android floating panel that reports no occupied
+bottom strip. Preserve existing outside-tap dismissal and native submission keys;
+do not add a separate dismissal action. Preserve transactional save and audio lifecycle ownership.
 
 ## Validation contract
 

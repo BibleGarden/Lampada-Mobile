@@ -513,10 +513,10 @@ The run is complete when:
 | ID | Action | Expected result |
 | --- | --- | --- |
 | KBD-001 [prepared, android] | Run the staged matrix on a named emulator with a docked keyboard for setup, answer, reflection, report and journal | native rectangles fit OS status/navigation/IME boundaries; input does not overlap lower actions; deferred actions are absent; text survives dismissal and persisted answers/notes reopen |
-| KBD-002 [prepared, android] | Select the real Gboard floating mode and run the same matrix | no zero-height-as-hide assumption; compact input, explicit Finish typing, complete lower action rectangles above the navigation area, and preserved text |
+| KBD-002 [prepared, android] | Select the real Gboard floating mode and run the same matrix | no zero-height-as-hide assumption; compact input, existing outside-tap dismissal, complete lower action rectangles above the navigation area, and preserved text |
 | KBD-003 [prepared, android] | Boot with an emulated hardware keyboard and run focused-input mode with software display disabled for hardware input, restoring that setting afterward | genuinely focused native input without an onscreen IME; actions remain available; this is a no-software-focus contract, not a physical external-keyboard acceptance claim |
 | KBD-004 [prepared, ipad] | Run iPad setup/answer/reflection/report keyboard flows, rotating while typing; check narrow floating mode separately | viewport adapts to actual window bounds; no extra keyboard inset; footer/body remain usable and text is retained |
-| KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and dismiss actions remain usable, without clearing personal app data |
+| KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and existing actions remain usable, without clearing personal app data |
 
 A native bounds assertion is stronger than assertVisible. The independent
 `keyboard_layout_bounds.py` reads OS InsetsSource frames and native Maestro hierarchy bounds,
@@ -526,8 +526,8 @@ validator's own tests. Physical screenshots must be checked before claiming that
 a floating panel does not overlap a field; the panel can be moved by the user.
 
 Keyboard submission regression (2026-10-09): preparation and reflection Enter
-submit before native dismissal; loss of input focus alone must never remove the
-Finish typing control or reveal deferred actions. The staged Android setup
+submit before native dismissal; loss of input focus alone must never reveal
+deferred actions. The staged Android setup
 restore flow verifies Enter restores duration/Next and preserves the topic.
 
 The iPad staged counterpart (`npm run test:keyboard:ios -- --mode docked`)
@@ -543,7 +543,7 @@ IME is already hidden; an orphaned IME must also hide when RN focus is absent.
 
 Clearing the journal query continues editing: hardware input remains focused
 with no IME, so another query can be typed directly. The staged journal
-checkpoint verifies this continuation instead of treating Clear as Finish typing.
+checkpoint verifies this continuation instead of treating Clear as ending input.
 
 KBD window resize: Android critical changes only the emulator width with the
 keyboard/editor open, checks full native bounds and retained focus, restores
@@ -551,3 +551,11 @@ the original dimensions, then saves and reopens the exact draft.
 
 JRN-007 prerequisite: scroll until the complete Delete action is visible for
 expanded long text/audio details before activating the timed confirmation.
+
+SETUP-004 Android injects its full long goal in bounded driver transactions,
+then asserts the complete unchanged text; this avoids a single two-minute RPC
+deadline without weakening layout or persistence checks.
+
+2026-10-09 UI correction: no form exposes an added Finish typing action.
+The native matrix asserts its absence and preserves existing outside-tap
+dismissal, native Done submission, and exact draft restoration.

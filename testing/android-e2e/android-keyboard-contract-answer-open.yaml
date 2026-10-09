@@ -38,7 +38,7 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - inputText: "Keyboard matrix answer"
-      - assertVisible:
+      - assertNotVisible:
           id: answer-keyboard-dismiss
 - assertVisible:
     id: answer-save-button

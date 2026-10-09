@@ -1,6 +1,5 @@
 export const componentMessages = {
   "en": {
-    "components.keyboard.done": "Finish typing",
     "components.reader.scripture": "Scripture",
     "components.reader.pause": "Pause",
     "components.reader.listenPassage": "Listen to passage",
@@ -44,7 +43,6 @@ export const componentMessages = {
     "components.reader.allow": "Allow"
   },
   "ru": {
-    "components.keyboard.done": "Закончить ввод",
     "components.reader.scripture": "Писание",
     "components.reader.pause": "Пауза",
     "components.reader.listenPassage": "Слушать отрывок",
@@ -88,7 +86,6 @@ export const componentMessages = {
     "components.reader.allow": "Разрешить"
   },
   "uk": {
-    "components.keyboard.done": "Завершити введення",
     "components.reader.scripture": "Писання",
     "components.reader.pause": "Пауза",
     "components.reader.listenPassage": "Слухати уривок",

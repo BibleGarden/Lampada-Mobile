@@ -8,7 +8,8 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - tapOn:
-          id: report-keyboard-dismiss
+          id: content-report-backdrop
+          point: "5%, 15%"
 - assertVisible:
     id: content-report-comment
     text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix report"}'

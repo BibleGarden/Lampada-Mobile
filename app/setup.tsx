@@ -20,7 +20,6 @@ import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
-import KeyboardDismissAction from '../components/keyboard/KeyboardDismissAction';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
@@ -131,7 +130,7 @@ export default function Setup() {
                 <Text style={styles.helpBtnLabel}>?</Text>
               </Pressable>
             </View>
-            <KeyboardDismissAction testID="setup-keyboard-dismiss" />
+
             <View style={[styles.topicSlot, policy.fillInput && styles.topicSlotDocked]}>
               <Text
                 style={[styles.topicInput, styles.topicSizer]}

@@ -22,7 +22,6 @@ import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
-import KeyboardDismissAction from '../components/keyboard/KeyboardDismissAction';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -129,7 +128,6 @@ function ReflectScreen() {
                 )}
               </View>
 
-              <KeyboardDismissAction testID="reflect-keyboard-dismiss" />
               <TextInput
                 value={takeaway}
                 onChangeText={setTakeaway}

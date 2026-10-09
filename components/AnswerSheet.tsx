@@ -60,7 +60,6 @@ import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
 import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
-import KeyboardDismissAction from './keyboard/KeyboardDismissAction';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 
 const RECORDING_OPTIONS = {
@@ -1260,7 +1259,7 @@ export default function AnswerSheet({
           ) : questionHeader}
 
           <View style={styles.form}>
-            <KeyboardDismissAction testID="answer-keyboard-dismiss" />
+
             {/* Поле занимает всю оставшуюся высоту и прокручивается само:
                 курсор при наборе всегда остаётся в поле зрения. */}
             <KeyboardSheetTextInput

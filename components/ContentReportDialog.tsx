@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sendContentReport, type ContentReportError } from '../lib/contentReportClient';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import KeyboardViewport from './keyboard/KeyboardViewport';
-import KeyboardDismissAction from './keyboard/KeyboardDismissAction';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 
 type Props = {
@@ -130,7 +129,7 @@ export default function ContentReportDialog({
             ) : (
               <>
                 <Text style={styles.body}>{t('components.contentReport.body')}</Text>
-                <KeyboardDismissAction testID="report-keyboard-dismiss" />
+
                 <TextInput
                   value={comment}
                   onChangeText={setComment}

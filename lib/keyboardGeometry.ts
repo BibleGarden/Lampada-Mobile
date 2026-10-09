@@ -40,6 +40,5 @@ export function keyboardFormPolicy(layout: KeyboardLayout, actionMode: 'defer' |
   return {
     fillInput: layout.kind === 'docked',
     actionsVisible: actionMode === 'keep' || !layout.visible,
-    dismissVisible: layout.visible,
   };
 }

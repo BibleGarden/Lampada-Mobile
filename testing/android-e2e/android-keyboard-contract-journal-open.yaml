@@ -42,7 +42,7 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - inputText: "Keyboard matrix journal"
-      - assertVisible:
+      - assertNotVisible:
           id: journal-keyboard-dismiss
 - assertVisible:
     id: journal-search-input

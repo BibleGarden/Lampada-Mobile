@@ -8,7 +8,7 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - tapOn:
-          id: journal-keyboard-dismiss
+          id: journal-title
 - assertVisible:
     id: journal-search-input
     text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix journal"}'

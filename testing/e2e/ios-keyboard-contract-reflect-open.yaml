@@ -38,7 +38,7 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - inputText: "Keyboard matrix reflect"
-      - assertVisible:
+      - assertNotVisible:
           id: reflect-keyboard-dismiss
 - runFlow:
     when:

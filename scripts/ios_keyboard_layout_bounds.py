@@ -31,11 +31,12 @@ def check(tree, form, mode, output):
     from .keyboard_contract_forms import FORMS
     input_id, lower_actions, deferred = FORMS[form]
     observation = observe_ios(tree)
-    actions = [*lower_actions, f'{form}-keyboard-dismiss']
-    ids = [input_id, *actions, *deferred]
+    actions = list(lower_actions)
+    absent = [*deferred, f'{form}-keyboard-dismiss']
+    ids = [input_id, *actions, *absent]
     result = {'platform': 'ios', 'expected_mode': mode,
               'viewport': observation['viewport'], 'observed_mode': observation['mode'],
               'boundary_source': 'UIKit native inputView and window frames; safe-area insets are not exposed',
               'elements': {key: observation['elements'].get(key) for key in ids}}
     output.write_text(json.dumps(result, indent=2) + '\n')
-    validate(observation, input_id, actions, deferred, mode, lower_actions)
+    validate(observation, input_id, actions, absent, mode, lower_actions)

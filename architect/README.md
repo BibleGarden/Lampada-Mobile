@@ -225,8 +225,8 @@ in their existing owners.
 
 Preparation and reflection defer lower actions while typing. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
-stay compact, and every form with a visible software keyboard exposes a localized
-Finish typing action. Answer snap expansion is a form policy, not a geometry
+stay compact. Keyboard dismissal uses existing outside taps and native submission
+keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
 calculation; the synchronous close flag prevents a late hide notification from
 reopening a saved sheet. Content can scroll on small windows or long questions.
 Keyboard opening may reflow the form; typing itself preserves text and focus.

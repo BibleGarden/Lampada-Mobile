@@ -18,7 +18,6 @@ import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
-import KeyboardDismissAction from '../components/keyboard/KeyboardDismissAction';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -454,7 +453,7 @@ export default function Journal() {
             clearButtonMode="never"
             testID="journal-search-input"
           />
-          <KeyboardDismissAction testID="journal-keyboard-dismiss" />
+
           {query.length > 0 && (
             <Pressable
               testID="journal-clear-search"

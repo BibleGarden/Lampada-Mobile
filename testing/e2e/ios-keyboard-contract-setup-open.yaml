@@ -15,7 +15,7 @@ tags:
       true: ${KEYBOARD_MODE != 'hardware'}
     commands:
       - inputText: "Keyboard matrix setup"
-      - assertVisible:
+      - assertNotVisible:
           id: setup-keyboard-dismiss
 - runFlow:
     when:
