@@ -114,7 +114,7 @@ are recorded.
 | PRE-004C | Run Android preflight with missing runtime variables | exit nonzero, with the output directory and missing names visible in the console; no scenarios start |
 | PRE-004D | Prebuild or build an Android store Release and inspect the merged manifest | `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE` are absent; the declared permissions match the Play Console declarations |
 | PRE-005 | Compare `expo.version` with the About footer after a local or preview build and after a production build | a test build shows the next patch of the current store version (`1.1` → `1.1.1`); a production build in TestFlight shows two components with the next minor (`1.1.1` → `1.2`); the update check treats `1.2` and `1.2.0` as equal |
-| PRE-005A | Run `build-production.sh` without a platform, with `all`, and with `android --keep-version` before and after a test build | without a platform it stops before checks and bumps; `all` reserves one minor for both stores; `--keep-version` keeps a two-part version and refuses a test version such as `1.4.1` (`buildVersion.test.mjs`) |
+| PRE-005A | Run `build-production.sh` without a platform, with `all`, with `all --keep-version`, and with `android --keep-version` before and after a test build | without a platform, and with `all --keep-version`, it stops before checks and bumps; `all` reserves one minor for both stores; `--keep-version` keeps a two-part version and refuses a test version such as `1.4.1` (`buildVersion.test.mjs`) |
 
 Expo Go is not to be used: it lacks some of the native modules of the project.
 
@@ -161,8 +161,8 @@ tier of its e2e runs.
 | NAV-006 | Leave Home in the background after praying, then reopen the app on a later day without navigating | the last dot represents the current local day, yesterday's prayer moves left, and the flame and greeting refresh |
 | NAV-007 | Keep Home open across local midnight, including a daylight-saving transition | the calendar advances at local midnight; today's unprayed dot becomes an outline and the previous prayer remains on its actual date |
 | NAV-008 [ipad] | Rotate an iPad between portrait and landscape on Home and another screen, including while JavaScript is briefly busy | the background covers the entire canvas during and after rotation; no strip retains the previous width or height |
-| NAV-009 | Cold start of a Release build on Android 12+ and on iOS | the launch screen is the app background `#0e0a07` with the flame centred, with no white screen, placeholder grid or visible square around the flame, then Home appears |
-| NAV-010 | Update check on iOS and Android against a server returning soft and hard decisions | the request carries `platform=ios` or `platform=android`; a decision for the other platform or without `platform` shows no overlay; on Android Update opens the Google Play URL and never the App Store (`versionCheck.test.mjs`) |
+| NAV-009 | Cold start of a Release build on Android 12+ and on iOS | the launch screen is the app background `#0e0a07` with the flame centred, with no white screen, placeholder grid or visible square around the flame; it stays until Home is drawn, with no empty dark frame between them |
+| NAV-010 | Update check on iOS and Android against a server returning soft and hard decisions, then against a server without `platform` | the request carries `platform=ios` or `platform=android`; a decision for the other platform or without `platform` shows no overlay and appends a `version_check_ignored` record with `platform-mismatch` to `lampada-diagnostics.log` (request and acceptance: `versionCheck.test.mjs`); manually, on Android Update opens the Google Play listing and never the App Store |
 
 ### Setup and entering the prayer
 
@@ -407,7 +407,7 @@ are in
 | LOCK-006 | "Forgot your PIN?" and two confirmations | cancelling at either of the two steps erases nothing, confirming wipes the journal and removes the protection |
 | LOCK-007 | Returning from the background before and after a minute | a short switch does not ask for the code, more than a minute does; the app process is not restarted |
 | LOCK-008 | The app snapshot in the task switcher | the privacy screen is shown instead of the content |
-| LOCK-009 | Entry by biometrics on iOS and Android | the toggle is available only with the PIN enabled and a sample enrolled, a refusal leaves entry by code; iOS names Face ID or Touch ID; Android names face recognition, fingerprint or biometrics in the interface language and never Face ID or Touch ID, including the title of the enable error (`biometryLabel.test.mjs`) |
+| LOCK-009 | Entry by biometrics on iOS and Android | the toggle is available only with the PIN enabled and a sample enrolled, a refusal leaves entry by code; iOS names Face ID or Touch ID; Android shows complete phrases for face, fingerprint or biometrics in the interface language (a specific method only when the device reports one type) and never Face ID or Touch ID, in the settings row, the system prompt title, the enable error and the lock screen (`biometryText.test.mjs`) |
 | LOCK-010 | The biometric samples are removed in the system after the toggle was enabled | the lock screen does not offer biometrics, the code keeps working |
 | LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt and the hash |
 
