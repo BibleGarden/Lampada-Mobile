@@ -1,9 +1,9 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   ActivityIndicator,
-  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -49,7 +49,7 @@ function ReflectScreen() {
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
-  const policy = useKeyboardFormPolicy('defer', inputFocused);
+  const policy = useKeyboardFormPolicy('defer');
   const dockedKeyboard = policy.fillInput;
   const completing = useRef(false);
 
@@ -64,7 +64,7 @@ function ReflectScreen() {
     completing.current = true;
     try {
       await s.complete(saveText);
-      Keyboard.dismiss();
+      dismissKeyboard();
       router.dismissTo({ pathname: '/', params: { prayerSaved: '1' } });
     } catch (e) {
       completing.current = false;
@@ -103,7 +103,7 @@ function ReflectScreen() {
             keyboardDismissMode="on-drag"
           >
             <Pressable
-              onPress={Keyboard.dismiss}
+              onPress={dismissKeyboard}
               accessible={false}
               style={styles.content}
             >
@@ -129,7 +129,7 @@ function ReflectScreen() {
                 )}
               </View>
 
-              <KeyboardDismissAction focused={inputFocused} testID="reflect-keyboard-dismiss" />
+              <KeyboardDismissAction testID="reflect-keyboard-dismiss" />
               <TextInput
                 value={takeaway}
                 onChangeText={setTakeaway}
@@ -144,8 +144,8 @@ function ReflectScreen() {
                 testID="reflection-input"
                 // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
                 returnKeyType="done"
-                submitBehavior="blurAndSubmit"
-                onSubmitEditing={Keyboard.dismiss}
+                submitBehavior="submit"
+                onSubmitEditing={dismissKeyboard}
               />
 
               {!dockedKeyboard && <View style={{ flex: 1, minHeight: sc(16) }} />}

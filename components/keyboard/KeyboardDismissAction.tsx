@@ -1,17 +1,18 @@
 import React from 'react';
-import { Keyboard, Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { dismissKeyboard } from '../../lib/dismissKeyboard';
 import { useI18n } from '../../lib/i18n';
 import { useKeyboardFormPolicy } from '../../lib/useKeyboardLayout';
 import { colors, fonts, sc, useStyles } from '../../lib/theme';
 import { ChevronDown } from '../icons';
 
-export default function KeyboardDismissAction({ focused, testID }: { focused: boolean; testID: string }) {
+export default function KeyboardDismissAction({ testID }: { testID: string }) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
-  const { dismissVisible } = useKeyboardFormPolicy('keep', focused);
+  const { dismissVisible } = useKeyboardFormPolicy('keep');
   if (!dismissVisible) return null;
   return (
-    <Pressable accessibilityRole="button" testID={testID} onPress={Keyboard.dismiss} style={styles.action}>
+    <Pressable accessibilityRole="button" testID={testID} onPress={dismissKeyboard} style={styles.action}>
       <Text style={styles.label}>{t('components.keyboard.done')}</Text>
       <ChevronDown size={14} color={colors.goldSoft} />
     </Pressable>

@@ -1,8 +1,8 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   AppState,
-  Keyboard,
   Modal,
   Pressable,
   StyleSheet,
@@ -50,8 +50,7 @@ export default function Setup() {
     return () => clearTimeout(timer);
   }, []);
   const keyboard = useKeyboardLayout();
-  const [inputFocused, setInputFocused] = useState(false);
-  const policy = useKeyboardFormPolicy('defer', inputFocused);
+  const policy = useKeyboardFormPolicy('defer');
   const editing = keyboard.visible;
   const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
@@ -98,7 +97,7 @@ export default function Setup() {
           по бокам ограниченной по ширине колонки на планшете. */}
       <KeyboardViewport>
       <Pressable
-        onPress={Keyboard.dismiss}
+        onPress={dismissKeyboard}
         accessible={false}
         style={styles.dismissArea}
       >
@@ -132,7 +131,7 @@ export default function Setup() {
                 <Text style={styles.helpBtnLabel}>?</Text>
               </Pressable>
             </View>
-            <KeyboardDismissAction focused={inputFocused} testID="setup-keyboard-dismiss" />
+            <KeyboardDismissAction testID="setup-keyboard-dismiss" />
             <View style={[styles.topicSlot, policy.fillInput && styles.topicSlotDocked]}>
               <Text
                 style={[styles.topicInput, styles.topicSizer]}
@@ -158,10 +157,8 @@ export default function Setup() {
                 // цель — одна фраза, переносы строк не нужны: клавиша ввода
                 // становится синей «Готово» и закрывает клавиатуру
                 returnKeyType="done"
-                submitBehavior="blurAndSubmit"
-                onSubmitEditing={Keyboard.dismiss}
-                onFocus={() => setInputFocused(true)}
-                onBlur={() => setInputFocused(false)}
+                submitBehavior="submit"
+                onSubmitEditing={dismissKeyboard}
               />
             </View>
           </View>

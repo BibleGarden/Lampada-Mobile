@@ -1,10 +1,10 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n, localeTag, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Alert,
   FlatList,
-  Keyboard,
   Modal,
   ScrollView,
   Pressable,
@@ -59,7 +59,6 @@ export default function Journal() {
   const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState<db.JournalEntry[]>([]);
   const [query, setQuery] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
   const [loaded, setLoaded] = useState(false);
   // раскрытая молитва и её содержимое (грузится по требованию)
   const [openId, setOpenId] = useState<number | null>(null);
@@ -425,7 +424,7 @@ export default function Journal() {
     <View
       style={styles.root}
       onStartShouldSetResponder={() => {
-        Keyboard.dismiss();
+        dismissKeyboard();
         return false;
       }}
     >
@@ -447,8 +446,6 @@ export default function Journal() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
             placeholder={t('screens.journal.search')}
             accessibilityLabel={t('screens.journal.search')}
             placeholderTextColor={colors.placeholder}
@@ -457,7 +454,7 @@ export default function Journal() {
             clearButtonMode="never"
             testID="journal-search-input"
           />
-          <KeyboardDismissAction focused={searchFocused} testID="journal-keyboard-dismiss" />
+          <KeyboardDismissAction testID="journal-keyboard-dismiss" />
           {query.length > 0 && (
             <Pressable
               testID="journal-clear-search"
@@ -476,7 +473,7 @@ export default function Journal() {
           data={entries}
           keyExtractor={(e) => String(e.id)}
           renderItem={renderEntry}
-          onScrollBeginDrag={Keyboard.dismiss}
+          onScrollBeginDrag={dismissKeyboard}
           contentContainerStyle={{
             paddingHorizontal: sc(18),
             paddingTop: sc(12),

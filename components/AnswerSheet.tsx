@@ -1,9 +1,9 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Alert,
-  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -474,7 +474,7 @@ export default function AnswerSheet({
     cancelDraftPlayback();
     observeRelease(cancelLimitCue());
     // Оверлей записи не должен остаться под открытой клавиатурой.
-    Keyboard.dismiss();
+    dismissKeyboard();
     // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
     // audio mode: иначе музыка может попасть в начало голосовой записи.
     player.pause();
@@ -967,7 +967,7 @@ export default function AnswerSheet({
       // Снимаем фокус до окна согласия: при его закрытии iOS иначе может
       // вернуть клавиатуру уже поверх закрытой шторки ответа.
       answerInputRef.current?.blur();
-      Keyboard.dismiss();
+      dismissKeyboard();
       // активная запись не должна молча продолжаться после сохранения
       if (
         recordingOperation.getPhase() === 'recording' ||
@@ -1007,7 +1007,7 @@ export default function AnswerSheet({
       // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
       // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
       openSheetRef.current = false;
-      Keyboard.dismiss();
+      dismissKeyboard();
       sheetRef.current?.close();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } finally {
@@ -1030,7 +1030,7 @@ export default function AnswerSheet({
       abortAllTranscriptions();
       discardUnsavedRecordings();
       openSheetRef.current = false; // см. комментарий в save()
-      Keyboard.dismiss();
+      dismissKeyboard();
       sheetRef.current?.close();
       return;
     }
@@ -1079,7 +1079,7 @@ export default function AnswerSheet({
         style={styles.handleWrap}
         testID="answer-sheet-handle"
         onStartShouldSetResponder={() => {
-          Keyboard.dismiss();
+          dismissKeyboard();
           return false;
         }}
       >
@@ -1244,7 +1244,7 @@ export default function AnswerSheet({
         {...screenReaderHiddenProps(!open || recordingsSheetOpen)}
         // Боковые поля шторки тоже закрывают клавиатуру, не перехватывая ввод.
         onStartShouldSetResponder={() => {
-          if (keyboardOpen) Keyboard.dismiss();
+          if (keyboardOpen) dismissKeyboard();
           return false;
         }}
       >
@@ -1260,7 +1260,7 @@ export default function AnswerSheet({
           ) : questionHeader}
 
           <View style={styles.form}>
-            <KeyboardDismissAction focused={inputFocused} testID="answer-keyboard-dismiss" />
+            <KeyboardDismissAction testID="answer-keyboard-dismiss" />
             {/* Поле занимает всю оставшуюся высоту и прокручивается само:
                 курсор при наборе всегда остаётся в поле зрения. */}
             <KeyboardSheetTextInput

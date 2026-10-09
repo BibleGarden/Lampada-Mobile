@@ -36,10 +36,10 @@ export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number) {
 
 export type KeyboardLayout = ReturnType<typeof keyboardLayoutFor>;
 
-export function keyboardFormPolicy(layout: KeyboardLayout, actionMode: 'defer' | 'keep', focused: boolean) {
+export function keyboardFormPolicy(layout: KeyboardLayout, actionMode: 'defer' | 'keep') {
   return {
     fillInput: layout.kind === 'docked',
     actionsVisible: actionMode === 'keep' || !layout.visible,
-    dismissVisible: layout.visible && focused,
+    dismissVisible: layout.visible,
   };
 }

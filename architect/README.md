@@ -202,6 +202,9 @@ subscriber to keyboard notifications. Visibility, animation phase and occupied
 space are separate: a zero-height Samsung panel and a narrow iPad panel remain
 visible without claiming the full window bottom. Field focus alone does not imply
 a software keyboard. Deferred actions return only after `keyboardDidHide`.
+`dismissKeyboard` uses native Keyboard Controller dismissal even after input
+blur; single-phrase editors submit before dismissing, so Enter cannot leave
+a visible IME with inaccessible lower actions.
 
 `KeyboardViewport` uses Expo SDK 57's supported Keyboard Controller 1.21.9,
 with native automatic offsets, to bound the actual available region. It consumes
@@ -221,7 +224,7 @@ in their existing owners.
 
 Preparation and reflection defer lower actions while typing. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
-stay compact, and every focused software-keyboard form exposes a localized
+stay compact, and every form with a visible software keyboard exposes a localized
 Finish typing action. Answer snap expansion is a form policy, not a geometry
 calculation; the synchronous close flag prevents a late hide notification from
 reopening a saved sheet. Content can scroll on small windows or long questions.

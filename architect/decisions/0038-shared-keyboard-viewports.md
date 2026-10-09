@@ -16,7 +16,9 @@ in accessibility without proving that its entire native rectangle was usable.
 
 Separate software visibility from occupied space and field focus in a single
 application provider. A show or zero-height frame never implies hide; deferred
-actions wait for didHide. Classify narrow iPad frames against the current display.
+actions wait for didHide. Dismiss controls follow software visibility, never
+field focus. Keyboard Controller owns native dismissal, including blur before
+IME hide; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display.
 
 Use Expo SDK 57's supported Keyboard Controller 1.21.9 for native viewport
 avoidance and automatic window offsets, including Modal and rotation. A bounded

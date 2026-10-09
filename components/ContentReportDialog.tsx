@@ -1,8 +1,8 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AppState,
-  Keyboard,
   Modal,
   Pressable,
   ScrollView,
@@ -104,7 +104,7 @@ export default function ContentReportDialog({
         <Pressable
           accessible={false}
           testID="content-report-backdrop"
-          onPress={() => Keyboard.dismiss()}
+          onPress={() => dismissKeyboard()}
           style={StyleSheet.absoluteFill}
         />
         <View accessibilityViewIsModal style={styles.card} testID="content-report-dialog">
@@ -130,7 +130,7 @@ export default function ContentReportDialog({
             ) : (
               <>
                 <Text style={styles.body}>{t('components.contentReport.body')}</Text>
-                <KeyboardDismissAction focused={commentFocused} testID="report-keyboard-dismiss" />
+                <KeyboardDismissAction testID="report-keyboard-dismiss" />
                 <TextInput
                   value={comment}
                   onChangeText={setComment}

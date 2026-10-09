@@ -524,3 +524,8 @@ not the app's calculated viewport. Run it only when the Maestro driver has stopp
 The initial oversized-field and cropped-navigation-button fixtures must fail the
 validator's own tests. Physical screenshots must be checked before claiming that
 a floating panel does not overlap a field; the panel can be moved by the user.
+
+Keyboard submission regression (2026-10-09): preparation and reflection Enter
+submit before native dismissal; loss of input focus alone must never remove the
+Finish typing control or reveal deferred actions. The staged Android setup
+restore flow verifies Enter restores duration/Next and preserves the topic.
