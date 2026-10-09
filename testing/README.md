@@ -25,7 +25,8 @@ API variables, use Russian as the emulator's primary locale, and run
 `npm run test:e2e:android:critical`. Its sequential runner preserves the full
 smoke → relaunch pair and stops at the first failure. The critical command also
 runs all five docked native geometry/save contracts on the disposable emulator;
-use a docked Gboard keyboard for this gate. iOS critical includes ASCII Enter
+use a docked Gboard keyboard for this gate. The critical wrapper refuses a
+physical device before running any fixture. iOS critical includes ASCII Enter
 contracts for preparation and reflection. Full logs, per-flow exit
 codes and Maestro artifacts are saved in the printed output directory; use
 `ANDROID_TEST_OUTPUT_DIR` to choose a stable location.

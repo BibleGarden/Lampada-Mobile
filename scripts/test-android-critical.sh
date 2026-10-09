@@ -2,6 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+device="${ANDROID_TEST_DEVICE:-emulator-5554}"
+[[ "$device" == emulator-* ]] || {
+  echo 'Critical fixtures clear app data; physical devices are prohibited.' >&2
+  exit 2
+}
+
 flows=(
   android-stage06-jrn-001-empty-history
   android-stage03-setup-start
@@ -19,5 +25,5 @@ export ANDROID_TEST_OUTPUT_DIR="${ANDROID_TEST_OUTPUT_DIR:-$(mktemp -d "${TMPDIR
 bash scripts/test-android.sh "${flows[@]}"
 echo 'All 10 Android critical scenarios passed.'
 # Native geometry is part of the build gate, not an optional visual check.
-python3 scripts/run-keyboard-contract.py --device "${ANDROID_TEST_DEVICE:-emulator-5554}" \
+python3 scripts/run-keyboard-contract.py --device "$device" \
   --mode docked --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-contract-docked"

@@ -50,7 +50,7 @@ def main():
             if not adb('shell', 'pidof', 'com.nf404.twinkler'):
                 raise RuntimeError('Lampada process stopped; inspect its crash before continuing')
             actions = list(lower_actions)
-            absent = deferred if mode != 'hardware' else []
+            absent = deferred if mode != 'hardware' else [f'{form}-keyboard-dismiss']
             if mode == 'hardware':
                 actions.extend(deferred)
             else:
