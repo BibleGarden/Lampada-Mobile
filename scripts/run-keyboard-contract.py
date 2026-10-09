@@ -48,12 +48,12 @@ def main():
             command(opening, ['maestro', '--device', args.device, 'test', '-e', f'KEYBOARD_MODE={mode}',
                               '--test-output-dir', str(output / opening), f'testing/android-e2e/{opening}.yaml'])
             if mode == 'hardware':
+                command(f'{form}-hardware-input', ['adb', '-s', args.device, 'shell', 'input', 'text', 'Matrix_hardware'])
                 native_window = adb('shell', 'dumpsys', 'window')
-                # Gboard может оставить пустое окно IME с нижней панелью.
-                # Native Back закрывает его, сохраняя фокус редактора.
+                # Gboard открывает пустое окно IME после аппаратных клавиш.
+                # Закрываем его после ввода, сохраняя фокус редактора.
                 if re.search(r'type=ime[^\n]*visible=true', native_window):
                     command(f'{form}-hide-ime-layer', ['adb', '-s', args.device, 'shell', 'input', 'keyevent', 'KEYCODE_BACK'])
-                command(f'{form}-hardware-input', ['adb', '-s', args.device, 'shell', 'input', 'text', 'Matrix_hardware'])
             if not adb('shell', 'pidof', 'com.nf404.twinkler'):
                 raise RuntimeError('Lampada process stopped; inspect its crash before continuing')
             actions = list(lower_actions)
