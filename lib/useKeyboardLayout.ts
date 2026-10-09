@@ -9,6 +9,6 @@ export function useKeyboardLayout() {
   return layout;
 }
 
-export function useKeyboardFormPolicy(actionMode: 'defer' | 'keep') {
-  return keyboardFormPolicy(useKeyboardLayout(), actionMode);
+export function useKeyboardFormPolicy() {
+  return keyboardFormPolicy(useKeyboardLayout());
 }

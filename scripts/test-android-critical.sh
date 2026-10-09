@@ -25,7 +25,7 @@ export ANDROID_TEST_OUTPUT_DIR="${ANDROID_TEST_OUTPUT_DIR:-$(mktemp -d "${TMPDIR
 bash scripts/test-android.sh "${flows[@]}"
 echo 'All 10 Android critical scenarios passed.'
 # Native geometry is part of the build gate, not an optional visual check.
-python3 scripts/run-keyboard-contract.py --device "$device" \
+python3 -m scripts.run_keyboard_contract --device "$device" \
   --mode docked --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-contract-docked"
 
 python3 scripts/run-keyboard-resize-contract.py --device "$device" \

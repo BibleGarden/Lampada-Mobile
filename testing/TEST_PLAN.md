@@ -555,7 +555,3 @@ expanded long text/audio details before activating the timed confirmation.
 SETUP-004 Android injects its full long goal in bounded driver transactions,
 then asserts the complete unchanged text; this avoids a single two-minute RPC
 deadline without weakening layout or persistence checks.
-
-2026-10-09 UI correction: no form exposes an added Finish typing action.
-The native matrix asserts its absence and preserves existing outside-tap
-dismissal, native Done submission, and exact draft restoration.

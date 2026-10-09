@@ -54,7 +54,7 @@
     "android": "bash scripts/build-native.sh android",
     "ios": "bash scripts/build-native.sh ios",
     "web": "EXPO_PUBLIC_BUILD_CHANNEL=test expo start --web",
-    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs",
+    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs && npm run test:keyboard:unit",
     "test:e2e:critical": "MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=critical --test-output-dir \"${TMPDIR:-/tmp/}pray-e2e-output\" testing/e2e/",
     "test:e2e:android:critical": "bash scripts/test-android-critical.sh",
     "test:e2e:android": "bash scripts/test-android.sh",
@@ -74,7 +74,7 @@
     "test:e2e:android:ordered": "bash scripts/test-android-ordered.sh",
     "test:e2e:android:prepared": "python3 scripts/test-android-prepared.py",
     "test:keyboard:unit": "python3 -m unittest discover -s scripts/tests",
-    "test:keyboard:android": "python3 scripts/run-keyboard-contract.py",
+    "test:keyboard:android": "python3 -m scripts.run_keyboard_contract",
     "test:keyboard:ios": "python3 -m scripts.run_ios_keyboard_contract"
   },
   "private": true

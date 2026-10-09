@@ -51,7 +51,6 @@ import {
   type AudioSessionLease,
 } from '../lib/audioModeCoordinator';
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
-import { useSheetReflow } from '../lib/useSheetReflow';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
@@ -255,11 +254,10 @@ export default function AnswerSheet({
     }
   };
 
-  // вторая точка — для открытой клавиатуры и для контента, который перестал
-  // помещаться: keyboardBehavior="extend" поднимает шторку до верхней, и поле
-  // ввода с кнопками остаются видны. Верхняя точка — вся высота под
-  // статус-баром (topInset).
-  const { mountKey, open, onIndexChange } = useSheetReflow();
+  // Вторая точка — вся высота под статус-баром (topInset): на неё шторку
+  // поднимает эффект открытой клавиатуры ниже, чтобы поле ввода и кнопки
+  // остались видны. Высоту тела даёт Gorhom внутри KeyboardSheet.
+  const [open, setOpen] = useState(false);
   const snapPoints = useMemo(() => ['62%', '100%'], []);
   const questionRef = useRef<Text>(null);
 
@@ -463,7 +461,7 @@ export default function AnswerSheet({
       expandedForKeyboard.current = false;
       sheetRef.current?.snapToIndex(0);
     }
-  }, [open, keyboard.kind, keyboard.visible, inputFocused, sheetRef]);
+  }, [open, keyboard.visible, inputFocused, sheetRef]);
 
   const startRecording = async () => {
     if (!recordingSheetOpenRef.current) return;
@@ -1162,7 +1160,6 @@ export default function AnswerSheet({
   return (
     <>
     <KeyboardSheet
-      key={mountKey}
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
@@ -1177,7 +1174,7 @@ export default function AnswerSheet({
       enableContentPanningGesture={false}
       onChange={async (i) => {
         if (!nativeAudioMountedRef.current) return;
-        onIndexChange(i);
+        setOpen(i >= 0);
         const editing = i >= 0;
         openSheetRef.current = editing;
         if (editing) onOpenChange?.(true);
@@ -1229,8 +1226,6 @@ export default function AnswerSheet({
       handleComponent={renderHandle}
       topInset={insets.top}
       backgroundStyle={styles.sheetBg}
-      keyboardBehavior="extend"
-      keyboardBlurBehavior="restore"
       footer={actions}
       footerHidden={!open || recordingsSheetOpen}
       footerStyle={landscapeTablet ? styles.landscapeFooter : undefined}
@@ -1259,7 +1254,6 @@ export default function AnswerSheet({
           ) : questionHeader}
 
           <View style={styles.form}>
-
             {/* Поле занимает всю оставшуюся высоту и прокручивается само:
                 курсор при наборе всегда остаётся в поле зрения. */}
             <KeyboardSheetTextInput
@@ -1278,8 +1272,6 @@ export default function AnswerSheet({
             />
 
             {!keyboardOpen && !text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
-
-
           </View>
         </View>
       </KeyboardSheetBody>

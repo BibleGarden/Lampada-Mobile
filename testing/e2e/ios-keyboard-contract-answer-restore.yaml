@@ -3,15 +3,11 @@ tags:
   - prepared
 ---
 # Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - tapOn:
-          id: answer-sheet-handle
+- tapOn:
+    id: answer-sheet-handle
 - assertVisible:
     id: answer-input
-    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix answer"}'
+    text: "Keyboard matrix answer"
 - tapOn:
     id: answer-save-button
 - runFlow:
@@ -27,4 +23,4 @@ tags:
     id: dock-answer-edit-button
 - assertVisible:
     id: answer-input
-    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix answer"}'
+    text: "Keyboard matrix answer"

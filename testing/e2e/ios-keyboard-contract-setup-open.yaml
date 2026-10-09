@@ -10,16 +10,6 @@ tags:
     id: start-prayer-button
 - tapOn:
     id: setup-goal-input
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - inputText: "Keyboard matrix setup"
-      - assertNotVisible:
-          id: setup-keyboard-dismiss
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - assertNotVisible:
-          id: setup-next-button
+- inputText: "Keyboard matrix setup"
+- assertNotVisible:
+    id: setup-next-button

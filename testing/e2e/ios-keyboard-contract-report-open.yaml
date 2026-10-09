@@ -37,12 +37,6 @@ tags:
     id: content-report-dialog
 - tapOn:
     id: content-report-comment
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - inputText: "Keyboard matrix report"
-      - assertNotVisible:
-          id: report-keyboard-dismiss
+- inputText: "Keyboard matrix report"
 - assertVisible:
     id: content-report-send

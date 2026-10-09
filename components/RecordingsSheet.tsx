@@ -19,7 +19,6 @@ import { transcriptionErrorMessageKey } from '../lib/transcriptionErrors';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
-import { useSheetReflow } from '../lib/useSheetReflow';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 import KeyboardSheet, { KeyboardSheetBody } from './keyboard/KeyboardSheet';
 
@@ -99,7 +98,6 @@ export default function RecordingsSheet({
   const recordingPending = recordingPhase === 'starting' || recordingPhase === 'stopping';
   const recordingBusy = recordingPhase !== 'idle';
   const [stopReady, setStopReady] = useState(false);
-  const { mountKey, onIndexChange } = useSheetReflow();
 
   useEffect(() => {
     if (!recording) {
@@ -175,58 +173,57 @@ export default function RecordingsSheet({
   );
 
   const actions = recording ? (
-          <Pressable
-            accessibilityLabel={t('components.answers.stop')}
-            accessibilityRole="button"
-            accessibilityValue={{ text: elapsedLabel }}
-            testID="recordings-stop-button"
-            disabled={stopDisabled}
-            onPress={onStopRecording}
-            // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
-            // и полупрозрачное «готово» выглядело как незапущенная запись.
-            style={({ pressed }) => [
-              styles.recDoneBtn,
-              pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
-            ]}
-          >
-            <Text style={styles.recDoneLabel}>
-              {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
-            </Text>
-          </Pressable>
+    <Pressable
+      accessibilityLabel={t('components.answers.stop')}
+      accessibilityRole="button"
+      accessibilityValue={{ text: elapsedLabel }}
+      testID="recordings-stop-button"
+      disabled={stopDisabled}
+      onPress={onStopRecording}
+      // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
+      // и полупрозрачное «готово» выглядело как незапущенная запись.
+      style={({ pressed }) => [
+        styles.recDoneBtn,
+        pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
+      ]}
+    >
+      <Text style={styles.recDoneLabel}>
+        {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
+      </Text>
+    </Pressable>
   ) : (
-        <View style={styles.actionsRow}>
-          <Pressable
-            accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
-            accessibilityRole="button"
-            testID="recordings-record-button"
-            disabled={recordingBusy}
-            onPress={() => {
-              // Reset synchronously before the overlay replaces this button,
-              // so the second physical tap cannot stop the new recording.
-              setStopReady(false);
-              onStartRecording();
-            }}
-            style={({ pressed }) => [
-              styles.recordBtn,
-              recordingBusy && { opacity: 0.5 },
-              pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
-            ]}
-          >
-            <Mic size={sc(16)} color={colors.greenSoft} />
-            <Text style={styles.recordLabel}>
-              {recordingPhase === 'starting'
-                ? t('components.answers.preparing')
-                : recordings.length
-                  ? t('components.answers.recordMore')
-                  : t('components.answers.record')}
-            </Text>
-          </Pressable>
-        </View>
+    <View style={styles.actionsRow}>
+      <Pressable
+        accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
+        accessibilityRole="button"
+        testID="recordings-record-button"
+        disabled={recordingBusy}
+        onPress={() => {
+          // Reset synchronously before the overlay replaces this button,
+          // so the second physical tap cannot stop the new recording.
+          setStopReady(false);
+          onStartRecording();
+        }}
+        style={({ pressed }) => [
+          styles.recordBtn,
+          recordingBusy && { opacity: 0.5 },
+          pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
+        ]}
+      >
+        <Mic size={sc(16)} color={colors.greenSoft} />
+        <Text style={styles.recordLabel}>
+          {recordingPhase === 'starting'
+            ? t('components.answers.preparing')
+            : recordings.length
+              ? t('components.answers.recordMore')
+              : t('components.answers.record')}
+        </Text>
+      </Pressable>
+    </View>
   );
 
   return (
     <KeyboardSheet
-      key={mountKey}
       ref={sheetRef}
       index={-1}
       snapPoints={SNAP_POINTS}
@@ -235,7 +232,6 @@ export default function RecordingsSheet({
       // Как и в шторке ответа: иначе внутренний список прокручивается только
       // на верхней snap-точке, а на нижней жест перехватывает сама шторка.
       enableContentPanningGesture={false}
-      onChange={onIndexChange}
       onClose={onDismiss}
       // Контейнер шторки по умолчанию — единый элемент доступности, и всё
       // внутри скрыто от VoiceOver и Maestro. Раскрываем детей.
@@ -430,15 +426,11 @@ export default function RecordingsSheet({
             );
           })}
         </BottomSheetScrollView>
-
-
       </View>
 
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
-        <View
-          style={styles.recOverlay}
-        >
+        <View style={styles.recOverlay}>
           <View style={styles.recOverlayContent}>
             <Text style={styles.recOverlayKicker}>{t('components.answers.recording')}</Text>
             <View style={styles.waveRow}>
@@ -463,7 +455,6 @@ export default function RecordingsSheet({
               </Text>
             )}
           </View>
-
         </View>
       )}
       </KeyboardSheetBody>

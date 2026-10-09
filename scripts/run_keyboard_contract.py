@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 """Run staged native keyboard contracts. Run only on a disposable named emulator."""
 import argparse
-import json
 import re
-import os
-from pathlib import Path
 import subprocess
-import sys
 from datetime import datetime
-from keyboard_layout_bounds import has_hardware_keyboard
-
-from keyboard_contract_forms import FORMS
+from pathlib import Path
+from .keyboard_contract_forms import FORMS
+from .keyboard_layout_bounds import has_hardware_keyboard
 
 
 def main():
@@ -57,7 +53,7 @@ def main():
             if not adb('shell', 'pidof', 'com.nf404.twinkler'):
                 raise RuntimeError('Lampada process stopped; inspect its crash before continuing')
             actions = list(lower_actions)
-            absent = [*(deferred if mode != 'hardware' else []), f'{form}-keyboard-dismiss']
+            absent = [] if mode == 'hardware' else list(deferred)
             if mode == 'hardware':
                 actions.extend(deferred)
             argv = ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device, '--input-id', input_id,
@@ -75,14 +71,14 @@ def main():
                                 '--test-output-dir', str(output / restoring), f'testing/android-e2e/{restoring}.yaml'])
             if mode == 'hardware' and form in ('setup', 'answer'):
                 argv = ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device, '--input-id', input_id,
-                        '--mode', 'hidden', '--unfocused', '--absent', f'{form}-keyboard-dismiss',
+                        '--mode', 'hidden', '--unfocused',
                         '--output', str(output / f'{form}-finished-native-bounds.json')]
                 if lower_actions or deferred:
                     argv += ['--actions', *lower_actions, *deferred]
                 command(f'{form}-finished-bounds', argv)
             if mode == 'hardware' and form == 'journal':
                 command('journal-cleared-bounds', ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device,
-                        '--input-id', input_id, '--mode', 'hardware', '--absent', 'journal-keyboard-dismiss',
+                        '--input-id', input_id, '--mode', 'hardware',
                         '--output', str(output / 'journal-cleared-native-bounds.json')])
             print(f'{form}: native {mode} bounds and restoration passed', flush=True)
     finally:

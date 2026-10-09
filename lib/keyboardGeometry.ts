@@ -1,4 +1,4 @@
-export type KeyboardCoordinates = { screenY: number; height: number; width: number };
+export type KeyboardCoordinates = { height: number; width: number };
 export type KeyboardPhase = 'hidden' | 'opening' | 'open' | 'closing';
 export type KeyboardState = { coordinates: KeyboardCoordinates | null; phase: KeyboardPhase };
 export type KeyboardSignal =
@@ -19,7 +19,6 @@ export function updateKeyboardState(state: KeyboardState, signal: KeyboardSignal
 
 // Плавающая Android-клавиатура видима, но не занимает полосу окна:
 // IME inset равен системной панели, а React Native передаёт высоту 0.
-// Её screenY — низ окна, а не верх плавающей клавиатуры.
 export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number) {
   const { coordinates, phase } = state;
   const visible = phase !== 'hidden';
@@ -36,9 +35,9 @@ export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number) {
 
 export type KeyboardLayout = ReturnType<typeof keyboardLayoutFor>;
 
-export function keyboardFormPolicy(layout: KeyboardLayout, actionMode: 'defer' | 'keep') {
+export function keyboardFormPolicy(layout: KeyboardLayout) {
   return {
     fillInput: layout.kind === 'docked',
-    actionsVisible: actionMode === 'keep' || !layout.visible,
+    actionsVisible: !layout.visible,
   };
 }

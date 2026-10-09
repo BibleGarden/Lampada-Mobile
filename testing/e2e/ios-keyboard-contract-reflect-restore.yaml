@@ -3,15 +3,11 @@ tags:
   - prepared
 ---
 # Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      # Enter must restore actions and preserve the text.
-      - pressKey: Enter
+# Enter must restore actions and preserve the text.
+- pressKey: Enter
 - assertVisible:
     id: reflection-input
-    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix reflect"}'
+    text: "Keyboard matrix reflect"
 - assertVisible:
     id: reflect-return-button
 - tapOn:
@@ -20,4 +16,4 @@ tags:
     id: home-title-lit
 - tapOn:
     id: journal-button
-- assertVisible: '${KEYBOARD_MODE == "hardware" ? ".*Matrix_hardware.*" : ".*Keyboard matrix reflect.*"}'
+- assertVisible: ".*Keyboard matrix reflect.*"

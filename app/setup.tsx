@@ -49,8 +49,11 @@ export default function Setup() {
     return () => clearTimeout(timer);
   }, []);
   const keyboard = useKeyboardLayout();
-  const policy = useKeyboardFormPolicy('defer');
+  const policy = useKeyboardFormPolicy();
   const editing = keyboard.visible;
+  // Высоту слота поля вне закреплённой клавиатуры задаёт невидимая копия
+  // текста. Пока клавиатура видна, копия держит текст на момент её открытия,
+  // чтобы набор не сдвигал поле.
   const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
   if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
@@ -130,7 +133,6 @@ export default function Setup() {
                 <Text style={styles.helpBtnLabel}>?</Text>
               </Pressable>
             </View>
-
             <View style={[styles.topicSlot, policy.fillInput && styles.topicSlotDocked]}>
               <Text
                 style={[styles.topicInput, styles.topicSizer]}
@@ -145,11 +147,7 @@ export default function Setup() {
                 multiline
                 // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
                 // говорят достаточно, а любая подсказка навязывала тон
-                style={[
-                  styles.topicInput,
-                  styles.topicInputFill,
-                  { bottom: 0 },
-                ]}
+                style={[styles.topicInput, styles.topicInputFill]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
                 testID="setup-goal-input"
@@ -343,7 +341,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   topicSlot: { flexShrink: 1, minHeight: sc(120) },
   topicSizer: { opacity: 0 },
-  topicInputFill: { position: 'absolute', top: 0, left: 0, right: 0 },
+  topicInputFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   stepper: {
     flexDirection: 'row',
     alignItems: 'stretch',

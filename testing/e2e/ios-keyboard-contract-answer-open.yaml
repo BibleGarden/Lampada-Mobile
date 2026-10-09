@@ -33,12 +33,6 @@ tags:
     id: answer-input
 - tapOn:
     id: answer-input
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - inputText: "Keyboard matrix answer"
-      - assertNotVisible:
-          id: answer-keyboard-dismiss
+- inputText: "Keyboard matrix answer"
 - assertVisible:
     id: answer-save-button

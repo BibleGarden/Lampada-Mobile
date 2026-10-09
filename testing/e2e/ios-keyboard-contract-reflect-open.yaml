@@ -33,16 +33,6 @@ tags:
     id: reflect-kicker
 - tapOn:
     id: reflection-input
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - inputText: "Keyboard matrix reflect"
-      - assertNotVisible:
-          id: reflect-keyboard-dismiss
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - assertNotVisible:
-          id: reflect-complete-button
+- inputText: "Keyboard matrix reflect"
+- assertNotVisible:
+    id: reflect-complete-button

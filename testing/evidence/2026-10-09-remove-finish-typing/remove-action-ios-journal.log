@@ -1,6 +1,0 @@
-
-> pray@1.0.0 test:keyboard:ios
-> python3 -m scripts.run_ios_keyboard_contract --simulator Pray Smoke iPhone 17 Pro --mode docked --forms journal --output /tmp/pray-keyboard-system-2026-10-09/remove-action-ios-journal
-
-journal: native UIKit docked bounds and restoration passed
-All selected iOS keyboard contracts passed

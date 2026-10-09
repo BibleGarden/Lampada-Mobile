@@ -32,7 +32,7 @@ def check(tree, form, mode, output):
     input_id, lower_actions, deferred = FORMS[form]
     observation = observe_ios(tree)
     actions = list(lower_actions)
-    absent = [*deferred, f'{form}-keyboard-dismiss']
+    absent = list(deferred)
     ids = [input_id, *actions, *absent]
     result = {'platform': 'ios', 'expected_mode': mode,
               'viewport': observation['viewport'], 'observed_mode': observation['mode'],

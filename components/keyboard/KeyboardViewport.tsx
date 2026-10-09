@@ -7,7 +7,9 @@ import { useKeyboardLayout } from '../../lib/useKeyboardLayout';
 // Единственный владелец доступной области обычной формы или нативного Modal.
 // Внутренний flex-контейнер ограничивает также absoluteFill-шторки:
 // сами абсолютные дети не обязаны учитывать padding внешнего View.
-export default function KeyboardViewport({ children, style, contentContainerStyle, overlay = false, onViewportLayout, ...props }: ViewProps & { contentContainerStyle?: StyleProp<ViewStyle>; overlay?: boolean; onViewportLayout?: ViewProps['onLayout'] }) {
+// Шторка (overlay) и её фон доходят до края экрана: нижнюю безопасную
+// зону она отдаёт своему footer, а не всему контейнеру.
+export default function KeyboardViewport({ children, style, contentContainerStyle, overlay = false, ...props }: ViewProps & { contentContainerStyle?: StyleProp<ViewStyle>; overlay?: boolean }) {
   const layout = useKeyboardLayout();
   const insets = useSafeAreaInsets();
   return (
@@ -19,8 +21,8 @@ export default function KeyboardViewport({ children, style, contentContainerStyl
       enabled={layout.kind !== 'floating'}
       style={[styles.fill, overlay && StyleSheet.absoluteFill, style]}
     >
-      <View pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, { paddingBottom: layout.kind === 'docked' ? 0 : insets.bottom }]}>
-        <View onLayout={onViewportLayout} pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, contentContainerStyle]}>{children}</View>
+      <View pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, { paddingBottom: overlay || layout.kind === 'docked' ? 0 : insets.bottom }]}>
+        <View pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, contentContainerStyle]}>{children}</View>
       </View>
     </KeyboardAvoidingView>
   );

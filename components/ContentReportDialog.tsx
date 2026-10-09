@@ -129,7 +129,6 @@ export default function ContentReportDialog({
             ) : (
               <>
                 <Text style={styles.body}>{t('components.contentReport.body')}</Text>
-
                 <TextInput
                   value={comment}
                   onChangeText={setComment}

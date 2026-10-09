@@ -22,17 +22,19 @@ dismissal is a no-op for an already hidden IME; single-phrase fields submit befo
 
 Use Expo SDK 57's supported Keyboard Controller 1.21.9 for native viewport
 avoidance and automatic window offsets, including Modal and rotation. A bounded
-inner frame consumes safe areas once and constrains absolute overlays. Gorhom
-owns sheet positioning and footer measurement within that frame, not a second
-keyboard inset. Managed sheet inputs deliberately do not register Gorhom's
+inner frame consumes the bottom safe area once and constrains absolute overlays.
+A sheet overlay and its backdrop reach the screen edge; its footer consumes the
+bottom safe area instead. Gorhom owns sheet positioning and footer measurement
+within that frame, not a second keyboard inset. Managed sheet inputs deliberately do not register Gorhom's
 independent keyboard handler. Remove app-level screen/keyboard height formulas
 and fixed-device padding corrections.
 
-Synchronize closed sheets against the measured viewport after its geometry
-settles, without remounting live editors. Closed presentation and hit testing
-remain disabled even if a vendor animation retains an old closed position.
+`KeyboardSheet` alone remounts a sheet, only while it is closed and only when
+the window geometry changes. A closed sheet is neither presented nor touchable,
+even if a vendor animation retains an old closed position.
 
-Keep action policy explicit: preparation/reflection defer, answers/reports keep.
+Preparation and reflection defer lower actions while a software keyboard is
+visible; answers and reports do not hide actions.
 Use compact floating inputs for an Android floating panel that reports no occupied
 bottom strip. Preserve existing outside-tap dismissal and native submission keys;
 do not add a separate dismissal action. Preserve transactional save and audio lifecycle ownership.
@@ -40,7 +42,8 @@ do not add a separate dismissal action. Preserve transactional save and audio li
 ## Validation contract
 
 - Unit sequences: zero-height show, narrow positive-height iPad float, animation
-  close, mode changes, rotation and focus without software visibility.
+  close, mode changes, rotation, focus without software visibility and the iPad
+  hardware-keyboard shortcut bar.
 - Native bounds: whole input/action rectangles fit the OS usable region, inputs
   do not overlap lower actions, floating inputs are compact, deferred controls
   are absent, and focus without a software IME remains usable.
@@ -64,4 +67,4 @@ separately from acceptance on a physical external keyboard.
 - https://docs.expo.dev/versions/v57.0.0/sdk/keyboard-controller/
 - `components/keyboard/`
 - `scripts/keyboard_layout_bounds.py`
-- `scripts/run-keyboard-contract.py`
+- `scripts/run_keyboard_contract.py`

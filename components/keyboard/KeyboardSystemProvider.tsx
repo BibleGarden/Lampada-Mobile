@@ -17,7 +17,9 @@ export default function KeyboardSystemProvider({ children }: React.PropsWithChil
     };
     const subscriptions = [
       Keyboard.addListener('keyboardDidShow', (event) => show(event, true)),
-      Keyboard.addListener('keyboardDidHide', () => setState(hiddenKeyboard)),
+      Keyboard.addListener('keyboardDidHide', () => {
+        setState((current) => updateKeyboardState(current, { type: 'hide' }));
+      }),
       Keyboard.addListener('keyboardDidChangeFrame', (event) => {
         setState((current) => updateKeyboardState(current, { type: 'frame', coordinates: event.endCoordinates }));
       }),

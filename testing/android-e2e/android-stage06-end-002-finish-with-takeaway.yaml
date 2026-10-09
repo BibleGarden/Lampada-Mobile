@@ -40,7 +40,7 @@ tags:
     id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
 # Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
-# Закрываем клавиатуру явной кнопкой после ввода Unicode.
+# Закрываем клавиатуру тапом вне поля после ввода Unicode.
 - runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible:
     id: "reflect-complete-button"

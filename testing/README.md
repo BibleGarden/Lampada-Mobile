@@ -259,7 +259,6 @@ and build artifacts are not added to the repository.
 ## Shared keyboard contracts
 
 ```bash
-npm run test:keyboard:unit
 npm run test:keyboard:android -- --mode docked --output /tmp/lampada-keyboard-docked
 npm run test:keyboard:android -- --mode floating --output /tmp/lampada-keyboard-floating
 npm run test:keyboard:android -- --mode hardware --output /tmp/lampada-keyboard-no-software
@@ -297,4 +296,5 @@ and window frames, then verifies persisted text. UIKit accessibility does not
 expose safe-area insets; this contract does not claim Android-style navigation
 inset measurement or physical external-keyboard acceptance. Floating mode must
 be selected in the real system keyboard before invoking `--mode floating`.
-`npm run test:keyboard:unit` covers both native bounds readers.
+`npm run test:keyboard:unit` covers both native bounds readers; `npm test` runs it
+too.

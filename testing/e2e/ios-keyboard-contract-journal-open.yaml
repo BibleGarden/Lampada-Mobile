@@ -37,12 +37,6 @@ tags:
     id: journal-button
 - tapOn:
     id: journal-search-input
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - inputText: "Keyboard matrix journal"
-      - assertNotVisible:
-          id: journal-keyboard-dismiss
+- inputText: "Keyboard matrix journal"
 - assertVisible:
     id: journal-search-input

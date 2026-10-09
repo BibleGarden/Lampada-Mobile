@@ -3,18 +3,14 @@ tags:
   - prepared
 ---
 # Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      - tapOn:
-          point: "3%,10%"
-          retryTapIfNoChange: false
-      - assertNotVisible:
-          id: inputView
+- tapOn:
+    point: "3%,10%"
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: inputView
 - assertVisible:
     id: content-report-comment
-    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix report"}'
+    text: "Keyboard matrix report"
 - assertVisible:
     id: content-report-send
 - tapOn:

@@ -453,7 +453,6 @@ export default function Journal() {
             clearButtonMode="never"
             testID="journal-search-input"
           />
-
           {query.length > 0 && (
             <Pressable
               testID="journal-clear-search"

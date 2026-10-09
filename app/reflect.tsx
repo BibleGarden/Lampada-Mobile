@@ -48,7 +48,7 @@ function ReflectScreen() {
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
-  const policy = useKeyboardFormPolicy('defer');
+  const policy = useKeyboardFormPolicy();
   const dockedKeyboard = policy.fillInput;
   const completing = useRef(false);
 
