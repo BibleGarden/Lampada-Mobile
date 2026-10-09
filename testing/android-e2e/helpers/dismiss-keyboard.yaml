@@ -1,0 +1,13 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Maestro Unicode injection replaces the IME and may blur the editor.
+# The app action must still dismiss the native software keyboard.
+- runFlow:
+    when:
+      visible:
+        id: "(setup|reflect|journal)-keyboard-dismiss"
+    commands:
+      - tapOn:
+          id: "(setup|reflect|journal)-keyboard-dismiss"

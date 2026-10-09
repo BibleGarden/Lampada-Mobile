@@ -49,7 +49,10 @@ stable app IDs. Maestro's Unicode `inputText` temporarily replaces Gboard
 with its own IME, so it must not be used to establish focus preconditions.
 Keyboard gesture fixtures use ASCII input; ANS-032 also taps a real Russian
 Gboard key and verifies that its Cyrillic character survives saving/reopening.
-Unicode persistence and search checks remain separate from focus checks. After a cold launch or relaunch,
+Unicode persistence and search checks remain separate from focus checks.
+After Unicode injection, use the app's Finish typing action if the software
+keyboard remains visible; injected Enter has no focused native editor to submit.
+ASCII staged keyboard contracts separately verify the real Enter path. After a cold launch or relaunch,
 assert that Home is ready before issuing a Settings/Setup deep link; Android
 launch completion alone does not establish a mounted router. Non-deadline fixtures are untimed; finite completion and early
 music completion retain timed prayers. Display-size changes used to reduce

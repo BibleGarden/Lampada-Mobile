@@ -18,7 +18,7 @@ tags:
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - inputText: ANS-023 кнопки записей
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: setup-preset-0
     waitToSettleTimeoutMs: 500

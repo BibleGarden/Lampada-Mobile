@@ -14,7 +14,7 @@ tags:
 - tapOn:
     id: "setup-goal-input"
 - inputText: "END-001 без вывода"
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
