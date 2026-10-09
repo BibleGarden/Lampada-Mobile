@@ -85,7 +85,7 @@ export default function RootLayout() {
   const obscured = useLock((s) => s.obscured);
   const covered = !lockReady || locked || obscured;
 
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Spectral_300Light,
     Spectral_300Light_Italic,
     Spectral_400Regular,
@@ -99,8 +99,12 @@ export default function RootLayout() {
 
   const ready = fontsLoaded && uiLanguageReady;
   useEffect(() => {
-    if (ready) SplashScreen.hide();
-  }, [ready]);
+    if (ready || fontError) SplashScreen.hide();
+  }, [ready, fontError]);
+
+  // Шрифты встроены в сборку, и их сбой — дефект сборки: он должен дойти до
+  // границы ошибок и отчёта о сбое, а не держать сплэш бесконечно.
+  if (fontError) throw fontError;
 
   if (!ready) {
     return <View style={{ flex: 1, backgroundColor: '#0e0a07' }} />;

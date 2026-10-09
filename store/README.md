@@ -204,7 +204,7 @@ Verify the permissions against the merged release manifest (`PRE-004D`):
 | Permission | Source | Purpose |
 |---|---|---|
 | `RECORD_AUDIO` | `app.json`, expo-audio | spoken answers, recorded only on the user's press |
-| `POST_NOTIFICATIONS` | `app.json`, expo-notifications | prayer reminders and the timer notification |
+| `POST_NOTIFICATIONS` | `app.json`, expo-notifications | prayer reminders, the prayer countdown notification (`modules/prayer-timer-notification`) and the background music playback notification |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | expo-audio `enableBackgroundPlayback` | music and Scripture narration continue in the background and on the lock screen |
 | `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK` | expo-notifications, WorkManager | rescheduling reminders after a restart |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | expo-local-authentication | the optional app lock |

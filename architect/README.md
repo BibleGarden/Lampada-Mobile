@@ -46,7 +46,8 @@ updates took frames from the text input, and typing showed up in batches.
 - Expo Localization for initial interface and scripture language selection.
 - Expo Splash Screen for the launch screen: the app background `#0e0a07` with
   the flame from `assets/splash.png` on both platforms. The root layout keeps
-  it until fonts and the interface language are loaded.
+  it until fonts and the interface language are loaded; a font loading error
+  hides it and is thrown to the error boundary.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 

@@ -186,8 +186,9 @@ One release has one version on both stores: build both with
 `eas:production:all`, or build the second platform later with
 `npm run eas:production:<ios|android> -- --keep-version`, which keeps the
 reserved two-part version and refuses a test version. Retry a failed
-production build with `--keep-version` too; a plain rerun reserves the next
-minor. `npm run iphone`,
+production build with `--keep-version` too, per platform even after an `all`
+build (`--keep-version` is refused with `all`); a plain rerun reserves the
+next minor. `npm run iphone`,
 `npm run ios`, `npm run android` and `npm run eas:preview` are test builds and
 reserve the next patch of the current store version: `1.2` → `1.2.1` → `1.2.2`.
 The major number remains manual.
