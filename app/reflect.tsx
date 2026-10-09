@@ -22,7 +22,7 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { useKeyboardTop } from '../lib/useKeyboardTop';
+import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -48,7 +48,8 @@ function ReflectScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
-  const keyboardOpen = useKeyboardTop() !== null;
+  const { visible: keyboardOpen, top: keyboardTop } = useKeyboardLayout();
+  const dockedKeyboard = keyboardTop !== null;
   const [inputFocused, setInputFocused] = useState(false);
   const completing = useRef(false);
 
@@ -95,10 +96,10 @@ function ReflectScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.body,
-              keyboardOpen && styles.bodyEditing,
+              dockedKeyboard && styles.bodyEditing,
               {
                 paddingTop: insets.top + sc(16),
-                paddingBottom: keyboardOpen ? sc(16) : insets.bottom + sc(24),
+                paddingBottom: dockedKeyboard ? sc(16) : insets.bottom + sc(24),
               },
             ]}
             keyboardShouldPersistTaps="handled"
@@ -109,14 +110,14 @@ function ReflectScreen() {
               accessible={false}
               style={styles.content}
             >
-              {!keyboardOpen && (
+              {!dockedKeyboard && (
                 <View style={styles.emberWrap}>
                   <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
                 </View>
               )}
 
-              <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
-                {!keyboardOpen && (
+              <View style={[styles.questionBlock, dockedKeyboard && styles.questionBlockCompact]}>
+                {!dockedKeyboard && (
                   <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }} testID="reflect-kicker">
                     {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
                   </Kicker>
@@ -139,7 +140,7 @@ function ReflectScreen() {
                 multiline
                 placeholder={t('screens.reflect.placeholder')}
                 placeholderTextColor={colors.placeholder}
-                style={[styles.input, keyboardOpen && styles.inputEditing]}
+                style={[styles.input, dockedKeyboard && styles.inputEditing]}
                 accessibilityLabel={t('screens.reflect.placeholder')}
                 accessibilityHint={t('screens.reflect.inputHint')}
                 testID="reflection-input"
@@ -149,7 +150,7 @@ function ReflectScreen() {
                 onSubmitEditing={Keyboard.dismiss}
               />
 
-              {!keyboardOpen && <View style={{ flex: 1, minHeight: sc(16) }} />}
+              {!dockedKeyboard && <View style={{ flex: 1, minHeight: sc(16) }} />}
 
               {!keyboardOpen && (
                 <View style={{ gap: sc(12) }}>

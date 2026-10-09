@@ -18,7 +18,7 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
-import { useKeyboardTop } from '../lib/useKeyboardTop';
+import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
@@ -48,23 +48,23 @@ export default function Setup() {
     return () => clearTimeout(timer);
   }, []);
   // Пока открыта клавиатура, раскладка экрана не меняется: верх поля цели
-  // остаётся на месте, а само поле тянется вниз до клавиатуры поверх
-  // скрытых длительности и «Далее». Высоту в покое задаёт невидимая копия
+  // остаётся на месте. Над закреплённой клавиатурой поле тянется вниз,
+  // с плавающей сохраняет обычную высоту; длительность и «Далее» скрыты
+  // в обоих случаях. Высоту в покое задаёт невидимая копия
   // текста в слоте поля: она пересчитывается при повороте, но на время ввода
   // держит текст на момент открытия клавиатуры, чтобы набор не сдвигал поле.
   // LayoutAnimation двигает видимые блоки при закрытии клавиатуры: на Setup
   // раскладка должна обновиться сразу, чтобы блоки появились на своих местах.
-  const keyboardTop = useKeyboardTop(false);
+  const { visible: editing, top: keyboardTop } = useKeyboardLayout(false);
   const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
   const inputSlot = useRef<View>(null);
   const [slot, setSlot] = useState<{ top: number; height: number } | null>(null);
   const measureSlot = useCallback(() => {
     inputSlot.current?.measureInWindow((_x, top, _width, height) => setSlot({ top, height }));
   }, []);
-  const editing = keyboardTop !== null;
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
   if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
-  const editingHeight = editing && slot
+  const editingHeight = keyboardTop !== null && slot
     ? Math.max(0, keyboardTop - sc(16) - slot.top)
     : null;
   const hiddenWhileEditing = editing

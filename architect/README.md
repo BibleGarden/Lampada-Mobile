@@ -210,12 +210,14 @@ the input fills the available space below the question and above the keyboard.
 The editing column expands to at most 960 pt on tablets. The decorative header
 and completion actions return when the keyboard closes.
 Content can scroll when a long question or a small window needs more room.
-Both screens follow the keyboard through `lib/useKeyboardTop.ts`; Reflection
+Both screens follow the keyboard through `lib/useKeyboardLayout.ts`; Reflection
 retains the keyboard-synchronized layout animation.
-Keyboard frames with zero occupied height retain the normal layout. Android
+Keyboard visibility controls whether Setup's duration/Next and Reflection's
+completion/return actions are hidden. Occupied height controls input sizing.
+Keyboard frames with zero occupied height retain the normal input size. Android
 reports this for Samsung's floating keyboard: its `screenY` is the window's
 bottom edge, not the floating panel's top. Neither screen stretches its input
-to that edge or hides its actions for a floating keyboard.
+to that edge; actions stay hidden until the floating keyboard closes.
 
 ## State and the main data flow
 

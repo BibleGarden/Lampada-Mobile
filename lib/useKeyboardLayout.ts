@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, LayoutAnimation, Platform, type KeyboardEvent } from 'react-native';
-import { dockedKeyboardTop } from './keyboardGeometry';
+import { keyboardLayoutFor, type KeyboardCoordinates } from './keyboardGeometry';
 
 function animateKeyboardLayout(event: KeyboardEvent) {
   const duration = Math.max(event.duration ?? 0, 380);
@@ -10,27 +10,27 @@ function animateKeyboardLayout(event: KeyboardEvent) {
   });
 }
 
-// Верхний край закреплённой клавиатуры в координатах экрана,
-// иначе null: плавающая клавиатура не уменьшает доступное окно.
+// Видимость клавиатуры и занятая ею область — разные признаки:
+// плавающая клавиатура открыта, но не уменьшает доступное окно.
 // По умолчанию раскладка анимируется вместе с клавиатурой;
 // экран Setup отключает эту анимацию, чтобы нижние блоки появлялись на месте.
 // Смена рамки открытой клавиатуры (поворот, смена раскладки) только обновляет значение.
-export function useKeyboardTop(animateLayout = true): number | null {
-  const [top, setTop] = useState<number | null>(null);
+export function useKeyboardLayout(animateLayout = true) {
+  const [coordinates, setCoordinates] = useState<KeyboardCoordinates | null>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const show = Keyboard.addListener(showEvent, (event) => {
       if (animateLayout) animateKeyboardLayout(event);
-      setTop(dockedKeyboardTop(event.endCoordinates));
+      setCoordinates(event.endCoordinates);
     });
     const hide = Keyboard.addListener(hideEvent, (event) => {
       if (animateLayout) animateKeyboardLayout(event);
-      setTop(null);
+      setCoordinates(null);
     });
     const frame = Keyboard.addListener('keyboardDidChangeFrame', (event) => {
-      setTop((current) => (current === null ? null : dockedKeyboardTop(event.endCoordinates)));
+      setCoordinates((current) => (current === null ? null : event.endCoordinates));
     });
     return () => {
       show.remove();
@@ -39,5 +39,5 @@ export function useKeyboardTop(animateLayout = true): number | null {
     };
   }, [animateLayout]);
 
-  return top;
+  return keyboardLayoutFor(coordinates);
 }

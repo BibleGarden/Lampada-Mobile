@@ -12,13 +12,19 @@ tags:
     id: "setup-goal-input"
 - assertVisible:
     id: "setup-kicker"
-- assertVisible:
+- assertNotVisible:
     id: "setup-duration-value"
-- assertVisible:
+- assertNotVisible:
     id: "setup-next-button"
 - inputText: "Floating keyboard layout"
 - assertVisible: "Floating keyboard layout"
+- assertNotVisible:
+    id: "setup-duration-value"
+- assertNotVisible:
+    id: "setup-next-button"
 - hideKeyboard
 - assertVisible: "Floating keyboard layout"
+- assertVisible:
+    id: "setup-duration-value"
 - assertVisible:
     id: "setup-next-button"
