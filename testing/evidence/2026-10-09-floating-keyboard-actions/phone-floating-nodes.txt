@@ -1,0 +1,5 @@
+setup-kicker ПЕРЕД МОЛИТВОЙ [161,144][529,191]
+ Цель молитвы [55,488][482,588]
+setup-examples-button  [778,503][849,573]
+ ? [802,511][823,564]
+setup-goal-input Floating keyboard layout [55,613][849,982]

@@ -1,0 +1,29 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage03-long-goal
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text SETUP-004... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Assert that id: setup-next-button is not visible... COMPLETED
+Assert that id: setup-duration-value is not visible... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Input text  very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely.... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Assert that id: setup-goal-input, Below id: setup-examples-button, Above id: com.google.android.inputmethod.latin:id/keyboard_holder is visible... COMPLETED
+Tap on id: setup-kicker... COMPLETED
+Assert that id: com.google.android.inputmethod.latin:id/keyboard_holder is not visible... COMPLETED
+Assert that "SETUP-004 very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely.", id: setup-goal-input is visible... COMPLETED
+Assert that "ДЛИТЕЛЬНОСТЬ" is visible... COMPLETED
+Take screenshot SETUP-004-actions-after-keyboard... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Assert that ".*SETUP-004 very long prayer goal.*" is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that ".*SETUP-004 very long prayer goal.*" is visible... COMPLETED

@@ -1,0 +1,70 @@
+Running on Pray iPad2 - iOS 26.5 - B037F1A1-E59D-4AD2-933A-CA1C03F46A53
+ > Flow ios-ipad-end-006-takeaway-rotation
+Launch app "twinkler" with clear state... COMPLETED
+Set orientation PORTRAIT... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text END-006 вывод на iPad... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text END-006 первая часть... COMPLETED
+Assert that id: reflect-complete-button is not visible... COMPLETED
+Assert that id: reflect-return-button is not visible... COMPLETED
+Take screenshot END-006-reflect-portrait-keyboard... COMPLETED
+Set orientation LANDSCAPE_LEFT... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Input text  и вторая... COMPLETED
+Assert that "END-006 первая часть и вторая", id: reflection-input is visible... COMPLETED
+Assert that id: reflect-complete-button is not visible... COMPLETED
+Take screenshot END-006-reflect-landscape-keyboard... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (3%,40%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that "END-006 первая часть и вторая", id: reflection-input is visible... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text  3... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (97%,40%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text  4... COMPLETED
+Set orientation PORTRAIT... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Assert that "(?s)^(?=.*END-006)(?=.*первая)(?=.*вторая)(?=.* 3)(?=.* 4).*$", id: reflection-input is visible... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (3%,30%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text  5... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (97%,30%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Input text  6... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on id: reflect-question... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Assert that id: reflect-return-button is visible... COMPLETED
+Set orientation LANDSCAPE_LEFT... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Assert that "(?s)^(?=.*END-006)(?=.*первая)(?=.*вторая)(?=.* 3)(?=.* 4)(?=.* 5)(?=.* 6).*$", id: reflection-input is visible... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Take screenshot END-006-reflect-landscape-actions... COMPLETED
+Set orientation PORTRAIT... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that ".*END-006 первая часть.* и вторая.*" is visible... COMPLETED

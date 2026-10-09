@@ -1,0 +1,62 @@
+Running on Pray iPad2 - iOS 26.5 - B037F1A1-E59D-4AD2-933A-CA1C03F46A53
+ > Flow ios-ipad-setup-004-keyboard-margins
+Launch app "twinkler" with clear state... COMPLETED
+Set orientation PORTRAIT... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text 4821... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Assert that id: setup-next-button is not visible... COMPLETED
+Assert that id: setup-duration-value is not visible... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Input text  11... COMPLETED
+Assert that "4821 11", id: setup-goal-input, Above id: inputView is visible... COMPLETED
+Tap on point (3%,50%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that "4821 11", id: setup-goal-input is visible... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text  12... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (97%,50%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that "4821 11 12", id: setup-goal-input is visible... COMPLETED
+Set orientation LANDSCAPE_LEFT... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text  21... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (3%,30%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text  22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin.... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Set orientation PORTRAIT... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Assert that "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin.", id: setup-goal-input, Below id: setup-examples-button, Above id: inputView is visible... COMPLETED
+Assert that id: setup-next-button is not visible... COMPLETED
+Assert that id: setup-duration-value is not visible... COMPLETED
+Press Enter key... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that id: setup-next-button is visible... COMPLETED
+Assert that id: setup-duration-value is visible... COMPLETED
+Take screenshot SETUP-004-ipad-actions-after-keyboard... COMPLETED
+Assert that "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin.", id: setup-goal-input is visible... COMPLETED
+Set orientation LANDSCAPE_LEFT... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text  ... COMPLETED
+Erase 1 characters... COMPLETED
+Assert that id: shift is visible... COMPLETED
+Tap on point (97%,30%)... COMPLETED
+Assert that id: shift is not visible... COMPLETED
+Assert that "4821 11 12 21 22 long prayer goal across several sentences that wraps onto multiple lines on the tablet. It stays editable with the software keyboard open and survives a tap in the side margin.", id: setup-goal-input is visible... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Set orientation PORTRAIT... COMPLETED
