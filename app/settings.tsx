@@ -789,6 +789,8 @@ export default function Settings() {
     if (!language || !translation) return;
     const preferences = preferencesFromCatalog(language, translation, next);
     if (!preferences) {
+      // Ошибка этой попытки не должна скрыться завершением более ранней записи.
+      scriptureSaveRequest.current++;
       recordDiagnostic('scripture_preferences_save_failed', new Error('Incompatible Bible triple'));
       setScriptureSaveError(true);
       return;
