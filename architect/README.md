@@ -212,6 +212,10 @@ and completion actions return when the keyboard closes.
 Content can scroll when a long question or a small window needs more room.
 Both screens follow the keyboard through `lib/useKeyboardTop.ts`; Reflection
 retains the keyboard-synchronized layout animation.
+Keyboard frames with zero occupied height retain the normal layout. Android
+reports this for Samsung's floating keyboard: its `screenY` is the window's
+bottom edge, not the floating panel's top. Neither screen stretches its input
+to that edge or hides its actions for a floating keyboard.
 
 ## State and the main data flow
 

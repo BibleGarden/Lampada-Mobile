@@ -1,0 +1,24 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# До запуска выбрать плавающий режим в клавиатуре Samsung.
+# Сценарий не очищает данные на личном телефоне.
+- launchApp:
+    stopApp: true
+- tapOn:
+    id: "start-prayer-button"
+- tapOn:
+    id: "setup-goal-input"
+- assertVisible:
+    id: "setup-kicker"
+- assertVisible:
+    id: "setup-duration-value"
+- assertVisible:
+    id: "setup-next-button"
+- inputText: "Floating keyboard layout"
+- assertVisible: "Floating keyboard layout"
+- hideKeyboard
+- assertVisible: "Floating keyboard layout"
+- assertVisible:
+    id: "setup-next-button"
