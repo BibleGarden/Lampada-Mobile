@@ -25,19 +25,22 @@ keyboard height. Every keyboard viewport fills its window down to the bottom
 edge (screens, transparent full-screen Modals, sheet overlays), so it reserves
 `max(bottom safe area, keyboard height)` as one UI-thread padding that follows
 the keyboard animation frame by frame; a floating keyboard reserves nothing.
-An inner frame constrains absolute overlays. A sheet overlay and its backdrop
-reach the screen edge; its footer adds the part of the bottom safe area the
-keyboard does not cover. Gorhom owns sheet positioning and footer measurement
-within that frame, not a second keyboard inset. Managed sheet inputs
+An inner frame constrains absolute children. A sheet overlay fills the window
+with no reservation, so the sheet and its backdrop reach the screen edge and
+its container never changes with the keyboard; the sheet footer reserves
+`max(bottom safe area, keyboard height)` the same way, and the body ends above
+the footer. Gorhom owns sheet positioning and footer measurement within that
+window, not a second keyboard inset. Managed sheet inputs
 deliberately do not register Gorhom's independent keyboard handler. Remove
 app-level screen/keyboard height formulas and fixed-device padding corrections.
 
 Gorhom 5.2.14 does not reposition a closed sheet when its container changes
-(`getEvaluatedPosition` has no position for index -1). Only an open sheet
-reserves the keyboard, so a closed sheet's container changes only with the
-window and once after closing, when the keyboard reservation is released.
-`KeyboardSheet` alone remounts a closed sheet whenever its container size
-changes. A closed sheet is neither presented nor touchable.
+(`getEvaluatedPosition` has no position for index -1), and it fixes a
+programmatic close target when the close starts. Because the sheet container
+changes only with the window, a close always slides to the screen edge.
+`KeyboardSheet` alone remounts a closed sheet when the window geometry changes,
+and a sheet rotated while open right after it closes. A closed sheet is neither
+presented nor touchable.
 
 Preparation and reflection defer lower actions while a software keyboard is
 visible; answers and reports do not hide actions.

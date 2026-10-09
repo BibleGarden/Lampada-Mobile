@@ -1,4 +1,4 @@
-import React, { createContext, forwardRef, useContext, useMemo, useRef, useState } from 'react';
+import React, { createContext, forwardRef, useContext, useMemo } from 'react';
 import { StyleSheet, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import BottomSheet, { BottomSheetFooter, BottomSheetScrollView, type BottomSheetFooterProps, type BottomSheetProps } from '@gorhom/bottom-sheet';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
@@ -8,6 +8,7 @@ import { screenReaderHiddenProps } from '../../lib/a11y';
 import { sc, column, useStyles } from '../../lib/theme';
 import KeyboardViewport, { useReservedKeyboardHeight } from './KeyboardViewport';
 import { useKeyboardLayout } from '../../lib/useKeyboardLayout';
+import { useSheetReflow } from '../../lib/useSheetReflow';
 
 type SheetContext = { footer: React.ReactNode; hidden: boolean; footerStyle?: StyleProp<ViewStyle>; bodyHeight: SharedValue<number> };
 const SheetLayoutContext = createContext<SheetContext | null>(null);
@@ -19,17 +20,16 @@ function useSheetLayout() {
 }
 
 // Позицию низа тела сообщает сам Gorhom после учёта контейнера, ручки
-// и измеренного footer. Здесь нет вычитания высоты клавиатуры или окна.
-// Шторка доходит до края экрана, поэтому над Home Indicator и системной
-// навигацией кнопки поднимает footer — на ту часть безопасной зоны, которую
-// не закрыла клавиатура, кадр в кадр с её анимацией.
+// и измеренного footer. Контейнер шторки — всё окно, поэтому footer сам
+// резервирует снизу max(безопасная зона, клавиатура) кадр в кадр с анимацией
+// клавиатуры, а тело кончается над ним.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, bodyHeight } = useSheetLayout();
   useAnimatedReaction(() => animatedFooterPosition.value, (height) => { bodyHeight.value = Math.max(0, height); });
   const keyboard = useReservedKeyboardHeight(true);
   const safeBottom = useSafeAreaInsets().bottom;
   const gap = sc(16);
-  const inset = useAnimatedStyle(() => ({ paddingBottom: gap + Math.max(0, safeBottom - keyboard.value) }), [gap, safeBottom]);
+  const inset = useAnimatedStyle(() => ({ paddingBottom: gap + Math.max(safeBottom, keyboard.value) }), [gap, safeBottom]);
   const styles = useStyles(stylesFactory);
   return (
     <BottomSheetFooter animatedFooterPosition={animatedFooterPosition} bottomInset={0}>
@@ -49,58 +49,39 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
   accessibilityModal?: boolean;
 };
 
-// Viewport резервирует физическое место ровно один раз. Gorhom владеет
-// только положением шторки и footer внутри уже доступного контейнера.
+// Клавиатуру резервирует только footer, контейнер Gorhom от неё не зависит.
+// Gorhom владеет только положением шторки и footer внутри окна.
 const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
   const bodyHeight = useSharedValue(0);
-  // Открытой шторка считается с начала анимации открытия и до onChange(-1).
-  const [present, setPresent] = useState(false);
-  const presentRef = useRef(false);
-  const updatePresent = (next: boolean) => {
-    presentRef.current = next;
-    setPresent(next);
-  };
-  // Gorhom 5.2.14 не переставляет закрытую шторку при смене контейнера:
-  // getEvaluatedPosition для индекса -1 возвращает undefined. Поэтому
+  // Gorhom 5.2.14 не переставляет закрытую или закрывающуюся шторку при
+  // смене контейнера, а контейнер меняется только вместе с окном. Поэтому
   // KeyboardSheet — единственный владелец пересборки: закрытую шторку
-  // пересоздаём, когда меняется её контейнер. Закрытая шторка клавиатуру
-  // не резервирует, так что контейнер меняется лишь со сменой окна и один
-  // раз после закрытия, когда снимается резерв клавиатуры, — без таймера
-  // и без пересборки на кадрах анимации. Открытую шторку Gorhom ведёт сам.
-  const [generation, setGeneration] = useState(0);
-  const viewportSize = useRef<string | null>(null);
+  // пересоздаём при смене окна, а повёрнутую открытой — сразу после закрытия
+  // (useSheetReflow). Открытой шторка считается с начала анимации открытия.
+  const { mountKey, open: present, onIndexChange } = useSheetReflow();
   const context = useMemo(() => ({ footer, hidden: footerHidden, footerStyle, bodyHeight }), [footer, footerHidden, footerStyle, bodyHeight]);
   return (
     <KeyboardViewport
       overlay
-      avoidKeyboard={present}
       style={!present && styles.hidden}
       pointerEvents={present ? 'box-none' : 'none'}
       accessibilityViewIsModal={accessibilityModal}
       onAccessibilityEscape={onAccessibilityEscape}
-      onViewportLayout={(event) => {
-        const { width, height } = event.nativeEvent.layout;
-        const size = `${width}x${height}`;
-        if (!presentRef.current && viewportSize.current !== null && viewportSize.current !== size) {
-          setGeneration((current) => current + 1);
-        }
-        viewportSize.current = size;
-      }}
     >
       <SheetLayoutContext.Provider value={context}>
         <BottomSheet
           {...props}
-          key={generation}
+          key={mountKey}
           ref={ref}
           bottomInset={0}
           android_keyboardInputMode="adjustResize"
           footerComponent={SheetFooter}
           onAnimate={(from, to, ...positions) => {
-            if (to >= 0) updatePresent(true);
+            if (to >= 0) onIndexChange(to);
             onAnimate?.(from, to, ...positions);
           }}
           onChange={(index, ...details) => {
-            updatePresent(index >= 0);
+            onIndexChange(index);
             onChange?.(index, ...details);
           }}
         >

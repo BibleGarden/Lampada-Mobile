@@ -213,14 +213,14 @@ Keyboard Controller 1.21.9 (Expo SDK 57), so content never dips under the Home
 Indicator or navigation bar while the keyboard animates. Forms do not subtract
 keyboard or screen heights themselves.
 
-`KeyboardSheet` puts a Gorhom sheet into an overlay viewport. The sheet and its
-backdrop reach the screen edge; the measured footer holds the answer and
-recording actions, including Stop, above the uncovered part of the bottom safe
-area, and the body takes the height above the footer. Sheet inputs do not
+`KeyboardSheet` puts a Gorhom sheet into a full-window overlay that reserves
+nothing, so the sheet and its backdrop reach the screen edge and the container
+does not change with the keyboard. The measured footer holds the answer and
+recording actions, including Stop, above `max(bottom safe area, keyboard
+height)`, and the body takes the height above the footer. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
-Only an open sheet reserves the keyboard. A closed sheet is hidden and
-untouchable, and `KeyboardSheet` remounts it whenever its container size
-changes, because Gorhom does not reposition a closed sheet.
+A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
+sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
 Preparation and reflection defer lower actions while typing. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
@@ -522,8 +522,9 @@ fragment. So the `Stack` in `app/_layout.tsx` is wrapped in a layout-neutral
 `View` subscribed to the lock state, the settings content is marked under its
 sheets and the PIN input, and the session content under the answer sheet and the
 Scripture reader. A closed gorhom sheet is only translated below the screen and
-would stay in the reading order, so its content is marked while closed
-(`useSheetReflow` exposes `open`); gorhom backdrops and containers are made
+would stay in the reading order, so its content is marked while closed (from
+`AnswerSheet`'s own `open`, `RecordingsSheet`'s `visible`, and the `open` that
+`useSheetReflow` exposes to `KeyboardSheet` and `ScriptureReader`); gorhom backdrops and containers are made
 non-accessible because their built-in labels are English. On opening, focus
 moves to the sheet's heading (the question, the passage reference). The shared
 helper is `lib/a11y.ts`: it sets `accessibilityElementsHidden` and

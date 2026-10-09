@@ -15,22 +15,20 @@ export function useReservedKeyboardHeight(enabled: boolean): SharedValue<number>
   return useDerivedValue(() => (reserve ? Math.max(0, -height.value) : 0), [reserve]);
 }
 
-// Единственный владелец доступной области обычной формы, нативного Modal
-// и шторки. Каждый viewport занимает окно до нижнего края, поэтому снизу
-// резервируется max(безопасная зона, клавиатура) одним значением UI-потока.
-// Внутренний flex-контейнер ограничивает также absoluteFill-шторки:
-// сами абсолютные дети не обязаны учитывать padding внешнего View.
-// Шторка (overlay) и её фон доходят до края экрана: безопасную зону она
-// отдаёт своему footer. Клавиатуру резервирует только открытая шторка
-// (avoidKeyboard), чтобы контейнер закрытой не зависел от клавиатуры.
-export default function KeyboardViewport({ children, style, contentContainerStyle, overlay = false, avoidKeyboard = true, onViewportLayout, ...props }: ViewProps & {
+// Единственный владелец доступной области обычной формы и нативного Modal.
+// Каждый viewport занимает окно до нижнего края, поэтому снизу резервируется
+// max(безопасная зона, клавиатура) одним значением UI-потока.
+// Внутренний flex-контейнер ограничивает также absoluteFill-детей:
+// сами они не обязаны учитывать padding внешнего View.
+// Шторка (overlay) занимает всё окно без резерва: её фон доходит до края
+// экрана, а безопасную зону и клавиатуру резервирует её footer. Поэтому
+// контейнер шторки не меняется вместе с клавиатурой.
+export default function KeyboardViewport({ children, style, contentContainerStyle, overlay = false, ...props }: ViewProps & {
   contentContainerStyle?: StyleProp<ViewStyle>;
   overlay?: boolean;
-  avoidKeyboard?: boolean;
-  onViewportLayout?: ViewProps['onLayout'];
 }) {
   const insets = useSafeAreaInsets();
-  const keyboard = useReservedKeyboardHeight(avoidKeyboard);
+  const keyboard = useReservedKeyboardHeight(!overlay);
   const safeBottom = overlay ? 0 : insets.bottom;
   const reserved = useAnimatedStyle(() => ({ paddingBottom: Math.max(safeBottom, keyboard.value) }), [safeBottom]);
   return (
@@ -39,7 +37,7 @@ export default function KeyboardViewport({ children, style, contentContainerStyl
       pointerEvents={props.pointerEvents ?? (overlay ? 'box-none' : 'auto')}
       style={[styles.fill, overlay && StyleSheet.absoluteFill, style, reserved]}
     >
-      <View onLayout={onViewportLayout} pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, contentContainerStyle]}>{children}</View>
+      <View pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, contentContainerStyle]}>{children}</View>
     </Animated.View>
   );
 }
