@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
-import { useSettings } from '../lib/settings';
+import { ensureScripturePreferences, useSettings } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
 import {
   DEFAULT_REMINDER_SCHEDULE,
@@ -375,7 +375,7 @@ export default function Settings() {
     setCatalogError(false);
     try {
       await load();
-      const saved = useSettings.getState().scripturePreferences;
+      const saved = await ensureScripturePreferences();
       const [languageCatalog, translationCatalog] = await Promise.all([
         fetchScriptureLanguages(),
         fetchScriptureTranslations(saved.language),
@@ -803,7 +803,7 @@ export default function Settings() {
           <View style={styles.card}>
             <SettingRow
               title={t('settings.bibleLanguage')}
-              value={language?.nameNational ?? scripturePreferences.languageName}
+              value={language?.nameNational ?? scripturePreferences?.languageName ?? '—'}
               testID="scripture-language-picker"
               disabled={loadingCatalog && languages.length === 0}
               divided
@@ -811,7 +811,7 @@ export default function Settings() {
             />
             <SettingRow
               title={t('settings.translation')}
-              value={translation?.name.trim() ?? (language ? t('settings.chooseTranslation') : scripturePreferences.translationName.trim())}
+              value={translation?.name.trim() ?? (language ? t('settings.chooseTranslation') : (scripturePreferences?.translationName.trim() ?? t('settings.chooseTranslation')))}
               testID="scripture-translation-picker"
               disabled={!language || loadingCatalog}
               divided
@@ -819,7 +819,7 @@ export default function Settings() {
             />
             <SettingRow
               title={t('settings.voice')}
-              value={voice?.name ?? (translation ? t('settings.chooseVoice') : scripturePreferences.voiceName)}
+              value={voice?.name ?? (translation ? t('settings.chooseVoice') : (scripturePreferences?.voiceName ?? t('settings.chooseVoice')))}
               testID="scripture-voice-picker"
               disabled={!translation}
               onPress={() => openPicker('voice')}

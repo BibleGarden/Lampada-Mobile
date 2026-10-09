@@ -35,19 +35,6 @@ export type ScripturePreferences = {
   voiceIsMusic: boolean;
 };
 
-/** Safe first-launch fallback when the device language cannot be confirmed. */
-export const ENGLISH_SCRIPTURE_PREFERENCES: ScripturePreferences = {
-  language: 'en',
-  languageName: 'English',
-  translationCode: 16,
-  translationAlias: 'bsb',
-  translationName: 'BSB',
-  voiceCode: 151,
-  voiceAlias: 'bsb_souer',
-  voiceName: 'Bob Souer',
-  voiceIsMusic: false,
-};
-
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -82,18 +69,12 @@ export function parseStoredScripturePreferences(value: string | null): Scripture
 const normalizeLanguage = (value: string | null | undefined) =>
   value?.trim().replaceAll('_', '-').toLowerCase() ?? '';
 
-/** Resolve the primary device locale against aliases actually returned by the server. */
+/** Начальный язык цитат следует уже определённому языку интерфейса. */
 export function resolveInitialScriptureLanguage(
-  deviceLocale: { languageTag?: string | null; languageCode?: string | null },
+  interfaceLanguage: string,
   languages: readonly ScriptureLanguageOption[],
 ): ScriptureLanguageOption | null {
-  const tag = normalizeLanguage(deviceLocale.languageTag);
-  const code = normalizeLanguage(deviceLocale.languageCode);
-  const exactTag = languages.find((item) => normalizeLanguage(item.alias) === tag);
-  if (exactTag) return exactTag;
-  const exactCode = languages.find((item) => normalizeLanguage(item.alias) === code);
-  if (exactCode) return exactCode;
-  return languages.find((item) => normalizeLanguage(item.alias) === 'en') ?? null;
+  return languages.find((item) => normalizeLanguage(item.alias) === normalizeLanguage(interfaceLanguage)) ?? null;
 }
 
 const preferredCodes: Readonly<Record<string, { translation: number; voice: number }>> = {

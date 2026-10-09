@@ -1,0 +1,13 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Continue the failure phase after host catalog=ok, with UI English on a Russian device.
+- tapOn: ".*Could not load the list.*"
+- assertVisible: ".*English.*"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"
+- tapOn:
+    id: interface-language-picker
+- tapOn:
+    id: interface-language-ru

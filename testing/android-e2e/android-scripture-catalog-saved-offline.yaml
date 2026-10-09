@@ -1,0 +1,13 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Continue after host catalog=fail: the confirmed English Bible survives UI Russian.
+- stopApp
+- launchApp
+- tapOn:
+    id: settings-button
+- assertVisible: ".*Не удалось загрузить список.*"
+- assertVisible: ".*English.*"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"

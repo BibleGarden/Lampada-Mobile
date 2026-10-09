@@ -295,8 +295,8 @@ tier of its e2e runs.
 | SCR-009 | Change the language, then the translation | the child lists are cleared; an incompatible or incomplete triple cannot be saved |
 | SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is visible and reachable next to wrapped error text, the previously saved choice is not damaged |
 | SCR-011 | Switch the language or the translation once an offline cache exists | the offline fallback does not show a snapshot of another language or translation |
-| SCR-012 | A clean installation with a supported primary device language | the server language of the device and a valid translation/voice triple are chosen |
-| SCR-013 [main] | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |
+| SCR-012 | A clean installation with a supported interface language, including one different from the primary device locale | the interface language and a confirmed valid translation/voice triple are chosen |
+| SCR-013 [prepared] | A clean installation with a failing catalog or no valid interface-language translation/voice; recover the catalog and use the existing retry | choice remains undefined, error is visible, no Bible preference is written; recovery chooses the interface language; saved explicit choices survive catalog failures (unit: `scriptureInitialization.test.mjs`) |
 | SCR-014 [main] | Change the device language after the setting was saved | the saved user choice is not overridden |
 | SCR-015 [rare] | Pause the scripture narration, press resume and immediately switch the mode or the passage | the old passage does not resume after the context changes; the new passage starts normally |
 | SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
@@ -506,3 +506,14 @@ The run is complete when:
   recorded;
 - the final report contains the versions, the commit, the exit codes and the full
   logs of the checks.
+
+
+SCR-013 staged catalog regression (2026-10-09): use a disposable named simulator
+or emulator with a build pointing to `scripts/scripture-stub.mjs`. Set
+`catalog=fail` via `POST /__control`, run `*-scripture-catalog-failure`, confirm
+`meta.scripture_preferences` is absent; set `catalog=ok`, run
+`*-scripture-catalog-recovery`, confirm saved `en/16/151`; set `catalog=fail`
+and run `*-scripture-catalog-saved-offline`. The Russian device's interface was
+explicitly set to English during the failure; recovery must follow that interface
+choice, not its primary system locale. The final phase changes the interface
+back to Russian and confirms that the saved English Bible is retained.

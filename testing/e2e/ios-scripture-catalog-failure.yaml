@@ -1,0 +1,17 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# Host runner sets catalog=fail before this phase; no automatic Bible choice exists.
+- launchApp:
+    clearState: true
+- tapOn:
+    id: settings-button
+- assertVisible: ".*Не удалось загрузить список.*"
+- assertNotVisible: ".*BSB.*"
+- assertNotVisible: ".*Bob Souer.*"
+- tapOn:
+    id: interface-language-picker
+- tapOn:
+    id: interface-language-en
+- assertVisible: ".*Could not load the list.*"

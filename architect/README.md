@@ -421,10 +421,15 @@ automatically after the narration is chosen, as a single JSON value
 `meta.scripture_preferences`. The language, the translation and the narration
 code are frozen when a prayer session starts: the language and the translation
 are used for the selection, and the narration code for requesting the alignment
-and the audio of the chosen passage. On a fresh install the primary
-`languageCode` of the device is matched against the server language catalogue; if
-there is no match, or the catalogue is unavailable, English is used. After the
-first save the system locale no longer overrides the choice.
+and the audio of the chosen passage. On a fresh install, the resolved interface
+language is matched against the server catalogue. Local settings load independently
+of this network initialization, with a nullable Bible selection until a complete
+valid triple is confirmed. Catalog errors and missing matches never substitute
+English or write a preference. Existing Settings retry/error handling exposes
+failures; an unresolved first selection must succeed before creating a prayer
+session. A successful initial triple is persisted atomically; a saved selection
+is used without a catalog request and is not overridden. A concurrent explicit
+selection wins over initialization. See ADR-0039.
 
 ## Prayer reminders
 

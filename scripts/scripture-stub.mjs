@@ -21,6 +21,8 @@ let versionResponse = {
 };
 /** 'ok' — успех; 'fail-once' — первый запрос 500 (ретрай-сценарий RPT-003). */
 let contentReportMode = 'ok';
+/** Ошибка каталога на первом запуске для проверки отсутствия ложного дефолта. */
+let catalogMode = 'ok';
 /** Пейлоды принятых жалоб — для проверки раннером через /__status. */
 const contentReports = [];
 
@@ -99,6 +101,7 @@ const server = http.createServer((request, response) => {
       if (Number.isFinite(body.questionDelayMs) && body.questionDelayMs >= 0) questionDelayMs = body.questionDelayMs;
       if (body.version && typeof body.version === 'object') versionResponse = { ...versionResponse, ...body.version };
       if (['ok', 'fail-once'].includes(body.contentReports)) contentReportMode = body.contentReports;
+      if (['ok', 'fail'].includes(body.catalog)) catalogMode = body.catalog;
       if (body.resetScripture) requestCount = 0;
       json(response, 200, { transcriptionMode, questionDelayMs, versionResponse, contentReportMode });
     });
@@ -147,6 +150,10 @@ const server = http.createServer((request, response) => {
       if (questionDelayMs > 0) setTimeout(send, questionDelayMs);
       else send();
     });
+    return;
+  }
+  if (request.method === 'GET' && ['/api/languages', '/api/translations'].includes(url.pathname) && catalogMode === 'fail') {
+    json(response, 503, { detail: 'catalog unavailable' });
     return;
   }
   if (request.method === 'GET' && url.pathname === '/api/languages') {
