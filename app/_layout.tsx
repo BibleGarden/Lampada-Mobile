@@ -3,6 +3,7 @@ import 'react-native-gesture-handler';
 import { useEffect, useRef, useState } from 'react';
 import { Stack, router, usePathname } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
@@ -34,6 +35,10 @@ import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 // завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
 // не выбрасывает пользователя из неё.
 const PRAYER_FLOW = new Set(['/session', '/reflect']);
+
+// Сплэш с пламенем держится, пока корневой layout ждёт шрифты и язык
+// интерфейса: иначе между ним и главной мелькал бы пустой тёмный кадр.
+void SplashScreen.preventAutoHideAsync();
 
 /** Тап по напоминанию открывает главную. */
 function ReminderRouting() {
@@ -92,7 +97,12 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
 
-  if (!fontsLoaded || !uiLanguageReady) {
+  const ready = fontsLoaded && uiLanguageReady;
+  useEffect(() => {
+    if (ready) SplashScreen.hide();
+  }, [ready]);
+
+  if (!ready) {
     return <View style={{ flex: 1, backgroundColor: '#0e0a07' }} />;
   }
 
