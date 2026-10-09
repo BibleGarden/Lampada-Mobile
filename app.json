@@ -40,6 +40,11 @@
       "permissions": [
         "RECORD_AUDIO",
         "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -82,6 +87,14 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Face ID is used to unlock the app."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0e0a07",
+          "image": "./assets/splash.png",
+          "imageWidth": 200
         }
       ]
     ],
