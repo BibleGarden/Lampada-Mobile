@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
-import { ensureScripturePreferences, useSettings } from '../lib/settings';
+import { ScriptureDefaultUnavailableError, ensureScripturePreferences, useSettings } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
 import {
   DEFAULT_REMINDER_SCHEDULE,
@@ -333,6 +333,7 @@ export default function Settings() {
   const [open, setOpen] = useState<OpenPicker>(null);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
+  const [defaultUnavailable, setDefaultUnavailable] = useState(false);
   const translationRequest = useRef(0);
   const preferenceSave = useRef<Promise<void>>(Promise.resolve());
 
@@ -373,20 +374,36 @@ export default function Settings() {
   const hydrate = async () => {
     setLoadingCatalog(true);
     setCatalogError(false);
+    setDefaultUnavailable(false);
     try {
       await load();
-      const saved = await ensureScripturePreferences();
-      const [languageCatalog, translationCatalog] = await Promise.all([
-        fetchScriptureLanguages(),
-        fetchScriptureTranslations(saved.language),
+      let saved = useSettings.getState().scripturePreferences;
+      let languageCatalog: ScriptureLanguageOption[] | null = null;
+      let translationCatalog: ScriptureTranslation[] | null = null;
+      if (!saved) {
+        try {
+          ({ preferences: saved, languages: languageCatalog, translations: translationCatalog } =
+            await ensureScripturePreferences());
+        } catch (error) {
+          if (!(error instanceof ScriptureDefaultUnavailableError)) throw error;
+          // Каталог доступен, но не подходит к языку интерфейса: выбор остаётся
+          // за человеком, ошибка видна рядом с открытыми списками.
+          setLanguages(error.languages);
+          setDefaultUnavailable(true);
+          return;
+        }
+      }
+      const [languageResult, translationResult] = await Promise.all([
+        languageCatalog ?? fetchScriptureLanguages(),
+        translationCatalog ?? fetchScriptureTranslations(saved.language),
       ]);
-      const savedLanguage = languageCatalog.find((item) => item.alias === saved.language) ?? null;
-      const savedTranslation = translationCatalog.find(
+      const savedLanguage = languageResult.find((item) => item.alias === saved.language) ?? null;
+      const savedTranslation = translationResult.find(
         (item) => item.code === saved.translationCode,
       ) ?? null;
       const savedVoice = savedTranslation?.voices.find((item) => item.code === saved.voiceCode) ?? null;
-      setLanguages(languageCatalog);
-      setTranslations(translationCatalog);
+      setLanguages(languageResult);
+      setTranslations(translationResult);
       setLanguage(savedLanguage);
       setTranslation(savedTranslation);
       setVoice(savedVoice);
@@ -826,6 +843,11 @@ export default function Settings() {
             />
           </View>
           {loadingCatalog ? <Text style={styles.catalogMessage}>{t('settings.catalogLoading')}</Text> : null}
+          {defaultUnavailable && !scripturePreferences ? (
+            <Text accessibilityRole="alert" style={styles.catalogMessage} testID="scripture-default-unavailable">
+              {t('settings.bibleDefaultUnavailable')}
+            </Text>
+          ) : null}
           {catalogError ? (
             <Pressable
               accessibilityRole="button"

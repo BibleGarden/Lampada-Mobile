@@ -6,8 +6,10 @@ import {
   answerContextAllowedNow,
   coreAiAllowedNow,
   ensureScripturePreferences,
+  ensureSettingsLoaded,
   useSettings,
 } from './settings';
+import type { ScripturePreferences } from './scripturePreferences';
 import type { ScriptureLanguage } from './scripture';
 import { createOneAheadPool } from './oneAheadPool';
 import { rememberShownQuestion, wasQuestionShown } from './questionNovelty';
@@ -55,6 +57,19 @@ export type RecordingDraft = {
 
 export type Answer = { text: string; recordings: RecordingDraft[] };
 
+/** Тройка Библии, замороженная на сессию. */
+export type ScriptureSelection = {
+  language: ScriptureLanguage;
+  translation: number;
+  voice: number;
+};
+
+const selectionFromPreferences = (preferences: ScripturePreferences): ScriptureSelection => ({
+  language: preferences.language,
+  translation: preferences.translationCode,
+  voice: preferences.voiceCode,
+});
+
 type SessionState = {
   // setup
   topic: string;
@@ -74,11 +89,10 @@ type SessionState = {
   scrList: ScriptureDisplay[]; // фактически показанный след текущей сессии
   scrIndex: number; // позиция в scrList
   scrFav: string[]; // canonical ID серверных записей в избранном
-  scriptureLanguage: ScriptureLanguage; // snapshot выбора на входе в сессию
-  scriptureTranslation: number;
-  scriptureVoice: number;
+  // Снимок выбора на входе в сессию; null, пока каталог не подтвердил первый выбор.
+  scriptureSelection: ScriptureSelection | null;
   scrStatus: 'idle' | 'loading' | 'ready' | 'retrying' | 'error' | 'offline_fallback';
-  scrError: 'not_configured' | 'unavailable' | null;
+  scrError: 'not_configured' | 'unavailable' | 'catalog_unavailable' | null;
 
   dockMode: 'question' | 'scripture';
   musicOn: boolean;
@@ -245,10 +259,12 @@ const loadScriptureForState = async (
   signal: AbortSignal,
 ): Promise<ScriptureLoadResult> => {
   if (signal.aborted) return { ok: false, error: { kind: 'cancelled' } };
+  const selection = s.scriptureSelection;
+  if (!selection) throw new Error('Scripture selection is not confirmed');
   const shownCanonicalIds = await scriptureRepository.getScriptureHistory();
   const request = buildScriptureRequest({
-    language: s.scriptureLanguage,
-    translation: s.scriptureTranslation,
+    language: selection.language,
+    translation: selection.translation,
     topic: s.topic,
     replies: replyTexts(s.answers),
     shareTopic: coreAiAllowedNow(),
@@ -283,9 +299,7 @@ const initial: SessionState = {
   scrList: [],
   scrIndex: 0,
   scrFav: [],
-  scriptureLanguage: 'ru',
-  scriptureTranslation: 1,
-  scriptureVoice: 1,
+  scriptureSelection: null,
   scrStatus: 'idle',
   scrError: null,
   dockMode: 'question',
@@ -382,12 +396,14 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // Момент начала берётся один раз: по нему датируются и запись журнала
     // (sessions.started_at), и день молитвы в серии (ADR-0033), иначе около
     // полуночи они могли разойтись на разные дни.
-    const scripturePreferences = await ensureScripturePreferences();
     const startedAtMs = Date.now();
     const [sessionId, favoriteScriptures] = await Promise.all([
       db.createSession(topic, minutes, startedAtMs),
-      scriptureRepository.getFavoriteScriptures(),
+      ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
+    // Неподтверждённый первый выбор Библии не задерживает вход: блок цитат
+    // сам подтвердит его по каталогу или покажет ошибку с повтором.
+    const scripturePreferences = useSettings.getState().scripturePreferences;
     // висящая генерация первого вопроса с порога больше не применится
     prepareToken++;
     firstQuestionFetch = null;
@@ -408,9 +424,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       scrFav: favoriteScriptures.flatMap((favorite) =>
         favorite.canonicalId ? [favorite.canonicalId] : [],
       ),
-      scriptureLanguage: scripturePreferences.language,
-      scriptureTranslation: scripturePreferences.translationCode,
-      scriptureVoice: scripturePreferences.voiceCode,
+      scriptureSelection: scripturePreferences ? selectionFromPreferences(scripturePreferences) : null,
       scrStatus: 'loading',
       scrError: null,
       dockMode: 'question',
@@ -674,6 +688,11 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       return;
     }
     if (s.sessionId === null || s.scrStatus === 'loading' || s.scrStatus === 'retrying') return;
+    if (!s.scriptureSelection) {
+      set({ scrStatus: 'loading', scrError: null });
+      await loadFirstScripture(s.sessionId, scriptureToken);
+      return;
+    }
     await showNextScripture(s.sessionId, scriptureToken);
   },
 
@@ -802,10 +821,11 @@ const sessionIsCurrent = (sessionId: number, token: number) => {
 
 const applyOfflineFallback = async (sessionId: number, token: number) => {
   if (!sessionIsCurrent(sessionId, token)) return;
-  const state = useSession.getState();
+  const selection = useSession.getState().scriptureSelection;
+  if (!selection) throw new Error('Scripture selection is not confirmed');
   const cached = await scriptureRepository.getShownScriptureCache(
-    state.scriptureLanguage,
-    state.scriptureTranslation,
+    selection.language,
+    selection.translation,
   );
   if (!sessionIsCurrent(sessionId, token)) return;
   const current = useSession.getState();
@@ -855,10 +875,38 @@ const handleScriptureFailure = async (
   ) useSession.setState({ scrError: 'not_configured' });
 };
 
+/**
+ * Подтверждает первый выбор Библии внутри уже начатой сессии. Ничего не
+ * подставляет: без каталога блок цитат показывает ошибку с повтором.
+ */
+async function confirmScriptureSelection(sessionId: number, token: number, foreground: boolean) {
+  let preferences: ScripturePreferences;
+  try {
+    preferences = (await ensureScripturePreferences()).preferences;
+  } catch (error) {
+    if (!sessionIsCurrent(sessionId, token)) return false;
+    console.warn('Bible catalog unavailable', error instanceof Error ? error.message : error);
+    // Скрытая попытка на входе не показывает ошибку: её покажет первое открытие блока.
+    useSession.setState(
+      foreground || useSession.getState().dockMode === 'scripture'
+        ? { scrStatus: 'error', scrError: 'catalog_unavailable' }
+        : { scrStatus: 'idle', scrError: null },
+    );
+    return false;
+  }
+  if (!sessionIsCurrent(sessionId, token)) return false;
+  useSession.setState({ scriptureSelection: selectionFromPreferences(preferences) });
+  return true;
+}
+
 async function loadFirstScripture(sessionId: number, token: number, foreground = true) {
   if (!sessionIsCurrent(sessionId, token)) return;
   const controller = scriptureAbortController;
   if (!controller) return;
+  if (
+    !useSession.getState().scriptureSelection
+    && !(await confirmScriptureSelection(sessionId, token, foreground))
+  ) return;
   const result = await runScriptureExclusive(() =>
     loadScriptureForState(useSession.getState(), foreground, controller.signal),
   );

@@ -103,7 +103,7 @@ const server = http.createServer((request, response) => {
       if (['ok', 'fail-once'].includes(body.contentReports)) contentReportMode = body.contentReports;
       if (['ok', 'fail'].includes(body.catalog)) catalogMode = body.catalog;
       if (body.resetScripture) requestCount = 0;
-      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse, contentReportMode });
+      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse, contentReportMode, catalogMode });
     });
     return;
   }

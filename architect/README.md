@@ -425,11 +425,16 @@ and the audio of the chosen passage. On a fresh install, the resolved interface
 language is matched against the server catalogue. Local settings load independently
 of this network initialization, with a nullable Bible selection until a complete
 valid triple is confirmed. Catalog errors and missing matches never substitute
-English or write a preference. Existing Settings retry/error handling exposes
-failures; an unresolved first selection must succeed before creating a prayer
-session. A successful initial triple is persisted atomically; a saved selection
-is used without a catalog request and is not overridden. A concurrent explicit
-selection wins over initialization. See ADR-0039.
+English or write a preference. A prayer starts without waiting for the catalogue:
+the session snapshot stays null, the scripture block confirms it in the
+background and otherwise shows "Bible catalog unavailable" with Retry, which
+reruns initialization within the same session. Settings show the language list
+for a manual choice when the catalogue has no triple for the interface language.
+A successful initial triple is persisted atomically; a saved selection is used
+without a catalog request and is not overridden. A concurrent explicit selection
+wins over initialization, and an interface language changed during it restarts
+initialization. A malformed record is logged as `scripture_preferences_invalid`
+in the local diagnostics file. See ADR-0039.
 
 ## Prayer reminders
 

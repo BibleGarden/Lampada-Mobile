@@ -1,6 +1,6 @@
 # ADR-0005: The scripture language default from the device
 
-- Status: Accepted
+- Status: Partly superseded by ADR-0039 (items 1–3)
 - Date: 2026-08-27
 - Participants: product owner, developer, QA lead
 - Partly supersedes: ADR-0004, item 4

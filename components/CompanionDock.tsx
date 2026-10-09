@@ -340,8 +340,13 @@ export default function CompanionDock({ onOpenAnswer, onOpenReader, onReportOpen
                 accessibilityRole="button"
                 onPress={tap(() => void s.retryScripture())}
                 style={styles.retryWrap}
+                testID="scripture-retry-button"
               >
-                <Text style={styles.cardText}>{t('components.reader.unavailable')}</Text>
+                <Text style={styles.cardText}>
+                  {s.scrError === 'catalog_unavailable'
+                    ? t('components.reader.catalogUnavailable')
+                    : t('components.reader.unavailable')}
+                </Text>
                 <Text style={styles.retryLabel}>
                   {s.scrError === 'not_configured' ? t('components.reader.checkSettings') : t('components.reader.tryAgain')}
                 </Text>

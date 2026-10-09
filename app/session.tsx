@@ -407,7 +407,7 @@ function SessionScreen() {
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
     scripture: currentScripture,
-    voice: s.scriptureVoice,
+    voice: s.scriptureSelection?.voice ?? null,
     enabled: s.dockMode === 'scripture',
     onAudioBusyChange: handleTransientAudioChange,
   });

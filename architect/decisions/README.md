@@ -11,7 +11,7 @@ it was made, which options were considered and what it led to.
 | [0002](0002-server-audio-transcription.md) | Partly superseded by ADR-0017 and ADR-0035 | Transcribe voice answers through the server-side Gemini proxy |
 | [0003](0003-contextual-scripture-selection.md) | Partly superseded by ADR-0004, ADR-0007 and ADR-0017 | Select scripture on the server with a single-flight prefetch, canonical history and offline snapshots |
 | [0004](0004-user-scripture-preferences.md) | Partly superseded by ADR-0005 | Pick the language, the translation and the narration from Bible API and freeze the choice for the session |
-| [0005](0005-device-scripture-language-default.md) | Accepted | Choose the first scripture language from the device locale, falling back to English |
+| [0005](0005-device-scripture-language-default.md) | Partly superseded by ADR-0039 | Choose the first scripture language from the device locale, falling back to English |
 | [0006](0006-structured-scripture-verses.md) | Accepted | Render and highlight scripture by the structured verses of the chosen translation |
 | [0007](0007-http-result-as-network-truth.md) | Accepted | Judge Bible API availability by the result of the HTTP request, without a network preflight |
 | [0008](0008-scripture-verse-audio-alignment.md) | Accepted | Play a passage using the verse timings inside the chapter audio |
@@ -75,3 +75,4 @@ implementation details do not need one.
 - [0035: Name the production AI processors in consent](0035-name-production-ai-processors-in-consent.md)
 - [0036: Release the iOS audio session when its last consumer stops](0036-audio-session-leases.md)
 - [0037: Native window for the Android lock gate](0037-android-lock-native-window.md)
+- [0039: Confirm Bible defaults before persisting them](0039-scripture-language-initialization.md) — partly supersedes ADR-0005

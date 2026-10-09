@@ -97,6 +97,38 @@ flow('android-rpt-001-002')
 control({'contentReports': 'fail-once'})
 flow('android-rpt-003')
 control({'contentReports': 'ok'})
+
+
+def scripture_meta(name):
+    run(name, ['python3', 'scripts/android-db-probe.py', '--device', arguments.device, '--mode', 'query',
+        '--sql', "SELECT key, value FROM meta WHERE key IN ('ui_language', 'scripture_preferences')"])
+    return {row['key']: row['value'] for row in json.loads((output / (name + '.log')).read_text())['rows']}
+
+
+def expect_english_bible(values, ui_language, phase):
+    selection = json.loads(values.get('scripture_preferences', 'null') or 'null')
+    if not selection or (selection['language'], selection['translationCode'], selection['voiceCode']) != ('en', 16, 151):
+        sys.exit(phase + ': expected the confirmed English Bible en/16/151, got ' + repr(selection))
+    if values.get('ui_language') != ui_language:
+        sys.exit(phase + ': expected ui_language=' + ui_language + ', got ' + repr(values.get('ui_language')))
+
+
+# SCR-013: the three phases share one app state; the catalog control changes between them.
+control({'catalog': 'fail'})
+flow('android-scripture-catalog-failure')
+if started:
+    values = scripture_meta('scripture-catalog-failure-meta')
+    if 'scripture_preferences' in values or values.get('ui_language') != 'en':
+        sys.exit('Catalog failure must save no Bible selection and keep ui_language=en, got ' + repr(values))
+control({'catalog': 'ok'})
+flow('android-scripture-catalog-recovery')
+if started:
+    expect_english_bible(scripture_meta('scripture-catalog-recovery-meta'), 'en', 'Catalog recovery')
+control({'catalog': 'fail'})
+flow('android-scripture-catalog-saved-offline')
+if started:
+    expect_english_bible(scripture_meta('scripture-catalog-saved-offline-meta'), 'ru', 'Saved selection offline')
+control({'catalog': 'ok'})
 with urllib.request.urlopen(arguments.stub + '/__status', timeout=20) as response:
     status = json.load(response)
 (output / 'stub-status.json').write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n')

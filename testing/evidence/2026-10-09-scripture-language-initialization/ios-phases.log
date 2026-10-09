@@ -1,7 +1,0 @@
-ios-scripture-catalog-failure exit=0
-failure SQLite checkpoint passed
-ios-scripture-catalog-recovery exit=0
-recovery SQLite checkpoint passed
-ios-scripture-catalog-saved-offline exit=0
-saved-offline SQLite checkpoint passed
-All targeted catalog phases and SQLite checkpoints passed

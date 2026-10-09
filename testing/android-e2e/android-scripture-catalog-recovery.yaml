@@ -2,12 +2,17 @@ appId: com.nf404.twinkler
 tags:
   - prepared
 ---
-# Continue the failure phase after host catalog=ok, with UI English on a Russian device.
-- tapOn: ".*Could not load the list.*"
-- assertVisible: ".*English.*"
-- assertVisible: ".*BSB.*"
-- assertVisible: ".*Bob Souer.*"
+# Android version of ios-scripture-catalog-recovery.yaml (SCR-013, phase 2 of 3):
+# continues the open prayer after the runner sets catalog=ok.
+- assertVisible:
+    id: session-title
+- assertVisible: ".*Bible catalog unavailable.*"
 - tapOn:
-    id: interface-language-picker
-- tapOn:
-    id: interface-language-ru
+    id: scripture-retry-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 30000
+- assertNotVisible: ".*Bible catalog unavailable.*"

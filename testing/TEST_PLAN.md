@@ -296,7 +296,7 @@ tier of its e2e runs.
 | SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is visible and reachable next to wrapped error text, the previously saved choice is not damaged |
 | SCR-011 | Switch the language or the translation once an offline cache exists | the offline fallback does not show a snapshot of another language or translation |
 | SCR-012 | A clean installation with a supported interface language, including one different from the primary device locale | the interface language and a confirmed valid translation/voice triple are chosen |
-| SCR-013 [prepared] | A clean installation with a failing catalog or no valid interface-language translation/voice; recover the catalog and use the existing retry | choice remains undefined, error is visible, no Bible preference is written; recovery chooses the interface language; saved explicit choices survive catalog failures (unit: `scriptureInitialization.test.mjs`) |
+| SCR-013 [prepared] | A clean installation offline (catalog fails): open Settings, start a prayer and open the scripture block; restore the catalog and press Retry; relaunch with the catalog failing again | Settings show no Bible choice and the catalog error; the prayer starts without waiting; the scripture block shows "Bible catalog unavailable" with Retry and no passage; nothing is written to `meta.scripture_preferences`; Retry confirms the interface-language triple and shows a passage in the same session; the saved choice survives the later catalog failure and an interface-language change (unit: `scriptureInitialization.test.mjs`, `sessionResume.test.mjs`; flows: `*-scripture-catalog-{failure,recovery,saved-offline}`) |
 | SCR-014 [main] | Change the device language after the setting was saved | the saved user choice is not overridden |
 | SCR-015 [rare] | Pause the scripture narration, press resume and immediately switch the mode or the passage | the old passage does not resume after the context changes; the new passage starts normally |
 | SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
@@ -310,6 +310,7 @@ tier of its e2e runs.
 | SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
 | SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 | SCR-026 | Start narration, cover the session with the PIN screen or background the app, then return | narration continues from its current position without restarting; the session timer expires on schedule, but reflection waits until the prayer screen is visible |
+| SCR-027 | A clean installation whose catalog has no complete translation/voice for the interface language; open Settings and start a prayer | Settings show the Bible language list with "No Bible matches the interface language"; a manual language/translation/voice choice is saved; until then the prayer starts and the scripture block shows the catalog error; nothing is substituted (unit: `scriptureInitialization.test.mjs`) |
 
 ### Content reports
 
@@ -508,12 +509,15 @@ The run is complete when:
   logs of the checks.
 
 
-SCR-013 staged catalog regression (2026-10-09): use a disposable named simulator
-or emulator with a build pointing to `scripts/scripture-stub.mjs`. Set
-`catalog=fail` via `POST /__control`, run `*-scripture-catalog-failure`, confirm
-`meta.scripture_preferences` is absent; set `catalog=ok`, run
-`*-scripture-catalog-recovery`, confirm saved `en/16/151`; set `catalog=fail`
-and run `*-scripture-catalog-saved-offline`. The Russian device's interface was
-explicitly set to English during the failure; recovery must follow that interface
-choice, not its primary system locale. The final phase changes the interface
-back to Russian and confirms that the saved English Bible is retained.
+SCR-013 prepared phases: use a named test simulator or emulator with Russian as
+the primary system language and a Release build pointing to
+`scripts/scripture-stub.mjs`. iOS: `scripts/test-scripture-initialization.py`;
+Android: the SCR-013 section of `scripts/test-android-prepared.py`. Each runner
+sets `catalog=fail` via `POST /__control` and runs `*-scripture-catalog-failure`
+(the interface is switched to English, a prayer starts and its scripture block
+shows the catalog error), then confirms that `meta.scripture_preferences` is
+absent. It sets `catalog=ok` and runs `*-scripture-catalog-recovery` (Retry in
+the same session shows a passage), then confirms the saved `en/16/151`: the
+choice follows the interface, not the system locale. It sets `catalog=fail` and
+runs `*-scripture-catalog-saved-offline` (cold start, interface back to Russian),
+then confirms `en/16/151` with `ui_language=ru`.
