@@ -215,9 +215,10 @@ keyboard or screen heights themselves.
 
 `KeyboardSheet` puts a Gorhom sheet into a full-window overlay that reserves
 nothing, so the sheet and its backdrop reach the screen edge and the container
-does not change with the keyboard. The measured footer holds the answer and
-recording actions, including Stop, above `max(bottom safe area, keyboard
-height)`, and the body takes the height above the footer. Sheet inputs do not
+does not change with the keyboard. The footer holds the answer and recording
+actions, including Stop, above the bottom safe area with a constant padding;
+a UI-thread transform lifts it above the keyboard frame by frame, and the body
+takes the height above the lifted footer. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.

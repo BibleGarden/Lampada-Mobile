@@ -1,12 +1,12 @@
 import React, { createContext, forwardRef, useContext, useMemo } from 'react';
-import { StyleSheet, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import BottomSheet, { BottomSheetFooter, BottomSheetScrollView, type BottomSheetFooterProps, type BottomSheetProps } from '@gorhom/bottom-sheet';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { TextInput as GestureTextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenReaderHiddenProps } from '../../lib/a11y';
 import { sc, column, useStyles } from '../../lib/theme';
-import KeyboardViewport, { useReservedKeyboardHeight } from './KeyboardViewport';
+import { useReservedKeyboardHeight } from './KeyboardViewport';
 import { useKeyboardLayout } from '../../lib/useKeyboardLayout';
 import { useSheetReflow } from '../../lib/useSheetReflow';
 
@@ -19,24 +19,28 @@ function useSheetLayout() {
   return context;
 }
 
-// Позицию низа тела сообщает сам Gorhom после учёта контейнера, ручки
-// и измеренного footer. Контейнер шторки — всё окно, поэтому footer сам
-// резервирует снизу max(безопасная зона, клавиатура) кадр в кадр с анимацией
-// клавиатуры, а тело кончается над ним.
+// Позицию footer считает Gorhom по его измеренной высоте. Контейнер шторки —
+// всё окно, поэтому footer стоит над безопасной зоной постоянным отступом
+// (Gorhom меряет его один раз), а над клавиатурой его поднимает сдвиг на
+// UI-потоке, кадр в кадр с её анимацией. Тело кончается над поднятым footer.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, bodyHeight } = useSheetLayout();
-  useAnimatedReaction(() => animatedFooterPosition.value, (height) => { bodyHeight.value = Math.max(0, height); });
-  const keyboard = useReservedKeyboardHeight(true);
+  const keyboard = useReservedKeyboardHeight();
   const safeBottom = useSafeAreaInsets().bottom;
-  const gap = sc(16);
-  const inset = useAnimatedStyle(() => ({ paddingBottom: gap + Math.max(safeBottom, keyboard.value) }), [gap, safeBottom]);
+  // Сдвиг не выводит footer выше верха шторки.
+  const lift = useDerivedValue(
+    () => Math.min(Math.max(0, keyboard.value - safeBottom), Math.max(0, animatedFooterPosition.value)),
+    [safeBottom],
+  );
+  useAnimatedReaction(() => Math.max(0, animatedFooterPosition.value - lift.value), (height) => { bodyHeight.value = height; });
+  const raised = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value }] }));
   const styles = useStyles(stylesFactory);
   return (
     <BottomSheetFooter animatedFooterPosition={animatedFooterPosition} bottomInset={0}>
       <Animated.View
         {...screenReaderHiddenProps(hidden)}
         pointerEvents={hidden ? 'none' : 'auto'}
-        style={[styles.footer, footerStyle, inset, hidden && styles.hidden]}
+        style={[styles.footer, { paddingBottom: sc(16) + safeBottom }, footerStyle, raised, hidden && styles.hidden]}
       >{footer}</Animated.View>
     </BottomSheetFooter>
   );
@@ -49,8 +53,8 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
   accessibilityModal?: boolean;
 };
 
-// Клавиатуру резервирует только footer, контейнер Gorhom от неё не зависит.
-// Gorhom владеет только положением шторки и footer внутри окна.
+// Шторка и её фон занимают всё окно до края экрана. Клавиатуру и безопасную
+// зону резервирует только footer, контейнер Gorhom от них не зависит.
 const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
   const bodyHeight = useSharedValue(0);
   // Gorhom 5.2.14 не переставляет закрытую или закрывающуюся шторку при
@@ -61,9 +65,8 @@ const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, fo
   const { mountKey, open: present, onIndexChange } = useSheetReflow();
   const context = useMemo(() => ({ footer, hidden: footerHidden, footerStyle, bodyHeight }), [footer, footerHidden, footerStyle, bodyHeight]);
   return (
-    <KeyboardViewport
-      overlay
-      style={!present && styles.hidden}
+    <View
+      style={[StyleSheet.absoluteFill, !present && styles.hidden]}
       pointerEvents={present ? 'box-none' : 'none'}
       accessibilityViewIsModal={accessibilityModal}
       onAccessibilityEscape={onAccessibilityEscape}
@@ -88,14 +91,14 @@ const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, fo
           {children}
         </BottomSheet>
       </SheetLayoutContext.Provider>
-    </KeyboardViewport>
+    </View>
   );
 });
 KeyboardSheet.displayName = 'KeyboardSheet';
 export default KeyboardSheet;
 
 // Обычный gesture-handler input намеренно не регистрируется в механизме
-// клавиатуры Gorhom: место уже резервирует KeyboardViewport. Это исключает
+// клавиатуры Gorhom: место над клавиатурой уже резервирует footer. Это исключает
 // второй отступ, в том числе для ненулевого плавающего прямоугольника iPad.
 export const KeyboardSheetTextInput = forwardRef<GestureTextInput, React.ComponentProps<typeof GestureTextInput>>(({ style, ...props }, ref) => {
   useSheetLayout();

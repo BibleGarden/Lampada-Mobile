@@ -22,14 +22,15 @@ dismissal is a no-op for an already hidden IME; single-phrase fields submit befo
 
 Use Expo SDK 57's supported Keyboard Controller 1.21.9 for the animated
 keyboard height. Every keyboard viewport fills its window down to the bottom
-edge (screens, transparent full-screen Modals, sheet overlays), so it reserves
+edge (screens, transparent full-screen Modals), so it reserves
 `max(bottom safe area, keyboard height)` as one UI-thread padding that follows
 the keyboard animation frame by frame; a floating keyboard reserves nothing.
-An inner frame constrains absolute children. A sheet overlay fills the window
-with no reservation, so the sheet and its backdrop reach the screen edge and
-its container never changes with the keyboard; the sheet footer reserves
-`max(bottom safe area, keyboard height)` the same way, and the body ends above
-the footer. Gorhom owns sheet positioning and footer measurement within that
+An inner frame constrains absolute children. A sheet fills the window with no
+reservation, so the sheet and its backdrop reach the screen edge and its
+container never changes with the keyboard. Its footer keeps a constant padding
+above the bottom safe area, which Gorhom measures once, and a UI-thread
+transform lifts it by the keyboard height not covered by that safe area; the
+body ends above the lifted footer. Gorhom owns sheet positioning and footer measurement within that
 window, not a second keyboard inset. Managed sheet inputs
 deliberately do not register Gorhom's independent keyboard handler. Remove
 app-level screen/keyboard height formulas and fixed-device padding corrections.

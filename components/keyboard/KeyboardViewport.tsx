@@ -7,10 +7,10 @@ import { useKeyboardLayout } from '../../lib/useKeyboardLayout';
 
 // Высота клавиатуры, которую резервирует viewport, — на UI-потоке, кадр в кадр
 // с анимацией клавиатуры. Плавающая клавиатура не занимает полосу окна.
-export function useReservedKeyboardHeight(enabled: boolean): SharedValue<number> {
+export function useReservedKeyboardHeight(): SharedValue<number> {
   const layout = useKeyboardLayout();
   const { height } = useReanimatedKeyboardAnimation();
-  const reserve = enabled && layout.kind !== 'floating';
+  const reserve = layout.kind !== 'floating';
   // height в Keyboard Controller отрицательна: это сдвиг вверх.
   return useDerivedValue(() => (reserve ? Math.max(0, -height.value) : 0), [reserve]);
 }
@@ -20,24 +20,16 @@ export function useReservedKeyboardHeight(enabled: boolean): SharedValue<number>
 // max(безопасная зона, клавиатура) одним значением UI-потока.
 // Внутренний flex-контейнер ограничивает также absoluteFill-детей:
 // сами они не обязаны учитывать padding внешнего View.
-// Шторка (overlay) занимает всё окно без резерва: её фон доходит до края
-// экрана, а безопасную зону и клавиатуру резервирует её footer. Поэтому
-// контейнер шторки не меняется вместе с клавиатурой.
-export default function KeyboardViewport({ children, style, contentContainerStyle, overlay = false, ...props }: ViewProps & {
+// Шторки сюда не входят: их резерв держит footer (KeyboardSheet).
+export default function KeyboardViewport({ children, style, contentContainerStyle, ...props }: ViewProps & {
   contentContainerStyle?: StyleProp<ViewStyle>;
-  overlay?: boolean;
 }) {
-  const insets = useSafeAreaInsets();
-  const keyboard = useReservedKeyboardHeight(!overlay);
-  const safeBottom = overlay ? 0 : insets.bottom;
+  const safeBottom = useSafeAreaInsets().bottom;
+  const keyboard = useReservedKeyboardHeight();
   const reserved = useAnimatedStyle(() => ({ paddingBottom: Math.max(safeBottom, keyboard.value) }), [safeBottom]);
   return (
-    <Animated.View
-      {...props}
-      pointerEvents={props.pointerEvents ?? (overlay ? 'box-none' : 'auto')}
-      style={[styles.fill, overlay && StyleSheet.absoluteFill, style, reserved]}
-    >
-      <View pointerEvents={overlay ? 'box-none' : 'auto'} style={[styles.fill, contentContainerStyle]}>{children}</View>
+    <Animated.View {...props} style={[styles.fill, style, reserved]}>
+      <View style={[styles.fill, contentContainerStyle]}>{children}</View>
     </Animated.View>
   );
 }
