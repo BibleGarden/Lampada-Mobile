@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Check complete native form bounds against UIKit keyboard/window frames.
 
 UIKit accessibility exposes inputView and window frames, not safe-area insets.

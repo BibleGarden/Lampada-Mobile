@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run staged native keyboard contracts. Run only on a disposable named emulator."""
 import argparse
 import re
@@ -56,7 +55,7 @@ def main():
             absent = [] if mode == 'hardware' else list(deferred)
             if mode == 'hardware':
                 actions.extend(deferred)
-            argv = ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device, '--input-id', input_id,
+            argv = ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device, '--input-id', input_id,
                     '--mode', mode, '--output', str(output / f'{form}-native-bounds.json')]
             if actions: argv += ['--actions', *actions]
             if absent: argv += ['--absent', *absent]
@@ -70,14 +69,14 @@ def main():
             command(restoring, ['maestro', '--device', args.device, 'test', '-e', f'KEYBOARD_MODE={mode}',
                                 '--test-output-dir', str(output / restoring), f'testing/android-e2e/{restoring}.yaml'])
             if mode == 'hardware' and form in ('setup', 'answer'):
-                argv = ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device, '--input-id', input_id,
+                argv = ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device, '--input-id', input_id,
                         '--mode', 'hidden', '--unfocused',
                         '--output', str(output / f'{form}-finished-native-bounds.json')]
                 if lower_actions or deferred:
                     argv += ['--actions', *lower_actions, *deferred]
                 command(f'{form}-finished-bounds', argv)
             if mode == 'hardware' and form == 'journal':
-                command('journal-cleared-bounds', ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device,
+                command('journal-cleared-bounds', ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device,
                         '--input-id', input_id, '--mode', 'hardware',
                         '--output', str(output / 'journal-cleared-native-bounds.json')])
             print(f'{form}: native {mode} bounds and restoration passed', flush=True)

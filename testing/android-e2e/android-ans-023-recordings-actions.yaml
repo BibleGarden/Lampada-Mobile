@@ -92,3 +92,8 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: answer-save-button
+- waitForAnimationToEnd:
+    timeout: 2500
+# Шторка ответа с закрытой клавиатурой: шторка и затемнение доходят до края
+# экрана, кнопки — над Home Indicator / системной навигацией.
+- takeScreenshot: ANS-023-answer-sheet

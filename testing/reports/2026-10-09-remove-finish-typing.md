@@ -1,5 +1,9 @@
 # Remove the unsolicited Finish typing action — 2026-10-09
 
+Superseded: this report covers source `57dadfd` only. Later revisions of the
+same PR, from `fa827ff` on, change the sheet geometry and are not covered here;
+the final integrated run of the merged revision gets its own report.
+
 The owner requested restoring the existing interface. The added action was
 removed from setup, answers, reflection, reports and journal, together with its
 component and locale keys. Existing Done/Enter submission and outside-tap
@@ -17,7 +21,8 @@ new native iOS build. Identities and hashes are in `build-identities.json`.
 
 - `npm run typecheck`: exit 0. `npm test`: 347 tests, exit 0. Native-reader
   unit tests: 18, exit 0.
-- Android, `npm run test:keyboard:android -- --mode docked`: all five forms
+- Android, `npm run test:keyboard:android -- --mode docked` on the `emulator-5554`
+  emulator (not the owner's phone): all five forms
   passed complete-rectangle and exact-text restoration checks, exit 0. The first
   attempt failed before any flow step because Maestro's `deviceInfo` RPC lost its
   ADB socket; the app process was alive and the crash buffer empty. Under the

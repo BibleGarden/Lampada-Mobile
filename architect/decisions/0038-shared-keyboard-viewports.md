@@ -20,18 +20,24 @@ actions wait for didHide, independently of field focus. Keyboard Controller owns
 IME hide. React Native responder release is unconditional because Controller
 dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display.
 
-Use Expo SDK 57's supported Keyboard Controller 1.21.9 for native viewport
-avoidance and automatic window offsets, including Modal and rotation. A bounded
-inner frame consumes the bottom safe area once and constrains absolute overlays.
-A sheet overlay and its backdrop reach the screen edge; its footer consumes the
-bottom safe area instead. Gorhom owns sheet positioning and footer measurement
-within that frame, not a second keyboard inset. Managed sheet inputs deliberately do not register Gorhom's
-independent keyboard handler. Remove app-level screen/keyboard height formulas
-and fixed-device padding corrections.
+Use Expo SDK 57's supported Keyboard Controller 1.21.9 for the animated
+keyboard height. Every keyboard viewport fills its window down to the bottom
+edge (screens, transparent full-screen Modals, sheet overlays), so it reserves
+`max(bottom safe area, keyboard height)` as one UI-thread padding that follows
+the keyboard animation frame by frame; a floating keyboard reserves nothing.
+An inner frame constrains absolute overlays. A sheet overlay and its backdrop
+reach the screen edge; its footer adds the part of the bottom safe area the
+keyboard does not cover. Gorhom owns sheet positioning and footer measurement
+within that frame, not a second keyboard inset. Managed sheet inputs
+deliberately do not register Gorhom's independent keyboard handler. Remove
+app-level screen/keyboard height formulas and fixed-device padding corrections.
 
-`KeyboardSheet` alone remounts a sheet, only while it is closed and only when
-the window geometry changes. A closed sheet is neither presented nor touchable,
-even if a vendor animation retains an old closed position.
+Gorhom 5.2.14 does not reposition a closed sheet when its container changes
+(`getEvaluatedPosition` has no position for index -1). Only an open sheet
+reserves the keyboard, so a closed sheet's container changes only with the
+window and once after closing, when the keyboard reservation is released.
+`KeyboardSheet` alone remounts a closed sheet whenever its container size
+changes. A closed sheet is neither presented nor touchable.
 
 Preparation and reflection defer lower actions while a software keyboard is
 visible; answers and reports do not hide actions.
@@ -61,6 +67,8 @@ pointer events and modal accessibility must include both body and footer. Native
 bounds and real floating-keyboard runs remain necessary; geometry-unit tests
 alone cannot establish visual acceptance. Hardware-focus emulation is recorded
 separately from acceptance on a physical external keyboard.
+A keyboard viewport must fill its window to the bottom edge; a shorter
+container would need its own window offset.
 
 ## References
 

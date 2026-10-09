@@ -1,14 +1,13 @@
-import React, { createContext, forwardRef, useContext, useMemo } from 'react';
-import { StyleSheet, View, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
+import React, { createContext, forwardRef, useContext, useMemo, useRef, useState } from 'react';
+import { StyleSheet, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import BottomSheet, { BottomSheetFooter, BottomSheetScrollView, type BottomSheetFooterProps, type BottomSheetProps } from '@gorhom/bottom-sheet';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { TextInput as GestureTextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenReaderHiddenProps } from '../../lib/a11y';
 import { sc, column, useStyles } from '../../lib/theme';
-import KeyboardViewport from './KeyboardViewport';
+import KeyboardViewport, { useReservedKeyboardHeight } from './KeyboardViewport';
 import { useKeyboardLayout } from '../../lib/useKeyboardLayout';
-import { useSheetReflow } from '../../lib/useSheetReflow';
 
 type SheetContext = { footer: React.ReactNode; hidden: boolean; footerStyle?: StyleProp<ViewStyle>; bodyHeight: SharedValue<number> };
 const SheetLayoutContext = createContext<SheetContext | null>(null);
@@ -22,22 +21,23 @@ function useSheetLayout() {
 // Позицию низа тела сообщает сам Gorhom после учёта контейнера, ручки
 // и измеренного footer. Здесь нет вычитания высоты клавиатуры или окна.
 // Шторка доходит до края экрана, поэтому над Home Indicator и системной
-// навигацией кнопки поднимает footer; закреплённая клавиатура эту полосу
-// уже закрывает.
+// навигацией кнопки поднимает footer — на ту часть безопасной зоны, которую
+// не закрыла клавиатура, кадр в кадр с её анимацией.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, bodyHeight } = useSheetLayout();
   useAnimatedReaction(() => animatedFooterPosition.value, (height) => { bodyHeight.value = Math.max(0, height); });
-  const keyboard = useKeyboardLayout();
-  const insets = useSafeAreaInsets();
+  const keyboard = useReservedKeyboardHeight(true);
+  const safeBottom = useSafeAreaInsets().bottom;
+  const gap = sc(16);
+  const inset = useAnimatedStyle(() => ({ paddingBottom: gap + Math.max(0, safeBottom - keyboard.value) }), [gap, safeBottom]);
   const styles = useStyles(stylesFactory);
-  const bottomInset = keyboard.kind === 'docked' ? 0 : insets.bottom;
   return (
     <BottomSheetFooter animatedFooterPosition={animatedFooterPosition} bottomInset={0}>
-      <View
+      <Animated.View
         {...screenReaderHiddenProps(hidden)}
         pointerEvents={hidden ? 'none' : 'auto'}
-        style={[styles.footer, { paddingBottom: sc(16) + bottomInset }, footerStyle, hidden && styles.hidden]}
-      >{footer}</View>
+        style={[styles.footer, footerStyle, inset, hidden && styles.hidden]}
+      >{footer}</Animated.View>
     </BottomSheetFooter>
   );
 }
@@ -53,35 +53,54 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
 // только положением шторки и footer внутри уже доступного контейнера.
 const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
   const bodyHeight = useSharedValue(0);
-  // Единственный владелец пересборки шторки: только закрытую и только при
-  // смене окна (поворот, Fold, Split View). Изменения контейнера от клавиатуры
-  // Gorhom отслеживает сам, а закрытую шторку не показываем и не трогаем,
-  // даже если анимация оставила её на прежней закрытой позиции. Открытой
-  // она считается с начала анимации открытия.
-  const { mountKey, open: present, onIndexChange } = useSheetReflow();
+  // Открытой шторка считается с начала анимации открытия и до onChange(-1).
+  const [present, setPresent] = useState(false);
+  const presentRef = useRef(false);
+  const updatePresent = (next: boolean) => {
+    presentRef.current = next;
+    setPresent(next);
+  };
+  // Gorhom 5.2.14 не переставляет закрытую шторку при смене контейнера:
+  // getEvaluatedPosition для индекса -1 возвращает undefined. Поэтому
+  // KeyboardSheet — единственный владелец пересборки: закрытую шторку
+  // пересоздаём, когда меняется её контейнер. Закрытая шторка клавиатуру
+  // не резервирует, так что контейнер меняется лишь со сменой окна и один
+  // раз после закрытия, когда снимается резерв клавиатуры, — без таймера
+  // и без пересборки на кадрах анимации. Открытую шторку Gorhom ведёт сам.
+  const [generation, setGeneration] = useState(0);
+  const viewportSize = useRef<string | null>(null);
   const context = useMemo(() => ({ footer, hidden: footerHidden, footerStyle, bodyHeight }), [footer, footerHidden, footerStyle, bodyHeight]);
   return (
     <KeyboardViewport
       overlay
+      avoidKeyboard={present}
       style={!present && styles.hidden}
       pointerEvents={present ? 'box-none' : 'none'}
       accessibilityViewIsModal={accessibilityModal}
       onAccessibilityEscape={onAccessibilityEscape}
+      onViewportLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout;
+        const size = `${width}x${height}`;
+        if (!presentRef.current && viewportSize.current !== null && viewportSize.current !== size) {
+          setGeneration((current) => current + 1);
+        }
+        viewportSize.current = size;
+      }}
     >
       <SheetLayoutContext.Provider value={context}>
         <BottomSheet
           {...props}
-          key={mountKey}
+          key={generation}
           ref={ref}
           bottomInset={0}
           android_keyboardInputMode="adjustResize"
           footerComponent={SheetFooter}
           onAnimate={(from, to, ...positions) => {
-            if (to >= 0) onIndexChange(to);
+            if (to >= 0) updatePresent(true);
             onAnimate?.(from, to, ...positions);
           }}
           onChange={(index, ...details) => {
-            onIndexChange(index);
+            updatePresent(index >= 0);
             onChange?.(index, ...details);
           }}
         >

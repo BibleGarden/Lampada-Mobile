@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run destructive staged keyboard contracts only on existing named simulators."""
 import argparse
 import json
@@ -32,7 +31,7 @@ def main():
     for form in args.forms:
         for phase in ['open', 'restore']:
             flow = f'ios-keyboard-contract-{form}-{phase}'
-            command(flow, ['maestro', '--device', device, 'test', '-e', f'KEYBOARD_MODE={args.mode}',
+            command(flow, ['maestro', '--device', device, 'test',
                            '--test-output-dir', str(output / flow), f'testing/e2e/{flow}.yaml'])
             if phase == 'open':
                 command(f'{form}-hierarchy', ['maestro', '--device', device, 'hierarchy'])

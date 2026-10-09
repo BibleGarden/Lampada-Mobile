@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Check native Android layout bounds against OS insets, independently of app geometry."""
 import argparse
 import json

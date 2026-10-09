@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Check retained keyboard/editor geometry during an actual Android window resize."""
 import argparse
 import re
@@ -34,7 +33,7 @@ def main():
                      '--test-output-dir', str(output / 'open'), 'testing/android-e2e/android-keyboard-contract-answer-open.yaml'])
     try:
         command('resize', ['adb', '-s', args.device, 'shell', 'wm', 'size', changed])
-        command('bounds', ['python3', 'scripts/keyboard_layout_bounds.py', '--device', args.device,
+        command('bounds', ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device,
                            '--input-id', 'answer-input', '--mode', 'docked', '--focused',
                            '--actions', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',
                            '--below-input', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',

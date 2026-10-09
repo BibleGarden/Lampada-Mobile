@@ -28,5 +28,5 @@ echo 'All 10 Android critical scenarios passed.'
 python3 -m scripts.run_keyboard_contract --device "$device" \
   --mode docked --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-contract-docked"
 
-python3 scripts/run-keyboard-resize-contract.py --device "$device" \
+python3 -m scripts.run_keyboard_resize_contract --device "$device" \
   --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-window-resize"
