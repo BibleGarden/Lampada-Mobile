@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-09",
+  "application_source": "d028086",
+  "base": "53e73ac",
+  "native_simulator_version": "1.3.40",
+  "validation_method": "Existing Release simulator binary with newly exported production iOS JavaScript and assets. No native rebuild or physical installation.",
+  "bundle_sha256": "629bec40b67f4833749ccd077f774552539d12d643e0720c443b30e7eb723616",
+  "simulator": "Pray Smoke iPhone 17 Pro",
+  "typecheck_exit": 0,
+  "node_tests": 339,
+  "node_exit": 0,
+  "maestro_phases": 3,
+  "maestro_exit": 0,
+  "readonly_sqlite_checkpoints": 3,
+  "android_live_validation": "Not run; Android prepared counterpart flows added; shared settings/session logic covered by Node tests."
+}

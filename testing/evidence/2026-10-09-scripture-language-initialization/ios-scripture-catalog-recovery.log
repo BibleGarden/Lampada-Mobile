@@ -1,0 +1,8 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-scripture-catalog-recovery
+Tap on ".*Could not load the list.*"... COMPLETED
+Assert that ".*English.*" is visible... COMPLETED
+Assert that ".*BSB.*" is visible... COMPLETED
+Assert that ".*Bob Souer.*" is visible... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Tap on id: interface-language-ru... COMPLETED
