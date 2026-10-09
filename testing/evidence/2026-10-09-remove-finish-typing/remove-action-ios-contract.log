@@ -1,0 +1,21 @@
+
+> pray@1.0.0 test:keyboard:ios
+> python3 -m scripts.run_ios_keyboard_contract --simulator Pray Smoke iPhone 17 Pro --mode docked --output /tmp/pray-keyboard-system-2026-10-09/remove-action-ios-contract
+
+setup: native UIKit docked bounds and restoration passed
+answer: native UIKit docked bounds and restoration passed
+reflect: native UIKit docked bounds and restoration passed
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/maria/Desktop/Dev/cep/pray/scripts/run_ios_keyboard_contract.py", line 47, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maria/Desktop/Dev/cep/pray/scripts/run_ios_keyboard_contract.py", line 35, in main
+    command(flow, ['maestro', '--device', device, 'test', '-e', f'KEYBOARD_MODE={args.mode}',
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   '--test-output-dir', str(output / flow), f'testing/e2e/{flow}.yaml'])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maria/Desktop/Dev/cep/pray/scripts/run_ios_keyboard_contract.py", line 30, in command
+    raise RuntimeError(f'{name} failed; full log: {output / (name + ".log")}')
+RuntimeError: ios-keyboard-contract-report-restore failed; full log: /tmp/pray-keyboard-system-2026-10-09/remove-action-ios-contract/ios-keyboard-contract-report-restore.log

@@ -1,0 +1,25 @@
+{
+  "device": "emulator-5554",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    156,
+    1280,
+    1848
+  ],
+  "observed_mode": "docked",
+  "elements": {
+    "setup-goal-input": {
+      "bounds": [
+        78,
+        620,
+        1202,
+        1743
+      ],
+      "focused": true
+    },
+    "setup-next-button": null,
+    "setup-duration-value": null,
+    "setup-keyboard-dismiss": null
+  }
+}

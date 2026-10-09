@@ -1,0 +1,78 @@
+21:34:14.297 [ INFO] maestro.cli.report.TestDebugReporter.logSystemInfo: Debug output path: /Users/maria/.maestro/tests/2026-10-09_213414
+21:34:14.299 [ INFO] MAESTRO.logSystemInfo: ---- System Info ----
+21:34:14.299 [ INFO] MAESTRO.logSystemInfo: Maestro Version: 2.10.0
+21:34:14.300 [ INFO] MAESTRO.logSystemInfo: CI: Undefined
+21:34:14.300 [ INFO] MAESTRO.logSystemInfo: OS Name: Mac OS X
+21:34:14.300 [ INFO] MAESTRO.logSystemInfo: OS Version: 27.0.1
+21:34:14.300 [ INFO] MAESTRO.logSystemInfo: Architecture: aarch64
+21:34:14.301 [ INFO] MAESTRO.logSystemInfo: Java Version: 21
+21:34:14.406 [ INFO] MAESTRO.logSystemInfo: Xcode Version: 27.0
+21:34:14.412 [ INFO] MAESTRO.logSystemInfo: Flutter Version: Undefined
+21:34:14.419 [ INFO] MAESTRO.logSystemInfo: Flutter Channel: Undefined
+21:34:14.419 [ INFO] MAESTRO.logSystemInfo: ---------------------
+21:34:15.041 [DEBUG] io.micrometer.common.util.internal.logging.InternalLoggerFactory.newDefaultFactory: Using SLF4J as the default logging framework
+21:34:18.765 [ INFO] maestro.cli.command.TestCommand.runShardSuite: [shard 1] Selected device emulator-5554 using port 59941 with execution plan ExecutionPlan(flowsToRun=[/Users/maria/Desktop/Dev/cep/pray/testing/android-e2e/android-keyboard-contract-setup-open.yaml], sequence=FlowSequence(flows=[], continueOnFailure=true), workspaceConfig=WorkspaceConfig(flows=null, includeTags=null, excludeTags=null, executionOrder=null, baselineBranch=null, notifications=null, disableRetries=false, platform=PlatformConfiguration(android=AndroidConfiguration(disableAnimations=false), ios=IOSConfiguration(disableAnimations=false, snapshotKeyHonorModalViews=null)), testOutputDir=null))
+21:34:20.628 [ INFO] maestro.cli.runner.TestRunner.runSingle: Running flow android-keyboard-contract-setup-open.yaml...
+21:34:20.645 [ INFO] maestro.Maestro.cachedDeviceInfo_delegate$lambda$0: Getting device info
+21:34:20.734 [ERROR] maestro.cli.runner.TestRunner.runCatching-ta8aW1Q: Failed to run flow
+maestro.android.DeviceServerDiedException: Device server died during 'deviceInfo' on emulator-5554 (120ms since last byte, connection age 120ms): StatusRuntimeException: UNAVAILABLE
+	at maestro.android.AndroidDeviceConnection.onGrpcDeath(AndroidDeviceConnection.kt:319)
+	at maestro.android.AndroidDeviceConnection.mapTransport(AndroidDeviceConnection.kt:306)
+	at maestro.android.AndroidDeviceConnection.execute(AndroidDeviceConnection.kt:122)
+	at maestro.drivers.AndroidDriver.deviceInfo(AndroidDriver.kt:202)
+	at maestro.Maestro.cachedDeviceInfo_delegate$lambda$0(Maestro.kt:56)
+	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+	at maestro.Maestro.getCachedDeviceInfo(Maestro.kt:54)
+	at maestro.orchestra.Orchestra._init_$lambda$12(Orchestra.kt:160)
+	at maestro.orchestra.Orchestra.initJsEngine(Orchestra.kt:372)
+	at maestro.orchestra.Orchestra.runFlow(Orchestra.kt:201)
+	at maestro.cli.runner.MaestroCommandRunner.runCommands(MaestroCommandRunner.kt:192)
+	at maestro.cli.runner.TestRunner$runSingle$result$1$1.invokeSuspend(TestRunner.kt:74)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:263)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:94)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:70)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source)
+	at maestro.cli.runner.TestRunner.runSingle$lambda$0(TestRunner.kt:73)
+	at maestro.cli.runner.TestRunner.runCatching-ta8aW1Q(TestRunner.kt:190)
+	at maestro.cli.runner.TestRunner.runSingle(TestRunner.kt:72)
+	at maestro.cli.command.TestCommand.runSingleFlow(TestCommand.kt:566)
+	at maestro.cli.command.TestCommand.runShardSuite$lambda$10(TestCommand.kt:528)
+	at maestro.cli.session.MaestroSessionManager.newSession(MaestroSessionManager.kt:135)
+	at maestro.cli.session.MaestroSessionManager.newSession$default(MaestroSessionManager.kt:66)
+	at maestro.cli.command.TestCommand.runShardSuite(TestCommand.kt:477)
+	at maestro.cli.command.TestCommand.access$runShardSuite(TestCommand.kt:81)
+	at maestro.cli.command.TestCommand$handleSessions$1$results$1$1.invokeSuspend(TestCommand.kt:438)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:820)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+Caused by: io.grpc.StatusRuntimeException: UNAVAILABLE
+	at io.grpc.stub.ClientCalls.toStatusRuntimeException(ClientCalls.java:275)
+	at io.grpc.stub.ClientCalls.getUnchecked(ClientCalls.java:256)
+	at io.grpc.stub.ClientCalls.blockingUnaryCall(ClientCalls.java:169)
+	at maestro_android.MaestroDriverGrpc$MaestroDriverBlockingStub.deviceInfo(MaestroDriverGrpc.java:740)
+	at maestro.drivers.AndroidDriver.deviceInfo$lambda$4(AndroidDriver.kt:202)
+	at maestro.android.AndroidDeviceConnection.execute(AndroidDeviceConnection.kt:120)
+	... 35 more
+Caused by: java.io.IOException: Command failed (tcp:59941): closed
+	at dadb.adbserver.AdbServer.send$dadb(AdbServer.kt:103)
+	at dadb.adbserver.AdbServerDadb.open(AdbServer.kt:149)
+	at maestro.android.AndroidDeviceConnection.buildChannel$lambda$2(AndroidDeviceConnection.kt:98)
+	at maestro.android.RawAdbSocket.connect(AdbSocketFactory.kt:206)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at maestro.android.AdbSocketFactory.createSocket(AdbSocketFactory.kt:57)
+	at maestro.android.AdbSocketFactory.createSocket(AdbSocketFactory.kt:63)
+	at io.grpc.okhttp.OkHttpClientTransport$3.run(OkHttpClientTransport.java:535)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.Thread.run(Unknown Source)
+21:34:20.746 [ INFO] maestro.cli.report.TestDebugReporter.deleteOldFiles: Performing purge of logs older than 14 days from /tmp/pray-keyboard-system-2026-10-09/remove-action-android-contract/android-keyboard-contract-setup-open

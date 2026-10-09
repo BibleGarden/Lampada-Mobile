@@ -1,0 +1,6 @@
+Running on Pray_Pixel_API_35
+ > Flow android-keyboard-contract-setup-restore
+Press Enter key... COMPLETED
+Assert that "${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix setup"}", id: setup-goal-input is visible... COMPLETED
+Assert that id: setup-duration-value is visible... COMPLETED
+Assert that id: setup-next-button is visible... COMPLETED

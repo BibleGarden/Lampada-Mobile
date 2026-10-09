@@ -1,0 +1,10 @@
+
+> pray@1.0.0 test:keyboard:android
+> python3 scripts/run-keyboard-contract.py --mode docked --output /tmp/pray-keyboard-system-2026-10-09/remove-action-android-contract-driver-recovered
+
+setup: native docked bounds and restoration passed
+answer: native docked bounds and restoration passed
+reflect: native docked bounds and restoration passed
+report: native docked bounds and restoration passed
+journal: native docked bounds and restoration passed
+All selected keyboard contracts passed

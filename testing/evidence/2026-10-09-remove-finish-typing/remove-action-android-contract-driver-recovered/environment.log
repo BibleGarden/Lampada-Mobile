@@ -1,0 +1,5 @@
+
+> pray@1.0.0 env:check:local
+> bash scripts/check-runtime-env.sh local
+
+✔ Local runtime variables are configured

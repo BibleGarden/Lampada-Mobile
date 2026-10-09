@@ -1,0 +1,9 @@
+Running on Pray_Pixel_API_35
+ > Flow android-keyboard-contract-reflect-restore
+Press Enter key... COMPLETED
+Assert that "${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix reflect"}", id: reflection-input is visible... COMPLETED
+Assert that id: reflect-return-button is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: home-title-lit is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that "${KEYBOARD_MODE == "hardware" ? ".*Matrix_hardware.*" : ".*Keyboard matrix reflect.*"}" is visible... COMPLETED

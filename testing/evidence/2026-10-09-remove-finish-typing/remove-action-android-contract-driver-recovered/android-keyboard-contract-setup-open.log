@@ -1,0 +1,12 @@
+Running on Pray_Pixel_API_35
+ > Flow android-keyboard-contract-setup-open
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Run flow when ${KEYBOARD_MODE != 'hardware'} is true...
+  Input text Keyboard matrix setup... COMPLETED
+  Assert that id: setup-keyboard-dismiss is not visible... COMPLETED
+Run flow when true is true... COMPLETED
+Run flow when ${KEYBOARD_MODE != 'hardware'} is true...
+  Assert that id: setup-next-button is not visible... COMPLETED
+Run flow when true is true... COMPLETED

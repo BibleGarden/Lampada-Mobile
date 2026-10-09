@@ -1,0 +1,23 @@
+Running on Pray_Pixel_API_35
+ > Flow android-keyboard-contract-reflect-open
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-examples-button... COMPLETED
+Tap on id: setup-example-0... COMPLETED
+Tap on id: setup-preset-0... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Long press on id: threshold-hold-button... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: session-finish-button... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflection-input... COMPLETED
+Run flow when ${KEYBOARD_MODE != 'hardware'} is true...
+  Input text Keyboard matrix reflect... COMPLETED
+  Assert that id: reflect-keyboard-dismiss is not visible... COMPLETED
+Run flow when true is true... COMPLETED
+Run flow when ${KEYBOARD_MODE != 'hardware'} is true...
+  Assert that id: reflect-complete-button is not visible... COMPLETED
+Run flow when true is true... COMPLETED

@@ -1,0 +1,9 @@
+Running on Pray_Pixel_API_35
+ > Flow android-keyboard-contract-report-restore
+Run flow when ${KEYBOARD_MODE != 'hardware'} is true...
+  Tap on id: content-report-backdrop at 5%, 15%... COMPLETED
+Run flow when true is true... COMPLETED
+Assert that "${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix report"}", id: content-report-comment is visible... COMPLETED
+Assert that id: content-report-send is visible... COMPLETED
+Tap on id: content-report-cancel... COMPLETED
+Assert that id: content-report-dialog is not visible... COMPLETED

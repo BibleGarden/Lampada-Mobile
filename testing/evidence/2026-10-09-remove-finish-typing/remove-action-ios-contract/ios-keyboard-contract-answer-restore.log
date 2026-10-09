@@ -1,0 +1,13 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-keyboard-contract-answer-restore
+Run flow when ${KEYBOARD_MODE != 'hardware'} is true...
+  Tap on id: answer-sheet-handle... COMPLETED
+Run flow when true is true... COMPLETED
+Assert that "${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix answer"}", id: answer-input is visible... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context-allow is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context-allow is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: dock-answer-edit-button... COMPLETED
+Assert that "${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix answer"}", id: answer-input is visible... COMPLETED
