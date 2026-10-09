@@ -313,8 +313,6 @@ Notes:
   response from the stub or catch a live case.
 - `RPT-004` is a negative check (no report action in the saved journal) and
   has no flow; one glance at the journal after sitting 6 covers it.
-- `ios-stage06-scr-002-favorite-relaunch.yaml` is superseded by the
-  `002a/002b` pair in the stub phase and runs nowhere on its own.
 
 ---
 

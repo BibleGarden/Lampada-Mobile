@@ -237,14 +237,17 @@ typing and moves the cursor instead of closing the keyboard.
 ### iOS runner prerequisites and cleanup
 
 Language flows match the complete accessibility label of the language picker.
-`run-lng.sh` changes locale settings on the booted simulator before rebooting,
-and stops at the first failed flow. Restore `ru_RU` / `ru` before another suite
-if a language run stops early. A successful run also restores the app interface
-to Russian with `ios-lng-restore-ru.yaml`.
+`run-lng.sh` boots the `Pray Smoke iPhone 17 Pro` simulator if needed, changes
+its locale settings before rebooting, and stops at the first failed flow. On
+exit it returns the simulator to `ru_RU` / `ru`, also after a failure, and keeps
+the failing exit code. A successful run also restores the app interface to
+Russian with `ios-lng-restore-ru.yaml`.
 
 PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456;
 no temporary `/tmp/disable-pin.yaml` prerequisite is needed. Cleanup errors
-are failures. The biometric preflight scrolls to the protection section before
+are failures. `run-lock-biometrics.sh` runs that cleanup on exit while the test
+PIN may still be on, so a failed LOCK-009/010 flow does not leave the PIN
+enabled; command logs go to the evidence directory. The biometric preflight scrolls to the protection section before
 checking the visible hierarchy. It sets the simulator notification state
 `com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and
 0 for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID

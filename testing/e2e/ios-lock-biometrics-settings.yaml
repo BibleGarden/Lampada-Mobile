@@ -1,0 +1,24 @@
+appId: twinkler
+tags:
+  - prepared
+# Только через run-lock-biometrics.sh: открывает настройки после включения пина.
+---
+# Экран настроек опрашивает биометрию при монтировании: возвращаемся home и
+# открываем настройки заново через openLink (simctl openurl показывает
+# системный диалог «Open in Lampada?»). Возможный диалог «Open» снимаем.
+- openLink: "lampada://"
+- tapOn:
+    text: "Open|Открыть"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- openLink: "lampada://settings"
+- tapOn:
+    text: "Open|Открыть"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+- scrollUntilVisible:
+    element:
+      id: biometrics-toggle
+    direction: DOWN

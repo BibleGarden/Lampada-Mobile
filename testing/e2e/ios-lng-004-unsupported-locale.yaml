@@ -21,8 +21,6 @@ tags:
 - assertVisible: "INTERFACE LANGUAGE"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible:
-    id: "interface-language-picker"
     text: ".*English.*"
 - tapOn:
     id: "interface-language-picker"
@@ -30,10 +28,6 @@ tags:
     id: "interface-language-sheet"
 - assertVisible:
     id: "interface-language-en"
-- assertVisible:
-    id: "interface-language-ru"
-- assertVisible:
-    id: "interface-language-uk"
 - assertVisible:
     id: "interface-language-ru"
     text: ".*Русский.*"
