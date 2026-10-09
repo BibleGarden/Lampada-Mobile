@@ -197,6 +197,50 @@ locale set and the absence of Face ID, Touch ID and Apple product names. There
 is no sync script: paste the texts into Play Console → Grow users → Store
 presence → Main store listing. The category is Lifestyle.
 
+### Play Console declarations
+
+Verify the permissions against the merged release manifest (`PRE-004D`):
+
+| Permission | Source | Purpose |
+|---|---|---|
+| `RECORD_AUDIO` | `app.json`, expo-audio | spoken answers, recorded only on the user's press |
+| `POST_NOTIFICATIONS` | `app.json`, expo-notifications | prayer reminders and the timer notification |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | expo-audio `enableBackgroundPlayback` | music and Scripture narration continue in the background and on the lock screen |
+| `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK` | expo-notifications, WorkManager | rescheduling reminders after a restart |
+| `USE_BIOMETRIC`, `USE_FINGERPRINT` | expo-local-authentication | the optional app lock |
+| `INTERNET`, `ACCESS_NETWORK_STATE`, `MODIFY_AUDIO_SETTINGS`, `VIBRATE` | template and libraries | network requests, audio routing, haptics |
+
+`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`
+must be absent (`android.blockedPermissions`).
+
+**Foreground service.** App content → Foreground service permissions → Media
+playback: background prayer music and Scripture narration that the user
+started keep playing while the screen is locked or another app is open. Attach
+a short video that starts music in a prayer, locks the screen and shows the
+playback notification.
+
+**Data safety.** These answers follow the consent texts in
+`lib/locales/settings.ts` (`settings.privacyDetails` and the consent hints):
+
+- Data is encrypted in transit. There are no accounts. The journal and
+  recordings stay on the device and are deleted with a prayer or by the full
+  reset.
+- Collected, not shared: Google Gemini and the Whisper server act as service
+  providers.
+  - Audio → Voice or sound recordings: optional, processed ephemerally, App
+    functionality. Sent only when the user asks for a transcription and has
+    given transcription consent.
+  - Messages → Other in-app messages, or App activity → Other user-generated
+    content: the prayer topic, answers and transcripts. Optional, processed
+    ephemerally, App functionality. Sent only with the topic and answer
+    consents.
+  - Content reports: the reported question or passage and an optional comment.
+    Optional, stored on the server for moderation (App functionality).
+  - Server logs: decide whether request logs count as App info and
+    performance → Diagnostics.
+- Not collected: location, contacts, photos, device or other identifiers,
+  financial or health data, analytics.
+
 Not in the repository yet: the 1024×500 feature graphic and Android phone
 screenshots with an aspect ratio of at most 2:1. The App Store screenshots do
 not fit and show the iOS interface.
