@@ -15,6 +15,17 @@ def rectangle(value):
     return values
 
 
+def hierarchy_xml(tree):
+    root = ET.Element('hierarchy')
+    def visit(node):
+        attrs = node.get('attributes', {})
+        if attrs.get('bounds'):
+            ET.SubElement(root, 'node', {key: str(value) for key, value in attrs.items()})
+        for child in node.get('children', []): visit(child)
+    visit(tree)
+    return ET.tostring(root, encoding='unicode')
+
+
 def observe(xml, window, width, height):
     elements = {}
     for node in ET.fromstring(xml).iter('node'):
@@ -101,10 +112,10 @@ def main():
     if not matches:
         raise RuntimeError('No Android display dimensions')
     width, height = map(int, matches[-1])
-    remote = '/sdcard/lampada-layout-contract.xml'
-    adb('shell', 'uiautomator', 'dump', remote)
-    xml = adb('shell', 'cat', remote)
-    adb('shell', 'rm', remote)
+    # Драйвер Maestro уже завершён; новый read-only сеанс снимает дерево
+    # немедленно, без waitForIdle, который не достигается на анимациях.
+    raw = subprocess.check_output(['maestro', '--device', args.device, 'hierarchy'], text=True, timeout=180)
+    xml = hierarchy_xml(json.loads(raw))
     window = adb('shell', 'dumpsys', 'window')
     observation = observe(xml, window, width, height)
     result = {'device': args.device, 'expected_mode': args.mode, 'viewport': observation['viewport'],

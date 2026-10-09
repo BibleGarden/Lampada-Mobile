@@ -1,5 +1,5 @@
 import unittest
-from scripts.keyboard_layout_bounds import observe, validate
+from scripts.keyboard_layout_bounds import observe, validate, hierarchy_xml
 
 
 class LayoutContractTests(unittest.TestCase):
@@ -54,3 +54,9 @@ class LayoutContractTests(unittest.TestCase):
     def test_dismiss_button_can_be_above_input(self):
         s = self.snapshot('[50,350][850,750]', '[700,280][850,330]', '[0,2190][904,2316]')
         validate(s, 'field', ['save'], [], 'floating')
+
+    def test_native_maestro_hierarchy_preserves_real_bounds(self):
+        tree = {'attributes': {}, 'children': [{'attributes': {'resource-id': 'field', 'bounds': '[50,350][850,750]', 'focused': 'true'}}]}
+        s = observe(hierarchy_xml(tree), '', 904, 2316)
+        self.assertEqual(s['elements']['field']['bounds'], (50, 350, 850, 750))
+        self.assertTrue(s['elements']['field']['focused'])

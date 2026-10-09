@@ -213,8 +213,9 @@ Forms do not subtract keyboard or screen heights themselves.
 inside that region. Body height comes from Gorhom's public footer position.
 `KeyboardSheetTextInput` uses a normal gesture-handler input intentionally:
 registering a `BottomSheetTextInput` here would create a second keyboard-space
-owner, particularly for positive-height floating iPad frames. Both answer and
-recording controls use this footer, including Stop; the fixed Home-button-device
+owner, particularly for positive-height floating iPad frames. Closed sheet instances synchronize against the measured viewport after keyboard
+geometry settles; they are not presented or touchable while closed. Both answer
+and recording controls use this footer, including Stop; the fixed Home-button-device
 padding workaround is removed. Audio lifecycle and save/cancel operations remain
 in their existing owners.
 

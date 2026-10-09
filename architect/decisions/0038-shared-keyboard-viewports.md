@@ -26,6 +26,10 @@ keyboard inset. Managed sheet inputs deliberately do not register Gorhom's
 independent keyboard handler. Remove app-level screen/keyboard height formulas
 and fixed-device padding corrections.
 
+Synchronize closed sheets against the measured viewport after its geometry
+settles, without remounting live editors. Closed presentation and hit testing
+remain disabled even if a vendor animation retains an old closed position.
+
 Keep action policy explicit: preparation/reflection defer, answers/reports keep.
 Use compact floating inputs and a localized Finish typing control rather than
 inventing coordinates for an Android floating panel that reports no occupied
@@ -41,7 +45,7 @@ bottom strip. Preserve transactional save and audio lifecycle ownership.
 - Staged Maestro: all five forms retain typed text through dismissal; answer
   saving/reopening and reflection/history persistence are verified.
 - Native checkpoints run after the Maestro driver exits, so a second Android
-  UiAutomation connection cannot invalidate the first one.
+  automation session cannot invalidate the first one.
 
 ## Consequences
 

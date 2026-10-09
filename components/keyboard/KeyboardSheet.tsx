@@ -1,4 +1,4 @@
-import React, { createContext, forwardRef, useContext, useMemo } from 'react';
+import React, { createContext, forwardRef, useContext, useMemo, useState, useEffect } from 'react';
 import { StyleSheet, View, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import BottomSheet, { BottomSheetFooter, BottomSheetScrollView, type BottomSheetFooterProps, type BottomSheetProps } from '@gorhom/bottom-sheet';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
@@ -43,13 +43,50 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
 
 // Viewport резервирует физическое место ровно один раз. Gorhom владеет
 // только положением шторки и footer внутри уже доступного контейнера.
-const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, accessibilityModal = false, onAccessibilityEscape, children, ...props }, ref) => {
+const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
   const bodyHeight = useSharedValue(0);
+  const keyboard = useKeyboardLayout();
+  const [present, setPresent] = useState((props.index ?? -1) >= 0);
+  const [viewportSize, setViewportSize] = useState('unmeasured');
+  const [mountKey, setMountKey] = useState(viewportSize);
+  // Закрытая позиция Gorhom может остаться от прежнего контейнера.
+  // Основание — реальные размеры viewport, а не Dimensions всего экрана.
+  // Не пересоздаём живой редактор и не гоняем remount на каждом кадре IME.
+  useEffect(() => {
+    if (present || keyboard.phase === 'opening' || keyboard.phase === 'closing') return;
+    const settle = setTimeout(() => setMountKey(viewportSize), 150);
+    return () => clearTimeout(settle);
+  }, [present, keyboard.phase, viewportSize]);
   const context = useMemo(() => ({ footer, hidden: footerHidden, footerStyle, bodyHeight }), [footer, footerHidden, footerStyle, bodyHeight]);
   return (
-    <KeyboardViewport overlay accessibilityViewIsModal={accessibilityModal} onAccessibilityEscape={onAccessibilityEscape}>
+    <KeyboardViewport
+      overlay
+      style={!present && styles.hidden}
+      pointerEvents={present ? 'box-none' : 'none'}
+      accessibilityViewIsModal={accessibilityModal}
+      onAccessibilityEscape={onAccessibilityEscape}
+      onViewportLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout;
+        setViewportSize(`${width}x${height}`);
+      }}
+    >
       <SheetLayoutContext.Provider value={context}>
-        <BottomSheet {...props} ref={ref} bottomInset={0} android_keyboardInputMode="adjustResize" footerComponent={SheetFooter}>
+        <BottomSheet
+          {...props}
+          key={mountKey}
+          ref={ref}
+          bottomInset={0}
+          android_keyboardInputMode="adjustResize"
+          footerComponent={SheetFooter}
+          onAnimate={(from, to, ...positions) => {
+            if (to >= 0) setPresent(true);
+            onAnimate?.(from, to, ...positions);
+          }}
+          onChange={(index, ...details) => {
+            setPresent(index >= 0);
+            onChange?.(index, ...details);
+          }}
+        >
           {children}
         </BottomSheet>
       </SheetLayoutContext.Provider>
@@ -86,7 +123,7 @@ export function KeyboardSheetBody({ children, style, scrollable = true, ...props
   );
 }
 
-const styles = StyleSheet.create({ body: { width: '100%' }, fill: { flex: 1 }, scrollContent: { flexGrow: 1 } });
+const styles = StyleSheet.create({ body: { width: '100%' }, fill: { flex: 1 }, scrollContent: { flexGrow: 1 }, hidden: { opacity: 0 } });
 const stylesFactory = () => StyleSheet.create({
   footer: { ...column(), paddingHorizontal: sc(16), paddingTop: sc(10), paddingBottom: sc(16) },
   hidden: { opacity: 0 },

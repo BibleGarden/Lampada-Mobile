@@ -266,7 +266,7 @@ physical devices because its fixtures clear app state.
 
 Each form has an open phase, an independent native OS-bounds checkpoint and a
 restore/persistence phase. Every command keeps its complete log and exit. The
-native checker runs between Maestro sessions to avoid stealing UiAutomation.
+native checker runs between Maestro sessions to avoid concurrent UiAutomation.
 Use `--forms answer` for the original failing form first. Read-only checking of a
 physical current screen is available through `keyboard_layout_bounds.py`; never
 run the clearing matrix on the owner's phone. iOS prepared counterparts and

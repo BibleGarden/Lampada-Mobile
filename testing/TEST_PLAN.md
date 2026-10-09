@@ -519,7 +519,7 @@ The run is complete when:
 | KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and dismiss actions remain usable, without clearing personal app data |
 
 A native bounds assertion is stronger than assertVisible. The independent
-`keyboard_layout_bounds.py` reads OS InsetsSource frames and UiAutomator bounds,
+`keyboard_layout_bounds.py` reads OS InsetsSource frames and native Maestro hierarchy bounds,
 not the app's calculated viewport. Run it only when the Maestro driver has stopped.
 The initial oversized-field and cropped-navigation-button fixtures must fail the
 validator's own tests. Physical screenshots must be checked before claiming that
