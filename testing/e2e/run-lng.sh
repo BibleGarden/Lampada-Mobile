@@ -26,13 +26,15 @@ UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
 # defaults write через simctl spawn работает только на загруженном устройстве.
 xcrun simctl bootstatus "$UDID" -b
 
+# Шаги связаны через &&: функция возвращает первую ошибку и тогда, когда её
+# вызывают слева от || (там errexit не действует).
 set_locale() { # $1 = locale (en_US), $2 = language (en)
-  echo "== Локаль симулятора -> $1 ($2)"
-  xcrun simctl spawn "$UDID" defaults write -g AppleLocale -string "$1"
-  xcrun simctl spawn "$UDID" defaults write -g AppleLanguages -array "$2"
-  xcrun simctl shutdown "$UDID"
-  xcrun simctl boot "$UDID"
-  xcrun simctl bootstatus "$UDID" -b
+  echo "== Локаль симулятора -> $1 ($2)" &&
+    xcrun simctl spawn "$UDID" defaults write -g AppleLocale -string "$1" &&
+    xcrun simctl spawn "$UDID" defaults write -g AppleLanguages -array "$2" &&
+    xcrun simctl shutdown "$UDID" &&
+    xcrun simctl boot "$UDID" &&
+    xcrun simctl bootstatus "$UDID" -b
 }
 
 run() { # $1 = flow

@@ -10,15 +10,52 @@
 #      не содержит строку пина.
 #
 # Предусловия: защита выключена; приложение установлено.
-# Скрипт сам включает пин 123456, гонит проверки и снимает защиту в конце.
+# Скрипт сам включает пин 123456, гонит проверки и снимает защиту при любом
+# выходе, в том числе после упавшей проверки.
+#
+# По умолчанию доказательства идут во временную папку (не в репозиторий).
+# Для сохранения в отчёт передайте EVIDENCE_DIR=testing/evidence/<дата>-<тема>.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
 PIN=${1:-123456}
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
+EVIDENCE="${EVIDENCE_DIR:-${TMPDIR:-/tmp/}pray-e2e-output}"
+mkdir -p "$EVIDENCE"
+DEV=(--device "$UDID")
+
+PIN_ON=0
+LPID=
+disable_test_pin() {
+  local log="$EVIDENCE/ios-lock-cleanup.log"
+  maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-cleanup.yaml > "$log" 2>&1 ||
+    { echo "FAIL: PIN cleanup flow failed, see $log" >&2; return 1; }
+  PIN_ON=0
+}
+# Любой выход останавливает поток системного лога и, пока пин включён,
+# снимает его tracked-флоу уборки. Код выхода прогона сохраняется.
+cleanup() {
+  local status=$?
+  if [ -n "$LPID" ] && kill -0 "$LPID" 2>/dev/null; then
+    kill "$LPID"
+    wait "$LPID" || true
+  fi
+  if [ "$PIN_ON" = 1 ]; then
+    echo "== Уборка: снимаем тестовый пин" >&2
+    if ! disable_test_pin && [ "$status" = 0 ]; then
+      status=1
+    fi
+  fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 echo "== Включаем защиту пином $PIN"
-maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-011-prepare.yaml > /tmp/lock-011-prepare.log 2>&1 || { echo "FAIL: не удалось включить пин"; exit 1; }
+PREPARE_LOG="$EVIDENCE/ios-lock-011-prepare.log"
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-011-prepare.yaml > "$PREPARE_LOG" 2>&1 || { echo "FAIL: PIN preparation, see $PREPARE_LOG" >&2; exit 1; }
+PIN_ON=1
 
 CONTAINER=$(xcrun simctl get_app_container "$UDID" twinkler data)
 
@@ -51,15 +88,17 @@ fi
 echo "OK: только служебные ключи; пина в открытом виде нет"
 
 echo "== 3. Логи устройства за время ввода пина"
-LOG=/tmp/lock011-device.log
+LOG="$EVIDENCE/ios-lock-011-device.log"
 : > "$LOG"
 xcrun simctl spawn "$UDID" log stream --style compact > "$LOG" 2>&1 &
 LPID=$!
 sleep 2
-export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
-maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-011-pin-entry.yaml > /tmp/lock-011-flow.log 2>&1 || { kill $LPID; echo "FAIL: флоу ввода пина упал"; exit 1; }
+FLOW_LOG="$EVIDENCE/ios-lock-011-pin-entry.log"
+maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-011-pin-entry.yaml > "$FLOW_LOG" 2>&1 || { echo "FAIL: PIN entry flow, see $FLOW_LOG" >&2; exit 1; }
 sleep 2
-kill $LPID || true
+kill "$LPID"
+wait "$LPID" || true
+LPID=
 if grep -q "$PIN" "$LOG"; then
   echo "FAIL: строка пина есть в системном логе:"
   grep "$PIN" "$LOG" | head -3
@@ -68,5 +107,5 @@ fi
 echo "OK: строка пина в системном логе не найдена ($(wc -l < "$LOG" | tr -d ' ') строк проверено)"
 
 echo "== Снимаем защиту"
-maestro test --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" --device "$UDID" testing/e2e/ios-lock-cleanup.yaml > /tmp/lock-011-disable.log 2>&1
+disable_test_pin
 echo "== LOCK-011: все проверки пройдены"

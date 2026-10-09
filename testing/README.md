@@ -243,17 +243,17 @@ exit it returns the simulator to `ru_RU` / `ru`, also after a failure, and keeps
 the failing exit code. A successful run also restores the app interface to
 Russian with `ios-lng-restore-ru.yaml`.
 
-PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456;
-no temporary `/tmp/disable-pin.yaml` prerequisite is needed. Cleanup errors
-are failures. `run-lock-biometrics.sh` runs that cleanup on exit while the test
-PIN may still be on, so a failed LOCK-009/010 flow does not leave the PIN
-enabled; command logs go to the evidence directory. The biometric preflight scrolls to the protection section before
-checking the visible hierarchy. It sets the simulator notification state
-`com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and
-0 for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID
-on the current runtime. Biometric signals are synchronized with the flow
-reaching its wait after the native authentication prompt appears. A mismatch
-keeps the iOS retry prompt open; select its PIN action to verify code entry.
+PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456.
+`run-lock-storage-check.sh` and `run-lock-biometrics.sh` run it on any exit,
+including Ctrl-C, while the test PIN is on, so a failed check does not leave
+the PIN enabled; cleanup errors are failures. Both write command logs to the
+evidence directory. The biometric preflight scrolls to the protection section
+before checking the visible hierarchy. It sets the simulator notification state
+`com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and 0
+for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID on
+the current runtime. Biometric signals are synchronized with the flow reaching
+its wait after the native authentication prompt appears. A mismatch keeps the
+iOS retry prompt open; select its PIN action to verify code entry.
 
 LOCK-008 is a manual Device Hub check. Run `run-lock-appswitcher.sh prepare`,
 open App Switcher using Device Hub's Home control, then run the script with

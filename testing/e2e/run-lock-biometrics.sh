@@ -32,31 +32,43 @@ set_enrolled() {
   xcrun simctl spawn "$UDID" notifyutil -p com.apple.BiometricKit.enrollmentChanged
 }
 
-# Пока пин может быть включён, любой выход из скрипта снимает его tracked-флоу
-# уборки: иначе упавший 009a…010 оставляет симулятор с тестовым пином. Без
-# образца биометрии приложение сразу показывает пин-клавиатуру (как в LOCK-010),
+# Любой выход из скрипта, в том числе по Ctrl-C, сначала останавливает фоновый
+# Maestro (в неинтерактивном bash он не получает SIGINT и иначе продолжит
+# управлять устройством параллельно с уборкой). Затем, пока пин включён
+# (после подготовки и до успешного 010), tracked-флоу уборки снимает его:
+# иначе упавший 009a…010 оставляет симулятор с тестовым пином. Без образца
+# биометрии приложение сразу показывает пин-клавиатуру (как в LOCK-010),
 # поэтому уборка сначала снимает регистрацию. Код выхода прогона сохраняется.
 PIN_MAY_BE_ON=0
+WORKER=
 cleanup_pin() {
   local status=$?
+  if [ -n "$WORKER" ] && kill -0 "$WORKER" 2>/dev/null; then
+    kill "$WORKER"
+    wait "$WORKER" || true
+  fi
   if [ "$PIN_MAY_BE_ON" = 1 ]; then
     local log="$EVIDENCE/ios-lock-cleanup.log"
     echo "== Уборка: снимаем тестовый пин" >&2
     if ! { set_enrolled 0 && maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-cleanup.yaml > "$log" 2>&1; }; then
-      echo "FAIL: cleanup did not disable the test PIN, see $log" >&2
+      echo "FAIL: PIN cleanup flow failed (if LOCK-010 got past disabling the PIN, it is already off), see $log" >&2
       [ "$status" = 0 ] && status=1
     fi
   fi
   exit "$status"
 }
 trap cleanup_pin EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 set_enrolled 1
 
 echo "== Подготовка: включаем пин 123456"
-PIN_MAY_BE_ON=1
 PREPARE_LOG="$EVIDENCE/ios-lock-011-prepare.log"
+# Подготовка включает пин последним шагом и проверяет это: при её падении пин
+# не включён (или был включён до прогона, вопреки предусловию), уборка не нужна.
 maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-011-prepare.yaml > "$PREPARE_LOG" 2>&1 || { echo "FAIL: PIN preparation, see $PREPARE_LOG" >&2; exit 1; }
+PIN_MAY_BE_ON=1
 
 # Экран настроек опрашивает биометрию при монтировании: tracked-флоу заново
 # открывает настройки и прокручивает их до раздела защиты.
@@ -81,29 +93,35 @@ run_biometric_flow() {
   local log="$EVIDENCE/$name.log"
   : > "$log"
   maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" "testing/e2e/$name.yaml" > "$log" 2>&1 &
-  local worker=$!
+  WORKER=$!
   local ready=0
   for ((attempt=0; attempt<240; attempt++)); do
     if grep -Fq "$BIO_WAIT_MARKER" "$log"; then
       ready=1
       break
     fi
-    if ! kill -0 "$worker" 2>/dev/null; then
-      wait "$worker" || true
+    if ! kill -0 "$WORKER" 2>/dev/null; then
+      wait "$WORKER" || true
+      WORKER=
       echo "FAIL: flow exited before its authentication wait: $log" >&2
       return 1
     fi
     sleep 1
   done
   if [ "$ready" != 1 ]; then
+    # Зависший флоу останавливает EXIT-ловушка.
     echo "FAIL: authentication wait timed out: $log" >&2
-    kill "$worker"
-    wait "$worker" || true
     return 1
   fi
   echo "Authentication ready: $name"
   signal "$BIO.$result_signal"
-  wait "$worker" || { echo "FAIL: $name, see $log" >&2; return 1; }
+  local status=0
+  wait "$WORKER" || status=$?
+  WORKER=
+  if [ "$status" != 0 ]; then
+    echo "FAIL: $name, see $log" >&2
+    return 1
+  fi
 }
 
 echo "== LOCK-009a: включение биометрии"
