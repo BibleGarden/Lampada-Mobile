@@ -12,6 +12,7 @@ import {
   FALLBACK_PIN_LENGTH,
   PIN_MAX_LENGTH,
   PIN_MIN_LENGTH,
+  biometryLabel,
   isValidPin,
   parseLockConfig,
   shouldLockAfterBackground,
@@ -182,11 +183,9 @@ export async function setBiometrics(on: boolean): Promise<void> {
 export type BiometryInfo = {
   /** Датчик есть и в системе зарегистрирован хотя бы один образец. */
   available: boolean;
-  /** Название способа на языке устройства: «Face ID», «Отпечаток пальца». */
+  /** Название способа: «Face ID» на iOS, «Отпечаток пальца» на Android. */
   label: string;
 };
-
-const DEFAULT_BIOMETRY_LABEL = 'Face ID / Touch ID';
 
 /** Что за биометрия доступна прямо сейчас; образцы могли удалить в системе. */
 export async function biometryInfo(): Promise<BiometryInfo> {
@@ -196,17 +195,12 @@ export async function biometryInfo(): Promise<BiometryInfo> {
       LocalAuthentication.isEnrolledAsync(),
       LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
-    const face = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
-    const finger = types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
-    const ios = Platform.OS === 'ios';
-    const label = face
-      ? ios ? 'Face ID' : translate('system.face')
-      : finger
-        ? ios ? 'Touch ID' : translate('system.finger')
-        : DEFAULT_BIOMETRY_LABEL;
-    return { available: hardware && enrolled, label };
+    const kind = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)
+      ? 'face'
+      : types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT) ? 'finger' : 'other';
+    return { available: hardware && enrolled, label: biometryLabel(Platform.OS, kind, translate) };
   } catch {
-    return { available: false, label: DEFAULT_BIOMETRY_LABEL };
+    return { available: false, label: biometryLabel(Platform.OS, 'other', translate) };
   }
 }
 

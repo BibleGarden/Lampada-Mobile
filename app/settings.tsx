@@ -518,7 +518,7 @@ export default function Settings() {
     // молчать нельзя: до этой правки человек не видел, почему включение
     // не сработало.
     if (result.reason === 'error') {
-      Alert.alert(t('settings.biometricsError'), result.message);
+      Alert.alert(t('settings.biometricsError', { name: info.label }), result.message);
     }
   };
 
