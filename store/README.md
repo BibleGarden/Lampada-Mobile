@@ -1,4 +1,7 @@
-# App Store materials
+# Store materials
+
+App Store materials are described first; Google Play has its own section at
+the end.
 
 `screenshots/` holds App Store Connect screenshots named
 `<device>-<language>-<NN>-<screen>.png`. The current set was captured on
@@ -183,3 +186,44 @@ polling for the first visible question, and simulator frame timestamps. The
 recorded action waits and reading holds use the configured values. The first
 question also has a live visual match during recording. Montage speed on typing
 and transitions provides the duration margin.
+
+## Google Play
+
+`play/<locale>.json` holds the Play listing texts for `en-US`, `ru-RU` and
+`uk`: `title` (30 characters), `shortDescription` (80) and `fullDescription`
+(4,000). They are adapted from the App Store texts without iOS terms; Play has
+no subtitle, keywords or promotional text. `npm test` checks the limits, the
+locale set and the absence of Face ID, Touch ID and Apple product names. There
+is no sync script: paste the texts into Play Console → Grow users → Store
+presence → Main store listing. The category is Lifestyle.
+
+Not in the repository yet: the 1024×500 feature graphic and Android phone
+screenshots with an aspect ratio of at most 2:1. The App Store screenshots do
+not fit and show the iOS interface.
+
+### Build and submit
+
+From the repository root:
+
+```sh
+npm run eas:production:android                     # new release, Android only
+npm run eas:production:all                         # new release, both stores
+npm run eas:production:android -- --keep-version   # Android for the release iOS already has
+npx eas-cli@latest submit --platform android --profile production
+```
+
+The build uses the EAS `production` environment and produces an AAB; EAS
+increments `versionCode` remotely. On the first Android build EAS offers to
+generate the upload keystore; keep it in EAS. Play App Signing holds the app
+signing key. The submit profile uploads to the `internal` track with
+`releaseStatus: draft`; promote the release in Play Console. Uploading the
+first AAB manually to internal testing in Play Console is the most predictable
+start.
+
+`eas submit` needs a Google Cloud service account that has access to the app in
+Play Console → Users and permissions. Upload its JSON key to EAS, never to git:
+`npx eas-cli@latest credentials --platform android` → `production` → Google
+Service Account → Manage your Google Service Account Key for Play Store
+Submissions → Set up a Google Service Account Key for Play Store Submissions.
+EAS assigns the key to `com.nf404.twinkler`, so `eas.json` has no
+`serviceAccountKeyPath`.
