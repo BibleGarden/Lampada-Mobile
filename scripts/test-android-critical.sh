@@ -15,5 +15,9 @@ flows=(
   android-smoke-full-relaunch
 )
 
+export ANDROID_TEST_OUTPUT_DIR="${ANDROID_TEST_OUTPUT_DIR:-$(mktemp -d "${TMPDIR:-/tmp/}lampada-android-critical.XXXXXX")}"
 bash scripts/test-android.sh "${flows[@]}"
 echo 'All 10 Android critical scenarios passed.'
+# Native geometry is part of the build gate, not an optional visual check.
+python3 scripts/run-keyboard-contract.py --device "${ANDROID_TEST_DEVICE:-emulator-5554}" \
+  --mode docked --output "${ANDROID_TEST_OUTPUT_DIR:?}/keyboard-contract-docked"

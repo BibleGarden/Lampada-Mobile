@@ -1,0 +1,21 @@
+appId: twinkler
+tags:
+  - critical
+---
+# Real submission must dismiss the IME, restore actions and retain text.
+- runFlow:
+    file: ios-keyboard-contract-setup-open.yaml
+    env:
+      KEYBOARD_MODE: docked
+- runFlow:
+    file: ios-keyboard-contract-setup-restore.yaml
+    env:
+      KEYBOARD_MODE: docked
+- runFlow:
+    file: ios-keyboard-contract-reflect-open.yaml
+    env:
+      KEYBOARD_MODE: docked
+- runFlow:
+    file: ios-keyboard-contract-reflect-restore.yaml
+    env:
+      KEYBOARD_MODE: docked

@@ -23,7 +23,10 @@ Android critical flows are kept separately in `android-e2e/`, so they are not
 picked up by the existing iOS tier commands. Build Android Release with test
 API variables, use Russian as the emulator's primary locale, and run
 `npm run test:e2e:android:critical`. Its sequential runner preserves the full
-smoke → relaunch pair and stops at the first failure. Full logs, per-flow exit
+smoke → relaunch pair and stops at the first failure. The critical command also
+runs all five docked native geometry/save contracts on the disposable emulator;
+use a docked Gboard keyboard for this gate. iOS critical includes ASCII Enter
+contracts for preparation and reflection. Full logs, per-flow exit
 codes and Maestro artifacts are saved in the printed output directory; use
 `ANDROID_TEST_OUTPUT_DIR` to choose a stable location.
 Preflight prints this directory first and shows failed environment diagnostics.
