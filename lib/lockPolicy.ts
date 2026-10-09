@@ -72,18 +72,53 @@ export function parseLockConfig({
 
 // ---- название биометрии ----
 
-/** Какой датчик сообщила система; `other` — тип неизвестен или проверка не удалась. */
+/** Какой способ называть; `other` — несколько датчиков или тип неизвестен. */
 export type BiometryKind = 'face' | 'finger' | 'other';
 
+/** Где звучит название способа: строка настроек, системный запрос, ошибка, экран блокировки. */
+export type BiometryText = 'label' | 'confirm' | 'enableError' | 'orUnlock' | 'unlock';
+
+// Значения AuthenticationType из expo-local-authentication.
+const FINGERPRINT = 1;
+const FACIAL_RECOGNITION = 2;
+
 /**
- * Face ID и Touch ID — названия Apple, поэтому они звучат только на iOS. На
- * Android те же способы называются общими словами из локализации.
+ * Способ по типам, которые сообщила система. На iOS датчик один. Android
+ * перечисляет аппаратные возможности, а системный запрос (уровень `weak`)
+ * сам выбирает среди зарегистрированных образцов, поэтому конкретное название
+ * верно, только когда тип ровно один; иначе — общее слово, как у самого Android.
  */
-export function biometryLabel(
-  platform: string, kind: BiometryKind, translate: (key: string) => string,
+export function biometryKind(platform: string, types: readonly number[]): BiometryKind {
+  if (platform === 'ios') {
+    return types.includes(FACIAL_RECOGNITION) ? 'face' : types.includes(FINGERPRINT) ? 'finger' : 'other';
+  }
+  if (types.length !== 1) return 'other';
+  return types[0] === FACIAL_RECOGNITION ? 'face' : types[0] === FINGERPRINT ? 'finger' : 'other';
+}
+
+const APPLE_NAMES: Record<BiometryKind, string> = {
+  face: 'Face ID', finger: 'Touch ID', other: 'Face ID / Touch ID',
+};
+
+const APPLE_TEMPLATES: Record<Exclude<BiometryText, 'label'>, string> = {
+  confirm: 'settings.confirmBiometrics',
+  enableError: 'settings.biometricsError',
+  orUnlock: 'components.security.orBiometrics',
+  unlock: 'components.security.useBiometrics',
+};
+
+/**
+ * Текст про биометрию. Face ID и Touch ID — несклоняемые названия Apple и
+ * подставляются в общий шаблон только на iOS. На Android у каждого способа
+ * своя готовая фраза: «отпечаток пальца» в шаблоне «Войти через {name}»
+ * не согласуется по падежу.
+ */
+export function biometryText(
+  platform: string, kind: BiometryKind, text: BiometryText,
+  translate: (key: string, params?: Record<string, string>) => string,
 ): string {
   if (platform === 'ios') {
-    return kind === 'face' ? 'Face ID' : kind === 'finger' ? 'Touch ID' : 'Face ID / Touch ID';
+    return text === 'label' ? APPLE_NAMES[kind] : translate(APPLE_TEMPLATES[text], { name: APPLE_NAMES[kind] });
   }
-  return translate(kind === 'face' ? 'system.face' : kind === 'finger' ? 'system.finger' : 'system.biometrics');
+  return translate(`system.biometry.${text}.${kind}`);
 }

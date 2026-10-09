@@ -12,10 +12,11 @@ import {
   FALLBACK_PIN_LENGTH,
   PIN_MAX_LENGTH,
   PIN_MIN_LENGTH,
-  biometryLabel,
+  biometryKind,
   isValidPin,
   parseLockConfig,
   shouldLockAfterBackground,
+  type BiometryKind,
   type LockConfig,
 } from './lockPolicy';
 
@@ -51,6 +52,9 @@ export {
   isValidPin,
   parseLockConfig,
   shouldLockAfterBackground,
+  biometryText,
+  type BiometryKind,
+  type BiometryText,
   type LockConfig,
 } from './lockPolicy';
 
@@ -169,7 +173,7 @@ export async function changePin(currentPin: string, nextPin: string): Promise<bo
 
 /**
  * Включить или выключить биометрию. Она существует только поверх пина: без
- * пин-кода нет и запасного способа войти, если Face ID перестанет узнавать.
+ * пин-кода нет и запасного способа войти, если датчик перестанет узнавать.
  */
 export async function setBiometrics(on: boolean): Promise<void> {
   if (on && !(await isLockEnabled())) return;
@@ -183,8 +187,8 @@ export async function setBiometrics(on: boolean): Promise<void> {
 export type BiometryInfo = {
   /** Датчик есть и в системе зарегистрирован хотя бы один образец. */
   available: boolean;
-  /** Название способа: «Face ID» на iOS, «Отпечаток пальца» на Android. */
-  label: string;
+  /** Какой способ называть в интерфейсе; тексты строит `biometryText`. */
+  kind: BiometryKind;
 };
 
 /** Что за биометрия доступна прямо сейчас; образцы могли удалить в системе. */
@@ -195,12 +199,9 @@ export async function biometryInfo(): Promise<BiometryInfo> {
       LocalAuthentication.isEnrolledAsync(),
       LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
-    const kind = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)
-      ? 'face'
-      : types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT) ? 'finger' : 'other';
-    return { available: hardware && enrolled, label: biometryLabel(Platform.OS, kind, translate) };
+    return { available: hardware && enrolled, kind: biometryKind(Platform.OS, types) };
   } catch {
-    return { available: false, label: biometryLabel(Platform.OS, 'other', translate) };
+    return { available: false, kind: 'other' };
   }
 }
 
