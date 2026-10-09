@@ -74,7 +74,8 @@
     "test:e2e:android:ordered": "bash scripts/test-android-ordered.sh",
     "test:e2e:android:prepared": "python3 scripts/test-android-prepared.py",
     "test:keyboard:unit": "python3 -m unittest discover -s scripts/tests",
-    "test:keyboard:android": "python3 scripts/run-keyboard-contract.py"
+    "test:keyboard:android": "python3 scripts/run-keyboard-contract.py",
+    "test:keyboard:ios": "python3 -m scripts.run_ios_keyboard_contract"
   },
   "private": true
 }

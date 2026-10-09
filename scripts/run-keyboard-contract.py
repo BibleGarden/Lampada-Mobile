@@ -9,13 +9,7 @@ import sys
 from datetime import datetime
 from keyboard_layout_bounds import observe, validate
 
-FORMS = {
-    'setup': ('setup-goal-input', [], ['setup-next-button', 'setup-duration-value']),
-    'answer': ('answer-input', ['answer-save-button', 'answer-record-button', 'answer-cancel-button'], []),
-    'reflect': ('reflection-input', [], ['reflect-complete-button', 'reflect-return-button']),
-    'report': ('content-report-comment', ['content-report-send', 'content-report-cancel'], []),
-    'journal': ('journal-search-input', [], []),
-}
+from keyboard_contract_forms import FORMS
 
 
 def main():

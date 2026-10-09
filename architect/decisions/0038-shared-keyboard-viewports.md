@@ -46,6 +46,8 @@ bottom strip. Preserve transactional save and audio lifecycle ownership.
   are absent, and focus without a software IME remains usable.
 - Staged Maestro: all five forms retain typed text through dismissal; answer
   saving/reopening and reflection/history persistence are verified.
+- UIKit counterparts check complete native rectangles against inputView/window
+  frames; accessibility does not expose iOS safe-area insets.
 - Native checkpoints run after the Maestro driver exits, so a second Android
   automation session cannot invalidate the first one.
 

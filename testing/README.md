@@ -277,3 +277,17 @@ Use `--forms answer` for the original failing form first. Read-only checking of 
 physical current screen is available through `keyboard_layout_bounds.py`; never
 run the clearing matrix on the owner's phone. iOS prepared counterparts and
 existing iPad rotation flows cover the same behavior through native selectors.
+
+The UIKit geometry counterpart runs the same staged forms on an existing named
+simulator, with no physical-device clearing:
+
+```bash
+npm run test:keyboard:ios -- --simulator "Pray iPad2" --mode docked
+```
+
+Its reader checks complete input/action rectangles against native `inputView`
+and window frames, then verifies persisted text. UIKit accessibility does not
+expose safe-area insets; this contract does not claim Android-style navigation
+inset measurement or physical external-keyboard acceptance. Floating mode must
+be selected in the real system keyboard before invoking `--mode floating`.
+`npm run test:keyboard:unit` covers both native bounds readers.

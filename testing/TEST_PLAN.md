@@ -529,3 +529,9 @@ Keyboard submission regression (2026-10-09): preparation and reflection Enter
 submit before native dismissal; loss of input focus alone must never remove the
 Finish typing control or reveal deferred actions. The staged Android setup
 restore flow verifies Enter restores duration/Next and preserves the topic.
+
+The iPad staged counterpart (`npm run test:keyboard:ios -- --mode docked`)
+measures entire native rectangles against UIKit's keyboard/window frames across
+the same five forms. It rejects a partly clipped action even if its center is
+visible. UIKit safe-area insets and physical external-keyboard use remain
+separate live checks.
