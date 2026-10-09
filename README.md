@@ -98,7 +98,7 @@ year.
 | --- | --- | --- |
 | `npm run iphone` | Local Release build installed directly onto a connected iPhone | `.env.local` |
 | `npm run eas:preview` | Internal Ad Hoc EAS build for registered devices | EAS environment `preview` |
-| `npm run eas:production` | Publishing through the App Store | EAS environment `production` |
+| `npm run eas:production:<all\|ios\|android>` | Publishing through the App Store and Google Play | EAS environment `production` |
 
 `preview` does not read `.env.local`: that file is excluded from git and from the
 cloud archive. Before a preview build the command checks automatically that the
@@ -179,9 +179,13 @@ restarting Metro for Debug and rebuilding for Release.
 
 ### Automatic app versions
 
-`app.json` → `expo.version` is the source of the app version. Each invocation of
-`npm run eas:production` reserves the next two-part store version before
-building: `1.1` → `1.2`, dropping any patch (`1.1.3` → `1.2`). `npm run iphone`,
+`app.json` → `expo.version` is the source of the app version. Each
+`npm run eas:production:<all|ios|android>` reserves the next two-part store
+version before building: `1.1` → `1.2`, dropping any patch (`1.1.3` → `1.2`).
+One release has one version on both stores: build both with
+`eas:production:all`, or build the second platform later with
+`npm run eas:production:<ios|android> -- --keep-version`, which keeps the
+reserved two-part version and refuses a test version. `npm run iphone`,
 `npm run ios`, `npm run android` and `npm run eas:preview` are test builds and
 reserve the next patch of the current store version: `1.2` → `1.2.1` → `1.2.2`.
 The major number remains manual.
