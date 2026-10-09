@@ -548,3 +548,6 @@ checkpoint verifies this continuation instead of treating Clear as Finish typing
 KBD window resize: Android critical changes only the emulator width with the
 keyboard/editor open, checks full native bounds and retained focus, restores
 the original dimensions, then saves and reopens the exact draft.
+
+JRN-007 prerequisite: scroll until the complete Delete action is visible for
+expanded long text/audio details before activating the timed confirmation.
