@@ -361,7 +361,7 @@ the stub; execution results belong in dated reports.
 | JRN-011 | Search by a word from a transcript in a different case | the right prayer is found |
 | JRN-012 | Get HTTP 413, 429, 5xx, a timeout, or a disconnected network in the journal and retry | the cause is explained in plain language, the audio stays available, and a repeated attempt can save the text |
 | JRN-013 | Close the details or delete the prayer during transcription | the request is cancelled, a late response does not bring the deleted data back into the UI or the database |
-| JRN-014 [rare] | Share an expanded prayer | the system share sheet opens with plain text carrying localized labels (`Topic:`, `Date:`, `Duration:`, `Question N:`, `Answer:`, `Voice note:`, `Saved passages:`, `Takeaway:`) and `———` separators between the meta block, the questions, the closing block and the app name; no audio file is attached and dismissing the native popover through its accessibility action changes nothing |
+| JRN-014 [rare] | Share an expanded prayer | the system share sheet opens with plain text carrying localized labels (`Topic:`, `Date:`, `Duration:`, `Question N:`, `Answer:`, `Voice note:`, `Saved passages:`, `Takeaway:`) and `———` separators between the meta block, the questions, the closing block and the app name; no audio file is attached and cancelling changes nothing |
 
 ### Prayer reminders
 
@@ -392,6 +392,9 @@ time-setting helper and captures the REM-008 screen at the scheduled time.
 The protection is optional and off by default; the decision and its boundaries
 are in
 [ADR-0014](../architect/decisions/0014-app-lock-pin-and-biometrics.md).
+The mapping of a biometric prompt result to the lock screen outcome
+(cancellation, `authentication_failed` and other errors shown in words) has
+unit coverage in `lib/__tests__/lockBiometrics.test.mjs`.
 
 | ID | Scenario | Expected result |
 |---|---|---|
@@ -402,10 +405,10 @@ are in
 | LOCK-005 | Disable the protection | cancelling and a wrong code do not remove it, the correct one does, a cold start no longer asks for a code |
 | LOCK-006 | "Forgot your PIN?" and two confirmations | cancelling at either of the two steps erases nothing, confirming wipes the journal and removes the protection |
 | LOCK-007 | Returning from the background before and after a minute | a short switch does not ask for the code, more than a minute does; the app process is not restarted |
-| LOCK-008 | The app snapshot in the task switcher | the privacy screen is shown instead of the content; inspect the Device Hub App Switcher screenshot after preparing the flow |
+| LOCK-008 | The app snapshot in the task switcher | the privacy screen is shown instead of the content |
 | LOCK-009 | Entry by Face ID / Touch ID | the toggle is available only with the PIN enabled and a sample enrolled, a mismatch shows the native retry prompt, its PIN action returns to the app lock screen, and only the correct code grants entry |
 | LOCK-010 | The biometric samples are removed in the system after the toggle was enabled | the lock screen does not offer biometrics, the code keeps working |
-| LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt, hash, PIN length, enabled flag and optional biometrics flag; the tracked cleanup flow disables the test PIN and cleanup failure fails the runner |
+| LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt, hash, PIN length, enabled flag and optional biometrics flag |
 
 ## 9. Non-functional checks
 

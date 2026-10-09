@@ -11,16 +11,20 @@
 #   de_DE: lng-004        ru_RU: lng-005        en_US: lng-006
 #   de_DE: lng-007 (без clearState, читает контейнер после lng-006!)
 #   en_US: lng-008        ru_RU: lng-009
-# После прогона симулятор возвращается на ru_RU — рабочую локаль остального
-# сьюта.
+# После прогона, в том числе упавшего, симулятор возвращается на ru_RU —
+# рабочую локаль остального сьюта. Язык интерфейса приложения возвращает на
+# русский только успешный прогон (ios-lng-restore-ru.yaml).
 #
-# Устройство: UDID=<udid> или берётся booted-симулятор.
+# Устройство: UDID=<udid>, по умолчанию симулятор «Pray Smoke iPhone 17 Pro»;
+# выключенный симулятор скрипт загружает сам.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 
 UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
+# defaults write через simctl spawn работает только на загруженном устройстве.
+xcrun simctl bootstatus "$UDID" -b
 
 set_locale() { # $1 = locale (en_US), $2 = language (en)
   echo "== Локаль симулятора -> $1 ($2)"
@@ -40,6 +44,17 @@ step() { # $1 = locale, $2 = language, $3 = flow
   set_locale "$1" "$2"
   run "$3"
 }
+
+# Упавший флоу останавливает прогон; симулятор всё равно возвращается на
+# ru_RU, а код выхода остаётся ненулевым.
+restore_locale_on_failure() {
+  local status=$?
+  if [ "$status" != 0 ]; then
+    set_locale ru_RU ru || echo "FAIL: simulator locale was not restored to ru_RU" >&2
+  fi
+  exit "$status"
+}
+trap restore_locale_on_failure EXIT
 
 step en_US en ios-lng-001-clean-en.yaml
 step ru_RU ru ios-lng-002-clean-ru.yaml

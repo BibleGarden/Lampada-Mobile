@@ -21,8 +21,6 @@ tags:
     id: "interface-language-sheet"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible:
-    id: "interface-language-picker"
     text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"

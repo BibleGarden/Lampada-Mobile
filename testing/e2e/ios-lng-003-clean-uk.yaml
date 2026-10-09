@@ -20,6 +20,4 @@ tags:
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible:
-    id: "interface-language-picker"
     text: ".*Українська.*"

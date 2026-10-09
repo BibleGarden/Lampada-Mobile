@@ -18,8 +18,6 @@ tags:
     id: "settings-button"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible:
-    id: "interface-language-picker"
     text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"
 - assertNotVisible: "SETTINGS"
