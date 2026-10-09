@@ -433,7 +433,8 @@ same session; a catalogue with no triple for the interface language sends the
 user to Settings, where a manual choice revives the block; a storage error has
 its own message and a diagnostic. Settings show the language list for a manual
 choice when the catalogue has no triple for the interface language, recheck it
-after an interface-language change, and show a failed save.
+after an interface-language change, show a failed save, and report storage
+failures separately from catalogue failures.
 A successful initial triple is persisted atomically; a saved selection is used
 without a catalog request and is not overridden. A concurrent explicit selection
 wins over initialization, and an interface language changed during it restarts
@@ -474,7 +475,8 @@ Android channel `prayer_reminders` and are marked with `content.data.kind`: the
 scheduler only cancels its own notifications and does not touch the ongoing
 chronometer of the prayer timer in the `twinkler_prayer_timer` channel. Tapping a
 reminder opens Home, except when the user is inside the prayer scenario - it does
-not throw them out of it.
+not throw them out of it. Settings opened from a running prayer count as part of
+that scenario.
 
 ## App lock
 

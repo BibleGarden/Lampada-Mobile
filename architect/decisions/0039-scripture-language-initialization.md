@@ -39,8 +39,9 @@ still not depend on the network.
    When the catalog is reachable but has no complete triple for the interface
    language, Settings show the language list with a specific message, so the
    user can pick a Bible manually; the check reruns when the interface language
-   changes on the same screen. A failed save of a manual pick is shown and
-   written to diagnostics. An initialization that produced the selection hands
+   changes on the same screen. A failed save of a manual pick, and any other
+   storage failure, is shown as such and written to diagnostics; the session's
+   "Open settings" screen keeps a reminder tap from leaving the prayer. An initialization that produced the selection hands
    its catalogs to Settings, which does not fetch them again.
 6. A malformed `meta.scripture_preferences` record is not a selection. It is
    reported to the local diagnostics log as `scripture_preferences_invalid` and

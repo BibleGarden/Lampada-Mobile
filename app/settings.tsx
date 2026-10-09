@@ -8,7 +8,12 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
-import { ScriptureDefaultUnavailableError, ensureScripturePreferences, useSettings } from '../lib/settings';
+import {
+  ScriptureCatalogUnavailableError,
+  ScriptureDefaultUnavailableError,
+  ensureScripturePreferences,
+  useSettings,
+} from '../lib/settings';
 import { useI18n } from '../lib/i18n';
 import { recordDiagnostic } from '../lib/db';
 import {
@@ -336,6 +341,8 @@ export default function Settings() {
   const [catalogError, setCatalogError] = useState(false);
   const [defaultUnavailable, setDefaultUnavailable] = useState(false);
   const [scriptureSaveError, setScriptureSaveError] = useState(false);
+  const [scriptureStorageError, setScriptureStorageError] = useState(false);
+  const scriptureSaveRequest = useRef(0);
   const hydrateRequest = useRef(0);
   const hydratedLanguage = useRef(uiLanguage);
   const translationRequest = useRef(0);
@@ -382,10 +389,12 @@ export default function Settings() {
     setLoadingCatalog(true);
     setCatalogError(false);
     setDefaultUnavailable(false);
+    setScriptureStorageError(false);
     try {
       await load();
       if (!current()) return;
       let saved = useSettings.getState().scripturePreferences;
+      const initializing = !saved;
       let languageCatalog: ScriptureLanguageOption[] | null = null;
       let translationCatalog: ScriptureTranslation[] | null = null;
       if (!saved) {
@@ -405,8 +414,12 @@ export default function Settings() {
       const [languageResult, translationResult] = await Promise.all([
         languageCatalog ?? fetchScriptureLanguages(),
         translationCatalog ?? fetchScriptureTranslations(saved.language),
-      ]);
+      ]).catch((error: unknown) => {
+        throw new ScriptureCatalogUnavailableError(error);
+      });
       if (!current()) return;
+      // Подтверждённый здесь выбор заменяет прежнюю неудачную попытку сохранения.
+      if (initializing) setScriptureSaveError(false);
       const savedLanguage = languageResult.find((item) => item.alias === saved.language) ?? null;
       const savedTranslation = translationResult.find(
         (item) => item.code === saved.translationCode,
@@ -417,8 +430,15 @@ export default function Settings() {
       setLanguage(savedLanguage);
       setTranslation(savedTranslation);
       setVoice(savedVoice);
-    } catch {
-      if (current()) setCatalogError(true);
+    } catch (error) {
+      if (!current()) return;
+      // Сбой SQLite — не сбой каталога: показываем и записываем его как есть.
+      if (error instanceof ScriptureCatalogUnavailableError) {
+        setCatalogError(true);
+      } else {
+        recordDiagnostic('scripture_selection_failed', error);
+        setScriptureStorageError(true);
+      }
     } finally {
       if (current()) setLoadingCatalog(false);
     }
@@ -773,16 +793,22 @@ export default function Settings() {
       setScriptureSaveError(true);
       return;
     }
-    setScriptureSaveError(false);
     // Записи идут последовательно: при быстром выборе нескольких голосов
     // последним в SQLite гарантированно останется последний выбор пользователя.
+    // Ошибку на экране определяет только последняя запись.
+    const request = ++scriptureSaveRequest.current;
     preferenceSave.current = preferenceSave.current
       .catch(() => undefined)
       .then(() => setScripturePreferences(preferences))
-      .catch((error: unknown) => {
-        recordDiagnostic('scripture_preferences_save_failed', error);
-        setScriptureSaveError(true);
-      });
+      .then(
+        () => {
+          if (request === scriptureSaveRequest.current) setScriptureSaveError(false);
+        },
+        (error: unknown) => {
+          recordDiagnostic('scripture_preferences_save_failed', error);
+          if (request === scriptureSaveRequest.current) setScriptureSaveError(true);
+        },
+      );
   };
 
   const openPicker = (id: Exclude<OpenPicker, null>) => setOpen(id);
@@ -876,6 +902,15 @@ export default function Settings() {
               testID="scripture-save-error"
             >
               {t('settings.bibleSaveError')}
+            </Text>
+          ) : null}
+          {scriptureStorageError ? (
+            <Text
+              accessibilityRole="alert"
+              style={[styles.settingHint, styles.reminderWarning]}
+              testID="scripture-storage-error"
+            >
+              {t('settings.bibleStorageError')}
             </Text>
           ) : null}
           {defaultUnavailable && !scripturePreferences ? (

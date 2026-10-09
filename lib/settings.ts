@@ -348,11 +348,14 @@ async function initializeScripturePreferences(): Promise<ScriptureInitialization
     const interfaceLanguage = useSettings.getState().uiLanguage;
     const languages = await fromCatalog(fetchScriptureLanguages());
     const language = resolveInitialScriptureLanguage(interfaceLanguage, languages);
+    // Язык интерфейса сменился во время загрузки: вывод «нет Библии» относился к старому.
+    if (useSettings.getState().uiLanguage !== interfaceLanguage) continue;
     if (!language) {
       throw new ScriptureDefaultUnavailableError('Scripture catalog does not contain the interface language', languages);
     }
     const translations = await fromCatalog(fetchScriptureTranslations(language.alias));
     const preferences = defaultPreferencesFromCatalog(language, translations);
+    if (useSettings.getState().uiLanguage !== interfaceLanguage) continue;
     if (!preferences) {
       throw new ScriptureDefaultUnavailableError('Scripture catalog has no valid translation and voice', languages);
     }
