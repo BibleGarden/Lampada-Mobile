@@ -69,3 +69,21 @@ export function parseLockConfig({
     pinLength: Number.isFinite(parsed) ? clampLength(parsed) : FALLBACK_PIN_LENGTH,
   };
 }
+
+// ---- название биометрии ----
+
+/** Какой датчик сообщила система; `other` — тип неизвестен или проверка не удалась. */
+export type BiometryKind = 'face' | 'finger' | 'other';
+
+/**
+ * Face ID и Touch ID — названия Apple, поэтому они звучат только на iOS. На
+ * Android те же способы называются общими словами из локализации.
+ */
+export function biometryLabel(
+  platform: string, kind: BiometryKind, translate: (key: string) => string,
+): string {
+  if (platform === 'ios') {
+    return kind === 'face' ? 'Face ID' : kind === 'finger' ? 'Touch ID' : 'Face ID / Touch ID';
+  }
+  return translate(kind === 'face' ? 'system.face' : kind === 'finger' ? 'system.finger' : 'system.biometrics');
+}
