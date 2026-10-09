@@ -196,28 +196,35 @@ the scenario is finished through explicit interface actions.
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
 
-Setup keeps its layout while the goal is typed: the header, title and the
-input's top edge stay in place, and the input stretches down to just above the
-keyboard over the hidden duration and navigation, scrolling long text inside.
-Setup updates that layout without a keyboard-triggered layout animation, so
-duration and navigation reappear in place when the keyboard closes.
-An invisible copy of the goal sizes the input's slot, so the position follows
-rotation; while typing it holds the text from when the keyboard opened.
-A long goal shrinks the slot to the free space and scrolls inside, so "Next"
-stays on screen.
-Reflection uses a keyboard-avoiding, scrollable content area. While typing,
-the input fills the available space below the question and above the keyboard.
-The editing column expands to at most 960 pt on tablets. The decorative header
-and completion actions return when the keyboard closes.
-Content can scroll when a long question or a small window needs more room.
-Both screens follow the keyboard through `lib/useKeyboardLayout.ts`; Reflection
-retains the keyboard-synchronized layout animation.
-Keyboard visibility controls whether Setup's duration/Next and Reflection's
-completion/return actions are hidden. Occupied height controls input sizing.
-Keyboard frames with zero occupied height retain the normal input size. Android
-reports this for Samsung's floating keyboard: its `screenY` is the window's
-bottom edge, not the floating panel's top. Neither screen stretches its input
-to that edge; actions stay hidden until the floating keyboard closes.
+Keyboard handling is shared by preparation, answers, reflection, content reports
+and history search (ADR-0038). `KeyboardSystemProvider` is the only application
+subscriber to keyboard notifications. Visibility, animation phase and occupied
+space are separate: a zero-height Samsung panel and a narrow iPad panel remain
+visible without claiming the full window bottom. Field focus alone does not imply
+a software keyboard. Deferred actions return only after `keyboardDidHide`.
+
+`KeyboardViewport` uses Expo SDK 57's supported Keyboard Controller 1.21.9,
+with native automatic offsets, to bound the actual available region. It consumes
+the bottom safe area when the keyboard does not occupy it. Its inner flex frame
+also bounds absolute sheet containers; overlays remain `box-none` when closed.
+Forms do not subtract keyboard or screen heights themselves.
+
+`KeyboardSheet` lets Gorhom position the sheet and a measured native footer
+inside that region. Body height comes from Gorhom's public footer position.
+`KeyboardSheetTextInput` uses a normal gesture-handler input intentionally:
+registering a `BottomSheetTextInput` here would create a second keyboard-space
+owner, particularly for positive-height floating iPad frames. Both answer and
+recording controls use this footer, including Stop; the fixed Home-button-device
+padding workaround is removed. Audio lifecycle and save/cancel operations remain
+in their existing owners.
+
+Preparation and reflection defer lower actions while typing. Answers and reports
+retain transaction actions within the available region. Floating answer inputs
+stay compact, and every focused software-keyboard form exposes a localized
+Finish typing action. Answer snap expansion is a form policy, not a geometry
+calculation; the synchronous close flag prevents a late hide notification from
+reopening a saved sheet. Content can scroll on small windows or long questions.
+Keyboard opening may reflow the form; typing itself preserves text and focus.
 
 ## State and the main data flow
 

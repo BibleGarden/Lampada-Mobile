@@ -1,0 +1,23 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+- runFlow:
+    when:
+      true: ${KEYBOARD_MODE != 'hardware'}
+    commands:
+      - tapOn:
+          id: reflect-keyboard-dismiss
+- assertVisible:
+    id: reflection-input
+    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix reflect"}'
+- assertVisible:
+    id: reflect-return-button
+- tapOn:
+    id: reflect-complete-button
+- assertVisible:
+    id: home-title-lit
+- tapOn:
+    id: journal-button
+- assertVisible: '${KEYBOARD_MODE == "hardware" ? ".*Matrix_hardware.*" : ".*Keyboard matrix reflect.*"}'

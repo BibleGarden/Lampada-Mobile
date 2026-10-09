@@ -1,0 +1,18 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+- runFlow:
+    when:
+      true: ${KEYBOARD_MODE != 'hardware'}
+    commands:
+      - tapOn:
+          id: setup-keyboard-dismiss
+- assertVisible:
+    id: setup-goal-input
+    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix setup"}'
+- assertVisible:
+    id: setup-duration-value
+- assertVisible:
+    id: setup-next-button

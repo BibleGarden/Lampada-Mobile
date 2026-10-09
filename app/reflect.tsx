@@ -4,8 +4,6 @@ import {
   BackHandler,
   ActivityIndicator,
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,7 +20,9 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { useKeyboardLayout } from '../lib/useKeyboardLayout';
+import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
+import KeyboardViewport from '../components/keyboard/KeyboardViewport';
+import KeyboardDismissAction from '../components/keyboard/KeyboardDismissAction';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -48,9 +48,9 @@ function ReflectScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
-  const { visible: keyboardOpen, top: keyboardTop } = useKeyboardLayout();
-  const dockedKeyboard = keyboardTop !== null;
   const [inputFocused, setInputFocused] = useState(false);
+  const policy = useKeyboardFormPolicy('defer', inputFocused);
+  const dockedKeyboard = policy.fillInput;
   const completing = useRef(false);
 
   // Android «назад» тут некуда вести — только явное завершение
@@ -89,17 +89,14 @@ function ReflectScreen() {
     <View style={styles.root}>
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.fill}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.fill}
-        >
+        <KeyboardViewport>
           <ScrollView
             contentContainerStyle={[
               styles.body,
               dockedKeyboard && styles.bodyEditing,
               {
                 paddingTop: insets.top + sc(16),
-                paddingBottom: dockedKeyboard ? sc(16) : insets.bottom + sc(24),
+                paddingBottom: dockedKeyboard ? sc(16) : sc(24),
               },
             ]}
             keyboardShouldPersistTaps="handled"
@@ -132,6 +129,7 @@ function ReflectScreen() {
                 )}
               </View>
 
+              <KeyboardDismissAction focused={inputFocused} testID="reflect-keyboard-dismiss" />
               <TextInput
                 value={takeaway}
                 onChangeText={setTakeaway}
@@ -152,7 +150,7 @@ function ReflectScreen() {
 
               {!dockedKeyboard && <View style={{ flex: 1, minHeight: sc(16) }} />}
 
-              {!keyboardOpen && (
+              {policy.actionsVisible && (
                 <View style={{ gap: sc(12) }}>
                   <GoldButton
                     label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
@@ -173,7 +171,7 @@ function ReflectScreen() {
               )}
             </Pressable>
           </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardViewport>
       </Animated.View>
     </View>
   );

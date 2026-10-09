@@ -246,3 +246,28 @@ Only selected material goes into `evidence/`, and every file has to be reference
 from a report - a file with no reference counts as orphaned and is deleted during
 cleanup. Repeated attempts, full system and Xcode logs, duplicate crash reports
 and build artifacts are not added to the repository.
+
+## Shared keyboard contracts
+
+```bash
+npm run test:keyboard:unit
+npm run test:keyboard:android -- --mode docked --output /tmp/lampada-keyboard-docked
+npm run test:keyboard:android -- --mode floating --output /tmp/lampada-keyboard-floating
+npm run test:keyboard:android -- --mode hardware --output /tmp/lampada-keyboard-no-software
+```
+
+Use the named disposable Android emulator, the final Release build and Russian
+system locale. Select the real Gboard floating mode before the floating command;
+the native checkpoint rejects a mode mismatch. The hardware-labelled command
+disables software IMEs on the emulator and injects native hardware key events,
+then restores the original enabled/default IMEs in finally. It verifies focused
+input without software UI, not an attached physical keyboard. The matrix refuses
+physical devices because its fixtures clear app state.
+
+Each form has an open phase, an independent native OS-bounds checkpoint and a
+restore/persistence phase. Every command keeps its complete log and exit. The
+native checker runs between Maestro sessions to avoid stealing UiAutomation.
+Use `--forms answer` for the original failing form first. Read-only checking of a
+physical current screen is available through `keyboard_layout_bounds.py`; never
+run the clearing matrix on the owner's phone. iOS prepared counterparts and
+existing iPad rotation flows cover the same behavior through native selectors.

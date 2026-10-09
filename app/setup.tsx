@@ -1,5 +1,5 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppState,
   Keyboard,
@@ -18,7 +18,9 @@ import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useSession } from '../lib/store';
-import { useKeyboardLayout } from '../lib/useKeyboardLayout';
+import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
+import KeyboardViewport from '../components/keyboard/KeyboardViewport';
+import KeyboardDismissAction from '../components/keyboard/KeyboardDismissAction';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
@@ -47,33 +49,18 @@ export default function Setup() {
     const timer = setTimeout(() => setEntranceReady(true), 350);
     return () => clearTimeout(timer);
   }, []);
-  // Пока открыта клавиатура, раскладка экрана не меняется: верх поля цели
-  // остаётся на месте. Над закреплённой клавиатурой поле тянется вниз,
-  // с плавающей сохраняет обычную высоту; длительность и «Далее» скрыты
-  // в обоих случаях. Высоту в покое задаёт невидимая копия
-  // текста в слоте поля: она пересчитывается при повороте, но на время ввода
-  // держит текст на момент открытия клавиатуры, чтобы набор не сдвигал поле.
-  // LayoutAnimation двигает видимые блоки при закрытии клавиатуры: на Setup
-  // раскладка должна обновиться сразу, чтобы блоки появились на своих местах.
-  const { visible: editing, top: keyboardTop } = useKeyboardLayout(false);
+  const keyboard = useKeyboardLayout();
+  const [inputFocused, setInputFocused] = useState(false);
+  const policy = useKeyboardFormPolicy('defer', inputFocused);
+  const editing = keyboard.visible;
   const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
-  const inputSlot = useRef<View>(null);
-  const [slot, setSlot] = useState<{ top: number; height: number } | null>(null);
-  const measureSlot = useCallback(() => {
-    inputSlot.current?.measureInWindow((_x, top, _width, height) => setSlot({ top, height }));
-  }, []);
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
   if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
-  const editingHeight = keyboardTop !== null && slot
-    ? Math.max(0, keyboardTop - sc(16) - slot.top)
-    : null;
-  const hiddenWhileEditing = editing
-    ? {
-        style: styles.hiddenWhileEditing,
-        accessibilityElementsHidden: true,
-        importantForAccessibility: 'no-hide-descendants' as const,
-      }
-    : {};
+  const hiddenWhileEditing = !policy.actionsVisible ? {
+    style: policy.fillInput ? styles.removedWhileEditing : styles.hiddenWhileEditing,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants' as const,
+  } : {};
 
   const durationUnitFor = (minutes: number) => minutes === 0
     ? t('screens.setup.untimed')
@@ -105,10 +92,11 @@ export default function Setup() {
   };
 
   return (
-    <View style={styles.root} onLayout={measureSlot}>
+    <View style={styles.root}>
       <ScreenBg />
       {/* Область закрытия клавиатуры занимает весь экран, включая поля
           по бокам ограниченной по ширине колонки на планшете. */}
+      <KeyboardViewport>
       <Pressable
         onPress={Keyboard.dismiss}
         accessible={false}
@@ -116,7 +104,7 @@ export default function Setup() {
       >
         <Animated.View
           entering={FadeIn.duration(450)}
-          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(24) }]}
+          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: sc(24) }]}
         >
           <View style={styles.headerRow}>
             <IconButton
@@ -129,7 +117,7 @@ export default function Setup() {
             <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
           </View>
 
-          <View style={styles.goal}>
+          <View style={[styles.goal, policy.fillInput && styles.goalDocked]}>
             <View style={styles.goalHeader}>
               <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
               <Pressable
@@ -144,7 +132,8 @@ export default function Setup() {
                 <Text style={styles.helpBtnLabel}>?</Text>
               </Pressable>
             </View>
-            <View ref={inputSlot} style={styles.topicSlot} onLayout={measureSlot}>
+            <KeyboardDismissAction focused={inputFocused} testID="setup-keyboard-dismiss" />
+            <View style={[styles.topicSlot, policy.fillInput && styles.topicSlotDocked]}>
               <Text
                 style={[styles.topicInput, styles.topicSizer]}
                 accessibilityElementsHidden
@@ -161,7 +150,7 @@ export default function Setup() {
                 style={[
                   styles.topicInput,
                   styles.topicInputFill,
-                  editingHeight === null ? { bottom: 0 } : { height: editingHeight, minHeight: 0 },
+                  { bottom: 0 },
                 ]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
@@ -171,7 +160,8 @@ export default function Setup() {
                 returnKeyType="done"
                 submitBehavior="blurAndSubmit"
                 onSubmitEditing={Keyboard.dismiss}
-                onFocus={measureSlot}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
               />
             </View>
           </View>
@@ -258,6 +248,7 @@ export default function Setup() {
           </View>
         </Animated.View>
       </Pressable>
+      </KeyboardViewport>
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
@@ -306,6 +297,9 @@ const stylesFactory = () => StyleSheet.create({
   // ужимает слот поля до свободного места, чтобы «Далее» оставалась на экране
   goal: { flexShrink: 1, zIndex: 1 },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
+  removedWhileEditing: { display: 'none' },
+  goalDocked: { flex: 1, marginTop: sc(24) },
+  topicSlotDocked: { flex: 1, minHeight: 0 },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -36,6 +36,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
+    "react-native-keyboard-controller": "1.21.9",
     "react-native-reanimated": "4.5.5",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
@@ -71,7 +72,9 @@
     "test:e2e:android:main": "bash scripts/test-android-tier.sh main",
     "test:e2e:android:rare": "bash scripts/test-android-tier.sh rare",
     "test:e2e:android:ordered": "bash scripts/test-android-ordered.sh",
-    "test:e2e:android:prepared": "python3 scripts/test-android-prepared.py"
+    "test:e2e:android:prepared": "python3 scripts/test-android-prepared.py",
+    "test:keyboard:unit": "python3 -m unittest discover -s scripts/tests",
+    "test:keyboard:android": "python3 scripts/run-keyboard-contract.py"
   },
   "private": true
 }

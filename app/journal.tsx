@@ -17,6 +17,8 @@ import {
 import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import KeyboardViewport from '../components/keyboard/KeyboardViewport';
+import KeyboardDismissAction from '../components/keyboard/KeyboardDismissAction';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -57,6 +59,7 @@ export default function Journal() {
   const insets = useSafeAreaInsets();
   const [entries, setEntries] = useState<db.JournalEntry[]>([]);
   const [query, setQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [loaded, setLoaded] = useState(false);
   // раскрытая молитва и её содержимое (грузится по требованию)
   const [openId, setOpenId] = useState<number | null>(null);
@@ -427,6 +430,7 @@ export default function Journal() {
       }}
     >
       <ScreenBg />
+      <KeyboardViewport>
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
           <IconButton
@@ -443,6 +447,8 @@ export default function Journal() {
           <TextInput
             value={query}
             onChangeText={setQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             placeholder={t('screens.journal.search')}
             accessibilityLabel={t('screens.journal.search')}
             placeholderTextColor={colors.placeholder}
@@ -451,8 +457,10 @@ export default function Journal() {
             clearButtonMode="never"
             testID="journal-search-input"
           />
+          <KeyboardDismissAction focused={searchFocused} testID="journal-keyboard-dismiss" />
           {query.length > 0 && (
             <Pressable
+              testID="journal-clear-search"
               onPress={() => setQuery('')}
               accessibilityRole="button"
               accessibilityLabel={t('screens.journal.clearSearch')}
@@ -472,7 +480,7 @@ export default function Journal() {
           contentContainerStyle={{
             paddingHorizontal: sc(18),
             paddingTop: sc(12),
-            paddingBottom: insets.bottom + sc(24),
+            paddingBottom: sc(24),
             gap: sc(10),
           }}
           ListEmptyComponent={
@@ -486,6 +494,7 @@ export default function Journal() {
           }
         />
       </Animated.View>
+      </KeyboardViewport>
 
       {/* Цитата целиком: то же оформление, что и на экране сохранённых цитат,
           с подсветкой ключевых стихов, когда сервер их отметил */}

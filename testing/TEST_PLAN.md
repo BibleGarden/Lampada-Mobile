@@ -167,7 +167,7 @@ tier of its e2e runs.
 | SETUP-001 [critical] | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 [critical] | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 [critical] | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the header, title and the field's top edge stay in place while the field stretches down to the keyboard and scrolls long text inside itself, also after a rotation; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
+| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the form reflows into the available viewport when the keyboard opens or rotates, and long text scrolls without covering the actions or losing focus; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
 | SETUP-004b [prepared, android] | On Samsung, select the floating keyboard, edit the goal, switch to the standard keyboard and back; repeat folded and unfolded, then request rotation | a floating keyboard retains the normal field size; duration and Next stay hidden with either keyboard mode and return only after closing it; the standard keyboard expands the input only to its top edge; switching modes and closing the keyboard preserve the text; Android keeps its configured portrait orientation; `android-setup-floating-keyboard.yaml` checks the floating layout |
 | START-001 [critical] | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
@@ -507,3 +507,20 @@ The run is complete when:
   recorded;
 - the final report contains the versions, the commit, the exit codes and the full
   logs of the checks.
+
+### Shared keyboard regression contract
+
+| ID | Action | Expected result |
+| --- | --- | --- |
+| KBD-001 [prepared, android] | Run the staged matrix on a named emulator with a docked keyboard for setup, answer, reflection, report and journal | native rectangles fit OS status/navigation/IME boundaries; input does not overlap lower actions; deferred actions are absent; text survives dismissal and persisted answers/notes reopen |
+| KBD-002 [prepared, android] | Select the real Gboard floating mode and run the same matrix | no zero-height-as-hide assumption; compact input, explicit Finish typing, complete lower action rectangles above the navigation area, and preserved text |
+| KBD-003 [prepared, android] | Run focused-input mode with software IMEs disabled and injected hardware key events, restoring IMEs afterward | genuinely focused native input without an onscreen IME; actions remain available; this is a no-software-focus contract, not a physical external-keyboard acceptance claim |
+| KBD-004 [prepared, ipad] | Run iPad setup/answer/reflection/report keyboard flows, rotating while typing; check narrow floating mode separately | viewport adapts to actual window bounds; no extra keyboard inset; footer/body remain usable and text is retained |
+| KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and dismiss actions remain usable, without clearing personal app data |
+
+A native bounds assertion is stronger than assertVisible. The independent
+`keyboard_layout_bounds.py` reads OS InsetsSource frames and UiAutomator bounds,
+not the app's calculated viewport. Run it only when the Maestro driver has stopped.
+The initial oversized-field and cropped-navigation-button fixtures must fail the
+validator's own tests. Physical screenshots must be checked before claiming that
+a floating panel does not overlap a field; the panel can be moved by the user.

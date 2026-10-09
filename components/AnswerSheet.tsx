@@ -7,11 +7,11 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  ScrollView,
   useWindowDimensions,
   View,
 } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { File } from 'expo-file-system';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -59,6 +59,9 @@ import { Mic } from './icons';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
+import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
+import KeyboardDismissAction from './keyboard/KeyboardDismissAction';
+import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 
 const RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
@@ -115,7 +118,7 @@ export default function AnswerSheet({
   const qIndex = useSession((st) => st.qIndex);
   const saveAnswerToStore = useSession((st) => st.saveAnswer);
   const [text, setText] = useState('');
-  const answerInputRef = useRef<React.ComponentRef<typeof BottomSheetTextInput>>(null);
+  const answerInputRef = useRef<React.ComponentRef<typeof KeyboardSheetTextInput>>(null);
   const [recs, setRecs] = useState<RecordingDraft[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   // Расшифровка показывается свёрнутой — три строки; раскрытая читается целиком.
@@ -266,21 +269,12 @@ export default function AnswerSheet({
   useEffect(() => {
     if (open && questionRef.current) AccessibilityInfo.sendAccessibilityEvent(questionRef.current, 'focus');
   }, [open]);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-  // Контейнер контента у шторки всегда высотой в верхнюю точку, а ручка
-  // абсолютная — flex по ним не посчитать. Поэтому высоту тела считаем сами:
-  // видимая часть шторки = высота окна минус её позиция.
+  const keyboard = useKeyboardLayout();
+  const keyboardOpen = keyboard.visible;
+  const [inputFocused, setInputFocused] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const landscapeTablet = isTablet() && windowWidth > windowHeight;
-  const handleHeight = sc(22);
-  const sheetPosition = useSharedValue(windowHeight);
-  const keyboardHeight = useSharedValue(0);
-  const bodyStyle = useAnimatedStyle(() => ({
-    height: Math.max(
-      0,
-      windowHeight - sheetPosition.value - handleHeight - keyboardHeight.value,
-    ),
-  }));
+  const expandedForKeyboard = useRef(false);
 
   const updateRecs = useCallback(
     (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
@@ -459,27 +453,18 @@ export default function AnswerSheet({
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
 
-  // клавиатура появилась — шторка на верхнюю точку, чтобы поле ввода
-  // и кнопки остались видны; спряталась — обратно на нижнюю.
-  // Слушатель, а не onFocus: свой snap шторка перебивает при показе клавиатуры
+  // Snap — политика открытия формы; размер доступного тела даёт Gorhom.
+  // Синхронный флаг закрытия защищает сохранение от позднего didHide.
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', (e) => {
-      keyboardHeight.value = e.endCoordinates.height;
-      setKeyboardOpen(true);
-      if (openSheetRef.current) sheetRef.current?.snapToIndex(1);
-    });
-    const hide = Keyboard.addListener('keyboardDidHide', () => {
-      keyboardHeight.value = 0;
-      setKeyboardOpen(false);
-      if (openSheetRef.current && !recordingOverlayActiveRef.current) {
-        sheetRef.current?.snapToIndex(0);
-      }
-    });
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, [sheetRef, keyboardHeight]);
+    if (!open || !openSheetRef.current) { expandedForKeyboard.current = false; return; }
+    if (keyboard.visible && inputFocused) {
+      expandedForKeyboard.current = true;
+      sheetRef.current?.snapToIndex(1);
+    } else if (!keyboard.visible && expandedForKeyboard.current && !recordingOverlayActiveRef.current) {
+      expandedForKeyboard.current = false;
+      sheetRef.current?.snapToIndex(0);
+    }
+  }, [open, keyboard.kind, keyboard.visible, inputFocused, sheetRef]);
 
   const startRecording = async () => {
     if (!recordingSheetOpenRef.current) return;
@@ -1125,9 +1110,59 @@ export default function AnswerSheet({
     </View>
   );
 
+  const actions = (
+    <View style={[styles.footerContent, landscapeTablet && styles.footerGrid]}>
+      {landscapeTablet && <View style={styles.questionColumn} />}
+      <View style={[styles.actionsRow, landscapeTablet && styles.footerActionsLandscape]}>
+        {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
+            карточки-спутника. Бадж показывает, сколько записей уже есть:
+            сами они живут в отдельной шторке и из ответа не видны. */}
+        <Pressable
+          accessibilityLabel={
+            recs.length ? t('components.answers.voiceCount', { count: recs.length }) : t('components.answers.recordAudio')
+          }
+          accessibilityRole="button"
+          testID="answer-record-button"
+          hitSlop={touchSlop(sc(32))} // micBtn
+          onPress={openRecordings}
+          style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
+        >
+          <Mic color={colors.greenSoft} />
+          {recs.length > 0 && (
+            <View style={styles.micBadge} testID="answer-record-badge">
+              <Text style={styles.micBadgeText}>{recs.length}</Text>
+            </View>
+          )}
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          testID="answer-cancel-button"
+          hitSlop={touchSlop(sc(32))} // cancelBtn
+          onPress={requestClose}
+          style={({ pressed }) => [
+            styles.cancelBtn,
+            confirmCancel && styles.cancelBtnConfirming,
+            pressed && { transform: [{ scale: 0.97 }] },
+          ]}
+        >
+          <Text style={[styles.cancelLabel, confirmCancel && { color: '#ec9b8e' }]}>
+            {confirmCancel ? t('components.answers.confirmClose') : t('components.answers.cancel')}
+          </Text>
+        </Pressable>
+        <GoldButton
+          compact
+          label={saving ? t('components.answers.saving') : t('components.answers.save')}
+          onPress={() => void save('manual')}
+          style={{ flex: 1 }}
+          testID="answer-save-button"
+        />
+      </View>
+    </View>
+  );
+
   return (
     <>
-    <BottomSheet
+    <KeyboardSheet
       key={mountKey}
       ref={sheetRef}
       index={-1}
@@ -1193,19 +1228,20 @@ export default function AnswerSheet({
       accessible={false}
       backdropComponent={renderBackdrop}
       handleComponent={renderHandle}
-      animatedPosition={sheetPosition}
       topInset={insets.top}
       backgroundStyle={styles.sheetBg}
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
+      footer={actions}
+      footerHidden={!open || recordingsSheetOpen}
+      footerStyle={landscapeTablet ? styles.landscapeFooter : undefined}
+      onAccessibilityEscape={requestClose}
     >
       {/* В альбомном окне планшета вопрос стоит рядом с формой, оставляя
           полю высоту над клавиатурой. Длинный вопрос прокручивается отдельно. */}
-      <Animated.View
-        style={[styles.dismissArea, bodyStyle]}
+      <KeyboardSheetBody
+        style={styles.dismissArea}
         {...screenReaderHiddenProps(!open || recordingsSheetOpen)}
-        // «Z» VoiceOver — та же «Отмена» с подтверждением черновика
-        onAccessibilityEscape={requestClose}
         // Боковые поля шторки тоже закрывают клавиатуру, не перехватывая ввод.
         onStartShouldSetResponder={() => {
           if (keyboardOpen) Keyboard.dismiss();
@@ -1214,19 +1250,20 @@ export default function AnswerSheet({
       >
         <View style={[styles.content, landscapeTablet && styles.contentLandscape]}>
           {landscapeTablet ? (
-            <BottomSheetScrollView
+            <ScrollView
               style={styles.questionColumn}
               contentContainerStyle={styles.questionColumnContent}
               keyboardShouldPersistTaps="handled"
             >
               {questionHeader}
-            </BottomSheetScrollView>
+            </ScrollView>
           ) : questionHeader}
 
           <View style={styles.form}>
+            <KeyboardDismissAction focused={inputFocused} testID="answer-keyboard-dismiss" />
             {/* Поле занимает всю оставшуюся высоту и прокручивается само:
                 курсор при наборе всегда остаётся в поле зрения. */}
-            <BottomSheetTextInput
+            <KeyboardSheetTextInput
               ref={answerInputRef}
               testID="answer-input"
               editable={!recordingsSheetOpen}
@@ -1237,57 +1274,17 @@ export default function AnswerSheet({
               placeholderTextColor={colors.placeholder}
               accessibilityLabel={t('components.answers.placeholder')}
               style={styles.input}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
             />
 
             {!keyboardOpen && !text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
 
-            <View style={styles.actionsRow}>
-              {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
-                  карточки-спутника. Бадж показывает, сколько записей уже есть:
-                  сами они живут в отдельной шторке и из ответа не видны. */}
-              <Pressable
-                accessibilityLabel={
-                  recs.length ? t('components.answers.voiceCount', { count: recs.length }) : t('components.answers.recordAudio')
-                }
-                accessibilityRole="button"
-                testID="answer-record-button"
-                hitSlop={touchSlop(sc(32))} // micBtn
-                onPress={openRecordings}
-                style={({ pressed }) => [styles.micBtn, pressed && { transform: [{ scale: 0.97 }] }]}
-              >
-                <Mic color={colors.greenSoft} />
-                {recs.length > 0 && (
-                  <View style={styles.micBadge} testID="answer-record-badge">
-                    <Text style={styles.micBadgeText}>{recs.length}</Text>
-                  </View>
-                )}
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={touchSlop(sc(32))} // cancelBtn
-                onPress={requestClose}
-                style={({ pressed }) => [
-                  styles.cancelBtn,
-                  confirmCancel && styles.cancelBtnConfirming,
-                  pressed && { transform: [{ scale: 0.97 }] },
-                ]}
-              >
-                <Text style={[styles.cancelLabel, confirmCancel && { color: '#ec9b8e' }]}>
-                  {confirmCancel ? t('components.answers.confirmClose') : t('components.answers.cancel')}
-                </Text>
-              </Pressable>
-              <GoldButton
-                compact
-                label={saving ? t('components.answers.saving') : t('components.answers.save')}
-                onPress={() => void save('manual')}
-                style={{ flex: 1 }}
-                testID="answer-save-button"
-              />
-            </View>
+
           </View>
         </View>
-      </Animated.View>
-    </BottomSheet>
+      </KeyboardSheetBody>
+    </KeyboardSheet>
 
     <RecordingsSheet
       sheetRef={recSheetRef}
@@ -1337,7 +1334,7 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.white08,
   },
-  // высота ручки задана явно: от неё считается высота тела шторки
+  // Gorhom измеряет ручку и резервирует её в доступной области.
   handleWrap: {
     height: sc(22),
     alignItems: 'center',
@@ -1356,7 +1353,7 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
     ...column(),
     paddingHorizontal: sc(16),
-    paddingBottom: sc(16),
+    paddingBottom: sc(8),
   },
   contentLandscape: {
     maxWidth: 1120,
@@ -1413,6 +1410,7 @@ const stylesFactory = () => StyleSheet.create({
     // Всё тело шторки минус вопрос и кнопки. Длинный ответ прокручивается
     // внутри поля, поэтому коробка не растёт и ничего не выталкивает.
     flex: 1,
+    minHeight: sc(72),
     padding: sc(12),
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,.045)',
@@ -1468,6 +1466,10 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(8),
     marginTop: sc(14),
   },
+  footerContent: { width: '100%' },
+  footerGrid: { flexDirection: 'row', gap: sc(24) },
+  footerActionsLandscape: { flex: 1 },
+  landscapeFooter: { maxWidth: 1120, paddingHorizontal: sc(24) },
   cancelBtn: {
     // высота как у кнопок карточки-спутника (CompanionDock/cardBtnSize)
     paddingHorizontal: sc(14),

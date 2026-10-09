@@ -1,0 +1,20 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+- runFlow:
+    when:
+      true: ${KEYBOARD_MODE != 'hardware'}
+    commands:
+      - tapOn:
+          id: report-keyboard-dismiss
+- assertVisible:
+    id: content-report-comment
+    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix report"}'
+- assertVisible:
+    id: content-report-send
+- tapOn:
+    id: content-report-cancel
+- assertNotVisible:
+    id: content-report-dialog
