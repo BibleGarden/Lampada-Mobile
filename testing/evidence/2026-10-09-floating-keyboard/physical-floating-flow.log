@@ -1,0 +1,13 @@
+Running on RFCW90KWKBH
+ > Flow android-setup-floating-keyboard
+Launch app "com.nf404.twinkler"... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Assert that id: setup-duration-value is visible... COMPLETED
+Assert that id: setup-next-button is visible... COMPLETED
+Input text Floating keyboard layout... COMPLETED
+Assert that "Floating keyboard layout" is visible... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that "Floating keyboard layout" is visible... COMPLETED
+Assert that id: setup-next-button is visible... COMPLETED

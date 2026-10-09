@@ -1,0 +1,24 @@
+Running on Pray_Pixel_API_35
+ > Flow android-stage03-navigation
+Launch app "com.nf404.twinkler" with clear state... COMPLETED
+Double tap on id: start-prayer-button... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Tap on "Назад"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on id: setup-goal-input... COMPLETED
+Input text NAV-002 draft... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-30... COMPLETED
+Double tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that ".*30 минут.*NAV-002 draft.*" is visible... COMPLETED
+Tap on "Назад"... COMPLETED
+Assert that id: setup-kicker is visible... COMPLETED
+Tap on "Назад"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Assert that "10 минут", id: setup-duration-value is visible... COMPLETED
+Assert that "NAV-002 draft" is not visible... COMPLETED

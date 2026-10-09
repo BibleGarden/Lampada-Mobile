@@ -1,0 +1,15 @@
+
+Waiting for flows to complete...
+[Passed] ios-stage04-answers-text (1m 6s)
+[Passed] ios-stage06-jrn-001-empty-history (21s)
+[Passed] ios-stage06-end-001-finish-without-takeaway (55s)
+[Passed] ios-privacy-consent-first-use (31s)
+[Passed] ios-stage03-navigation (42s)
+[Passed] ios-stage06-end-002-finish-with-takeaway (1m 9s)
+[Passed] ios-stage03-setup-start (54s)
+[Passed] ios-smoke-full (1m 39s)
+[Passed] ios-smoke-full-relaunch (13s)
+[Passed] ios-stage03-session-finite (1m 34s)
+
+10/10 Flows Passed in 9m 5s
+

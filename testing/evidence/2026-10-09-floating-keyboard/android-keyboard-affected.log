@@ -1,0 +1,13 @@
+
+> pray@1.0.0 test:e2e:android
+> bash scripts/test-android.sh android-stage03-long-goal android-end-006-takeaway-keyboard android-keyboard-reflect-journal
+
+Android test output: /tmp/pray-android-2026-10-09/android-keyboard-affected
+Installed APK test channel and API origin verified.
+Starting android-stage03-long-goal
+android-stage03-long-goal exit=0
+Starting android-end-006-takeaway-keyboard
+android-end-006-takeaway-keyboard exit=0
+Starting android-keyboard-reflect-journal
+android-keyboard-reflect-journal exit=0
+All 3 selected Android scenarios passed.
