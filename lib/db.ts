@@ -8,18 +8,20 @@ import { migrateScriptureStorage } from './scriptureSchema';
 
 const diagnosticLog = new File(Paths.document, 'lampada-diagnostics.log');
 
-/** Безопасная диагностическая запись, доступная даже при ошибке SQLite. */
+/** Вид ошибки без её текста: сообщения могут содержать пользовательские данные. */
+export const errorKind = (error: unknown) => (error instanceof Error ? 'error' : typeof error);
+
+/**
+ * Безопасная диагностическая запись, доступная даже при ошибке SQLite.
+ * В детали попадают только коды и причины, без содержимого молитв.
+ */
 export function recordDiagnostic(
-  event: 'session_start_failed' | 'answer_save_failed',
-  error: unknown,
+  event: 'session_start_failed' | 'answer_save_failed' | 'version_check_ignored',
+  details: Record<string, string | number>,
 ) {
   try {
     diagnosticLog.write(
-      `${JSON.stringify({
-        at: new Date().toISOString(),
-        event,
-        errorKind: error instanceof Error ? 'error' : typeof error,
-      })}\n`,
+      `${JSON.stringify({ at: new Date().toISOString(), event, ...details })}\n`,
       { append: true },
     );
   } catch {

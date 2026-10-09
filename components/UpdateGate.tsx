@@ -5,6 +5,7 @@ import * as Application from 'expo-application';
 import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { checkVersion, type VersionCheck } from '../lib/versionCheck';
+import { recordDiagnostic } from '../lib/db';
 import { apiPaths, resolveApiUrl } from '../lib/apiConfig';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
@@ -24,7 +25,15 @@ export default function UpdateGate({ covered, onVisibleChange }: {
     const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null;
     if (version && platform) void checkVersion(resolveApiUrl(apiPaths.versionCheck), version, platform,
       process.env.EXPO_PUBLIC_AI_PROXY_KEY, controller.signal).then((result) => {
-      if (!controller.signal.aborted) setData(result);
+      if (controller.signal.aborted) return;
+      if (result.ok) {
+        setData(result.check);
+        return;
+      }
+      // Приложение остаётся доступным, но отказ виден в диагностике: иначе
+      // сервер без поля platform незаметно выключил бы все обновления.
+      const { reason, status } = result;
+      recordDiagnostic('version_check_ignored', status === undefined ? { reason, platform } : { reason, platform, status });
     });
     return () => controller.abort();
   }, []);
