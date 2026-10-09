@@ -65,7 +65,12 @@ def observe(xml, window, width, height):
     return {'viewport': viewport, 'mode': 'docked' if docked else 'floating' if ime else 'hidden', 'elements': elements}
 
 
-def validate(observation, input_id, action_ids, absent_ids, mode, lower_action_ids=()):
+def has_hardware_keyboard(window):
+    configuration = re.search(r'^\s*mGlobalConfiguration=([^\n]+)', window, re.MULTILINE)
+    return bool(configuration and re.search(r'\bqwerty/v/v\b', configuration.group(1)))
+
+
+def validate(observation, input_id, action_ids, absent_ids, mode, lower_action_ids=(), expected_focus=None):
     actual_mode = observation['mode']
     if mode == 'hardware':
         if actual_mode != 'hidden':
@@ -88,6 +93,8 @@ def validate(observation, input_id, action_ids, absent_ids, mode, lower_action_i
         r = elements[input_id]['bounds']
         if mode == 'floating' and r[3] - r[1] > (viewport[3] - viewport[1]) / 2:
             raise AssertionError('Floating keyboard expanded the input to more than half the OS viewport')
+        if expected_focus is not None and elements[input_id]['focused'] != expected_focus:
+            raise AssertionError(f'Expected input focus={expected_focus}, observed {elements[input_id]["focused"]}')
         if mode == 'hardware' and not elements[input_id]['focused']:
             raise AssertionError('Hardware-focus contract requires a genuinely focused native input')
         if lower_action_ids and r[3] > min(elements[x]['bounds'][1] for x in lower_action_ids):
@@ -104,6 +111,7 @@ def main():
     parser.add_argument('--absent', nargs='*', default=[])
     parser.add_argument('--mode', choices=['hidden', 'hardware', 'floating', 'docked'], required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument('--unfocused', action='store_true')
     args = parser.parse_args()
     def adb(*command):
         return subprocess.check_output(['adb', '-s', args.device, *command], text=True, timeout=30)
@@ -122,7 +130,7 @@ def main():
               'observed_mode': observation['mode'],
               'elements': {key: observation['elements'].get(key) for key in ([args.input_id] if args.input_id else []) + args.actions + args.below_input + args.absent}}
     Path(args.output).write_text(json.dumps(result, indent=2) + '\n')
-    validate(observation, args.input_id, args.actions, args.absent, args.mode, args.below_input)
+    validate(observation, args.input_id, args.actions, args.absent, args.mode, args.below_input, False if args.unfocused else None)
     print('Native OS bounds contract passed')
 
 

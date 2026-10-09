@@ -3,12 +3,8 @@ tags:
   - prepared
 ---
 # Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
-- runFlow:
-    when:
-      true: ${KEYBOARD_MODE != 'hardware'}
-    commands:
-      # Enter must close the IME and restore actions without a second tap.
-      - pressKey: Enter
+# Enter ends editing with software or emulated hardware input.
+- pressKey: Enter
 - assertVisible:
     id: setup-goal-input
     text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix setup"}'

@@ -266,8 +266,12 @@ npm run test:keyboard:android -- --mode hardware --output /tmp/lampada-keyboard-
 Use the named disposable Android emulator, the final Release build and Russian
 system locale. Select the real Gboard floating mode before the floating command;
 the native checkpoint rejects a mode mismatch. The hardware-labelled command
-disables software IMEs on the emulator and injects native hardware key events,
-then restores the original enabled/default IMEs in finally. It verifies focused
+requires an emulated hardware keyboard (`hw.keyboard=yes` at AVD boot), verifies
+its native QWERTY configuration, temporarily sets
+`show_ime_with_hard_keyboard=0` and injects native key events. It restores that
+software-keyboard setting in finally and does not disable IMEs. If Gboard leaves
+a blank IME window, native Back hides that window while retaining editor focus;
+the native checkpoint must prove both retained focus and a hidden IME. It verifies focused
 input without software UI, not an attached physical keyboard. The matrix refuses
 physical devices because its fixtures clear app state.
 

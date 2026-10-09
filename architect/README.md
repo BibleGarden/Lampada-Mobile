@@ -203,7 +203,8 @@ space are separate: a zero-height Samsung panel and a narrow iPad panel remain
 visible without claiming the full window bottom. Field focus alone does not imply
 a software keyboard. Deferred actions return only after `keyboardDidHide`.
 `dismissKeyboard` uses native Keyboard Controller dismissal even after input
-blur; single-phrase editors submit before dismissing, so Enter cannot leave
+blur, and always clears the React Native responder even when no IME is open;
+single-phrase editors submit before dismissing, so Enter cannot leave
 a visible IME with inaccessible lower actions.
 
 `KeyboardViewport` uses Expo SDK 57's supported Keyboard Controller 1.21.9,

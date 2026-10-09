@@ -514,7 +514,7 @@ The run is complete when:
 | --- | --- | --- |
 | KBD-001 [prepared, android] | Run the staged matrix on a named emulator with a docked keyboard for setup, answer, reflection, report and journal | native rectangles fit OS status/navigation/IME boundaries; input does not overlap lower actions; deferred actions are absent; text survives dismissal and persisted answers/notes reopen |
 | KBD-002 [prepared, android] | Select the real Gboard floating mode and run the same matrix | no zero-height-as-hide assumption; compact input, explicit Finish typing, complete lower action rectangles above the navigation area, and preserved text |
-| KBD-003 [prepared, android] | Run focused-input mode with software IMEs disabled and injected hardware key events, restoring IMEs afterward | genuinely focused native input without an onscreen IME; actions remain available; this is a no-software-focus contract, not a physical external-keyboard acceptance claim |
+| KBD-003 [prepared, android] | Boot with an emulated hardware keyboard and run focused-input mode with software display disabled for hardware input, restoring that setting afterward | genuinely focused native input without an onscreen IME; actions remain available; this is a no-software-focus contract, not a physical external-keyboard acceptance claim |
 | KBD-004 [prepared, ipad] | Run iPad setup/answer/reflection/report keyboard flows, rotating while typing; check narrow floating mode separately | viewport adapts to actual window bounds; no extra keyboard inset; footer/body remain usable and text is retained |
 | KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and dismiss actions remain usable, without clearing personal app data |
 
@@ -535,3 +535,7 @@ measures entire native rectangles against UIKit's keyboard/window frames across
 the same five forms. It rejects a partly clipped action even if its center is
 visible. UIKit safe-area insets and physical external-keyboard use remain
 separate live checks.
+
+Hardware submission regression: Enter must release editor focus even when the
+IME is already hidden; an orphaned IME must also hide when RN focus is absent.
+`keyboardDismiss.test.mjs` executes the real helper against both native states.

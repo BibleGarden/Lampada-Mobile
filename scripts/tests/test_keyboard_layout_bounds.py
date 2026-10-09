@@ -1,5 +1,5 @@
 import unittest
-from scripts.keyboard_layout_bounds import observe, validate, hierarchy_xml
+from scripts.keyboard_layout_bounds import observe, validate, hierarchy_xml, has_hardware_keyboard
 
 
 class LayoutContractTests(unittest.TestCase):
@@ -60,3 +60,15 @@ class LayoutContractTests(unittest.TestCase):
         s = observe(hierarchy_xml(tree), '', 904, 2316)
         self.assertEqual(s['elements']['field']['bounds'], (50, 350, 850, 750))
         self.assertTrue(s['elements']['field']['focused'])
+
+    def test_hardware_presence_uses_native_configuration_not_the_ime_catalog(self):
+        self.assertTrue(has_hardware_keyboard('  mGlobalConfiguration={port finger qwerty/v/v dpad/v}'))
+        self.assertFalse(has_hardware_keyboard('  mGlobalConfiguration={port finger nokeys/v/h dpad/v}'))
+        self.assertFalse(has_hardware_keyboard('IME layout type=qwerty; enabled=true'))
+
+    def test_finished_hardware_input_must_release_its_native_responder(self):
+        s = self.snapshot('[50,350][850,1300]', '[50,2000][850,2100]', focused=True)
+        with self.assertRaisesRegex(AssertionError, 'Expected input focus=False'):
+            validate(s, 'field', ['save'], [], 'hidden', expected_focus=False)
+        s = self.snapshot('[50,350][850,1300]', '[50,2000][850,2100]', focused=False)
+        validate(s, 'field', ['save'], [], 'hidden', expected_focus=False)
