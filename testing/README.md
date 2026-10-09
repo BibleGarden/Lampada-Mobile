@@ -237,11 +237,15 @@ typing and moves the cursor instead of closing the keyboard.
 ### iOS runner prerequisites and cleanup
 
 Language flows match the complete accessibility label of the language picker.
-`run-lng.sh` boots the `Pray Smoke iPhone 17 Pro` simulator if needed, changes
-its locale settings before rebooting, and stops at the first failed flow. On
-exit it returns the simulator to `ru_RU` / `ru`, also after a failure, and keeps
-the failing exit code. A successful run also restores the app interface to
-Russian with `ios-lng-restore-ru.yaml`.
+Their `launchApp` steps grant `notifications` and `microphone` explicitly
+instead of Maestro's default `all: allow`, which also grants location through
+`simctl privacy`; Lampada does not use location, and that call can hang in
+`locationd` right after the cold reboot. `run-lng.sh` boots the `Pray Smoke
+iPhone 17 Pro` simulator if needed, changes its locale settings before
+rebooting, and stops at the first failed flow. On exit it returns the simulator
+to `ru_RU` / `ru`, also after a failure, and keeps the failing exit code. A
+successful run also restores the app interface to Russian with
+`ios-lng-restore-ru.yaml`.
 
 PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456.
 `run-lock-storage-check.sh` and `run-lock-biometrics.sh` run it on any exit,
