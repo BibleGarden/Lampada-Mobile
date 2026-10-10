@@ -103,7 +103,11 @@ A runner that calls Maestro directly runs the `boot` check and
 `scripts/android-maestro-driver.sh <serial> <log-dir>` once, and wraps every
 call: `node scripts/android-guest-load.mjs run --device <serial> --flow <name>
 -- maestro --device <serial> test --no-reinstall-driver ...`. The wrapper
-passes `SIGINT`, `SIGTERM` and `SIGHUP` on to Maestro.
+passes `SIGINT`, `SIGTERM` and `SIGHUP` that reach it on to Maestro; the
+calling script has to deliver them. Bash does not forward a signal to a
+foreground child, so `test-android.sh` runs the wrapper in the background,
+sends it `SIGTERM` when the runner gets `SIGTERM`, `SIGHUP` or `SIGINT`, and
+then stops the run without starting further flows.
 
 By default `maestro test` reinstalls its driver (`dev.mobile.maestro`) and
 server (`dev.mobile.maestro.test`) at the start of every flow and uninstalls

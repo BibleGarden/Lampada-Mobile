@@ -58,15 +58,32 @@ for flow in "${flows[@]}"; do
   echo "Starting $flow"
   # Relaunch must immediately follow smoke-full: it verifies the saved data.
   : > "$run_dir/$flow.log"
-  set +e
+  # Bash не передаёт сигналы дочернему процессу: гейт запускается в фоне,
+  # ловушка пересылает ему остановку, а он — Maestro.
+  stopped=0
   node scripts/android-guest-load.mjs run --device "$device" --flow "$flow" --flow-log "$run_dir/$flow.log" -- \
     maestro --device "$device" test --no-reinstall-driver --test-output-dir "$run_dir/$flow" \
-    "testing/android-e2e/$flow.yaml"
+    "testing/android-e2e/$flow.yaml" &
+  pid=$!
+  trap 'stopped=1; kill -TERM "$pid" 2>/dev/null' TERM HUP INT
+  set +e
+  wait "$pid"
   result=$?
+  # Сигнал прерывает wait раньше выхода процесса; ждём его настоящий код.
+  while (( stopped )) && kill -0 "$pid" 2>/dev/null; do
+    wait "$pid"
+    result=$?
+  done
+  (( stopped )) && { wait "$pid"; result=$?; }
   set -e
+  trap - TERM HUP INT
   printf '%s\t%s\n' "$flow" "$result" >> "$run_dir/results.tsv"
   printf '%s\n' "$result" > "$run_dir/$flow.exit"
   echo "$flow exit=$result"
+  if (( stopped )); then
+    echo "Stopped by a signal during $flow; full log: $run_dir/$flow.log" >&2
+    exit "$(( result ? result : 143 ))"
+  fi
   if [[ "$result" -ne 0 ]]; then
     echo "Stopped at first failure; full log: $run_dir/$flow.log" >&2
     exit "$result"
