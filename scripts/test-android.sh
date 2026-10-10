@@ -48,6 +48,17 @@ rm "$run_dir/installed-base.apk"
 locale="$(adb -s "$device" shell settings get system system_locales | tr -d '\r')"
 [[ "$locale" == ru-RU* ]] || { echo "Expected Russian as the primary Android locale, got $locale" >&2; exit 1; }
 
+# Без --no-reinstall-driver Maestro переустанавливает драйвер и сервер в начале
+# каждого сценария и удаляет их в конце: установка нагружает гостя сразу после
+# гейта. Удаляем оставшуюся (возможно, другой версии) копию; первый сценарий
+# ставит драйвер текущего Maestro, остальные его переиспользуют.
+for package in dev.mobile.maestro dev.mobile.maestro.test; do
+  installed="$(adb -s "$device" shell pm list packages "$package" | tr -d '\r')"
+  if grep -qx "package:$package" <<< "$installed"; then
+    adb -s "$device" uninstall "$package" > "$run_dir/uninstall-$package.log"
+  fi
+done
+
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 printf 'flow\texit\n' > "$run_dir/results.tsv"
 for flow in "${flows[@]}"; do
@@ -56,7 +67,8 @@ for flow in "${flows[@]}"; do
   : > "$run_dir/$flow.log"
   set +e
   node scripts/android-guest-load.mjs run --device "$device" --flow "$flow" --flow-log "$run_dir/$flow.log" -- \
-    maestro --device "$device" test --test-output-dir "$run_dir/$flow" "testing/android-e2e/$flow.yaml"
+    maestro --device "$device" test --no-reinstall-driver --test-output-dir "$run_dir/$flow" \
+    "testing/android-e2e/$flow.yaml"
   result=$?
   set -e
   printf '%s\t%s\n' "$flow" "$result" >> "$run_dir/results.tsv"
