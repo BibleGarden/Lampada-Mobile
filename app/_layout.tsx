@@ -37,9 +37,9 @@ import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 // не выбрасывает пользователя из неё.
 const PRAYER_FLOW = new Set(['/session', '/reflect']);
 
-// Нативный сплэш снимает BootSplash — его копия, которая и ждёт шрифты и язык
-// интерфейса. Без этого вызова expo-router снял бы сплэш по готовности
-// навигации, раньше, чем пламя копии готово к отрисовке.
+// Нативный сплэш снимается, когда пламя его копии BootSplash готово к
+// отрисовке; копия и ждёт шрифты и язык интерфейса. Без этого вызова
+// expo-router снял бы сплэш по готовности навигации, раньше пламени копии.
 void SplashScreen.preventAutoHideAsync();
 
 /** Тап по напоминанию открывает главную. */
@@ -98,20 +98,29 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
 
-  const ready = fontsLoaded && uiLanguageReady;
+  // Приложение монтируется только после снятия нативного сплэша: его тяжёлый
+  // первый кадр не должен стать первым кадром окна (ADR-0040).
+  const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
+  const hideNativeSplash = useCallback(() => {
+    SplashScreen.hide();
+    setNativeSplashHidden(true);
+  }, []);
+  const ready = fontsLoaded && uiLanguageReady && nativeSplashHidden;
   const [bootSplashHidden, setBootSplashHidden] = useState(false);
   const hideBootSplash = useCallback(() => setBootSplashHidden(true), []);
 
-  // Шрифты встроены в сборку, и их сбой — дефект сборки: он должен дойти до
-  // границы ошибок и отчёта о сбое. Граница ошибок expo-router сама снимает
-  // нативный сплэш, если он ещё виден.
+  // Шрифты встроены в сборку, и их сбой — дефект сборки. Корневой layout не
+  // экспортирует ErrorBoundary, поэтому ошибка фатальна: приложение падает с
+  // отчётом о сбое, а не висит на сплэше.
   if (fontError) throw fontError;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <StatusBar style="light" />
       {ready && <AppContent covered={covered} />}
-      {!bootSplashHidden && <BootSplash done={ready} onHidden={hideBootSplash} />}
+      {!bootSplashHidden && (
+        <BootSplash onFlameLoaded={hideNativeSplash} done={ready} onHidden={hideBootSplash} />
+      )}
     </GestureHandlerRootView>
   );
 }

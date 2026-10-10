@@ -59,10 +59,11 @@ use, and biometric texts named Face ID and Touch ID on Android.
   hidden as soon as the copy's flame has loaded, and the copy stays until the
   root layout has its fonts and interface language, then fades out over Home.
   So no empty frame appears between the flame and Home, and the app mounts its
-  interface only after Android has handed the splash over: on Android 12+ the
-  app must take the system splash within 2 s of its first frame. A font error
-  is thrown to the expo-router error boundary, which hides a native splash that
-  is still shown.
+  interface only after the native splash is hidden, so the window's first
+  frame is the light copy: on Android 12+ the app must take the system splash
+  within 2 s of its first frame. A font error is thrown from the root layout,
+  which exports no `ErrorBoundary`: it is a fatal error that crashes the app
+  with a crash report instead of leaving it on the splash.
 - **Permissions.** `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW`,
   `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`: the app keeps its files
   in app storage and shares prayers as text.
