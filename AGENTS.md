@@ -41,6 +41,17 @@
 - Stop a Maestro run at the first app crash, report the flow, the step and the
   cause from the crash report, and fix it before running anything else. Flows
   after a crash tend to fail the same way and add no information.
+- The agent running end-to-end tests judges each failure. Stop the whole run
+  when the failure makes the remaining scenarios uninformative: an app crash,
+  the app not launching, a broken shared precondition (onboarding, consent or
+  navigation that every flow passes through), a wrong or broken build, or an
+  environment that cannot run tests. Otherwise (an isolated assertion or a
+  single-screen defect) record the failure with evidence, do not rerun it, and
+  continue with the remaining independent suites and the other platform, so one
+  cycle reveals all defects. A runner that itself stops at its first failure is
+  not forced to continue.
+- Android and iOS suites may run in parallel on one Mac, as long as their
+  builds are not running at the same time.
 - After fixing a failure that an end-to-end run found, first run the failed
   scenario on a build of the fixed revision, then review, then the final run.
   Running a scenario on a new revision verifies the fix; it is not a rerun of
