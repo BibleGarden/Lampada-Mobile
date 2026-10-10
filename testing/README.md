@@ -229,6 +229,18 @@ bash testing/e2e/run-lock-biometrics.sh  # LOCK-009/010: simulator Face ID via B
 bash testing/e2e/run-background-music-timer-end.sh  # MUS-009: music stops at the deadline in the background
 ```
 
+Maestro's iOS XCTest driver leaves a screenshot for every step in each
+simulator's `testmanagerd` container (`tmp/Attachments`) and never deletes it;
+the folder grew to 24 GB on `Pray Smoke iPhone 17 Pro` and the disk filled up
+once. After a long Maestro session, shut the simulator down and run:
+
+```bash
+bash testing/e2e/clean-sim-attachments.sh "Pray Smoke iPhone 17 Pro"  # prints the freed size
+```
+
+The script refuses to run on a booted simulator and deletes nothing but that
+one directory.
+
 On Setup, flows close the keyboard with `pressKey: Enter` (the goal field's
 "Done" key), not `hideKeyboard`. Maestro's `hideKeyboard` drags a few points
 in the middle of the screen, which on Setup lands inside the goal field while
