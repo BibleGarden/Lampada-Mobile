@@ -1,0 +1,570 @@
+{
+  "sourceMainCommit": "57eb9e51012978a925c1dc194bd05225435ca7e9",
+  "validationCommit": "19ed21b5225468663db4a67f9cf60d17b51e48eb",
+  "runtime": "iOS 26.5",
+  "timezone": "Europe/Moscow",
+  "normalBuild": "1.3.7",
+  "preparedBuild": "1.3.8",
+  "preparedBundleSha256": "df69c96dca2c398fec92da98fb7c37d9fce9a1d996aeaad3510a50d5f5500ab3",
+  "unitPassed": 331,
+  "normalApiOrigin": "http://192.168.127.133:9084",
+  "preparedApiOrigin": "http://localhost:9085",
+  "rawArtifacts": "/tmp/pray-ios-pr36",
+  "results": {
+    "typecheck-final": {
+      "exit": 0
+    },
+    "stub-phase": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-stub-phase.sh"
+      ],
+      "started": 1791440574.3491662,
+      "finished": 1791441802.987465,
+      "crash": null
+    },
+    "stub-build": {
+      "exit": 0
+    },
+    "background-deadline": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-background-music-timer-end.sh"
+      ],
+      "started": 1791437309.490939,
+      "finished": 1791437580.646317,
+      "crash": null
+    },
+    "context-fallback": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/context-fallback/artifacts",
+        "testing/e2e/ios-scripture-context-fallback.yaml"
+      ],
+      "started": 1791442292.875515,
+      "finished": 1791442335.044141,
+      "crash": null
+    },
+    "ordered": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/ordered/artifacts",
+        "testing/e2e/ios-background-suite.yaml",
+        "testing/e2e/ios-lock-006-suite.yaml",
+        "testing/e2e/ios-lock-suite.yaml",
+        "testing/e2e/ios-jrn-suite.yaml",
+        "testing/e2e/ios-stage04-ans-012-no-transcribe.yaml",
+        "testing/e2e/ios-stage04-ans-015-delete-during.yaml"
+      ],
+      "started": 1791411918.652763,
+      "finished": 1791413293.628212,
+      "crash": null
+    },
+    "biometrics-verified": {
+      "exit": 1,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791434942.192943,
+      "finished": 1791435076.5439801,
+      "crash": null
+    },
+    "stub-critical": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:critical"
+      ],
+      "started": 1791440070.209559,
+      "finished": 1791440574.299396,
+      "crash": null
+    },
+    "stub-env": {
+      "exit": 0
+    },
+    "rare": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:rare"
+      ],
+      "started": 1791411581.038078,
+      "finished": 1791411918.450013,
+      "crash": null
+    },
+    "biometry-reset": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "18FBF907-60BB-48EF-9BE8-1DB2767465F5",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/biometry-reset/artifacts",
+        "testing/e2e/ios-lock-cleanup.yaml"
+      ],
+      "started": 1791435228.124911,
+      "finished": 1791435260.2146828,
+      "crash": null
+    },
+    "se-cleanup": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "18FBF907-60BB-48EF-9BE8-1DB2767465F5",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/se-cleanup/artifacts",
+        "testing/e2e/ios-lock-cleanup.yaml"
+      ],
+      "started": 1791408869.13765,
+      "finished": 1791408901.228808,
+      "crash": null
+    },
+    "unit-final": {
+      "exit": 0
+    },
+    "language-fix": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-lng.sh"
+      ],
+      "started": 1791407251.024363,
+      "finished": 1791407829.4736462,
+      "crash": null
+    },
+    "context-main": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/context-main/artifacts",
+        "testing/e2e/ios-scripture-context-main.yaml"
+      ],
+      "started": 1791442005.0888069,
+      "finished": 1791442093.4632761,
+      "crash": null
+    },
+    "pin-cleanup-after-language": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/pin-cleanup-after-language/artifacts",
+        "testing/e2e/ios-lock-cleanup.yaml"
+      ],
+      "started": 1791408004.604966,
+      "finished": 1791408042.7838058,
+      "crash": null
+    },
+    "typecheck-release": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "started": 1791439371.650733,
+      "finished": 1791439375.6733692,
+      "crash": null
+    },
+    "unit-release": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "test"
+      ],
+      "started": 1791439375.729878,
+      "finished": 1791439381.747639,
+      "crash": null
+    },
+    "biometry-final-reset": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "18FBF907-60BB-48EF-9BE8-1DB2767465F5",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/biometry-final-reset/artifacts",
+        "testing/e2e/ios-lock-cleanup.yaml"
+      ],
+      "started": 1791436322.3980641,
+      "finished": 1791436354.522602,
+      "crash": null
+    },
+    "biometry-removal-fixed": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "18FBF907-60BB-48EF-9BE8-1DB2767465F5",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/biometry-removal-fixed/artifacts",
+        "testing/e2e/ios-lock-010-biometrics-removed.yaml"
+      ],
+      "started": 1791436022.0449312,
+      "finished": 1791436058.1928089,
+      "crash": null
+    },
+    "reminder-deny": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/reminder-deny/artifacts",
+        "testing/e2e/ios-rem-002-permission-deny.yaml"
+      ],
+      "started": 1791439578.768965,
+      "finished": 1791439598.853413,
+      "crash": null
+    },
+    "reminder-editor-fix": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/reminder-editor-fix/artifacts",
+        "testing/e2e/ios-rem-editor-suite.yaml"
+      ],
+      "started": 1791408420.605757,
+      "finished": 1791408484.7561111,
+      "crash": null
+    },
+    "share-dismiss": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/share-dismiss/artifacts",
+        "/tmp/pray-ios-pr36/share-dismiss.yaml"
+      ],
+      "started": 1791407081.755921,
+      "finished": 1791407093.803245,
+      "crash": null
+    },
+    "main": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:main"
+      ],
+      "started": 1791409461.729027,
+      "finished": 1791411568.532498,
+      "crash": null
+    },
+    "biometry-reset-2": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "18FBF907-60BB-48EF-9BE8-1DB2767465F5",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/biometry-reset-2/artifacts",
+        "testing/e2e/ios-lock-cleanup.yaml"
+      ],
+      "started": 1791435507.460416,
+      "finished": 1791435539.530009,
+      "crash": null
+    },
+    "language-restore-verified": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/language-restore-verified/artifacts",
+        "testing/e2e/ios-lng-restore-ru.yaml"
+      ],
+      "started": 1791408158.313335,
+      "finished": 1791408178.3640609,
+      "crash": null
+    },
+    "biometrics-fix": {
+      "exit": 1,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791408548.89055,
+      "finished": 1791408699.307594,
+      "crash": null
+    },
+    "biometrics-synchronized": {
+      "exit": 1,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791435539.572223,
+      "finished": 1791435690.184777,
+      "crash": null
+    },
+    "biometrics-final": {
+      "exit": 2,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791413343.417513,
+      "finished": 1791413429.7772958,
+      "crash": null
+    },
+    "share-fix": {
+      "exit": 1,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/share-fix/artifacts",
+        "testing/e2e/ios-stage07-jrn-share-001.yaml"
+      ],
+      "started": 1791406909.399014,
+      "finished": 1791407027.888224,
+      "crash": null
+    },
+    "language-restore": {
+      "exit": 1,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/language-restore/artifacts",
+        "testing/e2e/ios-lng-restore-ru.yaml"
+      ],
+      "started": 1791408042.996306,
+      "finished": 1791408071.105629,
+      "crash": null
+    },
+    "language-final": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-lng.sh"
+      ],
+      "started": 1791437580.710003,
+      "finished": 1791438121.096151,
+      "crash": null
+    },
+    "share-verified": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/share-verified/artifacts",
+        "testing/e2e/ios-stage07-jrn-share-001.yaml"
+      ],
+      "started": 1791407144.547683,
+      "finished": 1791407250.961368,
+      "crash": null
+    },
+    "biometry-refusal-fix": {
+      "exit": 1,
+      "command": [
+        "bash",
+        "/tmp/pray-ios-pr36/verify-biometry-tail.sh"
+      ],
+      "started": 1791435837.519299,
+      "finished": 1791435915.865508,
+      "crash": null
+    },
+    "biometrics-complete": {
+      "exit": 1,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791435260.2558239,
+      "finished": 1791435394.594822,
+      "crash": null
+    },
+    "context-privacy": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/context-privacy/artifacts",
+        "testing/e2e/ios-scripture-context-privacy.yaml"
+      ],
+      "started": 1791442187.340928,
+      "finished": 1791442243.581808,
+      "crash": null
+    },
+    "lock-storage-fix": {
+      "exit": 1,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-storage-check.sh"
+      ],
+      "started": 1791407844.9917939,
+      "finished": 1791407933.371978,
+      "crash": null
+    },
+    "appswitcher-prepare": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-appswitcher.sh",
+        "prepare"
+      ],
+      "started": 1791408292.972845,
+      "finished": 1791408339.2045472,
+      "crash": null
+    },
+    "ipad": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:ipad"
+      ],
+      "started": 1791436607.987809,
+      "finished": 1791437202.015744,
+      "crash": null
+    },
+    "critical": {
+      "exit": 0,
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:critical"
+      ],
+      "started": 1791408914.739924,
+      "finished": 1791409423.942306,
+      "crash": null
+    },
+    "biometrics-final-pass": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791436354.569383,
+      "finished": 1791436539.394741,
+      "crash": null
+    },
+    "lock-storage-verified": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-storage-check.sh"
+      ],
+      "started": 1791408178.4149382,
+      "finished": 1791408292.9226282,
+      "crash": null
+    },
+    "reminder-fire": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-rem-fire.sh"
+      ],
+      "started": 1791438303.147882,
+      "finished": 1791439506.542229,
+      "crash": null
+    },
+    "build": {
+      "exit": 0
+    },
+    "appswitcher-cleanup": {
+      "exit": 0,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-appswitcher.sh",
+        "cleanup"
+      ],
+      "started": 1791408382.3116422,
+      "finished": 1791408420.4030468,
+      "crash": null
+    },
+    "journal-upgrade": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/journal-upgrade/artifacts",
+        "testing/e2e/ios-stage06-jrn-008-launch-after-upgrade.yaml",
+        "testing/e2e/ios-stage06-jrn-006-audio-switch.yaml",
+        "testing/e2e/ios-stage06-jrn-009-missing-file.yaml"
+      ],
+      "started": 1791438142.502434,
+      "finished": 1791438196.754703,
+      "crash": null
+    },
+    "highlight": {
+      "exit": 0,
+      "command": [
+        "maestro",
+        "--device",
+        "05F697B7-36CD-4050-9D57-FC9316AA093C",
+        "test",
+        "--test-output-dir",
+        "/tmp/pray-ios-pr36/highlight/artifacts",
+        "testing/e2e/ios-scripture-highlight.yaml"
+      ],
+      "started": 1791442093.674411,
+      "finished": 1791442145.895761,
+      "crash": null
+    },
+    "biometrics-release": {
+      "exit": 2,
+      "command": [
+        "bash",
+        "testing/e2e/run-lock-biometrics.sh"
+      ],
+      "started": 1791436058.255182,
+      "finished": 1791436206.8899221,
+      "crash": null
+    }
+  }
+}

@@ -198,6 +198,11 @@ maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scriptu
 
 Then reinstall the normal Release build without the URL override.
 
+SCR-002 uses `ios-stage06-scr-002a-favorite-relaunch.yaml` followed by
+`ios-stage06-scr-002b-favorite-relaunch.yaml`, with the stub passage counter
+reset between them. The runner guarantees both prayers receive the same
+fixture before checking persisted favorite state.
+
 The wider stub phase (update banners, journal transcription, delayed AI
 answers, scripture navigation, legacy favorites migration, the threshold
 error path) runs under one orchestrated session. The build additionally needs
@@ -224,10 +229,54 @@ bash testing/e2e/run-lock-biometrics.sh  # LOCK-009/010: simulator Face ID via B
 bash testing/e2e/run-background-music-timer-end.sh  # MUS-009: music stops at the deadline in the background
 ```
 
+Maestro's iOS XCTest driver leaves a screenshot for every step in each
+simulator's `testmanagerd` container (`tmp/Attachments`) and never deletes it;
+the folder grew to 24 GB on `Pray Smoke iPhone 17 Pro` and the disk filled up
+once. After a long Maestro session, shut the simulator down and run:
+
+```bash
+bash testing/e2e/clean-sim-attachments.sh "Pray Smoke iPhone 17 Pro"  # prints the freed size
+```
+
+The script refuses to run on a booted simulator and deletes nothing but that
+one directory.
+
 On Setup, flows close the keyboard with `pressKey: Enter` (the goal field's
 "Done" key), not `hideKeyboard`. Maestro's `hideKeyboard` drags a few points
 in the middle of the screen, which on Setup lands inside the goal field while
 typing and moves the cursor instead of closing the keyboard.
+
+### iOS runner prerequisites and cleanup
+
+Language flows match the complete accessibility label of the language picker.
+Their `launchApp` steps grant `notifications` and `microphone` explicitly
+instead of Maestro's default `all: allow`, which also grants location through
+`simctl privacy`; Lampada does not use location, and that call can hang in
+`locationd` right after the cold reboot. `run-lng.sh` boots the `Pray Smoke
+iPhone 17 Pro` simulator if needed, changes its locale settings before
+rebooting, and stops at the first failed flow. On exit it returns the simulator
+to `ru_RU` / `ru`, also after a failure, and keeps the failing exit code. A
+successful run also restores the app interface to Russian with
+`ios-lng-restore-ru.yaml`.
+
+PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456.
+`run-lock-storage-check.sh` and `run-lock-biometrics.sh` run it on any exit,
+including Ctrl-C, while the test PIN is on, so a failed check does not leave
+the PIN enabled; cleanup errors are failures. Both write command logs to the
+evidence directory. The biometric preflight scrolls to the protection section
+before checking the visible hierarchy. It sets the simulator notification state
+`com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and 0
+for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID on
+the current runtime. Biometric signals are synchronized with the flow reaching
+its wait after the native authentication prompt appears. A mismatch keeps the
+iOS retry prompt open; select its PIN action to verify code entry.
+
+LOCK-008 is a manual Device Hub check. Run `run-lock-appswitcher.sh prepare`,
+open App Switcher using Device Hub's Home control, then run the script with
+`capture`. Inspect the screenshot for the privacy curtain before marking the
+scenario passed. Run `cleanup` afterward. Capturing a screenshot alone does
+not assert the privacy outcome.
+
 
 ## What to do with the result
 

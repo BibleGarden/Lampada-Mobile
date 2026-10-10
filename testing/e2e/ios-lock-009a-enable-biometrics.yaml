@@ -37,7 +37,7 @@ tags:
     id: "settings-button"
 - scrollUntilVisible:
     element:
-      id: "lock-toggle"
+      id: "biometrics-toggle"
     direction: DOWN
 - assertVisible:
     id: "change-pin-button"
@@ -47,6 +47,10 @@ tags:
 # пока флоу спит; включение происходит без ввода пина.
 - tapOn:
     id: "biometrics-toggle"
+- extendedWaitUntil:
+    visible:
+      id: "com.apple.localauthentication.ax.authentication.alert"
+    timeout: 10000
 - evalScript: "java.lang.Thread.sleep(20000)"
 - assertVisible:
     id: "biometrics-toggle"

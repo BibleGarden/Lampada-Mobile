@@ -1,0 +1,20 @@
+[
+  {
+    "session": 2,
+    "topic": "JRN-008 upgrade retest",
+    "uri": "file:///Users/maria/Library/Developer/CoreSimulator/Devices/05F697B7-36CD-4050-9D57-FC9316AA093C/data/Containers/Data/Application/F95631FF-E6E2-4085-B1B0-EA59795A3BAA/Documents/validation-recordings/first.wav",
+    "fileExists": true
+  },
+  {
+    "session": 3,
+    "topic": "JRN-006 second audio",
+    "uri": "file:///Users/maria/Library/Developer/CoreSimulator/Devices/05F697B7-36CD-4050-9D57-FC9316AA093C/data/Containers/Data/Application/F95631FF-E6E2-4085-B1B0-EA59795A3BAA/Documents/validation-recordings/second.wav",
+    "fileExists": true
+  },
+  {
+    "session": 4,
+    "topic": "JRN-009 missing file",
+    "uri": "file:///Users/maria/Library/Developer/CoreSimulator/Devices/05F697B7-36CD-4050-9D57-FC9316AA093C/data/Containers/Data/Application/F95631FF-E6E2-4085-B1B0-EA59795A3BAA/Documents/validation-recordings/missing.wav",
+    "fileExists": false
+  }
+]

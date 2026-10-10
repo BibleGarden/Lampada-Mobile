@@ -1,0 +1,499 @@
+== UPDATE soft
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-update-soft
+Launch app "twinkler"... COMPLETED
+Assert that id: update-soft is visible... COMPLETED
+Assert that id: update-soft is visible... COMPLETED
+Assert that id: update-later is visible... COMPLETED
+Take screenshot UPDATE-soft-banner... COMPLETED
+Tap on id: update-later... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Open lampada://settings... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: update-soft is not visible... COMPLETED
+Launch app "twinkler"... COMPLETED
+Assert that id: update-soft is visible... COMPLETED
+Take screenshot UPDATE-soft-relaunch... COMPLETED
+== UPDATE hard
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-update-hard
+Launch app "twinkler"... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Assert that id: update-later is not visible... COMPLETED
+Take screenshot UPDATE-hard-banner... COMPLETED
+Open lampada://settings... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Launch app "twinkler"... COMPLETED
+Assert that id: update-hard is visible... COMPLETED
+Take screenshot UPDATE-hard-relaunch... COMPLETED
+== JRN-010/011: транскрипция успешна
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-jrn-010-011-transcribe
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text JRN-010 расшифровка... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: prayer-saved-notice is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible...
+  Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+Take screenshot JRN-010-transcript... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+Tap on ".*JRN-010 расшифровка.*"... COMPLETED
+Tap on id: journal-search-input... COMPLETED
+Input text стабильная... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that ".*JRN-010 расшифровка.*" is visible... COMPLETED
+Take screenshot JRN-011-search-transcript... COMPLETED
+== JRN-012a: ошибка транскрипции
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-jrn-012a-transcription-error
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text JRN-012 повтор расшифровки... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: prayer-saved-notice is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible...
+  Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that "Сервис расшифровки сейчас недоступен. Попробуй позже." is visible... COMPLETED
+Assert that id: journal-recording-0-transcribe is visible... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Take screenshot JRN-012-error... COMPLETED
+== JRN-012b: повтор сохраняет текст
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-jrn-012b-transcription-retry
+Launch app "twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Assert that id: journal-recording-0 is visible... COMPLETED
+Assert that id: journal-recording-0-transcribe is visible... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+Take screenshot JRN-012-retry-saved... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Tap on ".*JRN-012 повтор расшифровки.*"... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is visible... COMPLETED
+== JRN-013a: закрытие во время расшифровки
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-jrn-013a-close-during
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text JRN-013 закрытие... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: prayer-saved-notice is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-013 закрытие.*"... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible...
+  Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that id: journal-recording-0-transcribing is visible... COMPLETED
+Tap on ".*JRN-013 закрытие.*"... COMPLETED
+Run java.lang.Thread.sleep(16000)... COMPLETED
+Tap on ".*JRN-013 закрытие.*"... COMPLETED
+Assert that "Стабильная расшифровка лампады номер семь" is not visible... COMPLETED
+Assert that id: journal-recording-0-transcribing is not visible... COMPLETED
+Assert that id: journal-recording-0-transcribe is visible... COMPLETED
+Take screenshot JRN-013-closed-during... COMPLETED
+== JRN-013b: удаление во время расшифровки
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-jrn-013b-delete-during
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text JRN-013 удаление... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Wait for animation to end within 3000 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Wait for animation to end within 2000 ms... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+Run flow when id: privacy-consent-answer_context is visible... SKIPPED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED
+Tap on id: reflect-complete-button... COMPLETED
+Assert that id: prayer-saved-notice is visible... COMPLETED
+Tap on id: journal-button... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Tap on ".*JRN-013 удаление.*"... COMPLETED
+Tap on id: journal-recording-0-transcribe... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible...
+  Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Run flow when id: privacy-consent-audio_transcription is visible... COMPLETED
+Assert that id: journal-recording-0-transcribing is visible... COMPLETED
+Tap on id: journal-delete... COMPLETED
+Assert that id: journal-delete-confirm is visible... COMPLETED
+Tap on id: journal-delete-confirm... COMPLETED
+Assert that ".*JRN-013 удаление.*" is not visible... COMPLETED
+Run java.lang.Thread.sleep(16000)... COMPLETED
+Assert that ".*JRN-013 удаление.*" is not visible... COMPLETED
+Assert that id: journal-recording-0-transcribing is not visible... COMPLETED
+Assert that id: journal-title is visible... COMPLETED
+Take screenshot JRN-013-deleted-during... COMPLETED
+== ANS-013: подсказка и сохранение во время расшифровки
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage04-ans-013-save-in-flight
+Launch app "twinkler" with clear state... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Run flow when id: setup-kicker is not visible...
+Run flow when id: setup-kicker is not visible... SKIPPED
+Tap on point (50%,37%)... COMPLETED
+Input text ANS-013 сохранение в полёте... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-answer-button... COMPLETED
+Run flow when id: answer-record-button is not visible...
+Run flow when id: answer-record-button is not visible... SKIPPED
+Tap on id: answer-record-button... COMPLETED
+Run flow when "OK" is visible...
+Run flow when "OK" is visible... SKIPPED
+Run flow when "Allow" is visible...
+Run flow when "Allow" is visible... SKIPPED
+Wait for animation to end within 2500 ms... COMPLETED
+Tap on id: recordings-stop-button... COMPLETED
+Tap on id: recording-transcribe-0... COMPLETED
+Assert that id: privacy-consent-audio_transcription is visible... COMPLETED
+Tap on id: privacy-consent-audio_transcription-allow... COMPLETED
+Assert that id: recording-transcribing-0 is visible... COMPLETED
+Assert that id: recording-transcription-hint-0 is visible... COMPLETED
+Take screenshot ANS-013-transcription-hint... COMPLETED
+Tap on id: recordings-close-button... COMPLETED
+Tap on id: answer-save-button... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible...
+  Tap on id: privacy-consent-answer_context-allow... COMPLETED
+Run flow when id: privacy-consent-answer_context is visible... COMPLETED
+Assert that id: dock-answer-edit-button is visible... COMPLETED
+Tap on id: dock-answer-edit-button... COMPLETED
+Tap on id: answer-record-button... COMPLETED
+Assert that id: recording-card-0 is visible... COMPLETED
+Assert that ".*Стабильная расшифровка лампады номер семь.*" is visible... COMPLETED
+== Проверка БД: осиротевшие записи отсутствуют
+OK: осиротевших записей нет
+== AI-late: ответ ИИ с задержкой
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage05-ai-late-stub
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text AI late stub... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Assert that "(?s).*STUB вопрос с опозданием.*" is visible... COMPLETED
+Take screenshot AI-late-question-arrived... COMPLETED
+Run ios-stage05-ai-late-response.yaml...
+  Assert that id: dock-answer-button is visible... COMPLETED
+Run ios-stage05-ai-late-response.yaml... COMPLETED
+== SCR-001: навигация по отрывкам
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage06-scr-001-navigation
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-001 navigation... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Take screenshot SCR-001-00-initial-scripture... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Take screenshot SCR-001-A1-next... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Take screenshot SCR-001-A6-prev-after-noop-forward... COMPLETED
+Tap on id: dock-scripture-favorite... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-B00-favorited... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Tap on id: dock-scripture-favorite... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Tap on id: dock-scripture-next... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-B10-next-catalog-exhausted... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-C10-prev-at-start... COMPLETED
+Tap on id: dock-scripture-prev... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-001-C11-prev-boundary-noop... COMPLETED
+== SCR-002a/b: избранное переживает перезапуск
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage06-scr-002a-favorite-relaunch
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-002 favorite relaunch... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Tap on id: dock-scripture-favorite... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-002-before-relaunch... COMPLETED
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage06-scr-002b-favorite-relaunch
+Launch app "twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-002 favorite restored... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+Run flow when id: privacy-consent-core_prayer_ai is visible... SKIPPED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Assert that id: dock-scripture-favorite-active is visible... COMPLETED
+Take screenshot SCR-002-after-relaunch... COMPLETED
+Tap on id: dock-scripture-favorite-active... COMPLETED
+Assert that id: dock-scripture-favorite is visible... COMPLETED
+Launch app "twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text SCR-002 favorite removed... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+Run flow when id: privacy-consent-core_prayer_ai is visible... SKIPPED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-audio-button is visible... COMPLETED
+Assert that id: dock-scripture-favorite is visible... COMPLETED
+Take screenshot SCR-002-removed-after-relaunch... COMPLETED
+== Legacy-избранное: миграция
+Сеято: 2 legacy-записей, маркер миграции снят
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-scripture-legacy-favorites
+Launch app "twinkler"... COMPLETED
+Open lampada://favorites... COMPLETED
+Assert that "Колоссянам 3:23" is visible... COMPLETED
+Assert that "И всё, что делаете.*" is visible... COMPLETED
+Scrolling DOWN until "Неизвестная старая ссылка" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that "Сохранено ранее" is visible... COMPLETED
+== STG: ошибка входа через хук и живой повтор
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-stage03-start-sqlite-lock
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text STG sqlite ошибка входа... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that "Не удалось начать молитву" is visible... COMPLETED
+Assert that "Попробуй ещё раз." is visible... COMPLETED
+Take screenshot STG-sqlite-error... COMPLETED
+Tap on "Понятно"... COMPLETED
+Assert that id: threshold-hold-button is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Take screenshot STG-sqlite-retry-ok... COMPLETED
+== RPT-001/002: жалобы на вопрос и отрывок
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rpt-001-002
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text RPT content reports... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: question-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Take screenshot RPT-001-dialog... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Take screenshot RPT-001-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED
+Tap on id: dock-scripture-tab... COMPLETED
+Assert that id: scripture-report-button is visible... COMPLETED
+Take screenshot RPT-002-scripture-card... COMPLETED
+Tap on id: scripture-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Tap on id: content-report-comment... COMPLETED
+Input text Тестовый комментарий RPT-002... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Take screenshot RPT-002-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED
+Tap on id: scripture-read-full... COMPLETED
+Assert that id: scripture-reader-close is visible... COMPLETED
+Assert that id: scripture-report-button, Left of id: scripture-reader-close, Right of id: scripture-reader-favorite.* is not visible... COMPLETED
+Tap on id: scripture-reader-close... COMPLETED
+== RPT-003: сбой и повтор (fail-once)
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rpt-003
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text RPT 003 retry... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Tap on id: question-report-button... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Tap on id: content-report-comment... COMPLETED
+Input text Черновик комментария RPT-003... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Сейчас не удалось отправить жалобу. Попробуйте ещё раз." is visible... COMPLETED
+Assert that id: content-report-dialog is visible... COMPLETED
+Assert that id: content-report-comment is visible... COMPLETED
+Take screenshot RPT-003-error... COMPLETED
+Tap on id: content-report-send... COMPLETED
+Assert that "Спасибо. Жалоба отправлена на проверку." is visible... COMPLETED
+Take screenshot RPT-003-retry-sent... COMPLETED
+Tap on id: content-report-done... COMPLETED
+== Stub-фаза завершена. Доказательства: /tmp/pray-ios-pr36/stub-phase/artifacts
+== Не забудьте переустановить обычную Release-сборку (без override)!

@@ -13,11 +13,17 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
+    # Lampada не использует геолокацию; явный список не даёт Maestro
+    # дёргать locationd (simctl privacy location) сразу после холодной
+    # перезагрузки, где locationd зависает.
+    permissions:
+      notifications: allow
+      microphone: allow
 - tapOn:
     id: "settings-button"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "English"
+    text: ".*English.*"
 - assertVisible:
     id: "scripture-language-picker"
 - assertVisible: ".*BSB.*"
@@ -28,10 +34,12 @@ tags:
     id: "interface-language-ru"
 - assertVisible: "НАСТРОЙКИ"
 - assertVisible: "ЯЗЫК ИНТЕРФЕЙСА"
-- assertVisible: "Русский"
-- assertVisible: "Язык цитат"
+- assertVisible:
+    id: "interface-language-picker"
+    text: ".*Русский.*"
 - assertVisible:
     id: "scripture-language-picker"
+    text: ".*Язык цитат.*"
 - assertVisible: ".*English.*"
 - assertVisible: ".*BSB.*"
 - assertVisible: ".*Bob Souer.*"

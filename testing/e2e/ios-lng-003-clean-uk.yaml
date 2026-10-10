@@ -12,6 +12,12 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
+    # Lampada не использует геолокацию; явный список не даёт Maestro
+    # дёргать locationd (simctl privacy location) сразу после холодной
+    # перезагрузки, где locationd зависает.
+    permissions:
+      notifications: allow
+      microphone: allow
 - assertVisible: "Почати молитву"
 - assertVisible: "Підтримай вогник"
 - tapOn:
@@ -20,4 +26,4 @@ tags:
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "Українська"
+    text: ".*Українська.*"

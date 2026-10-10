@@ -1,0 +1,18 @@
+
+> pray@1.0.0 test:e2e:critical
+> MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=critical --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" testing/e2e/
+
+
+Waiting for flows to complete...
+[Passed] ios-stage04-answers-text (1m 2s)
+[Passed] ios-stage06-jrn-001-empty-history (19s)
+[Passed] ios-stage06-end-001-finish-without-takeaway (51s)
+[Passed] ios-privacy-consent-first-use (28s)
+[Passed] ios-stage03-navigation (38s)
+[Passed] ios-stage06-end-002-finish-with-takeaway (1m 4s)
+[Passed] ios-stage03-setup-start (47s)
+[Passed] ios-smoke-full (1m 28s)
+[Passed] ios-smoke-full-relaunch (11s)
+[Passed] ios-stage03-session-finite (1m 28s)
+
+10/10 Flows Passed in 8m 15s

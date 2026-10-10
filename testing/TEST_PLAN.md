@@ -392,6 +392,9 @@ time-setting helper and captures the REM-008 screen at the scheduled time.
 The protection is optional and off by default; the decision and its boundaries
 are in
 [ADR-0014](../architect/decisions/0014-app-lock-pin-and-biometrics.md).
+The mapping of a biometric prompt result to the lock screen outcome
+(cancellation, `authentication_failed` and other errors shown in words) has
+unit coverage in `lib/__tests__/lockBiometrics.test.mjs`.
 
 | ID | Scenario | Expected result |
 |---|---|---|
@@ -403,9 +406,9 @@ are in
 | LOCK-006 | "Forgot your PIN?" and two confirmations | cancelling at either of the two steps erases nothing, confirming wipes the journal and removes the protection |
 | LOCK-007 | Returning from the background before and after a minute | a short switch does not ask for the code, more than a minute does; the app process is not restarted |
 | LOCK-008 | The app snapshot in the task switcher | the privacy screen is shown instead of the content |
-| LOCK-009 | Entry by Face ID / Touch ID | the toggle is available only with the PIN enabled and a sample enrolled, a refusal leaves entry by code |
+| LOCK-009 | Entry by Face ID / Touch ID | the toggle is available only with the PIN enabled and a sample enrolled, a mismatch shows the native retry prompt, its PIN action returns to the app lock screen, and only the correct code grants entry |
 | LOCK-010 | The biometric samples are removed in the system after the toggle was enabled | the lock screen does not offer biometrics, the code keeps working |
-| LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt and the hash |
+| LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt, hash, PIN length, enabled flag and optional biometrics flag |
 
 ## 9. Non-functional checks
 
