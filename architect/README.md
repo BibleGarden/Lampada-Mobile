@@ -421,10 +421,25 @@ automatically after the narration is chosen, as a single JSON value
 `meta.scripture_preferences`. The language, the translation and the narration
 code are frozen when a prayer session starts: the language and the translation
 are used for the selection, and the narration code for requesting the alignment
-and the audio of the chosen passage. On a fresh install the primary
-`languageCode` of the device is matched against the server language catalogue; if
-there is no match, or the catalogue is unavailable, English is used. After the
-first save the system locale no longer overrides the choice.
+and the audio of the chosen passage. On a fresh install, the resolved interface
+language is matched against the server catalogue. Local settings load independently
+of this network initialization, with a nullable Bible selection until a complete
+valid triple is confirmed. Catalog errors and missing matches never substitute
+English or write a preference. A prayer starts without waiting for the catalogue:
+the session snapshot stays null, and the scripture block confirms it in the
+background. On failure the block names the cause: an unreachable catalogue shows
+"Bible catalog unavailable" with Retry, which reruns initialization within the
+same session; a catalogue with no triple for the interface language sends the
+user to Settings, where a manual choice revives the block; a storage error has
+its own message and a diagnostic. Settings show the language list for a manual
+choice when the catalogue has no triple for the interface language, recheck it
+after an interface-language change, show a failed save, and report storage
+failures separately from catalogue failures.
+A successful initial triple is persisted atomically; a saved selection is used
+without a catalog request and is not overridden. A concurrent explicit selection
+wins over initialization, and an interface language changed during it restarts
+initialization. A malformed record is logged as `scripture_preferences_invalid`
+in the local diagnostics file. See ADR-0039.
 
 ## Prayer reminders
 
@@ -460,7 +475,8 @@ Android channel `prayer_reminders` and are marked with `content.data.kind`: the
 scheduler only cancels its own notifications and does not touch the ongoing
 chronometer of the prayer timer in the `twinkler_prayer_timer` channel. Tapping a
 reminder opens Home, except when the user is inside the prayer scenario - it does
-not throw them out of it.
+not throw them out of it. Settings opened from a running prayer count as part of
+that scenario.
 
 ## App lock
 

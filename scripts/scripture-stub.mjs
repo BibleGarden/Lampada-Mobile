@@ -21,6 +21,11 @@ let versionResponse = {
 };
 /** 'ok' — успех; 'fail-once' — первый запрос 500 (ретрай-сценарий RPT-003). */
 let contentReportMode = 'ok';
+/**
+ * 'ok' — полный каталог; 'fail' — 503 на языки и переводы (SCR-013);
+ * 'unvoiced-ru' — русский перевод без озвучки, начального выбора нет (SCR-027).
+ */
+let catalogMode = 'ok';
 /** Пейлоды принятых жалоб — для проверки раннером через /__status. */
 const contentReports = [];
 
@@ -99,8 +104,9 @@ const server = http.createServer((request, response) => {
       if (Number.isFinite(body.questionDelayMs) && body.questionDelayMs >= 0) questionDelayMs = body.questionDelayMs;
       if (body.version && typeof body.version === 'object') versionResponse = { ...versionResponse, ...body.version };
       if (['ok', 'fail-once'].includes(body.contentReports)) contentReportMode = body.contentReports;
+      if (['ok', 'fail', 'unvoiced-ru'].includes(body.catalog)) catalogMode = body.catalog;
       if (body.resetScripture) requestCount = 0;
-      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse, contentReportMode });
+      json(response, 200, { transcriptionMode, questionDelayMs, versionResponse, contentReportMode, catalogMode });
     });
     return;
   }
@@ -149,6 +155,10 @@ const server = http.createServer((request, response) => {
     });
     return;
   }
+  if (request.method === 'GET' && ['/api/languages', '/api/translations'].includes(url.pathname) && catalogMode === 'fail') {
+    json(response, 503, { detail: 'catalog unavailable' });
+    return;
+  }
   if (request.method === 'GET' && url.pathname === '/api/languages') {
     json(response, 200, [
       { alias: 'ru', name_en: 'Russian', name_national: 'Русский' },
@@ -174,12 +184,12 @@ const server = http.createServer((request, response) => {
         voices: [{
           code: 1, alias: 'alexander', name: 'Alexander Bondarenko', description: 'Диктор',
           is_music: false, active: true,
-        }],
+        }].filter(() => catalogMode !== 'unvoiced-ru'),
       },
     ]);
     return;
   }
-  if (request.method === 'GET' && request.url === '/api/translations/1/books') {
+  if (request.method === 'GET' && url.pathname === '/api/translations/1/books') {
     json(response, 200, [
       { book_number: 19, name: 'Псалом', alias: 'psa', chapters_count: 150 },
       { book_number: 45, name: 'Послание Иакова', alias: 'jas', chapters_count: 5 },

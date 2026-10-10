@@ -23,6 +23,7 @@ import {
   JetBrainsMono_500Medium,
 } from '@expo-google-fonts/jetbrains-mono';
 import { useSettings } from '../lib/settings';
+import { useSession } from '../lib/store';
 import { useLock } from '../lib/lock';
 import LockGate from '../components/LockGate';
 import UpdateGate from '../components/UpdateGate';
@@ -44,6 +45,8 @@ function ReminderRouting() {
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(() => {
       if (PRAYER_FLOW.has(pathnameRef.current)) return;
+      // Настройки, открытые из идущей молитвы (выбор Библии), — тоже часть её сценария.
+      if (pathnameRef.current === '/settings' && useSession.getState().sessionId !== null) return;
       router.replace('/');
     });
     return () => sub.remove();

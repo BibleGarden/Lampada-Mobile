@@ -1,0 +1,26 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android version of ios-scripture-catalog-saved-offline.yaml (SCR-013, phase 4
+# of 4): after catalog=fail, a cold start keeps the confirmed English Bible,
+# also after switching the interface to Russian.
+- stopApp
+- launchApp
+- tapOn:
+    id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: ".*Could not load the list.*"
+- tapOn:
+    id: interface-language-picker
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: interface-language-ru
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible: ".*Не удалось загрузить список.*"
+- assertVisible: ".*English.*"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"

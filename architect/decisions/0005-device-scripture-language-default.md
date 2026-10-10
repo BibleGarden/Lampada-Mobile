@@ -1,6 +1,6 @@
 # ADR-0005: The scripture language default from the device
 
-- Status: Accepted
+- Status: Partly superseded by ADR-0039 (items 1–3, item 5 and the offline English start)
 - Date: 2026-08-27
 - Participants: product owner, developer, QA lead
 - Partly supersedes: ADR-0004, item 4
@@ -23,14 +23,16 @@ catalogue. An unsupported locale must not lead to Russian text.
 4. For the known `ru`, `uk` and `en`, prefer the stable pairs from BibleGarden;
    for the other supported languages take the first translation with an active
    narration in the server order.
-5. Save the computed triple. A later change of the device locale does not change
+5. *(Superseded by ADR-0039: only a catalog-confirmed triple is saved.)*
+   Save the computed triple. A later change of the device locale does not change
    the explicit or previously computed choice of the user.
 
 ## Consequences
 
 - The first launch without a saved choice makes a call to the server catalogue.
-- With no network available the app starts deterministically in English and does
-  not change the language unexpectedly later.
+- *(Superseded by ADR-0039: offline, no Bible is chosen until the catalog
+  confirms one.)* With no network available the app starts deterministically in
+  English and does not change the language unexpectedly later.
 - `expo-localization` is added as a native SDK 57 dependency and requires a
   rebuild.
 

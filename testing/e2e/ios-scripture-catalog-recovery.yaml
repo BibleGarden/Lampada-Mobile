@@ -1,0 +1,17 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# SCR-013, phase 2 of 3: continues the open prayer from the failure phase after
+# the runner sets catalog=ok. Retry confirms the Bible for the English interface
+# in the same session. The runner then reads SQLite: en/16/151, ui_language=en.
+- assertVisible:
+    id: "session-title"
+- assertVisible: ".*Bible catalog unavailable.*"
+- tapOn:
+    id: "scripture-retry-button"
+- extendedWaitUntil:
+    visible:
+      id: "scripture-audio-button"
+    timeout: 30000
+- assertNotVisible: ".*Bible catalog unavailable.*"
