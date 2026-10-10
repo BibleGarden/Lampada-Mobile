@@ -92,6 +92,17 @@ from `/proc/loadavg`:
 A runner that calls Maestro directly wraps the command instead:
 `node scripts/android-guest-load.mjs run --device <serial> --flow <name> -- maestro ...`.
 
+By default `maestro test` reinstalls its driver (`dev.mobile.maestro`) and
+server (`dev.mobile.maestro.test`) at the start of every flow and uninstalls
+them at the end, so each flow began with a package install right after the
+gate. Maestro 2.10.0 with `--no-reinstall-driver` installs each of them only
+when it is missing and keeps them afterwards. The runner therefore removes
+any copy left on the device, which may come from another Maestro version,
+before the first flow and passes `--no-reinstall-driver` to every flow: the
+first flow installs the current driver, the rest reuse it. A failed removal
+stops the run. The prepared runner starts the runner once per flow, so there
+the driver is still installed for each flow.
+
 ## Running
 
 Android critical flows are kept separately in `android-e2e/`, so they are not
