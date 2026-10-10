@@ -1,6 +1,6 @@
 import '../lib/disableFontScaling';
 import 'react-native-gesture-handler';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Stack, router, usePathname } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
@@ -27,6 +27,7 @@ import { useSettings } from '../lib/settings';
 import { useLock } from '../lib/lock';
 import LockGate from '../components/LockGate';
 import UpdateGate from '../components/UpdateGate';
+import BootSplash from '../components/BootSplash';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
@@ -36,8 +37,9 @@ import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 // не выбрасывает пользователя из неё.
 const PRAYER_FLOW = new Set(['/session', '/reflect']);
 
-// Сплэш с пламенем держится, пока корневой layout ждёт шрифты и язык
-// интерфейса: иначе между ним и главной мелькал бы пустой тёмный кадр.
+// Нативный сплэш снимает BootSplash — его копия, которая и ждёт шрифты и язык
+// интерфейса. Без этого вызова expo-router снял бы сплэш по готовности
+// навигации, раньше, чем пламя копии готово к отрисовке.
 void SplashScreen.preventAutoHideAsync();
 
 /** Тап по напоминанию открывает главную. */
@@ -58,7 +60,6 @@ function ReminderRouting() {
 }
 
 export default function RootLayout() {
-  const [updateVisible, setUpdateVisible] = useState(false);
   const uiLanguageReady = useSettings((state) => state.uiLanguageReady);
   const settingsLoaded = useSettings((state) => state.loaded);
   const uiLanguage = useSettings((state) => state.uiLanguage);
@@ -98,21 +99,27 @@ export default function RootLayout() {
   });
 
   const ready = fontsLoaded && uiLanguageReady;
-  useEffect(() => {
-    if (ready || fontError) SplashScreen.hide();
-  }, [ready, fontError]);
+  const [bootSplashHidden, setBootSplashHidden] = useState(false);
+  const hideBootSplash = useCallback(() => setBootSplashHidden(true), []);
 
   // Шрифты встроены в сборку, и их сбой — дефект сборки: он должен дойти до
-  // границы ошибок и отчёта о сбое, а не держать сплэш бесконечно.
+  // границы ошибок и отчёта о сбое. Граница ошибок expo-router сама снимает
+  // нативный сплэш, если он ещё виден.
   if (fontError) throw fontError;
-
-  if (!ready) {
-    return <View style={{ flex: 1, backgroundColor: '#0e0a07' }} />;
-  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <StatusBar style="light" />
+      {ready && <AppContent covered={covered} />}
+      {!bootSplashHidden && <BootSplash done={ready} onHidden={hideBootSplash} />}
+    </GestureHandlerRootView>
+  );
+}
+
+function AppContent({ covered }: { covered: boolean }) {
+  const [updateVisible, setUpdateVisible] = useState(false);
+  return (
+    <>
       <ReminderRouting />
       {/* Обёртка нужна только как адресат пометки для программ чтения с
           экрана: оверлеи — сиблинги навигации, а не её родитель, и пометить
@@ -139,6 +146,6 @@ export default function RootLayout() {
           приватности нельзя обойти ни переходом, ни диплинком. */}
       <UpdateGate covered={covered} onVisibleChange={setUpdateVisible} />
       <LockGate />
-    </GestureHandlerRootView>
+    </>
   );
 }
