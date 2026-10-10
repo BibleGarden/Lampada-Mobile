@@ -562,6 +562,12 @@ interval stay `NULL` - there is nothing to restore the link from. The journal
 shows the quotes of a prayer at the end of the expanded card, with the full text
 in a popup.
 
+Android Auto Backup stays enabled (`android.allowBackup` defaults to `true`;
+ADR-0040), so the journal is meant to follow the user to a new device through
+their Google account; the PIN, kept in SecureStore, is excluded, so a restored
+journal has no app lock until a PIN is set again. See ADR-0040 for the open
+issue with the backup rules written by `expo-secure-store`.
+
 The audio files live in the document directory of the app. The database stores a
 portable URI and the text of the transcript; the URI is resolved against the
 current document directory. The transcript is shown in the journal and takes part
