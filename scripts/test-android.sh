@@ -30,7 +30,7 @@ else
   cat "$run_dir/environment.log" >&2
   exit "$result"
 fi
-[[ "$(adb -s "$device" shell getprop sys.boot_completed | tr -d '\r')" == 1 ]] || { echo 'Android has not booted' >&2; exit 1; }
+node scripts/android-guest-load.mjs boot --device "$device"
 adb -s "$device" shell dumpsys package com.nf404.twinkler > "$run_dir/installed-package.log"
 grep -q 'versionName=' "$run_dir/installed-package.log" || { echo 'Lampada is not installed' >&2; exit 1; }
 if grep -q DEBUGGABLE "$run_dir/installed-package.log"; then
@@ -53,9 +53,10 @@ printf 'flow\texit\n' > "$run_dir/results.tsv"
 for flow in "${flows[@]}"; do
   echo "Starting $flow"
   # Relaunch must immediately follow smoke-full: it verifies the saved data.
+  : > "$run_dir/$flow.log"
   set +e
-  maestro --device "$device" test --test-output-dir "$run_dir/$flow" \
-    "testing/android-e2e/$flow.yaml" > "$run_dir/$flow.log" 2>&1
+  node scripts/android-guest-load.mjs run --device "$device" --flow "$flow" --flow-log "$run_dir/$flow.log" -- \
+    maestro --device "$device" test --test-output-dir "$run_dir/$flow" "testing/android-e2e/$flow.yaml"
   result=$?
   set -e
   printf '%s\t%s\n' "$flow" "$result" >> "$run_dir/results.tsv"
