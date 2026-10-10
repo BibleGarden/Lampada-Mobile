@@ -17,6 +17,110 @@ duplicated here, otherwise the two pictures drift apart.
 The scenario identifier is the shared key between the test plan, the flow, the
 report and the ClickUp task. Everything is tied together through it.
 
+## Android emulator
+
+Android flows run on the `Pray_Pixel_API_35` AVD: Pixel profile, Android 15
+Google Play ARM64 image, 1280x2856 at 480 dpi. Its
+`~/.android/avd/Pray_Pixel_API_35.avd/config.ini` must contain:
+
+| Key | Value | Why |
+| --- | --- | --- |
+| `hw.gpu.enabled`, `hw.gpu.mode` | `yes`, `host` | With software rendering (`swiftshader`, `auto` = lavapipe) a journal-screen frame took 150-600 ms (`gfxinfo` p50) and starved the guest; with the host GPU the draw itself takes 3-10 ms (`framestats`) |
+| `hw.ramSize` | `4G` | Raised from 2 GB; an idle guest with Lampada running keeps 0.7-0.9 GB free |
+| `hw.cpu.ncore` | `4` | Six vCPUs made the guest an order of magnitude slower on this host, see below |
+
+Boot it cold and do not save a snapshot, so every run starts from the same state:
+
+```bash
+emulator -avd Pray_Pixel_API_35 -gpu host -no-snapshot-save -no-boot-anim
+```
+
+The emulator warns that host OpenGL is deprecated on macOS for API 35; no
+rendering problems were seen. Display overrides (`wm size`, `wm density`) are
+not needed with the host GPU: with Gboard shown, the journal screen's total
+frame time (`gfxinfo` p50) was 129 ms natively and 133 ms at 480x1071/180.
+Most of it is the late start of the frame after vsync, not drawing. Keep the
+native size and
+remove a leftover override with `adb shell wm size reset` and
+`adb shell wm density reset`.
+
+Measured on 2026-10-10 on an M1 Pro (8 performance + 2 efficiency cores,
+32 GB) with host load 3-7, the same AVD, a cold boot and the installed Release
+APK 1.3.44, sampling `/proc/loadavg` every 5 s:
+
+| Measurement | 4 vCPUs | 6 vCPUs |
+| --- | --- | --- |
+| `sys.boot_completed` after start | 13 s | 15 s |
+| Guest 1-min load: peak after boot / below 3 / below 1 | 4.1 / 30 s / 106 s | 5.6 / 51 s / 137 s |
+| Guest load after 5 min idle, mean (max) | 0.15 (0.63) | 0.10 (0.46) |
+| Lampada cold start, `am start -W` TotalTime | 0.7-0.8 s | 23-25 s |
+| `adb install -r` of the same APK; guest load peak | 2.1 s; 0.37 | 42 s; 49 |
+| Fixed guest CPU work (md5 of 300 MB): 1 job / 8 in parallel | 0.9 s / 1.7 s | 3.8-14 s / 18-20 s |
+
+Play Services did not start a burst during 12 idle minutes after either
+cold boot.
+
+Everything the host runs competes with the guest's vCPUs. A host Gradle build
+once pushed the guest load to 41 and the `system_server` watchdog restarted
+Android; browser renderers (150 % each), `mediaanalysisd` (60 %) and
+`launchservicesd` (100 %) also slowed the guest. Do not build or run heavy
+apps on the host during a run, and check `top` on the host when the gate below
+reports a busy guest.
+
+### Readiness gate
+
+`scripts/test-android.sh`, which every Android runner uses, starts no flow on
+a busy emulator. `scripts/android-guest-load.mjs` checks the guest 1-min load
+from `/proc/loadavg`:
+
+- Once per run (`boot`), it waits for `sys.boot_completed`, which Android
+  sets after the package manager is up, and for a guest uptime of at least
+  the settle window.
+- Before each flow (`run`), it requires the load to stay below the threshold
+  for several samples in a row. Otherwise the flow fails with
+  `<flow> was not started` and the measured samples; it is not retried.
+  The load at the start and end of every flow is printed and written to the
+  flow's log as `guest-load <flow> start|end` lines. A failed load probe
+  after the flow is reported next to the flow's exit code, and a passing
+  flow then fails.
+
+The 1-min average lags: a burst that began a few seconds before the flow
+raises it only slightly, so the gate can pass while a burst is starting. It
+never passes on a guest that has been busy for a while. Settings that cannot
+pass on an idle guest, such as a flow timeout shorter than the quiet samples,
+are rejected.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `ANDROID_QUIET_LOAD` | `3` | The guest is quiet while its 1-min load is below this value |
+| `ANDROID_QUIET_SAMPLES` | `3` | Quiet samples in a row required before a flow |
+| `ANDROID_QUIET_INTERVAL_SECONDS` | `5` | Interval between samples; the kernel updates the load every 5 s |
+| `ANDROID_QUIET_TIMEOUT_SECONDS` | `300` | Time a flow waits for a quiet guest before failing |
+| `ANDROID_BOOT_SETTLE_SECONDS` | `120` | Minimum guest uptime before the first flow |
+| `ANDROID_BOOT_TIMEOUT_SECONDS` | `900` | Time the boot check waits before failing |
+
+A runner that calls Maestro directly runs the `boot` check and
+`scripts/android-maestro-driver.sh <serial> <log-dir>` once, and wraps every
+call: `node scripts/android-guest-load.mjs run --device <serial> --flow <name>
+-- maestro --device <serial> test --no-reinstall-driver ...`. The wrapper
+passes `SIGINT`, `SIGTERM` and `SIGHUP` that reach it on to Maestro; the
+calling script has to deliver them. Bash does not forward a signal to a
+foreground child, so `test-android.sh` runs the wrapper in the background,
+sends it `SIGTERM` when the runner gets `SIGTERM`, `SIGHUP` or `SIGINT`, and
+then stops the run without starting further flows.
+
+By default `maestro test` reinstalls its driver (`dev.mobile.maestro`) and
+server (`dev.mobile.maestro.test`) at the start of every flow and uninstalls
+them at the end, so each flow began with a package install right after the
+gate. Maestro 2.10.0 with `--no-reinstall-driver` installs each of them only
+when it is missing and keeps them afterwards. Every flow gets that flag.
+Before the flows, `scripts/android-maestro-driver.sh` compares the SHA-256 of
+each installed package with `maestro-app.apk` and `maestro-server.apk` from the
+current Maestro's `maestro-client.jar`; package versions are identical across
+Maestro releases. A matching package is reused, a different one is
+uninstalled, and the first flow then installs the current one. A failed check
+or removal stops the run.
+
 ## Running
 
 Android critical flows are kept separately in `android-e2e/`, so they are not
@@ -52,9 +156,7 @@ Gboard key and verifies that its Cyrillic character survives saving/reopening.
 Unicode persistence and search checks remain separate from focus checks. After a cold launch or relaunch,
 assert that Home is ready before issuing a Settings/Setup deep link; Android
 launch completion alone does not establish a mounted router. Non-deadline fixtures are untimed; finite completion and early
-music completion retain timed prayers. Display-size changes used to reduce
-emulator screenshot cost must preserve the logical viewport and be reset after
-testing. The tier runner stops at the first failure and records each flow's
+music completion retain timed prayers. The tier runner stops at the first failure and records each flow's
 full output and exit code, just like the critical tier.
 
 Controlled Android scenarios use a separate Release build with
