@@ -45,9 +45,11 @@ updates took frames from the text input, and typing showed up in batches.
   app lock with a PIN and biometrics.
 - Expo Localization for initial interface and scripture language selection.
 - Expo Splash Screen for the launch screen: the app background `#0e0a07` with
-  the flame from `assets/splash.png` on both platforms. The root layout keeps
-  it until fonts and the interface language are loaded; a font loading error
-  hides it and is thrown to the error boundary.
+  the flame from `assets/splash.png` on both platforms. The root layout's
+  first frame is an identical copy (`components/BootSplash.tsx`) that hides the
+  native splash once its flame has loaded and fades out when fonts and the
+  interface language are loaded; a font loading error is thrown to the error
+  boundary (ADR-0040).
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 

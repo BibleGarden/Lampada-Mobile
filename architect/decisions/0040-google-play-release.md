@@ -53,9 +53,16 @@ use, and biometric texts named Face ID and Touch ID on Android.
   96 %, smoothstep), so the icon's own dark square blends into the background
   and the Android 12+ circular icon mask does not reveal an edge. The file is
   800 px (the xxxhdpi size of a 200 dp image), palette-quantized with
-  libimagequant (quality 80–100, full dithering). The splash stays until the
-  root layout has its fonts and interface language, so no empty frame appears
-  between the flame and Home.
+  libimagequant (quality 80–100, full dithering). The first React frame is
+  `components/BootSplash.tsx`, a copy of the splash: the same background and
+  the same 200×200 flame in the centre of the window. The native splash is
+  hidden as soon as the copy's flame has loaded, and the copy stays until the
+  root layout has its fonts and interface language, then fades out over Home.
+  So no empty frame appears between the flame and Home, and the app mounts its
+  interface only after Android has handed the splash over: on Android 12+ the
+  app must take the system splash within 2 s of its first frame. A font error
+  is thrown to the expo-router error boundary, which hides a native splash that
+  is still shown.
 - **Permissions.** `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW`,
   `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`: the app keeps its files
   in app storage and shares prayers as text.
@@ -145,6 +152,15 @@ The journal would come back with its audio. Rejected: recordings outgrow the
 25 MB quota, and an app over the quota loses its whole cloud backup, journal
 included.
 
+### Hold the native splash until the app is ready
+
+`preventAutoHideAsync()` with `hide()` after fonts and the interface language
+would need no copy. The first app frame would then be the whole interface, and
+its mount keeps the main thread busy for seconds on a slow cold start. Android
+then times out the splash hand-over ("Activity transferring splash screen
+timeout") and leaves the app window with a `starting_reveal` animation that
+never ends; the UI automation input waits for it on every event. Rejected.
+
 ### Keep the template splash and icon assets
 
 Android would keep the white placeholder splash. Rejected; the unused template
@@ -179,6 +195,7 @@ assets were deleted.
 
 ## References
 
+- Android: [splash screens](https://developer.android.com/develop/ui/views/launch/splash-screen).
 - Expo SDK 57: [splash screen](https://docs.expo.dev/versions/v57.0.0/sdk/splash-screen/),
   [app config](https://docs.expo.dev/versions/v57.0.0/config/app/),
   [EAS Submit for Android](https://docs.expo.dev/submit/android/),
