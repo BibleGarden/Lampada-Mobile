@@ -189,6 +189,11 @@ and transitions provides the duration margin.
 
 ## Google Play
 
+The package name is `app.lampada`; the listing URL is
+`https://play.google.com/store/apps/details?id=app.lampada`. Play binds the app
+to it with the first upload, so it can no longer change (ADR-0040). The iOS
+bundle identifier stays `twinkler`.
+
 `play/<locale>.json` holds the Play listing texts for `en-US`, `ru-RU` and
 `uk`: `title` (30 characters), `shortDescription` (80) and `fullDescription`
 (4,000). They are adapted from the App Store texts without iOS terms; Play has
@@ -269,5 +274,5 @@ Play Console → Users and permissions. Upload its JSON key to EAS, never to git
 `npx eas-cli@latest credentials --platform android` → `production` → Google
 Service Account → Manage your Google Service Account Key for Play Store
 Submissions → Set up a Google Service Account Key for Play Store Submissions.
-EAS assigns the key to `com.nf404.twinkler`, so `eas.json` has no
+EAS assigns the key to `app.lampada`, so `eas.json` has no
 `serviceAccountKeyPath`.

@@ -65,8 +65,9 @@ runtime.
   has to be verified on a physical device and in EAS.
 - The Expo Widgets plugin 57.0.15 adds the `aps-environment` entitlement even
   with push updates disabled; the local implementation uses no push tokens.
-- The Android package is fixed for the first time as `com.nf404.twinkler`. It
-  cannot be changed after publishing to Google Play without creating a new app.
+- The Android package is fixed for the first time. It cannot be changed after
+  publishing to Google Play without creating a new app; ADR-0040 set it to
+  `app.lampada` before the first publication.
 - If the process is force-unloaded, the app does not restore the active session.
   The system card counts down to the deadline; the final cleanup also happens on
   the next launch or reset.
