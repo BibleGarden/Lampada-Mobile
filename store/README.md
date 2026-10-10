@@ -232,9 +232,12 @@ playback notification.
   reset.
 - Android Auto Backup is on (ADR-0040). A backup to the user's own Google
   account is not collection by the developer: do not declare it as collected
-  data. Mention it in the privacy policy and listing notes: the journal may be
-  restored from the user's Google backup, which is encrypted with the device
-  screen lock on Android 9 and later, and the app PIN is not restored.
+  data. Mention it in the privacy policy and listing notes: the journal text
+  and transcripts may be restored from the user's Google backup, which is
+  encrypted with the device screen lock (on Android 12 and later the app skips
+  the cloud backup without one); voice recordings are not in the cloud backup
+  and move only with a direct transfer to a new phone; the app PIN is never
+  restored.
 - Collected, not shared: Google Gemini and the Whisper server act as service
   providers.
   - Audio → Voice or sound recordings: optional, processed ephemerally, App
