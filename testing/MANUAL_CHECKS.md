@@ -28,10 +28,10 @@ mode, or a server log. It also says nothing about the wrapper-script groups —
 `run-lng.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`, `run-ipad.sh` — unless
 those were run explicitly, with their prepared environments. See sitting 9.
 
-Of 177 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
+Of 179 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
 including `START-*` and `RPT-*`, plus `LNG-001`–`LNG-013`, which the plan does
 not catalogue yet and which live in the e2e flows and this file), automation on
-main fully covers 107, partially covers 24, and does not cover 46. Section 9
+main fully covers 107, partially covers 24, and does not cover 48. Section 9
 of the plan has no IDs and is outside the count. How the count was made is at
 the end of this file.
 
@@ -307,8 +307,8 @@ Notes:
   with the stub setup in `testing/README.md`.
 - `JRN-006` (`ios-stage06-jrn-006-audio-switch.yaml`) needs its recordings
   seeded by hand; `JRN-009` (`ios-stage06-jrn-009-missing-file.yaml`) needs a
-  recording file deleted from the container. Both flows are written; the
-  preparation is yours.
+  recording file deleted from the simulator container. Both flows are
+  written; the preparation is yours. On Android see sitting 12.
 - `SCR-023` (`history_reset: true`) still has no flow — feed the app such a
   response from the stub or catch a live case.
 - `RPT-004` is a negative check (no report action in the saved journal) and
@@ -360,6 +360,26 @@ Recorded so a green iOS summary is not mistaken for these:
 
 ---
 
+## 12. Android — Auto Backup restore and missing audio
+
+Release and preview builds are not debuggable, so `adb shell run-as` cannot
+delete a recording file. A cloud restore produces the missing-audio state
+instead: it brings the journal back without `files/Audio/` (ADR-0040). Use an
+Android 12+ emulator with the build under test and a lock screen PIN.
+Tag: `backlog` (no runner prepares a backup yet).
+
+| ID | Do | Expected | Need |
+| --- | --- | --- | --- |
+| JRN-015 | Enable the app lock. Save a prayer with a text answer and one recording, transcribe it, finish. Run the JRN-015 commands from `TEST_PLAN.md` (local transport with `is_encrypted=true`, `bmgr backupnow app.lampada`, pull the APKs, uninstall, `install-multiple`, back to the GMS transport). Open the app. | `backupnow` prints `Package app.lampada with result: Success`. No lock screen; Settings show the protection off. The prayer, answer, takeaway and streak are back. | adb |
+| JRN-009 | After JRN-015, open History and expand that prayer. Tap the recording's play button. | The row keeps its duration and transcript; the play button is dimmed and does nothing; under the row: "Audio is not on this device" (switch the interface language to Russian and Ukrainian and check "Аудио нет на этом устройстве" / "Аудіо немає на цьому пристрої"); no Transcribe or Retry. No crash. | adb |
+| JRN-016 | On a fresh install, repeat the data of JRN-015 and run the JRN-016 commands (D2D test mode). | As JRN-015, and the recording plays with sound. | adb, ears |
+
+The player load-error branch of JRN-009 (a file that exists but cannot be
+decoded) has no manual preparation on a release build; it is reviewed in code
+(`app/journal.tsx`).
+
+---
+
 ## Suggested order on a release morning
 
 1. Confirm the tier runs, the suites and the unit/typecheck gates are green —
@@ -381,14 +401,14 @@ slots.
 
 ---
 
-## How the 177 IDs were counted
+## How the 179 IDs were counted
 
 Every `PRE-*`, `SMK-*`, `NAV-*`, `SETUP-*`, `START-*`, `SES-*`, `MUS-*`,
 `ANS-*`, `AI-*`, `SCR-*`, `RPT-*`, `END-*`, `JRN-*`, `REM-*` and `LOCK-*` row
-in `TEST_PLAN.md` sections 6–8 (164 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
+in `TEST_PLAN.md` sections 6–8 (166 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
 which the plan has no section for yet — they are catalogued by the
 `ios-lng-*.yaml` flows and this file. Section 9 of the plan has no IDs and is
-not in the 177.
+not in the 179.
 
 - **Covered (107):** a flow asserts the outcome the plan names and runs in one
   of the automated paths on main: a tier tag run (`critical` / `main` /
@@ -400,9 +420,10 @@ not in the 177.
   or a wrapper are not proven by the tier runs alone — sitting 9 names them.
 - **Partial (24):** an automated flow asserts a slice (usually UI, or the unit
   tests of the logic) and the rest is in this file.
-- **Not covered (46):** no flow at all (physical-device, airplane-mode,
-  backlog and deliberate items), a flow whose preparation is manual
-  (`JRN-006`, `JRN-009`), or a documented negative check (`RPT-004`).
+- **Not covered (48):** no flow at all (physical-device, airplane-mode,
+  backlog and deliberate items, the Android backup checks `JRN-015` and
+  `JRN-016`), a flow whose preparation is manual (`JRN-006`, `JRN-009`), or a
+  documented negative check (`RPT-004`).
 
 Flow file names are not always the current plan ID (`ios-stage06-scr-002a/b`
 is today's `SCR-003` favourites story; `ios-stage06-scr-003-long-reader` is
