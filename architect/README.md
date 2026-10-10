@@ -49,8 +49,11 @@ updates took frames from the text input, and typing showed up in batches.
   first frame is an identical copy (`components/BootSplash.tsx`). The native
   splash is hidden once the copy's flame has loaded; the app mounts after that
   and after fonts and the interface language are loaded, and the copy fades
-  out over it. A font loading error is fatal: the root layout exports no error
-  boundary, so the app crashes with a crash report (ADR-0040).
+  out over it. A font loading error, a failed `preventAutoHideAsync` and a
+  failed settings or lock-state load are fatal: the root layout exports no error
+  boundary, so the app crashes with a crash report. On Android 12+ a starved
+  main thread can still make the system's 2 s splash hand-over time out; the
+  residual risk and the rejected native signal module are in ADR-0040.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
