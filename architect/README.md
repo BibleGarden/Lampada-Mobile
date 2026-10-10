@@ -46,10 +46,11 @@ updates took frames from the text input, and typing showed up in batches.
 - Expo Localization for initial interface and scripture language selection.
 - Expo Splash Screen for the launch screen: the app background `#0e0a07` with
   the flame from `assets/splash.png` on both platforms. The root layout's
-  first frame is an identical copy (`components/BootSplash.tsx`) that hides the
-  native splash once its flame has loaded and fades out when fonts and the
-  interface language are loaded; a font loading error is thrown to the error
-  boundary (ADR-0040).
+  first frame is an identical copy (`components/BootSplash.tsx`). The native
+  splash is hidden once the copy's flame has loaded; the app mounts after that
+  and after fonts and the interface language are loaded, and the copy fades
+  out over it. A font loading error is fatal: the root layout exports no error
+  boundary, so the app crashes with a crash report (ADR-0040).
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
 - A custom native build: Expo Go does not support all the native modules in use.
 
