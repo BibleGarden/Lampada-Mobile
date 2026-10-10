@@ -31,13 +31,13 @@ else
   exit "$result"
 fi
 [[ "$(adb -s "$device" shell getprop sys.boot_completed | tr -d '\r')" == 1 ]] || { echo 'Android has not booted' >&2; exit 1; }
-adb -s "$device" shell dumpsys package com.nf404.twinkler > "$run_dir/installed-package.log"
+adb -s "$device" shell dumpsys package app.lampada > "$run_dir/installed-package.log"
 grep -q 'versionName=' "$run_dir/installed-package.log" || { echo 'Lampada is not installed' >&2; exit 1; }
 if grep -q DEBUGGABLE "$run_dir/installed-package.log"; then
   echo 'Install the standalone Release build before testing; Debug warnings can intercept taps.' >&2
   exit 1
 fi
-apk_paths="$(adb -s "$device" shell pm path com.nf404.twinkler | tr -d '\r')"
+apk_paths="$(adb -s "$device" shell pm path app.lampada | tr -d '\r')"
 apk_path="$(printf '%s\n' "$apk_paths" | sed -n 's/^package:\(.*\/base\.apk\)$/\1/p')"
 [[ -n "$apk_path" && "$apk_path" != *$'\n'* ]] || { echo 'Expected one installed base APK path.' >&2; exit 1; }
 trap 'rm -f "$run_dir/installed-base.apk"' EXIT

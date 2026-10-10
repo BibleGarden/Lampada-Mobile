@@ -12,9 +12,11 @@ import {
   FALLBACK_PIN_LENGTH,
   PIN_MAX_LENGTH,
   PIN_MIN_LENGTH,
+  biometryKind,
   isValidPin,
   parseLockConfig,
   shouldLockAfterBackground,
+  type BiometryKind,
   type LockConfig,
 } from './lockPolicy';
 
@@ -50,6 +52,9 @@ export {
   isValidPin,
   parseLockConfig,
   shouldLockAfterBackground,
+  biometryText,
+  type BiometryKind,
+  type BiometryText,
   type LockConfig,
 } from './lockPolicy';
 
@@ -168,7 +173,7 @@ export async function changePin(currentPin: string, nextPin: string): Promise<bo
 
 /**
  * Включить или выключить биометрию. Она существует только поверх пина: без
- * пин-кода нет и запасного способа войти, если Face ID перестанет узнавать.
+ * пин-кода нет и запасного способа войти, если датчик перестанет узнавать.
  */
 export async function setBiometrics(on: boolean): Promise<void> {
   if (on && !(await isLockEnabled())) return;
@@ -182,11 +187,9 @@ export async function setBiometrics(on: boolean): Promise<void> {
 export type BiometryInfo = {
   /** Датчик есть и в системе зарегистрирован хотя бы один образец. */
   available: boolean;
-  /** Название способа на языке устройства: «Face ID», «Отпечаток пальца». */
-  label: string;
+  /** Какой способ называть в интерфейсе; тексты строит `biometryText`. */
+  kind: BiometryKind;
 };
-
-const DEFAULT_BIOMETRY_LABEL = 'Face ID / Touch ID';
 
 /** Что за биометрия доступна прямо сейчас; образцы могли удалить в системе. */
 export async function biometryInfo(): Promise<BiometryInfo> {
@@ -196,17 +199,9 @@ export async function biometryInfo(): Promise<BiometryInfo> {
       LocalAuthentication.isEnrolledAsync(),
       LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
-    const face = types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION);
-    const finger = types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
-    const ios = Platform.OS === 'ios';
-    const label = face
-      ? ios ? 'Face ID' : translate('system.face')
-      : finger
-        ? ios ? 'Touch ID' : translate('system.finger')
-        : DEFAULT_BIOMETRY_LABEL;
-    return { available: hardware && enrolled, label };
+    return { available: hardware && enrolled, kind: biometryKind(Platform.OS, types) };
   } catch {
-    return { available: false, label: DEFAULT_BIOMETRY_LABEL };
+    return { available: false, kind: 'other' };
   }
 }
 

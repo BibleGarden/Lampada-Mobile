@@ -1,6 +1,6 @@
 import { languageNames } from '../lib/locales/languageNames';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -48,6 +48,7 @@ import {
   PIN_MIN_LENGTH,
   authenticateWithBiometrics,
   biometryInfo,
+  biometryText,
   changePin,
   disableLock,
   enableLock,
@@ -508,7 +509,7 @@ export default function Settings() {
     if (!info.available) return;
     // Включаем только после успешной проверки: человек сразу видит, что способ
     // работает, а не обнаруживает это на заблокированном экране.
-    const result = await authenticateWithBiometrics(t('settings.confirmBiometrics', { name: info.label }));
+    const result = await authenticateWithBiometrics(biometryText(Platform.OS, info.kind, 'confirm', t));
     if (result.ok) {
       await setBiometrics(true);
       return;
@@ -518,7 +519,7 @@ export default function Settings() {
     // молчать нельзя: до этой правки человек не видел, почему включение
     // не сработало.
     if (result.reason === 'error') {
-      Alert.alert(t('settings.biometricsError'), result.message);
+      Alert.alert(biometryText(Platform.OS, info.kind, 'enableError', t), result.message);
     }
   };
 
@@ -950,18 +951,18 @@ export default function Settings() {
             ) : null}
 
             {/* Биометрия существует только поверх пина: без кода не осталось бы
-                запасного входа, если Face ID перестанет узнавать. */}
+                запасного входа, если датчик перестанет узнавать. */}
             {lockEnabled && biometry?.available ? (
               <View style={[styles.toggleRow, styles.settingRowDivided]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{biometry.label}</Text>
+                  <Text style={styles.rowTitle}>{biometryText(Platform.OS, biometry.kind, 'label', t)}</Text>
                   <Text style={[styles.settingHint, styles.shareAnswersHint]}>
                     {t('settings.pinBackup')}
                   </Text>
                 </View>
                 <Toggle
                   value={biometricsEnabled}
-                  label={biometry.label}
+                  label={biometryText(Platform.OS, biometry.kind, 'label', t)}
                   testID="biometrics-toggle"
                   onChange={(next) => void toggleBiometrics(next)}
                 />

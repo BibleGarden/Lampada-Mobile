@@ -1,6 +1,6 @@
 # ADR-0034: Raise the minor for store builds and the patch for test builds
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-0040](0040-google-play-release.md) (production builds take a platform and share one version per release)
 - Date: 2026-09-26
 - Participants: product owner, developer
 

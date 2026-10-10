@@ -1,4 +1,7 @@
-# App Store materials
+# Store materials
+
+App Store materials are described first; Google Play has its own section at
+the end.
 
 `screenshots/` holds App Store Connect screenshots named
 `<device>-<language>-<NN>-<screen>.png`. The current set was captured on
@@ -183,3 +186,102 @@ polling for the first visible question, and simulator frame timestamps. The
 recorded action waits and reading holds use the configured values. The first
 question also has a live visual match during recording. Montage speed on typing
 and transitions provides the duration margin.
+
+## Google Play
+
+The package name is `app.lampada`; the listing URL is
+`https://play.google.com/store/apps/details?id=app.lampada`. Play binds the app
+to it with the first upload, so it can no longer change (ADR-0040). The iOS
+bundle identifier stays `twinkler`.
+
+`play/<locale>.json` holds the Play listing texts for `en-US`, `ru-RU` and
+`uk`: `title` (30 characters), `shortDescription` (80) and `fullDescription`
+(4,000). They are adapted from the App Store texts without iOS terms; Play has
+no subtitle, keywords or promotional text. `npm test` checks the limits, the
+locale set and the absence of Face ID, Touch ID and Apple product names. There
+is no sync script: paste the texts into Play Console → Grow users → Store
+presence → Main store listing. The category is Lifestyle.
+
+### Play Console declarations
+
+Verify the permissions against the merged release manifest (`PRE-004D`):
+
+| Permission | Source | Purpose |
+|---|---|---|
+| `RECORD_AUDIO` | `app.json`, expo-audio | spoken answers, recorded only on the user's press |
+| `POST_NOTIFICATIONS` | `app.json`, expo-notifications | prayer reminders, the prayer countdown notification (`modules/prayer-timer-notification`) and the background music playback notification |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | expo-audio `enableBackgroundPlayback` | music and Scripture narration continue in the background and on the lock screen |
+| `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK` | expo-notifications, WorkManager | rescheduling reminders after a restart |
+| `USE_BIOMETRIC`, `USE_FINGERPRINT` | expo-local-authentication | the optional app lock |
+| `INTERNET`, `ACCESS_NETWORK_STATE`, `MODIFY_AUDIO_SETTINGS`, `VIBRATE` | template and libraries | network requests, audio routing, haptics |
+
+`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`
+must be absent (`android.blockedPermissions`).
+
+**Foreground service.** App content → Foreground service permissions → Media
+playback: background prayer music and Scripture narration that the user
+started keep playing while the screen is locked or another app is open. Attach
+a short video that starts music in a prayer, locks the screen and shows the
+playback notification.
+
+**Data safety.** These answers follow the consent texts in
+`lib/locales/settings.ts` (`settings.privacyDetails` and the consent hints):
+
+- Data is encrypted in transit. There are no accounts. The journal and
+  recordings stay on the device and are deleted with a prayer or by the full
+  reset.
+- Android Auto Backup is on (ADR-0040). A backup to the user's own Google
+  account is not collection by the developer: do not declare it as collected
+  data. Mention it in the privacy policy and listing notes: the journal text
+  and transcripts may be restored from the user's Google backup; the app
+  sends the journal to that backup only end-to-end encrypted, which Android
+  does when the device has a screen lock, and not at all on Android 7–8.1;
+  voice recordings are never in the cloud backup and move only with a direct
+  transfer to a new phone (Android 9 and later); the app PIN is never
+  restored.
+- Collected, not shared: Google Gemini and the Whisper server act as service
+  providers.
+  - Audio → Voice or sound recordings: optional, processed ephemerally, App
+    functionality. Sent only when the user asks for a transcription and has
+    given transcription consent.
+  - Messages → Other in-app messages, or App activity → Other user-generated
+    content: the prayer topic, answers and transcripts. Optional, processed
+    ephemerally, App functionality. Sent only with the topic and answer
+    consents.
+  - Content reports: the reported question or passage and an optional comment.
+    Optional, stored on the server for moderation (App functionality).
+  - Server logs: decide whether request logs count as App info and
+    performance → Diagnostics.
+- Not collected: location, contacts, photos, device or other identifiers,
+  financial or health data, analytics.
+
+Not in the repository yet: the 1024×500 feature graphic and Android phone
+screenshots with an aspect ratio of at most 2:1. The App Store screenshots do
+not fit and show the iOS interface.
+
+### Build and submit
+
+From the repository root:
+
+```sh
+npm run eas:production:android                     # new release, Android only
+npm run eas:production:all                         # new release, both stores
+npm run eas:production:android -- --keep-version   # Android for the release iOS already has
+npx eas-cli@latest submit --platform android --profile production
+```
+
+The build uses the EAS `production` environment and produces an AAB; EAS
+increments `versionCode` remotely. On the first Android build EAS offers to
+generate the upload keystore; keep it in EAS. Play App Signing holds the app
+signing key. The submit profile uploads to the `internal` track with
+`releaseStatus: draft`; promote the release in Play Console. Uploading the
+first AAB manually to internal testing in Play Console is the most predictable
+start.
+
+`eas submit` needs a Google Cloud service account that has access to the app in
+Play Console → Users and permissions. Upload its JSON key to EAS, never to git:
+`npx eas-cli@latest credentials --platform android` → `production` → Google
+Service Account → Manage your Google Service Account Key for Play Store
+Submissions → Set up a Google Service Account Key for Play Store Submissions.
+EAS assigns the key to `app.lampada`, so `eas.json` has no
+`serviceAccountKeyPath`.

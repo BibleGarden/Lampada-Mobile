@@ -3,23 +3,31 @@ import { File, Paths } from 'expo-file-system';
 import { dayKey, getWeekIndicators } from './streak';
 import { resolveRecordingUri, toStoredRecordingUri } from './recordingUri';
 import { migrateScriptureStorage } from './scriptureSchema';
+import { recordingAudioState } from './recordingFile';
 
 // Все данные — только на устройстве.
 
 const diagnosticLog = new File(Paths.document, 'lampada-diagnostics.log');
 
-/** Безопасная диагностическая запись, доступная даже при ошибке SQLite. */
+/** Вид ошибки без её текста: сообщения могут содержать пользовательские данные. */
+export const errorKind = (error: unknown) => (error instanceof Error ? 'error' : typeof error);
+
+/**
+ * Безопасная диагностическая запись, доступная даже при ошибке SQLite.
+ * В детали попадают только коды и причины, без содержимого молитв.
+ */
 export function recordDiagnostic(
-  event: 'session_start_failed' | 'answer_save_failed',
-  error: unknown,
+  event:
+    | 'session_start_failed'
+    | 'answer_save_failed'
+    | 'version_check_ignored'
+    | 'recording_audio_missing'
+    | 'recording_playback_failed',
+  details: Record<string, string | number>,
 ) {
   try {
     diagnosticLog.write(
-      `${JSON.stringify({
-        at: new Date().toISOString(),
-        event,
-        errorKind: error instanceof Error ? 'error' : typeof error,
-      })}\n`,
+      `${JSON.stringify({ at: new Date().toISOString(), event, ...details })}\n`,
       { append: true },
     );
   } catch {
@@ -236,6 +244,8 @@ export type JournalDetail = {
     uri: string;
     durationSec: number;
     transcript: string | null;
+    /** Файл записи есть на этом устройстве; без него строка остаётся ради расшифровки. */
+    audioAvailable: boolean;
   }[];
 };
 
@@ -324,13 +334,21 @@ export async function getJournalDetail(sessionId: number): Promise<JournalDetail
   );
   return {
     answers: answers.map((a) => ({ questionIndex: a.question_index, question: a.question, text: a.text })),
-    recordings: recordings.map((r) => ({
-      id: r.id,
-      questionIndex: r.question_index,
-      uri: resolveRecordingUri(r.uri, Paths.document.uri),
-      durationSec: r.duration_sec,
-      transcript: r.transcript.trim() || null,
-    })),
+    recordings: recordings.map((r) => {
+      const uri = resolveRecordingUri(r.uri, Paths.document.uri);
+      const audio = recordingAudioState(() => new File(uri).exists);
+      if (audio !== 'available') {
+        recordDiagnostic('recording_audio_missing', { recordingId: r.id, reason: audio });
+      }
+      return {
+        id: r.id,
+        questionIndex: r.question_index,
+        uri,
+        durationSec: r.duration_sec,
+        transcript: r.transcript.trim() || null,
+        audioAvailable: audio === 'available',
+      };
+    }),
   };
 }
 

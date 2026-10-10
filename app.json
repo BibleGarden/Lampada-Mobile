@@ -31,7 +31,7 @@
       }
     },
     "android": {
-      "package": "com.nf404.twinkler",
+      "package": "app.lampada",
       "adaptiveIcon": {
         "backgroundColor": "#0e0a07",
         "foregroundImage": "./assets/icon.png"
@@ -40,6 +40,11 @@
       "permissions": [
         "RECORD_AUDIO",
         "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -47,6 +52,7 @@
     },
     "plugins": [
       "./plugins/withAndroidBuild",
+      "./plugins/withAndroidBackupRules",
       "expo-router",
       "expo-font",
       "expo-sqlite",
@@ -77,11 +83,24 @@
           "widgets": []
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": false
+        }
+      ],
       [
         "expo-local-authentication",
         {
           "faceIDPermission": "Face ID is used to unlock the app."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0e0a07",
+          "image": "./assets/splash.png",
+          "imageWidth": 200
         }
       ]
     ],
