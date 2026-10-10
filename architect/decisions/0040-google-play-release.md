@@ -153,10 +153,11 @@ assets were deleted.
   `platform` and must keep receiving iOS decisions.
 - The splash image is derived from the icon; regenerate it with the same fade
   if the icon changes.
-- A journal restored from the cloud keeps its texts and transcripts, but its
-  recordings are missing: the rows stay and the audio files are absent
-  (TEST_PLAN JRN-009). A device transfer on Android 12 and higher brings the
-  recordings too.
+- A journal restored from the cloud keeps its texts and transcripts, but not
+  the audio: the journal keeps each recording row with its transcript, marks
+  it "Audio is not on this device", disables playback and transcription, and
+  writes `recording_audio_missing` to the diagnostics log (TEST_PLAN JRN-009).
+  A device transfer on Android 12 and higher brings the recordings too.
 - A restored journal has no app lock until the PIN is set again.
 - The rules name native directories: `androidBackupRules.test.mjs` fails if an
   Expo upgrade moves the SQLite or recordings directory or renames the

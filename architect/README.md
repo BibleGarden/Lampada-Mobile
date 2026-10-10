@@ -574,7 +574,12 @@ restored from the cloud has recording rows without audio files.
 The audio files live in the document directory of the app. The database stores a
 portable URI and the text of the transcript; the URI is resolved against the
 current document directory. The transcript is shown in the journal and takes part
-in the local search. Deleting a session deletes its answers and recordings, but
+in the local search. `getJournalDetail` checks that each file exists; a recording
+without its file (an Android cloud restore, a file lost on iOS) keeps its row and
+transcript, is marked "Audio is not on this device", cannot be played or
+transcribed, and writes `recording_audio_missing` to `lampada-diagnostics.log`.
+Play checks the file again, and a player load error ends the playing state with
+a visible message and a `recording_playback_failed` record. Deleting a session deletes its answers and recordings, but
 does not change the historical day in the streak.
 
 While answering, the text and the voice recordings are split between two sheets
