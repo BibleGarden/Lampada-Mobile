@@ -61,9 +61,18 @@ use, and biometric texts named Face ID and Touch ID on Android.
   So no empty frame appears between the flame and Home, and the app mounts its
   interface only after the native splash is hidden, so the window's first
   frame is the light copy: on Android 12+ the app must take the system splash
-  within 2 s of its first frame. A font error is thrown from the root layout,
-  which exports no `ErrorBoundary`: it is a fatal error that crashes the app
-  with a crash report instead of leaving it on the splash.
+  within 2 s of its first frame. A font error, a failed `preventAutoHideAsync`
+  and a failed settings or lock-state load are thrown from the root layout,
+  which exports no `ErrorBoundary`: they are fatal errors that crash the app
+  with a crash report instead of leaving it on the splash or under the lock
+  curtain.
+  Residual risk: on Android 12+, if the app's main thread is starved right
+  after the first frame, the system's 2 s splash hand-over can still time out
+  ("Activity transferring splash screen timeout"). It was observed only under
+  extreme host CPU load on the emulator (1 of 13 cold launches at a host load
+  of about 58; 0 of 12 under normal and moderate stress). The effect is a
+  `starting_reveal` window animation that never finishes, which slows input
+  injection by test tools (Maestro). No user-visible effect is known.
 - **Permissions.** `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW`,
   `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`: the app keeps its files
   in app storage and shares prayers as text.
@@ -161,6 +170,20 @@ its mount keeps the main thread busy for seconds on a slow cold start. Android
 then times out the splash hand-over ("Activity transferring splash screen
 timeout") and leaves the app window with a `starting_reveal` animation that
 never ends; the UI automation input waits for it on every event. Rejected.
+
+### Signal the end of the hand-over from a native module
+
+A local Expo module could delay the interface until Android has finished taking
+over the system splash, closing the remaining risk. It watched the DecorView's
+hierarchy for the removal of the handed-over `SplashScreenView`. On API 31-32
+`ViewGroup` keeps a single hierarchy listener, and the module replaced the one
+installed by androidx core-splashscreen, which records the decor's
+fits-system-windows state for the splash exit. The exit then called
+`setDecorFitsSystemWindows(true)` and broke edge-to-edge at the splash exit.
+The same listener is also cleared before the view is removed on those
+versions, so the signal never fired there. Reliable alternatives (an attach
+state listener on the splash view, a frame-commit anchor) need testing on API
+31 and 32 devices. Rejected for a risk that has no known user-visible effect.
 
 ### Keep the template splash and icon assets
 

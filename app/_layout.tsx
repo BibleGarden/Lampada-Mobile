@@ -40,7 +40,8 @@ const PRAYER_FLOW = new Set(['/session', '/reflect']);
 // Нативный сплэш снимается, когда пламя его копии BootSplash готово к
 // отрисовке; копия и ждёт шрифты и язык интерфейса. Без этого вызова
 // expo-router снял бы сплэш по готовности навигации, раньше пламени копии.
-void SplashScreen.preventAutoHideAsync();
+// Отказ — дефект сборки и фатален: его бросает RootLayout (см. fatalError).
+const preventAutoHide = SplashScreen.preventAutoHideAsync();
 
 /** Тап по напоминанию открывает главную. */
 function ReminderRouting() {
@@ -63,9 +64,19 @@ export default function RootLayout() {
   const uiLanguageReady = useSettings((state) => state.uiLanguageReady);
   const settingsLoaded = useSettings((state) => state.loaded);
   const uiLanguage = useSettings((state) => state.uiLanguage);
+
+  // Сбой начальной загрузки (сплэш, настройки, блокировка) нельзя проглотить:
+  // без неё приложение молча висело бы на сплэше или под шторкой блокировки.
+  // Ошибка из промиса перебрасывается в рендер, откуда падает приложение.
+  const [fatalError, setFatalError] = useState<unknown>(null);
+  const failFatally = useCallback(
+    (error: unknown) => setFatalError(() => error ?? new Error('Startup failed')),
+    [],
+  );
   useEffect(() => {
-    void useSettings.getState().load().catch(() => undefined);
-  }, []);
+    preventAutoHide.catch(failFatally);
+    useSettings.getState().load().catch(failFatally);
+  }, [failFatally]);
 
   // При смене языка заменяем уже сохранённый в системе текст напоминаний.
   useEffect(() => {
@@ -75,8 +86,8 @@ export default function RootLayout() {
   // Состояние блокировки читается отдельно от настроек и раньше них: пока оно
   // неизвестно, LockGate держит шторку и не показывает содержимое экранов.
   useEffect(() => {
-    void useLock.getState().load().catch(() => undefined);
-  }, []);
+    useLock.getState().load().catch(failFatally);
+  }, [failFatally]);
 
   // Тот же признак «сверху висит оверлей», по которому LockGate решает, что
   // показывать. Он нужен и здесь: пометку для TalkBack ставит не оверлей, а
@@ -113,6 +124,7 @@ export default function RootLayout() {
   // экспортирует ErrorBoundary, поэтому ошибка фатальна: приложение падает с
   // отчётом о сбое, а не висит на сплэше.
   if (fontError) throw fontError;
+  if (fatalError) throw fatalError;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
