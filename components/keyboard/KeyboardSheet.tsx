@@ -25,15 +25,21 @@ function useSheetLayout() {
 // Gorhom двигает контейнер footer целиком, и кнопки остаются в его границах —
 // там, где они нарисованы, их находит доступность Android (TalkBack, Maestro).
 // Тело кончается над footer.
+//
+// Клавиатура не отнимает тело целиком: Android снимает фокус с поля, чей
+// предок сжался до нуля (View.sizeChange), и набор уходит в никуда. Поэтому
+// подъём останавливается на минимальной высоте тела, даже если клавиатура
+// выше (полноэкранная IME, низкая snap-точка на маленьком экране).
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, bodyHeight } = useSheetLayout();
   const keyboard = useReservedKeyboardHeight();
   const safeBottom = useSafeAreaInsets().bottom;
-  // Подъём не выводит footer выше верха шторки.
-  const position = useDerivedValue(
-    () => Math.max(0, animatedFooterPosition.value - Math.max(0, keyboard.value - safeBottom)),
-    [safeBottom],
-  );
+  const minBody = sc(72);
+  const position = useDerivedValue(() => {
+    const natural = animatedFooterPosition.value;
+    const lifted = natural - Math.max(0, keyboard.value - safeBottom);
+    return Math.max(0, lifted, Math.min(natural, minBody));
+  }, [safeBottom, minBody]);
   useAnimatedReaction(() => position.value, (top) => { bodyHeight.value = top; });
   const styles = useStyles(stylesFactory);
   return (

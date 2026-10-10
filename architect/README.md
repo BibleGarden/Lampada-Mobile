@@ -221,7 +221,8 @@ The keyboard height not covered by that padding is subtracted on the UI thread
 from the footer position Gorhom computes, so Gorhom moves the whole footer
 container above the keyboard frame by frame and the actions stay inside its
 bounds, where Android accessibility finds them. The body takes the height
-above the footer. Sheet inputs do not
+above the footer but never less than a minimum, because Android clears focus
+inside a view that shrinks to zero. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
@@ -230,8 +231,12 @@ Preparation and reflection defer lower actions while typing. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
 stay compact. Keyboard dismissal uses existing outside taps and native submission
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
-calculation; the synchronous close flag prevents a late hide notification from
-reopening a saved sheet. Content can scroll on small windows or long questions.
+calculation: the target snap follows the keyboard and focus, and it is
+reconciled with the index Gorhom settled at after every keyboard change and
+every sheet stop, so a fast input-method switch cannot leave the sheet low
+(`keyboardSnapTarget`, `reconcileKeyboardSnap` in `lib/keyboardGeometry.ts`).
+The synchronous close flag prevents a late hide notification from reopening a
+saved sheet. Content can scroll on small windows or long questions.
 Keyboard opening may reflow the form; typing itself preserves text and focus.
 
 ## State and the main data flow

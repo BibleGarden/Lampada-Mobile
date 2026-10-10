@@ -41,3 +41,34 @@ export function keyboardFormPolicy(layout: KeyboardLayout) {
     actionsVisible: !layout.visible,
   };
 }
+
+// Точка шторки ответа, которую требует клавиатура: 1 — вся высота, 0 —
+// вернуть на исходную, null — точку выбирает человек.
+export type KeyboardSnap = 0 | 1 | null;
+
+export function keyboardSnapTarget(current: KeyboardSnap, form: {
+  open: boolean;
+  keyboardVisible: boolean;
+  inputFocused: boolean;
+  recording: boolean;
+}): KeyboardSnap {
+  if (!form.open) return null;
+  if (form.keyboardVisible && form.inputFocused) return 1;
+  if (current === null) return null;
+  // После старта записи шторку не опускаем.
+  return form.recording ? null : 0;
+}
+
+// Сверка цели с точкой, на которой Gorhom остановил шторку. Запрос
+// повторяется при каждой сверке, пока точки не совпадут, поэтому итог не
+// зависит от порядка событий клавиатуры и анимаций. Цель «вернуть на
+// исходную» снимается только по остановке: до неё индекс ещё не знает
+// о начатом подъёме.
+export function reconcileKeyboardSnap(target: KeyboardSnap, index: number, settled: boolean): {
+  request: number | null;
+  target: KeyboardSnap;
+} {
+  if (target === null) return { request: null, target };
+  if (index !== target) return { request: target, target };
+  return { request: null, target: settled && target === 0 ? null : target };
+}

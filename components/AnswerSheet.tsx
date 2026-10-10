@@ -60,6 +60,7 @@ import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
 import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
+import { keyboardSnapTarget, reconcileKeyboardSnap, type KeyboardSnap } from '../lib/keyboardGeometry';
 
 const RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
@@ -271,7 +272,10 @@ export default function AnswerSheet({
   const [inputFocused, setInputFocused] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const landscapeTablet = isTablet() && windowWidth > windowHeight;
-  const expandedForKeyboard = useRef(false);
+  // Точка, которую требует клавиатура (null — решает человек), и точка,
+  // на которой Gorhom фактически остановил шторку.
+  const keyboardSnap = useRef<KeyboardSnap>(null);
+  const sheetIndex = useRef(-1);
 
   const updateRecs = useCallback(
     (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
@@ -450,18 +454,27 @@ export default function AnswerSheet({
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
 
-  // Snap — политика открытия формы; размер доступного тела даёт Gorhom.
-  // Синхронный флаг закрытия защищает сохранение от позднего didHide.
+  // Snap — сходящаяся политика формы, а не команда на каждое событие (см.
+  // keyboardSnapTarget). При быстрой смене клавиатуры hide и show приходят,
+  // пока шторка ещё едет, поэтому цель сверяется с фактической точкой и при
+  // смене клавиатуры или фокуса, и при каждой остановке шторки. Размер
+  // доступного тела даёт Gorhom. Синхронный флаг закрытия защищает сохранение
+  // от позднего didHide.
+  const reconcileSnap = useCallback((settled: boolean) => {
+    if (!openSheetRef.current) return;
+    const { request, target } = reconcileKeyboardSnap(keyboardSnap.current, sheetIndex.current, settled);
+    keyboardSnap.current = target;
+    if (request !== null) sheetRef.current?.snapToIndex(request);
+  }, [sheetRef]);
   useEffect(() => {
-    if (!open || !openSheetRef.current) { expandedForKeyboard.current = false; return; }
-    if (keyboard.visible && inputFocused) {
-      expandedForKeyboard.current = true;
-      sheetRef.current?.snapToIndex(1);
-    } else if (!keyboard.visible && expandedForKeyboard.current && !recordingOverlayActiveRef.current) {
-      expandedForKeyboard.current = false;
-      sheetRef.current?.snapToIndex(0);
-    }
-  }, [open, keyboard.visible, inputFocused, sheetRef]);
+    keyboardSnap.current = keyboardSnapTarget(keyboardSnap.current, {
+      open: open && openSheetRef.current,
+      keyboardVisible: keyboard.visible,
+      inputFocused,
+      recording: recordingOverlayActiveRef.current,
+    });
+    reconcileSnap(false);
+  }, [open, keyboard.visible, inputFocused, reconcileSnap]);
 
   const startRecording = async () => {
     if (!recordingSheetOpenRef.current) return;
@@ -1173,10 +1186,12 @@ export default function AnswerSheet({
       // за ручку.
       enableContentPanningGesture={false}
       onChange={async (i) => {
+        sheetIndex.current = i;
         if (!nativeAudioMountedRef.current) return;
         setOpen(i >= 0);
         const editing = i >= 0;
         openSheetRef.current = editing;
+        reconcileSnap(true);
         if (editing) onOpenChange?.(true);
         if (i < 0) {
           recordingsSheetGenerationRef.current += 1;

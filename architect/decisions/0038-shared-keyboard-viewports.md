@@ -33,7 +33,10 @@ covered by that safe area is subtracted on the UI thread from the footer
 position Gorhom computes, and that lifted position is what Gorhom's footer
 container is placed at; the body ends above it. The actions never move outside
 their container, because a child shifted out of its parent's bounds is drawn
-but is not visible to Android accessibility. Gorhom owns sheet
+but is not visible to Android accessibility. The lift stops at a minimum body
+height even when the keyboard is taller than the sheet allows (a full-screen
+input method, the low snap point on a small screen): Android clears focus inside
+a view that shrinks to zero size, and typing would go nowhere. Gorhom owns sheet
 positioning and footer measurement within that window, not a second keyboard
 inset. Managed sheet inputs
 deliberately do not register Gorhom's independent keyboard handler. Remove
@@ -48,7 +51,13 @@ and a sheet rotated while open right after it closes. A closed sheet is neither
 presented nor touchable.
 
 Preparation and reflection defer lower actions while a software keyboard is
-visible; answers and reports do not hide actions.
+visible; answers and reports do not hide actions. The answer sheet's snap is a
+convergent reconciliation, not a command per event: a visible keyboard with a
+focused field requires the full-height snap, its hiding returns the sheet to
+the resting snap once, and the target is compared with the index Gorhom settled
+at both when the keyboard or focus changes and after every sheet stop. A fast
+input-method switch delivers hide and show while the sheet is still moving, so
+the result does not depend on their order.
 Use compact floating inputs for an Android floating panel that reports no occupied
 bottom strip. Preserve existing outside-tap dismissal and native submission keys;
 do not add a separate dismissal action. Preserve transactional save and audio lifecycle ownership.
