@@ -47,7 +47,7 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "babel-preset-expo": "^57.0.1",
-    "patch-package": "^8.0.1",
+    "patch-package": "8.0.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -55,7 +55,7 @@
     "android": "bash scripts/build-native.sh android",
     "ios": "bash scripts/build-native.sh ios",
     "web": "EXPO_PUBLIC_BUILD_CHANNEL=test expo start --web",
-    "postinstall": "patch-package --error-on-fail",
+    "postinstall": "patch-package --error-on-fail --error-on-warn",
     "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/__tests__/*.test.mjs",
     "test:e2e:critical": "MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=critical --test-output-dir \"${TMPDIR:-/tmp/}pray-e2e-output\" testing/e2e/",
     "test:e2e:android:critical": "bash scripts/test-android-critical.sh",

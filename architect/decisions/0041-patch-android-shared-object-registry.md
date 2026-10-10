@@ -30,8 +30,9 @@ access and is not affected.
 
 `patches/expo-modules-core+57.0.14.patch` makes every read of the registry's
 `pairs` and `currentId` hold the same lock as its writes. `postinstall` applies
-it with `patch-package --error-on-fail`, so a patch that no longer applies
-after an Expo update stops the install instead of shipping the race. Startup
+it with `patch-package --error-on-fail --error-on-warn`, so a patch that no
+longer applies, or that applies to a different `expo-modules-core` version than
+the one it was made for, stops the install instead of shipping the race. Startup
 failures of the settings load stay fatal (ADR-0040): they report real defects
 instead of leaving the settings unloaded.
 
@@ -57,8 +58,23 @@ with a shared object argument, not only SQLite.
 
 - Android startup readers no longer fail at random on a live statement.
 - The patch must be recreated or dropped on every `expo-modules-core` update;
-  the install fails loudly until then. It can be dropped once upstream locks
-  these reads.
+  the install fails loudly until then.
+- Upstream issue: pending filing, not yet reported (no link).
+
+## Drop procedure
+
+When upstream `SharedObjectRegistry.toNativeObject` reads `pairs` and
+`currentId` (including `ensureWasNotRelease`) under the registry lock:
+
+1. Delete `patches/expo-modules-core+*.patch`.
+2. If no other patches remain, remove the `postinstall` script and the
+   `patch-package` devDependency from `package.json`, refresh
+   `package-lock.json`, and delete `patches/`.
+3. Mark this ADR as superseded.
+
+Until then, `--error-on-warn` makes every `expo-modules-core` bump fail the
+install, which forces re-evaluating the patch: check the new registry source,
+then either rename and regenerate the patch or drop it as above.
 
 ## References
 
