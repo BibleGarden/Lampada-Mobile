@@ -105,7 +105,10 @@ const server = http.createServer((request, response) => {
     return;
   }
   if (request.method === 'GET' && url.pathname === '/api/version-check') {
-    json(response, 200, versionResponse);
+    // Как настоящий API: ответ несёт platform запросившей сборки (iOS и Android).
+    const platform = url.searchParams.get('platform');
+    if (!platform) { json(response, 422, { detail: 'platform is required' }); return; }
+    json(response, 200, { ...versionResponse, platform });
     return;
   }
   // Транскрипция: приложение шлёт multipart — тело просто вычитываем.
