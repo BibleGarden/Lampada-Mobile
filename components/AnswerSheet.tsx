@@ -1222,6 +1222,8 @@ export default function AnswerSheet({
         openSheetRef.current = editing;
         if (editing) onOpenChange?.(true);
         if (i < 0) {
+          // Потерянное отпускание ручки не должно задерживать скрытия клавиатуры.
+          handlePressed.current = false;
           recordingsSheetGenerationRef.current += 1;
           observeRelease(cancelLimitCue());
           cancelDraftPlayback();
