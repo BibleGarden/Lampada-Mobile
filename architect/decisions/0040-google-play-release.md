@@ -58,17 +58,10 @@ use, and biometric texts named Face ID and Touch ID on Android.
   the same 200×200 flame in the centre of the window. The native splash is
   hidden as soon as the copy's flame has loaded, and the copy stays until the
   root layout has its fonts and interface language, then fades out over Home.
-  So no empty frame appears between the flame and Home. On Android 12+ the
-  system hands its splash over to the app after the window's first frame and
-  waits at most 2 s for the main thread to draw it; a missed hand-over leaves
-  the app window with a `starting_reveal` animation that never ends. The app
-  therefore mounts its interface only after the hand-over:
-  `modules/splash-hand-over` resolves when expo-splash-screen removes the
-  handed-over `SplashScreenView`, and without a hand-over (a snapshot start, a
-  recreated activity) once the system's 2 s have passed after the first frame
-  or after the transfer began; before Android 12 there is no hand-over. The
-  native fade is set to 0 ms: over an identical copy it is invisible and only
-  delays the hand-over's end. A font error is thrown from the root layout,
+  So no empty frame appears between the flame and Home, and the app mounts its
+  interface only after the native splash is hidden, so the window's first
+  frame is the light copy: on Android 12+ the app must take the system splash
+  within 2 s of its first frame. A font error is thrown from the root layout,
   which exports no `ErrorBoundary`: it is a fatal error that crashes the app
   with a crash report instead of leaving it on the splash.
 - **Permissions.** `android.blockedPermissions` removes `SYSTEM_ALERT_WINDOW`,
@@ -168,13 +161,6 @@ its mount keeps the main thread busy for seconds on a slow cold start. Android
 then times out the splash hand-over ("Activity transferring splash screen
 timeout") and leaves the app window with a `starting_reveal` animation that
 never ends; the UI automation input waits for it on every event. Rejected.
-
-### Mount the app as soon as the native splash is hidden
-
-The copy alone keeps the first frame light, but the interface then mounts
-within the 2 s hand-over window and, on a loaded device, still makes Android
-miss the hand-over. Neither `hide()` nor `hideAsync()` in expo-splash-screen
-reports its end. Rejected in favour of the local signal module.
 
 ### Keep the template splash and icon assets
 

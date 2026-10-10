@@ -31,7 +31,6 @@ import BootSplash from '../components/BootSplash';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
-import { waitForSplashHandOver } from '../lib/splashHandOver';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
 // завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
@@ -42,9 +41,6 @@ const PRAYER_FLOW = new Set(['/session', '/reflect']);
 // отрисовке; копия и ждёт шрифты и язык интерфейса. Без этого вызова
 // expo-router снял бы сплэш по готовности навигации, раньше пламени копии.
 void SplashScreen.preventAutoHideAsync();
-// Копия неотличима от нативного сплэша, и его затухание поверх неё только
-// задержало бы конец передачи сплэша на Android.
-SplashScreen.setOptions({ duration: 0 });
 
 /** Тап по напоминанию открывает главную. */
 function ReminderRouting() {
@@ -102,14 +98,14 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
 
-  // Приложение монтируется только после того, как Android принял нативный
-  // сплэш: тяжёлый монтаж в эти 2 с срывает передачу (ADR-0040).
-  const [splashHandedOver, setSplashHandedOver] = useState(false);
+  // Приложение монтируется только после снятия нативного сплэша: его тяжёлый
+  // первый кадр не должен стать первым кадром окна (ADR-0040).
+  const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
   const hideNativeSplash = useCallback(() => {
     SplashScreen.hide();
-    void waitForSplashHandOver().then(() => setSplashHandedOver(true));
+    setNativeSplashHidden(true);
   }, []);
-  const ready = fontsLoaded && uiLanguageReady && splashHandedOver;
+  const ready = fontsLoaded && uiLanguageReady && nativeSplashHidden;
   const [bootSplashHidden, setBootSplashHidden] = useState(false);
   const hideBootSplash = useCallback(() => setBootSplashHidden(true), []);
 
