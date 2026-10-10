@@ -36,6 +36,9 @@ updates took frames from the text input, and typing showed up in batches.
 - Expo Router with file-based routing in `app/`.
 - Zustand for the session state and the settings.
 - Expo SQLite for persistent structured data.
+- `patch-package` applies `patches/` on install: the Android shared object
+  registry of `expo-modules-core` reads under its lock, so parallel SQLite
+  queries do not fail on a live statement (ADR-0041).
 - Expo File System and Expo Audio for local voice recordings, the bundled music
   and the streamed scripture narration.
 - Expo Widgets and Expo UI for the system countdown in an iOS Live Activity.
