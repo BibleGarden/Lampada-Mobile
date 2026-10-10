@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-const run = promisify(execFile);
+const execFileAsync = promisify(execFile);
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 const SETTINGS = {
@@ -17,20 +17,32 @@ const SETTINGS = {
   flowSamples: ['ANDROID_QUIET_SAMPLES', 3],
   flowTimeoutSeconds: ['ANDROID_QUIET_TIMEOUT_SECONDS', 300],
   bootSettleSeconds: ['ANDROID_BOOT_SETTLE_SECONDS', 120],
-  bootTimeoutSeconds: ['ANDROID_BOOT_QUIET_TIMEOUT_SECONDS', 900],
+  bootTimeoutSeconds: ['ANDROID_BOOT_TIMEOUT_SECONDS', 900],
 };
+const name = (key) => SETTINGS[key][0];
 
 export function readSettings(environment) {
-  return Object.fromEntries(Object.entries(SETTINGS).map(([key, [name, fallback]]) => {
-    const raw = environment[name];
+  const settings = Object.fromEntries(Object.entries(SETTINGS).map(([key, [variable, fallback]]) => {
+    const raw = environment[variable];
     if (raw === undefined || raw === '') return [key, fallback];
     const value = Number(raw);
     const integer = key === 'flowSamples';
     if (!Number.isFinite(value) || value <= 0 || (integer && !Number.isInteger(value))) {
-      throw new Error(`${name} must be a positive ${integer ? 'integer' : 'number'}, got ${JSON.stringify(raw)}`);
+      throw new Error(`${variable} must be a positive ${integer ? 'integer' : 'number'}, got ${JSON.stringify(raw)}`);
     }
     return [key, value];
   }));
+  // Сочетания, при которых гейт не может пройти даже на простаивающем госте.
+  const quietWindow = (settings.flowSamples - 1) * settings.intervalSeconds;
+  if (settings.flowTimeoutSeconds < quietWindow) {
+    throw new Error(`${name('flowTimeoutSeconds')} (${settings.flowTimeoutSeconds}) is shorter than `
+      + `${name('flowSamples')} samples ${name('intervalSeconds')} apart (${quietWindow} s)`);
+  }
+  if (settings.bootTimeoutSeconds < settings.bootSettleSeconds) {
+    throw new Error(`${name('bootTimeoutSeconds')} (${settings.bootTimeoutSeconds}) is shorter than `
+      + `${name('bootSettleSeconds')} (${settings.bootSettleSeconds})`);
+  }
+  return settings;
 }
 
 export function parseLoadAverage(text) {
@@ -69,7 +81,7 @@ export async function waitForQuietGuest({ sample, threshold, samples, intervalMs
 }
 
 async function shell(device, ...command) {
-  const { stdout } = await run('adb', ['-s', device, 'shell', ...command], { timeout: 30_000 });
+  const { stdout } = await execFileAsync('adb', ['-s', device, 'shell', ...command], { timeout: 30_000 });
   return stdout.replace(/\r/g, '').trim();
 }
 
@@ -83,47 +95,55 @@ async function waitUntil(description, check, deadline, intervalMs) {
   }
 }
 
-// Разовая проверка после загрузки: система загружена, менеджер пакетов
-// отвечает, прошло окно фоновых задач холодного старта и гость утих.
-// На давно загруженном эмуляторе она стоит столько же, сколько гейт сценария.
-export async function waitForBootedQuietGuest(device, settings, report) {
+// Разовая проверка после загрузки: система загружена (sys.boot_completed
+// выставляется после запуска менеджера пакетов) и прошло окно фоновых задач
+// холодного старта. Тишину гостя проверяет гейт каждого сценария.
+export async function waitForBootedGuest(device, settings, report) {
   const intervalMs = settings.intervalSeconds * 1000;
   const started = Date.now();
   const deadline = started + settings.bootTimeoutSeconds * 1000;
   await waitUntil('sys.boot_completed=1', async () => (await shell(device, 'getprop', 'sys.boot_completed')) === '1',
     deadline, intervalMs);
-  await waitUntil('package manager ready', async () => {
-    try {
-      return (await shell(device, 'pm', 'path', 'android')).startsWith('package:');
-    } catch {
-      // До готовности сервиса package команда pm завершается с ошибкой.
-      return false;
-    }
-  }, deadline, intervalMs);
   const uptime = async () => parseUptime(await shell(device, 'cat', '/proc/uptime'));
   await waitUntil(`uptime of ${settings.bootSettleSeconds} s`, async () => (await uptime()) >= settings.bootSettleSeconds,
     deadline, intervalMs);
-  const { load } = await waitForQuietGuest({ sample: guestLoad(device), threshold: settings.threshold,
-    samples: settings.flowSamples, intervalMs, timeoutMs: Math.max(0, deadline - Date.now()) });
-  report(`guest-load boot ready uptime=${Math.round(await uptime())}s load=${load} `
+  report(`guest-load boot ready uptime=${Math.round(await uptime())}s load=${await guestLoad(device)()} `
     + `waited=${Math.round((Date.now() - started) / 1000)}s`);
 }
 
-// Гейт перед сценарием, сам сценарий и замер после него. Код выхода — код сценария.
-export async function runFlowOnQuietGuest(device, flow, command, flowLog, settings, report) {
-  const { load, waitedMs } = await waitForQuietGuest({ sample: guestLoad(device), threshold: settings.threshold,
+// Запускает команду; сигналы остановки передаются ей, чтобы Maestro не
+// продолжал управлять эмулятором после остановки прогона.
+export function execute(command, output) {
+  return new Promise((done, fail) => {
+    const child = spawn(command[0], command.slice(1), { stdio: ['ignore', output, output] });
+    const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
+    const forward = (signal) => child.kill(signal);
+    for (const signal of signals) process.on(signal, forward);
+    const release = () => { for (const signal of signals) process.off(signal, forward); };
+    child.on('error', (error) => { release(); fail(error); });
+    child.on('exit', (code, signal) => { release(); done(code ?? 128 + constants.signals[signal]); });
+  });
+}
+
+// Гейт перед сценарием, сам сценарий и замер после него. Код выхода — код
+// сценария; если замер после него не удался, об этом сообщается отдельно,
+// а успешный сценарий получает код 1.
+export async function runFlowOnQuietGuest({ flow, sample, launch, settings, report }) {
+  const { load, waitedMs } = await waitForQuietGuest({ sample, threshold: settings.threshold,
     samples: settings.flowSamples, intervalMs: settings.intervalSeconds * 1000,
     timeoutMs: settings.flowTimeoutSeconds * 1000 }).catch((error) => {
     throw new Error(`${flow} was not started: ${error.message}`);
   });
   report(`guest-load ${flow} start load=${load} waited=${Math.round(waitedMs / 1000)}s`);
-  const output = flowLog ? openSync(flowLog, 'a') : 'inherit';
-  const exit = await new Promise((done, fail) => {
-    const child = spawn(command[0], command.slice(1), { stdio: ['ignore', output, output] });
-    child.on('error', fail);
-    child.on('exit', (code, signal) => done(code ?? 128 + constants.signals[signal]));
-  }).finally(() => { if (flowLog) closeSync(output); });
-  report(`guest-load ${flow} end load=${await guestLoad(device)()} exit=${exit}`);
+  const exit = await launch();
+  let end;
+  try {
+    end = await sample();
+  } catch (error) {
+    report(`guest-load ${flow} end load probe failed: ${error.message}; flow exit=${exit}`);
+    return exit || 1;
+  }
+  report(`guest-load ${flow} end load=${end} exit=${exit}`);
   return exit;
 }
 
@@ -158,10 +178,17 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     flowLog = options['flow-log'];
     const settings = readSettings(process.env);
     if (options.mode === 'boot') {
-      await waitForBootedQuietGuest(options.device, settings, report);
+      await waitForBootedGuest(options.device, settings, report);
     } else {
-      process.exitCode = await runFlowOnQuietGuest(options.device, options.flow, options.command,
-        options['flow-log'], settings, report);
+      process.exitCode = await runFlowOnQuietGuest({ flow: options.flow, sample: guestLoad(options.device), settings,
+        report, launch: async () => {
+          const output = flowLog ? openSync(flowLog, 'a') : 'inherit';
+          try {
+            return await execute(options.command, output);
+          } finally {
+            if (flowLog) closeSync(output);
+          }
+        } });
     }
   } catch (error) {
     report(error.message);

@@ -25,7 +25,7 @@ Google Play ARM64 image, 1280x2856 at 480 dpi. Its
 
 | Key | Value | Why |
 | --- | --- | --- |
-| `hw.gpu.enabled`, `hw.gpu.mode` | `yes`, `host` | Software rendering (`swiftshader`, `auto` = lavapipe) took 150-600 ms per frame and starved the guest; with the host GPU a frame draws in 3-10 ms |
+| `hw.gpu.enabled`, `hw.gpu.mode` | `yes`, `host` | With software rendering (`swiftshader`, `auto` = lavapipe) a journal-screen frame took 150-600 ms (`gfxinfo` p50) and starved the guest; with the host GPU the draw itself takes 3-10 ms (`framestats`) |
 | `hw.ramSize` | `4G` | Raised from 2 GB; an idle guest with Lampada running keeps 0.7-0.9 GB free |
 | `hw.cpu.ncore` | `4` | Six vCPUs made the guest an order of magnitude slower on this host, see below |
 
@@ -37,8 +37,10 @@ emulator -avd Pray_Pixel_API_35 -gpu host -no-snapshot-save -no-boot-anim
 
 The emulator warns that host OpenGL is deprecated on macOS for API 35; no
 rendering problems were seen. Display overrides (`wm size`, `wm density`) are
-not needed with the host GPU: the journal screen with Gboard shown drew frames
-at p50 129 ms natively and 133 ms at 480x1071/180. Keep the native size and
+not needed with the host GPU: with Gboard shown, the journal screen's total
+frame time (`gfxinfo` p50) was 129 ms natively and 133 ms at 480x1071/180.
+Most of it is the late start of the frame after vsync, not drawing. Keep the
+native size and
 remove a leftover override with `adb shell wm size reset` and
 `adb shell wm density reset`.
 
@@ -71,14 +73,22 @@ reports a busy guest.
 a busy emulator. `scripts/android-guest-load.mjs` checks the guest 1-min load
 from `/proc/loadavg`:
 
-- Once per run (`boot`), it waits for `sys.boot_completed`, a responding
-  package manager, a guest uptime of at least the settle window, and then a
-  quiet guest.
+- Once per run (`boot`), it waits for `sys.boot_completed`, which Android
+  sets after the package manager is up, and for a guest uptime of at least
+  the settle window.
 - Before each flow (`run`), it requires the load to stay below the threshold
   for several samples in a row. Otherwise the flow fails with
   `<flow> was not started` and the measured samples; it is not retried.
   The load at the start and end of every flow is printed and written to the
-  flow's log as `guest-load <flow> start|end` lines.
+  flow's log as `guest-load <flow> start|end` lines. A failed load probe
+  after the flow is reported next to the flow's exit code, and a passing
+  flow then fails.
+
+The 1-min average lags: a burst that began a few seconds before the flow
+raises it only slightly, so the gate can pass while a burst is starting. It
+never passes on a guest that has been busy for a while. Settings that cannot
+pass on an idle guest, such as a flow timeout shorter than the quiet samples,
+are rejected.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -87,21 +97,25 @@ from `/proc/loadavg`:
 | `ANDROID_QUIET_INTERVAL_SECONDS` | `5` | Interval between samples; the kernel updates the load every 5 s |
 | `ANDROID_QUIET_TIMEOUT_SECONDS` | `300` | Time a flow waits for a quiet guest before failing |
 | `ANDROID_BOOT_SETTLE_SECONDS` | `120` | Minimum guest uptime before the first flow |
-| `ANDROID_BOOT_QUIET_TIMEOUT_SECONDS` | `900` | Time the boot check waits before failing |
+| `ANDROID_BOOT_TIMEOUT_SECONDS` | `900` | Time the boot check waits before failing |
 
-A runner that calls Maestro directly wraps the command instead:
-`node scripts/android-guest-load.mjs run --device <serial> --flow <name> -- maestro ...`.
+A runner that calls Maestro directly runs the `boot` check and
+`scripts/android-maestro-driver.sh <serial> <log-dir>` once, and wraps every
+call: `node scripts/android-guest-load.mjs run --device <serial> --flow <name>
+-- maestro --device <serial> test --no-reinstall-driver ...`. The wrapper
+passes `SIGINT`, `SIGTERM` and `SIGHUP` on to Maestro.
 
 By default `maestro test` reinstalls its driver (`dev.mobile.maestro`) and
 server (`dev.mobile.maestro.test`) at the start of every flow and uninstalls
 them at the end, so each flow began with a package install right after the
 gate. Maestro 2.10.0 with `--no-reinstall-driver` installs each of them only
-when it is missing and keeps them afterwards. The runner therefore removes
-any copy left on the device, which may come from another Maestro version,
-before the first flow and passes `--no-reinstall-driver` to every flow: the
-first flow installs the current driver, the rest reuse it. A failed removal
-stops the run. The prepared runner starts the runner once per flow, so there
-the driver is still installed for each flow.
+when it is missing and keeps them afterwards. Every flow gets that flag.
+Before the flows, `scripts/android-maestro-driver.sh` compares the SHA-256 of
+each installed package with `maestro-app.apk` and `maestro-server.apk` from the
+current Maestro's `maestro-client.jar`; package versions are identical across
+Maestro releases. A matching package is reused, a different one is
+uninstalled, and the first flow then installs the current one. A failed check
+or removal stops the run.
 
 ## Running
 
