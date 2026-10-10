@@ -564,12 +564,13 @@ in a popup.
 
 Android Auto Backup carries the journal to a new device through the user's
 Google account (ADR-0040). `plugins/withAndroidBackupRules.js` replaces the
-rules of `expo-secure-store` (`configureAndroidBackup: false`) and backs up only
-`files/SQLite/`; recordings in `files/Audio/` go only with a device-to-device
-transfer on Android 12 and higher, because the 25 MB cloud quota would stop the
-whole backup. `shared_prefs/SecureStore.xml` is excluded everywhere, so a
-restored journal has no app lock until a PIN is set again, and a journal
-restored from the cloud has recording rows without audio files.
+rules of `expo-secure-store` (`configureAndroidBackup: false`). The cloud backup
+carries only `files/SQLite/` and only end-to-end encrypted, that is with a
+screen lock set; recordings in `files/Audio/` go only with a device-to-device
+transfer, because the 25 MB cloud quota would stop the whole backup. Android
+7–8.1 back up nothing. No rule lists SharedPreferences, so SecureStore never
+enters a copy: a restored journal has no app lock until a PIN is set again,
+and a journal restored from the cloud has recording rows without audio files.
 
 The audio files live in the document directory of the app. The database stores a
 portable URI and the text of the transcript; the URI is resolved against the
