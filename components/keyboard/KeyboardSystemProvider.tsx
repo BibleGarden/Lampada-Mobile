@@ -1,8 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dimensions, Keyboard, Platform, useWindowDimensions, type KeyboardEvent } from 'react-native';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { hiddenKeyboard, keyboardLayoutFor, updateKeyboardState, type KeyboardState } from '../../lib/keyboardGeometry';
-import { KeyboardLayoutContext } from '../../lib/useKeyboardLayout';
+import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { KeyboardProvider, useKeyboardHandler, useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import {
+  hiddenKeyboard, keyboardLayoutFor, reservedKeyboardHeight, updateKeyboardState,
+  type KeyboardLayout, type KeyboardState,
+} from '../../lib/keyboardGeometry';
+import { KeyboardLayoutContext, ReservedKeyboardHeightContext } from '../../lib/useKeyboardLayout';
+
+// Резерв под клавиатуру: состояние даёт классификатор React Native, кадры
+// анимации — Keyboard Controller (reservedKeyboardHeight).
+function KeyboardReservation({ kind, children }: React.PropsWithChildren<{ kind: KeyboardLayout['kind'] }>) {
+  const { height } = useReanimatedKeyboardAnimation();
+  const moving = useSharedValue(false);
+  useKeyboardHandler({
+    onStart: () => { 'worklet'; moving.value = true; },
+    onEnd: () => { 'worklet'; moving.value = false; },
+  }, []);
+  // height в Keyboard Controller отрицательна: это сдвиг вверх.
+  const reserved = useDerivedValue(() => reservedKeyboardHeight(kind, moving.value, -height.value), [kind]);
+  return <ReservedKeyboardHeightContext.Provider value={reserved}>{children}</ReservedKeyboardHeightContext.Provider>;
+}
 
 export default function KeyboardSystemProvider({ children }: React.PropsWithChildren) {
   const { width } = useWindowDimensions();
@@ -41,7 +59,9 @@ export default function KeyboardSystemProvider({ children }: React.PropsWithChil
   const layout = useMemo(() => keyboardLayoutFor(state, dockedWidth), [state, dockedWidth]);
   return (
     <KeyboardProvider preload={false} statusBarTranslucent navigationBarTranslucent>
-      <KeyboardLayoutContext.Provider value={layout}>{children}</KeyboardLayoutContext.Provider>
+      <KeyboardLayoutContext.Provider value={layout}>
+        <KeyboardReservation kind={layout.kind}>{children}</KeyboardReservation>
+      </KeyboardLayoutContext.Provider>
     </KeyboardProvider>
   );
 }

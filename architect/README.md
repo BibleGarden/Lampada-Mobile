@@ -210,7 +210,11 @@ a visible IME with inaccessible lower actions.
 `KeyboardViewport` fills its window to the bottom edge and reserves
 `max(bottom safe area, keyboard height)` as one UI-thread padding driven by
 Keyboard Controller 1.21.9 (Expo SDK 57), so content never dips under the Home
-Indicator or navigation bar while the keyboard animates. Forms do not subtract
+Indicator or navigation bar while the keyboard animates. The state comes from
+the classifier and only the frames from Keyboard Controller: the height is
+reserved while the keyboard is docked or a Keyboard Controller transition runs
+(`reservedKeyboardHeight` in `lib/keyboardGeometry.ts`), so a stale Keyboard
+Controller height after a fast input-method switch leaves no padding. Forms do not subtract
 keyboard or screen heights themselves.
 
 `KeyboardSheet` puts a Gorhom sheet into a full-window overlay that reserves
@@ -222,7 +226,7 @@ from the footer position Gorhom computes, so Gorhom moves the whole footer
 container above the keyboard frame by frame and the actions stay inside its
 bounds, where Android accessibility finds them. The body takes the height
 above the footer but never less than a minimum, because Android clears focus
-inside a view that shrinks to zero. Sheet inputs do not
+inside a view that shrinks to zero (`sheetFooterPosition`). Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
@@ -231,10 +235,12 @@ Preparation and reflection defer lower actions while typing. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
 stay compact. Keyboard dismissal uses existing outside taps and native submission
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
-calculation: the target snap follows the keyboard and focus, and it is
-reconciled with the index Gorhom settled at after every keyboard change and
-every sheet stop, so a fast input-method switch cannot leave the sheet low
-(`keyboardSnapTarget`, `reconcileKeyboardSnap` in `lib/keyboardGeometry.ts`).
+calculation: the target snap follows the keyboard and focus, every keyboard or
+focus change requests it, and returning to the resting snap is a single request,
+so a later drag stays where the person put it. Gorhom ignores a repeated request
+and runs requests in order, so the last one decides the result of a fast
+input-method switch (`keyboardSnapTarget`, `reconcileKeyboardSnap` in
+`lib/keyboardGeometry.ts`).
 The synchronous close flag prevents a late hide notification from reopening a
 saved sheet. Content can scroll on small windows or long questions.
 Keyboard opening may reflow the form; typing itself preserves text and focus.

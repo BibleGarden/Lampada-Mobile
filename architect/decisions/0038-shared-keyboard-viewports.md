@@ -21,10 +21,15 @@ IME hide. React Native responder release is unconditional because Controller
 dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display.
 
 Use Expo SDK 57's supported Keyboard Controller 1.21.9 for the animated
-keyboard height. Every keyboard viewport fills its window down to the bottom
-edge (screens, transparent full-screen Modals), so it reserves
-`max(bottom safe area, keyboard height)` as one UI-thread padding that follows
-the keyboard animation frame by frame; a floating keyboard reserves nothing.
+keyboard height. The React Native classifier alone decides whether a docked
+keyboard is present; Keyboard Controller supplies only animation frames. The
+reservation is its height while the classifier reports a docked keyboard or
+while a Keyboard Controller transition runs (Android reports a hide at the start
+of its animation), and zero otherwise, because Keyboard Controller can keep a
+stale height after a fast input-method switch. Every keyboard viewport fills its
+window down to the bottom edge (screens, transparent full-screen Modals), so it
+reserves `max(bottom safe area, keyboard height)` as one UI-thread padding that
+follows the keyboard animation frame by frame; a floating keyboard reserves nothing.
 An inner frame constrains absolute children. A sheet fills the window with no
 reservation, so the sheet and its backdrop reach the screen edge and its
 container never changes with the keyboard. Its footer keeps a constant padding
@@ -54,10 +59,13 @@ Preparation and reflection defer lower actions while a software keyboard is
 visible; answers and reports do not hide actions. The answer sheet's snap is a
 convergent reconciliation, not a command per event: a visible keyboard with a
 focused field requires the full-height snap, its hiding returns the sheet to
-the resting snap once, and the target is compared with the index Gorhom settled
-at both when the keyboard or focus changes and after every sheet stop. A fast
-input-method switch delivers hide and show while the sheet is still moving, so
-the result does not depend on their order.
+the resting snap with one request, after which the person chooses the snap
+again, including by a gesture. Every keyboard or focus change requests the
+target snap without comparing it with the sheet index, which lags behind the
+animation on the JavaScript thread: Gorhom ignores a request for the snap it is
+already moving to, and requests run on the UI thread in the order they were
+sent. A fast input-method switch delivers hide and show while the sheet is
+still moving, so the last request decides the result whatever their order.
 Use compact floating inputs for an Android floating panel that reports no occupied
 bottom strip. Preserve existing outside-tap dismissal and native submission keys;
 do not add a separate dismissal action. Preserve transactional save and audio lifecycle ownership.

@@ -6,8 +6,8 @@ import { TextInput as GestureTextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenReaderHiddenProps } from '../../lib/a11y';
 import { sc, column, useStyles } from '../../lib/theme';
-import { useReservedKeyboardHeight } from './KeyboardViewport';
-import { useKeyboardLayout } from '../../lib/useKeyboardLayout';
+import { sheetFooterPosition } from '../../lib/keyboardGeometry';
+import { useKeyboardLayout, useReservedKeyboardHeight } from '../../lib/useKeyboardLayout';
 import { useSheetReflow } from '../../lib/useSheetReflow';
 
 type SheetContext = { footer: React.ReactNode; hidden: boolean; footerStyle?: StyleProp<ViewStyle>; bodyHeight: SharedValue<number> };
@@ -24,22 +24,16 @@ function useSheetLayout() {
 // вычитается из этой же позиции на UI-потоке, кадр в кадр с её анимацией:
 // Gorhom двигает контейнер footer целиком, и кнопки остаются в его границах —
 // там, где они нарисованы, их находит доступность Android (TalkBack, Maestro).
-// Тело кончается над footer.
-//
-// Клавиатура не отнимает тело целиком: Android снимает фокус с поля, чей
-// предок сжался до нуля (View.sizeChange), и набор уходит в никуда. Поэтому
-// подъём останавливается на минимальной высоте тела, даже если клавиатура
-// выше (полноэкранная IME, низкая snap-точка на маленьком экране).
+// Тело кончается над footer и не сжимается ниже минимума (sheetFooterPosition).
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, bodyHeight } = useSheetLayout();
   const keyboard = useReservedKeyboardHeight();
   const safeBottom = useSafeAreaInsets().bottom;
   const minBody = sc(72);
-  const position = useDerivedValue(() => {
-    const natural = animatedFooterPosition.value;
-    const lifted = natural - Math.max(0, keyboard.value - safeBottom);
-    return Math.max(0, lifted, Math.min(natural, minBody));
-  }, [safeBottom, minBody]);
+  const position = useDerivedValue(
+    () => sheetFooterPosition(animatedFooterPosition.value, keyboard.value, safeBottom, minBody),
+    [safeBottom, minBody],
+  );
   useAnimatedReaction(() => position.value, (top) => { bodyHeight.value = top; });
   const styles = useStyles(stylesFactory);
   return (

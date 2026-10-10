@@ -59,16 +59,40 @@ export function keyboardSnapTarget(current: KeyboardSnap, form: {
   return form.recording ? null : 0;
 }
 
-// Сверка цели с точкой, на которой Gorhom остановил шторку. Запрос
-// повторяется при каждой сверке, пока точки не совпадут, поэтому итог не
-// зависит от порядка событий клавиатуры и анимаций. Цель «вернуть на
-// исходную» снимается только по остановке: до неё индекс ещё не знает
-// о начатом подъёме.
-export function reconcileKeyboardSnap(target: KeyboardSnap, index: number, settled: boolean): {
+// Запрос, которым сверяется цель. Gorhom не выполняет повторно запрос точки,
+// к которой шторка уже едет, а запрос текущей точки шторку не двигает, поэтому
+// цель не сравнивается с индексом шторки: её индекс на JS-потоке отстаёт от
+// анимации и мог бы оказаться устаревшим. Запросы выполняются на UI-потоке в
+// порядке отправки, поэтому последний из них определяет итог при любом
+// порядке событий клавиатуры. Возврат на исходную точку — однократный запрос:
+// после него точку снова выбирает человек, в том числе жестом.
+export function reconcileKeyboardSnap(target: KeyboardSnap): {
   request: number | null;
   target: KeyboardSnap;
 } {
-  if (target === null) return { request: null, target };
-  if (index !== target) return { request: target, target };
-  return { request: null, target: settled && target === 0 ? null : target };
+  return { request: target, target: target === 0 ? null : target };
+}
+
+// Высота, которую резервирует форма под клавиатурой. Видима ли закреплённая
+// клавиатура, решает классификатор React Native (keyboardLayoutFor), а
+// Keyboard Controller даёт только кадры анимации. Высоту Keyboard Controller
+// после быстрой смены IME может не обновить, поэтому без классификатора она
+// оставляла бы фантомный отступ. На Android скрытие видно классификатору уже в
+// начале анимации, поэтому, пока анимация идёт, резерв следует за клавиатурой
+// вниз. Плавающая клавиатура не занимает полосу окна.
+export function reservedKeyboardHeight(kind: KeyboardLayout['kind'], moving: boolean, height: number): number {
+  'worklet';
+  return kind === 'docked' || (kind === 'hidden' && moving) ? Math.max(0, height) : 0;
+}
+
+// Позиция footer шторки (от верха её содержимого) с подъёмом над
+// клавиатурой. Клавиатура не отнимает тело целиком: Android снимает фокус с
+// поля, чей предок сжался до нуля (View.sizeChange), и набор уходит в никуда.
+// Поэтому подъём останавливается на минимальной высоте тела, даже если
+// клавиатура выше (полноэкранная IME, низкая snap-точка на маленьком экране).
+// Закрывающаяся шторка, которая уже ниже этого минимума, едет вниз вместе с footer.
+export function sheetFooterPosition(natural: number, keyboard: number, safeBottom: number, minBody: number): number {
+  'worklet';
+  const lifted = natural - Math.max(0, keyboard - safeBottom);
+  return Math.max(0, lifted, Math.min(natural, minBody));
 }
