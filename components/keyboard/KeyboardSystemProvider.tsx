@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, Keyboard, Platform, useWindowDimensions, type KeyboardEvent } from 'react-native';
+import { Dimensions, Keyboard, Platform, type KeyboardEvent } from 'react-native';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { KeyboardProvider, useKeyboardHandler, useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import {
@@ -23,7 +23,6 @@ function KeyboardReservation({ kind, children }: React.PropsWithChildren<{ kind:
 }
 
 export default function KeyboardSystemProvider({ children }: React.PropsWithChildren) {
-  const { width } = useWindowDimensions();
   const [state, setState] = useState<KeyboardState>(() => {
     const coordinates = Keyboard.metrics();
     return coordinates ? { coordinates, phase: 'open' } : hiddenKeyboard;
@@ -55,7 +54,8 @@ export default function KeyboardSystemProvider({ children }: React.PropsWithChil
 
   // На iPad плавающая панель может быть шире окна Stage Manager, но она
   // всё равно уже системной закреплённой клавиатуры текущего дисплея.
-  const dockedWidth = Platform.OS === 'ios' ? Dimensions.get('screen').width : width;
+  // Android ширину не сравнивает (keyboardLayoutFor).
+  const dockedWidth = Platform.OS === 'ios' ? Dimensions.get('screen').width : null;
   const layout = useMemo(() => keyboardLayoutFor(state, dockedWidth), [state, dockedWidth]);
   return (
     <KeyboardProvider preload={false} statusBarTranslucent navigationBarTranslucent>

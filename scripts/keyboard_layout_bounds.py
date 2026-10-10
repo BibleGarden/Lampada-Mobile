@@ -124,13 +124,17 @@ def main():
     # Драйвер Maestro уже завершён; новый read-only сеанс снимает дерево
     # немедленно, без waitForIdle, который не достигается на анимациях.
     raw = subprocess.check_output(['maestro', '--device', args.device, 'hierarchy'], text=True, timeout=180)
-    xml = hierarchy_xml(json.loads(raw))
     window = adb('shell', 'dumpsys', 'window')
+    # Сырые снимки сохраняются до разбора, чтобы провал оставлял улики.
+    output = Path(args.output)
+    output.with_name(f'{output.stem}-hierarchy.json').write_text(raw)
+    output.with_name(f'{output.stem}-window.txt').write_text(window)
+    xml = hierarchy_xml(json.loads(raw))
     observation = observe(xml, window, width, height)
     result = {'device': args.device, 'expected_mode': args.mode, 'viewport': observation['viewport'],
               'observed_mode': observation['mode'],
               'elements': {key: observation['elements'].get(key) for key in ([args.input_id] if args.input_id else []) + args.actions + args.below_input + args.absent}}
-    Path(args.output).write_text(json.dumps(result, indent=2) + '\n')
+    output.write_text(json.dumps(result, indent=2) + '\n')
     validate(observation, args.input_id, args.actions, args.absent, args.mode, args.below_input, True if args.focused else False if args.unfocused else None)
     print('Native OS bounds contract passed')
 

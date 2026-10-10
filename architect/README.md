@@ -200,7 +200,11 @@ Keyboard handling is shared by preparation, answers, reflection, content reports
 and history search (ADR-0038). `KeyboardSystemProvider` is the only application
 subscriber to keyboard notifications. Visibility, animation phase and occupied
 space are separate: a zero-height Samsung panel and a narrow iPad panel remain
-visible without claiming the full window bottom. Field focus alone does not imply
+visible without claiming the full window bottom. A keyboard is docked when it
+reports a positive height; on iOS its width must also reach the display width.
+Android compares no widths: React Native does not repeat `keyboardDidShow`
+after a width-only window resize (Fold unfold, split screen), so the saved
+keyboard width goes stale. Field focus alone does not imply
 a software keyboard. Deferred actions return only after `keyboardDidHide`.
 `dismissKeyboard` uses native Keyboard Controller dismissal even after input
 blur, and always clears the React Native responder even when no IME is open;

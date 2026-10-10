@@ -18,7 +18,7 @@ Separate software visibility from occupied space and field focus in a single
 application provider. A show or zero-height frame never implies hide; deferred
 actions wait for didHide, independently of field focus. Keyboard Controller owns native dismissal, including blur before
 IME hide. React Native responder release is unconditional because Controller
-dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display.
+dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display; on Android a positive height alone means docked, because React Native does not resend `keyboardDidShow` after a width-only window resize.
 
 Use Expo SDK 57's supported Keyboard Controller 1.21.9 for the animated
 keyboard height. The React Native classifier alone decides whether a docked

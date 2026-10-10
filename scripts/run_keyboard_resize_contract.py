@@ -34,15 +34,16 @@ def main():
                      '--test-output-dir', str(output / 'open'), 'testing/android-e2e/android-keyboard-contract-answer-open.yaml'])
     try:
         command('resize', ['adb', '-s', args.device, 'shell', 'wm', 'size', changed])
+        # Снимок экрана до проверки границ: провал проверки оставляет улику.
+        with (output / 'resized.png').open('wb') as screenshot:
+            result = subprocess.run(['adb', '-s', args.device, 'exec-out', 'screencap', '-p'], stdout=screenshot)
+        if result.returncode:
+            raise RuntimeError('Native resize screenshot failed')
         command('bounds', ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device,
                            '--input-id', 'answer-input', '--mode', 'docked', '--focused',
                            '--actions', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',
                            '--below-input', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',
                            '--output', str(output / 'resized-native-bounds.json')])
-        with (output / 'resized.png').open('wb') as screenshot:
-            result = subprocess.run(['adb', '-s', args.device, 'exec-out', 'screencap', '-p'], stdout=screenshot)
-        if result.returncode:
-            raise RuntimeError('Native resize screenshot failed')
     finally:
         original = 'x'.join(override.groups()) if override else 'reset'
         command('restore-window', ['adb', '-s', args.device, 'shell', 'wm', 'size', original])
