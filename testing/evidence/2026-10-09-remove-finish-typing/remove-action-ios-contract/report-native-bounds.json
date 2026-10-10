@@ -1,0 +1,42 @@
+{
+  "platform": "ios",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    0,
+    402,
+    539
+  ],
+  "observed_mode": "docked",
+  "boundary_source": "UIKit native inputView and window frames; safe-area insets are not exposed",
+  "elements": {
+    "content-report-comment": {
+      "bounds": [
+        62,
+        265,
+        340,
+        395
+      ],
+      "focused": false
+    },
+    "content-report-send": {
+      "bounds": [
+        196,
+        420,
+        341,
+        480
+      ],
+      "focused": false
+    },
+    "content-report-cancel": {
+      "bounds": [
+        61,
+        420,
+        183,
+        480
+      ],
+      "focused": false
+    },
+    "report-keyboard-dismiss": null
+  }
+}

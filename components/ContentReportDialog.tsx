@@ -1,11 +1,9 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AppState,
-  Keyboard,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +14,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sendContentReport, type ContentReportError } from '../lib/contentReportClient';
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import KeyboardViewport from './keyboard/KeyboardViewport';
+import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 
 type Props = {
   visible: boolean;
@@ -44,6 +44,8 @@ export default function ContentReportDialog({
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<ContentReportError | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const keyboard = useKeyboardLayout();
+  const [commentFocused, setCommentFocused] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -61,15 +63,11 @@ export default function ContentReportDialog({
     return () => subscription.remove();
   }, [onDismiss, visible]);
 
-  // Прокручиваем именно на появление клавиатуры: на фокусе карточка ещё не
-  // сжата, скроллить нечего, и поле комментария остаётся под сгибом.
   useEffect(() => {
-    if (!visible || sent) return undefined;
-    const subscription = Keyboard.addListener('keyboardDidShow', () => {
+    if (visible && !sent && commentFocused && keyboard.phase === 'open') {
       scrollRef.current?.scrollToEnd({ animated: true });
-    });
-    return () => subscription.remove();
-  }, [sent, visible]);
+    }
+  }, [visible, sent, commentFocused, keyboard.phase]);
 
   const dismiss = () => {
     if (!submitting) onDismiss();
@@ -95,20 +93,17 @@ export default function ContentReportDialog({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={[
-          styles.backdrop,
-          { paddingTop: insets.top + sc(20), paddingBottom: insets.bottom + sc(20) },
-        ]}
+    <Modal visible={visible} transparent statusBarTranslucent navigationBarTranslucent animationType="fade" onRequestClose={dismiss}>
+      <KeyboardViewport
+        style={styles.backdrop}
+        contentContainerStyle={[styles.backdropContent, { paddingTop: insets.top + sc(20), paddingBottom: sc(20) }]}
       >
         {/* тап по фону гасит клавиатуру, но не закрывает диалог: иначе
             набранный комментарий пропадал бы вместе с ним */}
         <Pressable
           accessible={false}
           testID="content-report-backdrop"
-          onPress={() => Keyboard.dismiss()}
+          onPress={() => dismissKeyboard()}
           style={StyleSheet.absoluteFill}
         />
         <View accessibilityViewIsModal style={styles.card} testID="content-report-dialog">
@@ -119,6 +114,9 @@ export default function ContentReportDialog({
             contentContainerStyle={styles.cardContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            onLayout={() => {
+              if (commentFocused && keyboard.visible) scrollRef.current?.scrollToEnd({ animated: false });
+            }}
           >
             <Text style={styles.kicker}>{t('components.contentReport.kicker')}</Text>
             <Text style={styles.title}>
@@ -134,6 +132,8 @@ export default function ContentReportDialog({
                 <TextInput
                   value={comment}
                   onChangeText={setComment}
+                  onFocus={() => setCommentFocused(true)}
+                  onBlur={() => setCommentFocused(false)}
                   editable={!submitting}
                   multiline
                   maxLength={1000}
@@ -190,7 +190,7 @@ export default function ContentReportDialog({
             )}
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardViewport>
     </Modal>
   );
 }
@@ -198,10 +198,9 @@ export default function ContentReportDialog({
 const stylesFactory = () => StyleSheet.create({
   backdrop: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: sc(22),
     backgroundColor: 'rgba(7,5,3,.9)',
   },
+  backdropContent: { justifyContent: 'center', paddingHorizontal: sc(22) },
   card: {
     alignSelf: 'center',
     width: '100%',

@@ -29,7 +29,7 @@ tags:
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - inputText: ANS-013 сохранение в полёте
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: setup-preset-5
     waitToSettleTimeoutMs: 500

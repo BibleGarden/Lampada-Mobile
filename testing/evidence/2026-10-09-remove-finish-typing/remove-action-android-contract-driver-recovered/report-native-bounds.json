@@ -1,0 +1,41 @@
+{
+  "device": "emulator-5554",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    156,
+    1280,
+    1848
+  ],
+  "observed_mode": "docked",
+  "elements": {
+    "content-report-comment": {
+      "bounds": [
+        195,
+        972,
+        1085,
+        1391
+      ],
+      "focused": true
+    },
+    "content-report-send": {
+      "bounds": [
+        627,
+        1471,
+        1085,
+        1663
+      ],
+      "focused": false
+    },
+    "content-report-cancel": {
+      "bounds": [
+        195,
+        1471,
+        584,
+        1663
+      ],
+      "focused": false
+    },
+    "report-keyboard-dismiss": null
+  }
+}

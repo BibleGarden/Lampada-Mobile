@@ -1,0 +1,23 @@
+{
+  "device": "emulator-5554",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    156,
+    1280,
+    1848
+  ],
+  "observed_mode": "docked",
+  "elements": {
+    "journal-search-input": {
+      "bounds": [
+        78,
+        401,
+        1202,
+        575
+      ],
+      "focused": true
+    },
+    "journal-keyboard-dismiss": null
+  }
+}

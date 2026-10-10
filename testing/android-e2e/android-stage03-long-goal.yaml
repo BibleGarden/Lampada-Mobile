@@ -32,11 +32,11 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
-- inputText: " very long prayer goal with multiple clauses and repeated context
-    for layout verification. This text must remain editable while the keyboard
-    is open and must not cover the primary action. Second paragraph equivalent
-    with more content for threshold and session rendering. Third segment adds
-    enough characters to exceed three display lines safely."
+# Keep each driver RPC bounded; final assertions still check the full text.
+- inputText: " very long prayer goal with multiple clauses and repeated context for layout verification."
+- inputText: " This text must remain editable while the keyboard is open and must not cover the primary "
+- inputText: "action. Second paragraph equivalent with more content for threshold and session rendering."
+- inputText: " Third segment adds enough characters to exceed three display lines safely."
 - assertVisible:
     id: setup-kicker
 - assertVisible:

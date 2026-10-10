@@ -23,7 +23,13 @@ Android critical flows are kept separately in `android-e2e/`, so they are not
 picked up by the existing iOS tier commands. Build Android Release with test
 API variables, use Russian as the emulator's primary locale, and run
 `npm run test:e2e:android:critical`. Its sequential runner preserves the full
-smoke → relaunch pair and stops at the first failure. Full logs, per-flow exit
+smoke → relaunch pair and stops at the first failure. The critical command also
+runs all five docked native geometry/save contracts on the disposable emulator;
+use a docked Gboard keyboard for this gate. A native window-width resize then
+checks that the focused editor and complete action rectangles remain above the
+IME, verifies save/reopen, and restores the original display dimensions. The critical wrapper refuses a
+physical device before running any fixture. iOS critical includes ASCII Enter
+contracts for preparation and reflection. Full logs, per-flow exit
 codes and Maestro artifacts are saved in the printed output directory; use
 `ANDROID_TEST_OUTPUT_DIR` to choose a stable location.
 Preflight prints this directory first and shows failed environment diagnostics.
@@ -49,7 +55,10 @@ stable app IDs. Maestro's Unicode `inputText` temporarily replaces Gboard
 with its own IME, so it must not be used to establish focus preconditions.
 Keyboard gesture fixtures use ASCII input; ANS-032 also taps a real Russian
 Gboard key and verifies that its Cyrillic character survives saving/reopening.
-Unicode persistence and search checks remain separate from focus checks. After a cold launch or relaunch,
+Unicode persistence and search checks remain separate from focus checks.
+After Unicode injection, use an existing outside-tap target if the software
+keyboard remains visible; injected Enter has no focused native editor to submit.
+ASCII staged keyboard contracts separately verify the real Enter path. After a cold launch or relaunch,
 assert that Home is ready before issuing a Settings/Setup deep link; Android
 launch completion alone does not establish a mounted router. Non-deadline fixtures are untimed; finite completion and early
 music completion retain timed prayers. Display-size changes used to reduce
@@ -246,3 +255,46 @@ Only selected material goes into `evidence/`, and every file has to be reference
 from a report - a file with no reference counts as orphaned and is deleted during
 cleanup. Repeated attempts, full system and Xcode logs, duplicate crash reports
 and build artifacts are not added to the repository.
+
+## Shared keyboard contracts
+
+```bash
+npm run test:keyboard:android -- --mode docked --output /tmp/lampada-keyboard-docked
+npm run test:keyboard:android -- --mode floating --output /tmp/lampada-keyboard-floating
+npm run test:keyboard:android -- --mode hardware --output /tmp/lampada-keyboard-no-software
+```
+
+Use the named disposable Android emulator, the final Release build and Russian
+system locale. Select the real Gboard floating mode before the floating command;
+the native checkpoint rejects a mode mismatch. The hardware-labelled command
+requires an emulated hardware keyboard (`hw.keyboard=yes` at AVD boot), verifies
+its native QWERTY configuration, temporarily sets
+`show_ime_with_hard_keyboard=0` and injects native key events. It restores that
+software-keyboard setting in finally and does not disable IMEs. If Gboard leaves
+a blank IME window, native Back hides that window while retaining editor focus;
+the native checkpoint must prove both retained focus and a hidden IME. It verifies focused
+input without software UI, not an attached physical keyboard. The matrix refuses
+physical devices because its fixtures clear app state.
+
+Each form has an open phase, an independent native OS-bounds checkpoint and a
+restore/persistence phase. Every command keeps its complete log and exit. The
+native checker runs between Maestro sessions to avoid concurrent UiAutomation.
+Use `--forms answer` for the original failing form first. Read-only checking of a
+physical current screen is available through `keyboard_layout_bounds.py`; never
+run the clearing matrix on the owner's phone. iOS prepared counterparts and
+existing iPad rotation flows cover the same behavior through native selectors.
+
+The UIKit geometry counterpart runs the same staged forms on an existing named
+simulator, with no physical-device clearing:
+
+```bash
+npm run test:keyboard:ios -- --simulator "Pray iPad2" --mode docked
+```
+
+Its reader checks complete input/action rectangles against native `inputView`
+and window frames, then verifies persisted text. UIKit accessibility does not
+expose safe-area insets; this contract does not claim Android-style navigation
+inset measurement or physical external-keyboard acceptance. Floating mode must
+be selected in the real system keyboard before invoking `--mode floating`.
+`npm run test:keyboard:unit` covers both native bounds readers; `npm test` runs it
+too.

@@ -7,6 +7,7 @@ import { Heart, NotebookText, Settings2 } from 'lucide-react-native';
 import Flame from '../components/Flame';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton } from '../components/ui';
+import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { startHomeRefresh } from '../lib/homeRefresh';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
@@ -24,7 +25,11 @@ export default function Home() {
   const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  const { streak, loadStreak, reset } = useSession();
+  // Главная остаётся в стеке под сессией: подписка на весь store
+  // перерисовывала бы её на каждом секундном тике таймера.
+  const { streak, loadStreak, reset } = useSession(
+    useShallow((st) => ({ streak: st.streak, loadStreak: st.loadStreak, reset: st.reset })),
+  );
   const { prayerSaved } = useLocalSearchParams<{ prayerSaved?: string }>();
   const [showSavedNotice, setShowSavedNotice] = useState(false);
   const visible = useVisibleScreen();

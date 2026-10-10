@@ -167,7 +167,8 @@ tier of its e2e runs.
 | SETUP-001 [critical] | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 [critical] | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 [critical] | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the header, title and the field's top edge stay in place while the field stretches down to the keyboard and scrolls long text inside itself, also after a rotation; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
+| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the form reflows into the available viewport when the keyboard opens or rotates, and long text scrolls without covering the actions or losing focus; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
+| SETUP-004b [prepared, android] | On Samsung, select the floating keyboard, edit the goal, switch to the standard keyboard and back; repeat folded and unfolded, then request rotation | a floating keyboard retains the normal field size; duration and Next stay hidden with either keyboard mode and return only after closing it; the standard keyboard expands the input only to its top edge; switching modes and closing the keyboard preserve the text; Android keeps its configured portrait orientation; `android-setup-floating-keyboard.yaml` checks the floating layout |
 | START-001 [critical] | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
@@ -230,7 +231,7 @@ tier of its e2e runs.
 | ANS-020 | Quickly press "Done" twice while a recording is stopping | exactly one stop happens, one working recording appears, a successful file is not deleted and no save error is shown |
 | ANS-021 [main] | With the music on, save an audio in one question, move to the next one and record a second immediately | both recordings are saved and play back; a late restoration of the music does not cut the second file and the "The recording was not saved" message does not appear |
 | ANS-022 [main] | Press "Record another" twice quickly without moving the finger | the second tap does not land on the "Done" button that appeared; the UI stop is unavailable for the first 1.5 seconds, the recording continues, and a file shorter than 0.5 seconds is not added to the list |
-| ANS-023 [main] | Open the recordings and start a recording on an iPhone SE / Home Button, an iPhone with a Home Indicator and an iPad | "Record another" and "Done" are fully visible, the bottom frame is not clipped and a margin remains between the button and the screen edge |
+| ANS-023 [main] | Open the recordings and start a recording on an iPhone SE / Home Button, an iPhone with a Home Indicator, an iPad and Android with 3-button navigation; close the recordings with the keyboard hidden | "Record another" and "Done" are fully visible, the bottom frame is not clipped and a margin remains between the button and the screen edge; the open answer and recordings sheets and their dimming reach the screen edge, and their footer actions sit above the Home Indicator / navigation bar (screenshots `ANS-023-recording-done`, `ANS-023-record-another`, `ANS-023-answer-sheet`); Save stays reachable above a docked keyboard, closes the sheet and the saved answer reopens (`ANS-023-saved-with-keyboard`, `ANS-023-reopened`). That the close slides fully off screen and the reopen starts from the screen edge is a manual check (`MANUAL_CHECKS.md`, ANS-023) |
 | ANS-024 [main] | On iOS and Android, type an answer with an existing voice recording, open recordings, close them, and focus the answer again | the keyboard closes when recordings open, the list and bottom button are reachable; closing recordings retains the text and restores editing; Android flow: `android-ans-024-recordings-keyboard.yaml` |
 | ANS-025 | With VoiceOver, check a short and a long transcript | the text is read out in full; a short text is not announced as a button; for a long text "Show in full"/"Collapse" is a separate focusable button |
 | ANS-026 | During a recording, simulate an interruption or a media services reset as far as the device allows | the false recording overlay disappears, the audio focus is released and the next recording starts normally |
@@ -255,6 +256,7 @@ tier of its e2e runs.
 | ANS-045 | Make an attempted manual stop fail while the native recorder continues | the error is shown, the limit remains active, and a later limit stop still runs at 9:59 recorded time |
 | ANS-046 | Play a finished file with a fractional duration, such as 39.3 seconds | its card shows the nearest whole second (0:39 in this example); upload validation still compares the exact fractional file duration |
 | ANS-047 | Leave the session while the recording-limit cue is pending or playing | the answer sheet unmounts without calling an already released native player or recorder; cue listeners and audio-session leases are released and the app does not crash |
+| ANS-048 | On Android, type an answer and switch the input method to another one and back within a fraction of a second (Maestro's `inputText` does this in `android-stage04-answers-text.yaml`), including an input method taller than the sheet | the answer field keeps focus and the typed text, the sheet ends at full height above the docked keyboard, and Save, Cancel and the microphone stay in the accessibility tree; when the input method ends hidden, no keyboard space stays reserved under the footer or in journal and preparation forms; the snap policy, the reservation and the footer position are unit-tested in `keyboardGeometry.test.mjs` |
 
 ### The AI and the companion
 
@@ -506,3 +508,51 @@ The run is complete when:
   recorded;
 - the final report contains the versions, the commit, the exit codes and the full
   logs of the checks.
+
+### Shared keyboard regression contract
+
+| ID | Action | Expected result |
+| --- | --- | --- |
+| KBD-001 [prepared, android] | Run the staged matrix on a named emulator with a docked keyboard for setup, answer, reflection, report and journal | native rectangles fit OS status/navigation/IME boundaries; input does not overlap lower actions; deferred actions are absent; text survives dismissal and persisted answers/notes reopen |
+| KBD-002 [prepared, android] | Select the real Gboard floating mode and run the same matrix | no zero-height-as-hide assumption; compact input, existing outside-tap dismissal, complete lower action rectangles above the navigation area, and preserved text |
+| KBD-003 [prepared, android] | Boot with an emulated hardware keyboard and run focused-input mode with software display disabled for hardware input, restoring that setting afterward | genuinely focused native input without an onscreen IME; actions remain available; this is a no-software-focus contract, not a physical external-keyboard acceptance claim |
+| KBD-004 [prepared, ipad] | Run iPad setup/answer/reflection/report keyboard flows, rotating while typing; check narrow floating mode separately | viewport adapts to actual window bounds; no extra keyboard inset; footer/body remain usable and text is retained |
+| KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and existing actions remain usable, without clearing personal app data |
+
+A native bounds assertion is stronger than assertVisible. The independent
+`keyboard_layout_bounds.py` reads OS InsetsSource frames and native Maestro hierarchy bounds,
+not the app's calculated viewport. Run it only when the Maestro driver has stopped.
+The initial oversized-field and cropped-navigation-button fixtures must fail the
+validator's own tests. Physical screenshots must be checked before claiming that
+a floating panel does not overlap a field; the panel can be moved by the user.
+
+Keyboard submission regression (2026-10-09): preparation and reflection Enter
+submit before native dismissal; loss of input focus alone must never reveal
+deferred actions. The staged Android setup
+restore flow verifies Enter restores duration/Next and preserves the topic.
+
+The iPad staged counterpart (`npm run test:keyboard:ios -- --mode docked`)
+measures entire native rectangles against UIKit's keyboard/window frames across
+the same five forms. It rejects a partly clipped action even if its center is
+visible. UIKit safe-area insets and physical external-keyboard use remain
+separate live checks.
+
+Hardware submission regression: goal/reflection Enter and answer Save must release
+editor focus even when the
+IME is already hidden; an orphaned IME must also hide when RN focus is absent.
+`keyboardDismiss.test.mjs` executes the real helper against both native states.
+
+Clearing the journal query continues editing: hardware input remains focused
+with no IME, so another query can be typed directly. The staged journal
+checkpoint verifies this continuation instead of treating Clear as ending input.
+
+KBD window resize: Android critical changes only the emulator width with the
+keyboard/editor open, checks full native bounds and retained focus, restores
+the original dimensions, then saves and reopens the exact draft.
+
+JRN-007 prerequisite: scroll until the complete Delete action is visible for
+expanded long text/audio details before activating the timed confirmation.
+
+SETUP-004 Android injects its full long goal in bounded driver transactions,
+then asserts the complete unchanged text; this avoids a single two-minute RPC
+deadline without weakening layout or persistence checks.

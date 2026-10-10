@@ -20,7 +20,7 @@ tags:
     id: "journal-search-input"
 - inputText: "тревога"
 - assertVisible: "тревога"
-# Поле поиска однострочное: Enter завершает ввод, не вызывая системный Back.
-- pressKey: Enter
+# После ввода Unicode завершаем редактирование тапом вне поля.
+- runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible: "Ничего не нашлось — попробуй другое слово"
 - takeScreenshot: JRN-001-empty-search

@@ -22,12 +22,23 @@ tags:
 - assertVisible: ".*Ответ Кириллица про доверие.*"
 - assertVisible:
     id: "journal-recording-0"
+# Long text/audio details place the actions below the current viewport.
+- scrollUntilVisible:
+    element:
+      id: "journal-delete"
+    direction: DOWN
+    visibilityPercentage: 100
+    timeout: 20000
 - tapOn:
     id: "journal-delete"
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
 - assertVisible:
     id: "journal-delete-confirm"
 - tapOn:
     id: "journal-delete-confirm"
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
 - assertNotVisible: ".*END-003 double finish.*"
 - assertVisible: ".*END-004 second prayer.*"
 - takeScreenshot: JRN-007-after-delete

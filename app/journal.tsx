@@ -1,10 +1,10 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n, localeTag, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Alert,
   FlatList,
-  Keyboard,
   Modal,
   ScrollView,
   Pressable,
@@ -17,6 +17,7 @@ import {
 import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -422,11 +423,12 @@ export default function Journal() {
     <View
       style={styles.root}
       onStartShouldSetResponder={() => {
-        Keyboard.dismiss();
+        dismissKeyboard();
         return false;
       }}
     >
       <ScreenBg />
+      <KeyboardViewport>
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
           <IconButton
@@ -453,6 +455,7 @@ export default function Journal() {
           />
           {query.length > 0 && (
             <Pressable
+              testID="journal-clear-search"
               onPress={() => setQuery('')}
               accessibilityRole="button"
               accessibilityLabel={t('screens.journal.clearSearch')}
@@ -468,11 +471,11 @@ export default function Journal() {
           data={entries}
           keyExtractor={(e) => String(e.id)}
           renderItem={renderEntry}
-          onScrollBeginDrag={Keyboard.dismiss}
+          onScrollBeginDrag={dismissKeyboard}
           contentContainerStyle={{
             paddingHorizontal: sc(18),
             paddingTop: sc(12),
-            paddingBottom: insets.bottom + sc(24),
+            paddingBottom: sc(24),
             gap: sc(10),
           }}
           ListEmptyComponent={
@@ -486,6 +489,7 @@ export default function Journal() {
           }
         />
       </Animated.View>
+      </KeyboardViewport>
 
       {/* Цитата целиком: то же оформление, что и на экране сохранённых цитат,
           с подсветкой ключевых стихов, когда сервер их отметил */}

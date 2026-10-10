@@ -1,11 +1,9 @@
+import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,7 +20,8 @@ import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
-import { useKeyboardTop } from '../lib/useKeyboardTop';
+import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
+import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -48,8 +47,9 @@ function ReflectScreen() {
   const insets = useSafeAreaInsets();
   const s = useSession();
   const [takeaway, setTakeaway] = useState('');
-  const keyboardOpen = useKeyboardTop() !== null;
   const [inputFocused, setInputFocused] = useState(false);
+  const policy = useKeyboardFormPolicy();
+  const dockedKeyboard = policy.fillInput;
   const completing = useRef(false);
 
   // Android «назад» тут некуда вести — только явное завершение
@@ -63,7 +63,7 @@ function ReflectScreen() {
     completing.current = true;
     try {
       await s.complete(saveText);
-      Keyboard.dismiss();
+      dismissKeyboard();
       router.dismissTo({ pathname: '/', params: { prayerSaved: '1' } });
     } catch (e) {
       completing.current = false;
@@ -88,35 +88,32 @@ function ReflectScreen() {
     <View style={styles.root}>
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.fill}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.fill}
-        >
+        <KeyboardViewport>
           <ScrollView
             contentContainerStyle={[
               styles.body,
-              keyboardOpen && styles.bodyEditing,
+              dockedKeyboard && styles.bodyEditing,
               {
                 paddingTop: insets.top + sc(16),
-                paddingBottom: keyboardOpen ? sc(16) : insets.bottom + sc(24),
+                paddingBottom: dockedKeyboard ? sc(16) : sc(24),
               },
             ]}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           >
             <Pressable
-              onPress={Keyboard.dismiss}
+              onPress={dismissKeyboard}
               accessible={false}
               style={styles.content}
             >
-              {!keyboardOpen && (
+              {!dockedKeyboard && (
                 <View style={styles.emberWrap}>
                   <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
                 </View>
               )}
 
-              <View style={[styles.questionBlock, keyboardOpen && styles.questionBlockCompact]}>
-                {!keyboardOpen && (
+              <View style={[styles.questionBlock, dockedKeyboard && styles.questionBlockCompact]}>
+                {!dockedKeyboard && (
                   <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }} testID="reflect-kicker">
                     {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
                   </Kicker>
@@ -139,19 +136,19 @@ function ReflectScreen() {
                 multiline
                 placeholder={t('screens.reflect.placeholder')}
                 placeholderTextColor={colors.placeholder}
-                style={[styles.input, keyboardOpen && styles.inputEditing]}
+                style={[styles.input, dockedKeyboard && styles.inputEditing]}
                 accessibilityLabel={t('screens.reflect.placeholder')}
                 accessibilityHint={t('screens.reflect.inputHint')}
                 testID="reflection-input"
                 // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
                 returnKeyType="done"
-                submitBehavior="blurAndSubmit"
-                onSubmitEditing={Keyboard.dismiss}
+                submitBehavior="submit"
+                onSubmitEditing={dismissKeyboard}
               />
 
-              {!keyboardOpen && <View style={{ flex: 1, minHeight: sc(16) }} />}
+              {!dockedKeyboard && <View style={{ flex: 1, minHeight: sc(16) }} />}
 
-              {!keyboardOpen && (
+              {policy.actionsVisible && (
                 <View style={{ gap: sc(12) }}>
                   <GoldButton
                     label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
@@ -172,7 +169,7 @@ function ReflectScreen() {
               )}
             </Pressable>
           </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardViewport>
       </Animated.View>
     </View>
   );

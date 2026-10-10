@@ -19,8 +19,8 @@ import { transcriptionErrorMessageKey } from '../lib/transcriptionErrors';
 import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
-import { useSheetReflow } from '../lib/useSheetReflow';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
+import KeyboardSheet, { KeyboardSheetBody } from './keyboard/KeyboardSheet';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -95,17 +95,9 @@ export default function RecordingsSheet({
   const screenVisible = useVisibleScreen();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  // Expo safe-area padding can legitimately be zero on Home Button devices.
-  // Keep a base inset there and add it to the real Home Indicator inset.
-  const bottomContentInset = insets.bottom + sc(16);
-  // The recording overlay is positioned against BottomSheet's full content
-  // container, whose logical bottom sits below the clipped snap viewport on
-  // compact Home Button devices. Keep its action above that clipped strip.
-  const recordingBottomInset = insets.bottom > 0 ? bottomContentInset : sc(70);
   const recordingPending = recordingPhase === 'starting' || recordingPhase === 'stopping';
   const recordingBusy = recordingPhase !== 'idle';
   const [stopReady, setStopReady] = useState(false);
-  const { mountKey, onIndexChange } = useSheetReflow();
 
   useEffect(() => {
     if (!recording) {
@@ -180,9 +172,58 @@ export default function RecordingsSheet({
     [styles],
   );
 
+  const actions = recording ? (
+    <Pressable
+      accessibilityLabel={t('components.answers.stop')}
+      accessibilityRole="button"
+      accessibilityValue={{ text: elapsedLabel }}
+      testID="recordings-stop-button"
+      disabled={stopDisabled}
+      onPress={onStopRecording}
+      // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
+      // и полупрозрачное «готово» выглядело как незапущенная запись.
+      style={({ pressed }) => [
+        styles.recDoneBtn,
+        pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
+      ]}
+    >
+      <Text style={styles.recDoneLabel}>
+        {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
+      </Text>
+    </Pressable>
+  ) : (
+    <View style={styles.actionsRow}>
+      <Pressable
+        accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
+        accessibilityRole="button"
+        testID="recordings-record-button"
+        disabled={recordingBusy}
+        onPress={() => {
+          // Reset synchronously before the overlay replaces this button,
+          // so the second physical tap cannot stop the new recording.
+          setStopReady(false);
+          onStartRecording();
+        }}
+        style={({ pressed }) => [
+          styles.recordBtn,
+          recordingBusy && { opacity: 0.5 },
+          pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
+        ]}
+      >
+        <Mic size={sc(16)} color={colors.greenSoft} />
+        <Text style={styles.recordLabel}>
+          {recordingPhase === 'starting'
+            ? t('components.answers.preparing')
+            : recordings.length
+              ? t('components.answers.recordMore')
+              : t('components.answers.record')}
+        </Text>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <BottomSheet
-      key={mountKey}
+    <KeyboardSheet
       ref={sheetRef}
       index={-1}
       snapPoints={SNAP_POINTS}
@@ -191,7 +232,6 @@ export default function RecordingsSheet({
       // Как и в шторке ответа: иначе внутренний список прокручивается только
       // на верхней snap-точке, а на нижней жест перехватывает сама шторка.
       enableContentPanningGesture={false}
-      onChange={onIndexChange}
       onClose={onDismiss}
       // Контейнер шторки по умолчанию — единый элемент доступности, и всё
       // внутри скрыто от VoiceOver и Maestro. Раскрываем детей.
@@ -200,15 +240,19 @@ export default function RecordingsSheet({
       handleComponent={renderHandle}
       topInset={insets.top}
       backgroundStyle={styles.sheetBg}
+      accessibilityModal={visible}
+      onAccessibilityEscape={() => {
+        if (!recordingBusy) sheetRef.current?.close();
+      }}
+      footer={actions}
+      footerHidden={!visible}
+      footerStyle={recording ? styles.recordingFooter : undefined}
     >
       {/* закрытая шторка уехала за край, но без пометки осталась бы в обходе */}
-      <View
+      <KeyboardSheetBody
+        scrollable={false}
         style={styles.sheetBody}
         {...screenReaderHiddenProps(!visible)}
-        // «Z» VoiceOver — как кнопка-шеврон: во время записи шторка не закрывается
-        onAccessibilityEscape={() => {
-          if (!recordingBusy) sheetRef.current?.close();
-        }}
       >
       <View style={styles.content} {...screenReaderHiddenProps(recording)}>
         <View style={styles.header}>
@@ -382,43 +426,11 @@ export default function RecordingsSheet({
             );
           })}
         </BottomSheetScrollView>
-
-        <View style={[styles.actionsRow, { paddingBottom: bottomContentInset }]}>
-          <Pressable
-            accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
-            accessibilityRole="button"
-            testID="recordings-record-button"
-            disabled={recordingBusy}
-            onPress={() => {
-              // Reset synchronously before the overlay replaces this button,
-              // so the second physical tap cannot stop the new recording.
-              setStopReady(false);
-              onStartRecording();
-            }}
-            style={({ pressed }) => [
-              styles.recordBtn,
-              recordingBusy && { opacity: 0.5 },
-              pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
-            ]}
-          >
-            <Mic size={sc(16)} color={colors.greenSoft} />
-            <Text style={styles.recordLabel}>
-              {recordingPhase === 'starting'
-                ? t('components.answers.preparing')
-                : recordings.length
-                  ? t('components.answers.recordMore')
-                  : t('components.answers.record')}
-            </Text>
-          </Pressable>
-        </View>
       </View>
 
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
-        <View
-          accessibilityViewIsModal
-          style={[styles.recOverlay, { paddingBottom: recordingBottomInset }]}
-        >
+        <View style={styles.recOverlay}>
           <View style={styles.recOverlayContent}>
             <Text style={styles.recOverlayKicker}>{t('components.answers.recording')}</Text>
             <View style={styles.waveRow}>
@@ -443,28 +455,10 @@ export default function RecordingsSheet({
               </Text>
             )}
           </View>
-          <Pressable
-            accessibilityLabel={t('components.answers.stop')}
-            accessibilityRole="button"
-            accessibilityValue={{ text: elapsedLabel }}
-            testID="recordings-stop-button"
-            disabled={stopDisabled}
-            onPress={onStopRecording}
-            // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
-            // и полупрозрачное «готово» выглядело как незапущенная запись.
-            style={({ pressed }) => [
-              styles.recDoneBtn,
-              pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
-            ]}
-          >
-            <Text style={styles.recDoneLabel}>
-              {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
-            </Text>
-          </Pressable>
         </View>
       )}
-      </View>
-    </BottomSheet>
+      </KeyboardSheetBody>
+    </KeyboardSheet>
   );
 }
 
@@ -522,6 +516,7 @@ function WaveBar({ color, delay, active }: { color: string; delay: number; activ
 }
 
 const stylesFactory = () => StyleSheet.create({
+  recordingFooter: { backgroundColor: 'rgba(18,12,7,.97)' },
   sheetBody: {
     flex: 1,
   },

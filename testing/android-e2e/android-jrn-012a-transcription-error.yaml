@@ -18,7 +18,7 @@ tags:
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - inputText: JRN-012 повтор расшифровки
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: setup-preset-5
     waitToSettleTimeoutMs: 500

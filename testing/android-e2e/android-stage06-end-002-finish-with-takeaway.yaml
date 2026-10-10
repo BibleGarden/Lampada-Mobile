@@ -11,7 +11,7 @@ tags:
 - tapOn:
     id: "setup-goal-input"
 - inputText: "END-002 с выводом"
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: "setup-preset-5"
 - tapOn:
@@ -40,8 +40,8 @@ tags:
     id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
 # Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
-# (app/reflect.tsx:144) — гасим клавиатуру через Enter (как в smoke-full).
-- pressKey: Enter
+# Закрываем клавиатуру тапом вне поля после ввода Unicode.
+- runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible:
     id: "reflect-complete-button"
 - takeScreenshot: END-002-reflect-filled

@@ -1,0 +1,14 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+# Enter ends editing with software or emulated hardware input.
+- pressKey: Enter
+- assertVisible:
+    id: setup-goal-input
+    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix setup"}'
+- assertVisible:
+    id: setup-duration-value
+- assertVisible:
+    id: setup-next-button

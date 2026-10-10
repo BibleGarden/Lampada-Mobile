@@ -1,0 +1,19 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+# Enter must restore actions and preserve the text.
+- pressKey: Enter
+- assertVisible:
+    id: reflection-input
+    text: "Keyboard matrix reflect"
+- assertVisible:
+    id: reflect-return-button
+- tapOn:
+    id: reflect-complete-button
+- assertVisible:
+    id: home-title-lit
+- tapOn:
+    id: journal-button
+- assertVisible: ".*Keyboard matrix reflect.*"

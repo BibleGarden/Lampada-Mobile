@@ -196,22 +196,62 @@ the scenario is finished through explicit interface actions.
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
 
-Setup keeps its layout while the goal is typed: the header, title and the
-input's top edge stay in place, and the input stretches down to just above the
-keyboard over the hidden duration and navigation, scrolling long text inside.
-Setup updates that layout without a keyboard-triggered layout animation, so
-duration and navigation reappear in place when the keyboard closes.
-An invisible copy of the goal sizes the input's slot, so the position follows
-rotation; while typing it holds the text from when the keyboard opened.
-A long goal shrinks the slot to the free space and scrolls inside, so "Next"
-stays on screen.
-Reflection uses a keyboard-avoiding, scrollable content area. While typing,
-the input fills the available space below the question and above the keyboard.
-The editing column expands to at most 960 pt on tablets. The decorative header
-and completion actions return when the keyboard closes.
-Content can scroll when a long question or a small window needs more room.
-Both screens follow the keyboard through `lib/useKeyboardTop.ts`; Reflection
-retains the keyboard-synchronized layout animation.
+Keyboard handling is shared by preparation, answers, reflection, content reports
+and history search (ADR-0038). `KeyboardSystemProvider` is the only application
+subscriber to keyboard notifications. Visibility, animation phase and occupied
+space are separate: a zero-height Samsung panel and a narrow iPad panel remain
+visible without claiming the full window bottom. Field focus alone does not imply
+a software keyboard. Deferred actions return only after `keyboardDidHide`.
+`dismissKeyboard` uses native Keyboard Controller dismissal even after input
+blur, and always clears the React Native responder even when no IME is open;
+single-phrase editors submit before dismissing, so Enter cannot leave
+a visible IME with inaccessible lower actions.
+
+`KeyboardViewport` fills its window to the bottom edge and reserves
+`max(bottom safe area, keyboard height)` as one UI-thread padding driven by
+Keyboard Controller 1.21.9 (Expo SDK 57), so content never dips under the Home
+Indicator or navigation bar while the keyboard animates. The state comes from
+the classifier and only the frames from Keyboard Controller: the height is
+reserved while the keyboard is docked, or hidden while a Keyboard Controller
+transition runs
+(`reservedKeyboardHeight` in `lib/keyboardGeometry.ts`), so a stale Keyboard
+Controller height after a fast input-method switch leaves no padding. Forms do not subtract
+keyboard or screen heights themselves.
+
+`KeyboardSheet` puts a Gorhom sheet into a full-window overlay that reserves
+nothing, so the sheet and its backdrop reach the screen edge and the container
+does not change with the keyboard. The footer holds the answer and recording
+actions, including Stop, above the bottom safe area with a constant padding.
+The keyboard height not covered by that padding is subtracted on the UI thread
+from the footer position Gorhom computes, so Gorhom moves the whole footer
+container above the keyboard frame by frame and the actions stay inside its
+bounds, where Android accessibility finds them. The body takes the height
+above the footer but never less than a minimum, because Android clears focus
+inside a view that shrinks to zero (`sheetFooterPosition`). Sheet inputs do not
+register Gorhom's own keyboard handling, so the keyboard space is reserved once.
+A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
+sheet, so `KeyboardSheet` remounts it when the window geometry changes.
+
+Preparation and reflection defer lower actions while typing. Answers and reports
+retain transaction actions within the available region. Floating answer inputs
+stay compact. Keyboard dismissal uses existing outside taps and native submission
+keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
+calculation: the target snap follows the keyboard and focus, every keyboard or
+focus change requests it, and returning to the resting snap is a single request,
+so a later drag stays where the person put it. Touching the handle hides the
+keyboard: a tap returns the sheet to the resting snap like any other hide, and a
+drag, which cancels the React Native touch once Gorhom's pan starts, leaves the
+snap to the person. Gorhom drops a request for the destination of its running
+animation even when an earlier request that has not reached the UI thread changes
+that destination, so a fast input-method switch can lose the full-height request.
+The full-height target is therefore checked again whenever Gorhom's animated
+index settles on a whole number, including a stop at the previous snap, for which
+Gorhom reports neither `onChange` nor `onAnimate` (`keyboardSnapTarget`,
+`reconcileKeyboardSnap`, `keyboardSnapOnHandleRelease`,
+`settledKeyboardSnapRequest` in `lib/keyboardGeometry.ts`).
+The synchronous close flag prevents a late hide notification from reopening a
+saved sheet. Content can scroll on small windows or long questions.
+Keyboard opening may reflow the form; typing itself preserves text and focus.
 
 ## State and the main data flow
 
@@ -304,6 +344,12 @@ clock every time, so after coming back from the background the timer immediately
 catches up with the interval that passed. For a finite prayer `elapsed` stops at
 `endsAtMs`: the time after zero is not saved as prayer duration, while extending
 the timer or resuming from reflection moves the deadline and so the cap (ADR-0033).
+
+Each tick re-renders only the session screen and its companion card. Home and
+Setup stay mounted under the session in the stack, so they select only the
+store fields they show; the answer sheet and the Scripture reader are memoized
+and receive stable props.
+
 An untimed prayer saves the wall-clock time from its start to the last tick of the
 session screen. A session unloaded by the OS is not
 restored yet.
@@ -505,8 +551,9 @@ fragment. So the `Stack` in `app/_layout.tsx` is wrapped in a layout-neutral
 `View` subscribed to the lock state, the settings content is marked under its
 sheets and the PIN input, and the session content under the answer sheet and the
 Scripture reader. A closed gorhom sheet is only translated below the screen and
-would stay in the reading order, so its content is marked while closed
-(`useSheetReflow` exposes `open`); gorhom backdrops and containers are made
+would stay in the reading order, so its content is marked while closed (from
+`AnswerSheet`'s own `open`, `RecordingsSheet`'s `visible`, and the `open` that
+`useSheetReflow` exposes to `KeyboardSheet` and `ScriptureReader`); gorhom backdrops and containers are made
 non-accessible because their built-in labels are English. On opening, focus
 moves to the sheet's heading (the question, the passage reference). The shared
 helper is `lib/a11y.ts`: it sets `accessibilityElementsHidden` and

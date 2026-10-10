@@ -1,0 +1,50 @@
+{
+  "device": "emulator-5554",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    156,
+    1280,
+    1848
+  ],
+  "observed_mode": "docked",
+  "elements": {
+    "answer-input": {
+      "bounds": [
+        69,
+        775,
+        1211,
+        1500
+      ],
+      "focused": true
+    },
+    "answer-save-button": {
+      "bounds": [
+        597,
+        1640,
+        1211,
+        1780
+      ],
+      "focused": false
+    },
+    "answer-record-button": {
+      "bounds": [
+        69,
+        1640,
+        209,
+        1780
+      ],
+      "focused": false
+    },
+    "answer-cancel-button": {
+      "bounds": [
+        243,
+        1640,
+        562,
+        1780
+      ],
+      "focused": false
+    },
+    "answer-keyboard-dismiss": null
+  }
+}
