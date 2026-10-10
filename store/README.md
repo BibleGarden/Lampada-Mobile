@@ -230,6 +230,11 @@ playback notification.
 - Data is encrypted in transit. There are no accounts. The journal and
   recordings stay on the device and are deleted with a prayer or by the full
   reset.
+- Android Auto Backup is on (ADR-0040). A backup to the user's own Google
+  account is not collection by the developer: do not declare it as collected
+  data. Mention it in the privacy policy and listing notes: the journal may be
+  restored from the user's Google backup, which is encrypted with the device
+  screen lock on Android 9 and later, and the app PIN is not restored.
 - Collected, not shared: Google Gemini and the Whisper server act as service
   providers.
   - Audio → Voice or sound recordings: optional, processed ephemerally, App

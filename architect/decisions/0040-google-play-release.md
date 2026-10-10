@@ -67,6 +67,17 @@ use, and biometric texts named Face ID and Touch ID on Android.
   system reports exactly one biometric type; otherwise the system prompt
   chooses among enrolled methods and the app says "biometrics".
 
+- **Android Auto Backup stays enabled.** `android.allowBackup` is not set in
+  `app.json`, so Expo's default `true` applies. The owner decided not to
+  exclude the journal: losing every prayer and recording on a device change is
+  a real harm, while the risk is low. Google backups on Android 9 and later are
+  end-to-end encrypted with the device screen lock, and a restore goes to the
+  user's own device and account. The app PIN is not restored (its SecureStore
+  keys are excluded from backup, see the architecture README), so a restored
+  journal opens without the app lock until the user sets a PIN again. Backup
+  to the user's own Google account is not data collection by the developer
+  (Play Console Data safety).
+
 ## Options considered
 
 ### Keep `com.nf404.twinkler` on Android
@@ -88,6 +99,12 @@ An Android build could replace the App Store URL with a Play URL. This splits
 the update policy between two repositories and still shows iOS thresholds to
 Android. Rejected.
 
+### Exclude the journal from Auto Backup
+
+`allowBackup: false` would keep the journal off Google's servers, but a new
+phone would start with an empty journal and no way to bring the prayers back.
+Rejected: the backup is encrypted and belongs to the user.
+
 ### Keep the template splash and icon assets
 
 Android would keep the white placeholder splash. Rejected; the unused template
@@ -103,6 +120,16 @@ assets were deleted.
   `platform` and must keep receiving iOS decisions.
 - The splash image is derived from the icon; regenerate it with the same fade
   if the icon changes.
+- A restored journal has no app lock until the PIN is set again.
+- Open issue: the rules that `expo-secure-store` writes
+  (`secure_store_backup_rules.xml`, `secure_store_data_extraction_rules.xml`)
+  contain `<include domain="sharedpref">` only, and Android restricts the
+  backup to the listed `<include>` resources. As built, the SQLite database
+  and the recordings (domain `file`) are therefore probably not backed up, and
+  this decision is not yet effective. Own backup rules that include the
+  `file` domain and exclude `sharedpref/SecureStore` (and the plugin's
+  `configureAndroidBackup: false`) are needed; verify with `adb shell bmgr`
+  on a device before publishing the "journal survives a device change" claim.
 - The first Android upload may be done manually in Play Console; Play Console
   declarations, store graphics and screenshots remain owner tasks.
 
