@@ -47,9 +47,8 @@ updates took frames from the text input, and typing showed up in batches.
 - Expo Splash Screen for the launch screen: the app background `#0e0a07` with
   the flame from `assets/splash.png` on both platforms. The root layout's
   first frame is an identical copy (`components/BootSplash.tsx`). The native
-  splash is hidden once the copy's flame has loaded. The app mounts when fonts
-  and the interface language are loaded and Android has finished taking over
-  the system splash (`modules/splash-hand-over`, Android 12+); the copy fades
+  splash is hidden once the copy's flame has loaded; the app mounts after that
+  and after fonts and the interface language are loaded, and the copy fades
   out over it. A font loading error is fatal: the root layout exports no error
   boundary, so the app crashes with a crash report (ADR-0040).
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
@@ -128,7 +127,6 @@ upgrading it requires rebuilding the native app.
 | `lib/prayerSystemTimer.*.ts` | The platform lifecycle of the timer on the locked screen |
 | `widgets/PrayerLiveActivity.tsx` | The iOS Live Activity and Dynamic Island with the system countdown |
 | `modules/prayer-timer-notification/` | The Android ongoing notification with the system chronometer |
-| `modules/splash-hand-over/`, `lib/splashHandOver.*.ts` | The end of the Android 12+ system splash hand-over, before which the root layout does not mount the app (ADR-0040) |
 | `lib/disableFontScaling.tsx` | Turns off system font scaling for every `Text` and `TextInput`; imported first in `app/_layout.tsx` (ADR-0032) |
 | `lib/theme.ts` | Visual tokens, `useStyles` - rebuilding the styles when the window geometry changes (ADR-0011), `column()` - the content column of the single layout (ADR-0012) |
 | `assets/audio/` | The local music files and the record of their origin and licenses |
