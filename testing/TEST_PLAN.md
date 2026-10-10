@@ -367,6 +367,8 @@ the stub; execution results belong in dated reports.
 | JRN-012 | Get HTTP 413, 429, 5xx, a timeout, or a disconnected network in the journal and retry | the cause is explained in plain language, the audio stays available, and a repeated attempt can save the text |
 | JRN-013 | Close the details or delete the prayer during transcription | the request is cancelled, a late response does not bring the deleted data back into the UI or the database |
 | JRN-014 [rare] | Share an expanded prayer | the system share sheet opens with plain text carrying localized labels (`Topic:`, `Date:`, `Duration:`, `Question N:`, `Answer:`, `Voice note:`, `Saved passages:`, `Takeaway:`) and `———` separators between the meta block, the questions, the closing block and the app name; no audio file is attached and cancelling changes nothing |
+| JRN-015 | Android 12+ emulator, cloud backup and restore (ADR-0040). Enable the app lock, save a prayer with a text answer and a transcribed recording. Run `adb shell bmgr enable true`, `adb shell bmgr transport com.android.localtransport/.LocalTransport`, `adb shell settings put secure backup_local_transport_parameters 'is_encrypted=true'`, `adb shell bmgr backupnow app.lampada`; pull every APK listed by `adb shell pm path app.lampada`, run `adb shell pm uninstall --user 0 app.lampada` and `adb install-multiple -t --user 0 <the pulled APKs>` (the install restores the backup), then `adb shell bmgr transport com.google.android.gms/.backup.BackupTransportService` | `backupnow` prints `Package app.lampada with result: Success`; the app starts without the lock screen and the settings show the protection off; the journal shows the prayer with its answer, takeaway, transcript and recording row; the audio file is not restored (JRN-009); the streak and settings are kept |
+| JRN-016 | Android 12+ emulator, device-to-device transfer. Same data as JRN-015. Run `adb shell bmgr enable true`, `adb shell settings put secure backup_enable_d2d_test_mode 1`, `adb shell bmgr transport com.google.android.gms/.backup.migrate.service.D2dTransport`, `adb shell bmgr init com.google.android.gms/.backup.migrate.service.D2dTransport`, `adb shell bmgr backupnow app.lampada`; pull the APKs, `adb shell pm uninstall --user 0 app.lampada`, `adb shell bmgr transport com.google.android.gms/.backup.BackupTransportService`, `adb install-multiple -t --user 0 <the pulled APKs>`; clean up with `bmgr init` of the D2D transport, `settings put secure backup_enable_d2d_test_mode 0` and the GMS transport again | as in JRN-015, and the recording also plays |
 
 ### Prayer reminders
 
@@ -452,6 +454,9 @@ are in
   omits the field instead of sending an empty placeholder;
 - audio files are stored in the expected directory and reach the transcription
   endpoint only after both an explicit press and transcription consent;
+- the Android backup rules contain the journal database, recordings only for
+  device transfer, and never `shared_prefs/SecureStore.xml`
+  (`androidBackupRules.test.mjs`, JRN-015, JRN-016);
 - before routing transcription to Google Gemini, the published Privacy Policy
   names that audio route and the paid-API processing terms match the consent;
 - the server logs and persistent storage contain neither the audio, nor the file

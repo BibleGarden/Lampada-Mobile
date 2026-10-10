@@ -67,16 +67,43 @@ use, and biometric texts named Face ID and Touch ID on Android.
   system reports exactly one biometric type; otherwise the system prompt
   chooses among enrolled methods and the app says "biometrics".
 
-- **Android Auto Backup stays enabled.** `android.allowBackup` is not set in
-  `app.json`, so Expo's default `true` applies. The owner decided not to
-  exclude the journal: losing every prayer and recording on a device change is
-  a real harm, while the risk is low. Google backups on Android 9 and later are
-  end-to-end encrypted with the device screen lock, and a restore goes to the
-  user's own device and account. The app PIN is not restored (its SecureStore
-  keys are excluded from backup, see the architecture README), so a restored
-  journal opens without the app lock until the user sets a PIN again. Backup
-  to the user's own Google account is not data collection by the developer
-  (Play Console Data safety).
+- **Android Auto Backup carries the journal.** `android.allowBackup` is not
+  set in `app.json`, so Expo's default `true` applies. The owner decided not to
+  exclude the journal: losing every prayer on a device change is a real harm,
+  while the risk is low. Any `<include>` rule limits the backup to the listed
+  paths, and the rules written by `expo-secure-store` include only
+  `sharedpref`, which left the database out. `plugins/withAndroidBackupRules.js`
+  writes the app's own rules instead (`fullBackupContent` for Android 11 and
+  lower, `dataExtractionRules` for 12 and higher), and `expo-secure-store` runs
+  with `configureAndroidBackup: false`:
+
+  | App storage path | Android ≤ 11 | Android 12+ cloud backup | Android 12+ device transfer |
+  |---|---|---|---|
+  | `files/SQLite/` (`lampada.db` with its WAL files) | included | included | included |
+  | `files/Audio/` (voice recordings) | — | — | included |
+  | `shared_prefs/SecureStore.xml` | excluded | excluded | excluded |
+
+  Nothing else is backed up: cache and `no_backup` never are, and the
+  diagnostics log and other modules' SharedPreferences are not listed
+  (reminders are rescheduled from the journal settings at every start).
+  - **Recordings stay out of the cloud backup.** Google keeps 25 MB per app and
+    stops backing up an app entirely while its data exceeds the quota.
+    Recordings at 48 kbit/s take about 22 MB per hour, so they would soon cost
+    the journal its backup. Device transfer has no quota and carries them; on
+    Android 11 and lower one set of rules serves both, so recordings are not
+    transferred there.
+  - **The cloud backup is encrypted.** On Android 12 and higher the
+    `cloud-backup` rules set `disableIfNoEncryptionCapabilities="true"`: the
+    journal goes to Google only end-to-end encrypted with the device screen
+    lock. The Android 11 rules have no such condition; Android 9 and later
+    encrypt the backup whenever a screen lock is set.
+  - **The PIN is not restored.** SecureStore values are encrypted with an
+    Android Keystore key that never leaves the device, so a restored copy could
+    not be decrypted. The lock keys live only in SecureStore (`lib/lock.ts`),
+    and a missing record means protection off (`parseLockConfig`), so a
+    restored journal opens without the lock until the user sets a PIN again.
+  - Backup to the user's own Google account is not data collection by the
+    developer (Play Console Data safety).
 
 ## Options considered
 
@@ -105,6 +132,12 @@ Android. Rejected.
 phone would start with an empty journal and no way to bring the prayers back.
 Rejected: the backup is encrypted and belongs to the user.
 
+### Back up recordings to the cloud
+
+The journal would come back with its audio. Rejected: recordings outgrow the
+25 MB quota, and an app over the quota loses its whole cloud backup, journal
+included.
+
 ### Keep the template splash and icon assets
 
 Android would keep the white placeholder splash. Rejected; the unused template
@@ -120,16 +153,16 @@ assets were deleted.
   `platform` and must keep receiving iOS decisions.
 - The splash image is derived from the icon; regenerate it with the same fade
   if the icon changes.
+- A journal restored from the cloud keeps its texts and transcripts, but its
+  recordings are missing: the rows stay and the audio files are absent
+  (TEST_PLAN JRN-009). A device transfer on Android 12 and higher brings the
+  recordings too.
 - A restored journal has no app lock until the PIN is set again.
-- Open issue: the rules that `expo-secure-store` writes
-  (`secure_store_backup_rules.xml`, `secure_store_data_extraction_rules.xml`)
-  contain `<include domain="sharedpref">` only, and Android restricts the
-  backup to the listed `<include>` resources. As built, the SQLite database
-  and the recordings (domain `file`) are therefore probably not backed up, and
-  this decision is not yet effective. Own backup rules that include the
-  `file` domain and exclude `sharedpref/SecureStore` (and the plugin's
-  `configureAndroidBackup: false`) are needed; verify with `adb shell bmgr`
-  on a device before publishing the "journal survives a device change" claim.
+- The rules name native directories: `androidBackupRules.test.mjs` fails if an
+  Expo upgrade moves the SQLite or recordings directory or renames the
+  SecureStore preferences file. Backup and restore are checked manually
+  (TEST_PLAN JRN-015, JRN-016) before the "journal survives a device change"
+  claim is published.
 - The first Android upload may be done manually in Play Console; Play Console
   declarations, store graphics and screenshots remain owner tasks.
 
@@ -137,5 +170,8 @@ assets were deleted.
 
 - Expo SDK 57: [splash screen](https://docs.expo.dev/versions/v57.0.0/sdk/splash-screen/),
   [app config](https://docs.expo.dev/versions/v57.0.0/config/app/),
-  [EAS Submit for Android](https://docs.expo.dev/submit/android/)
+  [EAS Submit for Android](https://docs.expo.dev/submit/android/),
+  [SecureStore Android Auto Backup](https://docs.expo.dev/versions/v57.0.0/sdk/securestore/)
+- Android: [Auto Backup](https://developer.android.com/identity/data/autobackup),
+  [testing backup and restore](https://developer.android.com/identity/data/testingbackup)
 - Amends ADR-0020 and ADR-0034

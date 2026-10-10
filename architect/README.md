@@ -562,11 +562,14 @@ interval stay `NULL` - there is nothing to restore the link from. The journal
 shows the quotes of a prayer at the end of the expanded card, with the full text
 in a popup.
 
-Android Auto Backup stays enabled (`android.allowBackup` defaults to `true`;
-ADR-0040), so the journal is meant to follow the user to a new device through
-their Google account; the PIN, kept in SecureStore, is excluded, so a restored
-journal has no app lock until a PIN is set again. See ADR-0040 for the open
-issue with the backup rules written by `expo-secure-store`.
+Android Auto Backup carries the journal to a new device through the user's
+Google account (ADR-0040). `plugins/withAndroidBackupRules.js` replaces the
+rules of `expo-secure-store` (`configureAndroidBackup: false`) and backs up only
+`files/SQLite/`; recordings in `files/Audio/` go only with a device-to-device
+transfer on Android 12 and higher, because the 25 MB cloud quota would stop the
+whole backup. `shared_prefs/SecureStore.xml` is excluded everywhere, so a
+restored journal has no app lock until a PIN is set again, and a journal
+restored from the cloud has recording rows without audio files.
 
 The audio files live in the document directory of the app. The database stores a
 portable URI and the text of the transcript; the URI is resolved against the

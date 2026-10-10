@@ -52,6 +52,7 @@
     },
     "plugins": [
       "./plugins/withAndroidBuild",
+      "./plugins/withAndroidBackupRules",
       "expo-router",
       "expo-font",
       "expo-sqlite",
@@ -82,7 +83,12 @@
           "widgets": []
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": false
+        }
+      ],
       [
         "expo-local-authentication",
         {
