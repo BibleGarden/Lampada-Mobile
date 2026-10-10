@@ -53,9 +53,9 @@ npm run test:e2e:android:critical
 npm run test:e2e:android -- android-ans-024-recordings-keyboard
 ```
 
-The 10 Android flows live in `testing/android-e2e/` and use
-`com.nf404.twinkler`, Android selectors and keyboard commands. The runner
-requires Release, preserves smoke → relaunch order, stops at the first failure
+The Android flows live in `testing/android-e2e/` and use the application id
+`app.lampada`, Android selectors and keyboard commands. The runner requires
+Release, preserves smoke → relaunch order, stops at the first failure
 and records full logs and exit codes in a temporary output directory. Override
 `ANDROID_TEST_DEVICE` or `ANDROID_TEST_OUTPUT_DIR` when needed. The original iOS
 commands still scan only `testing/e2e/` and use `twinkler`.

@@ -17,6 +17,15 @@ use, and biometric texts named Face ID and Touch ID on Android.
 
 ## Decision
 
+- **Android application id `app.lampada`.** `android.package` changes from
+  `com.nf404.twinkler` to `app.lampada` before the first Google Play
+  publication, while the id can still change: Play binds an app to its id
+  forever, and the old one is built from the Expo account `nf404` and the
+  working name `twinkler` rather than the product name. The iOS bundle
+  identifier stays `twinkler`: the App Store app is published, and a new
+  bundle identifier would be a new App Store app. Android flows, runner
+  scripts and the test probe target `app.lampada`; a unit test rejects the old
+  id in them.
 - **One store version per release.** `scripts/build-production.sh` takes a
   required platform: `android`, `ios` or `all` (`npm run eas:production:<platform>`).
   It reserves the next minor once (ADR-0034); `all` builds both platforms from
@@ -29,7 +38,7 @@ use, and biometric texts named Face ID and Touch ID on Android.
 - **Submission.** `eas.json` `submit.production.android` uploads to the
   `internal` track with `releaseStatus: draft`; the owner promotes releases in
   Play Console. The Google service account key is stored in EAS credentials
-  for `com.nf404.twinkler`, never in the repository, so the profile has no
+  for `app.lampada`, never in the repository, so the profile has no
   `serviceAccountKeyPath`.
 - **Platform-aware update check.** The client sends `platform=ios|android` and
   accepts only responses that echo the same `platform`. A response without it
@@ -59,6 +68,12 @@ use, and biometric texts named Face ID and Touch ID on Android.
   chooses among enrolled methods and the app says "biometrics".
 
 ## Options considered
+
+### Keep `com.nf404.twinkler` on Android
+
+It matches neither the product name nor the iOS bundle identifier `twinkler`,
+and the Play listing URL would keep it forever. Rejected while the app is not
+yet published on Play.
 
 ### Bump the version only when it still has a patch
 

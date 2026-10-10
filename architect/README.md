@@ -641,7 +641,7 @@ Required Bible-API contract for `GET /api/version-check` with `app=lampada`:
   and its response does not change.
 - Minimum supported version, latest version, enable switch and store URL are
   configured per platform. Android uses
-  `https://play.google.com/store/apps/details?id=com.nf404.twinkler`, iOS
+  `https://play.google.com/store/apps/details?id=app.lampada`, iOS
   `https://apps.apple.com/app/id6806024678`. Each platform's switch stays off
   until its store listing is public.
 - The response adds `"platform": "<ios|android>"` for the platform it was

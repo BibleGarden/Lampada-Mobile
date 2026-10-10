@@ -31,7 +31,7 @@
       }
     },
     "android": {
-      "package": "com.nf404.twinkler",
+      "package": "app.lampada",
       "adaptiveIcon": {
         "backgroundColor": "#0e0a07",
         "foregroundImage": "./assets/icon.png"
