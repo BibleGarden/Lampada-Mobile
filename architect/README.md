@@ -212,7 +212,8 @@ a visible IME with inaccessible lower actions.
 Keyboard Controller 1.21.9 (Expo SDK 57), so content never dips under the Home
 Indicator or navigation bar while the keyboard animates. The state comes from
 the classifier and only the frames from Keyboard Controller: the height is
-reserved while the keyboard is docked or a Keyboard Controller transition runs
+reserved while the keyboard is docked, or hidden while a Keyboard Controller
+transition runs
 (`reservedKeyboardHeight` in `lib/keyboardGeometry.ts`), so a stale Keyboard
 Controller height after a fast input-method switch leaves no padding. Forms do not subtract
 keyboard or screen heights themselves.
@@ -237,9 +238,12 @@ stay compact. Keyboard dismissal uses existing outside taps and native submissio
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
 calculation: the target snap follows the keyboard and focus, every keyboard or
 focus change requests it, and returning to the resting snap is a single request,
-so a later drag stays where the person put it. Gorhom ignores a repeated request
-and runs requests in order, so the last one decides the result of a fast
-input-method switch (`keyboardSnapTarget`, `reconcileKeyboardSnap` in
+so a later drag stays where the person put it; grabbing the handle clears the
+target. Gorhom drops a request for the destination of its running animation even
+when an earlier request that has not reached the UI thread changes that
+destination, so a fast input-method switch can lose the full-height request; the
+full-height target is therefore checked again when the sheet stops
+(`keyboardSnapTarget`, `reconcileKeyboardSnap`, `settledKeyboardSnapRequest` in
 `lib/keyboardGeometry.ts`).
 The synchronous close flag prevents a late hide notification from reopening a
 saved sheet. Content can scroll on small windows or long questions.

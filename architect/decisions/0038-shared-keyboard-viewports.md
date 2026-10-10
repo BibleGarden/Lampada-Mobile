@@ -60,12 +60,13 @@ visible; answers and reports do not hide actions. The answer sheet's snap is a
 convergent reconciliation, not a command per event: a visible keyboard with a
 focused field requires the full-height snap, its hiding returns the sheet to
 the resting snap with one request, after which the person chooses the snap
-again, including by a gesture. Every keyboard or focus change requests the
-target snap without comparing it with the sheet index, which lags behind the
-animation on the JavaScript thread: Gorhom ignores a request for the snap it is
-already moving to, and requests run on the UI thread in the order they were
-sent. A fast input-method switch delivers hide and show while the sheet is
-still moving, so the last request decides the result whatever their order.
+again, including by a gesture; grabbing the handle clears the target. Every
+keyboard or focus change requests the target snap without comparing it with the
+sheet index, which lags behind the animation on the JavaScript thread. A fast
+input-method switch delivers hide and show while the sheet is still moving, and
+Gorhom drops a request for the destination of its running animation even when an
+earlier request that has not reached the UI thread changes that destination.
+The full-height target is therefore checked again whenever the sheet stops.
 Use compact floating inputs for an Android floating panel that reports no occupied
 bottom strip. Preserve existing outside-tap dismissal and native submission keys;
 do not add a separate dismissal action. Preserve transactional save and audio lifecycle ownership.

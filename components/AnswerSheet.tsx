@@ -60,7 +60,7 @@ import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
 import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
-import { keyboardSnapTarget, reconcileKeyboardSnap, type KeyboardSnap } from '../lib/keyboardGeometry';
+import { keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap } from '../lib/keyboardGeometry';
 
 const RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
@@ -452,11 +452,11 @@ export default function AnswerSheet({
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
 
-  // Snap — политика формы, а не геометрия (см. keyboardSnapTarget). При
-  // быстрой смене клавиатуры hide и show приходят, пока шторка ещё едет:
-  // каждая смена клавиатуры или фокуса запрашивает точку цели, и последний
-  // запрос определяет итог (reconcileKeyboardSnap). Размер доступного тела
-  // даёт Gorhom. Синхронный флаг закрытия защищает сохранение от позднего didHide.
+  // Snap — политика формы, а не геометрия (см. keyboardSnapTarget). Каждая
+  // смена клавиатуры или фокуса запрашивает точку цели (reconcileKeyboardSnap),
+  // а полная высота проверяется снова по остановке шторки
+  // (settledKeyboardSnapRequest). Размер доступного тела даёт Gorhom.
+  // Синхронный флаг закрытия защищает сохранение от позднего didHide.
   useEffect(() => {
     const target = keyboardSnapTarget(keyboardSnap.current, {
       open: open && openSheetRef.current,
@@ -1082,6 +1082,9 @@ export default function AnswerSheet({
         style={styles.handleWrap}
         testID="answer-sheet-handle"
         onStartShouldSetResponder={() => {
+          // Схватив ручку, точку выбирает человек: скрытие клавиатуры не
+          // должно запрашивать свою точку под его жестом.
+          keyboardSnap.current = null;
           dismissKeyboard();
           return false;
         }}
@@ -1183,6 +1186,8 @@ export default function AnswerSheet({
         setOpen(i >= 0);
         const editing = i >= 0;
         openSheetRef.current = editing;
+        const request = settledKeyboardSnapRequest(keyboardSnap.current, i);
+        if (request !== null) sheetRef.current?.snapToIndex(request);
         if (editing) onOpenChange?.(true);
         if (i < 0) {
           recordingsSheetGenerationRef.current += 1;
