@@ -77,8 +77,12 @@ npm run test:e2e:android:prepared -- --device emulator-5554 --output /tmp/lampad
 
 The prepared runner preserves dependent transcription/favorite order, stops on
 failure and records full logs and exits. It checks orphaned recordings and
-seeds the legacy format through the signed probe. Restore the normal API
-configuration and normal Release APK afterward; uninstall the probe when done.
+seeds the legacy format through the signed probe. The probe is
+`am instrument` against the app package, and Android stops the app to start it:
+a flow that runs after a probe must launch the app itself and may rely only on
+persisted state, never on a screen left open by an earlier flow. Restore the
+normal API configuration and normal Release APK afterward; uninstall the probe
+when done.
 
 Individual Android flows use the same installed-APK preflight and sequential
 runner as the critical tier. Pass flow names without a path or `.yaml` extension.
@@ -269,5 +273,8 @@ interface and a later catalog failure. The SCR-027 phase then uses a catalog
 without a narrated Russian translation: the scripture block must send the user
 to Settings, and the manual choice made there must be saved. It resolves only named simulators and
 cannot target a physical phone. On Android the same phases run as part of
-`npm run test:e2e:android:prepared`. Never run these clear-state fixtures on an
+`npm run test:e2e:android:prepared`, with one more phase,
+`android-scripture-catalog-reopen`, before recovery: the database probe stops
+the app, so this phase relaunches it, checks the saved English interface and
+opens the failing prayer again. Never run these clear-state fixtures on an
 owner's phone.

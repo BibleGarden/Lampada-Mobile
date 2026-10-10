@@ -2,8 +2,8 @@ appId: com.nf404.twinkler
 tags:
   - prepared
 ---
-# Android version of ios-scripture-catalog-saved-offline.yaml (SCR-013, phase 3
-# of 3): after catalog=fail, a cold start keeps the confirmed English Bible,
+# Android version of ios-scripture-catalog-saved-offline.yaml (SCR-013, phase 4
+# of 4): after catalog=fail, a cold start keeps the confirmed English Bible,
 # also after switching the interface to Russian.
 - stopApp
 - launchApp

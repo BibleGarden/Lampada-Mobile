@@ -2,35 +2,15 @@ appId: com.nf404.twinkler
 tags:
   - prepared
 ---
-# Android version of ios-scripture-catalog-failure.yaml (SCR-013, phase 1 of 4).
-# scripts/test-android-prepared.py sets catalog=fail; scripts/test-android.sh
-# requires Russian as the primary emulator locale.
+# SCR-013 on Android, phase 2 of 4. The database probe after the failure phase
+# runs `am instrument`, which stops the app, so the prayer from phase 1 is gone.
+# With catalog=fail still set, a cold start must keep the English interface
+# saved in phase 1, and a new prayer must again show the catalog error. The
+# recovery phase continues this prayer; the runner runs no probe in between.
 - launchApp:
     stopApp: true
-    clearState: true
-    permissions:
-      notifications: allow
-      microphone: allow
-- tapOn:
-    id: settings-button
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- assertVisible: ".*Не удалось загрузить список.*"
-- assertNotVisible: ".*BSB.*"
-- assertNotVisible: ".*Bob Souer.*"
-- tapOn:
-    id: interface-language-picker
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- tapOn:
-    id: interface-language-en
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
-- assertVisible: ".*Could not load the list.*"
-- tapOn:
-    id: settings-back-button
-    waitToSettleTimeoutMs: 500
-    retryTapIfNoChange: false
+    clearState: false
+- assertVisible: ".*Begin prayer.*"
 - tapOn:
     id: start-prayer-button
     waitToSettleTimeoutMs: 500
@@ -39,7 +19,7 @@ tags:
     id: setup-goal-input
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- inputText: SCR-013 catalog offline
+- inputText: SCR-013 catalog recovery
 - pressKey: Enter
 - tapOn:
     id: setup-preset-5
@@ -72,6 +52,5 @@ tags:
       id: scripture-retry-button
     timeout: 30000
 - assertVisible: ".*Bible catalog unavailable.*"
-- assertVisible: ".*Try again.*"
 - assertNotVisible:
     id: scripture-audio-button

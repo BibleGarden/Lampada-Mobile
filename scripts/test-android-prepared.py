@@ -16,9 +16,10 @@ parser.add_argument('--start-at', help='Resume from a diagnosed and corrected sc
 arguments = parser.parse_args()
 if not arguments.device.startswith('emulator-'):
     parser.error('Prepared Android tests require an emulator')
-# Фазы SCR-013 продолжают состояние приложения предыдущей фазы: цепочку можно
-# начать только с её первой фазы.
-if arguments.start_at in ('android-scripture-catalog-recovery', 'android-scripture-catalog-saved-offline'):
+# Фазы SCR-013 опираются на сохранённое состояние предыдущей фазы, а recovery —
+# ещё и на молитву, открытую в reopen: цепочку можно начать только с её первой фазы.
+if arguments.start_at in ('android-scripture-catalog-reopen', 'android-scripture-catalog-recovery',
+                          'android-scripture-catalog-saved-offline'):
     parser.error('SCR-013 phases form one chain; use --start-at android-scripture-catalog-failure')
 output = Path(arguments.output).resolve()
 output.mkdir(parents=True, exist_ok=True)
@@ -124,13 +125,18 @@ def expect_english_bible(values, ui_language, phase):
         sys.exit(phase + ': expected ui_language=' + ui_language + ', got ' + repr(values.get('ui_language')))
 
 
-# SCR-013: the three phases share one app state; the catalog control changes between them.
+# SCR-013. Проба базы — это `am instrument` по пакету приложения, и Android
+# останавливает приложение перед её запуском. Поэтому проба завершает фазу, а
+# следующая фаза перезапускает приложение с проверенного пробой сохранённого
+# состояния. Recovery повторяет запрос в молитве, открытой в reopen, — между
+# ними пробы нет.
 control({'catalog': 'fail'})
 flow('android-scripture-catalog-failure')
 if started:
     values = scripture_meta('scripture-catalog-failure-meta')
     if 'scripture_preferences' in values or values.get('ui_language') != 'en':
         sys.exit('Catalog failure must save no Bible selection and keep ui_language=en, got ' + repr(values))
+flow('android-scripture-catalog-reopen')
 control({'catalog': 'ok'})
 flow('android-scripture-catalog-recovery')
 if started:
