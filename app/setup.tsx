@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { GoldButton, IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Minus, Plus } from '../components/icons';
+import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
@@ -38,7 +39,19 @@ export default function Setup() {
   const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  const s = useSession();
+  // Экран остаётся в стеке под сессией: без выборки он перерисовывался бы
+  // на каждом секундном тике таймера.
+  const s = useSession(
+    useShallow((st) => ({
+      minutes: st.minutes,
+      topic: st.topic,
+      setMinutes: st.setMinutes,
+      incMinutes: st.incMinutes,
+      decMinutes: st.decMinutes,
+      setTopic: st.setTopic,
+      prepareThreshold: st.prepareThreshold,
+    })),
+  );
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
   const [entranceReady, setEntranceReady] = useState(false);

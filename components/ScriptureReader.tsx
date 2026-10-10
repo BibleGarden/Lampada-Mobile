@@ -19,7 +19,10 @@ type Props = {
 };
 
 // Читалка длинных отрывков — тёмно-зелёная, как в прототипе
-export default function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
+// Как и шторка ответа, читалка не перерисовывается от секундного тика сессии.
+export default React.memo(ScriptureReader);
+
+function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();

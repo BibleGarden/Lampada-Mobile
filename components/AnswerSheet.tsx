@@ -104,7 +104,11 @@ const LIMIT_CUE_PLAYBACK_MODE = {
 // Шторка ответа: текст ответа и счётчик голосовых записей. Сами записи живут
 // в отдельной шторке поверх (RecordingsSheet). Открывается на текущем вопросе,
 // черновик считывается из сохранённого ответа.
-export default function AnswerSheet({
+// Экран сессии перерисовывается каждую секунду ради таймера. Шторке это не
+// нужно: она обновляется от своих props (стабильных) и подписок на store.
+export default React.memo(AnswerSheet);
+
+function AnswerSheet({
   sheetRef,
   openRef,
   flushRef,

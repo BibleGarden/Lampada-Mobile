@@ -344,6 +344,12 @@ clock every time, so after coming back from the background the timer immediately
 catches up with the interval that passed. For a finite prayer `elapsed` stops at
 `endsAtMs`: the time after zero is not saved as prayer duration, while extending
 the timer or resuming from reflection moves the deadline and so the cap (ADR-0033).
+
+Each tick re-renders only the session screen and its companion card. Home and
+Setup stay mounted under the session in the stack, so they select only the
+store fields they show; the answer sheet and the Scripture reader are memoized
+and receive stable props.
+
 An untimed prayer saves the wall-clock time from its start to the last tick of the
 session screen. A session unloaded by the OS is not
 restored yet.
