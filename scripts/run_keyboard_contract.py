@@ -4,6 +4,7 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from .child_process import run_forwarding_signals
 from .keyboard_contract_forms import FORMS
 from .keyboard_layout_bounds import has_hardware_keyboard
 
@@ -20,9 +21,9 @@ def main():
     output = Path(args.output);output.mkdir(parents=True, exist_ok=True)
     def command(name, argv):
         with (output / f'{name}.log').open('w') as log:
-            result = subprocess.run(argv, stdout=log, stderr=subprocess.STDOUT)
-        (output / f'{name}.exit').write_text(f'{result.returncode}\n')
-        if result.returncode:
+            returncode = run_forwarding_signals(argv, stdout=log, stderr=subprocess.STDOUT)
+        (output / f'{name}.exit').write_text(f'{returncode}\n')
+        if returncode:
             raise RuntimeError(f'{name} failed; full log: {output / (name + ".log")}')
     def adb(*argv):
         return subprocess.check_output(['adb', '-s', args.device, *argv], text=True, timeout=30).strip()
