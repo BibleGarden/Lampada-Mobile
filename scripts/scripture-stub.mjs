@@ -189,7 +189,7 @@ const server = http.createServer((request, response) => {
     ]);
     return;
   }
-  if (request.method === 'GET' && request.url === '/api/translations/1/books') {
+  if (request.method === 'GET' && url.pathname === '/api/translations/1/books') {
     json(response, 200, [
       { book_number: 19, name: 'Псалом', alias: 'psa', chapters_count: 150 },
       { book_number: 45, name: 'Послание Иакова', alias: 'jas', chapters_count: 5 },
