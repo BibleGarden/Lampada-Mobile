@@ -238,13 +238,17 @@ stay compact. Keyboard dismissal uses existing outside taps and native submissio
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
 calculation: the target snap follows the keyboard and focus, every keyboard or
 focus change requests it, and returning to the resting snap is a single request,
-so a later drag stays where the person put it; grabbing the handle clears the
-target. Gorhom drops a request for the destination of its running animation even
-when an earlier request that has not reached the UI thread changes that
-destination, so a fast input-method switch can lose the full-height request; the
-full-height target is therefore checked again when the sheet stops
-(`keyboardSnapTarget`, `reconcileKeyboardSnap`, `settledKeyboardSnapRequest` in
-`lib/keyboardGeometry.ts`).
+so a later drag stays where the person put it. Touching the handle hides the
+keyboard: a tap returns the sheet to the resting snap like any other hide, and a
+drag, which cancels the React Native touch once Gorhom's pan starts, leaves the
+snap to the person. Gorhom drops a request for the destination of its running
+animation even when an earlier request that has not reached the UI thread changes
+that destination, so a fast input-method switch can lose the full-height request.
+The full-height target is therefore checked again whenever Gorhom's animated
+index settles on a whole number, including a stop at the previous snap, for which
+Gorhom reports neither `onChange` nor `onAnimate` (`keyboardSnapTarget`,
+`reconcileKeyboardSnap`, `keyboardSnapOnHandleRelease`,
+`settledKeyboardSnapRequest` in `lib/keyboardGeometry.ts`).
 The synchronous close flag prevents a late hide notification from reopening a
 saved sheet. Content can scroll on small windows or long questions.
 Keyboard opening may reflow the form; typing itself preserves text and focus.

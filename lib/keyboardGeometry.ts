@@ -62,19 +62,32 @@ export function keyboardSnapTarget(current: KeyboardSnap, form: {
 // Запрос, которым сверяется цель при смене клавиатуры или фокуса. Цель не
 // сравнивается с индексом шторки: на JS-потоке он отстаёт от анимации. Возврат
 // на исходную точку — однократный запрос: после него точку снова выбирает
-// человек, в том числе жестом.
-export function reconcileKeyboardSnap(target: KeyboardSnap): {
+// человек, в том числе жестом. Пока человек держит ручку, возврат ждёт
+// отпускания (keyboardSnapOnHandleRelease).
+export function reconcileKeyboardSnap(target: KeyboardSnap, handlePressed = false): {
   request: number | null;
   target: KeyboardSnap;
 } {
+  if (target === 0 && handlePressed) return { request: null, target };
   return { request: target, target: target === 0 ? null : target };
+}
+
+// Касание ручки скрывает клавиатуру. Простое касание ведёт себя как любое
+// скрытие — шторка возвращается на исходную точку; перетаскивание оставляет
+// точку человеку, и запрос клавиатуры не спорит с его жестом.
+export function keyboardSnapOnHandleRelease(target: KeyboardSnap, dragged: boolean): {
+  request: number | null;
+  target: KeyboardSnap;
+} {
+  return dragged ? { request: null, target: null } : reconcileKeyboardSnap(target);
 }
 
 // Повторный запрос полной высоты, когда шторка остановилась ниже неё.
 // Gorhom отбрасывает запрос точки, к которой идёт текущая анимация, даже если
 // более ранний запрос, ещё не дошедший до UI-потока, эту точку меняет. Поэтому
 // при быстрой смене IME запрос полной высоты может потеряться, и цель
-// проверяется снова по остановке шторки.
+// проверяется снова при каждой остановке шторки — в том числе на прежней
+// точке, о которой Gorhom не сообщает ни onChange, ни onAnimate.
 export function settledKeyboardSnapRequest(target: KeyboardSnap, index: number): number | null {
   return target === 1 && index >= 0 && index !== 1 ? 1 : null;
 }

@@ -15,6 +15,8 @@ import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { File } from 'expo-file-system';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import {
   AudioModule,
   RecordingPresets,
@@ -60,7 +62,9 @@ import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
 import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
-import { keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap } from '../lib/keyboardGeometry';
+import {
+  keyboardSnapOnHandleRelease, keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap,
+} from '../lib/keyboardGeometry';
 
 const RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
@@ -274,6 +278,10 @@ export default function AnswerSheet({
   const landscapeTablet = isTablet() && windowWidth > windowHeight;
   // Точка, которую требует клавиатура (null — решает человек).
   const keyboardSnap = useRef<KeyboardSnap>(null);
+  // Человек держит ручку шторки (касание ещё не отпущено и не стало жестом).
+  const handlePressed = useRef(false);
+  // Непрерывный индекс шторки от Gorhom: целое значение — шторка стоит.
+  const sheetIndex = useSharedValue(-1);
 
   const updateRecs = useCallback(
     (updater: (current: RecordingDraft[]) => RecordingDraft[]) => {
@@ -454,9 +462,33 @@ export default function AnswerSheet({
 
   // Snap — политика формы, а не геометрия (см. keyboardSnapTarget). Каждая
   // смена клавиатуры или фокуса запрашивает точку цели (reconcileKeyboardSnap),
-  // а полная высота проверяется снова по остановке шторки
-  // (settledKeyboardSnapRequest). Размер доступного тела даёт Gorhom.
-  // Синхронный флаг закрытия защищает сохранение от позднего didHide.
+  // а полная высота проверяется снова при каждой остановке шторки
+  // (settledKeyboardSnapRequest). Gorhom вызывает onChange только при смене
+  // индекса, поэтому остановка видна по animatedIndex: он становится целым
+  // после движения. Размер доступного тела даёт Gorhom. Синхронный флаг
+  // закрытия защищает сохранение от позднего didHide.
+  const requestSnap = useCallback((step: { request: number | null; target: KeyboardSnap }) => {
+    keyboardSnap.current = step.target;
+    if (step.request !== null) sheetRef.current?.snapToIndex(step.request);
+  }, [sheetRef]);
+  const releaseHandle = useCallback((dragged: boolean) => {
+    if (!handlePressed.current) return;
+    handlePressed.current = false;
+    if (!openSheetRef.current) return;
+    requestSnap(keyboardSnapOnHandleRelease(keyboardSnap.current, dragged));
+  }, [requestSnap]);
+  const onSheetSettled = useCallback((index: number) => {
+    if (!openSheetRef.current) return;
+    const request = settledKeyboardSnapRequest(keyboardSnap.current, index);
+    if (request !== null) sheetRef.current?.snapToIndex(request);
+  }, [sheetRef]);
+  useAnimatedReaction(
+    () => (Number.isInteger(sheetIndex.value) ? sheetIndex.value : null),
+    (settled, previous) => {
+      if (settled !== null && settled !== previous) scheduleOnRN(onSheetSettled, settled);
+    },
+    [onSheetSettled],
+  );
   useEffect(() => {
     const target = keyboardSnapTarget(keyboardSnap.current, {
       open: open && openSheetRef.current,
@@ -464,10 +496,8 @@ export default function AnswerSheet({
       inputFocused,
       recording: recordingOverlayActiveRef.current,
     });
-    const step = reconcileKeyboardSnap(target);
-    keyboardSnap.current = step.target;
-    if (step.request !== null) sheetRef.current?.snapToIndex(step.request);
-  }, [open, keyboard.visible, inputFocused, sheetRef]);
+    requestSnap(reconcileKeyboardSnap(target, handlePressed.current));
+  }, [open, keyboard.visible, inputFocused, requestSnap]);
 
   const startRecording = async () => {
     if (!recordingSheetOpenRef.current) return;
@@ -1081,10 +1111,13 @@ export default function AnswerSheet({
       <View
         style={styles.handleWrap}
         testID="answer-sheet-handle"
+        // Жест Gorhom, начавшись, отменяет касание React Native: отмена —
+        // перетаскивание, отпускание — простое касание
+        // (keyboardSnapOnHandleRelease).
+        onTouchStart={() => { handlePressed.current = true; }}
+        onTouchEnd={() => releaseHandle(false)}
+        onTouchCancel={() => releaseHandle(true)}
         onStartShouldSetResponder={() => {
-          // Схватив ручку, точку выбирает человек: скрытие клавиатуры не
-          // должно запрашивать свою точку под его жестом.
-          keyboardSnap.current = null;
           dismissKeyboard();
           return false;
         }}
@@ -1092,7 +1125,7 @@ export default function AnswerSheet({
         <View style={styles.handle} />
       </View>
     ),
-    [styles],
+    [styles, releaseHandle],
   );
 
   const recording = recordingPhase === 'recording' || recordingPhase === 'stopping';
@@ -1170,6 +1203,7 @@ export default function AnswerSheet({
     <>
     <KeyboardSheet
       ref={sheetRef}
+      animatedIndex={sheetIndex}
       index={-1}
       snapPoints={snapPoints}
       // без этого v5 подмешивает snap-точку «по контенту», и индексы съезжают
@@ -1186,8 +1220,6 @@ export default function AnswerSheet({
         setOpen(i >= 0);
         const editing = i >= 0;
         openSheetRef.current = editing;
-        const request = settledKeyboardSnapRequest(keyboardSnap.current, i);
-        if (request !== null) sheetRef.current?.snapToIndex(request);
         if (editing) onOpenChange?.(true);
         if (i < 0) {
           recordingsSheetGenerationRef.current += 1;
