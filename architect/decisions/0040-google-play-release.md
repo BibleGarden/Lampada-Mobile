@@ -25,7 +25,7 @@ use, and biometric texts named Face ID and Touch ID on Android.
   identifier stays `twinkler`: the App Store app is published, and a new
   bundle identifier would be a new App Store app. Android flows, runner
   scripts and the test probe target `app.lampada`; a unit test rejects the old
-  id in them.
+  id anywhere in the app code, scripts and Android flows.
 - **One store version per release.** `scripts/build-production.sh` takes a
   required platform: `android`, `ios` or `all` (`npm run eas:production:<platform>`).
   It reserves the next minor once (ADR-0034); `all` builds both platforms from
