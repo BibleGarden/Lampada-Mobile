@@ -28,10 +28,14 @@ the keyboard animation frame by frame; a floating keyboard reserves nothing.
 An inner frame constrains absolute children. A sheet fills the window with no
 reservation, so the sheet and its backdrop reach the screen edge and its
 container never changes with the keyboard. Its footer keeps a constant padding
-above the bottom safe area, which Gorhom measures once, and a UI-thread
-transform lifts it by the keyboard height not covered by that safe area; the
-body ends above the lifted footer. Gorhom owns sheet positioning and footer measurement within that
-window, not a second keyboard inset. Managed sheet inputs
+above the bottom safe area, which Gorhom measures once. The keyboard height not
+covered by that safe area is subtracted on the UI thread from the footer
+position Gorhom computes, and that lifted position is what Gorhom's footer
+container is placed at; the body ends above it. The actions never move outside
+their container, because a child shifted out of its parent's bounds is drawn
+but is not visible to Android accessibility. Gorhom owns sheet
+positioning and footer measurement within that window, not a second keyboard
+inset. Managed sheet inputs
 deliberately do not register Gorhom's independent keyboard handler. Remove
 app-level screen/keyboard height formulas and fixed-device padding corrections.
 

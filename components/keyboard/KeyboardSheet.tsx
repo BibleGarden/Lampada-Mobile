@@ -19,29 +19,30 @@ function useSheetLayout() {
   return context;
 }
 
-// Позицию footer считает Gorhom по его измеренной высоте. Контейнер шторки —
-// всё окно, поэтому footer стоит над безопасной зоной постоянным отступом
-// (Gorhom меряет его один раз), а над клавиатурой его поднимает сдвиг на
-// UI-потоке, кадр в кадр с её анимацией. Тело кончается над поднятым footer.
+// Позицию footer считает Gorhom по его постоянной измеренной высоте
+// (отступ над безопасной зоной меряется один раз). Подъём над клавиатурой
+// вычитается из этой же позиции на UI-потоке, кадр в кадр с её анимацией:
+// Gorhom двигает контейнер footer целиком, и кнопки остаются в его границах —
+// там, где они нарисованы, их находит доступность Android (TalkBack, Maestro).
+// Тело кончается над footer.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, bodyHeight } = useSheetLayout();
   const keyboard = useReservedKeyboardHeight();
   const safeBottom = useSafeAreaInsets().bottom;
-  // Сдвиг не выводит footer выше верха шторки.
-  const lift = useDerivedValue(
-    () => Math.min(Math.max(0, keyboard.value - safeBottom), Math.max(0, animatedFooterPosition.value)),
+  // Подъём не выводит footer выше верха шторки.
+  const position = useDerivedValue(
+    () => Math.max(0, animatedFooterPosition.value - Math.max(0, keyboard.value - safeBottom)),
     [safeBottom],
   );
-  useAnimatedReaction(() => Math.max(0, animatedFooterPosition.value - lift.value), (height) => { bodyHeight.value = height; });
-  const raised = useAnimatedStyle(() => ({ transform: [{ translateY: -lift.value }] }));
+  useAnimatedReaction(() => position.value, (top) => { bodyHeight.value = top; });
   const styles = useStyles(stylesFactory);
   return (
-    <BottomSheetFooter animatedFooterPosition={animatedFooterPosition} bottomInset={0}>
-      <Animated.View
+    <BottomSheetFooter animatedFooterPosition={position} bottomInset={0}>
+      <View
         {...screenReaderHiddenProps(hidden)}
         pointerEvents={hidden ? 'none' : 'auto'}
-        style={[styles.footer, { paddingBottom: sc(16) + safeBottom }, footerStyle, raised, hidden && styles.hidden]}
-      >{footer}</Animated.View>
+        style={[styles.footer, { paddingBottom: sc(16) + safeBottom }, footerStyle, hidden && styles.hidden]}
+      >{footer}</View>
     </BottomSheetFooter>
   );
 }
