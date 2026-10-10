@@ -18,12 +18,13 @@ export function updateKeyboardState(state: KeyboardState, signal: KeyboardSignal
 }
 
 // Плавающая Android-клавиатура видима, но не занимает полосу окна:
-// IME inset равен системной панели, а React Native передаёт высоту 0.
+// IME inset не больше системной панели, и React Native передаёт высоту ≤ 0.
 // Узкая плавающая клавиатура iPad может сообщать ненулевую высоту, поэтому на
 // iOS её ширина сравнивается с шириной закреплённой клавиатуры (dockedWidth).
-// На Android ширину не сравнивают (null): React Native не повторяет
-// keyboardDidShow после изменения только ширины окна (раскрытие Fold, split
-// screen), и сохранённая ширина клавиатуры устаревает.
+// На Android ширину не сравнивают (null): React Native передаёт там ширину
+// видимого окна, а не IME. Она ничего не говорит о плавающей клавиатуре и
+// устаревает после изменения только ширины окна (раскрытие Fold, split
+// screen), потому что keyboardDidShow тогда не повторяется.
 export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number | null) {
   const { coordinates, phase } = state;
   const visible = phase !== 'hidden';
