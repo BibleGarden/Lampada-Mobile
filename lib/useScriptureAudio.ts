@@ -15,7 +15,7 @@ import { createScriptureAudioOperation, narrationNativeState } from './scripture
 import { watchNativePlaybackStart } from './nativePlaybackStart';
 import { errorKind, recordDiagnostic } from './db';
 
-export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'interrupted' | 'error';
 
 const SCRIPTURE_PLAYBACK_MODE = {
   allowsRecording: false,
@@ -151,7 +151,7 @@ export function useScriptureAudio({
 
   useEffect(() => {
     const clip = clipRef.current;
-    if (phase !== 'playing' || !clip) return;
+    if ((phase !== 'playing' && phase !== 'interrupted') || !clip) return;
     if (status.playbackState === 'error') {
       reportNarrationFailure('player_error');
       stop('error');
@@ -164,8 +164,13 @@ export function useScriptureAudio({
     const native = narrationNativeState(status, nativeStartedRef.current);
     if (native === 'started') {
       nativeStartedRef.current = true;
+      if (phase === 'interrupted') {
+        setPhase('playing');
+        onAudioBusyChange(true);
+      }
       return;
     }
+    if (phase === 'interrupted') return;
     if (native !== 'stopped') return;
     // Событие статуса могло отстать от недавнего play(): решает живой статус.
     const live = player.currentStatus;
@@ -176,9 +181,9 @@ export function useScriptureAudio({
       return;
     }
     nativeStartedRef.current = false;
-    releaseSession();
-    setPhase('paused');
-    onAudioBusyChange(false);
+    // Android возобновит плеер после возврата audio focus, только пока lease
+    // держит сессию активной. Deadline при этом не ждёт системную паузу.
+    setPhase('interrupted');
   }, [
     finishClip,
     onAudioBusyChange,
@@ -209,7 +214,8 @@ export function useScriptureAudio({
       onAudioBusyChange(false);
       return;
     }
-    if ((phase === 'paused' || phase === 'idle') && clipRef.current) {
+    if ((phase === 'paused' || phase === 'interrupted' || phase === 'idle') && clipRef.current) {
+      if (phase === 'interrupted') releaseSession();
       const continuation = playbackOperation.begin();
       if (!continuation) return;
       const lease = acquireSession();

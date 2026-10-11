@@ -396,7 +396,7 @@ export default function CompanionDock({
                   accessibilityLabel={
                     scriptureAudio.phase === 'playing'
                       ? t('components.reader.pause')
-                      : scriptureAudio.phase === 'paused'
+                      : scriptureAudio.phase === 'paused' || scriptureAudio.phase === 'interrupted'
                         ? t('components.reader.resume')
                         : t('components.reader.listenPassage')
                   }
@@ -414,7 +414,7 @@ export default function CompanionDock({
                       ? t('components.reader.loading')
                       : scriptureAudio.phase === 'playing'
                         ? t('components.reader.pause')
-                        : scriptureAudio.phase === 'paused'
+                        : scriptureAudio.phase === 'paused' || scriptureAudio.phase === 'interrupted'
                           ? t('components.reader.resume')
                           : scriptureAudio.phase === 'error'
                             ? t('components.reader.retry')

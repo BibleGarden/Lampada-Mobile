@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { File } from 'expo-file-system';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
@@ -36,6 +36,9 @@ import { transcriptionErrorMessageKey, transcriptionFailureCode, type Transcript
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
+import { audioModeCoordinator } from '../lib/audioSession';
+import { TRANSIENT_AUDIO_PLAYER_OPTIONS } from '../lib/audioModeCoordinator';
+import { createPlaybackLeaseOperation, startJournalPlayback } from '../lib/audioPlayerOperation';
 import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 import PairedActions from '../components/PairedActions';
@@ -84,8 +87,12 @@ export default function Journal() {
   >({});
   const [playingUri, setPlayingUri] = useState<string | null>(null);
   const [playbackFailedUri, setPlaybackFailedUri] = useState<string | null>(null);
-  const player = useAudioPlayer();
+  const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
+  const playback = useRef(createPlaybackLeaseOperation()).current;
+  const cancelPlayback = useCallback(() => {
+    void playback.cancel().catch((error) => console.error('Failed to release journal audio session', error));
+  }, [playback]);
 
   // поиск с лёгким дебаунсом, чтобы не гонять SQL на каждую букву
   useFocusEffect(
@@ -122,13 +129,17 @@ export default function Journal() {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       for (const controller of transcriptionControllers.current.values()) controller.abort();
       transcriptionControllers.current.clear();
+      cancelPlayback();
     },
-    [],
+    [cancelPlayback],
   );
 
   useEffect(() => {
-    if (playerStatus.didJustFinish) setPlayingUri(null);
-  }, [playerStatus.didJustFinish]);
+    if (playerStatus.didJustFinish) {
+      cancelPlayback();
+      setPlayingUri(null);
+    }
+  }, [cancelPlayback, playerStatus.didJustFinish]);
 
   // Сбой загрузки нельзя показывать как идущее воспроизведение. Зависимость —
   // само событие плеера: смена playingUri не должна заново ловить старую ошибку.
@@ -136,9 +147,10 @@ export default function Journal() {
     if (!playerStatus.error || playingUri === null) return;
     console.warn('Failed to play journal recording', playerStatus.error);
     db.recordDiagnostic('recording_playback_failed', { place: 'journal', reason: 'player_error' });
+    cancelPlayback();
     setPlaybackFailedUri(playingUri);
     setPlayingUri(null);
-  }, [playerStatus]);
+  }, [playerStatus, cancelPlayback]);
 
   // Android молча игнорирует play() при выключенной аудиосессии: строка не
   // должна остаться «играющей», если нативный плеер так и не начал. Очистка
@@ -151,11 +163,12 @@ export default function Journal() {
         console.warn('Journal recording did not start', reason, status.playbackState);
         db.recordDiagnostic('recording_playback_failed', { place: 'journal', reason });
         player.pause();
+        cancelPlayback();
         setPlaybackFailedUri(playingUri);
         setPlayingUri(null);
       },
     });
-  }, [playingUri, player]);
+  }, [playingUri, player, cancelPlayback]);
 
   const toggleOpen = useCallback(async (id: number) => {
     for (const controller of transcriptionControllers.current.values()) controller.abort();
@@ -165,6 +178,7 @@ export default function Journal() {
     Haptics.selectionAsync();
     setConfirmDeleteId(null);
     setPlaybackFailedUri(null);
+    cancelPlayback();
     if (playingUri) {
       player.pause();
       setPlayingUri(null);
@@ -193,7 +207,7 @@ export default function Journal() {
       db.recordDiagnostic('journal_failed', { action: 'detail', errorKind: db.errorKind(error) });
       if (detailRequest.current === request) setDetailFailed(true);
     }
-  }, [openId, playingUri, player]);
+  }, [openId, playingUri, player, cancelPlayback]);
 
   const runJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
     transcriptionControllers.current.get(recording.id)?.abort();
@@ -261,13 +275,17 @@ export default function Journal() {
     if (decision === 'allowed' && recording) await runJournalTranscription(recording);
   };
 
-  const togglePlay = (recording: db.JournalDetail['recordings'][number]) => {
+  const togglePlay = async (recording: db.JournalDetail['recordings'][number]) => {
     const { uri } = recording;
     if (playingUri === uri) {
       player.pause();
+      cancelPlayback();
       setPlayingUri(null);
       return;
     }
+    if (playingUri !== null) player.pause();
+    cancelPlayback();
+    setPlayingUri(null);
     setPlaybackFailedUri(null);
     // Файл могли удалить и после открытия молитвы: проверяем перед каждым запуском.
     const audio = recordingAudioState(() => new File(uri).exists);
@@ -285,9 +303,25 @@ export default function Journal() {
       );
       return;
     }
-    player.replace(uri);
-    player.play();
-    setPlayingUri(uri);
+    try {
+      const started = await startJournalPlayback(
+        playback,
+        () => audioModeCoordinator.acquireSession(),
+        () => audioModeCoordinator.requestPlayback(setAudioModeAsync, {
+          allowsRecording: false,
+          playsInSilentMode: true,
+        }),
+        player,
+        uri,
+      );
+      if (!started) return;
+      setPlayingUri(uri);
+    } catch (error) {
+      console.error('Failed to start journal recording', db.errorKind(error));
+      db.recordDiagnostic('recording_playback_failed', { place: 'journal', reason: 'mode_failed' });
+      setPlaybackFailedUri(uri);
+      cancelPlayback();
+    }
   };
 
   // экспорт молитвы текстом в системное «Поделиться»: только читаемое,
@@ -327,6 +361,7 @@ export default function Journal() {
     if (confirmDeleteId === id) {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       setConfirmDeleteId(null);
+      cancelPlayback();
       if (playingUri) {
         player.pause();
         setPlayingUri(null);

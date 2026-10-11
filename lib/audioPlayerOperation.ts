@@ -1,4 +1,4 @@
-import type { AudioSessionLease } from './audioModeCoordinator';
+import type { AudioSessionLease, PlaybackAudioModeGrant } from './audioModeCoordinator';
 
 export const shouldClearDraftAudioBusy = (
   activeDraftId: number | null,
@@ -44,6 +44,32 @@ export function createPlaybackLeaseOperation() {
       return cancel();
     },
   };
+}
+
+/** A journal item only starts after its lease has reactivated the native session. */
+export async function startJournalPlayback(
+  operation: ReturnType<typeof createPlaybackLeaseOperation>,
+  acquireSession: () => AudioSessionLease,
+  requestPlayback: () => Promise<PlaybackAudioModeGrant | null>,
+  player: { replace: (uri: string) => void; play: () => void },
+  uri: string,
+): Promise<boolean> {
+  const attempt = operation.begin(acquireSession);
+  try {
+    const grant = await requestPlayback();
+    if (!operation.isCurrent(attempt)) return false;
+    if (!grant?.isCurrent()) {
+      await operation.cancel();
+      return false;
+    }
+    player.replace(uri);
+    player.play();
+    return true;
+  } catch (error) {
+    if (!operation.isCurrent(attempt)) return false;
+    await operation.cancel();
+    throw error;
+  }
 }
 
 export type AudioPlayerReadyStatus = {

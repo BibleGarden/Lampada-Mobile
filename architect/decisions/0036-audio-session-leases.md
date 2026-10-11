@@ -16,8 +16,14 @@ drafts and recording could leave an idle app active in the background.
 ## Decision
 
 `audioModeCoordinator` counts session leases for music, scripture narration,
-draft playback and microphone recording. Each consumer acquires one before
+draft and journal playback, and microphone recording. Each consumer acquires one before
 native audio work and releases it after pause, completion, failure or exit.
+Narration interrupted by system audio focus loss keeps its lease so Android
+can resume it on focus gain. Its distinct `interrupted` phase does not hold an
+expired prayer open; a user pause, stop, completion or unmount releases it.
+Journal playback acquires a lease and requests playback mode before `play()`;
+pause, completion, failure and unmount release it without native player calls
+from unmount cleanup.
 If a recorder stop fails without confirming native shutdown, its lease stays
 held until the existing visible retry or unmount cleanup resolves the recorder.
 The last release queues `setIsAudioActiveAsync(false)` behind earlier mode
