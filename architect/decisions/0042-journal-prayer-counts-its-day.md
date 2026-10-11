@@ -23,7 +23,8 @@ person pray that day.
    day it started. The journal predicate is a single SQL fragment in
    `lib/db.ts`; the journal query, the day synchronisation and the migration all
    use it.
-2. A day is in `prayed_days` while the journal has a prayer started on that day.
+2. A day is in `prayed_days` while the journal has a prayer started on that day,
+   with the legacy-day exception in item 6.
    Every write that can change a session's visibility (an answer save, a time
    checkpoint, completion, deletion) brings the day of the session's start in
    line in the same exclusive transaction. The day is `dayKey(new Date(started_at))`
@@ -43,7 +44,9 @@ person pray that day.
    grows, so the order of a checkpoint and the completion write does not matter.
 6. A one-time migration (`meta.prayed_days_journal_backfill`) adds the days of the
    journal sessions saved before this rule. It keeps existing days that have no
-   journal session: they were counted under the previous rule. The legacy
+   journal session until a write removes the last visible prayer of that same
+   day (including clearing its only answer); then day synchronisation removes
+   the day. They were counted under the previous rule. The legacy
    streak counter (`meta.streak_last_day`, `meta.streak_count`) is now migrated
    once and deleted in the same transaction; it was applied on every launch and
    would have restored a day removed by deleting its last prayer.

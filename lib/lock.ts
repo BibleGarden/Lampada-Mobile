@@ -318,23 +318,28 @@ export async function wipeEverything(): Promise<WipeResult> {
     remindersError = error;
   }
   await wipeLocalData();
-  await Promise.all(ALL_KEYS.map(deleteSecure));
-  if (!remindersCancelled) {
-    // Пишем после wipeLocalData: стирание удаляет и диагностический лог.
-    console.error('Wipe could not cancel prayer reminders', errorKind(remindersError));
-    recordDiagnostic('wipe_incomplete', { step: 'reminders', errorKind: errorKind(remindersError) });
+  try {
+    await Promise.all(ALL_KEYS.map(deleteSecure));
+    if (!remindersCancelled) {
+      // Пишем после wipeLocalData: стирание удаляет и диагностический лог.
+      console.error('Wipe could not cancel prayer reminders', errorKind(remindersError));
+      recordDiagnostic('wipe_incomplete', { step: 'reminders', errorKind: errorKind(remindersError) });
+    }
+  } finally {
+    // Даже если SecureStore не удалил ключ, память не должна ссылаться на
+    // уже стёртые сессии и согласия.
+    resetSettingsStore();
+    resetSessionStore();
+    useLock.setState({
+      ready: true,
+      enabled: false,
+      biometrics: false,
+      locked: false,
+      obscured: false,
+      backgroundedAt: null,
+      pinLength: FALLBACK_PIN_LENGTH,
+    });
   }
-  resetSettingsStore();
-  resetSessionStore();
-  useLock.setState({
-    ready: true,
-    enabled: false,
-    biometrics: false,
-    locked: false,
-    obscured: false,
-    backgroundedAt: null,
-    pinLength: FALLBACK_PIN_LENGTH,
-  });
   return { remindersCancelled };
 }
 
