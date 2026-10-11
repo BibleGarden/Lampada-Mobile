@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   setAudioModeAsync,
   setIsAudioActiveAsync,
@@ -246,5 +246,6 @@ export function useScriptureAudio({
     }
   }
 
-  return { phase, activeVerseNumber, stop, toggle };
+  // Стабильный объект: читалка мемоизирована и получает его через props.
+  return useMemo(() => ({ phase, activeVerseNumber, stop, toggle }), [phase, activeVerseNumber, stop, toggle]);
 }

@@ -30,6 +30,7 @@ import UpdateGate from '../components/UpdateGate';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
+import KeyboardSystemProvider from '../components/keyboard/KeyboardSystemProvider';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
 // завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
@@ -101,6 +102,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
+      <KeyboardSystemProvider>
       <StatusBar style="light" />
       <ReminderRouting />
       {/* Обёртка нужна только как адресат пометки для программ чтения с
@@ -128,6 +130,7 @@ export default function RootLayout() {
           приватности нельзя обойти ни переходом, ни диплинком. */}
       <UpdateGate covered={covered} onVisibleChange={setUpdateVisible} />
       <LockGate />
+      </KeyboardSystemProvider>
     </GestureHandlerRootView>
   );
 }

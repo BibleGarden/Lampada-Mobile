@@ -1,0 +1,65 @@
+"""Check retained keyboard/editor geometry during an actual Android window resize."""
+import argparse
+import os
+import re
+import subprocess
+from pathlib import Path
+from .child_process import run_forwarding_signals
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--device', default='emulator-5554')
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
+    if not args.device.startswith('emulator-'):
+        parser.error('The resize fixture clears app data; physical devices are prohibited')
+    output = Path(args.output); output.mkdir(parents=True, exist_ok=True)
+    os.environ['MAESTRO_DRIVER_STARTUP_TIMEOUT'] = '180000'
+    def command(name, argv):
+        with (output / f'{name}.log').open('w') as log:
+            returncode = run_forwarding_signals(argv, stdout=log, stderr=subprocess.STDOUT)
+        (output / f'{name}.exit').write_text(f'{returncode}\n')
+        if returncode:
+            raise RuntimeError(f'{name} failed; full log: {output / (name + ".log")}')
+    def maestro(name, flow):
+        command(name, ['node', 'scripts/android-guest-load.mjs', 'run', '--device', args.device, '--flow', name, '--',
+                       'maestro', '--device', args.device, 'test', '--no-reinstall-driver', '-e', 'KEYBOARD_MODE=docked',
+                       '--test-output-dir', str(output / name), f'testing/android-e2e/{flow}.yaml'])
+    command('guest-boot', ['node', 'scripts/android-guest-load.mjs', 'boot', '--device', args.device])
+    command('maestro-driver', ['bash', 'scripts/android-maestro-driver.sh', args.device, str(output)])
+    size = subprocess.check_output(['adb', '-s', args.device, 'shell', 'wm', 'size'], text=True)
+    (output / 'original-display-size.log').write_text(size)
+    (output / 'original-display-size.exit').write_text('0\n')
+    physical = re.search(r'Physical size: (\d+)x(\d+)', size)
+    override = re.search(r'Override size: (\d+)x(\d+)', size)
+    current = override or physical
+    if not current:
+        raise RuntimeError('No native emulator display size')
+    width, height = map(int, current.groups())
+    changed = f'{round(width * 1.125)}x{height}'
+    maestro('open', 'android-keyboard-contract-answer-open')
+    try:
+        command('resize', ['adb', '-s', args.device, 'shell', 'wm', 'size', changed])
+        try:
+            command('bounds', ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device,
+                               '--input-id', 'answer-input', '--mode', 'docked', '--focused',
+                               '--actions', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',
+                               '--below-input', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',
+                               '--output', str(output / 'resized-native-bounds.json')])
+        finally:
+            # Снимок после перекладки, даже при провале проверки, до восстановления окна.
+            with (output / 'resized.png').open('wb') as screenshot:
+                result = subprocess.run(['adb', '-s', args.device, 'exec-out', 'screencap', '-p'], stdout=screenshot)
+        # Ошибка снимка не заслоняет провал проверки границ.
+        if result.returncode:
+            raise RuntimeError('Native resize screenshot failed')
+    finally:
+        original = 'x'.join(override.groups()) if override else 'reset'
+        command('restore-window', ['adb', '-s', args.device, 'shell', 'wm', 'size', original])
+    maestro('save-reopen', 'android-keyboard-contract-answer-restore')
+    print('Native resize bounds, focus, and saved text passed; original display size restored')
+
+
+if __name__ == '__main__':
+    main()

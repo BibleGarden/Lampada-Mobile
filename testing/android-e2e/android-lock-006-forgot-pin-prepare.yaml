@@ -35,7 +35,7 @@ tags:
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - inputText: LOCK-006 запись
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible: LOCK-006 запись
 - tapOn:
     id: setup-preset-5

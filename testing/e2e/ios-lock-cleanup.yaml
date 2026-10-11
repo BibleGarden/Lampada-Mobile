@@ -1,0 +1,49 @@
+appId: twinkler
+tags:
+  - prepared
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: lock-screen
+    timeout: 10000
+- tapOn:
+    id: pin-key-1
+- tapOn:
+    id: pin-key-2
+- tapOn:
+    id: pin-key-3
+- tapOn:
+    id: pin-key-4
+- tapOn:
+    id: pin-key-5
+- tapOn:
+    id: pin-key-6
+- assertNotVisible:
+    id: lock-screen
+- openLink: "lampada://settings"
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: DOWN
+- tapOn:
+    id: lock-toggle
+- assertVisible:
+    id: pin-prompt-disable-current
+- tapOn:
+    id: pin-key-1
+- tapOn:
+    id: pin-key-2
+- tapOn:
+    id: pin-key-3
+- tapOn:
+    id: pin-key-4
+- tapOn:
+    id: pin-key-5
+- tapOn:
+    id: pin-key-6
+- assertNotVisible:
+    id: change-pin-button
+- assertNotVisible:
+    id: pin-prompt

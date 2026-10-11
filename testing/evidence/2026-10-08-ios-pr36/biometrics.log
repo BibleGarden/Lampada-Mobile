@@ -1,0 +1,20 @@
+== Подготовка: включаем пин 123456
+Running on Pray SE - iOS 26.5 - 18FBF907-60BB-48EF-9BE8-1DB2767465F5
+ > Flow bio-nav
+Open lampada://... COMPLETED
+Tap on (Optional) "Open|Открыть"... WARNED
+Wait for animation to end within 2000 ms... COMPLETED
+Open lampada://settings... COMPLETED
+Tap on (Optional) "Open|Открыть"... WARNED
+Wait for animation to end within 3000 ms... COMPLETED
+Scrolling DOWN until id: biometrics-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+   биометрия доступна
+== LOCK-009a: включение биометрии
+Authentication ready: ios-lock-009a-enable-biometrics
+== LOCK-009b: холодный старт, вход по биометрии
+Authentication ready: ios-lock-009b-cold-start-faceid
+== LOCK-009c: отказ, запасной вход пином
+Authentication ready: ios-lock-009c-refusal
+== LOCK-010: образцы удалены, вход пином
+LOCK-010 exit=0
+== Готово. Доказательства: /tmp/pray-ios-pr36/biometrics-final-pass/artifacts
