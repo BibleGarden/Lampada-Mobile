@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { pendingKeyboardReserve } from '../../lib/keyboardGeometry';
 import { useKeyboardFrames } from '../../lib/useKeyboardLayout';
 
 // Единственный владелец доступной области обычной формы и нативного Modal.
@@ -21,6 +22,18 @@ export default function KeyboardViewport({ children, style, contentContainerStyl
       <View style={[styles.fill, contentContainerStyle]}>{children}</View>
     </Animated.View>
   );
+}
+
+// Полоса под полем, которое заполняет форму над закреплённой клавиатурой:
+// место, которое открывающаяся клавиатура ещё займёт в KeyboardViewport
+// (pendingKeyboardReserve). Её монтирует только раскладка редактирования.
+export function KeyboardPendingSpace() {
+  const safeBottom = useSafeAreaInsets().bottom;
+  const { reserved, target } = useKeyboardFrames();
+  const pending = useAnimatedStyle(() => ({
+    height: pendingKeyboardReserve(safeBottom, reserved.value, target.value),
+  }), [safeBottom]);
+  return <Animated.View style={pending} pointerEvents="none" />;
 }
 
 const styles = StyleSheet.create({ fill: { flex: 1, minHeight: 0 } });

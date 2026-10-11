@@ -39,17 +39,22 @@ export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number | nu
 
 export type KeyboardLayout = ReturnType<typeof keyboardLayoutFor>;
 
+// Поле заполняет форму, пока закреплённая клавиатура открывается или открыта.
+// Закрывающаяся клавиатура раскладку редактирования уже не держит: форма
+// возвращается к обычной раскладке в начале скрытия, а не растягивает поле
+// на освобождающееся место и сжимает его после keyboardDidHide. Отложенные
+// действия возвращаются только после keyboardDidHide.
 export function keyboardFormPolicy(layout: KeyboardLayout) {
   return {
-    fillInput: layout.kind === 'docked',
+    fillInput: layout.kind === 'docked' && keyboardShowing(layout),
     actionsVisible: !layout.visible,
   };
 }
 
-// Клавиатура нужна шторке, пока она открывается или открыта. Закрывающаяся
-// (iOS keyboardWillHide) уже не нужна: шторка возвращается на исходную точку
-// вместе с ней, а не отдельным движением после keyboardDidHide. Android
-// сообщает скрытие в начале анимации, поэтому там фазы closing нет.
+// Клавиатура нужна форме и шторке, пока она открывается или открыта.
+// Закрывающаяся (iOS keyboardWillHide) уже не нужна: шторка возвращается на
+// исходную точку вместе с ней, а не отдельным движением после keyboardDidHide.
+// Android сообщает скрытие в начале анимации, поэтому там фазы closing нет.
 export function keyboardShowing(layout: KeyboardLayout) {
   return layout.phase === 'opening' || layout.phase === 'open';
 }
@@ -114,6 +119,17 @@ export function settledKeyboardSnapRequest(target: KeyboardSnap, index: number):
 export function reservedKeyboardHeight(kind: KeyboardLayout['kind'], moving: boolean, height: number): number {
   'worklet';
   return kind === 'docked' || (kind === 'hidden' && moving) ? Math.max(0, height) : 0;
+}
+
+// Полоса, которую открывающаяся клавиатура ещё займёт в KeyboardViewport:
+// резерв, которым кончится анимация, за вычетом резерва сейчас (оба не меньше
+// безопасной зоны). Поле, заполняющее форму над закреплённой клавиатурой,
+// стоит над этой полосой и поэтому с первого кадра имеет итоговую высоту:
+// клавиатура поднимается в пустую полосу, а не сжимает многострочное поле
+// кадр за кадром. Закрывающаяся клавиатура полосы не оставляет — цель ниже.
+export function pendingKeyboardReserve(safeBottom: number, reserved: number, target: number): number {
+  'worklet';
+  return Math.max(0, Math.max(safeBottom, target) - Math.max(safeBottom, reserved));
 }
 
 // Позиция footer шторки (от верха её содержимого) с подъёмом над

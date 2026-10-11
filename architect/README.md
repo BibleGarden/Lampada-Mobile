@@ -262,7 +262,14 @@ register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
-Preparation and reflection defer lower actions while typing. Answers and reports
+Preparation and reflection defer lower actions while typing. Their field fills
+the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
+when the hide starts, the form returns to its normal layout, so the field does
+not stretch into the space the keyboard frees and shrink after `keyboardDidHide`.
+Reflection keeps its filling field at its final height from the start of the
+opening: below the field, `KeyboardPendingSpace` holds the strip the keyboard
+has yet to cover in the viewport (`pendingKeyboardReserve`), and the keyboard
+rises into it. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
 stay compact. Keyboard dismissal uses existing outside taps and native submission
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry

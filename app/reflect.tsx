@@ -21,7 +21,7 @@ import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
-import KeyboardViewport from '../components/keyboard/KeyboardViewport';
+import KeyboardViewport, { KeyboardPendingSpace } from '../components/keyboard/KeyboardViewport';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
 import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
 
@@ -146,7 +146,9 @@ function ReflectScreen() {
                 onSubmitEditing={dismissKeyboard}
               />
 
-              {!dockedKeyboard && <View style={{ flex: 1, minHeight: sc(16) }} />}
+              {dockedKeyboard
+                ? <KeyboardPendingSpace />
+                : <View style={{ flex: 1, minHeight: sc(16) }} />}
 
               {policy.actionsVisible && (
                 <View style={{ gap: sc(12) }}>

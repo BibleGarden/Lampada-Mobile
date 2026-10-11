@@ -60,7 +60,14 @@ and a sheet rotated while open right after it closes. A closed sheet is neither
 presented nor touchable.
 
 Preparation and reflection defer lower actions while a software keyboard is
-visible; answers and reports do not hide actions. The answer sheet's snap is a
+visible; answers and reports do not hide actions. Their field fills the form
+only while a docked keyboard is opening or open: a closing keyboard
+(iOS `keyboardWillHide`) returns the form to its normal layout when the hide
+starts, because the viewport releases the keyboard space frame by frame and a
+filling field would first stretch into it and then shrink after
+`keyboardDidHide`. A filling field takes its final height when the opening
+starts: an empty strip below it holds the part of the final reservation the
+keyboard has not covered yet, and shrinks as the viewport reservation grows. The answer sheet's snap is a
 convergent reconciliation, not a command per event: a visible keyboard with a
 focused field requires the full-height snap, its hiding returns the sheet to
 the resting snap with one request made when the hide starts (iOS
