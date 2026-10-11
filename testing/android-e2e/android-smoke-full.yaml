@@ -17,7 +17,7 @@ tags:
 - tapOn:
     id: "setup-goal-input"
 - inputText: "Финальный smoke"
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible: "Финальный smoke"
 - tapOn:
     id: "setup-preset-5"
@@ -71,7 +71,7 @@ tags:
 - tapOn:
     id: "reflection-input"
 - inputText: "Финальный вывод"
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: "reflect-complete-button"
 - assertVisible:

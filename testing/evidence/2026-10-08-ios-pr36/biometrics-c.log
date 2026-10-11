@@ -1,0 +1,27 @@
+Running on Pray SE - iOS 26.5 - 18FBF907-60BB-48EF-9BE8-1DB2767465F5
+ > Flow ios-lock-009c-refusal
+Launch app "twinkler"... COMPLETED
+Assert that id: com.apple.localauthentication.ax.authentication.alert is visible... COMPLETED
+Run java.lang.Thread.sleep(20000)... COMPLETED
+Assert that "Повторите|Try Again", id: com.apple.localauthentication.ax.authentication.alert is visible... COMPLETED
+Take screenshot LOCK-009-native-refusal... COMPLETED
+Tap on id: com.apple.localauthentication.ax.authentication.button.cancel... COMPLETED
+Assert that id: lock-screen is visible... COMPLETED
+Assert that id: lock-pin-title is visible... COMPLETED
+Tap on id: pin-key-0... COMPLETED
+Tap on id: pin-key-0... COMPLETED
+Tap on id: pin-key-0... COMPLETED
+Tap on id: pin-key-0... COMPLETED
+Tap on id: pin-key-0... COMPLETED
+Tap on id: pin-key-6... COMPLETED
+Assert that "Неверный пин-код" is visible... COMPLETED
+Assert that id: lock-screen is visible... COMPLETED
+Tap on id: pin-key-1... COMPLETED
+Tap on id: pin-key-2... COMPLETED
+Tap on id: pin-key-3... COMPLETED
+Tap on id: pin-key-4... COMPLETED
+Tap on id: pin-key-5... COMPLETED
+Tap on id: pin-key-6... COMPLETED
+Assert that id: lock-screen is not visible... COMPLETED
+Assert that id: settings-button is visible... COMPLETED
+Take screenshot LOCK-009-refusal-pin-fallback... COMPLETED

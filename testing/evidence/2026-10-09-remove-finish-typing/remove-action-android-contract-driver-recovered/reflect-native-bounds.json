@@ -1,0 +1,25 @@
+{
+  "device": "emulator-5554",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    156,
+    1280,
+    1848
+  ],
+  "observed_mode": "docked",
+  "elements": {
+    "reflection-input": {
+      "bounds": [
+        78,
+        816,
+        1202,
+        1779
+      ],
+      "focused": true
+    },
+    "reflect-complete-button": null,
+    "reflect-return-button": null,
+    "reflect-keyboard-dismiss": null
+  }
+}

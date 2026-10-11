@@ -24,6 +24,7 @@ import {
   JetBrainsMono_500Medium,
 } from '@expo-google-fonts/jetbrains-mono';
 import { useSettings } from '../lib/settings';
+import { useSession } from '../lib/store';
 import { useLock } from '../lib/lock';
 import LockGate from '../components/LockGate';
 import UpdateGate from '../components/UpdateGate';
@@ -31,6 +32,7 @@ import BootSplash from '../components/BootSplash';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
+import KeyboardSystemProvider from '../components/keyboard/KeyboardSystemProvider';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
 // завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
@@ -52,6 +54,8 @@ function ReminderRouting() {
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(() => {
       if (PRAYER_FLOW.has(pathnameRef.current)) return;
+      // Настройки, открытые из идущей молитвы (выбор Библии), — тоже часть её сценария.
+      if (pathnameRef.current === '/settings' && useSession.getState().sessionId !== null) return;
       router.replace('/');
     });
     return () => sub.remove();
@@ -128,11 +132,13 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
-      <StatusBar style="light" />
-      {ready && <AppContent covered={covered} />}
-      {!bootSplashHidden && (
-        <BootSplash onFlameLoaded={hideNativeSplash} done={ready} onHidden={hideBootSplash} />
-      )}
+      <KeyboardSystemProvider>
+        <StatusBar style="light" />
+        {ready && <AppContent covered={covered} />}
+        {!bootSplashHidden && (
+          <BootSplash onFlameLoaded={hideNativeSplash} done={ready} onHidden={hideBootSplash} />
+        )}
+      </KeyboardSystemProvider>
     </GestureHandlerRootView>
   );
 }

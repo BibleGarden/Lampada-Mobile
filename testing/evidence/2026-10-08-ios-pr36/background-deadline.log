@@ -1,0 +1,33 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-background-music-timer-end
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Input text Background music timer end... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Tap on id: session-music-off... COMPLETED
+Assert that id: music-playing is visible... COMPLETED
+Assert that (Optional) "ЗАВЕДОМО-ЛОЖНЫЙ-МАРКЕР-ПАУЗЫ" is visible... WARNED
+Tap on id: session-timer-button... COMPLETED
+Tap on id: session-time-subtract... COMPLETED
+Tap on id: session-time-subtract... COMPLETED
+Tap on id: session-time-subtract... COMPLETED
+Assert that id: music-playing is visible... COMPLETED
+Press Home key... COMPLETED
+Assert that (Optional) "ЗАВЕДОМО-ЛОЖНЫЙ-МАРКЕР-ПАУЗЫ" is visible... WARNED
+getpwuid_r did not find a match for uid 501
+client starting
+client starting
+client stopping
+client stopping
+OK: музыка остановлена в фоне
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-background-timer-resume
+Launch app "twinkler" without stopping app... COMPLETED
+Assert that id: reflect-kicker is visible... COMPLETED

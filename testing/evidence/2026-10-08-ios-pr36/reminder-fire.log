@@ -1,0 +1,125 @@
+== Чистая установка + REM-001 (разрешение)
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-001-permission-allow
+Launch app "twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: reminders-toggle... COMPLETED
+Assert that ".*уведомления.*" is visible... COMPLETED
+Tap on "Разрешить"... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Assert that id: reminders-summary is visible... COMPLETED
+Assert that ".*Настроить расписание 1: Каждый день: 09:00.*" is visible... COMPLETED
+Tap on id: reminders-toggle... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Tap on id: reminders-toggle... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Assert that id: reminders-summary is visible... COMPLETED
+== REM-004/011/013: цель 08:50 (строка сейчас 09:00)
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-fire
+Launch app "twinkler"... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Run /tmp/rem-set-time.yaml...
+  Tap on "09:00: пять минут назад"... COMPLETED
+  Tap on "08:55: пять минут назад"... COMPLETED
+Run /tmp/rem-set-time.yaml... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Assert that ".*Настроить расписание 1: Каждый день:.*" is visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Tap on id: start-prayer-button... COMPLETED
+Tap on point (50%,37%)... COMPLETED
+Erase text... COMPLETED
+Input text REM 004 fire... COMPLETED
+Press Enter key... COMPLETED
+Tap on id: setup-preset-5... COMPLETED
+Tap on id: setup-next-button... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible...
+  Tap on id: privacy-consent-core_prayer_ai-allow... COMPLETED
+Run flow when id: privacy-consent-core_prayer_ai is visible... COMPLETED
+Assert that id: threshold-kicker is visible... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-title is visible... COMPLETED
+Wait for animation to end within 9000 ms... COMPLETED
+Tap on point (10%,11%)... COMPLETED
+Assert that id: reflect-complete-button is visible... COMPLETED
+Run flow when id: reflect-kicker is visible...
+  Tap on id: reflect-complete-button... COMPLETED
+Run flow when id: reflect-kicker is visible... COMPLETED
+Run flow when id: reflect-return-button is visible...
+Run flow when id: reflect-return-button is visible... SKIPPED
+Assert that id: home-title-lit is visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+  📸 REM-004-011-013-banner
+== REM-005: цели 08:55, 09:00 (исходная строка 08:50)
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-005-two-times
+Launch app "twinkler"... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Run /tmp/rem-set-time.yaml...
+  Tap on "08:50: пять минут вперёд"... COMPLETED
+  Tap on id: reminder-add-time-0... COMPLETED
+  Tap on "09:55: пять минут назад"... COMPLETED
+  Tap on "09:50: пять минут назад"... COMPLETED
+  Tap on "09:45: пять минут назад"... COMPLETED
+  Tap on "09:40: пять минут назад"... COMPLETED
+  Tap on "09:35: пять минут назад"... COMPLETED
+  Tap on "09:30: пять минут назад"... COMPLETED
+  Tap on "09:25: пять минут назад"... COMPLETED
+  Tap on "09:20: пять минут назад"... COMPLETED
+  Tap on "09:15: пять минут назад"... COMPLETED
+  Tap on "09:10: пять минут назад"... COMPLETED
+  Tap on "09:05: пять минут назад"... COMPLETED
+Run /tmp/rem-set-time.yaml... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Wait for animation to end within 5000 ms... COMPLETED
+Assert that ".*${REM_T1}.*" is visible... COMPLETED
+Assert that ".*${REM_T2}.*" is visible... COMPLETED
+Open lampada://... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+  📸 REM-005-first
+  📸 REM-005-second
+== REM-006: перезапуск
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-006-restart
+Launch app "twinkler"... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Assert that id: reminders-summary is visible... COMPLETED
+Assert that ".*Настроить расписание 1: Каждый день:.*" is visible... COMPLETED
+Launch app "twinkler"... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Assert that id: reminders-summary is visible... COMPLETED
+Assert that ".*Настроить расписание 1: Каждый день:.*" is visible... COMPLETED
+== REM-008: цель 09:05, выключение тумблера
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-008-toggle-off
+Launch app "twinkler"... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: reminders-settings-button-0... COMPLETED
+Assert that id: reminders-editor-modal is visible... COMPLETED
+Run /tmp/rem-set-time.yaml...
+  Tap on "08:55: пять минут вперёд"... COMPLETED
+  Tap on "09:00: пять минут вперёд"... COMPLETED
+Run /tmp/rem-set-time.yaml... COMPLETED
+Tap on id: reminders-editor-done... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Tap on id: reminders-toggle... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Open lampada://... COMPLETED
+  📸 REM-008-no-banner
+== Готово. Доказательства: /tmp/pray-ios-pr36/reminder-fire/artifacts

@@ -1,0 +1,20 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+- runFlow:
+    when:
+      true: ${KEYBOARD_MODE != 'hardware'}
+    commands:
+      - tapOn:
+          id: journal-title
+- assertVisible:
+    id: journal-search-input
+    text: '${KEYBOARD_MODE == "hardware" ? "Matrix_hardware" : "Keyboard matrix journal"}'
+- assertVisible:
+    id: journal-clear-search
+- tapOn:
+    id: journal-clear-search
+- assertNotVisible:
+    id: journal-clear-search

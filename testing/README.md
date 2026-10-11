@@ -17,13 +17,133 @@ duplicated here, otherwise the two pictures drift apart.
 The scenario identifier is the shared key between the test plan, the flow, the
 report and the ClickUp task. Everything is tied together through it.
 
+## Android emulator
+
+Android flows run on the `Pray_Pixel_API_35` AVD: Pixel profile, Android 15
+Google Play ARM64 image, 1280x2856 at 480 dpi. Its
+`~/.android/avd/Pray_Pixel_API_35.avd/config.ini` must contain:
+
+| Key | Value | Why |
+| --- | --- | --- |
+| `hw.gpu.enabled`, `hw.gpu.mode` | `yes`, `host` | With software rendering (`swiftshader`, `auto` = lavapipe) a journal-screen frame took 150-600 ms (`gfxinfo` p50) and starved the guest; with the host GPU the draw itself takes 3-10 ms (`framestats`) |
+| `hw.ramSize` | `4G` | Raised from 2 GB; an idle guest with Lampada running keeps 0.7-0.9 GB free |
+| `hw.cpu.ncore` | `4` | Six vCPUs made the guest an order of magnitude slower on this host, see below |
+
+Boot it cold and do not save a snapshot, so every run starts from the same state:
+
+```bash
+emulator -avd Pray_Pixel_API_35 -gpu host -no-snapshot-save -no-boot-anim
+```
+
+Start the emulator with normal CPU priority. zsh's default `BG_NICE` runs
+background jobs at nice 5, and macOS then schedules qemu as background work:
+a cold start takes 5-7 s instead of ~0.7 s and flows time out on the splash
+screen. Run `setopt NO_BG_NICE` first, or start the emulator from bash or with
+`nohup`, and check that `ps -o nice -p <qemu pid>` prints 0.
+
+Two more host effects slow the guest the same way. macOS Low Power Mode slows
+the host; turn it off for e2e runs. Spotlight indexing right after `npm ci` can
+spike the host load; wait for it to finish.
+
+The emulator warns that host OpenGL is deprecated on macOS for API 35; no
+rendering problems were seen. Display overrides (`wm size`, `wm density`) are
+not needed with the host GPU: with Gboard shown, the journal screen's total
+frame time (`gfxinfo` p50) was 129 ms natively and 133 ms at 480x1071/180.
+Most of it is the late start of the frame after vsync, not drawing. Keep the
+native size and
+remove a leftover override with `adb shell wm size reset` and
+`adb shell wm density reset`.
+
+Measured on 2026-10-10 on an M1 Pro (8 performance + 2 efficiency cores,
+32 GB) with host load 3-7, the same AVD, a cold boot and the installed Release
+APK 1.3.44, sampling `/proc/loadavg` every 5 s:
+
+| Measurement | 4 vCPUs | 6 vCPUs |
+| --- | --- | --- |
+| `sys.boot_completed` after start | 13 s | 15 s |
+| Guest 1-min load: peak after boot / below 3 / below 1 | 4.1 / 30 s / 106 s | 5.6 / 51 s / 137 s |
+| Guest load after 5 min idle, mean (max) | 0.15 (0.63) | 0.10 (0.46) |
+| Lampada cold start, `am start -W` TotalTime | 0.7-0.8 s | 23-25 s |
+| `adb install -r` of the same APK; guest load peak | 2.1 s; 0.37 | 42 s; 49 |
+| Fixed guest CPU work (md5 of 300 MB): 1 job / 8 in parallel | 0.9 s / 1.7 s | 3.8-14 s / 18-20 s |
+
+Play Services did not start a burst during 12 idle minutes after either
+cold boot.
+
+Everything the host runs competes with the guest's vCPUs. A host Gradle build
+once pushed the guest load to 41 and the `system_server` watchdog restarted
+Android; browser renderers (150 % each), `mediaanalysisd` (60 %) and
+`launchservicesd` (100 %) also slowed the guest. Do not build or run heavy
+apps on the host during a run, and check `top` on the host when the gate below
+reports a busy guest.
+
+### Readiness gate
+
+Android runners (`scripts/test-android.sh` and the keyboard contract runners)
+start no flow on a busy emulator. `scripts/android-guest-load.mjs` checks the
+guest 1-min load from `/proc/loadavg`:
+
+- Once per run (`boot`), it waits for `sys.boot_completed`, which Android
+  sets after the package manager is up, and for a guest uptime of at least
+  the settle window.
+- Before each flow (`run`), it requires the load to stay below the threshold
+  for several samples in a row. Otherwise the flow fails with
+  `<flow> was not started` and the measured samples; it is not retried.
+  The load at the start and end of every flow is printed and written to the
+  flow's log as `guest-load <flow> start|end` lines. A failed load probe
+  after the flow is reported next to the flow's exit code, and a passing
+  flow then fails.
+
+The 1-min average lags: a burst that began a few seconds before the flow
+raises it only slightly, so the gate can pass while a burst is starting. It
+never passes on a guest that has been busy for a while. Settings that cannot
+pass on an idle guest, such as a flow timeout shorter than the quiet samples,
+are rejected.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `ANDROID_QUIET_LOAD` | `3` | The guest is quiet while its 1-min load is below this value |
+| `ANDROID_QUIET_SAMPLES` | `3` | Quiet samples in a row required before a flow |
+| `ANDROID_QUIET_INTERVAL_SECONDS` | `5` | Interval between samples; the kernel updates the load every 5 s |
+| `ANDROID_QUIET_TIMEOUT_SECONDS` | `300` | Time a flow waits for a quiet guest before failing |
+| `ANDROID_BOOT_SETTLE_SECONDS` | `120` | Minimum guest uptime before the first flow |
+| `ANDROID_BOOT_TIMEOUT_SECONDS` | `900` | Time the boot check waits before failing |
+
+A runner that calls Maestro directly runs the `boot` check and
+`scripts/android-maestro-driver.sh <serial> <log-dir>` once, and wraps every
+call: `node scripts/android-guest-load.mjs run --device <serial> --flow <name>
+-- maestro --device <serial> test --no-reinstall-driver ...`. The wrapper
+passes `SIGINT`, `SIGTERM` and `SIGHUP` that reach it on to Maestro; the
+calling script has to deliver them. Bash does not forward a signal to a
+foreground child, so `test-android.sh` runs the wrapper in the background,
+sends it `SIGTERM` when the runner gets `SIGTERM`, `SIGHUP` or `SIGINT`, and
+then stops the run without starting further flows.
+
+By default `maestro test` reinstalls its driver (`dev.mobile.maestro`) and
+server (`dev.mobile.maestro.test`) at the start of every flow and uninstalls
+them at the end, so each flow began with a package install right after the
+gate. Maestro 2.10.0 with `--no-reinstall-driver` installs each of them only
+when it is missing and keeps them afterwards. Every flow gets that flag.
+Before the flows, `scripts/android-maestro-driver.sh` compares the SHA-256 of
+each installed package with `maestro-app.apk` and `maestro-server.apk` from the
+current Maestro's `maestro-client.jar`; package versions are identical across
+Maestro releases. A matching package is reused, a different one is
+uninstalled, and the first flow then installs the current one. A failed check
+or removal stops the run.
+
 ## Running
 
 Android critical flows are kept separately in `android-e2e/`, so they are not
 picked up by the existing iOS tier commands. Build Android Release with test
 API variables, use Russian as the emulator's primary locale, and run
 `npm run test:e2e:android:critical`. Its sequential runner preserves the full
-smoke → relaunch pair and stops at the first failure. Full logs, per-flow exit
+smoke → relaunch pair and stops at the first failure. The critical command also
+runs all five docked native geometry/save contracts on the disposable emulator;
+use a docked Gboard keyboard for this gate. A native window-width resize then
+checks that the focused editor and complete action rectangles remain above the
+IME, verifies save/reopen, and restores the original display dimensions. The critical wrapper refuses a
+physical device before running any fixture. iOS critical includes ASCII Enter
+contracts for preparation and reflection. Full logs, per-flow exit
 codes and Maestro artifacts are saved in the printed output directory; use
 `ANDROID_TEST_OUTPUT_DIR` to choose a stable location.
 Preflight prints this directory first and shows failed environment diagnostics.
@@ -49,12 +169,13 @@ stable app IDs. Maestro's Unicode `inputText` temporarily replaces Gboard
 with its own IME, so it must not be used to establish focus preconditions.
 Keyboard gesture fixtures use ASCII input; ANS-032 also taps a real Russian
 Gboard key and verifies that its Cyrillic character survives saving/reopening.
-Unicode persistence and search checks remain separate from focus checks. After a cold launch or relaunch,
+Unicode persistence and search checks remain separate from focus checks.
+After Unicode injection, use an existing outside-tap target if the software
+keyboard remains visible; injected Enter has no focused native editor to submit.
+ASCII staged keyboard contracts separately verify the real Enter path. After a cold launch or relaunch,
 assert that Home is ready before issuing a Settings/Setup deep link; Android
 launch completion alone does not establish a mounted router. Non-deadline fixtures are untimed; finite completion and early
-music completion retain timed prayers. Display-size changes used to reduce
-emulator screenshot cost must preserve the logical viewport and be reset after
-testing. The tier runner stops at the first failure and records each flow's
+music completion retain timed prayers. The tier runner stops at the first failure and records each flow's
 full output and exit code, just like the critical tier.
 
 Controlled Android scenarios use a separate Release build with
@@ -77,8 +198,12 @@ npm run test:e2e:android:prepared -- --device emulator-5554 --output /tmp/lampad
 
 The prepared runner preserves dependent transcription/favorite order, stops on
 failure and records full logs and exits. It checks orphaned recordings and
-seeds the legacy format through the signed probe. Restore the normal API
-configuration and normal Release APK afterward; uninstall the probe when done.
+seeds the legacy format through the signed probe. The probe is
+`am instrument` against the app package, and Android stops the app to start it:
+a flow that runs after a probe must launch the app itself and may rely only on
+persisted state, never on a screen left open by an earlier flow. Restore the
+normal API configuration and normal Release APK afterward; uninstall the probe
+when done.
 
 Individual Android flows use the same installed-APK preflight and sequential
 runner as the critical tier. Pass flow names without a path or `.yaml` extension.
@@ -198,6 +323,11 @@ maestro test --test-output-dir "$TMPDIR/pray-e2e-output" testing/e2e/ios-scriptu
 
 Then reinstall the normal Release build without the URL override.
 
+SCR-002 uses `ios-stage06-scr-002a-favorite-relaunch.yaml` followed by
+`ios-stage06-scr-002b-favorite-relaunch.yaml`, with the stub passage counter
+reset between them. The runner guarantees both prayers receive the same
+fixture before checking persisted favorite state.
+
 The wider stub phase (update banners, journal transcription, delayed AI
 answers, scripture navigation, legacy favorites migration, the threshold
 error path) runs under one orchestrated session. The build additionally needs
@@ -224,10 +354,54 @@ bash testing/e2e/run-lock-biometrics.sh  # LOCK-009/010: simulator Face ID via B
 bash testing/e2e/run-background-music-timer-end.sh  # MUS-009: music stops at the deadline in the background
 ```
 
+Maestro's iOS XCTest driver leaves a screenshot for every step in each
+simulator's `testmanagerd` container (`tmp/Attachments`) and never deletes it;
+the folder grew to 24 GB on `Pray Smoke iPhone 17 Pro` and the disk filled up
+once. After a long Maestro session, shut the simulator down and run:
+
+```bash
+bash testing/e2e/clean-sim-attachments.sh "Pray Smoke iPhone 17 Pro"  # prints the freed size
+```
+
+The script refuses to run on a booted simulator and deletes nothing but that
+one directory.
+
 On Setup, flows close the keyboard with `pressKey: Enter` (the goal field's
 "Done" key), not `hideKeyboard`. Maestro's `hideKeyboard` drags a few points
 in the middle of the screen, which on Setup lands inside the goal field while
 typing and moves the cursor instead of closing the keyboard.
+
+### iOS runner prerequisites and cleanup
+
+Language flows match the complete accessibility label of the language picker.
+Their `launchApp` steps grant `notifications` and `microphone` explicitly
+instead of Maestro's default `all: allow`, which also grants location through
+`simctl privacy`; Lampada does not use location, and that call can hang in
+`locationd` right after the cold reboot. `run-lng.sh` boots the `Pray Smoke
+iPhone 17 Pro` simulator if needed, changes its locale settings before
+rebooting, and stops at the first failed flow. On exit it returns the simulator
+to `ru_RU` / `ru`, also after a failure, and keeps the failing exit code. A
+successful run also restores the app interface to Russian with
+`ios-lng-restore-ru.yaml`.
+
+PIN runners use the tracked `ios-lock-cleanup.yaml` flow with test PIN 123456.
+`run-lock-storage-check.sh` and `run-lock-biometrics.sh` run it on any exit,
+including Ctrl-C, while the test PIN is on, so a failed check does not leave
+the PIN enabled; cleanup errors are failures. Both write command logs to the
+evidence directory. The biometric preflight scrolls to the protection section
+before checking the visible hierarchy. It sets the simulator notification state
+`com.apple.BiometricKit.enrollmentChanged` explicitly to 1 for enrollment and 0
+for removal; the old `fingerTouch.enrollment` post does not enroll Touch ID on
+the current runtime. Biometric signals are synchronized with the flow reaching
+its wait after the native authentication prompt appears. A mismatch keeps the
+iOS retry prompt open; select its PIN action to verify code entry.
+
+LOCK-008 is a manual Device Hub check. Run `run-lock-appswitcher.sh prepare`,
+open App Switcher using Device Hub's Home control, then run the script with
+`capture`. Inspect the screenshot for the privacy curtain before marking the
+scenario passed. Run `cleanup` afterward. Capturing a screenshot alone does
+not assert the privacy outcome.
+
 
 ## What to do with the result
 
@@ -246,3 +420,73 @@ Only selected material goes into `evidence/`, and every file has to be reference
 from a report - a file with no reference counts as orphaned and is deleted during
 cleanup. Repeated attempts, full system and Xcode logs, duplicate crash reports
 and build artifacts are not added to the repository.
+
+### Initial Bible language regression (SCR-013)
+
+Use a named test simulator from `AGENTS.md` with Russian as its primary
+language and a Release build with
+`EXPO_PUBLIC_API_URL=http://127.0.0.1:9085`. Start
+`node scripts/scripture-stub.mjs`, then run:
+
+```sh
+python3 scripts/test-scripture-initialization.py --output /tmp/lampada-scripture-init
+```
+
+The runner checks the simulator language, switches the stub catalog between
+failure and recovery, runs the three prepared Maestro phases, saves full
+output, exits and screenshots, and reads SQLite in read-only mode after each
+phase. A failure must write no Bible preference while the prayer still starts
+and its scripture block shows the catalog error; Retry after recovery must show
+a passage in the same session; the saved English choice must survive a Russian
+interface and a later catalog failure. The SCR-027 phase then uses a catalog
+without a narrated Russian translation: the scripture block must send the user
+to Settings, and the manual choice made there must be saved. It resolves only named simulators and
+cannot target a physical phone. On Android the same phases run as part of
+`npm run test:e2e:android:prepared`, with one more phase,
+`android-scripture-catalog-reopen`, before recovery: the database probe stops
+the app, so this phase relaunches it, checks the saved English interface and
+opens the failing prayer again. Never run these clear-state fixtures on an
+owner's phone.
+
+## Shared keyboard contracts
+
+```bash
+npm run test:keyboard:android -- --mode docked --output /tmp/lampada-keyboard-docked
+npm run test:keyboard:android -- --mode floating --output /tmp/lampada-keyboard-floating
+npm run test:keyboard:android -- --mode hardware --output /tmp/lampada-keyboard-no-software
+```
+
+Use the named disposable Android emulator, the final Release build and Russian
+system locale. Select the real Gboard floating mode before the floating command;
+the native checkpoint rejects a mode mismatch. The hardware-labelled command
+requires an emulated hardware keyboard (`hw.keyboard=yes` at AVD boot), verifies
+its native QWERTY configuration, temporarily sets
+`show_ime_with_hard_keyboard=0` and injects native key events. It restores that
+software-keyboard setting in finally and does not disable IMEs. If Gboard leaves
+a blank IME window, native Back hides that window while retaining editor focus;
+the native checkpoint must prove both retained focus and a hidden IME. It verifies focused
+input without software UI, not an attached physical keyboard. The matrix refuses
+physical devices because its fixtures clear app state.
+
+Each form has an open phase, an independent native OS-bounds checkpoint and a
+restore/persistence phase. Every command keeps its complete log and exit. The
+native checker runs between Maestro sessions to avoid concurrent UiAutomation.
+Use `--forms answer` for the original failing form first. Read-only checking of a
+physical current screen is available through `keyboard_layout_bounds.py`; never
+run the clearing matrix on the owner's phone. iOS prepared counterparts and
+existing iPad rotation flows cover the same behavior through native selectors.
+
+The UIKit geometry counterpart runs the same staged forms on an existing named
+simulator, with no physical-device clearing:
+
+```bash
+npm run test:keyboard:ios -- --simulator "Pray iPad2" --mode docked
+```
+
+Its reader checks complete input/action rectangles against native `inputView`
+and window frames, then verifies persisted text. UIKit accessibility does not
+expose safe-area insets; this contract does not claim Android-style navigation
+inset measurement or physical external-keyboard acceptance. Floating mode must
+be selected in the real system keyboard before invoking `--mode floating`.
+`npm run test:keyboard:unit` covers both native bounds readers; `npm test` runs it
+too.

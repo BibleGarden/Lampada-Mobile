@@ -1,0 +1,505 @@
+== Локаль симулятора -> en_US (en)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:33:06 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:33:06 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:33:07 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:33:08 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:33:09 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:33:10 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:33:11 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:33:12 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:33:13 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:33:14 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:33:15 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-001-clean-en.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-001-clean-en
+Launch app "twinkler" with clear state... COMPLETED
+Assert that "Begin prayer" is visible... COMPLETED
+Assert that "Keep the flame glowing" is visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that "SETTINGS" is visible... COMPLETED
+Assert that "INTERFACE LANGUAGE" is visible... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*English.*", id: interface-language-picker is visible... COMPLETED
+== Локаль симулятора -> ru_RU (ru)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:34:00 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:34:00 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:34:01 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:34:02 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:34:03 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:34:04 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:34:05 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:34:06 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:34:07 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:34:08 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:34:09 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-002-clean-ru.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-002-clean-ru
+Launch app "twinkler" with clear state... COMPLETED
+Assert that "Начать молитву" is visible... COMPLETED
+Assert that "Поддержи огонёк" is visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that "НАСТРОЙКИ" is visible... COMPLETED
+Assert that "ЯЗЫК ИНТЕРФЕЙСА" is visible... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*Русский.*", id: interface-language-picker is visible... COMPLETED
+== Локаль симулятора -> uk_UA (uk)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:34:52 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:34:52 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:34:53 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:34:53 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:34:54 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:34:55 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:34:56 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:34:58 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:34:58 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:35:00 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:35:01 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-003-clean-uk.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-003-clean-uk
+Launch app "twinkler" with clear state... COMPLETED
+Assert that "Почати молитву" is visible... COMPLETED
+Assert that "Підтримай вогник" is visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that "НАЛАШТУВАННЯ" is visible... COMPLETED
+Assert that "МОВА ІНТЕРФЕЙСУ" is visible... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*Українська.*", id: interface-language-picker is visible... COMPLETED
+== Локаль симулятора -> de_DE (de)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:35:50 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:35:50 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:35:51 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:35:52 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:35:53 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:35:54 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:35:55 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:35:56 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:35:57 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:35:58 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:35:59 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-004-unsupported-locale.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-004-unsupported-locale
+Launch app "twinkler" with clear state... COMPLETED
+Assert that "Begin prayer" is visible... COMPLETED
+Assert that "Keep the flame glowing" is visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that "SETTINGS" is visible... COMPLETED
+Assert that "INTERFACE LANGUAGE" is visible... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*English.*", id: interface-language-picker is visible... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Assert that id: interface-language-sheet is visible... COMPLETED
+Assert that id: interface-language-en is visible... COMPLETED
+Assert that id: interface-language-ru is visible... COMPLETED
+Assert that id: interface-language-uk is visible... COMPLETED
+Assert that ".*Русский.*", id: interface-language-ru is visible... COMPLETED
+Assert that ".*Українська.*", id: interface-language-uk is visible... COMPLETED
+== Локаль симулятора -> ru_RU (ru)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:36:59 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:36:59 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:37:00 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:37:01 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:37:02 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:37:03 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:37:04 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:37:05 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:37:06 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:37:07 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:37:08 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-005-switch-no-restart.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-005-switch-no-restart
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Tap on id: interface-language-uk... COMPLETED
+Assert that id: interface-language-sheet is not visible... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*Українська.*", id: interface-language-picker is visible... COMPLETED
+Assert that "НАЛАШТУВАННЯ" is visible... COMPLETED
+Assert that "МОВА ІНТЕРФЕЙСУ" is visible... COMPLETED
+Tap on id: settings-back-button... COMPLETED
+Assert that "Почати молитву" is visible... COMPLETED
+Assert that "Підтримай вогник" is visible... COMPLETED
+== Локаль симулятора -> en_US (en)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:37:51 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:37:52 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:37:52 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:37:53 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:37:54 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:37:55 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:37:56 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:37:57 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:37:58 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:37:59 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:38:00 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-006-persist-relaunch.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-006-persist-relaunch
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Tap on id: interface-language-uk... COMPLETED
+Assert that ".*Українська.*", id: interface-language-picker is visible... COMPLETED
+Assert that "НАЛАШТУВАННЯ" is visible... COMPLETED
+Launch app "twinkler"... COMPLETED
+Assert that "Почати молитву" is visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*Українська.*", id: interface-language-picker is visible... COMPLETED
+Assert that "НАЛАШТУВАННЯ" is visible... COMPLETED
+== Локаль симулятора -> de_DE (de)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:38:47 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:38:47 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:38:47 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:38:48 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:38:49 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:38:50 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:38:51 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:38:52 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:38:53 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:38:54 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:38:55 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-007-choice-survives-locale.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-007-choice-survives-locale
+Launch app "twinkler"... COMPLETED
+Assert that "Почати молитву" is visible... COMPLETED
+Assert that "Begin prayer" is not visible... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*Українська.*", id: interface-language-picker is visible... COMPLETED
+Assert that "НАЛАШТУВАННЯ" is visible... COMPLETED
+Assert that "SETTINGS" is not visible... COMPLETED
+== Локаль симулятора -> en_US (en)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:39:36 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:39:36 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:39:37 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:39:38 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:39:39 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:39:40 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:39:41 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:39:42 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:39:43 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:39:44 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:39:45 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-008-independent-of-scripture.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-008-independent-of-scripture
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Assert that id: interface-language-picker is visible... COMPLETED
+Assert that ".*English.*", id: interface-language-picker is visible... COMPLETED
+Assert that id: scripture-language-picker is visible... COMPLETED
+Assert that ".*BSB.*" is visible... COMPLETED
+Assert that ".*Bob Souer.*" is visible... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Tap on id: interface-language-ru... COMPLETED
+Assert that "НАСТРОЙКИ" is visible... COMPLETED
+Assert that "ЯЗЫК ИНТЕРФЕЙСА" is visible... COMPLETED
+Assert that ".*Русский.*", id: interface-language-picker is visible... COMPLETED
+Assert that ".*Язык цитат.*", id: scripture-language-picker is visible... COMPLETED
+Assert that id: scripture-language-picker is visible... COMPLETED
+Assert that ".*English.*" is visible... COMPLETED
+Assert that ".*BSB.*" is visible... COMPLETED
+Assert that ".*Bob Souer.*" is visible... COMPLETED
+== Локаль симулятора -> ru_RU (ru)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:40:22 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:40:22 +0000] Status=4, isTerminal=NO, Elapsed=00:01.
+	Waiting on System App
+
+[2026-10-08 05:40:23 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:40:24 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:40:25 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:40:26 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:40:27 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:40:28 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:40:29 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:40:30 +0000] Status=4, isTerminal=NO, Elapsed=00:09.
+	Waiting on System App
+
+[2026-10-08 05:40:31 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:10.
+	Finished
+
+== maestro: ios-lng-009-fallback-questions.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-009-fallback-questions
+Launch app "twinkler" with clear state... COMPLETED
+Tap on id: settings-button... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Tap on id: interface-language-en... COMPLETED
+Tap on id: privacy-settings-button... COMPLETED
+Tap on id: privacy-setting-core_prayer_ai-denied... COMPLETED
+Tap on id: privacy-sheet-close... COMPLETED
+Open lampada://setup... COMPLETED
+Run flow when "Open|Открыть" is visible...
+Run flow when "Open|Открыть" is visible... SKIPPED
+Tap on "Continue"... COMPLETED
+Swipe from (50%,78%) to (50%,78%) in 1700 ms... COMPLETED
+Assert that id: session-timer-button is visible... COMPLETED
+Assert that id: question-source-label is visible... COMPLETED
+Assert that "Backup question" is visible... COMPLETED
+Assert that "What is truly worrying you most right now\?|What do you truly want in this situation\?|What are you afraid of losing\?|What does your conscience tell you when you become still\?|If God were beside you listening right now, what would you tell Him\?" is visible... COMPLETED
+== Локаль симулятора -> ru_RU (ru)
+Monitoring boot status for Pray Smoke iPhone 17 Pro (05F697B7-36CD-4050-9D57-FC9316AA093C).
+[2026-10-08 05:41:27 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-08 05:41:27 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:41:28 +0000] Status=4, isTerminal=NO, Elapsed=00:02.
+	Waiting on System App
+
+[2026-10-08 05:41:29 +0000] Status=4, isTerminal=NO, Elapsed=00:03.
+	Waiting on System App
+
+[2026-10-08 05:41:30 +0000] Status=4, isTerminal=NO, Elapsed=00:04.
+	Waiting on System App
+
+[2026-10-08 05:41:31 +0000] Status=4, isTerminal=NO, Elapsed=00:05.
+	Waiting on System App
+
+[2026-10-08 05:41:32 +0000] Status=4, isTerminal=NO, Elapsed=00:06.
+	Waiting on System App
+
+[2026-10-08 05:41:33 +0000] Status=4, isTerminal=NO, Elapsed=00:07.
+	Waiting on System App
+
+[2026-10-08 05:41:34 +0000] Status=4, isTerminal=NO, Elapsed=00:08.
+	Waiting on System App
+
+[2026-10-08 05:41:35 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:09.
+	Finished
+
+== maestro: ios-lng-restore-ru.yaml
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-lng-restore-ru
+Open lampada://settings... COMPLETED
+Scrolling UP until id: interface-language-picker is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: interface-language-picker... COMPLETED
+Tap on id: interface-language-ru... COMPLETED
+Assert that ".*Русский.*", id: interface-language-picker is visible... COMPLETED
+Launch app "twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+== Все LNG-флоу зелёные

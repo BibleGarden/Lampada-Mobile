@@ -1,0 +1,16 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+- tapOn:
+    id: journal-title
+- assertVisible:
+    id: journal-search-input
+    text: "Keyboard matrix journal"
+- assertVisible:
+    id: journal-clear-search
+- tapOn:
+    id: journal-clear-search
+- assertNotVisible:
+    id: journal-clear-search

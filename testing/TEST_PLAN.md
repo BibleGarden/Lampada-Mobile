@@ -172,7 +172,8 @@ tier of its e2e runs.
 | SETUP-001 [critical] | Leave the goal empty | free prayer is available, the texts contain no empty or broken phrases |
 | SETUP-002 [critical] | Pick each goal example | the modal closes, the chosen text appears in the field |
 | SETUP-003 [critical] | Check the 5/15/30/60/∞ presets and the ± buttons | the value and the declension of the minutes are correct, the bounds are safe |
-| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the header, title and the field's top edge stay in place while the field stretches down to the keyboard and scrolls long text inside itself, also after a rotation; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
+| SETUP-004 [main, ipad] | Edit a long goal on iPhone and iPad; on iPad rotate while typing, then tap above the field and in both side margins | the form reflows into the available viewport when the keyboard opens or rotates, and long text scrolls without covering the actions or losing focus; duration and "Next" are hidden while typing; taps inside keep editing, outside taps or "Done" restore the actions in place, without a top-left motion or lost text |
+| SETUP-004b [prepared, android] | On Samsung, select the floating keyboard, edit the goal, switch to the standard keyboard and back; repeat folded and unfolded, then request rotation | a floating keyboard retains the normal field size; duration and Next stay hidden with either keyboard mode and return only after closing it; the standard keyboard expands the input only to its top edge; switching modes and closing the keyboard preserve the text; Android keeps its configured portrait orientation; `android-setup-floating-keyboard.yaml` checks the floating layout |
 | START-001 [critical] | A short hold and moving the finger outside | the progress resets, no session is created |
 | START-002 [critical] | A full hold | exactly one session is created and the timer opens |
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
@@ -235,7 +236,7 @@ tier of its e2e runs.
 | ANS-020 | Quickly press "Done" twice while a recording is stopping | exactly one stop happens, one working recording appears, a successful file is not deleted and no save error is shown |
 | ANS-021 [main] | With the music on, save an audio in one question, move to the next one and record a second immediately | both recordings are saved and play back; a late restoration of the music does not cut the second file and the "The recording was not saved" message does not appear |
 | ANS-022 [main] | Press "Record another" twice quickly without moving the finger | the second tap does not land on the "Done" button that appeared; the UI stop is unavailable for the first 1.5 seconds, the recording continues, and a file shorter than 0.5 seconds is not added to the list |
-| ANS-023 [main] | Open the recordings and start a recording on an iPhone SE / Home Button, an iPhone with a Home Indicator and an iPad | "Record another" and "Done" are fully visible, the bottom frame is not clipped and a margin remains between the button and the screen edge |
+| ANS-023 [main] | Open the recordings and start a recording on an iPhone SE / Home Button, an iPhone with a Home Indicator, an iPad and Android with 3-button navigation; close the recordings with the keyboard hidden | "Record another" and "Done" are fully visible, the bottom frame is not clipped and a margin remains between the button and the screen edge; the open answer and recordings sheets and their dimming reach the screen edge, and their footer actions sit above the Home Indicator / navigation bar (screenshots `ANS-023-recording-done`, `ANS-023-record-another`, `ANS-023-answer-sheet`); Save stays reachable above a docked keyboard, closes the sheet and the saved answer reopens (`ANS-023-saved-with-keyboard`, `ANS-023-reopened`). That the close slides fully off screen and the reopen starts from the screen edge is a manual check (`MANUAL_CHECKS.md`, ANS-023) |
 | ANS-024 [main] | On iOS and Android, type an answer with an existing voice recording, open recordings, close them, and focus the answer again | the keyboard closes when recordings open, the list and bottom button are reachable; closing recordings retains the text and restores editing; Android flow: `android-ans-024-recordings-keyboard.yaml` |
 | ANS-025 | With VoiceOver, check a short and a long transcript | the text is read out in full; a short text is not announced as a button; for a long text "Show in full"/"Collapse" is a separate focusable button |
 | ANS-026 | During a recording, simulate an interruption or a media services reset as far as the device allows | the false recording overlay disappears, the audio focus is released and the next recording starts normally |
@@ -260,6 +261,7 @@ tier of its e2e runs.
 | ANS-045 | Make an attempted manual stop fail while the native recorder continues | the error is shown, the limit remains active, and a later limit stop still runs at 9:59 recorded time |
 | ANS-046 | Play a finished file with a fractional duration, such as 39.3 seconds | its card shows the nearest whole second (0:39 in this example); upload validation still compares the exact fractional file duration |
 | ANS-047 | Leave the session while the recording-limit cue is pending or playing | the answer sheet unmounts without calling an already released native player or recorder; cue listeners and audio-session leases are released and the app does not crash |
+| ANS-048 | On Android, type an answer and switch the input method to another one and back within a fraction of a second (Maestro's `inputText` does this in `android-stage04-answers-text.yaml`), including an input method taller than the sheet | the answer field keeps focus and the typed text, the sheet ends at full height above the docked keyboard, and Save, Cancel and the microphone stay in the accessibility tree; when the input method ends hidden, no keyboard space stays reserved under the footer or in journal and preparation forms; the snap policy, the reservation and the footer position are unit-tested in `keyboardGeometry.test.mjs` |
 
 ### The AI and the companion
 
@@ -300,8 +302,8 @@ tier of its e2e runs.
 | SCR-009 | Change the language, then the translation | the child lists are cleared; an incompatible or incomplete triple cannot be saved |
 | SCR-010 [rare] | Open the settings with no network or with a catalogue error | the saved labels are visible, a retry is visible and reachable next to wrapped error text, the previously saved choice is not damaged |
 | SCR-011 | Switch the language or the translation once an offline cache exists | the offline fallback does not show a snapshot of another language or translation |
-| SCR-012 | A clean installation with a supported primary device language | the server language of the device and a valid translation/voice triple are chosen |
-| SCR-013 [main] | A clean installation with an unsupported device language or an unavailable catalogue | English `en / 16 / 151` is chosen |
+| SCR-012 | A clean installation with a supported interface language, including one different from the primary device locale | the interface language and a confirmed valid translation/voice triple are chosen |
+| SCR-013 [prepared] | A clean installation offline (catalog fails): open Settings, start a prayer and open the scripture block; restore the catalog and press Retry; relaunch with the catalog failing again | Settings show no Bible choice and the catalog error; the prayer starts without waiting; the scripture block shows "Bible catalog unavailable" with Retry and no passage; nothing is written to `meta.scripture_preferences`; Retry confirms the interface-language triple and shows a passage in the same session; the saved choice survives the later catalog failure and an interface-language change (unit: `scriptureInitialization.test.mjs`, `sessionResume.test.mjs`; flows: `*-scripture-catalog-{failure,recovery,saved-offline}`, `android-scripture-catalog-reopen`) |
 | SCR-014 [main] | Change the device language after the setting was saved | the saved user choice is not overridden |
 | SCR-015 [rare] | Pause the scripture narration, press resume and immediately switch the mode or the passage | the old passage does not resume after the context changes; the new passage starts normally |
 | SCR-016 | Let the timer expire during scripture narration with music enabled | the passage plays to its end; an open reader still postpones completion; once reading and narration finish, reflection opens after one second |
@@ -315,6 +317,7 @@ tier of its e2e runs.
 | SCR-024 | A text shorter than 160 characters wraps onto more than three lines | the card shows "Read in full", the reader opens the whole passage |
 | SCR-025 [main] | Expand the reader as far as possible with a long passage on an iPhone with a Dynamic Island | the top of the reader stays below the status bar; the title and the buttons are not overlapped |
 | SCR-026 | Start narration, cover the session with the PIN screen or background the app, then return | narration continues from its current position without restarting; the session timer expires on schedule, but reflection waits until the prayer screen is visible |
+| SCR-027 [prepared] | A clean installation whose catalog has no narrated translation for the interface language (stub `catalog=unvoiced-ru`, Russian system language): start a prayer, open the scripture block, follow its action to Settings, pick English / BSB / Bob Souer, return | the block says there is no Bible for the interface language and offers "Open settings" instead of a retry; Settings show the Bible language list with "No Bible matches the interface language"; the manual triple is saved (`en/16/151` in SQLite) and the block shows a passage in the same session; manual checks: a failed save of the pick is shown; a storage failure shows `scripture-storage-error`; a reminder tap while Settings are open from the prayer keeps the prayer; switching the interface to English on the same Settings screen rechecks the catalog and replaces the message with the English default (unit: `scriptureInitialization.test.mjs`, `sessionResume.test.mjs`; flows: `*-scripture-catalog-no-default`) |
 
 ### Content reports
 
@@ -399,6 +402,9 @@ time-setting helper and captures the REM-008 screen at the scheduled time.
 The protection is optional and off by default; the decision and its boundaries
 are in
 [ADR-0014](../architect/decisions/0014-app-lock-pin-and-biometrics.md).
+The mapping of a biometric prompt result to the lock screen outcome
+(cancellation, `authentication_failed` and other errors shown in words) has
+unit coverage in `lib/__tests__/lockBiometrics.test.mjs`.
 
 | ID | Scenario | Expected result |
 |---|---|---|
@@ -410,9 +416,9 @@ are in
 | LOCK-006 | "Forgot your PIN?" and two confirmations | cancelling at either of the two steps erases nothing, confirming wipes the journal and removes the protection |
 | LOCK-007 | Returning from the background before and after a minute | a short switch does not ask for the code, more than a minute does; the app process is not restarted |
 | LOCK-008 | The app snapshot in the task switcher | the privacy screen is shown instead of the content |
-| LOCK-009 | Entry by biometrics on iOS and Android | the toggle is available only with the PIN enabled and a sample enrolled, a refusal leaves entry by code; iOS names Face ID or Touch ID; Android shows complete phrases for face, fingerprint or biometrics in the interface language (a specific method only when the device reports one type) and never Face ID or Touch ID, in the settings row, the system prompt title, the enable error and the lock screen (`biometryText.test.mjs`) |
+| LOCK-009 | Entry by biometrics on iOS and Android | the toggle is available only with the PIN enabled and a sample enrolled, a mismatch shows the native retry prompt, a refusal or its PIN action returns to the app lock screen, and only the correct code grants entry; iOS names Face ID or Touch ID; Android shows complete phrases for face, fingerprint or biometrics in the interface language (a specific method only when the device reports one type) and never Face ID or Touch ID, in the settings row, the system prompt title, the enable error and the lock screen (`biometryText.test.mjs`) |
 | LOCK-010 | The biometric samples are removed in the system after the toggle was enabled | the lock screen does not offer biometrics, the code keeps working |
-| LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt and the hash |
+| LOCK-011 | The PIN and its hash in the logs and in the storage | the PIN is nowhere stored and nowhere logged, the Keychain holds only the salt, hash, PIN length, enabled flag and optional biometrics flag |
 
 ## 9. Non-functional checks
 
@@ -516,3 +522,74 @@ The run is complete when:
   recorded;
 - the final report contains the versions, the commit, the exit codes and the full
   logs of the checks.
+
+SCR-013 prepared phases: use a named test simulator or emulator with Russian as
+the primary system language and a Release build pointing to
+`scripts/scripture-stub.mjs`. iOS: `scripts/test-scripture-initialization.py`;
+Android: the SCR-013 section of `scripts/test-android-prepared.py`. Each runner
+sets `catalog=fail` via `POST /__control` and runs `*-scripture-catalog-failure`
+(the interface is switched to English, a prayer starts and its scripture block
+shows the catalog error), then confirms that `meta.scripture_preferences` is
+absent. It sets `catalog=ok` and runs `*-scripture-catalog-recovery` (Retry in
+the same session shows a passage), then confirms the saved `en/16/151`: the
+choice follows the interface, not the system locale. It sets `catalog=fail` and
+runs `*-scripture-catalog-saved-offline` (cold start, interface back to Russian),
+then confirms `en/16/151` with `ui_language=ru`. SCR-027 runs next with
+`catalog=unvoiced-ru` through `*-scripture-catalog-no-default` from a clean
+install, then confirms the manually chosen `en/16/151`. The iOS runner reads
+the database file from the simulator app container, which leaves the app
+running. The Android probe is `am instrument` against the app package, and
+Android stops the app to start it, so on Android a probe ends a phase: after the
+failure check, `android-scripture-catalog-reopen` cold-starts with `catalog=fail`
+still set, checks the English interface saved by the failure phase, and opens a
+new prayer with the catalog error; recovery then retries in that prayer, with no
+probe in between. The four Android SCR-013 phases are one chain: `--start-at`
+accepts only its first phase.
+
+### Shared keyboard regression contract
+
+| ID | Action | Expected result |
+| --- | --- | --- |
+| KBD-001 [prepared, android] | Run the staged matrix on a named emulator with a docked keyboard for setup, answer, reflection, report and journal | native rectangles fit OS status/navigation/IME boundaries; input does not overlap lower actions; deferred actions are absent; text survives dismissal and persisted answers/notes reopen |
+| KBD-002 [prepared, android] | Select the real Gboard floating mode and run the same matrix | no zero-height-as-hide assumption; compact input, existing outside-tap dismissal, complete lower action rectangles above the navigation area, and preserved text |
+| KBD-003 [prepared, android] | Boot with an emulated hardware keyboard and run focused-input mode with software display disabled for hardware input, restoring that setting afterward | genuinely focused native input without an onscreen IME; actions remain available; this is a no-software-focus contract, not a physical external-keyboard acceptance claim |
+| KBD-004 [prepared, ipad] | Run iPad setup/answer/reflection/report keyboard flows, rotating while typing; check narrow floating mode separately | viewport adapts to actual window bounds; no extra keyboard inset; footer/body remain usable and text is retained |
+| KBD-005 [manual, android] | On Fold5 check folded/unfolded, native Samsung floating/docked modes, mode changes and actual Done | no cropped actions or oversized floating input; all fields and existing actions remain usable, without clearing personal app data |
+
+A native bounds assertion is stronger than assertVisible. The independent
+`keyboard_layout_bounds.py` reads OS InsetsSource frames and native Maestro hierarchy bounds,
+not the app's calculated viewport. Run it only when the Maestro driver has stopped.
+The initial oversized-field and cropped-navigation-button fixtures must fail the
+validator's own tests. Physical screenshots must be checked before claiming that
+a floating panel does not overlap a field; the panel can be moved by the user.
+
+Keyboard submission regression (2026-10-09): preparation and reflection Enter
+submit before native dismissal; loss of input focus alone must never reveal
+deferred actions. The staged Android setup
+restore flow verifies Enter restores duration/Next and preserves the topic.
+
+The iPad staged counterpart (`npm run test:keyboard:ios -- --mode docked`)
+measures entire native rectangles against UIKit's keyboard/window frames across
+the same five forms. It rejects a partly clipped action even if its center is
+visible. UIKit safe-area insets and physical external-keyboard use remain
+separate live checks.
+
+Hardware submission regression: goal/reflection Enter and answer Save must release
+editor focus even when the
+IME is already hidden; an orphaned IME must also hide when RN focus is absent.
+`keyboardDismiss.test.mjs` executes the real helper against both native states.
+
+Clearing the journal query continues editing: hardware input remains focused
+with no IME, so another query can be typed directly. The staged journal
+checkpoint verifies this continuation instead of treating Clear as ending input.
+
+KBD window resize: Android critical changes only the emulator width with the
+keyboard/editor open, checks full native bounds and retained focus, restores
+the original dimensions, then saves and reopens the exact draft.
+
+JRN-007 prerequisite: scroll until the complete Delete action is visible for
+expanded long text/audio details before activating the timed confirmation.
+
+SETUP-004 Android injects its full long goal in bounded driver transactions,
+then asserts the complete unchanged text; this avoids a single two-minute RPC
+deadline without weakening layout or persistence checks.

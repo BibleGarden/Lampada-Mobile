@@ -1,0 +1,15 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# Геометрия проверяется хостовым runner после остановки драйвера Maestro.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: start-prayer-button
+- tapOn:
+    id: setup-goal-input
+- inputText: "Keyboard matrix setup"
+- assertNotVisible:
+    id: setup-next-button

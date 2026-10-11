@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   setAudioModeAsync,
   setIsAudioActiveAsync,
@@ -37,7 +37,8 @@ export function useScriptureAudio({
   onAudioBusyChange,
 }: {
   scripture: ScriptureDisplay | undefined;
-  voice: number;
+  // null, пока первый выбор Библии не подтверждён: тогда и отрывка нет.
+  voice: number | null;
   enabled: boolean;
   onAudioBusyChange: (busy: boolean) => void;
 }): ScriptureAudioControl {
@@ -72,7 +73,7 @@ export function useScriptureAudio({
     playbackOperationRef.current = createScriptureAudioOperation();
   }
   const playbackOperation = playbackOperationRef.current;
-  const scriptureKey = scripture
+  const scriptureKey = scripture && voice !== null
     ? `${scripture.canonicalId}:${scripture.receivedAt}:${voice}`
     : null;
   playbackOperation.setContext(enabled && !scripture?.offline ? scriptureKey : null);
@@ -121,7 +122,7 @@ export function useScriptureAudio({
   );
 
   const toggle = useCallback(() => {
-    if (!scripture || scripture.offline || !enabled) return;
+    if (!scripture || scripture.offline || !enabled || voice === null) return;
     if (phase === 'loading') return;
     if (phase === 'playing') {
       player.pause();
@@ -245,5 +246,6 @@ export function useScriptureAudio({
     }
   }
 
-  return { phase, activeVerseNumber, stop, toggle };
+  // Стабильный объект: читалка мемоизирована и получает его через props.
+  return useMemo(() => ({ phase, activeVerseNumber, stop, toggle }), [phase, activeVerseNumber, stop, toggle]);
 }

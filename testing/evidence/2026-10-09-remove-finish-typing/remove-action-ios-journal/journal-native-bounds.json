@@ -1,0 +1,24 @@
+{
+  "platform": "ios",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    0,
+    402,
+    539
+  ],
+  "observed_mode": "docked",
+  "boundary_source": "UIKit native inputView and window frames; safe-area insets are not exposed",
+  "elements": {
+    "journal-search-input": {
+      "bounds": [
+        25,
+        139,
+        376,
+        192
+      ],
+      "focused": false
+    },
+    "journal-keyboard-dismiss": null
+  }
+}

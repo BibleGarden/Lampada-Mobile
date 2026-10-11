@@ -25,7 +25,8 @@ Maestro flows the `appId` of the custom build is `twinkler`, not
 ## Running locally on Android
 
 Use Node.js 22.13 or newer, Java and Android SDK 36 with Build Tools 36.0.0,
-NDK 27.1.12297006 and CMake 3.22.1. Start an existing Android emulator and
+NDK 27.1.12297006 and CMake 3.22.1. Start the test emulator as
+[`testing/README.md`](testing/README.md#android-emulator) describes and
 configure `.env.local` with the **test** API origin and its dedicated Lampada
 key before running tests. Keep production credentials in a separate file
 outside Expo's automatic dotenv loading.
@@ -33,7 +34,7 @@ outside Expo's automatic dotenv loading.
 ```bash
 npm ci
 npm run env:check:local
-npm run android -- --variant release --device Pixel_9_Pro_API_35 --no-bundler
+npm run android -- --variant release --device Pray_Pixel_API_35 --no-bundler
 ```
 
 This installs a standalone Release build with test-build metadata. Metro is

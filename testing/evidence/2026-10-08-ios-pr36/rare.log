@@ -1,0 +1,12 @@
+
+> pray@1.0.0 test:e2e:rare
+> MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro test --include-tags=rare --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" testing/e2e/
+
+
+Waiting for flows to complete...
+[Passed] ios-stage06-scr-003-long-reader (2m 3s)
+[Passed] ios-scripture-audio-resume-cancel (1m 41s)
+[Passed] ios-stage07-jrn-share-001 (1m 32s)
+[Passed] ios-scripture-translation-labels (12s)
+
+4/4 Flows Passed in 5m 28s

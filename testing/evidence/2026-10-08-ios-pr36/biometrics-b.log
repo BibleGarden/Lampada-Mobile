@@ -1,0 +1,9 @@
+Running on Pray SE - iOS 26.5 - 18FBF907-60BB-48EF-9BE8-1DB2767465F5
+ > Flow ios-lock-009b-cold-start-faceid
+Launch app "twinkler"... COMPLETED
+Assert that id: com.apple.localauthentication.ax.authentication.alert is visible... COMPLETED
+Run java.lang.Thread.sleep(20000)... COMPLETED
+Assert that id: com.apple.localauthentication.ax.authentication.alert is not visible... COMPLETED
+Assert that id: lock-screen is not visible... COMPLETED
+Assert that id: settings-button is visible... COMPLETED
+Take screenshot LOCK-009-faceid-unlock... COMPLETED

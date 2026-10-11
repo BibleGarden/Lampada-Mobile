@@ -1,0 +1,20 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# SCR-013, phase 3 of 3: after the runner sets catalog=fail again, a cold start
+# keeps the confirmed English Bible, also after switching the interface to
+# Russian. The runner then reads SQLite: en/16/151, ui_language=ru.
+- stopApp
+- launchApp
+- tapOn:
+    id: "settings-button"
+- assertVisible: ".*Could not load the list.*"
+- tapOn:
+    id: "interface-language-picker"
+- tapOn:
+    id: "interface-language-ru"
+- assertVisible: ".*Не удалось загрузить список.*"
+- assertVisible: ".*English.*"
+- assertVisible: ".*BSB.*"
+- assertVisible: ".*Bob Souer.*"

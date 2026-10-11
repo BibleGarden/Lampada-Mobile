@@ -11,6 +11,12 @@ tags:
 - launchApp:
     stopApp: true
     clearState: true
+    # Lampada не использует геолокацию; явный список не даёт Maestro
+    # дёргать locationd (simctl privacy location) сразу после холодной
+    # перезагрузки, где locationd зависает.
+    permissions:
+      notifications: allow
+      microphone: allow
 - tapOn:
     id: "settings-button"
 - tapOn:
@@ -21,7 +27,7 @@ tags:
     id: "interface-language-sheet"
 - assertVisible:
     id: "interface-language-picker"
-- assertVisible: "Українська"
+    text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"
 # Кнопка назад — по testID: её подпись переключается вслед за языком.

@@ -22,7 +22,10 @@ export function recordDiagnostic(
     | 'answer_save_failed'
     | 'version_check_ignored'
     | 'recording_audio_missing'
-    | 'recording_playback_failed',
+    | 'recording_playback_failed'
+    | 'scripture_preferences_invalid'
+    | 'scripture_selection_failed'
+    | 'scripture_preferences_save_failed',
   details: Record<string, string | number>,
 ) {
   try {

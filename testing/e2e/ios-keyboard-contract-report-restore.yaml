@@ -1,0 +1,19 @@
+appId: twinkler
+tags:
+  - prepared
+---
+# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+- tapOn:
+    point: "3%,10%"
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: inputView
+- assertVisible:
+    id: content-report-comment
+    text: "Keyboard matrix report"
+- assertVisible:
+    id: content-report-send
+- tapOn:
+    id: content-report-cancel
+- assertNotVisible:
+    id: content-report-dialog
