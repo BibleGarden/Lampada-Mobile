@@ -22,6 +22,7 @@ import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 import KeyboardSheet, { KeyboardSheetBody } from './keyboard/KeyboardSheet';
 import QuestionHeader from './QuestionHeader';
+import { GoldButton } from './ui';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -177,24 +178,17 @@ export default function RecordingsSheet({
   );
 
   const actions = recording ? (
-    <Pressable
+    // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
+    // и полупрозрачное «готово» выглядело как незапущенная запись.
+    <GoldButton
+      compact
+      label={recordingPhase === 'stopping' ? t('components.answers.saving') : t('components.answers.done')}
       accessibilityLabel={t('components.answers.stop')}
-      accessibilityRole="button"
       accessibilityValue={{ text: elapsedLabel }}
       testID="recordings-stop-button"
       disabled={stopDisabled}
       onPress={onStopRecording}
-      // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
-      // и полупрозрачное «готово» выглядело как незапущенная запись.
-      style={({ pressed }) => [
-        styles.recDoneBtn,
-        pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
-      ]}
-    >
-      <Text style={styles.recDoneLabel}>
-        {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
-      </Text>
-    </Pressable>
+    />
   ) : (
     <View style={styles.actionsRow}>
       <Pressable
@@ -243,14 +237,15 @@ export default function RecordingsSheet({
       backdropComponent={renderBackdrop}
       handleComponent={renderHandle}
       topInset={insets.top}
-      backgroundStyle={styles.sheetBg}
+      // Во время записи вся шторка — цвет оверлея: вопрос над ним и footer
+      // под ним не выделяются отдельными карточками.
+      backgroundStyle={recording ? styles.sheetBgRecording : styles.sheetBg}
       accessibilityModal={visible}
       onAccessibilityEscape={() => {
         if (!recordingBusy) sheetRef.current?.close();
       }}
       footer={actions}
       footerHidden={!visible}
-      footerStyle={recording ? styles.recordingFooter : undefined}
     >
       {/* закрытая шторка уехала за край, но без пометки осталась бы в обходе */}
       <KeyboardSheetBody
@@ -473,6 +468,9 @@ export default function RecordingsSheet({
 }
 
 const SNAP_POINTS = ['78%'];
+// Прежний оверлей rgba(18,12,7,.97) поверх фона шторки, без прозрачности.
+const RECORDING_BACKGROUND = '#120c07';
+const SHEET_BORDER = 1;
 
 const WAVE_BARS = [
   { color: '#d68a2e', delay: 0 },
@@ -526,14 +524,19 @@ function WaveBar({ color, delay, active }: { color: string; delay: number; activ
 }
 
 const stylesFactory = () => StyleSheet.create({
-  recordingFooter: { backgroundColor: 'rgba(18,12,7,.97)' },
   sheetBody: {
     flex: 1,
   },
   sheetBg: {
     backgroundColor: '#1d1710',
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: SHEET_BORDER,
+    borderColor: colors.white08,
+  },
+  sheetBgRecording: {
+    backgroundColor: RECORDING_BACKGROUND,
+    borderRadius: radius.md,
+    borderWidth: SHEET_BORDER,
     borderColor: colors.white08,
   },
   handleWrap: {
@@ -748,14 +751,14 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(13.5),
     color: colors.creamBright,
   },
+  // Оверлей прячет список, но не рамку шторки: боковые рамки идут до низа.
   recOverlay: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
+    left: SHEET_BORDER,
+    right: SHEET_BORDER,
     bottom: 0,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(18,12,7,.97)',
+    backgroundColor: RECORDING_BACKGROUND,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: sc(28),
@@ -812,18 +815,5 @@ const stylesFactory = () => StyleSheet.create({
     color: '#ec9b8e',
     textAlign: 'center',
     paddingHorizontal: sc(24),
-  },
-  recDoneBtn: {
-    paddingVertical: sc(12),
-    paddingHorizontal: sc(30),
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(230,162,60,.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(230,162,60,.42)',
-  },
-  recDoneLabel: {
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(14),
-    color: colors.creamBright,
   },
 });

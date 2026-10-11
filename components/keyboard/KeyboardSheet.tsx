@@ -1,11 +1,11 @@
 import React, { createContext, forwardRef, useContext, useMemo } from 'react';
 import { StyleSheet, View, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import BottomSheet, {
-  BottomSheetFooter, BottomSheetScrollView, useBottomSheet, useBottomSheetInternal,
+  BottomSheetFooter, BottomSheetScrollView, useBottomSheetInternal,
   type BottomSheetFooterProps, type BottomSheetProps,
 } from '@gorhom/bottom-sheet';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from 'react-native-reanimated';
-import { TextInput as GestureTextInput } from 'react-native-gesture-handler';
+import { State, TextInput as GestureTextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenReaderHiddenProps } from '../../lib/a11y';
 import { sc, column, useStyles } from '../../lib/theme';
@@ -35,13 +35,13 @@ function useSheetLayout() {
 // там, где они нарисованы, их находит доступность Android (TalkBack, Maestro).
 // Тело кончается над footer и не сжимается ниже минимума (sheetFooterPosition).
 // Кадр в кадр движется только footer (трансформация). Высота тела меняется
-// дважды за переход шторки или клавиатуры (sheetBodyHeight), поэтому footer
-// закрашен фоном шторки и прячет часть тела, которую он ещё не открыл.
+// один раз в начале перехода шторки или клавиатуры — сразу на целевую
+// (sheetBodyHeight), поэтому footer закрашен фоном шторки и прячет часть тела,
+// которую он ещё не открыл.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, footerBackground, bodyHeight } = useSheetLayout();
   const keyboard = useKeyboardFrames();
-  const { animatedIndex } = useBottomSheet();
-  const { animatedLayoutState } = useBottomSheetInternal();
+  const { animatedLayoutState, animatedAnimationState, animatedPosition, animatedHandleGestureState, animatedContentGestureState } = useBottomSheetInternal();
   const safeBottom = useSafeAreaInsets().bottom;
   const minBody = sc(72);
   const position = useDerivedValue(
@@ -49,11 +49,17 @@ function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
     [safeBottom, minBody],
   );
   useAnimatedReaction(() => {
-    const moving = keyboard.moving.value || !Number.isInteger(animatedIndex.value);
-    return sheetBodyHeight(position.value, animatedLayoutState.get(), moving);
-  }, (height, previous) => {
-    if (height !== previous) bodyHeight.value = height;
-  });
+    const gestures = [animatedHandleGestureState.get(), animatedContentGestureState.get()];
+    const { nextIndex, nextPosition } = animatedAnimationState.get();
+    return sheetBodyHeight(animatedLayoutState.get(), {
+      position: animatedPosition.get(),
+      nextIndex,
+      nextPosition,
+      dragging: gestures.some((state) => state === State.BEGAN || state === State.ACTIVE),
+    }, keyboard.target.value, safeBottom, minBody);
+  }, (height) => {
+    if (height !== null && height !== bodyHeight.value) bodyHeight.value = height;
+  }, [safeBottom, minBody]);
   const styles = useStyles(stylesFactory);
   return (
     <BottomSheetFooter animatedFooterPosition={position} bottomInset={0} style={footerBackground}>

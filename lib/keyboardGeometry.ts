@@ -130,17 +130,33 @@ export function sheetFooterPosition(natural: number, keyboard: number, safeBotto
 
 // Высота тела шторки над footer. Footer движется трансформацией кадр в кадр,
 // а высота тела — раскладка всего содержимого с многострочным полем, поэтому
-// она меняется не в каждом кадре, а дважды за переход: пока движутся шторка
-// или клавиатура, тело занимает наибольшую высоту, которую может открыть
-// footer (он у верха контейнера, клавиатуры нет), и ещё не открытая часть
-// прячется под непрозрачным footer, клавиатурой и краем экрана; когда всё
-// встало, тело кончается ровно над footer. Пока Gorhom не измерил ручку и
-// footer (отрицательные размеры), наибольшей высоты ещё нет.
+// она меняется один раз в начале каждого перехода: тело сразу берёт высоту,
+// которая будет над footer, когда шторка и клавиатура дойдут до цели. Пока
+// footer едет к ней, он скользит к уже готовому полю или закрывает фоном шторки
+// ту часть тела, которую ещё не открыл; в конце перехода ничего не меняется.
+// Пока Gorhom не измерил ручку и footer (отрицательные размеры), тела ещё нет.
 export type SheetLayout = { containerHeight: number; handleHeight: number; footerHeight: number };
 
-export function sheetBodyHeight(footer: number, layout: SheetLayout, moving: boolean): number {
+// Позиция footer, которую Gorhom ставит шторке на позиции position
+// (BottomSheetFooterContainer), — без подъёма над клавиатурой.
+export function naturalFooterPosition(layout: SheetLayout, position: number): number {
   'worklet';
   const { containerHeight, handleHeight, footerHeight } = layout;
-  if (!moving || handleHeight < 0 || footerHeight < 0) return footer;
-  return Math.max(containerHeight - handleHeight - footerHeight, footer);
+  if (handleHeight < 0 || footerHeight < 0) return 0;
+  return Math.max(0, containerHeight - position) - footerHeight - handleHeight;
+}
+
+// Цель шторки — позиция, к которой идёт её анимация (nextPosition Gorhom), а
+// стоящей — текущая. Закрытие и жест человека тело не перестраивают (null):
+// закрывающаяся шторка уезжает с содержимым, а цель жеста станет известна,
+// когда после отпускания Gorhom запустит анимацию к точке.
+export type SheetMotion = { position: number; nextIndex?: number; nextPosition?: number; dragging: boolean };
+
+export function sheetBodyHeight(
+  layout: SheetLayout, sheet: SheetMotion, keyboardTarget: number, safeBottom: number, minBody: number,
+): number | null {
+  'worklet';
+  if (sheet.dragging || sheet.nextIndex === -1) return null;
+  const target = sheet.nextPosition ?? sheet.position;
+  return sheetFooterPosition(naturalFooterPosition(layout, target), keyboardTarget, safeBottom, minBody);
 }

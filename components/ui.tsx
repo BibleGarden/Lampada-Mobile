@@ -10,6 +10,7 @@ import {
   ViewStyle,
   StyleProp,
   type AccessibilityState,
+  type AccessibilityValue,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,6 +45,8 @@ export function GoldButton({
   testID,
   compact,
   disabled = false,
+  accessibilityLabel = label,
+  accessibilityValue,
 }: {
   label: string;
   onPress: () => void;
@@ -52,11 +55,15 @@ export function GoldButton({
   /** Низкий вариант: высота как у кнопок карточки-спутника */
   compact?: boolean;
   disabled?: boolean;
+  /** Действие, когда видимая подпись — его состояние («Готово» останавливает запись) */
+  accessibilityLabel?: string;
+  accessibilityValue?: AccessibilityValue;
 }) {
   const styles = useStyles(stylesFactory);
   return (
     <Pressable
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityValue={accessibilityValue}
       accessibilityRole="button"
       testID={testID}
       disabled={disabled}

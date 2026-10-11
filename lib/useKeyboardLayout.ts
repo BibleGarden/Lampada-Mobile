@@ -3,9 +3,9 @@ import type { SharedValue } from 'react-native-reanimated';
 import { keyboardFormPolicy, type KeyboardLayout } from './keyboardGeometry';
 
 export const KeyboardLayoutContext = createContext<KeyboardLayout | null>(null);
-// Кадры клавиатуры на UI-потоке: резерв под неё (reservedKeyboardHeight) и
-// флаг идущей анимации Keyboard Controller.
-export type KeyboardFrames = { reserved: SharedValue<number>; moving: SharedValue<boolean> };
+// Кадры клавиатуры на UI-потоке: резерв под неё сейчас (reservedKeyboardHeight)
+// и резерв, к которому идёт её анимация (target).
+export type KeyboardFrames = { reserved: SharedValue<number>; target: SharedValue<number> };
 export const KeyboardFramesContext = createContext<KeyboardFrames | null>(null);
 
 export function useKeyboardLayout() {
@@ -19,7 +19,7 @@ export function useKeyboardFormPolicy() {
 }
 
 // Резерв, который держат формы и footer шторки, кадр в кадр с анимацией
-// клавиатуры, и признак того, что она сейчас движется.
+// клавиатуры, и резерв, которым эта анимация кончится.
 export function useKeyboardFrames() {
   const frames = useContext(KeyboardFramesContext);
   if (!frames) throw new Error('KeyboardSystemProvider is required for keyboard-aware forms');

@@ -39,10 +39,10 @@ position Gorhom computes, and that lifted position is what Gorhom's footer
 container is placed at; the body ends above it. The actions never move outside
 their container, because a child shifted out of its parent's bounds is drawn
 but is not visible to Android accessibility. Only that footer transform follows
-the animations frame by frame; the body height, a layout of the whole form, is
-the largest height the footer can uncover while the sheet or the keyboard moves
-and the height above the footer once both settle, and the footer is painted with
-the sheet background so that it hides the body it has not uncovered yet. The lift stops at a minimum body
+the animations frame by frame; the body height, a layout of the whole form,
+changes once at the start of a transition to the height it will have above the
+footer at the sheet's and the keyboard's destinations, and the footer is painted
+with the sheet background so that it hides the body it has not uncovered yet. The lift stops at a minimum body
 height even when the keyboard is taller than the sheet allows (a full-screen
 input method, the low snap point on a small screen): Android clears focus inside
 a view that shrinks to zero size, and typing would go nowhere. Gorhom owns sheet

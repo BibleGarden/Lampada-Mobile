@@ -9,17 +9,21 @@ import {
 import { KeyboardFramesContext, KeyboardLayoutContext } from '../../lib/useKeyboardLayout';
 
 // Резерв под клавиатуру: состояние даёт классификатор React Native, кадры
-// анимации — Keyboard Controller (reservedKeyboardHeight).
+// анимации — Keyboard Controller (reservedKeyboardHeight). Цель — резерв, к
+// которому идёт текущая анимация: высоту назначения Keyboard Controller
+// сообщает в её начале.
 function KeyboardReservation({ kind, children }: React.PropsWithChildren<{ kind: KeyboardLayout['kind'] }>) {
   const { height } = useReanimatedKeyboardAnimation();
   const moving = useSharedValue(false);
+  const destination = useSharedValue(Keyboard.metrics()?.height ?? 0);
   useKeyboardHandler({
-    onStart: () => { 'worklet'; moving.value = true; },
-    onEnd: () => { 'worklet'; moving.value = false; },
+    onStart: (event) => { 'worklet'; moving.value = true; destination.value = event.height; },
+    onEnd: (event) => { 'worklet'; moving.value = false; destination.value = event.height; },
   }, []);
   // height в Keyboard Controller отрицательна: это сдвиг вверх.
   const reserved = useDerivedValue(() => reservedKeyboardHeight(kind, moving.value, -height.value), [kind]);
-  const frames = useMemo(() => ({ reserved, moving }), [reserved, moving]);
+  const target = useDerivedValue(() => reservedKeyboardHeight(kind, moving.value, destination.value), [kind]);
+  const frames = useMemo(() => ({ reserved, target }), [reserved, target]);
   return <KeyboardFramesContext.Provider value={frames}>{children}</KeyboardFramesContext.Provider>;
 }
 

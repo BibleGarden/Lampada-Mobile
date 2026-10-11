@@ -251,12 +251,13 @@ bounds, where Android accessibility finds them. The body takes the height
 above the footer but never less than a minimum, because Android clears focus
 inside a view that shrinks to zero (`sheetFooterPosition`). Only the footer
 moves frame by frame, as a transform. The body height is a layout of the whole
-form with its multiline field, so it changes twice per transition: while the
-sheet or the keyboard (Keyboard Controller's animation flag) moves, the body
-takes the largest height the footer can uncover, and when both settle it ends
-just above the footer (`sheetBodyHeight`). The footer is painted with the sheet
-background inside its side borders, so the part of the body it has not
-uncovered yet stays hidden. Sheet inputs do not
+form with its multiline field, so it changes once, when a transition starts:
+the body takes at once the height it will have above the footer when the sheet
+reaches the snap Gorhom animates to and the keyboard reaches the height Keyboard
+Controller reports at the start of its animation (`sheetBodyHeight`); nothing
+changes when the motion ends. A closing sheet and a drag keep the body as it is.
+The footer is painted with the sheet background inside its side borders, so it
+hides the part of the body it has not uncovered yet. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
