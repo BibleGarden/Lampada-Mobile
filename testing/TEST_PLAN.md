@@ -420,8 +420,9 @@ time-setting helper and captures the REM-008 screen at the scheduled time.
 ### App lock
 
 For Russian and Ukrainian, Settings, the PIN and biometric prompts, content
-reports, and error messages address the user informally («ты» / «ти»). English
-copy is unchanged; Scripture quotations retain their source wording.
+reports, OS permission texts, and error messages address the user informally
+(«ты» / «ти»). English copy is unchanged; Scripture quotations retain their
+source wording.
 
 The protection is optional and off by default; the decision and its boundaries
 are in
