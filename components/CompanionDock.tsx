@@ -293,17 +293,17 @@ export default function CompanionDock({
               <ActivityIndicator accessibilityLabel={t('components.reader.selecting')} color={colors.goldSoft} />
             ) : curScripture ? (
               <>
-                {/* Неполный текст отрывка открывает полную читалку. Подпись
+                {/* Текст отрывка всегда открывает полную читалку. Подпись
                     не задаём: VoiceOver читает сам отрывок, а действие — подсказкой.
-                    Без disabled: иначе полный отрывок читался бы «недоступно». */}
+                    testID различает неполный текст: по нему тесты ищут длинный отрывок. */}
                 <Pressable
-                  onPress={canReadInFull ? tap(onOpenReader) : undefined}
-                  accessibilityRole={canReadInFull ? 'button' : undefined}
-                  accessibilityHint={canReadInFull ? t('components.reader.readFull') : undefined}
-                  testID={canReadInFull ? 'scripture-read-full' : undefined}
+                  onPress={tap(onOpenReader)}
+                  accessibilityRole="button"
+                  accessibilityHint={t('components.reader.readFull')}
+                  testID={canReadInFull ? 'scripture-read-full' : 'scripture-preview'}
                   style={({ pressed }) => [
                     styles.scripturePreview,
-                    pressed && canReadInFull && styles.scripturePreviewPressed,
+                    pressed && styles.scripturePreviewPressed,
                   ]}
                 >
                   <ScripturePassageText

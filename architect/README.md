@@ -518,9 +518,8 @@ translation. The compact card and the key verses in the full reader use the same
 off-white text colour. Surrounding verses use that colour at 55% opacity; passages
 without a key-verse range stay at full opacity. The shared passage renderer also
 applies this hierarchy in favourites and the journal, with a translucent white
-underline for the currently narrated verse. The full reader is opened both by
-tapping the card text itself and by the "Read in full" link - both available when
-the card truncates the text and when it
+underline for the currently narrated verse. Tapping the card text always opens
+the full reader. A continuation mark shows that the card truncates the text or
 shows only the highlighted fragment. If there is no highlight, or it covers the
 whole passage, the card shows the passage in full. The client uses the
 verse-level representation only when it reconstructs `passage.text` exactly; old
