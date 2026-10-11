@@ -216,7 +216,10 @@ function SessionScreen() {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
+      // Из переключателя приложений iOS может завершить приложение, не прислав
+      // 'background', поэтому время сохраняется уже на 'inactive'.
       if (nextState === 'active') useSession.getState().tick();
+      else useSession.getState().checkpointElapsed();
     });
     return () => sub.remove();
   }, []);

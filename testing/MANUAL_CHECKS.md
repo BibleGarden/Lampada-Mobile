@@ -28,10 +28,10 @@ mode, or a server log. It also says nothing about the wrapper-script groups —
 `run-lng.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`, `run-ipad.sh` — unless
 those were run explicitly, with their prepared environments. See sitting 9.
 
-Of 179 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
+Of 180 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
 including `START-*` and `RPT-*`, plus `LNG-001`–`LNG-013`, which the plan does
 not catalogue yet and which live in the e2e flows and this file), automation on
-main fully covers 107, partially covers 24, and does not cover 48. Section 9
+main fully covers 107, partially covers 25, and does not cover 48. Section 9
 of the plan has no IDs and is outside the count. How the count was made is at
 the end of this file.
 
@@ -330,6 +330,7 @@ a substitute for the sittings above.
 | AI-012 | Withdraw each allowed AI purpose in Settings, then use that feature at once. | 09 |
 | SES-005 | Finish early with an unsaved answer sheet still open (finish-early without an open sheet is automated). | 09 |
 | START-001 | Move the finger off the hold control (a short hold is already automated). | 09 |
+| END-010 | Save an answer, force-quit, relaunch: the journal shows the prayer and Home marks its day (the rule and the checkpoints are unit-tested). | ADR-0042 |
 
 iPad, rotation and keyboard are not listed here — they are sitting 8,
 stage 07 (`86cb8k53f`).
@@ -400,14 +401,14 @@ slots.
 
 ---
 
-## How the 179 IDs were counted
+## How the 180 IDs were counted
 
 Every `PRE-*`, `SMK-*`, `NAV-*`, `SETUP-*`, `START-*`, `SES-*`, `MUS-*`,
 `ANS-*`, `AI-*`, `SCR-*`, `RPT-*`, `END-*`, `JRN-*`, `REM-*` and `LOCK-*` row
-in `TEST_PLAN.md` sections 6–8 (166 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
+in `TEST_PLAN.md` sections 6–8 (167 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
 which the plan has no section for yet — they are catalogued by the
 `ios-lng-*.yaml` flows and this file. Section 9 of the plan has no IDs and is
-not in the 179.
+not in the 180.
 
 - **Covered (107):** a flow asserts the outcome the plan names and runs in one
   of the automated paths on main: a tier tag run (`critical` / `main` /
@@ -417,7 +418,7 @@ not in the 179.
   tests of the date arithmetic count, because the live-midnight pass is
   documented above as optional. Covered IDs whose only automation is a suite
   or a wrapper are not proven by the tier runs alone — sitting 9 names them.
-- **Partial (24):** an automated flow asserts a slice (usually UI, or the unit
+- **Partial (25):** an automated flow asserts a slice (usually UI, or the unit
   tests of the logic) and the rest is in this file.
 - **Not covered (48):** no flow at all (physical-device, airplane-mode,
   backlog and deliberate items, the Android backup checks `JRN-015` and

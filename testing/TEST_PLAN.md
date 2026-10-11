@@ -348,23 +348,24 @@ the stub; execution results belong in dated reports.
 | END-002 [critical] | Finish with a takeaway | Home opens with a temporary saved notice, checked immediately after finishing; the text remains in the journal |
 | END-003 [main] | A double press on finishing | the finish and the day mark happen exactly once |
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
-| END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `sessionResume.test.mjs`) |
+| END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `journalDays.test.mjs`) |
 | END-007 | Leave an expired prayer overnight, open the app the next day and finish it on reflection | the prayer counts for the day it started, not the day of "Done"; the streak stays unbroken |
 | END-006 [main, ipad] | Enter a takeaway with the keyboard open on iPhone and iPad; on iPad, rotate while typing | the input stays above the keyboard; on tablets the editing column widens and long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 | END-008 | Type a takeaway with a hardware keyboard in an App Store video build | while the input is focused, the visible flame stays on one frame and each non-whitespace character causes a visible text or caret update; after blur the flame animates again; ordinary builds never freeze the flame (`reflectionFlame.test.mjs`). The ANS-034 smoothness expectation is a 150 ms maximum visible gap, reported as a metric in the video pipeline; its gross recording rejection gate is 250 ms. |
 | END-009 | Finish the prayer while the first question is still loading | the reflection question appears; the late first question does not leave reflection loading |
+| END-010 | Pray for more than a minute without finishing, or save an answer, then force-quit the app (also from the app switcher) and open it again | the prayer is in the journal with the time prayed up to the last minute or the moment the app left the foreground, and Home marks the day it started; ADR-0042 (unit tests in `journalDays.test.mjs` and `sessionResume.test.mjs`) |
 
 ### The journal and local data
 
 | ID | Scenario | Expected result |
 |---|---|---|
 | JRN-001 [critical] | An empty history | a clear empty state without an error |
-| JRN-002 [main] | An abandoned empty session | it is not shown in the journal |
+| JRN-002 [main] | An abandoned empty session, left within the first minute without answers | it is not shown in the journal and Home does not mark its day |
 | JRN-003 | Search by the goal, the takeaway, a question and an answer | the right records are found |
 | JRN-004 | A Cyrillic search in a different case | the search stays case-insensitive |
 | JRN-005 [main] | Open the details of a text and of a voice prayer | the questions, the answers and the recordings are linked correctly |
 | JRN-006 | Play an audio, close the details, start another one | two sources never play at once, the player UI is reset |
-| JRN-007 | Delete a prayer, including with a two-line confirmation label | visual, checked manually: the trash icon and both lines stay inside the confirmation button, and the adjacent Share button remains in place; the session, the answers, the recording rows and the files are deleted; the streak day remains |
+| JRN-007 | Delete a prayer, including with a two-line confirmation label | visual, checked manually: the trash icon and both lines stay inside the confirmation button, and the adjacent Share button remains in place; the session, the answers, the recording rows and the files are deleted; the day stays marked while another prayer started that day is in the journal, and deleting the last one removes the mark (ADR-0042, `journalDays.test.mjs`) |
 | JRN-008 | A restart and installing a new build over the old one | SQLite and the audio files survive and are readable |
 | JRN-009 | The recording file is missing but the database row remains (as after an Android cloud restore, ADR-0040), and separately a file that exists but fails to load | the screen does not crash; a missing file keeps its row with the duration and the transcript, the play button is disabled and dimmed, the row says "Audio is not on this device" in the interface language, Transcribe and Retry are not offered, and a `recording_audio_missing` record is appended to `lampada-diagnostics.log` (also when the file disappears after the prayer was opened and play is pressed); a file that fails to load does not stay shown as playing, the row says the recording could not be played, and a `recording_playback_failed` record is appended (`journalDetail.test.mjs` covers the file check and the diagnostics; the on-screen state is `ios-stage06-jrn-009-missing-file.yaml` with a hand-deleted file on iOS and MANUAL_CHECKS sitting 12 on Android) |
 | JRN-010 | Open a voice answer without text and press "Transcribe" | loading appears, then the text under the corresponding audio player; after reopening the text is still there |

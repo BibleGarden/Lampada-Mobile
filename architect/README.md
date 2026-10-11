@@ -386,6 +386,15 @@ An untimed prayer saves the wall-clock time from its start to the last tick of t
 session screen. A session unloaded by the OS is not
 restored yet.
 
+While the prayer runs, the store saves `elapsed` to `sessions.elapsed_sec`
+once a minute from the existing tick, when the app leaves the `active` state and
+on the transition to reflection, so an interrupted prayer keeps its duration in
+the journal (ADR-0042). The last saved value lives outside the store state, so the
+checkpoint adds no re-render. The first checkpoint comes after one minute: a
+prayer opened and left at once, without answers, stays out of the journal and the
+streak. The database keeps the larger of the stored and the written time, so a
+late checkpoint never lowers the duration saved on completion.
+
 Timer expiry waits while the reader or answer sheet is open, or narration is
 loading, playing, paused or showing an error. A non-interactive six-second notice
 allows the user to finish that activity. Sheet opening is reported before its
@@ -409,7 +418,7 @@ See [ADR-0027](decisions/0027-resume-current-prayer.md).
 After the reflection is saved (or skipped), completion returns directly Home with
 `router.dismissTo`, removing the prayer flow from the navigation stack. Home shows
 a localized four-second saved notice and the updated flame/day state. The
-completed prayer counts for the local calendar day of its start, not the day
+prayer counts for the local calendar day of its start, not the day
 "Done" is tapped (ADR-0033). The takeaway
 remains in the journal; there is no separate success screen. A consumed route
 parameter triggers the notice once. Legacy `/done` links redirect without claiming
@@ -639,7 +648,7 @@ created and filled in on open.
 | `scripture_books` | A local directory of book names per translation |
 | `favorites_legacy_backup` | A copy of the old favourites from before the migration |
 | `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value, and `prayer_minutes` - the duration of the last started prayer (0 = untimed), which `/setup` opens with; saved on the prayer start, so extending the timer does not change it; the default of 10 minutes applies until the first prayer |
-| `prayed_days` | The local calendar days of completed prayers, keyed by the prayer start; the streak is computed from them |
+| `prayed_days` | The local calendar days of the prayers shown in the journal, keyed by the prayer start; the streak is computed from them |
 
 A quote is tied to a prayer through `scripture_favorites.session_id`, which is set
 at the moment it is saved. For records made before the column existed, the link is
@@ -667,8 +676,19 @@ without its file (an Android cloud restore, a file lost on iOS) keeps its row an
 transcript, is marked "Audio is not on this device", cannot be played or
 transcribed, and writes `recording_audio_missing` to `lampada-diagnostics.log`.
 Play checks the file again, and a player load error ends the playing state with
-a visible message and a `recording_playback_failed` record. Deleting a session deletes its answers and recordings, but
-does not change the historical day in the streak.
+a visible message and a `recording_playback_failed` record. Deleting a session deletes its answers and recordings.
+
+A session is shown in the journal when it has saved time, a takeaway, a non-empty
+answer or a recording. This one predicate in `lib/db.ts` both filters the journal
+and decides the streak: a day is in `prayed_days` while the journal has a prayer
+started on that local day (ADR-0042). Every write that can change a session's
+visibility (an answer save, a time checkpoint, completion, deletion) brings the
+day of the session's start in line in the same transaction. The day comes from
+`dayKey(new Date(started_at))`, the same local-day function the calendar uses.
+Deleting the last journal prayer of a day removes the day; a prayer of the same
+day that stays keeps it. A one-time migration adds the days of the journal
+sessions saved before this rule; days counted earlier without a journal session
+are kept.
 
 While answering, the text and the voice recordings are split between two sheets
 (ADR-0016). `AnswerSheet` holds the answer field, `RecordingsSheet` holds the

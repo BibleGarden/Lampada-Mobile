@@ -69,7 +69,7 @@ implementation details do not need one.
 
 - [0032: Ignore the system font size](0032-ignore-system-font-size.md)
 
-- [0033: Bound the music, the duration and the streak day by the prayer time](0033-prayer-time-bounds-music-and-day.md)
+- [0033: Bound the music, the duration and the streak day by the prayer time](0033-prayer-time-bounds-music-and-day.md) — partly superseded by ADR-0042
 
 - [0034: Raise the minor for store builds and the patch for test builds](0034-store-minor-test-patch-versions.md)
 - [0035: Name the production AI processors in consent](0035-name-production-ai-processors-in-consent.md)
@@ -79,3 +79,4 @@ implementation details do not need one.
 - [0039: Confirm Bible defaults before persisting them](0039-scripture-language-initialization.md) — partly supersedes ADR-0005
 - [0040: Release on Google Play alongside the App Store](0040-google-play-release.md)
 - [0041: Patch the Android shared object registry of expo-modules-core](0041-patch-android-shared-object-registry.md)
+- [0042: A prayer in the journal counts the day it started](0042-journal-prayer-counts-its-day.md) — partly supersedes ADR-0033
