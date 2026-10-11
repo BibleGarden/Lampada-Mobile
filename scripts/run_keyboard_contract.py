@@ -56,7 +56,7 @@ def main():
                 # Закрываем его после ввода, сохраняя фокус редактора.
                 if re.search(r'type=ime[^\n]*visible=true', native_window):
                     command(f'{form}-hide-ime-layer', ['adb', '-s', args.device, 'shell', 'input', 'keyevent', 'KEYCODE_BACK'])
-            if not adb('shell', 'pidof', 'com.nf404.twinkler'):
+            if not adb('shell', 'pidof', 'app.lampada'):
                 raise RuntimeError('Lampada process stopped; inspect its crash before continuing')
             actions = list(lower_actions)
             absent = [] if mode == 'hardware' else list(deferred)
