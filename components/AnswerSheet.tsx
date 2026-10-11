@@ -27,7 +27,7 @@ import {
   useAudioRecorder,
 } from 'expo-audio';
 import { useSession, RecordingDraft } from '../lib/store';
-import { transcribeRecording } from '../lib/transcription';
+import { reportTranscriptionFailure, transcribeRecording } from '../lib/transcription';
 import { audioFileDurationSeconds } from '../lib/audioFileDuration';
 import { MAX_RECORDING_SECONDS, recordingLimitDisplay } from '../lib/transcriptionLimits';
 import { useRecordingLimit } from '../lib/useRecordingLimit';
@@ -329,10 +329,7 @@ function AnswerSheet({
         })
         .catch((error) => {
           if (controller.signal.aborted) return;
-          console.warn(
-            'Failed to transcribe audio recording',
-            error instanceof Error ? error.message : 'unknown error',
-          );
+          reportTranscriptionFailure('answer', error);
           updateRecs((current) =>
             current.map((item) =>
               item.id === recording.id

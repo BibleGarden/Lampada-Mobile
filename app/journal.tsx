@@ -31,7 +31,7 @@ import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
 import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
 import { recordingAudioState } from '../lib/recordingFile';
-import { transcribeRecording } from '../lib/transcription';
+import { reportTranscriptionFailure, transcribeRecording } from '../lib/transcription';
 import { transcriptionErrorMessageKey, transcriptionFailureCode, type TranscriptionErrorCode } from '../lib/transcriptionErrors';
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
@@ -184,10 +184,7 @@ export default function Journal() {
       });
     } catch (error) {
       if (controller.signal.aborted) return;
-      console.warn(
-        'Failed to transcribe journal recording',
-        error instanceof Error ? error.message : 'unknown error',
-      );
+      reportTranscriptionFailure('journal', error);
       setTranscriptionStates((current) => ({ ...current, [recording.id]: transcriptionFailureCode(error) }));
     } finally {
       if (transcriptionControllers.current.get(recording.id) === controller) {

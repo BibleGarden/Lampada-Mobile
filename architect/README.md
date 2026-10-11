@@ -385,9 +385,16 @@ completion latency.
 Before transcription, the client reads the file duration again without rounding,
 including for older drafts whose stored durations came from the recorder clock. It rejects
 files above 14 MiB or recordings longer than 600 seconds without uploading
-them. HTTP 413, 429 and 5xx, transport
+them. The client builds the multipart body itself and declares the file part
+as `recording.m4a` with `audio/mp4`: `FormData` takes the part type from the
+platform MIME table, and Android maps `.m4a` to `audio/mpeg`, which Bible API
+rejects with 415. HTTP 413, 429 and 5xx, transport
 timeouts, and lost connections have separate retry messages in both the answer
-sheet and the journal. Existing recordings retain their original format.
+sheet and the journal. Every failure that is not a cancellation appends a
+`transcription_failed` record (`place`, category `code`, HTTP `status` when the
+server answered, `errorClass`) to `lampada-diagnostics.log` and logs the same
+fields to the console, without the audio, the transcript, error messages or
+the key. Existing recordings retain their original format.
 Scripture narration retains its position and continues playback when the screen
 is covered or the app is backgrounded. It stops when the user changes the
 scripture mode, the passage, or finishes the prayer.
