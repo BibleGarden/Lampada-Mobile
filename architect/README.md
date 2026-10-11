@@ -138,7 +138,7 @@ upgrading it requires rebuilding the native app.
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
 | `lib/audioSession.ts` | The app's single audio mode coordinator, bound to Expo's session activation |
 | `lib/audioPlayerOperation.ts` | Draft readiness, stale-play cancellation, audio-session leases and native status listeners; journal start after a playback grant (`startJournalPlayback`) |
-| `lib/journalPlaybackOperation.ts` | Journal playback state, pause/row-switch cancellation, native completion/error and start-timeout handling; unmount releases leases without player calls |
+| `lib/journalPlaybackOperation.ts` | One operation per journal mount owns playback state, pause/row-switch cancellation, native completion/error and start-timeout handling; unmount releases leases without player calls |
 | `lib/nativePlaybackStart.ts` | The check that `play()` really started the native player, with a start timeout and an overall buffering limit; shared by narration, the journal and answer drafts |
 | `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
@@ -736,10 +736,11 @@ your PIN?" link performs a full wipe: `wipeLocalData` in `lib/db.ts` deletes the
 whole database file through `deleteDatabaseAsync` and removes the audio files of
 the recordings, while `wipeEverything` in `lib/lock.ts` additionally cancels the
 scheduled reminders, clears the SecureStore keys and resets the in-memory stores.
-It first deletes the lock-enabled flag: a failure there preserves the data and
-the lock screen for retry. After data deletion, the stores are reset in `finally`
-even if a remaining SecureStore key cannot be removed; without the enabled flag,
-leftover keys cannot turn protection back on at the next launch.
+It wipes data before changing secure keys or live stores. A data-wipe failure
+preserves protection and the lock screen for retry. After data deletion, settings
+and session stores are reset in `finally`; any key-delete failure keeps the
+in-memory lock enabled and locked, so "Forgot your PIN?" can be retried over
+empty data. Only deleting all keys successfully dismisses that lock screen.
 If the reminders cannot be cancelled, the wipe still completes (it is the only
 way past a forgotten PIN), then writes `wipe_incomplete` and tells the person to
 turn off the app's notifications in the system settings.

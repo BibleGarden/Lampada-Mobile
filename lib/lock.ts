@@ -307,37 +307,38 @@ export type WipeResult = { remindersCancelled: boolean };
  * узнал о неполном стирании.
  */
 export async function wipeEverything(): Promise<WipeResult> {
-  // Пока флаг защиты не удалён, ничего не стираем: LockGate остаётся
-  // доступным для повторной попытки, если SecureStore откажет.
-  await deleteSecure(KEY_ENABLED);
+  // Сбой удаления данных не меняет ни ключи, ни живые состояния защиты.
+  await wipeLocalData();
   // Расписание напоминаний живёт в системе, а не только в базе: не сняв его,
   // приложение продолжало бы напоминать по стёртому расписанию.
   let remindersError: unknown = null;
   let remindersCancelled = true;
+  let keysDeleted = false;
   try {
-    await cancelRemindersAsync();
-  } catch (error) {
-    remindersCancelled = false;
-    remindersError = error;
-  }
-  await wipeLocalData();
-  try {
-    await Promise.all(ALL_KEYS.filter((key) => key !== KEY_ENABLED).map(deleteSecure));
+    try {
+      await cancelRemindersAsync();
+    } catch (error) {
+      remindersCancelled = false;
+      remindersError = error;
+    }
     if (!remindersCancelled) {
       // Пишем после wipeLocalData: стирание удаляет и диагностический лог.
       console.error('Wipe could not cancel prayer reminders', errorKind(remindersError));
       recordDiagnostic('wipe_incomplete', { step: 'reminders', errorKind: errorKind(remindersError) });
     }
+    await Promise.all(ALL_KEYS.map(deleteSecure));
+    keysDeleted = true;
   } finally {
     // Даже если SecureStore не удалил ключ, память не должна ссылаться на
-    // уже стёртые сессии и согласия.
+    // уже стёртые сессии и согласия. LockGate остаётся до успешного удаления
+    // всех ключей: из него можно повторить «Забыли PIN?» над пустыми данными.
     resetSettingsStore();
     resetSessionStore();
     useLock.setState({
       ready: true,
-      enabled: false,
+      enabled: !keysDeleted,
       biometrics: false,
-      locked: false,
+      locked: !keysDeleted,
       obscured: false,
       backgroundedAt: null,
       pinLength: FALLBACK_PIN_LENGTH,

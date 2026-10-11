@@ -1,6 +1,6 @@
 import { dismissKeyboard } from '../lib/dismissKeyboard';
 import { useI18n, localeTag, pluralCategory } from '../lib/i18n';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Alert,
@@ -88,7 +88,7 @@ export default function Journal() {
   const [playbackFailedUri, setPlaybackFailedUri] = useState<string | null>(null);
   const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
-  const playback = useMemo(() => createJournalPlaybackOperation({
+  const [playback] = useState(() => createJournalPlaybackOperation({
     player,
     acquireSession: () => audioModeCoordinator.acquireSession(),
     requestPlayback: () => audioModeCoordinator.requestPlayback(setAudioModeAsync, {
@@ -102,7 +102,7 @@ export default function Journal() {
       setPlaybackFailedUri(uri);
     },
     onReleaseFailure: (error) => console.error('Failed to release journal audio session', error),
-  }), [player]);
+  }));
 
   // поиск с лёгким дебаунсом, чтобы не гонять SQL на каждую букву
   useFocusEffect(
