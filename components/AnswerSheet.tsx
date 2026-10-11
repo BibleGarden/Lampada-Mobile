@@ -1387,7 +1387,8 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
     ...column(),
     paddingHorizontal: sc(16),
-    paddingBottom: sc(8),
+    // Вместе с верхним отступом footer (sc(10)) — sc(14) от поля до кнопок.
+    paddingBottom: sc(4),
   },
   contentLandscape: {
     maxWidth: 1120,
@@ -1461,7 +1462,6 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
-    marginTop: sc(14),
   },
   footerContent: { width: '100%' },
   footerGrid: { flexDirection: 'row', gap: sc(24) },

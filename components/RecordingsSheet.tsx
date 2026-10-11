@@ -190,34 +190,32 @@ export default function RecordingsSheet({
       onPress={onStopRecording}
     />
   ) : (
-    <View style={styles.actionsRow}>
-      <Pressable
-        accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
-        accessibilityRole="button"
-        testID="recordings-record-button"
-        disabled={recordingBusy}
-        onPress={() => {
-          // Reset synchronously before the overlay replaces this button,
-          // so the second physical tap cannot stop the new recording.
-          setStopReady(false);
-          onStartRecording();
-        }}
-        style={({ pressed }) => [
-          styles.recordBtn,
-          recordingBusy && { opacity: 0.5 },
-          pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
-        ]}
-      >
-        <Mic size={sc(16)} color={colors.greenSoft} />
-        <Text style={styles.recordLabel}>
-          {recordingPhase === 'starting'
-            ? t('components.answers.preparing')
-            : recordings.length
-              ? t('components.answers.recordMore')
-              : t('components.answers.record')}
-        </Text>
-      </Pressable>
-    </View>
+    <Pressable
+      accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
+      accessibilityRole="button"
+      testID="recordings-record-button"
+      disabled={recordingBusy}
+      onPress={() => {
+        // Reset synchronously before the overlay replaces this button,
+        // so the second physical tap cannot stop the new recording.
+        setStopReady(false);
+        onStartRecording();
+      }}
+      style={({ pressed }) => [
+        styles.recordBtn,
+        recordingBusy && { opacity: 0.5 },
+        pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
+      ]}
+    >
+      <Mic size={sc(16)} color={colors.greenSoft} />
+      <Text style={styles.recordLabel}>
+        {recordingPhase === 'starting'
+          ? t('components.answers.preparing')
+          : recordings.length
+            ? t('components.answers.recordMore')
+            : t('components.answers.record')}
+      </Text>
+    </Pressable>
   );
 
   return (
@@ -731,9 +729,6 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(9.5),
     letterSpacing: sc(0.9),
     color: colors.greenSoft,
-  },
-  actionsRow: {
-    paddingTop: sc(10),
   },
   recordBtn: {
     flexDirection: 'row',
