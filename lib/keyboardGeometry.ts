@@ -46,18 +46,26 @@ export function keyboardFormPolicy(layout: KeyboardLayout) {
   };
 }
 
+// Клавиатура нужна шторке, пока она открывается или открыта. Закрывающаяся
+// (iOS keyboardWillHide) уже не нужна: шторка возвращается на исходную точку
+// вместе с ней, а не отдельным движением после keyboardDidHide. Android
+// сообщает скрытие в начале анимации, поэтому там фазы closing нет.
+export function keyboardShowing(layout: KeyboardLayout) {
+  return layout.phase === 'opening' || layout.phase === 'open';
+}
+
 // Точка шторки ответа, которую требует клавиатура: 1 — вся высота, 0 —
 // вернуть на исходную, null — точку выбирает человек.
 export type KeyboardSnap = 0 | 1 | null;
 
 export function keyboardSnapTarget(current: KeyboardSnap, form: {
   open: boolean;
-  keyboardVisible: boolean;
+  keyboardShowing: boolean;
   inputFocused: boolean;
   recording: boolean;
 }): KeyboardSnap {
   if (!form.open) return null;
-  if (form.keyboardVisible && form.inputFocused) return 1;
+  if (form.keyboardShowing && form.inputFocused) return 1;
   if (current === null) return null;
   // После старта записи шторку не опускаем.
   return form.recording ? null : 0;
@@ -118,4 +126,21 @@ export function sheetFooterPosition(natural: number, keyboard: number, safeBotto
   'worklet';
   const lifted = natural - Math.max(0, keyboard - safeBottom);
   return Math.max(0, lifted, Math.min(natural, minBody));
+}
+
+// Высота тела шторки над footer. Footer движется трансформацией кадр в кадр,
+// а высота тела — раскладка всего содержимого с многострочным полем, поэтому
+// она меняется не в каждом кадре, а дважды за переход: пока движутся шторка
+// или клавиатура, тело занимает наибольшую высоту, которую может открыть
+// footer (он у верха контейнера, клавиатуры нет), и ещё не открытая часть
+// прячется под непрозрачным footer, клавиатурой и краем экрана; когда всё
+// встало, тело кончается ровно над footer. Пока Gorhom не измерил ручку и
+// footer (отрицательные размеры), наибольшей высоты ещё нет.
+export type SheetLayout = { containerHeight: number; handleHeight: number; footerHeight: number };
+
+export function sheetBodyHeight(footer: number, layout: SheetLayout, moving: boolean): number {
+  'worklet';
+  const { containerHeight, handleHeight, footerHeight } = layout;
+  if (!moving || handleHeight < 0 || footerHeight < 0) return footer;
+  return Math.max(containerHeight - handleHeight - footerHeight, footer);
 }

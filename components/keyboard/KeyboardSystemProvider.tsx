@@ -6,7 +6,7 @@ import {
   hiddenKeyboard, keyboardLayoutFor, reservedKeyboardHeight, updateKeyboardState,
   type KeyboardLayout, type KeyboardState,
 } from '../../lib/keyboardGeometry';
-import { KeyboardLayoutContext, ReservedKeyboardHeightContext } from '../../lib/useKeyboardLayout';
+import { KeyboardFramesContext, KeyboardLayoutContext } from '../../lib/useKeyboardLayout';
 
 // Резерв под клавиатуру: состояние даёт классификатор React Native, кадры
 // анимации — Keyboard Controller (reservedKeyboardHeight).
@@ -19,7 +19,8 @@ function KeyboardReservation({ kind, children }: React.PropsWithChildren<{ kind:
   }, []);
   // height в Keyboard Controller отрицательна: это сдвиг вверх.
   const reserved = useDerivedValue(() => reservedKeyboardHeight(kind, moving.value, -height.value), [kind]);
-  return <ReservedKeyboardHeightContext.Provider value={reserved}>{children}</ReservedKeyboardHeightContext.Provider>;
+  const frames = useMemo(() => ({ reserved, moving }), [reserved, moving]);
+  return <KeyboardFramesContext.Provider value={frames}>{children}</KeyboardFramesContext.Provider>;
 }
 
 export default function KeyboardSystemProvider({ children }: React.PropsWithChildren) {

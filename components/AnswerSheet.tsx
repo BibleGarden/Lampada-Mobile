@@ -64,7 +64,7 @@ import { GoldButton } from './ui';
 import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 import {
-  keyboardSnapOnHandleRelease, keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap,
+  keyboardShowing, keyboardSnapOnHandleRelease, keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap,
 } from '../lib/keyboardGeometry';
 
 const RECORDING_OPTIONS = {
@@ -266,7 +266,7 @@ function AnswerSheet({
 
   // Вторая точка — вся высота под статус-баром (topInset): на неё шторку
   // поднимает эффект открытой клавиатуры ниже, чтобы поле ввода и кнопки
-  // остались видны. Высоту тела даёт Gorhom внутри KeyboardSheet.
+  // остались видны. Высоту тела держит KeyboardSheet.
   const [open, setOpen] = useState(false);
   const snapPoints = useMemo(() => ['62%', '100%'], []);
   const questionRef = useRef<Text>(null);
@@ -278,6 +278,7 @@ function AnswerSheet({
   }, [open]);
   const keyboard = useKeyboardLayout();
   const keyboardOpen = keyboard.visible;
+  const keyboardShown = keyboardShowing(keyboard);
   const [inputFocused, setInputFocused] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const landscapeTablet = isTablet() && windowWidth > windowHeight;
@@ -470,8 +471,9 @@ function AnswerSheet({
   // а полная высота проверяется снова при каждой остановке шторки
   // (settledKeyboardSnapRequest). Gorhom вызывает onChange только при смене
   // индекса, поэтому остановка видна по animatedIndex: он становится целым
-  // после движения. Размер доступного тела даёт Gorhom. Синхронный флаг
-  // закрытия защищает сохранение от позднего didHide.
+  // после движения. Закрывающаяся клавиатура полной высоты уже не требует
+  // (keyboardShowing): шторка опускается вместе с ней. Высоту тела держит
+  // KeyboardSheet. Синхронный флаг закрытия защищает сохранение от позднего didHide.
   const requestSnap = useCallback((step: { request: number | null; target: KeyboardSnap }) => {
     keyboardSnap.current = step.target;
     if (step.request !== null) sheetRef.current?.snapToIndex(step.request);
@@ -497,12 +499,12 @@ function AnswerSheet({
   useEffect(() => {
     const target = keyboardSnapTarget(keyboardSnap.current, {
       open: open && openSheetRef.current,
-      keyboardVisible: keyboard.visible,
+      keyboardShowing: keyboardShown,
       inputFocused,
       recording: recordingOverlayActiveRef.current,
     });
     requestSnap(reconcileKeyboardSnap(target, handlePressed.current));
-  }, [open, keyboard.visible, inputFocused, requestSnap]);
+  }, [open, keyboardShown, inputFocused, requestSnap]);
 
   const startRecording = async () => {
     if (!recordingSheetOpenRef.current) return;

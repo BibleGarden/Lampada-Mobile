@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View, type ViewProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useReservedKeyboardHeight } from '../../lib/useKeyboardLayout';
+import { useKeyboardFrames } from '../../lib/useKeyboardLayout';
 
 // Единственный владелец доступной области обычной формы и нативного Modal.
 // Каждый viewport занимает окно до нижнего края, поэтому снизу резервируется
@@ -14,7 +14,7 @@ export default function KeyboardViewport({ children, style, contentContainerStyl
   contentContainerStyle?: StyleProp<ViewStyle>;
 }) {
   const safeBottom = useSafeAreaInsets().bottom;
-  const keyboard = useReservedKeyboardHeight();
+  const keyboard = useKeyboardFrames().reserved;
   const reserved = useAnimatedStyle(() => ({ paddingBottom: Math.max(safeBottom, keyboard.value) }), [safeBottom]);
   return (
     <Animated.View {...props} style={[styles.fill, style, reserved]}>

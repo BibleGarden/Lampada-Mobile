@@ -249,7 +249,14 @@ from the footer position Gorhom computes, so Gorhom moves the whole footer
 container above the keyboard frame by frame and the actions stay inside its
 bounds, where Android accessibility finds them. The body takes the height
 above the footer but never less than a minimum, because Android clears focus
-inside a view that shrinks to zero (`sheetFooterPosition`). Sheet inputs do not
+inside a view that shrinks to zero (`sheetFooterPosition`). Only the footer
+moves frame by frame, as a transform. The body height is a layout of the whole
+form with its multiline field, so it changes twice per transition: while the
+sheet or the keyboard (Keyboard Controller's animation flag) moves, the body
+takes the largest height the footer can uncover, and when both settle it ends
+just above the footer (`sheetBodyHeight`). The footer is painted with the sheet
+background inside its side borders, so the part of the body it has not
+uncovered yet stays hidden. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
@@ -260,6 +267,9 @@ stay compact. Keyboard dismissal uses existing outside taps and native submissio
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
 calculation: the target snap follows the keyboard and focus, every keyboard or
 focus change requests it, and returning to the resting snap is a single request,
+made when the keyboard starts hiding (`keyboardShowing`: iOS `keyboardWillHide`;
+Android reports the hide at the start of its animation), so the sheet returns
+together with the keyboard rather than after it,
 so a later drag stays where the person put it. Touching the handle hides the
 keyboard: a tap returns the sheet to the resting snap like any other hide, and a
 drag, which cancels the React Native touch once Gorhom's pan starts, leaves the

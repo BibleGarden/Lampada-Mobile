@@ -38,7 +38,11 @@ covered by that safe area is subtracted on the UI thread from the footer
 position Gorhom computes, and that lifted position is what Gorhom's footer
 container is placed at; the body ends above it. The actions never move outside
 their container, because a child shifted out of its parent's bounds is drawn
-but is not visible to Android accessibility. The lift stops at a minimum body
+but is not visible to Android accessibility. Only that footer transform follows
+the animations frame by frame; the body height, a layout of the whole form, is
+the largest height the footer can uncover while the sheet or the keyboard moves
+and the height above the footer once both settle, and the footer is painted with
+the sheet background so that it hides the body it has not uncovered yet. The lift stops at a minimum body
 height even when the keyboard is taller than the sheet allows (a full-screen
 input method, the low snap point on a small screen): Android clears focus inside
 a view that shrinks to zero size, and typing would go nowhere. Gorhom owns sheet
@@ -59,7 +63,8 @@ Preparation and reflection defer lower actions while a software keyboard is
 visible; answers and reports do not hide actions. The answer sheet's snap is a
 convergent reconciliation, not a command per event: a visible keyboard with a
 focused field requires the full-height snap, its hiding returns the sheet to
-the resting snap with one request, after which the person chooses the snap
+the resting snap with one request made when the hide starts (iOS
+`keyboardWillHide`), so the sheet and the keyboard move together, after which the person chooses the snap
 again, including by a gesture. A tap on the handle hides the keyboard and
 returns the sheet like any other hide; a drag of the handle leaves the snap to
 the person. Every
