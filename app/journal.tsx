@@ -36,7 +36,7 @@ import { transcriptionErrorMessageKey, transcriptionFailureCode, type Transcript
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
-import { colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 import PairedActions from '../components/PairedActions';
 
@@ -481,6 +481,7 @@ export default function Journal() {
               actions={[
                 {
                   label: t('screens.journal.share'),
+                  labels: [t('screens.journal.share')],
                   onPress: () => void sharePrayer(item),
                   testID: 'journal-share',
                   icon: <ShareIcon size={14} color="rgba(255,255,255,.45)" />,
@@ -488,6 +489,7 @@ export default function Journal() {
                 },
                 {
                   label: confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete'),
+                  labels: [t('screens.journal.delete'), t('screens.journal.confirmDelete')],
                   onPress: () => askOrConfirmDelete(item.id),
                   testID: confirming ? 'journal-delete-confirm' : 'journal-delete',
                   icon: <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />,
@@ -558,7 +560,7 @@ export default function Journal() {
           contentContainerStyle={{
             paddingHorizontal: screenGutter(),
             paddingTop: sc(12),
-            paddingBottom: insets.bottom + sc(24),
+            paddingBottom: bottomActionPadding(insets.bottom),
             gap: sc(10),
           }}
           ListEmptyComponent={

@@ -87,8 +87,8 @@ export const column = () => ({
 /** Одинаковый боковой отступ экрана и его заголовка внутри колонки. */
 export const screenGutter = () => sc(18);
 
-/** Отступ нижнего действия от безопасной зоны; footer шторки оставляет 16 единиц. */
-export const bottomActionPadding = (bottomInset: number, spacing = 12) => bottomInset + sc(spacing);
+/** Единый отступ нижнего действия от безопасной зоны. */
+export const bottomActionPadding = (bottomInset: number) => bottomInset + sc(12);
 
 export const colors = {
   // фоны

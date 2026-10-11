@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const consentCopy = (t: ReturnType<typeof useI18n>['t']): Record<ConsentPurpose, { kicker: string; title: string; body: string }> => ({
   core_prayer_ai: {
@@ -70,7 +70,7 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
         accessibilityViewIsModal
         // escape VoiceOver — то же, что «назад» Android: без решения
         onAccessibilityEscape={onDismiss}
-        style={[styles.backdrop, { paddingTop: insets.top + sc(20), paddingBottom: insets.bottom + sc(20) }]}
+        style={[styles.backdrop, { paddingTop: insets.top + sc(20), paddingBottom: bottomActionPadding(insets.bottom) }]}
       >
         <View style={styles.card} testID={`privacy-consent-${purpose}`}>
           <Text style={styles.kicker}>{text.kicker}</Text>

@@ -15,7 +15,7 @@ import {
   favoriteToScriptureDisplay,
   type FavoriteScripture,
 } from '../lib/scripture';
-import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import { collapsedTextFromLines, shortenCollapsedText } from '../lib/textTruncation';
 
 /**
@@ -65,7 +65,7 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
               style={styles.text}
               numberOfLines={expanded || clippedText !== null ? undefined : COLLAPSED_LINES}
               compactTextOverride={expanded ? undefined : clippedText ?? undefined}
-              accessibilityLabel={expanded ? undefined : favorite.text}
+              accessibilityLabel={expanded ? undefined : collapsedText}
               testIDPrefix={`favorite-highlight-${favorite.id}`}
               variant={expanded ? 'full' : 'compact'}
             />
@@ -73,7 +73,7 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
             <Text
               style={styles.text}
               numberOfLines={expanded || clippedText !== null ? undefined : COLLAPSED_LINES}
-              accessibilityLabel={expanded ? undefined : favorite.text}
+              accessibilityLabel={expanded ? undefined : collapsedText}
             >
               {expanded ? favorite.text : clippedText ?? favorite.text}
             </Text>
@@ -184,7 +184,7 @@ export default function Favorites() {
           contentContainerStyle={{
             paddingTop: sc(14),
             paddingHorizontal: screenGutter(),
-            paddingBottom: insets.bottom + sc(28),
+            paddingBottom: bottomActionPadding(insets.bottom),
             gap: sc(12),
           }}
         >

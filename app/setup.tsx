@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -23,7 +22,7 @@ import { useSession } from '../lib/store';
 import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
-import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 const EXAMPLES = [0, 1, 2, 3] as const;
@@ -64,8 +63,6 @@ export default function Setup() {
   }, []);
   const keyboard = useKeyboardLayout();
   const policy = useKeyboardFormPolicy();
-  const { width, height } = useWindowDimensions();
-  const compactKeyboardGoal = policy.fillInput && isTablet() && width > height;
   const editing = keyboard.visible;
   // Высоту слота поля вне закреплённой клавиатуры задаёт невидимая копия
   // текста. Пока клавиатура видна, копия держит текст на момент её открытия,
@@ -121,7 +118,7 @@ export default function Setup() {
       >
         <Animated.View
           entering={FadeIn.duration(450)}
-          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: sc(24) }]}
+          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: bottomActionPadding(0) }]}
         >
           <View style={styles.headerRow}>
             <IconButton
@@ -151,7 +148,7 @@ export default function Setup() {
             </View>
             <View style={[styles.topicSlot, policy.fillInput && styles.topicSlotDocked]}>
               <Text
-                style={[styles.topicInput, compactKeyboardGoal && styles.topicInputCompact, styles.topicSizer]}
+                style={[styles.topicInput, policy.fillInput && styles.topicInputCompact, styles.topicSizer]}
                 accessibilityElementsHidden
                 importantForAccessibility="no-hide-descendants"
               >
@@ -163,7 +160,7 @@ export default function Setup() {
                 multiline
                 // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
                 // говорят достаточно, а любая подсказка навязывала тон
-                style={[styles.topicInput, compactKeyboardGoal && styles.topicInputCompact, styles.topicInputFill]}
+                style={[styles.topicInput, policy.fillInput && styles.topicInputCompact, styles.topicInputFill]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
                 testID="setup-goal-input"

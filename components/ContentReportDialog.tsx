@@ -169,6 +169,7 @@ export default function ContentReportDialog({
                 actions={[
                   {
                     label: t('components.contentReport.cancel'),
+                    labels: [t('components.contentReport.cancel')],
                     onPress: dismiss,
                     testID: 'content-report-cancel',
                     disabled: submitting,
@@ -177,6 +178,7 @@ export default function ContentReportDialog({
                   },
                   {
                     label: submitting ? t('components.contentReport.sending') : t('components.contentReport.send'),
+                    labels: [t('components.contentReport.send'), t('components.contentReport.sending')],
                     onPress: () => void submit(),
                     testID: 'content-report-send',
                     disabled: submitting,

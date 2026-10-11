@@ -164,9 +164,11 @@ The recordings sheet places its question, list and footer within the same
 `column()` measure and gutter. A favourite card builds its collapsed preview
 from the first four measured lines, trims trailing whitespace and punctuation,
 and appends one ellipsis. The preview is measured again to leave room for that
-mark. The saved passage, expanded text and full accessibility label stay intact.
-`PairedActions` measures both labels at their shared font size: if either wraps
-in the horizontal pair, both actions stack vertically without shrinking labels.
+mark. The saved passage and expanded text stay intact; the collapsed accessibility
+label reads the selected verses without truncation, matching the card's scope.
+`PairedActions` measures all label states at their shared font size: if any wraps
+in the horizontal pair, both actions stack vertically. Arming deletion or sending
+a report changes only the label, never the pair's placement.
 
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
@@ -177,9 +179,10 @@ so their width scales with their controls. The Scripture reader uses the same
 `column()` and gutter for its header and text. Scrollable reader and journal
 content carry the bottom safe area in their content padding, so the final line
 can scroll clear of a navigation bar or Home Indicator. `bottomActionPadding()`
-adds a gap above the bottom safe area: `sc(12)` for session cards and settings
-sheets, and the existing larger `sc(16)` for keyboard-sheet footers, on every
-device and orientation.
+adds one `sc(12)` gap above the bottom safe area for screen-ending content,
+bottom actions, settings sheets, keyboard-sheet footers, update and consent
+overlays. Forms inside `KeyboardViewport` add that gap with a zero inset because
+the viewport already reserves the safe area.
 
 Accessibility baseline. Text tokens in `lib/theme.ts` (including
 `placeholder`) meet WCAG AA 4.5:1 on the lightest backgrounds they sit on - a
@@ -311,8 +314,8 @@ sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
 Preparation and reflection defer lower actions while typing. Reflection keeps
 the same column measure while editing. Preparation keeps its bottom gap by
-relaxing the goal field's `sc(120)` minimum only in a tablet landscape window
-while the docked keyboard fills the form; phones and portrait keep that minimum.
+relaxing the goal field's `sc(120)` minimum whenever the docked keyboard fills
+the form, regardless of the device or orientation.
 Their field fills the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
 when the hide starts, the form returns to its normal layout together with its
 actions, which move down with the viewport reservation above the keyboard, so
@@ -805,10 +808,12 @@ Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.
 The recording overlay appears once the native recorder confirms `isRecording`.
-The overlay measures its viewport and text. Roomy sheets keep `sc(24)` gaps and
+The overlay measures its Gorhom scroll viewport and text; its content padding
+comes from the same styles used to render it. Roomy sheets keep `sc(24)` gaps and
 the `sc(48)` wave; short sheets reduce the gaps to `sc(8)`, then the wave to
-`sc(24)`. If the text still needs more room, the overlay scrolls within the body
-above the footer (`lib/recordingOverlayGeometry.ts`).
+`sc(24)`. If the text still needs more room, `BottomSheetScrollView` scrolls it
+within the body above the footer, including on Android
+(`lib/recordingOverlayGeometry.ts`).
 Its elapsed time (m:ss) polls the recorder's native `durationMillis` every 250 ms.
 The saved duration comes from the same clock and is also floored to whole seconds.
 VoiceOver reads the elapsed time as the value of the Stop button and does not

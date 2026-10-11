@@ -12,7 +12,7 @@ import { useSession } from '../lib/store';
 import { startHomeRefresh } from '../lib/homeRefresh';
 import { fitFlameWidth } from '../lib/flameGeometry';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
-import { colors, column, fonts, sc, screenGutter, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, sc, screenGutter, useStyles } from '../lib/theme';
 
 const greetingByHour = (t: ReturnType<typeof useI18n>['t']) => {
   const h = new Date().getHours();
@@ -150,7 +150,7 @@ export default function Home() {
           </View>
         </View>
 
-        <View style={[styles.bottom, { paddingBottom: insets.bottom + sc(24) }]}>
+        <View style={[styles.bottom, { paddingBottom: bottomActionPadding(insets.bottom) }]}>
           {showSavedNotice && (
             <Text style={styles.savedNotice} testID="prayer-saved-notice">
               {t('screens.home.prayerSaved')}

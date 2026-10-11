@@ -64,7 +64,7 @@ import {
   verifyPin,
   type BiometryInfo,
 } from '../lib/lock';
-import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
@@ -919,7 +919,7 @@ export default function Settings() {
           contentContainerStyle={{
             paddingTop: sc(16),
             paddingHorizontal: screenGutter(),
-            paddingBottom: insets.bottom + sc(24),
+            paddingBottom: bottomActionPadding(insets.bottom),
           }}
         >
           <Kicker style={styles.sectionKicker}>{t('settings.interfaceLanguage')}</Kicker>

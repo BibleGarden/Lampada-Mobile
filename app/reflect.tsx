@@ -23,7 +23,7 @@ import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport, { KeyboardPendingSpace } from '../components/keyboard/KeyboardViewport';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
-import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 
 const ReflectionFlame = React.memo(Flame);
 
@@ -94,7 +94,7 @@ function ReflectScreen() {
               styles.body,
               {
                 paddingTop: insets.top + sc(16),
-                paddingBottom: dockedKeyboard ? sc(16) : sc(24),
+                paddingBottom: dockedKeyboard ? sc(16) : bottomActionPadding(0),
               },
             ]}
             keyboardShouldPersistTaps="handled"

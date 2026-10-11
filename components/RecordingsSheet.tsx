@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Animated, {
   Easing,
@@ -104,13 +104,13 @@ export default function RecordingsSheet({
   const recordingPending = recordingPhase === 'starting' || recordingPhase === 'stopping';
   const recordingBusy = recordingPhase !== 'idle';
   const [stopReady, setStopReady] = useState(false);
-  const [overlaySizes, setOverlaySizes] = useState({ height: 0, kicker: 0, elapsed: 0, hint: 0, error: 0 });
+  const [overlaySizes, setOverlaySizes] = useState({ viewport: 0, kicker: 0, elapsed: 0, hint: 0, error: 0 });
   const measureOverlay = (part: keyof typeof overlaySizes) => (event: LayoutChangeEvent) => {
     const height = event.nativeEvent.layout.height;
     setOverlaySizes((current) => current[part] === height ? current : { ...current, [part]: height });
   };
-  const overlayFit = overlaySizes.height === 0 ? { gap: sc(24), waveHeight: sc(48) } : fitRecordingOverlay(
-    overlaySizes.height - sc(28) - sc(8),
+  const overlayFit = overlaySizes.viewport === 0 ? { gap: sc(24), waveHeight: sc(48) } : fitRecordingOverlay(
+    overlaySizes.viewport - styles.recOverlayContent.paddingVertical * 2,
     overlaySizes.kicker + overlaySizes.elapsed + overlaySizes.hint + (limitError ? overlaySizes.error : 0),
     limitError ? 4 : 3,
     sc(24),
@@ -446,12 +446,14 @@ export default function RecordingsSheet({
 
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
-        <View style={styles.recOverlay} onLayout={measureOverlay('height')}>
-          <ScrollView
+        <View style={styles.recOverlay}>
+          <BottomSheetScrollView
             style={styles.recOverlayScroll}
             contentContainerStyle={[styles.recOverlayContent, { gap: overlayFit.gap }]}
             showsVerticalScrollIndicator={false}
             bounces={false}
+            nestedScrollEnabled
+            onLayout={measureOverlay('viewport')}
           >
             <Text style={styles.recOverlayKicker} onLayout={measureOverlay('kicker')}>
               {t('components.answers.recording')}
@@ -480,7 +482,7 @@ export default function RecordingsSheet({
                 {t(limitError)}
               </Text>
             )}
-          </ScrollView>
+          </BottomSheetScrollView>
         </View>
       )}
       </View>

@@ -4,6 +4,8 @@ import { screenReaderHiddenProps } from '../lib/a11y';
 
 type Action = {
   label: string;
+  /** Все состояния подписи: переключение действия не должно менять раскладку. */
+  labels: readonly [string, ...string[]];
   onPress: () => void;
   testID?: string;
   disabled?: boolean;
@@ -24,7 +26,8 @@ export default function PairedActions({ actions, labelStyle, gap, style }: Props
   const [width, setWidth] = useState(0);
   const [measurement, setMeasurement] = useState({ key: '', lines: [0, 0] });
   const font = StyleSheet.flatten(labelStyle);
-  const key = JSON.stringify([width, font, actions.map((action) => action.label)]);
+  const key = JSON.stringify([width, font, actions.map((action) => action.labels)]);
+  const stateCount = Math.max(...actions.map((action) => action.labels.length));
   const measurementKey = useRef(key);
   measurementKey.current = key;
   const stacked = measurement.key === key && measurement.lines.some((lines) => lines > 1);
@@ -42,27 +45,32 @@ export default function PairedActions({ actions, labelStyle, gap, style }: Props
             pointerEvents="none"
             accessible={false}
             {...screenReaderHiddenProps(true)}
-            style={[styles.measure, styles.row, { gap }]}
+            style={styles.measure}
           >
-            {actions.map((action, index) => (
-              <View key={index} style={[action.style(false), styles.rowButton]}>
-                {action.icon}
-                <Text
-                  key={key}
-                  style={[labelStyle, action.labelStyle]}
-                  onTextLayout={({ nativeEvent }) => {
-                    if (measurementKey.current !== key) return;
-                    const count = nativeEvent.lines.length;
-                    setMeasurement((current) => {
-                      const lines = current.key === key ? current.lines.slice() : [0, 0];
-                      if (current.key === key && lines[index] === count) return current;
-                      lines[index] = count;
-                      return { key, lines };
-                    });
-                  }}
-                >
-                  {action.label}
-                </Text>
+            {Array.from({ length: stateCount }, (_, stateIndex) => (
+              <View key={stateIndex} style={[styles.row, { gap }]}>
+                {actions.map((action, index) => (
+                  <View key={index} style={[action.style(false), styles.rowButton]}>
+                    {action.icon}
+                    <Text
+                      key={key}
+                      style={[labelStyle, action.labelStyle]}
+                      onTextLayout={({ nativeEvent }) => {
+                        if (measurementKey.current !== key) return;
+                        const count = nativeEvent.lines.length;
+                        const measurementIndex = stateIndex * actions.length + index;
+                        setMeasurement((current) => {
+                          const lines = current.key === key ? current.lines.slice() : Array<number>(stateCount * actions.length).fill(0);
+                          if (current.key === key && lines[measurementIndex] === count) return current;
+                          lines[measurementIndex] = count;
+                          return { key, lines };
+                        });
+                      }}
+                    >
+                      {action.labels[Math.min(stateIndex, action.labels.length - 1)]}
+                    </Text>
+                  </View>
+                ))}
               </View>
             ))}
           </View>

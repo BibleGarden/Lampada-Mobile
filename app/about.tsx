@@ -13,7 +13,7 @@ import { apiBaseUrl } from '../lib/apiConfig';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { Book, ChevronLeft } from '../components/icons';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = (Constants.executionEnvironment === 'storeClient'
@@ -61,7 +61,7 @@ export default function About() {
           contentContainerStyle={{
             paddingTop: sc(26),
             paddingHorizontal: sc(12),
-            paddingBottom: insets.bottom + sc(28),
+            paddingBottom: bottomActionPadding(insets.bottom),
           }}
         >
           <Kicker style={styles.sectionKicker}>{t('screens.about.lampada')}</Kicker>

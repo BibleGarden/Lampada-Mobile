@@ -66,7 +66,7 @@ function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
       <View
         {...screenReaderHiddenProps(hidden)}
         pointerEvents={hidden ? 'none' : 'auto'}
-        style={[styles.footer, { paddingBottom: bottomActionPadding(safeBottom, 16) }, footerStyle, hidden && styles.hidden]}
+        style={[styles.footer, { paddingBottom: bottomActionPadding(safeBottom) }, footerStyle, hidden && styles.hidden]}
       >{footer}</View>
     </BottomSheetFooter>
   );
