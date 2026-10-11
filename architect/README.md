@@ -21,6 +21,11 @@ While Home is focused, its prayer calendar refreshes on app activation and at
 the next local midnight. Leaving Home removes the listener and timer; resuming
 the app refreshes the calendar without resetting the session.
 
+The Home flame keeps its full size while the window has room for it. On a short
+window (a foldable's inner display, iPad Split View, landscape) it shrinks to
+the height left above Start and the saved notice, keeping its proportions; the
+captions keep their size (`lib/flameGeometry.ts`).
+
 Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
 The flame's Reanimated clock stops when its route is covered or the app leaves

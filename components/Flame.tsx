@@ -19,6 +19,7 @@ import {
   withTiming,
   cancelAnimation,
 } from 'react-native-reanimated';
+import { FLAME_HEIGHT_RATIO } from '../lib/flameGeometry';
 import { colors } from '../lib/theme';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 
@@ -79,7 +80,7 @@ const gust = (tt: number) => {
 export default function Flame({ width = 240, lit = true, ember = false, paused = false }: Props) {
   const visible = useVisibleScreen();
   const W = width;
-  const H = ember ? width : width * 1.17;
+  const H = ember ? width : width * FLAME_HEIGHT_RATIO;
   // холст больше занимаемого места: гало должно растворяться,
   // а не обрезаться прямоугольником по краю Canvas
   const pad = W * 0.45;
