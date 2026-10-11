@@ -3,7 +3,7 @@ import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from './ui';
 import { Close } from './icons';
-import { bottomActionPadding, colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, fonts, radius, sc, sheetMaxWidth, useStyles } from '../lib/theme';
 
 /**
  * Нижняя шторка поверх экрана, а не системный Modal: иначе окно закрыло бы
@@ -104,7 +104,7 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.78)',
   },
   sheet: {
-    width: '100%', maxWidth: sc(294), alignSelf: 'center',
+    width: '100%', maxWidth: sheetMaxWidth(), alignSelf: 'center',
     maxHeight: '82%', paddingTop: sc(7), paddingHorizontal: sc(14),
     backgroundColor: '#171109', borderTopLeftRadius: sc(22), borderTopRightRadius: sc(22),
     borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(214,182,120,.2)',

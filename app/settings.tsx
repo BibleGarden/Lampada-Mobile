@@ -202,8 +202,8 @@ function SettingRow({ title, value, testID, accessibilityLabel, disabled, divide
         pressed && styles.optionPressed,
       ]}
     >
-      <Text style={[styles.rowTitle, value ? styles.settingRowTitle : styles.settingRowTitleWide]} numberOfLines={1}>{title}</Text>
-      {value ? <Text style={styles.settingRowValue} numberOfLines={1}>{value}</Text> : null}
+      <Text style={[styles.rowTitle, value ? styles.settingRowTitle : styles.settingRowTitleWide]}>{title}</Text>
+      {value ? <Text style={styles.settingRowValue}>{value}</Text> : null}
       <ChevronRight size={15} color={colors.labelGold} />
     </Pressable>
   );
@@ -1042,11 +1042,11 @@ export default function Settings() {
                     style={styles.reminderSettingsCopy}
                     testID={ruleIndex === 0 ? 'reminders-summary' : `reminders-summary-${ruleIndex}`}
                   >
-                    <Text style={styles.rowTitle} numberOfLines={1}>
+                    <Text style={styles.rowTitle}>
                       {formatReminderWeekdays(rule.weekdays, uiLanguage)}
                     </Text>
                   </View>
-                  <Text style={styles.settingRowValue} numberOfLines={1}>
+                  <Text style={styles.settingRowValue}>
                     {rule.times.map(formatReminderTime).join(', ')}
                   </Text>
                   <ChevronRight size={15} color={colors.labelGold} />
@@ -1421,6 +1421,8 @@ const stylesFactory = () => StyleSheet.create({
   top: {
     paddingHorizontal: screenGutter(),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(214,182,120,.22)',
   },
   topSpacer: { width: sc(34), height: sc(34) },
   sectionKicker: { marginBottom: sc(7), marginLeft: sc(4) },
@@ -1437,10 +1439,10 @@ const stylesFactory = () => StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(214,182,120,.16)',
   },
-  settingRowTitle: { flexShrink: 1 },
+  settingRowTitle: { flex: 1, minWidth: 0 },
   settingRowTitleWide: { flex: 1 },
   settingRowValue: {
-    flex: 1, textAlign: 'right', fontFamily: fonts.sans, fontSize: sc(12),
+    maxWidth: '55%', textAlign: 'right', fontFamily: fonts.sans, fontSize: sc(12),
     color: colors.creamDim,
   },
   toggleRow: {

@@ -15,7 +15,7 @@ import { useSettings } from '../lib/settings';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { THRESHOLD_DENSITIES, ThresholdDensity, fitThresholdDensity } from '../lib/thresholdLayout';
-import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
+import { colors, column, durations, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
 
 export default function Threshold() {
   const { t, language } = useI18n();
@@ -174,7 +174,7 @@ export default function Threshold() {
         ]}
       >
         {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
-        <View style={styles.headerRow}>
+        <View style={[styles.headerRow, landscapeTablet && styles.headerRowLandscape]}>
           <IconButton size={sc(30)} accessibilityLabel={t('settings.back')} onPress={() => router.back()}>
             <ChevronLeft size={18} color={colors.white55} />
           </IconButton>
@@ -279,7 +279,7 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   body: {
     flex: 1,
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
     ...column(),
     justifyContent: 'space-between',
   },
@@ -298,7 +298,10 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
-    marginLeft: -4,
+  },
+  headerRowLandscape: {
+    ...column(),
+    paddingHorizontal: screenGutter(),
   },
   title: {
     marginBottom: sc(6),

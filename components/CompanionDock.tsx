@@ -616,6 +616,7 @@ const stylesFactory = () => StyleSheet.create({
     // ней фиксировано. Слишком высокий пол не давал карточке ужаться под
     // доступную высоту, и ряды снизу вываливались за рамку.
     minHeight: sc(28),
+    paddingTop: sc(6),
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: sc(4),

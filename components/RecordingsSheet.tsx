@@ -609,7 +609,7 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: sc(8),
+    paddingBottom: sc(24),
   },
   emptyHint: {
     marginTop: sc(28),

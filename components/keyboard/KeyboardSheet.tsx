@@ -8,7 +8,7 @@ import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSh
 import { State, TextInput as GestureTextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenReaderHiddenProps } from '../../lib/a11y';
-import { bottomActionPadding, sc, column, screenGutter, useStyles } from '../../lib/theme';
+import { bottomActionPadding, sc, column, screenGutter, sheetMaxWidth, useStyles } from '../../lib/theme';
 import { sheetBodyHeight, sheetFooterPosition } from '../../lib/keyboardGeometry';
 import { useKeyboardFrames, useKeyboardLayout } from '../../lib/useKeyboardLayout';
 import { useSheetReflow } from '../../lib/useSheetReflow';
@@ -93,6 +93,7 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
 // Шторка и её фон занимают всё окно до края экрана. Клавиатуру и безопасную
 // зону резервирует только footer, контейнер Gorhom от них не зависит.
 const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, keyboardSnapPosition, keyboardRestFraction, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
+  const sheetStyles = useStyles(sheetStylesFactory);
   const bodyHeight = useSharedValue(0);
   const footerBackground = useMemo(() => footerBackgroundOf(props.backgroundStyle), [props.backgroundStyle]);
   // Gorhom 5.2.14 не переставляет закрытую или закрывающуюся шторку при
@@ -118,6 +119,7 @@ const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, fo
       <SheetLayoutContext.Provider value={context}>
         <BottomSheet
           {...props}
+          style={[sheetStyles.sheet, props.style]}
           key={mountKey}
           ref={ref}
           bottomInset={0}
@@ -171,6 +173,7 @@ export function KeyboardSheetBody({ children, scrollable = true, ...props }: Omi
 }
 
 const styles = StyleSheet.create({ body: { width: '100%' }, fill: { flex: 1 }, scrollContent: { flexGrow: 1 }, hidden: { opacity: 0 } });
+const sheetStylesFactory = () => StyleSheet.create({ sheet: { width: '100%', maxWidth: sheetMaxWidth(), alignSelf: 'center' } });
 const stylesFactory = () => StyleSheet.create({
   footer: { ...column(), paddingHorizontal: screenGutter(), paddingTop: sc(10) },
   hidden: { opacity: 0 },

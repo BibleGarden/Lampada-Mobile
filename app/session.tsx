@@ -604,6 +604,7 @@ function SessionScreen() {
         <View
           style={[
             styles.sessionContent,
+            (height >= 800 || isTablet()) && styles.sessionContentRoomy,
             {
               // Нижний отступ держит карточку выше системной навигации;
               // на низком окне его забираем из свободной высоты карточки.
@@ -970,6 +971,7 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'space-between',
     gap: sc(22),
   },
+  sessionContentRoomy: { gap: sc(14) },
   timerWrap: {
     alignSelf: 'center',
   },
@@ -1035,6 +1037,6 @@ const stylesFactory = () => StyleSheet.create({
     // меньше, чем нужно даже минимальному набору.
     flexGrow: 1,
     flexShrink: 1,
-    maxHeight: isTablet() ? sc(230) : undefined,
+    maxHeight: isTablet() ? sc(310) : undefined,
   },
 });

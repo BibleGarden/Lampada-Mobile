@@ -87,6 +87,9 @@ export const column = () => ({
 /** Одинаковый боковой отступ экрана и его заголовка внутри колонки. */
 export const screenGutter = () => sc(18);
 
+/** Общий предел ширины нижних шторок на широком окне. */
+export const sheetMaxWidth = () => sc(294);
+
 /** Единый отступ нижнего действия от безопасной зоны. */
 export const bottomActionPadding = (bottomInset: number) => bottomInset + sc(12);
 
