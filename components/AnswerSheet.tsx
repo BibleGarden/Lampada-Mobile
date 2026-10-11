@@ -1272,7 +1272,6 @@ function AnswerSheet({
       {/* В альбомном окне планшета вопрос стоит рядом с формой, оставляя
           полю высоту над клавиатурой. Длинный вопрос прокручивается отдельно. */}
       <KeyboardSheetBody
-        style={styles.dismissArea}
         {...screenReaderHiddenProps(!open || recordingsSheetOpen)}
         // Боковые поля шторки тоже закрывают клавиатуру, не перехватывая ввод.
         onStartShouldSetResponder={() => {
@@ -1374,7 +1373,6 @@ const stylesFactory = () => StyleSheet.create({
     height: sc(4),
     borderRadius: sc(2),
   },
-  dismissArea: { width: '100%' },
   // ADR-0012: колонка держит меру строки. Без неё на планшете строка ответа
   // уходила на ~70 символов, а «Сохранить» растягивалась во всю ширину окна.
   content: {

@@ -248,7 +248,6 @@ export default function RecordingsSheet({
       {/* закрытая шторка уехала за край, но без пометки осталась бы в обходе */}
       <KeyboardSheetBody
         scrollable={false}
-        style={styles.sheetBody}
         {...screenReaderHiddenProps(!visible)}
       >
       <View style={styles.questionWrap}>
@@ -522,9 +521,6 @@ function WaveBar({ color, delay, active }: { color: string; delay: number; activ
 }
 
 const stylesFactory = () => StyleSheet.create({
-  sheetBody: {
-    flex: 1,
-  },
   sheetBg: {
     backgroundColor: '#1d1710',
     borderRadius: radius.md,

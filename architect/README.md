@@ -268,7 +268,9 @@ from the footer position Gorhom computes, so Gorhom moves the whole footer
 container above the keyboard frame by frame and the actions stay inside its
 bounds, where Android accessibility finds them. The body takes the height
 above the footer but never less than a minimum, because Android clears focus
-inside a view that shrinks to zero (`sheetFooterPosition`). Only the footer
+inside a view that shrinks to zero (`sheetFooterPosition`). Callers cannot
+style the body: a `flex: 1` there overrode that height and stretched the body
+under the footer, out of reach of its scroll view. Only the footer
 moves frame by frame, as a transform. The body height is a layout of the whole
 form with its multiline field, so it changes once, when a transition starts:
 the body takes at once the height it will have above the footer when the sheet

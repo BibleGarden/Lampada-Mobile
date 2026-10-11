@@ -148,11 +148,13 @@ export const KeyboardSheetTextInput = forwardRef<GestureTextInput, React.Compone
 });
 KeyboardSheetTextInput.displayName = 'KeyboardSheetTextInput';
 
-export function KeyboardSheetBody({ children, style, scrollable = true, ...props }: ViewProps & { scrollable?: boolean }) {
+// Размер тела задаёт только шторка: стиль снаружи (например, flex: 1)
+// перебил бы высоту над footer, и низ тела ушёл бы под кнопки.
+export function KeyboardSheetBody({ children, scrollable = true, ...props }: Omit<ViewProps, 'style'> & { scrollable?: boolean }) {
   const { bodyHeight } = useSheetLayout();
   const size = useAnimatedStyle(() => ({ height: bodyHeight.value }));
   return (
-    <Animated.View {...props} style={[styles.body, style, size]}>
+    <Animated.View {...props} style={[styles.body, size]}>
       {scrollable ? <BottomSheetScrollView
         style={styles.fill}
         contentContainerStyle={styles.scrollContent}
