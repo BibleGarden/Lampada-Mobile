@@ -59,8 +59,13 @@
 - Save each full command log and exit code as a PR or task artifact accessible
   to reviewers, and identify the tested commit and build. Put only selected
   final evidence in `testing/evidence/` as described in `testing/README.md`.
-  Investigate and report failures; never rerun a failed test or CI job without
-  the owner's explicit permission.
+  Investigate and report failures. Never rerun a failed test or CI job without
+  the owner's explicit permission, with one exception (owner's decision of
+  2026-10-11): a failed scenario may be rerun without asking when the cause is
+  proven to be the test environment, not the app (for example an emulator at
+  lowered CPU priority, an overloaded host, a full disk or a stuck tool). The
+  evidence for that cause goes into the run report. A failure that may be an
+  app defect is never rerun: it is analysed and fixed.
 
 # Simulators
 
