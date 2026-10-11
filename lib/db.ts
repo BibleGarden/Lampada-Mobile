@@ -27,7 +27,8 @@ export function recordDiagnostic(
     | 'scripture_preferences_invalid'
     | 'scripture_selection_failed'
     | 'scripture_preferences_save_failed'
-    | 'transcription_failed',
+    | 'transcription_failed'
+    | 'scripture_audio_failed',
   details: Record<string, string | number>,
 ) {
   try {

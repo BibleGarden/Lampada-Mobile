@@ -136,6 +136,7 @@ upgrading it requires rebuilding the native app.
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
 | `lib/audioSession.ts` | The app's single audio mode coordinator, bound to Expo's session activation |
 | `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
+| `lib/nativePlaybackStart.ts` | The check that `play()` really started the native player, with a start timeout and an overall buffering limit; shared by narration, the journal and answer drafts |
 | `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/recordingLimitController.ts` | The single stop decision from the recorder's accumulated recorded milliseconds |
@@ -543,8 +544,10 @@ previous solid text, without heuristics.
 For narration the client requests the server `begin`/`end` of the verses, streams
 the Range-compatible MP3 of the whole chapter, starts at the first verse of the
 passage and stops at the end of the last one. The narration state follows the
-native player: if it has not started two seconds after `play()` and is not
-buffering, narration shows an error and logs the native playback state; if the
+native player (`lib/nativePlaybackStart.ts`): if it has not started two seconds
+after `play()` and is not buffering, or is still buffering after 15 seconds,
+narration shows an error and writes a `scripture_audio_failed` record with the
+reason and the native playback state; if the
 system pauses a started player, narration becomes paused. The text selection does not depend
 on that extra request; the offline snapshot stays available without audio
 controls. In the full reader the current verse is determined by the same timings
@@ -727,8 +730,11 @@ in the local search. `getJournalDetail` checks that each file exists; a recordin
 without its file (an Android cloud restore, a file lost on iOS) keeps its row and
 transcript, is marked "Audio is not on this device", cannot be played or
 transcribed, and writes `recording_audio_missing` to `lampada-diagnostics.log`.
-Play checks the file again, and a player load error ends the playing state with
-a visible message and a `recording_playback_failed` record. Deleting a session deletes its answers and recordings.
+Play checks the file again, and a player load error, or a player that has not
+started two seconds after `play()`, ends the playing state with a visible
+message and a `recording_playback_failed` record (`place`, `reason`); the same
+applies to drafts in the answer sheet.
+Deleting a session deletes its answers and recordings.
 
 A session is shown in the journal when it has saved time, a takeaway, a non-empty
 answer or a recording. This one predicate in `lib/db.ts` both filters the journal

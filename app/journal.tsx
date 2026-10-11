@@ -35,6 +35,7 @@ import { reportTranscriptionFailure, transcribeRecording } from '../lib/transcri
 import { transcriptionErrorMessageKey, transcriptionFailureCode, type TranscriptionErrorCode } from '../lib/transcriptionErrors';
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
+import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
@@ -117,10 +118,27 @@ export default function Journal() {
   useEffect(() => {
     if (!playerStatus.error || playingUri === null) return;
     console.warn('Failed to play journal recording', playerStatus.error);
-    db.recordDiagnostic('recording_playback_failed', { place: 'journal' });
+    db.recordDiagnostic('recording_playback_failed', { place: 'journal', reason: 'player_error' });
     setPlaybackFailedUri(playingUri);
     setPlayingUri(null);
   }, [playerStatus]);
+
+  // Android молча игнорирует play() при выключенной аудиосессии: строка не
+  // должна остаться «играющей», если нативный плеер так и не начал. Очистка
+  // только снимает таймер и не трогает плеер (ADR-0036).
+  useEffect(() => {
+    if (playingUri === null) return undefined;
+    return watchNativePlaybackStart({
+      readStatus: () => player.currentStatus,
+      onFailed: (reason, status) => {
+        console.warn('Journal recording did not start', reason, status.playbackState);
+        db.recordDiagnostic('recording_playback_failed', { place: 'journal', reason });
+        player.pause();
+        setPlaybackFailedUri(playingUri);
+        setPlayingUri(null);
+      },
+    });
+  }, [playingUri, player]);
 
   const toggleOpen = useCallback(async (id: number) => {
     for (const controller of transcriptionControllers.current.values()) controller.abort();

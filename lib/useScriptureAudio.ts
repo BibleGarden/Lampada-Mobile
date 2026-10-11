@@ -12,6 +12,8 @@ import {
 } from './audioModeCoordinator';
 import { audioModeCoordinator } from './audioSession';
 import { createScriptureAudioOperation, narrationNativeState } from './scriptureAudioOperation';
+import { watchNativePlaybackStart } from './nativePlaybackStart';
+import { errorKind, recordDiagnostic } from './db';
 
 export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
@@ -22,9 +24,19 @@ const SCRIPTURE_PLAYBACK_MODE = {
   interruptionMode: 'doNotMix' as const,
 };
 
-// Сколько ждать, пока нативный плеер начнёт играть после play(). Пока поток
-// буферизуется, ожидание продлевается.
-const NATIVE_START_TIMEOUT_MS = 2_000;
+type NarrationFailure =
+  | 'not_started'
+  | 'buffering_timeout'
+  | 'player_error'
+  | 'play_failed'
+  | 'mode_failed'
+  | 'rewind_failed';
+
+/** Лог и диагностика без текста ошибки: в нём может оказаться адрес с ключом. */
+const reportNarrationFailure = (reason: NarrationFailure, details: Record<string, string> = {}) => {
+  console.warn('Scripture narration failed', reason, details);
+  recordDiagnostic('scripture_audio_failed', { reason, ...details });
+};
 
 export type ScriptureAudioControl = {
   phase: ScriptureAudioPhase;
@@ -77,10 +89,10 @@ export function useScriptureAudio({
   // Подтвердил ли нативный плеер последний play(). Android молча игнорирует
   // play() при выключенной аудиосессии, поэтому фаза следует за плеером.
   const nativeStartedRef = useRef(false);
-  const startWatchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelStartWatchRef = useRef<(() => void) | null>(null);
   const clearStartWatch = useCallback(() => {
-    if (startWatchRef.current) clearTimeout(startWatchRef.current);
-    startWatchRef.current = null;
+    cancelStartWatchRef.current?.();
+    cancelStartWatchRef.current = null;
   }, []);
   const scriptureKey = scripture && voice !== null
     ? `${scripture.canonicalId}:${scripture.receivedAt}:${voice}`
@@ -105,19 +117,15 @@ export function useScriptureAudio({
     clearStartWatch();
     nativeStartedRef.current = false;
     player.play();
-    const check = () => {
-      startWatchRef.current = null;
-      if (nativeStartedRef.current) return;
-      const live = player.currentStatus;
-      if (live.playing) return;
-      if (live.isBuffering) {
-        startWatchRef.current = setTimeout(check, NATIVE_START_TIMEOUT_MS);
-        return;
-      }
-      console.error('Scripture narration did not start', { playbackState: live.playbackState });
-      stop('error');
-    };
-    startWatchRef.current = setTimeout(check, NATIVE_START_TIMEOUT_MS);
+    cancelStartWatchRef.current = watchNativePlaybackStart({
+      readStatus: () => player.currentStatus,
+      hasStarted: () => nativeStartedRef.current,
+      onFailed: (reason, live) => {
+        cancelStartWatchRef.current = null;
+        reportNarrationFailure(reason, { playbackState: live.playbackState ?? 'unknown' });
+        stop('error');
+      },
+    });
   }, [clearStartWatch, player, stop]);
 
   const finishClip = useCallback((clip: ScriptureAudioClip) => {
@@ -128,10 +136,7 @@ export function useScriptureAudio({
     setPhase('idle');
     onAudioBusyChange(false);
     void player.seekTo(clip.startSeconds, 0, 0).catch((error) => {
-      console.warn(
-        'Failed to rewind Scripture passage',
-        error instanceof Error ? error.message : 'unknown error',
-      );
+      reportNarrationFailure('rewind_failed', { errorKind: errorKind(error) });
       setPhase('error');
     });
   }, [clearStartWatch, onAudioBusyChange, player, releaseSession]);
@@ -148,6 +153,7 @@ export function useScriptureAudio({
     const clip = clipRef.current;
     if (phase !== 'playing' || !clip) return;
     if (status.playbackState === 'error') {
+      reportNarrationFailure('player_error');
       stop('error');
       return;
     }
@@ -230,7 +236,7 @@ export function useScriptureAudio({
             releaseSession(lease);
             return;
           }
-          console.warn('Failed to restore Scripture audio mode', error);
+          reportNarrationFailure('mode_failed', { errorKind: errorKind(error) });
           setPhase('error');
           onAudioBusyChange(false);
           releaseSession(lease);
@@ -285,10 +291,11 @@ export function useScriptureAudio({
           releaseSession(lease);
           return;
         }
-        console.warn(
-          'Failed to play Scripture passage',
-          error instanceof Error ? error.message : 'unknown error',
-        );
+        reportNarrationFailure('play_failed', {
+          errorKind: errorKind(error),
+          // Коды клиента (not_configured, invalid_response…) не содержат данных.
+          ...(error instanceof Error && /^[a-z_]+$/.test(error.message) ? { code: error.message } : {}),
+        });
         setPhase('error');
         onAudioBusyChange(false);
         releaseSession(lease);

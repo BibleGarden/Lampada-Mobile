@@ -54,6 +54,7 @@ import { audioModeCoordinator } from '../lib/audioSession';
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
 import QuestionHeader from './QuestionHeader';
@@ -878,10 +879,36 @@ function AnswerSheet({
             observeRelease(draftPlaybackOperation.complete(generation));
             setPlayingId(null);
             setPausedId(null);
-            if (status.error) setAudioError('components.answers.playbackFailed');
+            if (status.error) {
+              console.warn('Draft recording playback failed', status.error);
+              recordDiagnostic('recording_playback_failed', { place: 'answer', reason: 'player_error' });
+              setAudioError('components.answers.playbackFailed');
+            }
             onAudioBusyChange?.(false);
           });
-          draftPlaybackOperation.attachStatus(generation, subscription);
+          // Android молча игнорирует play() при выключенной аудиосессии: черновик
+          // не должен остаться «играющим». Таймер снимается вместе со слушателем
+          // при любой отмене, в том числе при unmount (ADR-0036).
+          const cancelStartWatch = watchNativePlaybackStart({
+            readStatus: () => player.currentStatus,
+            onFailed: (reason, status) => {
+              if (!nativeAudioMountedRef.current || !draftPlaybackOperation.isCurrent(generation)) return;
+              console.warn('Draft recording did not start', reason, status.playbackState);
+              recordDiagnostic('recording_playback_failed', { place: 'answer', reason });
+              cancelDraftPlayback();
+              player.pause();
+              setPlayingId(null);
+              setPausedId(null);
+              setAudioError('components.answers.playbackFailed');
+              onAudioBusyChange?.(false);
+            },
+          });
+          draftPlaybackOperation.attachStatus(generation, {
+            remove: () => {
+              cancelStartWatch();
+              subscription.remove();
+            },
+          });
         }))) {
           if (draftPlaybackOperation.isCurrent(generation)) {
             cancelDraftPlayback();
@@ -896,6 +923,7 @@ function AnswerSheet({
       .catch((error) => {
         if (!draftPlaybackOperation.isCurrent(generation)) return;
         console.warn('Failed to play audio recording', error);
+        recordDiagnostic('recording_playback_failed', { place: 'answer', reason: 'start_error', errorKind: errorKind(error) });
         cancelDraftPlayback();
         setPausedId(null);
         setAudioError('components.answers.playbackFailed');
