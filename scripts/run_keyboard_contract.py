@@ -1,5 +1,6 @@
 """Run staged native keyboard contracts. Run only on a disposable named emulator."""
 import argparse
+import os
 import re
 import subprocess
 from datetime import datetime
@@ -19,6 +20,7 @@ def main():
     if not args.device.startswith('emulator-'):
         parser.error('The matrix clears test app state; physical devices are prohibited. Use the read-only bounds checker there.')
     output = Path(args.output);output.mkdir(parents=True, exist_ok=True)
+    os.environ['MAESTRO_DRIVER_STARTUP_TIMEOUT'] = '180000'
     def command(name, argv):
         with (output / f'{name}.log').open('w') as log:
             returncode = run_forwarding_signals(argv, stdout=log, stderr=subprocess.STDOUT)
@@ -27,9 +29,14 @@ def main():
             raise RuntimeError(f'{name} failed; full log: {output / (name + ".log")}')
     def adb(*argv):
         return subprocess.check_output(['adb', '-s', args.device, *argv], text=True, timeout=30).strip()
+    def maestro(name):
+        command(name, ['node', 'scripts/android-guest-load.mjs', 'run', '--device', args.device, '--flow', name, '--',
+                       'maestro', '--device', args.device, 'test', '--no-reinstall-driver',
+                       '-e', f'KEYBOARD_MODE={args.mode}', '--test-output-dir', str(output / name),
+                       f'testing/android-e2e/{name}.yaml'])
     command('environment', ['npm', 'run', 'env:check:local'])
-    if adb('shell', 'getprop', 'sys.boot_completed') != '1':
-        raise RuntimeError('Emulator has not booted')
+    command('guest-boot', ['node', 'scripts/android-guest-load.mjs', 'boot', '--device', args.device])
+    command('maestro-driver', ['bash', 'scripts/android-maestro-driver.sh', args.device, str(output)])
     original_hardware_ime = adb('shell', 'settings', 'get', 'secure', 'show_ime_with_hard_keyboard')
     try:
         if args.mode == 'hardware':
@@ -41,8 +48,7 @@ def main():
             input_id, lower_actions, deferred = FORMS[form]
             mode = args.mode
             opening = f'android-keyboard-contract-{form}-open'
-            command(opening, ['maestro', '--device', args.device, 'test', '-e', f'KEYBOARD_MODE={mode}',
-                              '--test-output-dir', str(output / opening), f'testing/android-e2e/{opening}.yaml'])
+            maestro(opening)
             if mode == 'hardware':
                 command(f'{form}-hardware-input', ['adb', '-s', args.device, 'shell', 'input', 'text', 'Matrix_hardware'])
                 native_window = adb('shell', 'dumpsys', 'window')
@@ -67,8 +73,7 @@ def main():
                 result = subprocess.run(['adb', '-s', args.device, 'exec-out', 'screencap', '-p'], stdout=screenshot, stderr=subprocess.DEVNULL)
             if result.returncode: raise RuntimeError('Native screenshot failed')
             restoring = f'android-keyboard-contract-{form}-restore'
-            command(restoring, ['maestro', '--device', args.device, 'test', '-e', f'KEYBOARD_MODE={mode}',
-                                '--test-output-dir', str(output / restoring), f'testing/android-e2e/{restoring}.yaml'])
+            maestro(restoring)
             if mode == 'hardware' and form in ('setup', 'answer'):
                 argv = ['python3', '-m', 'scripts.keyboard_layout_bounds', '--device', args.device, '--input-id', input_id,
                         '--mode', 'hidden', '--unfocused',

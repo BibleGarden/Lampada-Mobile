@@ -1,5 +1,6 @@
 """Check retained keyboard/editor geometry during an actual Android window resize."""
 import argparse
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -14,12 +15,19 @@ def main():
     if not args.device.startswith('emulator-'):
         parser.error('The resize fixture clears app data; physical devices are prohibited')
     output = Path(args.output); output.mkdir(parents=True, exist_ok=True)
+    os.environ['MAESTRO_DRIVER_STARTUP_TIMEOUT'] = '180000'
     def command(name, argv):
         with (output / f'{name}.log').open('w') as log:
             returncode = run_forwarding_signals(argv, stdout=log, stderr=subprocess.STDOUT)
         (output / f'{name}.exit').write_text(f'{returncode}\n')
         if returncode:
             raise RuntimeError(f'{name} failed; full log: {output / (name + ".log")}')
+    def maestro(name, flow):
+        command(name, ['node', 'scripts/android-guest-load.mjs', 'run', '--device', args.device, '--flow', name, '--',
+                       'maestro', '--device', args.device, 'test', '--no-reinstall-driver', '-e', 'KEYBOARD_MODE=docked',
+                       '--test-output-dir', str(output / name), f'testing/android-e2e/{flow}.yaml'])
+    command('guest-boot', ['node', 'scripts/android-guest-load.mjs', 'boot', '--device', args.device])
+    command('maestro-driver', ['bash', 'scripts/android-maestro-driver.sh', args.device, str(output)])
     size = subprocess.check_output(['adb', '-s', args.device, 'shell', 'wm', 'size'], text=True)
     (output / 'original-display-size.log').write_text(size)
     (output / 'original-display-size.exit').write_text('0\n')
@@ -30,8 +38,7 @@ def main():
         raise RuntimeError('No native emulator display size')
     width, height = map(int, current.groups())
     changed = f'{round(width * 1.125)}x{height}'
-    command('open', ['maestro', '--device', args.device, 'test', '-e', 'KEYBOARD_MODE=docked',
-                     '--test-output-dir', str(output / 'open'), 'testing/android-e2e/android-keyboard-contract-answer-open.yaml'])
+    maestro('open', 'android-keyboard-contract-answer-open')
     try:
         command('resize', ['adb', '-s', args.device, 'shell', 'wm', 'size', changed])
         try:
@@ -50,8 +57,7 @@ def main():
     finally:
         original = 'x'.join(override.groups()) if override else 'reset'
         command('restore-window', ['adb', '-s', args.device, 'shell', 'wm', 'size', original])
-    command('save-reopen', ['maestro', '--device', args.device, 'test', '-e', 'KEYBOARD_MODE=docked',
-                            '--test-output-dir', str(output / 'save-reopen'), 'testing/android-e2e/android-keyboard-contract-answer-restore.yaml'])
+    maestro('save-reopen', 'android-keyboard-contract-answer-restore')
     print('Native resize bounds, focus, and saved text passed; original display size restored')
 
 

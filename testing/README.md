@@ -79,9 +79,9 @@ reports a busy guest.
 
 ### Readiness gate
 
-`scripts/test-android.sh`, which every Android runner uses, starts no flow on
-a busy emulator. `scripts/android-guest-load.mjs` checks the guest 1-min load
-from `/proc/loadavg`:
+Android runners (`scripts/test-android.sh` and the keyboard contract runners)
+start no flow on a busy emulator. `scripts/android-guest-load.mjs` checks the
+guest 1-min load from `/proc/loadavg`:
 
 - Once per run (`boot`), it waits for `sys.boot_completed`, which Android
   sets after the package manager is up, and for a guest uptime of at least
