@@ -1,0 +1,7 @@
+{
+  "biometryType" : 1,
+  "canEvaluate" : false,
+  "errorCode" : -7,
+  "errorDescription" : "Biometry is not enrolled.",
+  "errorDomain" : "com.apple.LocalAuthentication"
+}
