@@ -193,6 +193,7 @@ tier of its e2e runs.
 | SES-007 | A very long goal | the text does not overlap the timer and the companion panel |
 | SES-008 [ipad] | Inspect the Question / Quote switcher on an iPad | both icons scale with their labels and stay aligned in the two tabs; inspect the landscape screenshot in the ANS-033 flow |
 | SES-009 | Move Home → Setup → Session → Reflection → Home, open and close the answer and recordings sheets, then background and foreground the app | only the exposed flame, halo, music pulse and recording wave animate; hidden screens and closed sheets have no visual loop or UI polling; animations resume when exposed, the timer catches up and background music retains its deadline fade. Energy measurement in Instruments is separate |
+| SES-010 [android] | In the system light mode, open the prayer screen with 3-button and with gesture navigation; switch Question / Quote several times | the navigation bar is transparent over the dark app with light buttons, without a white scrim; the companion card's buttons and step dots stay inside the card frame, and the frame keeps a margin above the navigation bar. A visual check with screenshots: Maestro does not assert colors or frame overlap |
 
 ### Background music
 

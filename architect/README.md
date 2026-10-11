@@ -73,6 +73,13 @@ non-production origin.
 `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`:
 recordings and the journal stay in app storage and prayers are shared as text.
 
+Android draws edge-to-edge (enforced from target SDK 35). React Native picks
+the navigation bar button style and its contrast scrim from the system
+light/dark mode, while the app is always dark, so with button navigation a
+light-mode phone showed a white scrim under every screen. The
+`expo-navigation-bar` plugin sets `enforceContrast: false` and `style: light`
+in the app theme: the bar stays transparent over the app with light buttons.
+
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
 

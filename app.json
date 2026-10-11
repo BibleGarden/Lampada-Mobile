@@ -71,6 +71,13 @@
         }
       ],
       "expo-status-bar",
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false,
+          "style": "light"
+        }
+      ],
       "expo-asset",
       "expo-localization",
       [
