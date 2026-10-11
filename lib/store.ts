@@ -749,11 +749,26 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         ? s.scrFav.filter((id) => id !== current.canonicalId)
         : [...s.scrFav, current.canonicalId],
     });
-    if (has) {
-      void scriptureRepository.removeFavoriteByCanonicalId(current.canonicalId);
-    } else {
-      void scriptureRepository.addFavoriteScripture(current, s.sessionId);
-    }
+    const write = has
+      ? scriptureRepository.removeFavoriteByCanonicalId(current.canonicalId)
+      : scriptureRepository.addFavoriteScripture(current, s.sessionId);
+    void write.catch((error: unknown) => {
+      console.error('Failed to save a favourite passage', db.errorKind(error));
+      db.recordDiagnostic('favorite_save_failed', {
+        operation: has ? 'remove' : 'add',
+        errorKind: db.errorKind(error),
+      });
+      // Сердце возвращается к тому, что лежит в базе, если его не успели
+      // переключить снова.
+      set((state) => {
+        if (state.scrFav.includes(current.canonicalId) === has) return state;
+        return {
+          scrFav: has
+            ? [...state.scrFav, current.canonicalId]
+            : state.scrFav.filter((id) => id !== current.canonicalId),
+        };
+      });
+    });
   },
 
   retryScripture: async () => {
@@ -947,7 +962,40 @@ async function confirmScriptureSelection(sessionId: number, token: number, foreg
   return true;
 }
 
-async function loadFirstScripture(sessionId: number, token: number, foreground = true) {
+/**
+ * Непредвиденный сбой (например, SQLite при записи истории показов) не должен
+ * оставить блок цитат в вечной загрузке: блок показывает ошибку с повтором.
+ * Скрытая попытка на входе, как и при сбое выбора Библии, ошибку не показывает:
+ * первое открытие блока повторит загрузку.
+ */
+async function guardScriptureLoad(
+  sessionId: number,
+  token: number,
+  step: 'first' | 'next',
+  foreground: boolean,
+  load: () => Promise<void>,
+) {
+  try {
+    await load();
+  } catch (error) {
+    console.error('Failed to load Scripture', step, db.errorKind(error));
+    db.recordDiagnostic('scripture_load_failed', { step, errorKind: db.errorKind(error) });
+    if (!sessionIsCurrent(sessionId, token)) return;
+    useSession.setState(
+      foreground || useSession.getState().dockMode === 'scripture'
+        ? { scrStatus: 'error', scrError: 'unavailable' }
+        : { scrStatus: 'idle', scrError: null },
+    );
+  }
+}
+
+function loadFirstScripture(sessionId: number, token: number, foreground = true) {
+  return guardScriptureLoad(sessionId, token, 'first', foreground, () =>
+    runFirstScriptureLoad(sessionId, token, foreground),
+  );
+}
+
+async function runFirstScriptureLoad(sessionId: number, token: number, foreground: boolean) {
   if (!sessionIsCurrent(sessionId, token)) return;
   const controller = scriptureAbortController;
   if (!controller) return;
@@ -961,7 +1009,7 @@ async function loadFirstScripture(sessionId: number, token: number, foreground =
   if (!sessionIsCurrent(sessionId, token)) return;
   if (!result.ok && !foreground) {
     if (useSession.getState().dockMode === 'scripture') {
-      await loadFirstScripture(sessionId, token);
+      await runFirstScriptureLoad(sessionId, token, true);
     } else {
       useSession.setState({ scrStatus: 'idle', scrError: null });
     }
@@ -990,10 +1038,21 @@ function startScripturePrefetch(sessionId: number, token: number) {
     // Successful results stay in the one-ahead slot until the user asks for them.
     // Failed background requests are discarded silently; an explicit Next retries.
     if (!result.ok) scripturePrefetch = null;
+  }, (error: unknown) => {
+    // Явный «Дальше», ждущий этот промис, покажет ошибку сам; здесь только след.
+    console.error('Failed to prefetch Scripture', db.errorKind(error));
+    db.recordDiagnostic('scripture_load_failed', { step: 'prefetch', errorKind: db.errorKind(error) });
+    if (scripturePrefetch === slot) scripturePrefetch = null;
   });
 }
 
-async function showNextScripture(sessionId: number, token: number) {
+function showNextScripture(sessionId: number, token: number) {
+  return guardScriptureLoad(sessionId, token, 'next', true, () =>
+    runNextScriptureLoad(sessionId, token),
+  );
+}
+
+async function runNextScriptureLoad(sessionId: number, token: number) {
   if (!sessionIsCurrent(sessionId, token)) return;
   const controller = scriptureAbortController;
   if (!controller) return;

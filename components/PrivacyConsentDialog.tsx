@@ -39,8 +39,11 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
   const insets = useSafeAreaInsets();
   const text = consentCopy(t)[purpose];
   const [submitting, setSubmitting] = useState(false);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    if (visible) setSubmitting(false);
+    if (!visible) return;
+    setSubmitting(false);
+    setFailed(false);
   }, [visible]);
   useEffect(() => {
     if (!visible) return undefined;
@@ -52,9 +55,12 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
   const decide = async (decision: 'allowed' | 'denied') => {
     if (submitting) return;
     setSubmitting(true);
+    setFailed(false);
     try {
       await onDecision(decision);
     } catch {
+      // Лог и диагностику пишет сохранение решения (settings.setConsent).
+      setFailed(true);
       setSubmitting(false);
     }
   };
@@ -71,6 +77,11 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
           <Text style={styles.title}>{text.title}</Text>
           <Text style={styles.body}>{text.body}</Text>
           <Text style={styles.note}>{t('components.reader.decisionNote')}</Text>
+          {failed ? (
+            <Text accessibilityRole="alert" style={styles.error} testID={`privacy-consent-${purpose}-error`}>
+              {t('components.reader.consentSaveFailed')}
+            </Text>
+          ) : null}
           <View style={styles.actions}>
             <Pressable
               accessibilityRole="button"
@@ -142,6 +153,13 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: sc(10),
     lineHeight: sc(15),
+  },
+  error: {
+    marginTop: sc(12),
+    color: 'rgba(240,170,120,.92)',
+    fontFamily: fonts.sans,
+    fontSize: sc(11),
+    lineHeight: sc(16),
   },
   actions: { flexDirection: 'row', gap: sc(10), marginTop: sc(20) },
   action: {

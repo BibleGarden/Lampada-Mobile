@@ -120,6 +120,7 @@ function ConsentSetting({
 }) {
   const styles = useStyles(stylesFactory);
   const { t } = useI18n();
+  const [failed, setFailed] = useState(false);
   return (
     <View style={styles.consentSetting} testID={`privacy-setting-${purpose}`}>
       <Text style={styles.rowTitle}>{title}</Text>
@@ -138,7 +139,9 @@ function ConsentSetting({
               testID={`privacy-setting-${purpose}-${option.decision}`}
               onPress={() => {
                 void Haptics.selectionAsync();
-                void onChange(purpose, option.decision);
+                setFailed(false);
+                // Лог и диагностику пишет settings.setConsent; выбор там же откатывается.
+                void onChange(purpose, option.decision).catch(() => setFailed(true));
               }}
               style={({ pressed }) => [
                 styles.consentAction,
@@ -155,6 +158,15 @@ function ConsentSetting({
       </View>
       {decision === 'undecided' ? (
         <Text style={styles.consentUndecided}>{t('settings.undecided')}</Text>
+      ) : null}
+      {failed ? (
+        <Text
+          accessibilityRole="alert"
+          style={[styles.settingHint, styles.reminderWarning]}
+          testID={`privacy-setting-${purpose}-error`}
+        >
+          {t('settings.consentSaveError')}
+        </Text>
       ) : null}
     </View>
   );
@@ -1104,7 +1116,11 @@ export default function Settings() {
                       setLanguageSaveError(false);
                       setInterfaceLanguageOpen(false);
                     })
-                    .catch(() => setLanguageSaveError(true));
+                    .catch((error: unknown) => {
+                      console.error('Failed to save the interface language', errorKind(error));
+                      recordDiagnostic('settings_save_failed', { setting: 'ui_language', errorKind: errorKind(error) });
+                      setLanguageSaveError(true);
+                    });
                 }}
               />
             ))}

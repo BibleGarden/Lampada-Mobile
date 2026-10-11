@@ -62,9 +62,13 @@ export default function Journal() {
   const [entries, setEntries] = useState<db.JournalEntry[]>([]);
   const [query, setQuery] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // Повтор чтения дневника после сбоя: смена значения перезапускает загрузку.
+  const [loadAttempt, setLoadAttempt] = useState(0);
   // раскрытая молитва и её содержимое (грузится по требованию)
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<db.JournalDetail | null>(null);
+  const [detailFailed, setDetailFailed] = useState(false);
   // цитаты раскрытой молитвы и та, что читают во всплывающем окне
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
   const [openQuote, setOpenQuote] = useState<FavoriteScripture | null>(null);
@@ -86,18 +90,30 @@ export default function Journal() {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      const timer = setTimeout(async () => {
-        const nextEntries = await db.getJournal(query);
-        if (active) {
-          setEntries(nextEntries);
-          setLoaded(true);
-        }
+      const timer = setTimeout(() => {
+        db.getJournal(query).then(
+          (nextEntries) => {
+            if (!active) return;
+            setEntries(nextEntries);
+            setLoadFailed(false);
+            setLoaded(true);
+          },
+          (error: unknown) => {
+            console.error('Failed to read the journal', db.errorKind(error));
+            db.recordDiagnostic('journal_failed', { action: 'list', errorKind: db.errorKind(error) });
+            if (!active) return;
+            // Устаревший список нельзя выдавать за результат нового запроса.
+            setEntries([]);
+            setLoadFailed(true);
+            setLoaded(true);
+          },
+        );
       }, 150);
       return () => {
         active = false;
         clearTimeout(timer);
       };
-    }, [query]),
+    }, [query, loadAttempt]),
   );
 
   useEffect(
@@ -160,14 +176,21 @@ export default function Journal() {
     }
     setOpenId(id);
     setDetail(null);
+    setDetailFailed(false);
     setFavorites([]);
-    const [nextDetail, nextFavorites] = await Promise.all([
-      db.getJournalDetail(id),
-      getFavoriteScripturesBySession(id),
-    ]);
-    if (detailRequest.current === request) {
-      setDetail(nextDetail);
-      setFavorites(nextFavorites);
+    try {
+      const [nextDetail, nextFavorites] = await Promise.all([
+        db.getJournalDetail(id),
+        getFavoriteScripturesBySession(id),
+      ]);
+      if (detailRequest.current === request) {
+        setDetail(nextDetail);
+        setFavorites(nextFavorites);
+      }
+    } catch (error) {
+      console.error('Failed to open a journal prayer', db.errorKind(error));
+      db.recordDiagnostic('journal_failed', { action: 'detail', errorKind: db.errorKind(error) });
+      if (detailRequest.current === request) setDetailFailed(true);
     }
   }, [openId, playingUri, player]);
 
@@ -310,13 +333,20 @@ export default function Journal() {
       for (const controller of transcriptionControllers.current.values()) controller.abort();
       transcriptionControllers.current.clear();
       setTranscriptionStates({});
-      await db.deleteSession(id);
+      try {
+        await db.deleteSession(id);
+      } catch (error) {
+        console.error('Failed to delete a journal prayer', db.errorKind(error));
+        db.recordDiagnostic('journal_failed', { action: 'delete', errorKind: db.errorKind(error) });
+        Alert.alert(t('screens.journal.deleteFailed'), t('screens.retryMessage'));
+        return;
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (openId === id) {
         setOpenId(null);
         setDetail(null);
       }
-      setEntries(await db.getJournal(query));
+      setEntries((current) => current.filter((entry) => entry.id !== id));
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -369,7 +399,11 @@ export default function Journal() {
 
         {open && (
           <Animated.View entering={FadeIn.duration(250)}>
-            {detail === null ? null : detail.answers.length === 0
+            {detailFailed ? (
+              <Text style={styles.emptyDetail} accessibilityRole="alert" testID="journal-detail-error">
+                {t('screens.journal.detailFailed')}
+              </Text>
+            ) : detail === null ? null : detail.answers.length === 0
               && detail.recordings.length === 0 && favorites.length === 0 ? (
               <Text style={styles.emptyDetail}>{t('screens.journal.noNotes')}</Text>
             ) : (
@@ -530,7 +564,15 @@ export default function Journal() {
             gap: sc(10),
           }}
           ListEmptyComponent={
-            loaded ? (
+            loadFailed ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setLoadAttempt((attempt) => attempt + 1)}
+                testID="journal-load-error"
+              >
+                <Text style={styles.empty}>{t('screens.journal.loadFailed')}</Text>
+              </Pressable>
+            ) : loaded ? (
               <Text style={styles.empty} testID="journal-empty-state">
                 {query.trim()
                   ? t('screens.journal.noResults')

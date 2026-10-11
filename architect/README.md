@@ -733,8 +733,13 @@ transcribed, and writes `recording_audio_missing` to `lampada-diagnostics.log`.
 Play checks the file again, and a player load error, or a player that has not
 started two seconds after `play()`, ends the playing state with a visible
 message and a `recording_playback_failed` record (`place`, `reason`); the same
-applies to drafts in the answer sheet.
-Deleting a session deletes its answers and recordings.
+applies to drafts in the answer sheet. A journal or saved-passages read that
+fails shows a tappable error instead of an empty list (`journal_failed`,
+`favorites_load_failed`); a failed favourite write puts the heart back
+(`favorite_save_failed`); a local failure while choosing a passage ends in the
+block's error with Retry (`scripture_load_failed`) rather than an endless
+loading state; a failed privacy decision save keeps the dialog open with an
+error (`consent_save_failed`). Deleting a session deletes its answers and recordings.
 
 A session is shown in the journal when it has saved time, a takeaway, a non-empty
 answer or a recording. This one predicate in `lib/db.ts` both filters the journal

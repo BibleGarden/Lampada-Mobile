@@ -28,7 +28,13 @@ export function recordDiagnostic(
     | 'scripture_selection_failed'
     | 'scripture_preferences_save_failed'
     | 'transcription_failed'
-    | 'scripture_audio_failed',
+    | 'scripture_audio_failed'
+    | 'scripture_load_failed'
+    | 'favorite_save_failed'
+    | 'favorites_load_failed'
+    | 'journal_failed'
+    | 'consent_save_failed'
+    | 'settings_save_failed',
   details: Record<string, string | number>,
 ) {
   try {

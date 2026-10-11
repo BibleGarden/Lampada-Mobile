@@ -43,6 +43,7 @@ export const componentMessages = {
     "components.reader.audioTitle": "Send this recording for transcription?",
     "components.reader.audioBody": "To turn your recording into text, we send it for transcription to Whisper on our servers or Google Gemini (through Google's paid API). We don't store the recording on our server.",
     "components.reader.decisionNote": "You can change this decision later in settings.",
+    "components.reader.consentSaveFailed": "Could not save the decision. Please try again.",
     "components.reader.deny": "Do not send",
     "components.reader.allow": "Allow"
   },
@@ -90,6 +91,7 @@ export const componentMessages = {
     "components.reader.audioTitle": "Отправить запись на расшифровку?",
     "components.reader.audioBody": "Чтобы превратить запись в текст, мы отправим её на расшифровку — в Whisper на наших серверах или в Google Gemini (платный API Google). Саму запись мы у себя не храним.",
     "components.reader.decisionNote": "Решение можно позже изменить в настройках.",
+    "components.reader.consentSaveFailed": "Не удалось сохранить решение. Попробуй ещё раз.",
     "components.reader.deny": "Не передавать",
     "components.reader.allow": "Разрешить"
   },
@@ -137,6 +139,7 @@ export const componentMessages = {
     "components.reader.audioTitle": "Надіслати запис для розшифрування?",
     "components.reader.audioBody": "Щоб перетворити запис на текст, ми надішлемо його на розшифрування до Whisper на наших серверах або до Google Gemini (через платний API Google). Сам запис ми в себе не зберігаємо.",
     "components.reader.decisionNote": "Рішення можна змінити пізніше в налаштуваннях.",
+    "components.reader.consentSaveFailed": "Не вдалося зберегти рішення. Спробуй ще раз.",
     "components.reader.deny": "Не передавати",
     "components.reader.allow": "Дозволити"
   }

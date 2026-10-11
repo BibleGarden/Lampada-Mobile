@@ -9,6 +9,7 @@ import ScripturePassageText from '../components/ScripturePassageText';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft } from '../components/icons';
 import { getFavoriteScriptures } from '../lib/scriptureRepository';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   buildScriptureCompactText,
   favoriteToScriptureDisplay,
@@ -95,9 +96,22 @@ export default function Favorites() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(() => {
-    void getFavoriteScriptures().then(setFavorites);
+    void getFavoriteScriptures().then(
+      (next) => {
+        setFavorites(next);
+        setLoadFailed(false);
+      },
+      (error: unknown) => {
+        console.error('Failed to read saved passages', errorKind(error));
+        recordDiagnostic('favorites_load_failed', { errorKind: errorKind(error) });
+        // Пустой список выглядел бы как «ничего не сохранено».
+        setFavorites([]);
+        setLoadFailed(true);
+      },
+    );
   }, []);
   useEffect(load, [load]);
   useFocusEffect(load);
@@ -124,7 +138,11 @@ export default function Favorites() {
             gap: sc(12),
           }}
         >
-          {favorites.length === 0 ? (
+          {loadFailed ? (
+            <Pressable accessibilityRole="button" onPress={load} testID="favorites-load-error">
+              <Text style={styles.empty}>{t('screens.favorites.loadFailed')}</Text>
+            </Pressable>
+          ) : favorites.length === 0 ? (
             <Text style={styles.empty}>{t('screens.favorites.empty')}</Text>
           ) : favorites.map((favorite) => (
             <FavoriteCard key={favorite.id} favorite={favorite} />

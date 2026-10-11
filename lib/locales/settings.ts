@@ -74,6 +74,7 @@ export const settingMessages = {
     "settings.addScheduleTime": "Add a time to schedule {number}",
     "settings.interfaceLanguage": "Interface language",
     "settings.languageSaveError": "Could not save the language. Please try again.",
+    "settings.consentSaveError": "Could not save the decision. Please try again.",
     "settings.back": "Back"
   },
   "ru": {
@@ -151,6 +152,7 @@ export const settingMessages = {
     "settings.addScheduleTime": "Добавить время в расписание {number}",
     "settings.interfaceLanguage": "Язык интерфейса",
     "settings.languageSaveError": "Не удалось сохранить язык. Попробуйте ещё раз.",
+    "settings.consentSaveError": "Не удалось сохранить решение. Попробуйте ещё раз.",
     "settings.back": "Назад"
   },
   "uk": {
@@ -228,6 +230,7 @@ export const settingMessages = {
     "settings.addScheduleTime": "Додати час до розкладу {number}",
     "settings.interfaceLanguage": "Мова інтерфейсу",
     "settings.languageSaveError": "Не вдалося зберегти мову. Спробуйте ще раз.",
+    "settings.consentSaveError": "Не вдалося зберегти рішення. Спробуйте ще раз.",
     "settings.back": "Назад"
   }
 } as const;

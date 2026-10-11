@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getLocales } from 'expo-localization';
-import { getDb, recordDiagnostic } from './db';
+import { errorKind, getDb, recordDiagnostic } from './db';
 import { initialUiLanguage, isUiLanguage, type UiLanguage } from './uiLanguage';
 import {
   defaultPreferencesFromCatalog,
@@ -203,6 +203,8 @@ export const useSettings = create<SettingsState>((set) => ({
     try {
       await consentSavePromise;
     } catch (error) {
+      console.error('Failed to save a privacy decision', purpose, errorKind(error));
+      recordDiagnostic('consent_save_failed', { purpose, errorKind: errorKind(error) });
       if (useSettings.getState()[stateKey] === decision) {
         set({ [stateKey]: previousDecision } as Pick<SettingsState, typeof stateKey>);
       }
