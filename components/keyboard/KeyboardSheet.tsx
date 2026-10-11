@@ -64,7 +64,10 @@ const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, fo
   // пересоздаём при смене окна, а повёрнутую открытой — сразу после закрытия
   // (useSheetReflow). Открытой шторка считается с начала анимации открытия.
   const { mountKey, open: present, onIndexChange } = useSheetReflow();
-  const context = useMemo(() => ({ footer, hidden: footerHidden, footerStyle, bodyHeight }), [footer, footerHidden, footerStyle, bodyHeight]);
+  // Кнопки едут вместе со шторкой с начала анимации открытия, а не появляются
+  // после того, как она встанет (на iPad с клавиатурой это 1–2 секунды).
+  const hidden = footerHidden || !present;
+  const context = useMemo(() => ({ footer, hidden, footerStyle, bodyHeight }), [footer, hidden, footerStyle, bodyHeight]);
   return (
     <View
       style={[StyleSheet.absoluteFill, !present && styles.hidden]}

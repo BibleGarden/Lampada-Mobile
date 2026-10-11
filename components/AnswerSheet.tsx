@@ -1269,7 +1269,7 @@ function AnswerSheet({
       topInset={insets.top}
       backgroundStyle={styles.sheetBg}
       footer={actions}
-      footerHidden={!open || recordingsSheetOpen}
+      footerHidden={recordingsSheetOpen}
       footerStyle={landscapeTablet ? styles.landscapeFooter : undefined}
       onAccessibilityEscape={requestClose}
     >
