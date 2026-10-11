@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { colors, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 
 /** Подпись капсом моноширинным — фирменный элемент прототипа */
@@ -149,7 +149,14 @@ export function IconButton({
   );
 }
 
-/** Появление карточки снизу — аналог qIn из прототипа */
+/**
+ * Появление содержимого снизу — аналог qIn из прототипа: прозрачность и
+ * подъём на 25 pt за 350 мс при монтировании; новое появление — новый `key`.
+ * Анимированным стилем, а не layout-анимацией `entering`: на Android
+ * Reanimated теряет кадры `entering`, пришедшие до монтирования нативного
+ * вида, и восстанавливает только прозрачность — содержимое оставалось
+ * сдвинутым вниз и вылезало за рамку карточки.
+ */
 export function CardIn({
   children,
   style,
@@ -157,12 +164,15 @@ export function CardIn({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const styles = useStyles(stylesFactory);
-  return (
-    <Animated.View entering={FadeInDown.duration(350)} style={style}>
-      {children}
-    </Animated.View>
-  );
+  const progress = useSharedValue(0);
+  React.useEffect(() => {
+    progress.value = withTiming(1, { duration: 350 });
+  }, [progress]);
+  const enter = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ translateY: (1 - progress.value) * 25 }],
+  }));
+  return <Animated.View style={[style, enter]}>{children}</Animated.View>;
 }
 
 /**

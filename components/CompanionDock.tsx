@@ -9,7 +9,6 @@ import {
   View,
   type LayoutChangeEvent,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { BookOpen, CircleQuestionMark } from 'lucide-react-native';
 import { useShallow } from 'zustand/react/shallow';
@@ -18,7 +17,7 @@ import { useSettings } from '../lib/settings';
 import { buildScriptureCompactText } from '../lib/scripture';
 import { getContentReportTarget, type ContentReportTarget } from '../lib/contentReportTarget';
 import { colors, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
-import { WindowDots } from './ui';
+import { CardIn, WindowDots } from './ui';
 import {
   Check,
   ChevronLeft,
@@ -211,7 +210,7 @@ export default function CompanionDock({
       </View>
 
       {isQ ? (
-        <Animated.View key={`q-${s.qIndex}`} entering={FadeInDown.duration(350)} style={styles.body}>
+        <CardIn key={`q-${s.qIndex}`} style={styles.body}>
           <View style={styles.textWrap} onLayout={onTextAreaLayout}>
             {s.generating ? (
               <ActivityIndicator accessibilityLabel={t('components.reader.preparing')} color={colors.goldSoft} />
@@ -283,11 +282,10 @@ export default function CompanionDock({
               accessibilityLabel={t('components.reader.question')}
             />
           </View>
-        </Animated.View>
+        </CardIn>
       ) : (
-        <Animated.View
+        <CardIn
           key={`scr-${s.scrIndex}-${curScripture?.canonicalId ?? s.scrStatus}`}
-          entering={FadeInDown.duration(350)}
           style={styles.body}
         >
           <View style={styles.textWrap} onLayout={onTextAreaLayout}>
@@ -469,7 +467,7 @@ export default function CompanionDock({
               accessibilityLabel={t('components.reader.quote')}
             />
           </View>
-        </Animated.View>
+        </CardIn>
       )}
       {reportTarget && (
         <ContentReportDialog

@@ -58,6 +58,11 @@ updates took frames from the text input, and typing showed up in batches.
   main thread can still make the system's 2 s splash hand-over time out; the
   residual risk and the rejected native signal module are in ADR-0040.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
+  Content that slides in from below on mount (`CardIn` in `components/ui.tsx`)
+  uses an animated style, not an `entering` layout animation: on Android
+  Reanimated drops `entering` frames that arrive before the native view is
+  mounted and restores only the opacity, so the companion card's body stayed
+  shifted down past the card frame.
 - A custom native build: Expo Go does not support all the native modules in use.
 
 The Android build plugin permits cleartext traffic only when the build
