@@ -584,6 +584,17 @@ export default function Settings() {
   };
 
   const toggleBiometrics = async (next: boolean) => {
+    try {
+      await applyBiometrics(next);
+    } catch (error) {
+      // Тумблер остаётся в прежнем положении: состояние меняется только после
+      // записи. Диагностику сбоя SecureStore пишет lib/lock.
+      console.error('Failed to change biometrics', errorKind(error));
+      Alert.alert(t('settings.continueError'), t('screens.retryMessage'));
+    }
+  };
+
+  const applyBiometrics = async (next: boolean) => {
     if (!next) {
       await setBiometrics(false);
       return;

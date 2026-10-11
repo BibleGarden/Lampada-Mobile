@@ -36,7 +36,11 @@ export function recordDiagnostic(
     | 'consent_save_failed'
     | 'reminders_failed'
     | 'reminder_schedule_invalid'
-    | 'settings_save_failed',
+    | 'settings_save_failed'
+    | 'settings_load_failed'
+    | 'secure_store_failed'
+    | 'biometry_check_failed'
+    | 'wipe_incomplete',
   details: Record<string, string | number>,
 ) {
   try {

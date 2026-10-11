@@ -645,7 +645,10 @@ PIN length; the length is needed by the unlock screen to show the right number o
 dots and to validate the input on the last digit. The keys are written with
 `WHEN_UNLOCKED_THIS_DEVICE_ONLY` and excluded from Android Auto Backup. An
 incomplete record and a storage read error are treated as protection being off: a
-SecureStore failure must not cut the person off from their own data.
+SecureStore failure must not cut the person off from their own data. Every
+SecureStore failure writes a `secure_store_failed` record with the operation and
+the key name; a failed write or delete is not swallowed, so the lock state never
+changes in memory without the keys changing on the device.
 
 The gate is `components/LockGate.tsx`, a conditional overlay above the `Stack` in
 the root `app/_layout.tsx` rather than a separate route: an overlay cannot be
@@ -687,6 +690,9 @@ your PIN?" link performs a full wipe: `wipeLocalData` in `lib/db.ts` deletes the
 whole database file through `deleteDatabaseAsync` and removes the audio files of
 the recordings, while `wipeEverything` in `lib/lock.ts` additionally cancels the
 scheduled reminders, clears the SecureStore keys and resets the in-memory stores.
+If the reminders cannot be cancelled, the wipe still completes (it is the only
+way past a forgotten PIN), then writes `wipe_incomplete` and tells the person to
+turn off the app's notifications in the system settings.
 The schema is recreated by the ordinary migration on the very next access to the
 database. Encrypting the data on disk is out of scope: the lock protects against
 someone else's eyes in an unlocked phone, not against reading the files around
