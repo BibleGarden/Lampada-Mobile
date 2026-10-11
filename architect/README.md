@@ -162,7 +162,9 @@ upgrading it requires rebuilding the native app.
 | `store/` | App Store screenshots and preview videos |
 
 The recordings sheet places its question, list and footer within the same
-`column()` measure and gutter. A favourite card builds its collapsed preview
+`column()` measure and gutter. The scrollable list reserves `sc(24)` below its
+last card, even when a wrapped question leaves less room above the actions.
+A favourite card builds its collapsed preview
 from the first four measured lines, trims trailing whitespace and punctuation,
 and appends one ellipsis. The preview is measured again to leave room for that
 mark. The saved passage and expanded text stay intact; the collapsed accessibility
@@ -175,7 +177,11 @@ Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
 font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032).
 Screen headers and content use the same `screenGutter()` inside `column()`.
-Settings sheets are centered and capped at `sc(294)` in both orientations,
+The session card takes the free height of roomy windows for more complete
+passage lines; compact windows keep the text clear of the Question/Quote switch.
+Settings rows keep complete values by wrapping either text column, and the
+settings header has a hairline at its scroll boundary. All lower sheets are
+centered and capped by `sheetMaxWidth()` (`sc(294)`) in both orientations,
 so their width scales with their controls. The Scripture reader uses the same
 `column()` and gutter for its header and text. Scrollable reader and journal
 content carry the bottom safe area in their content padding, so the final line
@@ -253,6 +259,7 @@ the scenario is finished through explicit interface actions.
 
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
+Its back header follows the shared content column and gutter in either layout.
 In the vertical layout the threshold measures the briefing and the free height
 under its header and takes the first density in `lib/thresholdLayout.ts` at
 which all briefing items fit above the hold-to-start control: the original
@@ -386,8 +393,9 @@ Screen → useSession → lib/db.ts → SQLite / local audio files
 The AI is not required to go through a prayer. When there is no configuration, or
 on a network error, a timeout or a malformed response, `lib/ai.ts` returns a
 question from the local pool for a user-requested generation. Background generation
-returns no content on failure and does not substitute a local question. Later
-questions use a buffer one question ahead;
+returns no content on failure and does not substitute a local question. Questions
+with JSON or Markdown debris are rejected, logged without response content and
+handled by the same fallback path. Later questions use a buffer one question ahead;
 stale asynchronous results are cut off by keys and tokens. Local-pool questions
 carry a visible backup-question label in both the session and reflection screens.
 
