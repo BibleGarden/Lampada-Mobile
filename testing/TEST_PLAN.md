@@ -262,6 +262,7 @@ tier of its e2e runs.
 | ANS-046 | Play a finished file with a fractional duration, such as 39.3 seconds | its card shows the nearest whole second (0:39 in this example); upload validation still compares the exact fractional file duration |
 | ANS-047 | Leave the session while the recording-limit cue is pending or playing | the answer sheet unmounts without calling an already released native player or recorder; cue listeners and audio-session leases are released and the app does not crash |
 | ANS-048 | On Android, type an answer and switch the input method to another one and back within a fraction of a second (Maestro's `inputText` does this in `android-stage04-answers-text.yaml`), including an input method taller than the sheet | the answer field keeps focus and the typed text, the sheet ends at full height above the docked keyboard, and Save, Cancel and the microphone stay in the accessibility tree; when the input method ends hidden, no keyboard space stays reserved under the footer or in journal and preparation forms; the snap policy, the reservation and the footer position are unit-tested in `keyboardGeometry.test.mjs` |
+| ANS-049 | Open the recordings sheet from an answer, then start a recording | the question and its "Question for reflection" label stay at the top of the recordings sheet, above the list and above the recording overlay |
 
 ### The AI and the companion
 
