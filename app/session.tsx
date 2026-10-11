@@ -73,6 +73,11 @@ const MUSIC_CROSSFADE_LEAD_SECONDS = 2.2;
 // router.replace (плееры живут, пока смонтирован экран), поэтому оно короче.
 const MUSIC_BACKGROUND_FADE_OUT_MS = 3000;
 const MUSIC_FINISH_FADE_OUT_MS = 800;
+const SESSION_HEADER_MARGIN_CORRECTION = 9;
+const SESSION_GOAL_MARGIN_CORRECTION = 3;
+const SESSION_DEFAULT_GAP = 22;
+const SESSION_ROOMY_GAP = 14;
+const SESSION_ROOMY_CARD_MIN_HEIGHT = 230;
 type MusicPlayerSlot = 0 | 1;
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
@@ -108,11 +113,19 @@ function SessionScreen() {
   // Считаем место при исходных зазорах, независимо от выбранной плотности:
   // иначе уменьшение gap само переключало бы правило обратно и вперёд.
   // Высоты onLayout не включают отрицательные поля шапки и цели.
-  const freeCardHeight = sessionLayout.frame - insets.top - sc(2)
-    - bottomActionPadding(insets.bottom) - sessionLayout.header - ringSize
-    - sessionLayout.goal - sc(22) * 3 + sc(9) + sc(3);
-  const roomyCard = sessionLayout.header > 0 && sessionLayout.goal > 0
-    && freeCardHeight >= sc(230);
+  const reservedCardHeight = insets.top + sc(2) + bottomActionPadding(insets.bottom)
+    + ringSize + sc(SESSION_DEFAULT_GAP) * 3
+    - sc(SESSION_HEADER_MARGIN_CORRECTION) - sc(SESSION_GOAL_MARGIN_CORRECTION);
+  const freeCardHeight = sessionLayout.frame - reservedCardHeight
+    - sessionLayout.header - sessionLayout.goal;
+  const densityMeasured = sessionLayout.frame > 0 && sessionLayout.header > 0
+    && sessionLayout.goal > 0;
+  const roomyCard = densityMeasured && freeCardHeight >= sc(SESSION_ROOMY_CARD_MIN_HEIGHT);
+  // Даже без шапки и цели свободного места не может быть больше этой границы.
+  // На заведомо тесном окне карточку показываем сразу; иначе первый замер
+  // выбирает плотность до её появления в общем FadeIn экрана.
+  const cardReady = densityMeasured
+    || height - reservedCardHeight < sc(SESSION_ROOMY_CARD_MIN_HEIGHT);
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [readerOpen, setReaderOpen] = useState(false);
@@ -723,7 +736,11 @@ function SessionScreen() {
             </Text>
           </View>
 
-          <View style={styles.dockWrap}>
+          <View
+            style={[styles.dockWrap, !cardReady && styles.dockUnmeasured]}
+            pointerEvents={cardReady ? 'auto' : 'none'}
+            {...screenReaderHiddenProps(!cardReady)}
+          >
             <CompanionDock
               onOpenAnswer={() => openAnswerRef.current?.()}
               onOpenReader={() => {
@@ -959,7 +976,7 @@ const stylesFactory = () => StyleSheet.create({
     // Оптическая поправка к общему gap: зазор до кольца читается от строки
     // «Молитва», а она сидит по центру ряда — до низа кнопок ещё половина их
     // высоты, и геометрически равный отступ выглядит заметно больше.
-    marginBottom: -sc(9),
+    marginBottom: -sc(SESSION_HEADER_MARGIN_CORRECTION),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -984,9 +1001,9 @@ const stylesFactory = () => StyleSheet.create({
     // ограничена, и space-between раздаёт остаток поровну между теми же
     // стыками: лишняя высота становится воздухом, а не пустой карточкой.
     justifyContent: 'space-between',
-    gap: sc(22),
+    gap: sc(SESSION_DEFAULT_GAP),
   },
-  sessionContentRoomy: { gap: sc(14) },
+  sessionContentRoomy: { gap: sc(SESSION_ROOMY_GAP) },
   timerWrap: {
     alignSelf: 'center',
   },
@@ -1033,7 +1050,7 @@ const stylesFactory = () => StyleSheet.create({
     paddingHorizontal: sc(12),
     alignItems: 'center',
     // Та же поправка снизу: нижний leading строки цели съедает часть зазора.
-    marginBottom: -sc(3),
+    marginBottom: -sc(SESSION_GOAL_MARGIN_CORRECTION),
   },
   goalText: {
     fontFamily: fonts.serifItalic,
@@ -1042,6 +1059,7 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.body,
     textAlign: 'center',
   },
+  dockUnmeasured: { opacity: 0 },
   dockWrap: {
     width: '100%',
     // Единственный растягивающийся блок: карточка добирает остаток высоты,

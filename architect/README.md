@@ -181,8 +181,12 @@ The session measures its frame, header and goal and subtracts the safe-area
 padding, timer and three default `sc(22)` gaps, including the header/goal margin
 corrections. When at least `sc(230)` remains for the card, the gaps become
 `sc(14)` to give the passage more complete lines. This calculation uses the
-default gaps in both states, so changing density cannot toggle it back. The
-passage line limit excludes its `sc(6)` top padding below the Question/Quote switch.
+default gaps in both states, so changing density cannot toggle it back.
+Header/goal margin corrections are shared constants used by both styles and
+the calculation. The mounted card stays invisible and inaccessible until the
+first density measurement, then appears within the screen fade-in; windows
+whose maximum possible free card height is below `sc(230)` show it immediately.
+The passage line limit excludes its `sc(6)` top padding below the Question/Quote switch.
 Settings rows keep complete values by wrapping either text column, and the
 settings header has a hairline at its scroll boundary. Settings sheets built
 with `components/BottomSheet` are centered and capped by `sheetMaxWidth()`
