@@ -100,6 +100,19 @@ function SessionScreen() {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const ringSize = ringSizeFor(height);
+  const [sessionLayout, setSessionLayout] = useState({ frame: 0, header: 0, goal: 0 });
+  const measureSessionPart = (part: keyof typeof sessionLayout, value: number) => {
+    setSessionLayout((current) => Math.abs(current[part] - value) < 1
+      ? current : { ...current, [part]: value });
+  };
+  // Считаем место при исходных зазорах, независимо от выбранной плотности:
+  // иначе уменьшение gap само переключало бы правило обратно и вперёд.
+  // Высоты onLayout не включают отрицательные поля шапки и цели.
+  const freeCardHeight = sessionLayout.frame - insets.top - sc(2)
+    - bottomActionPadding(insets.bottom) - sessionLayout.header - ringSize
+    - sessionLayout.goal - sc(22) * 3 + sc(9) + sc(3);
+  const roomyCard = sessionLayout.header > 0 && sessionLayout.goal > 0
+    && freeCardHeight >= sc(230);
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [readerOpen, setReaderOpen] = useState(false);
@@ -604,7 +617,7 @@ function SessionScreen() {
         <View
           style={[
             styles.sessionContent,
-            (height >= 800 || isTablet()) && styles.sessionContentRoomy,
+            roomyCard && styles.sessionContentRoomy,
             {
               // Нижний отступ держит карточку выше системной навигации;
               // на низком окне его забираем из свободной высоты карточки.
@@ -612,8 +625,9 @@ function SessionScreen() {
               paddingBottom: bottomActionPadding(insets.bottom),
             },
           ]}
+          onLayout={({ nativeEvent }) => measureSessionPart('frame', nativeEvent.layout.height)}
         >
-          <View style={styles.topBar}>
+          <View style={styles.topBar} onLayout={({ nativeEvent }) => measureSessionPart('header', nativeEvent.layout.height)}>
             <IconButton
               onPress={finishEarly}
               accessibilityLabel={t('screens.session.finish')}
@@ -699,7 +713,8 @@ function SessionScreen() {
             )}
           </View>
 
-          <View accessible style={styles.goalWrap} testID="session-goal">
+          <View accessible style={styles.goalWrap} testID="session-goal"
+            onLayout={({ nativeEvent }) => measureSessionPart('goal', nativeEvent.layout.height)}>
             <Kicker style={{ fontSize: sc(9), marginBottom: sc(5) }}>
               {t('screens.session.goal')}
             </Kicker>

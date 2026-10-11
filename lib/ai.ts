@@ -53,7 +53,8 @@ const isQuestion = (q: unknown): q is string =>
   typeof q === 'string' && q.length >= 8 && q.length <= 180
   && /^[\p{L}\p{N}«“„"'‘\-—–]/u.test(q)
   && !/[{}\[\]<>`#*]/u.test(q)
-  && !/^(?:["'“«][^"'”»]{1,40}["'”»]|json|question|вопрос|питання)\s*:/iu.test(q)
+  && !/^"?(question|text|json|вопрос|питання)"?\s*:/iu.test(q)
+  && !/^(\d+[.)]|[-•])\s/u.test(q)
   && q.includes('?');
 
 /**

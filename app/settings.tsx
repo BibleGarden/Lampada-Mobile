@@ -1457,7 +1457,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
   reminderWarning: { color: 'rgba(240,170,120,.92)' },
-  reminderSettingsCopy: { flexShrink: 1 },
+  reminderSettingsCopy: { flex: 1, minWidth: 0 },
   addScheduleTitle: { flex: 1, color: colors.warmHint },
   sheetList: {
     paddingHorizontal: sc(11), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,.025)',

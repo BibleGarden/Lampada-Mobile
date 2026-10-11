@@ -46,6 +46,7 @@ type Props = {
 // Функции, а не константы: значения зависят от текущей геометрии окна и
 // пересчитываются на каждом рендере вместе со стилями.
 const cardLineHeight = () => sc(20);
+const cardTextPaddingTop = () => sc(6);
 // Кнопки в карточке ниже, чем ряд действий на весь экран: карточка и так
 // набирает высоту, а строки отрывка нужнее.
 const cardBtnSize = () => sc(32);
@@ -74,7 +75,7 @@ export default function CompanionDock({
   const [textAreaHeight, setTextAreaHeight] = React.useState(0);
   const [reportTarget, setReportTarget] = React.useState<ContentReportTarget | null>(null);
   const scriptureLineLimit = textAreaHeight
-    ? Math.max(1, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
+    ? Math.max(1, Math.min(9, Math.floor((textAreaHeight - cardTextPaddingTop()) / cardLineHeight())))
     : 3;
   // селектор без remaining/elapsed: карточка не должна ререндериться
   // каждую секунду от тика таймера
@@ -616,7 +617,7 @@ const stylesFactory = () => StyleSheet.create({
     // ней фиксировано. Слишком высокий пол не давал карточке ужаться под
     // доступную высоту, и ряды снизу вываливались за рамку.
     minHeight: sc(28),
-    paddingTop: sc(6),
+    paddingTop: cardTextPaddingTop(),
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: sc(4),

@@ -5,6 +5,7 @@ A prayer app built with Expo (SDK 57) / React Native.
 The current shape of the project is described in
 [`architect/README.md`](architect/README.md); the history of architectural
 decisions lives in [`architect/decisions/`](architect/decisions/README.md).
+Settings sheets built with `components/BottomSheet` cap their width at `sc(294)`; answer and recordings `KeyboardSheet` overlays span the window width, retaining the landscape-tablet answer columns.
 
 ## Development
 

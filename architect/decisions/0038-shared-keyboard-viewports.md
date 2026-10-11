@@ -30,9 +30,11 @@ stale height after a fast input-method switch. Every keyboard viewport fills its
 window down to the bottom edge (screens, transparent full-screen Modals), so it
 reserves `max(bottom safe area, keyboard height)` as one UI-thread padding that
 follows the keyboard animation frame by frame; a floating keyboard reserves nothing.
-An inner frame constrains absolute children. A sheet fills the window with no
-reservation, so the sheet and its backdrop reach the screen edge and its
-container never changes with the keyboard. Its footer keeps a constant padding
+An inner frame constrains absolute children. `KeyboardSheet` fills the window
+width with no reservation; the answer retains its landscape-tablet columns.
+Its sheet and backdrop reach the screen edge, and its container never changes
+with the keyboard. Only settings sheets built with `components/BottomSheet`
+cap their width at `sc(294)`. The keyboard-sheet footer keeps a constant padding
 above the bottom safe area, which Gorhom measures once. The keyboard height not
 covered by that safe area is subtracted on the UI thread from the footer
 position Gorhom computes, and that lifted position is what Gorhom's footer

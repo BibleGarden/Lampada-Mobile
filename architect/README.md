@@ -177,12 +177,18 @@ Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
 font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032).
 Screen headers and content use the same `screenGutter()` inside `column()`.
-The session card takes the free height of roomy windows for more complete
-passage lines; compact windows keep the text clear of the Question/Quote switch.
+The session measures its frame, header and goal and subtracts the safe-area
+padding, timer and three default `sc(22)` gaps, including the header/goal margin
+corrections. When at least `sc(230)` remains for the card, the gaps become
+`sc(14)` to give the passage more complete lines. This calculation uses the
+default gaps in both states, so changing density cannot toggle it back. The
+passage line limit excludes its `sc(6)` top padding below the Question/Quote switch.
 Settings rows keep complete values by wrapping either text column, and the
-settings header has a hairline at its scroll boundary. All lower sheets are
-centered and capped by `sheetMaxWidth()` (`sc(294)`) in both orientations,
-so their width scales with their controls. The Scripture reader uses the same
+settings header has a hairline at its scroll boundary. Settings sheets built
+with `components/BottomSheet` are centered and capped by `sheetMaxWidth()`
+(`sc(294)`) in both orientations. Answer and recordings `KeyboardSheet` overlays
+span the window width; the answer retains its landscape-tablet columns.
+The Scripture reader uses the same
 `column()` and gutter for its header and text. Scrollable reader and journal
 content carry the bottom safe area in their content padding, so the final line
 can scroll clear of a navigation bar or Home Indicator. `bottomActionPadding()`
@@ -296,8 +302,8 @@ transition runs
 Controller height after a fast input-method switch leaves no padding. Forms do not subtract
 keyboard or screen heights themselves.
 
-`KeyboardSheet` puts a Gorhom sheet into a full-window overlay that reserves
-nothing, so the sheet and its backdrop reach the screen edge and the container
+`KeyboardSheet` puts a full-width Gorhom sheet into a full-window overlay that
+reserves nothing, so the sheet and its backdrop reach the screen edge and the container
 does not change with the keyboard. The footer holds the answer and recording
 actions, including Stop, above the bottom safe area with a constant padding.
 The keyboard height not covered by that padding is subtracted on the UI thread

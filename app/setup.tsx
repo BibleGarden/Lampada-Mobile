@@ -312,7 +312,6 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
-    marginLeft: -4,
   },
   goalHeader: {
     flexDirection: 'row',
