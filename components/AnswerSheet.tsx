@@ -1314,8 +1314,6 @@ function AnswerSheet({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
             />
-
-            {!keyboardOpen && !text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
           </View>
         </View>
       </KeyboardSheetBody>
@@ -1427,13 +1425,6 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(23),
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
-  },
-  voiceHint: {
-    marginTop: sc(8),
-    fontFamily: fonts.serifItalic,
-    fontSize: sc(12),
-    textAlign: 'center',
-    color: colors.creamDim,
   },
   micBtn: {
     width: sc(32),

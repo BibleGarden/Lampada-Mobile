@@ -696,8 +696,8 @@ While answering, the text and the voice recordings are split between two sheets
 audio files and their transcripts. Transcripts can be expanded or appended to
 the editable answer; they are removed together with their recording.
 On landscape tablets, the question scrolls in a separate column beside the
-answer field and actions. While typing, the voice hint is hidden and the field
-uses the remaining height above the keyboard.
+answer field and actions. While typing, the field uses the remaining height
+above the keyboard.
 Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.
