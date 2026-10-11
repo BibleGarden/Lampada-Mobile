@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
   FadeIn,
-  FadeInDown,
   FadeOut,
   cancelAnimation,
   useAnimatedStyle,
@@ -39,7 +38,7 @@ import ProgressRing from '../components/ProgressRing';
 import CompanionDock from '../components/CompanionDock';
 import AnswerSheet from '../components/AnswerSheet';
 import ScriptureReader from '../components/ScriptureReader';
-import { IconButton, Kicker } from '../components/ui';
+import { CardIn, IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
@@ -737,15 +736,16 @@ function SessionScreen() {
       />
       {showExpiryNotice && activityOpen && (
         <Animated.View
-          entering={FadeInDown.duration(200)}
           exiting={FadeOut.duration(250)}
           pointerEvents="none"
           style={[styles.expiryNotice, { top: insets.top + sc(8) }]}
           testID="session-expiry-notice"
         >
-          <Text style={styles.expiryNoticeText}>
-            {t('screens.session.expiryNotice')}
-          </Text>
+          <CardIn duration={200}>
+            <Text style={styles.expiryNoticeText}>
+              {t('screens.session.expiryNotice')}
+            </Text>
+          </CardIn>
         </Animated.View>
       )}
     </View>
@@ -886,8 +886,8 @@ function AdjustBtn({
 }) {
   const styles = useStyles(stylesFactory);
   return (
-    <Animated.View
-      entering={FadeInDown.duration(200)}
+    <CardIn
+      duration={200}
       style={[
         styles.adjustBtnWrap,
         { top: ringSize / 2 - sc(22) },
@@ -910,7 +910,7 @@ function AdjustBtn({
       >
         <Text style={[styles.adjustLabel, accent && { color: colors.amberBright }]}>{label}</Text>
       </Pressable>
-    </Animated.View>
+    </CardIn>
   );
 }
 

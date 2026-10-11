@@ -10,6 +10,7 @@ duplicated here, otherwise the two pictures drift apart.
 | --- | --- | --- |
 | [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
 | `e2e/` | Executable Maestro scenarios | Living |
+| `screens/` | Cross-device screenshot capture flows, outside all test tiers | Living |
 | `reminder-fire/` | Clock-dependent Maestro flows run only by `e2e/run-rem-fire.sh` | Living |
 | `reports/` | Dated results of runs | Immutable: a new run means a new file |
 | `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |

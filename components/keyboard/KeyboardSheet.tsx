@@ -19,6 +19,8 @@ type SheetContext = {
   footerStyle?: StyleProp<ViewStyle>;
   footerBackground: ViewStyle;
   bodyHeight: SharedValue<number>;
+  keyboardSnapPosition?: number;
+  keyboardRestFraction?: number;
 };
 const SheetLayoutContext = createContext<SheetContext | null>(null);
 
@@ -39,7 +41,7 @@ function useSheetLayout() {
 // (sheetBodyHeight), поэтому footer закрашен фоном шторки и прячет часть тела,
 // которую он ещё не открыл.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
-  const { footer, hidden, footerStyle, footerBackground, bodyHeight } = useSheetLayout();
+  const { footer, hidden, footerStyle, footerBackground, bodyHeight, keyboardSnapPosition, keyboardRestFraction } = useSheetLayout();
   const keyboard = useKeyboardFrames();
   const { animatedLayoutState, animatedAnimationState, animatedPosition, animatedHandleGestureState, animatedContentGestureState } = useBottomSheetInternal();
   const safeBottom = useSafeAreaInsets().bottom;
@@ -56,10 +58,10 @@ function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
       nextIndex,
       nextPosition,
       dragging: gestures.some((state) => state === State.BEGAN || state === State.ACTIVE),
-    }, keyboard.target.value, safeBottom, minBody);
+    }, keyboard.target.value, safeBottom, minBody, keyboardSnapPosition, keyboard.reserved.value, keyboardRestFraction);
   }, (height) => {
     if (height !== null && height !== bodyHeight.value) bodyHeight.value = height;
-  }, [safeBottom, minBody]);
+  }, [safeBottom, minBody, keyboardSnapPosition, keyboardRestFraction]);
   const styles = useStyles(stylesFactory);
   return (
     <BottomSheetFooter animatedFooterPosition={position} bottomInset={0} style={footerBackground}>
@@ -84,11 +86,13 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
   footerHidden: boolean;
   footerStyle?: StyleProp<ViewStyle>;
   accessibilityModal?: boolean;
+  keyboardSnapPosition?: number;
+  keyboardRestFraction?: number;
 };
 
 // Шторка и её фон занимают всё окно до края экрана. Клавиатуру и безопасную
 // зону резервирует только footer, контейнер Gorhom от них не зависит.
-const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
+const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, keyboardSnapPosition, keyboardRestFraction, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
   const bodyHeight = useSharedValue(0);
   const footerBackground = useMemo(() => footerBackgroundOf(props.backgroundStyle), [props.backgroundStyle]);
   // Gorhom 5.2.14 не переставляет закрытую или закрывающуюся шторку при
@@ -101,8 +105,8 @@ const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, fo
   // после того, как она встанет (на iPad с клавиатурой это 1–2 секунды).
   const hidden = footerHidden || !present;
   const context = useMemo(
-    () => ({ footer, hidden, footerStyle, footerBackground, bodyHeight }),
-    [footer, hidden, footerStyle, footerBackground, bodyHeight],
+    () => ({ footer, hidden, footerStyle, footerBackground, bodyHeight, keyboardSnapPosition, keyboardRestFraction }),
+    [footer, hidden, footerStyle, footerBackground, bodyHeight, keyboardSnapPosition, keyboardRestFraction],
   );
   return (
     <View

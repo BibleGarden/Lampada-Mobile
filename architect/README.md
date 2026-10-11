@@ -304,11 +304,16 @@ moves frame by frame, as a transform. The body height is a layout of the whole
 form with its multiline field, so it changes once, when a transition starts:
 the body takes at once the height it will have above the footer when the sheet
 reaches the snap Gorhom animates to and the keyboard reaches the height Keyboard
-Controller reports at the start of its animation (`sheetBodyHeight`); nothing
+Controller reports at the start of its animation (`sheetBodyHeight`). For the
+answer sheet, that keyboard target also selects the full-height snap before
+Gorhom receives the React-side snap request; nothing
 changes when the motion ends. A closing sheet and a drag keep the body as it is.
 The footer is painted with the sheet background inside its side borders, so it
 hides the part of the body it has not uncovered yet. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
+A transient iOS `willHide` followed by `willShow` can briefly move the answer
+sheet toward its resting snap before it returns to full height; its final snap
+is correct.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
@@ -397,7 +402,7 @@ draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.
 The audio mode coordinator also owns the process-wide audio session through
-reference-counted leases. Music, narration, draft playback and recording acquire
+reference-counted leases. Music, narration, draft playback, journal playback and recording acquire
 a lease for their active interval. Pausing the last player or stopping the last
 recorder releases it and deactivates the audio session in the serialized native
 queue; keeping a screen mounted does not retain the session. On Android that
@@ -408,6 +413,10 @@ leaves an idle session inactive. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
+System-paused narration retains its lease so Android can resume it when audio
+focus returns, but does not hold an expired prayer's completion deadline. User
+pause, stop, completion and unmount release the lease. Journal playback takes
+its own lease and requests playback mode before calling `play()`.
 On answer-sheet unmount, Expo Audio may release its native player and recorder
 before the sheet's effect cleanup. That cleanup cancels pending cue work and
 status listeners and releases leases without calling native audio methods.
@@ -747,7 +756,7 @@ created and filled in on open.
 | `scripture_books` | A local directory of book names per translation |
 | `favorites_legacy_backup` | A copy of the old favourites from before the migration |
 | `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value, and `prayer_minutes` - the duration of the last started prayer (0 = untimed), which `/setup` opens with; saved on the prayer start, so extending the timer does not change it; the default of 10 minutes applies until the first prayer |
-| `prayed_days` | The local calendar days of the prayers shown in the journal, keyed by the prayer start; the streak is computed from them |
+| `prayed_days` | The local calendar days of prayers shown in the journal, keyed by prayer start, plus legacy days kept by ADR-0042 until the last journal prayer of that day is cleared or deleted; the streak is computed from them |
 
 A quote is tied to a prayer through `scripture_favorites.session_id`, which is set
 at the moment it is saved. For records made before the column existed, the link is

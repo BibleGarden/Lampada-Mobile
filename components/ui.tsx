@@ -160,14 +160,16 @@ export function IconButton({
 export function CardIn({
   children,
   style,
+  duration = 350,
 }: {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  duration?: number;
 }) {
   const progress = useSharedValue(0);
   React.useEffect(() => {
-    progress.value = withTiming(1, { duration: 350 });
-  }, [progress]);
+    progress.value = withTiming(1, { duration });
+  }, [progress, duration]);
   const enter = useAnimatedStyle(() => ({
     opacity: progress.value,
     transform: [{ translateY: (1 - progress.value) * 25 }],

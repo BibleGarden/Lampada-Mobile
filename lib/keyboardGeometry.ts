@@ -173,9 +173,19 @@ export type SheetMotion = { position: number; nextIndex?: number; nextPosition?:
 
 export function sheetBodyHeight(
   layout: SheetLayout, sheet: SheetMotion, keyboardTarget: number, safeBottom: number, minBody: number,
+  keyboardSnapPosition?: number,
+  keyboardReserved = 0,
+  keyboardRestFraction?: number,
 ): number | null {
   'worklet';
   if (sheet.dragging || sheet.nextIndex === -1) return null;
-  const target = sheet.nextPosition ?? sheet.position;
+  // Keyboard Controller's UI-thread target precedes Gorhom's JS snap request.
+  // Use the pending keyboard snap now so the field does not shrink at rest.
+  let target = sheet.nextPosition ?? sheet.position;
+  if (keyboardTarget > 0 && keyboardSnapPosition !== undefined) {
+    target = keyboardSnapPosition;
+  } else if (keyboardTarget === 0 && keyboardReserved > 0 && keyboardRestFraction !== undefined) {
+    target = layout.containerHeight * keyboardRestFraction;
+  }
   return sheetFooterPosition(naturalFooterPosition(layout, target), keyboardTarget, safeBottom, minBody);
 }

@@ -42,7 +42,12 @@ but is not visible to Android accessibility. Only that footer transform follows
 the animations frame by frame; the body height, a layout of the whole form,
 changes once at the start of a transition to the height it will have above the
 footer at the sheet's and the keyboard's destinations, and the footer is painted
-with the sheet background so that it hides the body it has not uncovered yet. The lift stops at a minimum body
+with the sheet background so that it hides the body it has not uncovered yet.
+For the answer sheet, the Keyboard Controller target selects the
+full-height snap on the UI thread before the React-side Gorhom request arrives,
+so the body does not briefly shrink at the resting snap. A transient iOS
+`willHide` then `willShow` can briefly move the sheet down and back up; the
+convergent target restores the correct final snap. The lift stops at a minimum body
 height even when the keyboard is taller than the sheet allows (a full-screen
 input method, the low snap point on a small screen): Android clears focus inside
 a view that shrinks to zero size, and typing would go nowhere. Gorhom owns sheet

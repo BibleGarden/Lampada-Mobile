@@ -20,6 +20,7 @@ import { ChevronLeft, Minus, Plus } from '../components/icons';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
+import { keyboardShowing } from '../lib/keyboardGeometry';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
@@ -63,7 +64,7 @@ export default function Setup() {
   }, []);
   const keyboard = useKeyboardLayout();
   const policy = useKeyboardFormPolicy();
-  const editing = keyboard.visible;
+  const editing = keyboardShowing(keyboard);
   // Высоту слота поля вне закреплённой клавиатуры задаёт невидимая копия
   // текста. Пока клавиатура видна, копия держит текст на момент её открытия,
   // чтобы набор не сдвигал поле.

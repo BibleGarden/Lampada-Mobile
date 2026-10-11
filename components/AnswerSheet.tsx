@@ -91,6 +91,7 @@ type Props = {
 };
 
 const MIN_UI_RECORDING_MILLIS = 1_500;
+const REST_SNAP_FRACTION = 0.62;
 const DRAFT_PLAYBACK_MODE = {
   allowsRecording: false,
   playsInSilentMode: true,
@@ -268,7 +269,7 @@ function AnswerSheet({
   // поднимает эффект открытой клавиатуры ниже, чтобы поле ввода и кнопки
   // остались видны. Высоту тела держит KeyboardSheet.
   const [open, setOpen] = useState(false);
-  const snapPoints = useMemo(() => ['62%', '100%'], []);
+  const snapPoints = useMemo(() => [`${REST_SNAP_FRACTION * 100}%`, '100%'], []);
   const questionRef = useRef<Text>(null);
 
   // Экран под шторкой скрыт от программ чтения с экрана, и фокус с кнопки
@@ -1066,7 +1067,7 @@ function AnswerSheet({
       }
       // После сохранения файлы принадлежат ответу и больше не являются черновиком.
       unsavedRecordingUris.current.clear();
-      // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
+      // Флаг снимаем до dismiss: willHide может вернуть snap, пока close() идёт.
       // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
       openSheetRef.current = false;
       dismissKeyboard();
@@ -1224,6 +1225,8 @@ function AnswerSheet({
     <>
     <KeyboardSheet
       ref={sheetRef}
+      keyboardSnapPosition={0}
+      keyboardRestFraction={1 - REST_SNAP_FRACTION}
       animatedIndex={sheetIndex}
       index={-1}
       snapPoints={snapPoints}

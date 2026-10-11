@@ -24,6 +24,8 @@
   simulator or emulator, and ask for approval. Attach before and after
   screenshots, or a screen recording for motion, for every affected platform to
   the PR.
+- Owner preview builds for visual approval are separate from the single final
+  Maestro and live validation run on the finished revision.
 - A change made for one platform that touches shared components is shown on
   both platforms.
 - Passing Maestro and unit tests does not approve a visual change: they check
