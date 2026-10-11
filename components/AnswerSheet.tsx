@@ -57,6 +57,7 @@ import { screenReaderHiddenProps } from '../lib/a11y';
 import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
+import QuestionHeader from './QuestionHeader';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
@@ -1142,15 +1143,7 @@ function AnswerSheet({
 
   const questionText = questions[answerIndexRef.current] ?? questions[qIndex] ?? '';
   const questionHeader = (
-    <View style={styles.header}>
-      <View style={styles.orbRow}>
-        <View style={styles.orb} />
-        <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
-      </View>
-      <Text ref={questionRef} style={styles.question} testID="answer-question">
-        {questionText}
-      </Text>
-    </View>
+    <QuestionHeader question={questionText} questionRef={questionRef} testID="answer-question" />
   );
 
   const actions = (
@@ -1329,6 +1322,7 @@ function AnswerSheet({
     <RecordingsSheet
       sheetRef={recSheetRef}
       visible={recordingsSheetOpen}
+      question={questionText}
       recordings={recs}
       recording={recording}
       recordingPhase={recordingPhase}
@@ -1416,36 +1410,6 @@ const stylesFactory = () => StyleSheet.create({
   },
   // Шапка не сжимается скроллом: вопрос — контекст ответа и должен быть виден.
   // flexShrink на крайний случай очень длинного вопроса на низком экране.
-  header: {
-    flexShrink: 1,
-  },
-  orbRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: sc(4),
-    marginBottom: sc(8),
-  },
-  orb: {
-    width: sc(9),
-    height: sc(9),
-    borderRadius: sc(5),
-    backgroundColor: '#6fae93',
-  },
-  orbLabel: {
-    fontFamily: fonts.mono,
-    fontSize: sc(9),
-    letterSpacing: sc(1.4),
-    color: 'rgba(170,210,190,.65)',
-  },
-  question: {
-    fontFamily: fonts.serif,
-    fontSize: sc(16),
-    lineHeight: sc(22),
-    color: colors.cream,
-    textAlign: 'center',
-    marginBottom: sc(12),
-  },
   input: {
     // Всё тело шторки минус вопрос и кнопки. Длинный ответ прокручивается
     // внутри поля, поэтому коробка не растёт и ничего не выталкивает.

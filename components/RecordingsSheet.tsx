@@ -21,6 +21,7 @@ import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 import KeyboardSheet, { KeyboardSheetBody } from './keyboard/KeyboardSheet';
+import QuestionHeader from './QuestionHeader';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -35,6 +36,8 @@ const SLOW_TRANSCRIPTION_MILLIS = 4_000;
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
   visible: boolean;
+  /** Вопрос ответа: шторка записей закрывает его в шторке ответа. */
+  question: string;
   recordings: RecordingDraft[];
   /** Идёт запись: поверх списка показывается оверлей с волной. */
   recording: boolean;
@@ -70,6 +73,7 @@ type Props = {
 export default function RecordingsSheet({
   sheetRef,
   visible,
+  question,
   recordings,
   recording,
   recordingPhase,
@@ -254,6 +258,11 @@ export default function RecordingsSheet({
         style={styles.sheetBody}
         {...screenReaderHiddenProps(!visible)}
       >
+      <View style={styles.questionWrap}>
+        <QuestionHeader question={question} testID="recordings-question" />
+      </View>
+      {/* Оверлей записи закрывает список, но не вопрос: на него и отвечают голосом. */}
+      <View style={styles.stage}>
       <View style={styles.content} {...screenReaderHiddenProps(recording)}>
         <View style={styles.header}>
           <Text style={styles.kicker}>
@@ -457,6 +466,7 @@ export default function RecordingsSheet({
           </View>
         </View>
       )}
+      </View>
       </KeyboardSheetBody>
     </KeyboardSheet>
   );
@@ -538,6 +548,12 @@ const stylesFactory = () => StyleSheet.create({
     borderRadius: sc(2),
   },
   // ADR-0012: колонка держит меру строки и на планшете
+  questionWrap: {
+    paddingHorizontal: sc(16),
+  },
+  stage: {
+    flex: 1,
+  },
   content: {
     ...column(),
     flex: 1,
