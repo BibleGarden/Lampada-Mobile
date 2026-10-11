@@ -1,0 +1,30 @@
+diff --git a/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/sharedobjects/SharedObjectRegistry.kt b/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/sharedobjects/SharedObjectRegistry.kt
+index 52ec91c..cd64138 100644
+--- a/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/sharedobjects/SharedObjectRegistry.kt
++++ b/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/sharedobjects/SharedObjectRegistry.kt
+@@ -93,8 +93,13 @@ class SharedObjectRegistry(runtime: Runtime) {
+     }
+   }
+ 
++  // Reads run on the async-function queue while the JS thread adds and deletes pairs, so every
++  // access to `pairs` and `currentId` must hold the lock: an unlocked read during a HashMap resize
++  // misses a live object and reports it as released (ERR_USING_RELEASED_SHARED_OBJECT).
+   internal fun toNativeObject(id: SharedObjectId): SharedObject {
+-    val native = pairs[id.ensureWasNotRelease()]?.first
++    val native = synchronized(this) {
++      pairs[id.ensureWasNotRelease()]?.first
++    }
+     return native ?: throw InvalidSharedObjectIdException()
+   }
+ 
+@@ -110,7 +115,9 @@ class SharedObjectRegistry(runtime: Runtime) {
+     }
+ 
+     val id = SharedObjectId(js.getProperty(sharedObjectIdPropertyName).getInt())
+-    return pairs[id]?.first
++    return synchronized(this) {
++      pairs[id]?.first
++    }
+   }
+ 
+   internal fun toJavaScriptObjectOrNull(native: SharedObject): JavaScriptObject? {

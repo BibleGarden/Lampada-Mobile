@@ -1,8 +1,9 @@
 import '../lib/disableFontScaling';
 import 'react-native-gesture-handler';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Stack, router, usePathname } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
@@ -27,6 +28,7 @@ import { useSession } from '../lib/store';
 import { useLock } from '../lib/lock';
 import LockGate from '../components/LockGate';
 import UpdateGate from '../components/UpdateGate';
+import BootSplash from '../components/BootSplash';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
@@ -36,6 +38,12 @@ import KeyboardSystemProvider from '../components/keyboard/KeyboardSystemProvide
 // завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
 // не выбрасывает пользователя из неё.
 const PRAYER_FLOW = new Set(['/session', '/reflect']);
+
+// Нативный сплэш снимается, когда пламя его копии BootSplash готово к
+// отрисовке; копия и ждёт шрифты и язык интерфейса. Без этого вызова
+// expo-router снял бы сплэш по готовности навигации, раньше пламени копии.
+// Отказ — дефект сборки и фатален: его бросает RootLayout (см. fatalError).
+const preventAutoHide = SplashScreen.preventAutoHideAsync();
 
 /** Тап по напоминанию открывает главную. */
 function ReminderRouting() {
@@ -57,13 +65,22 @@ function ReminderRouting() {
 }
 
 export default function RootLayout() {
-  const [updateVisible, setUpdateVisible] = useState(false);
   const uiLanguageReady = useSettings((state) => state.uiLanguageReady);
   const settingsLoaded = useSettings((state) => state.loaded);
   const uiLanguage = useSettings((state) => state.uiLanguage);
+
+  // Сбой начальной загрузки (сплэш, настройки, блокировка) нельзя проглотить:
+  // без неё приложение молча висело бы на сплэше или под шторкой блокировки.
+  // Ошибка из промиса перебрасывается в рендер, откуда падает приложение.
+  const [fatalError, setFatalError] = useState<unknown>(null);
+  const failFatally = useCallback(
+    (error: unknown) => setFatalError(() => error ?? new Error('Startup failed')),
+    [],
+  );
   useEffect(() => {
-    void useSettings.getState().load().catch(() => undefined);
-  }, []);
+    preventAutoHide.catch(failFatally);
+    useSettings.getState().load().catch(failFatally);
+  }, [failFatally]);
 
   // При смене языка заменяем уже сохранённый в системе текст напоминаний.
   useEffect(() => {
@@ -73,8 +90,8 @@ export default function RootLayout() {
   // Состояние блокировки читается отдельно от настроек и раньше них: пока оно
   // неизвестно, LockGate держит шторку и не показывает содержимое экранов.
   useEffect(() => {
-    void useLock.getState().load().catch(() => undefined);
-  }, []);
+    useLock.getState().load().catch(failFatally);
+  }, [failFatally]);
 
   // Тот же признак «сверху висит оверлей», по которому LockGate решает, что
   // показывать. Он нужен и здесь: пометку для TalkBack ставит не оверлей, а
@@ -84,7 +101,7 @@ export default function RootLayout() {
   const obscured = useLock((s) => s.obscured);
   const covered = !lockReady || locked || obscured;
 
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Spectral_300Light,
     Spectral_300Light_Italic,
     Spectral_400Regular,
@@ -96,14 +113,40 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
 
-  if (!fontsLoaded || !uiLanguageReady) {
-    return <View style={{ flex: 1, backgroundColor: '#0e0a07' }} />;
-  }
+  // Приложение монтируется только после снятия нативного сплэша: его тяжёлый
+  // первый кадр не должен стать первым кадром окна (ADR-0040).
+  const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
+  const hideNativeSplash = useCallback(() => {
+    SplashScreen.hide();
+    setNativeSplashHidden(true);
+  }, []);
+  const ready = fontsLoaded && uiLanguageReady && nativeSplashHidden;
+  const [bootSplashHidden, setBootSplashHidden] = useState(false);
+  const hideBootSplash = useCallback(() => setBootSplashHidden(true), []);
+
+  // Шрифты встроены в сборку, и их сбой — дефект сборки. Корневой layout не
+  // экспортирует ErrorBoundary, поэтому ошибка фатальна: приложение падает с
+  // отчётом о сбое, а не висит на сплэше.
+  if (fontError) throw fontError;
+  if (fatalError) throw fatalError;
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <KeyboardSystemProvider>
-      <StatusBar style="light" />
+        <StatusBar style="light" />
+        {ready && <AppContent covered={covered} />}
+        {!bootSplashHidden && (
+          <BootSplash onFlameLoaded={hideNativeSplash} done={ready} onHidden={hideBootSplash} />
+        )}
+      </KeyboardSystemProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function AppContent({ covered }: { covered: boolean }) {
+  const [updateVisible, setUpdateVisible] = useState(false);
+  return (
+    <>
       <ReminderRouting />
       {/* Обёртка нужна только как адресат пометки для программ чтения с
           экрана: оверлеи — сиблинги навигации, а не её родитель, и пометить
@@ -130,7 +173,6 @@ export default function RootLayout() {
           приватности нельзя обойти ни переходом, ни диплинком. */}
       <UpdateGate covered={covered} onVisibleChange={setUpdateVisible} />
       <LockGate />
-      </KeyboardSystemProvider>
-    </GestureHandlerRootView>
+    </>
   );
 }

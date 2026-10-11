@@ -111,7 +111,11 @@ const server = http.createServer((request, response) => {
     return;
   }
   if (request.method === 'GET' && url.pathname === '/api/version-check') {
-    json(response, 200, versionResponse);
+    // Как настоящий API: ответ несёт platform запросившей сборки. Без platform —
+    // ios (уже установленные iOS-сборки его не шлют), неизвестное значение — 422.
+    const platform = url.searchParams.get('platform') ?? 'ios';
+    if (!['ios', 'android'].includes(platform)) { json(response, 422, { detail: 'unknown platform' }); return; }
+    json(response, 200, { ...versionResponse, platform });
     return;
   }
   // Транскрипция: приложение шлёт multipart — тело просто вычитываем.

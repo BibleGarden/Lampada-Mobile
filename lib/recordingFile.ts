@@ -10,6 +10,21 @@ export type RecordingFileMetadata = {
   size: number | null;
 };
 
+export type RecordingAudioState = 'available' | 'missing' | 'unreadable';
+
+/**
+ * Есть ли аудио записи на этом устройстве. После восстановления дневника из
+ * облачной копии Android строки записей приходят без файлов (ADR-0040). Сбой
+ * самой проверки тоже означает «аудио нет», но с отдельной причиной.
+ */
+export function recordingAudioState(exists: () => boolean): RecordingAudioState {
+  try {
+    return exists() ? 'available' : 'missing';
+  } catch {
+    return 'unreadable';
+  }
+}
+
 export function recordingFileIssue(
   file: RecordingFileMetadata,
 ): 'missing' | 'incomplete' | null {

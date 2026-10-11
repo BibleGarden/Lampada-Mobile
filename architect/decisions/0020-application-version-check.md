@@ -1,6 +1,6 @@
 # ADR 0020: Application-specific update checks
 
-Status: Accepted
+Status: Accepted; amended by [ADR-0040](0040-google-play-release.md) (the request and the response carry the platform)
 
 ## Context
 

@@ -12,7 +12,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useSettings } from '../lib/settings';
-import { recordDiagnostic } from '../lib/db';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
 
@@ -93,7 +93,7 @@ export default function Threshold() {
     try {
       await s.enterSession();
     } catch (error) {
-      recordDiagnostic('session_start_failed', error);
+      recordDiagnostic('session_start_failed', { errorKind: errorKind(error) });
       Alert.alert(t('screens.threshold.error'), t('screens.retryMessage'), [{ text: t('screens.understood') }]);
       // при ошибке enterSession кнопка не должна остаться мёртвой
       entering.current = false;

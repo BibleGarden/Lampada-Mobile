@@ -1,4 +1,4 @@
-appId: com.nf404.twinkler
+appId: app.lampada
 tags:
   - prepared
 # Фрагмент без тегов: не подхватывается планировщиком тиров. По замыслу

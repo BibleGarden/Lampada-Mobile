@@ -145,7 +145,7 @@ export const useSettings = create<SettingsState>((set) => ({
         // Повреждённая запись не считается выбором, но и не исчезает молча:
         // инициализация заменит её подтверждённой тройкой, а след останется в диагностике.
         if (scriptureRow && !storedPreferences) {
-          recordDiagnostic('scripture_preferences_invalid', new Error('Malformed meta.scripture_preferences'));
+          recordDiagnostic('scripture_preferences_invalid', { reason: 'malformed_scripture_preferences' });
         }
         set({
           coreAiConsent,

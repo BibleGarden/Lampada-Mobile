@@ -21,6 +21,7 @@ import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { File } from 'expo-file-system';
 import ScreenBg from '../components/ScreenBg';
 import { IconButton, Kicker } from '../components/ui';
 import { ChevronLeft, Close, Heart, PauseIcon, Pen, PlayIcon, ShareIcon, Trash } from '../components/icons';
@@ -29,6 +30,7 @@ import * as db from '../lib/db';
 import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
 import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
+import { recordingAudioState } from '../lib/recordingFile';
 import { transcribeRecording } from '../lib/transcription';
 import { transcriptionErrorMessageKey, transcriptionFailureCode, type TranscriptionErrorCode } from '../lib/transcriptionErrors';
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
@@ -75,6 +77,7 @@ export default function Journal() {
     Record<number, 'loading' | TranscriptionErrorCode>
   >({});
   const [playingUri, setPlayingUri] = useState<string | null>(null);
+  const [playbackFailedUri, setPlaybackFailedUri] = useState<string | null>(null);
   const player = useAudioPlayer();
   const playerStatus = useAudioPlayerStatus(player);
 
@@ -109,6 +112,16 @@ export default function Journal() {
     if (playerStatus.didJustFinish) setPlayingUri(null);
   }, [playerStatus.didJustFinish]);
 
+  // Сбой загрузки нельзя показывать как идущее воспроизведение. Зависимость —
+  // само событие плеера: смена playingUri не должна заново ловить старую ошибку.
+  useEffect(() => {
+    if (!playerStatus.error || playingUri === null) return;
+    console.warn('Failed to play journal recording', playerStatus.error);
+    db.recordDiagnostic('recording_playback_failed', { place: 'journal' });
+    setPlaybackFailedUri(playingUri);
+    setPlayingUri(null);
+  }, [playerStatus]);
+
   const toggleOpen = useCallback(async (id: number) => {
     for (const controller of transcriptionControllers.current.values()) controller.abort();
     transcriptionControllers.current.clear();
@@ -116,6 +129,7 @@ export default function Journal() {
     const request = ++detailRequest.current;
     Haptics.selectionAsync();
     setConfirmDeleteId(null);
+    setPlaybackFailedUri(null);
     if (playingUri) {
       player.pause();
       setPlayingUri(null);
@@ -208,10 +222,28 @@ export default function Journal() {
     if (decision === 'allowed' && recording) await runJournalTranscription(recording);
   };
 
-  const togglePlay = (uri: string) => {
+  const togglePlay = (recording: db.JournalDetail['recordings'][number]) => {
+    const { uri } = recording;
     if (playingUri === uri) {
       player.pause();
       setPlayingUri(null);
+      return;
+    }
+    setPlaybackFailedUri(null);
+    // Файл могли удалить и после открытия молитвы: проверяем перед каждым запуском.
+    const audio = recordingAudioState(() => new File(uri).exists);
+    if (audio !== 'available') {
+      db.recordDiagnostic('recording_audio_missing', { recordingId: recording.id, reason: audio });
+      setDetail((current) =>
+        current === null
+          ? current
+          : {
+              ...current,
+              recordings: current.recordings.map((item) =>
+                item.id === recording.id ? { ...item, audioAvailable: false } : item,
+              ),
+            },
+      );
       return;
     }
     player.replace(uri);
@@ -340,7 +372,9 @@ export default function Journal() {
                         durationSec={r.durationSec}
                         transcript={r.transcript}
                         playing={playingUri === r.uri}
-                        onToggle={() => togglePlay(r.uri)}
+                        audioAvailable={r.audioAvailable}
+                        playbackFailed={playbackFailedUri === r.uri}
+                        onToggle={() => togglePlay(r)}
                         transcriptionState={transcriptionStates[r.id]}
                         onTranscribe={() => startJournalTranscription(r)}
                       />
@@ -361,7 +395,9 @@ export default function Journal() {
                     durationSec={r.durationSec}
                     transcript={r.transcript}
                     playing={playingUri === r.uri}
-                    onToggle={() => togglePlay(r.uri)}
+                    audioAvailable={r.audioAvailable}
+                    playbackFailed={playbackFailedUri === r.uri}
+                    onToggle={() => togglePlay(r)}
                     transcriptionState={transcriptionStates[r.id]}
                     onTranscribe={() => startJournalTranscription(r)}
                   />
@@ -558,6 +594,8 @@ function RecordingRow({
   durationSec,
   transcript,
   playing,
+  audioAvailable,
+  playbackFailed,
   onToggle,
   transcriptionState,
   onTranscribe,
@@ -567,6 +605,9 @@ function RecordingRow({
   durationSec: number;
   transcript: string | null;
   playing: boolean;
+  /** Без файла запись нельзя ни прослушать, ни расшифровать; расшифровка остаётся. */
+  audioAvailable: boolean;
+  playbackFailed: boolean;
   onToggle: () => void;
   transcriptionState?: 'loading' | TranscriptionErrorCode;
   onTranscribe: () => void;
@@ -581,12 +622,13 @@ function RecordingRow({
         accessibilityLabel={t('screens.journal.recording', {
           duration: durationSec === 0 ? t('screens.journal.durationUnknown') : fmtTime(durationSec),
         })}
-        accessibilityState={{ selected: playing }}
+        accessibilityState={{ selected: playing, disabled: !audioAvailable }}
+        disabled={!audioAvailable}
         hitSlop={touchSlop(recPlaySize())}
         style={styles.recRow}
         testID={`journal-recording-${index}`}
       >
-        <View style={styles.recPlay}>
+        <View style={[styles.recPlay, !audioAvailable && styles.recPlayUnavailable]}>
           {playing ? <PauseIcon size={11} color="#f0c074" /> : <PlayIcon size={12} color="#f0c074" />}
         </View>
         <Text style={styles.recLabel}>{t('screens.journal.recording', {
@@ -594,7 +636,16 @@ function RecordingRow({
         })}</Text>
       </Pressable>
       {!!transcript && <Text style={styles.recTranscript}>{transcript}</Text>}
-      {!transcript && transcriptionState === 'loading' ? (
+      {!audioAvailable ? (
+        <Text style={styles.recTranscriptionState} testID={`journal-recording-${index}-missing`}>
+          {t('screens.journal.audioMissing')}
+        </Text>
+      ) : playbackFailed ? (
+        <Text style={styles.recPlaybackError} testID={`journal-recording-${index}-playback-failed`}>
+          {t('components.answers.playbackFailed')}
+        </Text>
+      ) : null}
+      {!audioAvailable ? null : !transcript && transcriptionState === 'loading' ? (
         <Text style={styles.recTranscriptionState} testID={`journal-recording-${index}-transcribing`}>
           {t('screens.journal.transcribing')}
         </Text>
@@ -775,6 +826,14 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(13.5),
     lineHeight: sc(19),
     color: colors.body,
+  },
+  recPlayUnavailable: { opacity: 0.35 },
+  recPlaybackError: {
+    marginTop: sc(6),
+    marginLeft: sc(36),
+    fontFamily: fonts.sans,
+    fontSize: sc(11.5),
+    color: '#ec9b8e',
   },
   recTranscriptionState: {
     marginTop: sc(6),

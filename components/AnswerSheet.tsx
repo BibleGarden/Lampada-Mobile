@@ -38,7 +38,7 @@ import {
   saveAnswerDraft,
   type AnswerSaveMode,
 } from '../lib/answerSave';
-import { recordDiagnostic } from '../lib/db';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import { createStoppedRecordingDraft, recordingFileIssue, waitForRecordingFile } from '../lib/recordingFile';
 import {
   createRecordingOperation,
@@ -1033,7 +1033,7 @@ function AnswerSheet({
         );
       } catch (error) {
         // Шторка с черновиком остаётся открытой: ответ не считается сохранённым.
-        recordDiagnostic('answer_save_failed', error);
+        recordDiagnostic('answer_save_failed', { errorKind: errorKind(error) });
         Alert.alert(t('components.answers.answerSaveFailed'), t('screens.retryMessage'), [
           { text: t('screens.understood') },
         ]);

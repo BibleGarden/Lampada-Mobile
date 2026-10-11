@@ -2,7 +2,7 @@ appId: twinkler
 tags:
   - prepared
 ---
-# JRN-009: a missing recording file must not crash journal details or playback attempt.
+# JRN-009: a missing recording file keeps its row, is marked unavailable and cannot be played.
 - launchApp:
     stopApp: true
     clearState: false
@@ -19,8 +19,11 @@ tags:
 - tapOn: ".*JRN-009 missing file.*"
 - assertVisible:
     id: "journal-recording-0"
-- tapOn:
-    id: "journal-recording-0"
+    enabled: false
+- assertVisible:
+    id: "journal-recording-0-missing"
+- assertNotVisible:
+    id: "journal-recording-0-transcribe"
 - assertVisible:
     id: "journal-title"
 - assertVisible: ".*JRN-009 missing file.*"

@@ -77,3 +77,5 @@ implementation details do not need one.
 - [0037: Native window for the Android lock gate](0037-android-lock-native-window.md)
 - [0038: Shared keyboard state and bounded form viewports](0038-shared-keyboard-viewports.md)
 - [0039: Confirm Bible defaults before persisting them](0039-scripture-language-initialization.md) — partly supersedes ADR-0005
+- [0040: Release on Google Play alongside the App Store](0040-google-play-release.md)
+- [0041: Patch the Android shared object registry of expo-modules-core](0041-patch-android-shared-object-registry.md)
