@@ -16,7 +16,7 @@ in accessibility without proving that its entire native rectangle was usable.
 
 Separate software visibility from occupied space and field focus in a single
 application provider. A show or zero-height frame never implies hide; deferred
-actions wait for didHide, independently of field focus. Keyboard Controller owns native dismissal, including blur before
+actions wait for the keyboard to start hiding (iOS willHide, Android didHide), independently of field focus. Keyboard Controller owns native dismissal, including blur before
 IME hide. React Native responder release is unconditional because Controller
 dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display; on Android a positive height alone means docked, because React Native reports the visible window width there, which says nothing about a floating keyboard and goes stale after a width-only window resize.
 
@@ -62,8 +62,9 @@ presented nor touchable.
 Preparation and reflection defer lower actions while a software keyboard is
 visible; answers and reports do not hide actions. Their field fills the form
 only while a docked keyboard is opening or open: a closing keyboard
-(iOS `keyboardWillHide`) returns the form to its normal layout when the hide
-starts, because the viewport releases the keyboard space frame by frame and a
+(iOS `keyboardWillHide`) returns the form to its normal layout, actions
+included, when the hide starts; the actions ride down above the keyboard with
+the viewport reservation, because the viewport releases the keyboard space frame by frame and a
 filling field would first stretch into it and then shrink after
 `keyboardDidHide`. A filling field takes its final height when the opening
 starts: an empty strip below it holds the part of the final reservation the

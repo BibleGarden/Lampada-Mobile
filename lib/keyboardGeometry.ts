@@ -40,14 +40,17 @@ export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number | nu
 export type KeyboardLayout = ReturnType<typeof keyboardLayoutFor>;
 
 // Поле заполняет форму, пока закреплённая клавиатура открывается или открыта.
-// Закрывающаяся клавиатура раскладку редактирования уже не держит: форма
-// возвращается к обычной раскладке в начале скрытия, а не растягивает поле
-// на освобождающееся место и сжимает его после keyboardDidHide. Отложенные
-// действия возвращаются только после keyboardDidHide.
+// Закрывающаяся клавиатура раскладку редактирования уже не держит: в начале
+// скрытия форма целиком, с отложенными действиями, возвращается к обычной
+// раскладке, а не растягивает поле на освобождающееся место и не перестраивается
+// второй раз после keyboardDidHide. Резерв viewport идёт вниз с клавиатурой,
+// поэтому действия едут над ней. Потеря фокуса или нулевая высота клавиатуры
+// действий не возвращают: решает только фаза клавиатуры.
 export function keyboardFormPolicy(layout: KeyboardLayout) {
+  const showing = keyboardShowing(layout);
   return {
-    fillInput: layout.kind === 'docked' && keyboardShowing(layout),
-    actionsVisible: !layout.visible,
+    fillInput: layout.kind === 'docked' && showing,
+    actionsVisible: !showing,
   };
 }
 

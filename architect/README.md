@@ -223,7 +223,8 @@ Android compares no widths: there React Native reports the visible window width,
 not the IME width, so it says nothing about a floating keyboard, and it goes
 stale after a width-only window resize (Fold unfold, split screen) because
 `keyboardDidShow` is not repeated. Field focus alone does not imply
-a software keyboard. Deferred actions return only after `keyboardDidHide`.
+a software keyboard. Deferred actions return when the keyboard starts hiding
+(iOS `keyboardWillHide`, Android `keyboardDidHide`), not when a field loses focus.
 `dismissKeyboard` uses native Keyboard Controller dismissal even after input
 blur, and always clears the React Native responder even when no IME is open;
 single-phrase editors submit before dismissing, so Enter cannot leave
@@ -264,8 +265,10 @@ sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
 Preparation and reflection defer lower actions while typing. Their field fills
 the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
-when the hide starts, the form returns to its normal layout, so the field does
-not stretch into the space the keyboard frees and shrink after `keyboardDidHide`.
+when the hide starts, the form returns to its normal layout together with its
+actions, which move down with the viewport reservation above the keyboard, so
+the field does not stretch into the space the keyboard frees and nothing
+changes after `keyboardDidHide`.
 Reflection keeps its filling field at its final height from the start of the
 opening: below the field, `KeyboardPendingSpace` holds the strip the keyboard
 has yet to cover in the viewport (`pendingKeyboardReserve`), and the keyboard
