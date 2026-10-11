@@ -22,27 +22,45 @@ appId: twinkler
     id: interface-language-ru
 - tapOn:
     id: settings-back-button
-- assertVisible:
-    id: start-prayer-button
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
 - takeScreenshot: 01-home-before
 - tapOn:
     id: settings-button
 - takeScreenshot: 02-settings-top
+- swipe:
+    start: "50%,80%"
+    end: "50%,40%"
+    duration: 600
 - scrollUntilVisible:
     element:
-      id: reminders-toggle
+      id: reminders-settings-button-0
     direction: DOWN
+    centerElement: true
 - takeScreenshot: 03-settings-reminders
 - tapOn:
     id: reminders-settings-button-0
 - takeScreenshot: 04-reminders-editor
 - tapOn:
     id: reminders-editor-done
+- swipe:
+    start: "50%,80%"
+    end: "50%,35%"
+    duration: 600
+- scrollUntilVisible:
+    element:
+      id: about-button
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: 05-settings-bottom
 - scrollUntilVisible:
     element:
       id: lock-toggle
-    direction: DOWN
-- takeScreenshot: 05-settings-bottom
+    direction: UP
 - tapOn:
     id: lock-toggle
 - takeScreenshot: 06-pin-setup
@@ -98,6 +116,12 @@ appId: twinkler
 - takeScreenshot: 14-session-scripture
 - tapOn:
     id: dock-scripture-next
+- extendedWaitUntil:
+    visible:
+      id: scripture-read-full|scripture-preview
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 2000
 - takeScreenshot: 15-session-scripture-next
 - tapOn:
     id: scripture-read-full
@@ -137,10 +161,20 @@ appId: twinkler
           timeout: 2500
       - tapOn:
           id: recordings-stop-button
+- scrollUntilVisible:
+    element:
+      id: recording-card-0
+    direction: UP
+    centerElement: true
 - takeScreenshot: 21-recordings-three
+- scrollUntilVisible:
+    element:
+      id: recording-delete-2
+    direction: DOWN
+    centerElement: true
 - swipe:
     start: "50%,75%"
-    end: "50%,32%"
+    end: "50%,60%"
     duration: 500
 - takeScreenshot: 22-recordings-bottom
 - tapOn:
@@ -156,6 +190,10 @@ appId: twinkler
           id: privacy-consent-answer_context-allow
 - tapOn:
     id: session-finish-button
+- extendedWaitUntil:
+    visible:
+      id: reflect-question
+    timeout: 60000
 - takeScreenshot: 23-reflection-empty
 - tapOn:
     id: reflection-input
@@ -164,6 +202,7 @@ appId: twinkler
 - pressKey: Enter
 - tapOn:
     id: reflect-complete-button
+    waitToSettleTimeoutMs: 100
 - takeScreenshot: 25-home-saved
 - tapOn:
     id: journal-button
