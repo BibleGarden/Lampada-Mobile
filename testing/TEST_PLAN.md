@@ -180,6 +180,7 @@ tier of its e2e runs.
 | START-003 | Repeated gestures during the transition | no parallel sessions are created |
 | START-004 | A SQLite error while creating the session | the button does not stay blocked forever, the error is diagnosable |
 | START-005 [ipad] | Open the threshold on an iPad with a multi-line goal and rotate between portrait and landscape | landscape shows the briefing and hold-to-start button side by side; all three briefing items fit for a typical multi-line goal; longer content scrolls without covering the button; portrait returns to the vertical layout |
+| START-006 | Open the threshold with a two-line goal and undecided answer consent on a short window: a Galaxy Z Fold inner display in portrait with a taskbar or three-button navigation (an Android emulator at `wm size 1812x2176`, density 420), an iPhone SE, iPad Split View | all three briefing items are fully visible above Start, no line is cut; a window with room keeps the original spacing and button size; on a window too short even for the densest layout the briefing scrolls and its edge fades instead of cutting a line (unit tests in `thresholdLayout.test.mjs`) |
 
 ### The timer and the prayer flow
 

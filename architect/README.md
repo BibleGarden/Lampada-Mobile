@@ -230,6 +230,13 @@ the scenario is finished through explicit interface actions.
 
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
+In the vertical layout the threshold measures the briefing and the free height
+under its header and takes the first density in `lib/thresholdLayout.ts` at
+which all briefing items fit above the hold-to-start control: the original
+spacing first, then tighter spacing and a smaller control, then less air below
+it. The type size stays. Only when even the densest layout does not fit does
+the briefing scroll, with faded edges on Android and a flashed scroll indicator
+on iOS.
 
 Keyboard handling is shared by preparation, answers, reflection, content reports
 and history search (ADR-0038). `KeyboardSystemProvider` is the only application
