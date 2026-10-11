@@ -129,12 +129,13 @@ upgrading it requires rebuilding the native app.
 | `lib/scriptureAudioClient.ts` | Book aliases, verse-level timings and the public URLs of chapter audio |
 | `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
+| `lib/audioSession.ts` | The app's single audio mode coordinator, bound to Expo's session activation |
 | `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
 | `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/recordingLimitController.ts` | The single stop decision from the recorder's accumulated recorded milliseconds |
 | `lib/useRecordingLimit.ts` | The mounted recording-limit lifecycle: polling, per-recording reset, guarded manual stop, UI state and terminal failure reporting |
-| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
+| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context; classification of the native player status |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
 | `lib/scriptureCatalogClient.ts` | The HTTP client of languages, translations and available narrations |
 | `lib/scripturePreferences.ts` | The valid dependent triple of language, translation and narration |
@@ -359,8 +360,12 @@ recording or mix with the user's audio.
 The audio mode coordinator also owns the process-wide audio session through
 reference-counted leases. Music, narration, draft playback and recording acquire
 a lease for their active interval. Pausing the last player or stopping the last
-recorder releases it and deactivates AVAudioSession in the serialized native
-queue; keeping a screen mounted does not retain the session. An untimed prayer
+recorder releases it and deactivates the audio session in the serialized native
+queue; keeping a screen mounted does not retain the session. On Android that
+deactivation is a sticky Expo flag that turns every later `play()` into a native
+no-op, so a playback request from a lease holder first reactivates the session in
+the same queue. Restoring the playback mode after a recording, without a lease,
+leaves an idle session inactive. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
@@ -426,7 +431,8 @@ streak. The database keeps the larger of the stored and the written time, so a
 late checkpoint never lowers the duration saved on completion.
 
 Timer expiry waits while the reader or answer sheet is open, or narration is
-loading, playing, paused or showing an error. A non-interactive six-second notice
+loading, playing or paused. A narration error stays on the card but does not hold
+an expired prayer. A non-interactive six-second notice
 allows the user to finish that activity. Sheet opening is reported before its
 animation; closing is reported after the sheet settles and recording cleanup
 finishes. Once the active prayer screen has no such activity, reflection opens
@@ -523,7 +529,10 @@ previous solid text, without heuristics.
 
 For narration the client requests the server `begin`/`end` of the verses, streams
 the Range-compatible MP3 of the whole chapter, starts at the first verse of the
-passage and stops at the end of the last one. The text selection does not depend
+passage and stops at the end of the last one. The narration state follows the
+native player: if it has not started two seconds after `play()` and is not
+buffering, narration shows an error and logs the native playback state; if the
+system pauses a started player, narration becomes paused. The text selection does not depend
 on that extra request; the offline snapshot stays available without audio
 controls. In the full reader the current verse is determined by the same timings
 and marked with a light dotted underline; during the pause between verses the

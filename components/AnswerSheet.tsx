@@ -21,7 +21,6 @@ import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
-  setIsAudioActiveAsync,
   useAudioPlayer,
   useAudioPlayerStatus,
   useAudioRecorder,
@@ -47,11 +46,11 @@ import {
   startPreparedRecording,
 } from '../lib/recordingOperation';
 import {
-  audioModeCoordinator,
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type RecordingAudioModeLease,
   type AudioSessionLease,
 } from '../lib/audioModeCoordinator';
+import { audioModeCoordinator } from '../lib/audioSession';
 import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
@@ -242,7 +241,7 @@ function AnswerSheet({
 
   const playLimitCue = async () => {
     const generation = limitCueOperation.begin(() =>
-      audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false)),
+      audioModeCoordinator.acquireSession(),
     );
     limitCueActiveRef.current = true;
     try {
@@ -546,9 +545,7 @@ function AnswerSheet({
       if (recordingSessionLeaseRef.current) {
         throw new Error('A recording already owns an audio session lease');
       }
-      sessionLease = audioModeCoordinator.acquireSession(
-        () => setIsAudioActiveAsync(false),
-      );
+      sessionLease = audioModeCoordinator.acquireSession();
       recordingSessionLeaseRef.current = sessionLease;
       audioModeLease = audioModeCoordinator.acquireRecording(setAudioModeAsync, {
         allowsRecording: true,
@@ -852,7 +849,7 @@ function AnswerSheet({
     setAudioError(null);
     onAudioBusyChange?.(true);
     const generation = draftPlaybackOperation.begin(() =>
-      audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false)),
+      audioModeCoordinator.acquireSession(),
     );
     activeDraftIdRef.current = r.id;
     void audioModeCoordinator

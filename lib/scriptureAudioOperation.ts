@@ -33,3 +33,23 @@ export function createScriptureAudioOperation() {
     },
   };
 }
+
+export type NarrationNativeStatus = {
+  playing: boolean;
+  isBuffering: boolean;
+};
+
+/**
+ * How the native player relates to a narration the interface shows as playing.
+ * `started` once it plays; `waiting` while it buffers or has not started yet;
+ * `stopped` when a started player no longer plays: the system paused it
+ * (for example, another app took the audio focus).
+ */
+export function narrationNativeState(
+  status: NarrationNativeStatus,
+  started: boolean,
+): 'started' | 'waiting' | 'stopped' {
+  if (status.playing) return 'started';
+  if (status.isBuffering || !started) return 'waiting';
+  return 'stopped';
+}

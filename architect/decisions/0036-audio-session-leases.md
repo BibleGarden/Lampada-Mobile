@@ -21,7 +21,9 @@ native audio work and releases it after pause, completion, failure or exit.
 If a recorder stop fails without confirming native shutdown, its lease stays
 held until the existing visible retry or unmount cleanup resolves the recorder.
 The last release queues `setIsAudioActiveAsync(false)` behind earlier mode
-changes. A new lease acquired before that queued operation runs cancels the
+changes. On Android that call is a sticky flag that turns every later `play()`
+into a silent native no-op, so a playback request from a lease holder queues
+`setIsAudioActiveAsync(true)` before its mode (amended 2026-10-11). A new lease acquired before that queued operation runs cancels the
 deactivation; its mode request remains serialized after the queue. Native
 deactivation errors reject the release operation. Every consumer logs that
 rejection with `console.error`; cleanup never silently retries deactivation or

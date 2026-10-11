@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   setAudioModeAsync,
-  setIsAudioActiveAsync,
   useAudioPlayer,
   useAudioPlayerStatus,
 } from 'expo-audio';
 import type { ScriptureDisplay } from './scripture';
 import { fetchScriptureAudioClip, type ScriptureAudioClip } from './scriptureAudioClient';
 import {
-  audioModeCoordinator,
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type AudioSessionLease,
 } from './audioModeCoordinator';
-import { createScriptureAudioOperation } from './scriptureAudioOperation';
+import { audioModeCoordinator } from './audioSession';
+import { createScriptureAudioOperation, narrationNativeState } from './scriptureAudioOperation';
 
 export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
@@ -22,6 +21,10 @@ const SCRIPTURE_PLAYBACK_MODE = {
   shouldPlayInBackground: true,
   interruptionMode: 'doNotMix' as const,
 };
+
+// Сколько ждать, пока нативный плеер начнёт играть после play(). Пока поток
+// буферизуется, ожидание продлевается.
+const NATIVE_START_TIMEOUT_MS = 2_000;
 
 export type ScriptureAudioControl = {
   phase: ScriptureAudioPhase;
@@ -62,9 +65,7 @@ export function useScriptureAudio({
   }, []);
   const acquireSession = useCallback(() => {
     if (sessionLeaseRef.current) throw new Error('Scripture audio already owns a session lease');
-    const lease = audioModeCoordinator.acquireSession(
-      () => setIsAudioActiveAsync(false),
-    );
+    const lease = audioModeCoordinator.acquireSession();
     sessionLeaseRef.current = lease;
     return lease;
   }, []);
@@ -73,6 +74,14 @@ export function useScriptureAudio({
     playbackOperationRef.current = createScriptureAudioOperation();
   }
   const playbackOperation = playbackOperationRef.current;
+  // Подтвердил ли нативный плеер последний play(). Android молча игнорирует
+  // play() при выключенной аудиосессии, поэтому фаза следует за плеером.
+  const nativeStartedRef = useRef(false);
+  const startWatchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearStartWatch = useCallback(() => {
+    if (startWatchRef.current) clearTimeout(startWatchRef.current);
+    startWatchRef.current = null;
+  }, []);
   const scriptureKey = scripture && voice !== null
     ? `${scripture.canonicalId}:${scripture.receivedAt}:${voice}`
     : null;
@@ -80,6 +89,8 @@ export function useScriptureAudio({
 
   const stop = useCallback((nextPhase: ScriptureAudioPhase = 'idle') => {
     playbackOperation.invalidate();
+    clearStartWatch();
+    nativeStartedRef.current = false;
     requestRef.current?.abort();
     requestRef.current = null;
     player.pause();
@@ -88,7 +99,42 @@ export function useScriptureAudio({
     scriptureKeyRef.current = null;
     setPhase(nextPhase);
     onAudioBusyChange(false);
-  }, [onAudioBusyChange, playbackOperation, player, releaseSession]);
+  }, [clearStartWatch, onAudioBusyChange, playbackOperation, player, releaseSession]);
+
+  const playNative = useCallback(() => {
+    clearStartWatch();
+    nativeStartedRef.current = false;
+    player.play();
+    const check = () => {
+      startWatchRef.current = null;
+      if (nativeStartedRef.current) return;
+      const live = player.currentStatus;
+      if (live.playing) return;
+      if (live.isBuffering) {
+        startWatchRef.current = setTimeout(check, NATIVE_START_TIMEOUT_MS);
+        return;
+      }
+      console.error('Scripture narration did not start', { playbackState: live.playbackState });
+      stop('error');
+    };
+    startWatchRef.current = setTimeout(check, NATIVE_START_TIMEOUT_MS);
+  }, [clearStartWatch, player, stop]);
+
+  const finishClip = useCallback((clip: ScriptureAudioClip) => {
+    clearStartWatch();
+    nativeStartedRef.current = false;
+    player.pause();
+    releaseSession();
+    setPhase('idle');
+    onAudioBusyChange(false);
+    void player.seekTo(clip.startSeconds, 0, 0).catch((error) => {
+      console.warn(
+        'Failed to rewind Scripture passage',
+        error instanceof Error ? error.message : 'unknown error',
+      );
+      setPhase('error');
+    });
+  }, [clearStartWatch, onAudioBusyChange, player, releaseSession]);
 
   useEffect(() => {
     if (!enabled) stop();
@@ -105,26 +151,52 @@ export function useScriptureAudio({
       stop('error');
       return;
     }
-    if (status.currentTime + 0.03 < clip.endSeconds) return;
-    player.pause();
+    if (status.currentTime + 0.03 >= clip.endSeconds) {
+      finishClip(clip);
+      return;
+    }
+    const native = narrationNativeState(status, nativeStartedRef.current);
+    if (native === 'started') {
+      nativeStartedRef.current = true;
+      return;
+    }
+    if (native !== 'stopped') return;
+    // Событие статуса могло отстать от недавнего play(): решает живой статус.
+    const live = player.currentStatus;
+    if (narrationNativeState(live, true) !== 'stopped') return;
+    if (live.duration > 0 && live.currentTime + 0.5 >= live.duration) {
+      // Последний стих главы может кончаться позже файла: плеер дошёл до конца сам.
+      finishClip(clip);
+      return;
+    }
+    nativeStartedRef.current = false;
     releaseSession();
-    setPhase('idle');
+    setPhase('paused');
     onAudioBusyChange(false);
-    void player.seekTo(clip.startSeconds, 0, 0).catch(() => setPhase('error'));
-  }, [onAudioBusyChange, phase, player, releaseSession, status.currentTime, status.playbackState, stop]);
+  }, [
+    finishClip,
+    onAudioBusyChange,
+    phase,
+    player,
+    releaseSession,
+    status,
+    stop,
+  ]);
 
   useEffect(
     () => () => {
+      clearStartWatch();
       requestRef.current?.abort();
       releaseSession();
     },
-    [releaseSession],
+    [clearStartWatch, releaseSession],
   );
 
   const toggle = useCallback(() => {
     if (!scripture || scripture.offline || !enabled || voice === null) return;
     if (phase === 'loading') return;
     if (phase === 'playing') {
+      clearStartWatch();
       player.pause();
       releaseSession();
       setPhase('paused');
@@ -150,7 +222,7 @@ export function useScriptureAudio({
             releaseSession(lease);
             return;
           }
-          player.play();
+          playNative();
           setPhase('playing');
         })
         .catch((error) => {
@@ -206,7 +278,7 @@ export function useScriptureAudio({
         }
         clipRef.current = clip;
         scriptureKeyRef.current = scriptureKey;
-        player.play();
+        playNative();
         setPhase('playing');
       } catch (error) {
         if (controller.signal.aborted) {
@@ -224,7 +296,7 @@ export function useScriptureAudio({
         if (requestRef.current === controller) requestRef.current = null;
       }
     })();
-  }, [acquireSession, enabled, onAudioBusyChange, phase, playbackOperation, player, releaseSession, scripture, scriptureKey, voice]);
+  }, [acquireSession, clearStartWatch, enabled, onAudioBusyChange, phase, playbackOperation, playNative, player, releaseSession, scripture, scriptureKey, voice]);
 
   let activeVerseNumber: number | null = null;
   const clip = clipRef.current;

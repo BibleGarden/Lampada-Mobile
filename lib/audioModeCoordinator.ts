@@ -6,7 +6,7 @@ export type AudioModeRequest = {
 };
 
 type ApplyAudioMode = (mode: AudioModeRequest) => Promise<void>;
-type DeactivateAudioSession = () => Promise<void>;
+type SetAudioSessionActive = (active: boolean) => Promise<void>;
 
 export type AudioSessionLease = {
   /** Повторный вызов безопасен; последний владелец дожидается деактивации. */
@@ -34,14 +34,21 @@ export const TRANSIENT_AUDIO_PLAYER_OPTIONS = {
 } as const;
 
 /**
- * Serializes changes to Expo's process-wide audio mode.
+ * Serializes changes to Expo's process-wide audio mode and session activity.
  *
  * A recording lease becomes active synchronously. This rejects newer playback
  * requests immediately, while its own mode change remains ordered behind work
  * that was already queued. Thus an older playback request cannot land after a
  * recorder has been prepared and stop it on iOS.
+ *
+ * The last released session lease deactivates the session. On Android that
+ * deactivation is a sticky module flag: every later play() is a native no-op
+ * until the session is activated again. A playback grant for a lease holder
+ * therefore activates the session before it applies the mode. Activation stays
+ * in the same queue, so a following recording cannot start while a late
+ * activation is still reconfiguring the iOS session.
  */
-export function createAudioModeCoordinator() {
+export function createAudioModeCoordinator(setSessionActive: SetAudioSessionActive) {
   type LeaseToken = { released: boolean };
 
   let tail: Promise<void> = Promise.resolve();
@@ -59,7 +66,7 @@ export function createAudioModeCoordinator() {
   };
 
   return {
-    acquireSession(deactivate: DeactivateAudioSession): AudioSessionLease {
+    acquireSession(): AudioSessionLease {
       const token: LeaseToken = { released: false };
       sessionLeases.add(token);
       return {
@@ -71,7 +78,7 @@ export function createAudioModeCoordinator() {
           // Новый владелец может появиться до выполнения этой операции.
           // Изменение его режима остаётся в той же нативной очереди.
           return enqueue(async () => {
-            if (sessionLeases.size === 0) await deactivate();
+            if (sessionLeases.size === 0) await setSessionActive(false);
           });
         },
       };
@@ -122,6 +129,9 @@ export function createAudioModeCoordinator() {
       if (recordingLease) return Promise.resolve(null);
       return enqueue(async () => {
         if (recordingLease || generation !== playbackGeneration) return null;
+        // Mode restoration after a recording has no lease holder and must not
+        // reactivate an idle session.
+        if (sessionLeases.size > 0) await setSessionActive(true);
         await applyAudioMode(mode);
         return {
           isCurrent: () =>
@@ -133,5 +143,3 @@ export function createAudioModeCoordinator() {
     hasRecordingLease: () => recordingLease !== null,
   };
 }
-
-export const audioModeCoordinator = createAudioModeCoordinator();

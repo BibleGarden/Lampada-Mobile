@@ -30,7 +30,6 @@ import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
   setAudioModeAsync,
-  setIsAudioActiveAsync,
   type AudioStatus,
   useAudioPlayer,
 } from 'expo-audio';
@@ -57,11 +56,8 @@ import {
   startMusicFadeOut,
   type MusicFadeOut,
 } from '../lib/musicFade';
-import {
-  audioModeCoordinator,
-  type AudioModeRequest,
-  type AudioSessionLease,
-} from '../lib/audioModeCoordinator';
+import { type AudioSessionLease } from '../lib/audioModeCoordinator';
+import { audioModeCoordinator } from '../lib/audioSession';
 
 const MUSIC_PLAYBACK_MODE = {
   allowsRecording: false,
@@ -189,14 +185,6 @@ function SessionScreen() {
     musicPlayerB.clearLockScreenControls();
   }, [cancelMusicCrossfade, musicPlayerA, musicPlayerB]);
 
-  const applyMusicAudioMode = useCallback(async (mode: AudioModeRequest) => {
-    // AVAudioSession activation is process-wide too. Keep it in the same queue
-    // as mode changes so a quick next recording cannot call record() while a
-    // late music activation is still reconfiguring the native session.
-    await setIsAudioActiveAsync(true);
-    await setAudioModeAsync(mode);
-  }, []);
-
   const reportReleaseError = useCallback((error: unknown) => {
     console.error('Failed to release audio session', error);
   }, []);
@@ -233,11 +221,11 @@ function SessionScreen() {
         active = false;
       };
     }
-    const lease = audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false));
+    const lease = audioModeCoordinator.acquireSession();
     musicLeaseRef.current = lease;
     void (async () => {
       const modeGrant = await audioModeCoordinator.requestPlayback(
-        applyMusicAudioMode,
+        setAudioModeAsync,
         MUSIC_PLAYBACK_MODE,
       );
       if (!modeGrant?.isCurrent()) return;
@@ -265,7 +253,6 @@ function SessionScreen() {
       if (musicLeaseRef.current === lease) musicLeaseRef.current = null;
     };
   }, [
-    applyMusicAudioMode,
     musicPlayerForSlot,
     pauseMusicPlayers,
     reportReleaseError,
@@ -418,7 +405,7 @@ function SessionScreen() {
     readerOpen,
     answerOpen,
     reportOpen,
-    scriptureAudioActive: scriptureAudio.phase !== 'idle',
+    scriptureAudioPhase: scriptureAudio.phase,
   });
   const handleAnswerAudioChange = useCallback(
     (busy: boolean) => {
