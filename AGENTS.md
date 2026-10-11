@@ -41,6 +41,17 @@
 - Stop a Maestro run at the first app crash, report the flow, the step and the
   cause from the crash report, and fix it before running anything else. Flows
   after a crash tend to fail the same way and add no information.
+- The agent running end-to-end tests judges each failure. Stop the whole run
+  when the failure makes the remaining scenarios uninformative: an app crash,
+  the app not launching, a broken shared precondition (onboarding, consent or
+  navigation that every flow passes through), a wrong or broken build, or an
+  environment that cannot run tests. Otherwise (an isolated assertion or a
+  single-screen defect) record the failure with evidence, do not rerun it, and
+  continue with the remaining independent suites and the other platform, so one
+  cycle reveals all defects. A runner that itself stops at its first failure is
+  not forced to continue.
+- Android and iOS suites may run in parallel on one Mac, as long as their
+  builds are not running at the same time.
 - After fixing a failure that an end-to-end run found, first run the failed
   scenario on a build of the fixed revision, then review, then the final run.
   Running a scenario on a new revision verifies the fix; it is not a rerun of
@@ -48,8 +59,13 @@
 - Save each full command log and exit code as a PR or task artifact accessible
   to reviewers, and identify the tested commit and build. Put only selected
   final evidence in `testing/evidence/` as described in `testing/README.md`.
-  Investigate and report failures; never rerun a failed test or CI job without
-  the owner's explicit permission.
+  Investigate and report failures. Never rerun a failed test or CI job without
+  the owner's explicit permission, with one exception (owner's decision of
+  2026-10-11): a failed scenario may be rerun without asking when the cause is
+  proven to be the test environment, not the app (for example an emulator at
+  lowered CPU priority, an overloaded host, a full disk or a stuck tool). The
+  evidence for that cause goes into the run report. A failure that may be an
+  app defect is never rerun: it is analysed and fixed.
 
 # Simulators
 

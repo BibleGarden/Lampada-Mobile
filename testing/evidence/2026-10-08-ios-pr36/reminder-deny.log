@@ -1,0 +1,15 @@
+Running on Pray Smoke iPhone 17 Pro - iOS 26.5 - 05F697B7-36CD-4050-9D57-FC9316AA093C
+ > Flow ios-rem-002-permission-deny
+Launch app "twinkler"... COMPLETED
+Assert that id: start-prayer-button is visible... COMPLETED
+Open lampada://settings... COMPLETED
+Scrolling DOWN until id: reminders-toggle is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on id: reminders-toggle... COMPLETED
+Assert that ".*уведомления.*" is visible... COMPLETED
+Tap on "Не разрешать"... COMPLETED
+Assert that id: reminders-toggle is visible... COMPLETED
+Assert that id: reminders-permission-warning is visible... COMPLETED
+Assert that "Уведомления запрещены в настройках системы." is visible... COMPLETED
+Scrolling DOWN until id: privacy-settings-button is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that id: privacy-settings-button is visible... COMPLETED
+Assert that id: lock-toggle is visible... COMPLETED
