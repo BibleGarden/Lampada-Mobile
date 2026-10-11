@@ -66,7 +66,7 @@ tags:
     id: content-report-send
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible: Спасибо. Жалоба отправлена на проверку.
+- assertVisible: Спасибо. Мы её проверим.
 - takeScreenshot: RPT-003-retry-sent
 - tapOn:
     id: content-report-done

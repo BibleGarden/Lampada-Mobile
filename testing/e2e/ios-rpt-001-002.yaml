@@ -42,7 +42,9 @@ tags:
 - takeScreenshot: RPT-001-dialog
 - tapOn:
     id: "content-report-send"
-- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- assertVisible: "Спасибо. Мы её проверим."
+- assertVisible: "Жалоба отправлена"
+- assertNotVisible: "Пожаловаться на этот .*"
 - takeScreenshot: RPT-001-sent
 - tapOn:
     id: "content-report-done"
@@ -64,7 +66,9 @@ tags:
 - inputText: "Тестовый комментарий RPT-002"
 - tapOn:
     id: "content-report-send"
-- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- assertVisible: "Спасибо. Мы её проверим."
+- assertVisible: "Жалоба отправлена"
+- assertNotVisible: "Пожаловаться на этот .*"
 - takeScreenshot: RPT-002-sent
 - tapOn:
     id: "content-report-done"

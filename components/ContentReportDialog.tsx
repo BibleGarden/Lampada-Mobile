@@ -120,9 +120,11 @@ export default function ContentReportDialog({
           >
             <Text style={styles.kicker}>{t('components.contentReport.kicker')}</Text>
             <Text style={styles.title}>
-              {contentType === 'question'
-                ? t('components.contentReport.questionTitle')
-                : t('components.contentReport.scriptureTitle')}
+              {sent
+                ? t('components.contentReport.sentTitle')
+                : contentType === 'question'
+                  ? t('components.contentReport.questionTitle')
+                  : t('components.contentReport.scriptureTitle')}
             </Text>
             {sent ? (
               <Text style={styles.body}>{t('components.contentReport.sent')}</Text>

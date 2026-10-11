@@ -51,7 +51,7 @@ tags:
 # Повтор — stub уже вернулся в ok, комментарий сохранился в поле.
 - tapOn:
     id: "content-report-send"
-- assertVisible: "Спасибо. Жалоба отправлена на проверку."
+- assertVisible: "Спасибо. Мы её проверим."
 - takeScreenshot: RPT-003-retry-sent
 - tapOn:
     id: "content-report-done"
