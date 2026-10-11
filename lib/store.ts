@@ -900,7 +900,7 @@ async function confirmScriptureSelection(sessionId: number, token: number, foreg
       : error instanceof ScriptureDefaultUnavailableError
         ? 'no_default_bible'
         : 'selection_failed';
-    if (scrError === 'selection_failed') db.recordDiagnostic('scripture_selection_failed', error);
+    if (scrError === 'selection_failed') db.recordDiagnostic('scripture_selection_failed', { errorKind: db.errorKind(error) });
     else console.warn('Bible selection is not confirmed', error instanceof Error ? error.message : error);
     // Скрытая попытка на входе не показывает ошибку: её покажет первое открытие блока.
     useSession.setState(

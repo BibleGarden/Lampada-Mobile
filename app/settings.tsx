@@ -15,7 +15,7 @@ import {
   useSettings,
 } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
-import { recordDiagnostic } from '../lib/db';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   DEFAULT_REMINDER_SCHEDULE,
   MAX_REMINDER_RULES,
@@ -437,7 +437,7 @@ export default function Settings() {
       if (error instanceof ScriptureCatalogUnavailableError) {
         setCatalogError(true);
       } else {
-        recordDiagnostic('scripture_selection_failed', error);
+        recordDiagnostic('scripture_selection_failed', { errorKind: errorKind(error) });
         setScriptureStorageError(true);
       }
     } finally {
@@ -792,7 +792,7 @@ export default function Settings() {
     if (!preferences) {
       // Ошибка этой попытки не должна скрыться завершением более ранней записи.
       scriptureSaveRequest.current++;
-      recordDiagnostic('scripture_preferences_save_failed', new Error('Incompatible Bible triple'));
+      recordDiagnostic('scripture_preferences_save_failed', { reason: 'incompatible_bible_triple' });
       setScriptureSaveError(true);
       return;
     }
@@ -808,7 +808,7 @@ export default function Settings() {
           if (request === scriptureSaveRequest.current) setScriptureSaveError(false);
         },
         (error: unknown) => {
-          recordDiagnostic('scripture_preferences_save_failed', error);
+          recordDiagnostic('scripture_preferences_save_failed', { errorKind: errorKind(error) });
           if (request === scriptureSaveRequest.current) setScriptureSaveError(true);
         },
       );
