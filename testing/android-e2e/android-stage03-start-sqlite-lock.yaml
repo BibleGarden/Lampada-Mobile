@@ -42,7 +42,7 @@ tags:
     id: threshold-hold-button
     waitToSettleTimeoutMs: 500
 - assertVisible: Не удалось начать молитву
-- assertVisible: Попробуй ещё раз.
+- assertVisible: Попробуйте ещё раз.
 - takeScreenshot: STG-sqlite-error
 - tapOn: Понятно
 - assertVisible:

@@ -113,7 +113,7 @@ tags:
           waitToSettleTimeoutMs: 500
           retryTapIfNoChange: false
 - extendedWaitUntil:
-    visible: Сервис расшифровки сейчас недоступен. Попробуй позже.
+    visible: Сервис расшифровки сейчас недоступен. Попробуйте позже.
     timeout: 30000
 - assertVisible:
     id: journal-recording-0-transcribe
