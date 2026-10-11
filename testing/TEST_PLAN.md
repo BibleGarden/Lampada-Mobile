@@ -410,6 +410,8 @@ the stub; execution results belong in dated reports.
 | REM-013 | Pray, then wait for the reminder time on the same day | the reminder arrives: it was agreed to remind unconditionally |
 | REM-014 | Tap the trash button for a rule or time, then tap it again within three seconds | the first tap highlights the button without deleting; the second deletes only the selected item |
 | REM-015 | Arm deletion, then wait three seconds, edit the schedule, close the editor or background the app | confirmation clears; deleting again requires two taps; arming a different target cancels the previous one |
+| REM-016 | Saving the schedule, checking the permission or scheduling in the system fails, including the sync on launch | the settings show "Could not update reminders. Please try again." under the toggle and in the editor until a later sync succeeds; nothing is reported as zero scheduled reminders; a `reminders_failed` record with the step and place is appended (unit: `prayerReminderScheduler.test.mjs`) |
+| REM-017 | The saved schedule in `meta.prayer_reminders` is unreadable | the default schedule is shown with "Could not read the saved reminder schedule. Set up reminders again." until the schedule is saved; a `reminder_schedule_invalid` record is appended; a missing schedule shows no warning (unit: `scriptureInitialization.test.mjs`) |
 
 REM-004/005/008 run through `e2e/run-rem-fire.sh`. Their clock-dependent flows
 are in `reminder-fire/`, outside the tier scan; the runner generates the required

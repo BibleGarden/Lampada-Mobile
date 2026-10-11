@@ -52,6 +52,9 @@ type SettingsState = {
   audioTranscriptionConsent: ConsentDecision;
   scripturePreferences: ScripturePreferences | null;
   reminderSchedule: ReminderSchedule;
+  // Сохранённое расписание не прочиталось и заменено расписанием по умолчанию;
+  // флаг держится до первой успешной записи расписания.
+  reminderScheduleInvalid: boolean;
   prayerMinutes: number; // длительность последней начатой молитвы; 0 = без таймера
   loaded: boolean;
   load: () => Promise<void>;
@@ -75,6 +78,7 @@ export const useSettings = create<SettingsState>((set) => ({
   audioTranscriptionConsent: 'undecided',
   scripturePreferences: null,
   reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
+  reminderScheduleInvalid: false,
   prayerMinutes: DEFAULT_PRAYER_MINUTES,
   loaded: false,
 
@@ -147,6 +151,14 @@ export const useSettings = create<SettingsState>((set) => ({
         if (scriptureRow && !storedPreferences) {
           recordDiagnostic('scripture_preferences_invalid', { reason: 'malformed_scripture_preferences' });
         }
+        const storedReminders = parseStoredReminderSchedule(remindersRow?.value ?? null);
+        // Отсутствие записи — обычное расписание по умолчанию. Повреждённая
+        // запись тоже заменяется им, но человек видит предупреждение в настройках.
+        const reminderScheduleInvalid = !!remindersRow && !storedReminders;
+        if (reminderScheduleInvalid) {
+          console.warn('Saved reminder schedule is unreadable');
+          recordDiagnostic('reminder_schedule_invalid', { reason: 'malformed_reminder_schedule' });
+        }
         set({
           coreAiConsent,
           answerContextConsent,
@@ -154,8 +166,8 @@ export const useSettings = create<SettingsState>((set) => ({
           scripturePreferences: storedPreferences,
           // Расписание по умолчанию статично, поэтому его отсутствие не нужно
           // дописывать в meta: запись появится с первой правкой пользователя.
-          reminderSchedule:
-            parseStoredReminderSchedule(remindersRow?.value ?? null) ?? DEFAULT_REMINDER_SCHEDULE,
+          reminderSchedule: storedReminders ?? DEFAULT_REMINDER_SCHEDULE,
+          reminderScheduleInvalid,
           loaded: true,
         });
       })().catch((error) => {
@@ -225,7 +237,7 @@ export const useSettings = create<SettingsState>((set) => ({
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
       JSON.stringify(schedule),
     );
-    set({ reminderSchedule: schedule });
+    set({ reminderSchedule: schedule, reminderScheduleInvalid: false });
   },
 
   setPrayerMinutes: async (minutes) => {
@@ -259,6 +271,7 @@ export const resetSettingsStore = () => {
     audioTranscriptionConsent: 'undecided',
     scripturePreferences: null,
     reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
+    reminderScheduleInvalid: false,
     prayerMinutes: DEFAULT_PRAYER_MINUTES,
     loaded: false,
   });

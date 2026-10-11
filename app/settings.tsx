@@ -33,6 +33,7 @@ import {
   reminderPermissionAsync,
   requestReminderPermissionAsync,
   syncRemindersAsync,
+  useReminderSyncStatus,
   type ReminderPermission,
 } from '../lib/prayerReminderScheduler';
 import {
@@ -340,6 +341,16 @@ export default function Settings() {
   const [biometry, setBiometry] = useState<BiometryInfo | null>(null);
   const [pinFlow, setPinFlow] = useState<PinFlow>(null);
   const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
+  const [reminderError, setReminderError] = useState(false);
+  const reminderScheduleInvalid = useSettings((s) => s.reminderScheduleInvalid);
+  const reminderSyncFailed = useReminderSyncStatus((s) => s.failed);
+  const reportReminderFailure = (step: 'save' | 'sync' | 'permission', error: unknown) => {
+    console.error('Failed to update prayer reminders', step, errorKind(error));
+    recordDiagnostic('reminders_failed', { step, place: 'settings', errorKind: errorKind(error) });
+    // Сбой синхронизации показывает useReminderSyncStatus: он же снимет
+    // предупреждение после следующей удачной синхронизации.
+    if (step !== 'sync') setReminderError(true);
+  };
   const [reminderEditorRuleIndex, setReminderEditorRuleIndex] = useState<number | null>(null);
   const [confirmReminderDelete, setConfirmReminderDelete] = useState<string | null>(null);
   const reminderDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -476,14 +487,20 @@ export default function Settings() {
     let alive = true;
     let known: ReminderPermission | null = null;
     const refresh = () => {
-      void reminderPermissionAsync().then((status) => {
+      reminderPermissionAsync().then((status) => {
         if (!alive) return;
         const changed = known !== null && known !== status;
         known = status;
         setReminderPermission(status);
         // Разрешение могли вернуть в системных настройках — тогда расписание
         // нужно снова уложить в систему. При запуске это уже сделал _layout.
-        if (changed) void syncRemindersAsync(useSettings.getState().reminderSchedule);
+        if (changed) {
+          syncRemindersAsync(useSettings.getState().reminderSchedule).catch((error: unknown) => {
+            if (alive) reportReminderFailure('sync', error);
+          });
+        }
+      }, (error: unknown) => {
+        if (alive) reportReminderFailure('permission', error);
       });
     };
     refresh();
@@ -631,13 +648,21 @@ export default function Settings() {
   // системе останется расписание, соответствующее последнему нажатию.
   const applyReminderSchedule = (next: ReminderSchedule) => {
     const normalized = normalizeReminderSchedule(next) ?? DEFAULT_REMINDER_SCHEDULE;
-    reminderSave.current = reminderSave.current
-      .catch(() => undefined)
-      .then(async () => {
+    setReminderError(false);
+    // Каждое звено сообщает о своём сбое само, поэтому цепочка ошибку не несёт.
+    reminderSave.current = reminderSave.current.then(async () => {
+      try {
         await setReminderSchedule(normalized);
+      } catch (error) {
+        reportReminderFailure('save', error);
+        return;
+      }
+      try {
         await syncRemindersAsync(normalized);
-      })
-      .catch(() => undefined);
+      } catch (error) {
+        reportReminderFailure('sync', error);
+      }
+    });
   };
 
   const editReminderRule = (ruleIndex: number, update: (rule: ReminderRule) => ReminderRule) => {
@@ -663,7 +688,14 @@ export default function Settings() {
     }
     // Разрешение спрашиваем ровно здесь — в момент, когда пользователь сам
     // включает напоминания, а не при старте приложения.
-    const status = await requestReminderPermissionAsync();
+    setReminderError(false);
+    let status: ReminderPermission;
+    try {
+      status = await requestReminderPermissionAsync();
+    } catch (error) {
+      reportReminderFailure('permission', error);
+      return;
+    }
     setReminderPermission(status);
     // Без разрешения включать нечего: тумблер честно остаётся выключенным.
     if (status !== 'granted') return;
@@ -756,6 +788,17 @@ export default function Settings() {
     });
     if (reminderEditorRuleIndex === ruleIndex) setReminderEditorRuleIndex(null);
   };
+
+  // Один и тот же текст под тумблером и в шторке правки: шторка закрывает экран.
+  const reminderWarning = reminderError || reminderSyncFailed || reminderScheduleInvalid ? (
+    <Text
+      accessibilityRole="alert"
+      style={[styles.settingHint, styles.shareAnswersHint, styles.reminderWarning]}
+      testID="reminders-error"
+    >
+      {t(reminderError || reminderSyncFailed ? 'settings.reminderSaveError' : 'settings.reminderScheduleInvalid')}
+    </Text>
+  ) : null;
 
   const activeReminderRule = reminderEditorRuleIndex === null
     ? null
@@ -959,6 +1002,7 @@ export default function Settings() {
                     {t('settings.notificationsDenied')}
                   </Text>
                 ) : null}
+                {reminderWarning}
               </View>
               <Toggle
                 value={reminderSchedule.enabled}
@@ -1339,6 +1383,7 @@ export default function Settings() {
                 <Text style={styles.addTimeText}>{t('settings.addTime')}</Text>
               </Pressable>
             ) : null}
+            {reminderWarning}
           </View>
         </BottomSheet>
       ) : null}

@@ -34,6 +34,8 @@ export function recordDiagnostic(
     | 'favorites_load_failed'
     | 'journal_failed'
     | 'consent_save_failed'
+    | 'reminders_failed'
+    | 'reminder_schedule_invalid'
     | 'settings_save_failed',
   details: Record<string, string | number>,
 ) {

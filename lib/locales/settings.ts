@@ -74,6 +74,8 @@ export const settingMessages = {
     "settings.addScheduleTime": "Add a time to schedule {number}",
     "settings.interfaceLanguage": "Interface language",
     "settings.languageSaveError": "Could not save the language. Please try again.",
+    "settings.reminderSaveError": "Could not update reminders. Please try again.",
+    "settings.reminderScheduleInvalid": "Could not read the saved reminder schedule. Set up reminders again.",
     "settings.consentSaveError": "Could not save the decision. Please try again.",
     "settings.back": "Back"
   },
@@ -152,6 +154,8 @@ export const settingMessages = {
     "settings.addScheduleTime": "Добавить время в расписание {number}",
     "settings.interfaceLanguage": "Язык интерфейса",
     "settings.languageSaveError": "Не удалось сохранить язык. Попробуйте ещё раз.",
+    "settings.reminderSaveError": "Не удалось обновить напоминания. Попробуйте ещё раз.",
+    "settings.reminderScheduleInvalid": "Не удалось прочитать сохранённое расписание напоминаний. Настройте напоминания заново.",
     "settings.consentSaveError": "Не удалось сохранить решение. Попробуйте ещё раз.",
     "settings.back": "Назад"
   },
@@ -230,6 +234,8 @@ export const settingMessages = {
     "settings.addScheduleTime": "Додати час до розкладу {number}",
     "settings.interfaceLanguage": "Мова інтерфейсу",
     "settings.languageSaveError": "Не вдалося зберегти мову. Спробуйте ще раз.",
+    "settings.reminderSaveError": "Не вдалося оновити нагадування. Спробуйте ще раз.",
+    "settings.reminderScheduleInvalid": "Не вдалося прочитати збережений розклад нагадувань. Налаштуйте нагадування знову.",
     "settings.consentSaveError": "Не вдалося зберегти рішення. Спробуйте ще раз.",
     "settings.back": "Назад"
   }

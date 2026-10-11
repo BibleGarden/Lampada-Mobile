@@ -32,6 +32,7 @@ import BootSplash from '../components/BootSplash';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import KeyboardSystemProvider from '../components/keyboard/KeyboardSystemProvider';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
@@ -84,7 +85,12 @@ export default function RootLayout() {
 
   // При смене языка заменяем уже сохранённый в системе текст напоминаний.
   useEffect(() => {
-    if (settingsLoaded) void syncRemindersAsync(useSettings.getState().reminderSchedule);
+    if (!settingsLoaded) return;
+    syncRemindersAsync(useSettings.getState().reminderSchedule).catch((error: unknown) => {
+      // Экрана здесь нет: предупреждение покажут настройки (useReminderSyncStatus).
+      console.error('Failed to schedule prayer reminders', errorKind(error));
+      recordDiagnostic('reminders_failed', { step: 'sync', place: 'startup', errorKind: errorKind(error) });
+    });
   }, [settingsLoaded, uiLanguage]);
 
   // Состояние блокировки читается отдельно от настроек и раньше них: пока оно

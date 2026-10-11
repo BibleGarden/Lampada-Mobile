@@ -611,7 +611,13 @@ affect the reminders: `prayed_days` takes no part in the schedule.
 
 The notification permission is requested at the moment the user turns the
 reminders on themselves. A refusal leaves the toggle off and is shown on the
-settings screen as text; anything scheduled is removed. `SCHEDULE_EXACT_ALARM` is
+settings screen as text; anything scheduled is removed. A failed permission
+check, schedule save or system scheduling is not treated as "nothing to
+schedule": `syncRemindersAsync` rejects, `useReminderSyncStatus` keeps the
+result of the last sync (also the one on launch), the settings screen shows a
+warning under the toggle and in the editor, and a `reminders_failed` record is
+written. An unreadable saved schedule falls back to the default but shows its own
+warning and writes `reminder_schedule_invalid`. `SCHEDULE_EXACT_ALARM` is
 not requested, so the display time is approximate. The reminders use their own
 Android channel `prayer_reminders` and are marked with `content.data.kind`: the
 scheduler only cancels its own notifications and does not touch the ongoing
