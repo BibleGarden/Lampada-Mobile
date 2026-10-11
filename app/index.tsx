@@ -12,7 +12,7 @@ import { useSession } from '../lib/store';
 import { startHomeRefresh } from '../lib/homeRefresh';
 import { fitFlameWidth } from '../lib/flameGeometry';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
-import { colors, column, fonts, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, sc, screenGutter, useStyles } from '../lib/theme';
 
 const greetingByHour = (t: ReturnType<typeof useI18n>['t']) => {
   const h = new Date().getHours();
@@ -123,7 +123,7 @@ export default function Home() {
           </View>
         </View>
 
-        <View style={styles.center} onLayout={onCenterLayout}>
+        <View style={[styles.center, showSavedNotice && { marginBottom: sc(12) }]} onLayout={onCenterLayout}>
           {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
               после — в полную силу: «поддержи» обретает буквальный смысл */}
           <Flame width={flameWidth} lit={streak.prayedToday} />
@@ -168,8 +168,8 @@ const stylesFactory = () => StyleSheet.create({
   screen: { flex: 1, ...column() },
   top: {
     position: 'absolute',
-    left: sc(18),
-    right: sc(18),
+    left: screenGutter(),
+    right: screenGutter(),
     zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,7 +234,7 @@ const stylesFactory = () => StyleSheet.create({
   // получать оставшуюся высоту, иначе на низком окне огонёк с подписями
   // центрируется по всему экрану и наезжает на кнопку.
   bottom: {
-    paddingHorizontal: sc(18),
+    paddingHorizontal: screenGutter(),
   },
   savedNotice: {
     marginBottom: sc(12),

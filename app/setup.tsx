@@ -305,7 +305,7 @@ const stylesFactory = () => StyleSheet.create({
   goal: { flexShrink: 1, zIndex: 1 },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
   removedWhileEditing: { display: 'none' },
-  goalDocked: { flex: 1, marginTop: sc(24) },
+  goalDocked: { flex: 1, marginTop: sc(24), marginBottom: sc(18) },
   topicSlotDocked: { flex: 1, minHeight: 0 },
   headerRow: {
     flexDirection: 'row',

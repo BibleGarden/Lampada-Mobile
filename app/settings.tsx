@@ -64,7 +64,7 @@ import {
   verifyPin,
   type BiometryInfo,
 } from '../lib/lock';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
@@ -918,7 +918,7 @@ export default function Settings() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             paddingTop: sc(16),
-            paddingHorizontal: sc(12),
+            paddingHorizontal: screenGutter(),
             paddingBottom: insets.bottom + sc(24),
           }}
         >
@@ -1419,7 +1419,7 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   screen: { flex: 1, ...column() },
   top: {
-    paddingHorizontal: sc(12),
+    paddingHorizontal: screenGutter(),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   topSpacer: { width: sc(34), height: sc(34) },

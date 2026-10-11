@@ -133,7 +133,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
       </View>
       <BottomSheetScrollView
         {...contentA11y}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + sc(40) }]}
         onContentSizeChange={(_, height) => setContentHeight(height)}
       >
         {cur?.title ? <Text style={styles.title}>{cur.title}</Text> : null}
@@ -190,8 +190,10 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.white50,
   },
   content: {
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
     paddingHorizontal: sc(18),
-    paddingBottom: sc(40),
   },
   text: {
     fontFamily: fonts.serif,

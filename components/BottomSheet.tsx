@@ -104,7 +104,7 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.78)',
   },
   sheet: {
-    width: '100%', maxWidth: sc(390), alignSelf: 'center',
+    width: '100%', maxWidth: Math.min(sc(390), 480), alignSelf: 'center',
     maxHeight: '82%', paddingTop: sc(7), paddingHorizontal: sc(14),
     backgroundColor: '#171109', borderTopLeftRadius: sc(22), borderTopRightRadius: sc(22),
     borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(214,182,120,.2)',

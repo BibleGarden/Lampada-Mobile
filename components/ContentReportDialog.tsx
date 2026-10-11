@@ -169,7 +169,9 @@ export default function ContentReportDialog({
                   onPress={dismiss}
                   style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}
                 >
-                  <Text style={styles.secondaryActionText}>{t('components.contentReport.cancel')}</Text>
+                  <Text style={styles.secondaryActionText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+                    {t('components.contentReport.cancel')}
+                  </Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -182,7 +184,7 @@ export default function ContentReportDialog({
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Text style={styles.primaryActionText}>
+                  <Text style={styles.primaryActionText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                     {submitting
                       ? t('components.contentReport.sending')
                       : t('components.contentReport.send')}

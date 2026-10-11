@@ -15,7 +15,8 @@ import {
   favoriteToScriptureDisplay,
   type FavoriteScripture,
 } from '../lib/scripture';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
+import { withoutPunctuationAtClippedLine } from '../lib/textTruncation';
 
 /**
  * Сколько строк отрывка показывать в свёрнутой карточке. В доке лимит считается
@@ -28,6 +29,7 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
   const styles = useStyles(stylesFactory);
   const [expanded, setExpanded] = useState(false);
   const [lines, setLines] = useState(0);
+  const [collapsedOverride, setCollapsedOverride] = useState<string | null>(null);
 
   // Ответ сервера сохранён вместе с записью, поэтому карточку рисует тот же
   // компонент, что и во время молитвы: свёрнутая — только ключевые стихи,
@@ -51,12 +53,13 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
               scripture={display}
               style={styles.text}
               numberOfLines={expanded ? undefined : COLLAPSED_LINES}
+              compactTextOverride={expanded ? undefined : collapsedOverride ?? undefined}
               testIDPrefix={`favorite-highlight-${favorite.id}`}
               variant={expanded ? 'full' : 'compact'}
             />
           ) : (
             <Text style={styles.text} numberOfLines={expanded ? undefined : COLLAPSED_LINES}>
-              {favorite.text}
+              {expanded ? favorite.text : collapsedOverride ?? favorite.text}
             </Text>
           )}
           {/* Невидимая копия свёрнутого текста: по ней считаем реальное число
@@ -67,11 +70,17 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
             importantForAccessibility="no-hide-descendants"
             pointerEvents="none"
             style={[styles.text, styles.measure]}
-            onTextLayout={({ nativeEvent }) =>
-              setLines((current) =>
-                current === nativeEvent.lines.length ? current : nativeEvent.lines.length,
-              )
-            }
+            onTextLayout={({ nativeEvent }) => {
+              const measured = nativeEvent.lines;
+              setLines((current) => current === measured.length ? current : measured.length);
+              const next = measured.length > COLLAPSED_LINES
+                ? withoutPunctuationAtClippedLine(collapsedText, measured[COLLAPSED_LINES - 1].text)
+                : collapsedText;
+              setCollapsedOverride((current) => {
+                const corrected = next === collapsedText ? null : next;
+                return current === corrected ? current : corrected;
+              });
+            }}
           >
             {collapsedText}
           </Text>
@@ -133,7 +142,7 @@ export default function Favorites() {
         <ScrollView
           contentContainerStyle={{
             paddingTop: sc(14),
-            paddingHorizontal: sc(10),
+            paddingHorizontal: screenGutter(),
             paddingBottom: insets.bottom + sc(28),
             gap: sc(12),
           }}
@@ -157,7 +166,7 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   screen: { flex: 1, ...column() },
   top: {
-    paddingHorizontal: sc(12), paddingBottom: sc(8),
+    paddingHorizontal: screenGutter(), paddingBottom: sc(8),
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   empty: {

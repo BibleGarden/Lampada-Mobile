@@ -23,7 +23,7 @@ import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport, { KeyboardPendingSpace } from '../components/keyboard/KeyboardViewport';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
-import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
 
 const ReflectionFlame = React.memo(Flame);
 
@@ -92,7 +92,6 @@ function ReflectScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.body,
-              dockedKeyboard && styles.bodyEditing,
               {
                 paddingTop: insets.top + sc(16),
                 paddingBottom: dockedKeyboard ? sc(16) : sc(24),
@@ -181,7 +180,6 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   fill: { flex: 1 },
   body: { flexGrow: 1, paddingHorizontal: sc(18), ...column() },
-  bodyEditing: { maxWidth: isTablet() ? 960 : sc(360) },
   content: { flexGrow: 1 },
   emberWrap: {
     alignItems: 'center',

@@ -546,6 +546,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   // ADR-0012: колонка держит меру строки и на планшете
   questionWrap: {
+    ...column(),
     paddingHorizontal: sc(16),
   },
   stage: {
@@ -758,9 +759,10 @@ const stylesFactory = () => StyleSheet.create({
   // висит у верхнего края, а до кнопки «готово» тянется пустая полоса.
   recOverlayContent: {
     flex: 1,
+    minHeight: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: sc(24),
+    gap: sc(12),
   },
   recOverlayKicker: {
     fontFamily: fonts.sans,

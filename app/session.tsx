@@ -43,7 +43,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
-import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
@@ -609,7 +609,7 @@ function SessionScreen() {
               // Только отбивка от безопасной зоны: в альбоме на планшете
               // высота дефицитна, и каждая точка тут отнимается у карточки.
               paddingTop: insets.top + sc(2),
-              paddingBottom: insets.bottom + sc(4),
+              paddingBottom: Math.max(insets.bottom + sc(4), sc(16)),
             },
           ]}
         >
@@ -920,7 +920,7 @@ const stylesFactory = () => StyleSheet.create({
     alignSelf: 'center',
     maxWidth: sc(390),
     marginHorizontal: sc(16),
-    paddingHorizontal: sc(18),
+    paddingHorizontal: screenGutter(),
     paddingVertical: sc(12),
     borderRadius: sc(14),
     backgroundColor: '#21190f',

@@ -36,7 +36,7 @@ import { transcriptionErrorMessageKey, transcriptionFailureCode, type Transcript
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
-import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 export default function Journal() {
@@ -482,7 +482,9 @@ export default function Journal() {
                 style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.7 }]}
               >
                 <ShareIcon size={14} color="rgba(255,255,255,.45)" />
-                <Text style={styles.actionLabel}>{t('screens.journal.share')}</Text>
+                <Text style={styles.actionLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+                  {t('screens.journal.share')}
+                </Text>
               </Pressable>
 
               <Pressable
@@ -493,7 +495,12 @@ export default function Journal() {
                 style={[styles.actionBtn, confirming && styles.actionBtnConfirming]}
               >
                 <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
-                <Text style={[styles.actionLabel, confirming && { color: '#ec8a7a' }]}>
+                <Text
+                  style={[styles.actionLabel, confirming && { color: '#ec8a7a' }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
+                >
                   {confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
                 </Text>
               </Pressable>
@@ -513,7 +520,7 @@ export default function Journal() {
       }}
     >
       <ScreenBg />
-      <KeyboardViewport>
+      <KeyboardViewport safeAreaInContent>
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
           <IconButton
@@ -558,9 +565,9 @@ export default function Journal() {
           renderItem={renderEntry}
           onScrollBeginDrag={dismissKeyboard}
           contentContainerStyle={{
-            paddingHorizontal: sc(18),
+            paddingHorizontal: screenGutter(),
             paddingTop: sc(12),
-            paddingBottom: sc(24),
+            paddingBottom: insets.bottom + sc(24),
             gap: sc(10),
           }}
           ListEmptyComponent={
@@ -743,15 +750,15 @@ const stylesFactory = () => StyleSheet.create({
   screen: { flex: 1, ...column() },
   top: {
     position: 'absolute',
-    left: sc(12),
-    right: sc(12),
+    left: screenGutter(),
+    right: screenGutter(),
     zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   searchWrap: {
-    marginHorizontal: sc(18),
+    marginHorizontal: screenGutter(),
     justifyContent: 'center',
   },
   search: {
