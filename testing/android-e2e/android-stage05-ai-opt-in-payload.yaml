@@ -72,7 +72,7 @@ tags:
       visible:
         id: privacy-consent-answer_context
     commands:
-      - assertVisible: Чтобы следующие вопросы.*ваши ответы и расшифровки.*Google Gemini.*
+      - assertVisible: Чтобы следующие вопросы.*твои ответы и расшифровки.*Google Gemini.*
       - tapOn:
           id: privacy-consent-answer_context-allow
           waitToSettleTimeoutMs: 500

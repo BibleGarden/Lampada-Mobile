@@ -1066,8 +1066,7 @@ preferences (ADR-0021). The `ui_language` SQLite meta value publishes to Zustand
 after a successful serialized write. The initial choice follows the first
 supported device language, with English as fallback. React screens and overlays
 subscribe through `useI18n`; library messages use `translate`. Bundled catalogs
-include accessibility, privacy, errors, dates and reminder copy. Russian and
-Ukrainian interface copy addresses the user formally: ru «вы», uk «ви».
+include accessibility, privacy, errors, dates and reminder copy.
 
 Changing the interface language reschedules system-held reminder text without
 altering the saved schedule. Timer labels are passed into native rendering.

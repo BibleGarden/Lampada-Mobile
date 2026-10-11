@@ -82,7 +82,7 @@ tags:
       - tapOn:
           id: "privacy-consent-audio_transcription-allow"
 - extendedWaitUntil:
-    visible: "Сервис расшифровки сейчас недоступен. Попробуйте позже."
+    visible: "Сервис расшифровки сейчас недоступен. Попробуй позже."
     timeout: 30000
 - assertVisible:
     id: "journal-recording-0-transcribe"

@@ -37,7 +37,7 @@ tags:
     end: "50%,78%"
     duration: 1700
 - assertVisible: "Не удалось начать молитву"
-- assertVisible: "Попробуйте ещё раз."
+- assertVisible: "Попробуй ещё раз."
 - takeScreenshot: STG-sqlite-error
 - tapOn: "Понятно"
 # Кнопка не мёртвая: повторный вход проходит (хук одноразовый).
