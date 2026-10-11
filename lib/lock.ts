@@ -307,6 +307,9 @@ export type WipeResult = { remindersCancelled: boolean };
  * узнал о неполном стирании.
  */
 export async function wipeEverything(): Promise<WipeResult> {
+  // Пока флаг защиты не удалён, ничего не стираем: LockGate остаётся
+  // доступным для повторной попытки, если SecureStore откажет.
+  await deleteSecure(KEY_ENABLED);
   // Расписание напоминаний живёт в системе, а не только в базе: не сняв его,
   // приложение продолжало бы напоминать по стёртому расписанию.
   let remindersError: unknown = null;
@@ -319,7 +322,7 @@ export async function wipeEverything(): Promise<WipeResult> {
   }
   await wipeLocalData();
   try {
-    await Promise.all(ALL_KEYS.map(deleteSecure));
+    await Promise.all(ALL_KEYS.filter((key) => key !== KEY_ENABLED).map(deleteSecure));
     if (!remindersCancelled) {
       // Пишем после wipeLocalData: стирание удаляет и диагностический лог.
       console.error('Wipe could not cancel prayer reminders', errorKind(remindersError));

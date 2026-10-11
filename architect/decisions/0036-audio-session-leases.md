@@ -21,6 +21,8 @@ native audio work and releases it after pause, completion, failure or exit.
 Narration interrupted by system audio focus loss keeps its lease so Android
 can resume it on focus gain. Its distinct `interrupted` phase does not hold an
 expired prayer open; a user pause, stop, completion or unmount releases it.
+Manual resume from `interrupted` reuses that lease. If the playback grant is
+stale, narration remains interrupted with its lease and verse highlight intact.
 Journal playback acquires a lease and requests playback mode before `play()`;
 pause, completion, failure and unmount release it without native player calls
 from unmount cleanup.

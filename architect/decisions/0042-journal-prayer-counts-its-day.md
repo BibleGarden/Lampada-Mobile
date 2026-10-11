@@ -44,9 +44,10 @@ person pray that day.
    grows, so the order of a checkpoint and the completion write does not matter.
 6. A one-time migration (`meta.prayed_days_journal_backfill`) adds the days of the
    journal sessions saved before this rule. It keeps existing days that have no
-   journal session until a write removes the last visible prayer of that same
-   day (including clearing its only answer); then day synchronisation removes
-   the day. They were counted under the previous rule. The legacy
+   journal session until an answer save, checkpoint, completion or deletion of
+   a prayer started that day finds no visible prayer on that day; then day
+   synchronisation removes the legacy day too. They were counted under the
+   previous rule. The legacy
    streak counter (`meta.streak_last_day`, `meta.streak_count`) is now migrated
    once and deleted in the same transaction; it was applied on every launch and
    would have restored a day removed by deleting its last prayer.
@@ -87,7 +88,7 @@ seven dots on Home.
   zone change marks the start day in the new zone; a day counted in the old zone
   stays.
 - Days counted earlier for sessions deleted under the previous rule stay in the
-  streak.
+  streak until a day-sync write finds no visible prayer started on that day.
 
 ## References
 

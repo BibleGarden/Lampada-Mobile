@@ -137,13 +137,14 @@ upgrading it requires rebuilding the native app.
 | `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
 | `lib/audioSession.ts` | The app's single audio mode coordinator, bound to Expo's session activation |
-| `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
+| `lib/audioPlayerOperation.ts` | Draft readiness, stale-play cancellation, audio-session leases and native status listeners; journal start after a playback grant (`startJournalPlayback`) |
+| `lib/journalPlaybackOperation.ts` | Journal playback state, pause/row-switch cancellation, native completion/error and start-timeout handling; unmount releases leases without player calls |
 | `lib/nativePlaybackStart.ts` | The check that `play()` really started the native player, with a start timeout and an overall buffering limit; shared by narration, the journal and answer drafts |
 | `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/recordingLimitController.ts` | The single stop decision from the recorder's accumulated recorded milliseconds |
 | `lib/useRecordingLimit.ts` | The mounted recording-limit lifecycle: polling, per-recording reset, guarded manual stop, UI state and terminal failure reporting |
-| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context; classification of the native player status |
+| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations, native interruption and resume lease decisions, and verse highlighting |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
 | `lib/scriptureCatalogClient.ts` | The HTTP client of languages, translations and available narrations |
 | `lib/scripturePreferences.ts` | The valid dependent triple of language, translation and narration |
@@ -415,8 +416,12 @@ fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
 System-paused narration retains its lease so Android can resume it when audio
 focus returns, but does not hold an expired prayer's completion deadline. User
+resume reuses that lease; a stale playback grant restores the interrupted phase
+with its lease and verse highlight intact. User
 pause, stop, completion and unmount release the lease. Journal playback takes
-its own lease and requests playback mode before calling `play()`.
+its own lease and requests playback mode before calling `play()`. Its lifecycle
+operation owns all release paths and distinguishes mode failures from native
+replace/play failures.
 On answer-sheet unmount, Expo Audio may release its native player and recorder
 before the sheet's effect cleanup. That cleanup cancels pending cue work and
 status listeners and releases leases without calling native audio methods.
@@ -731,6 +736,10 @@ your PIN?" link performs a full wipe: `wipeLocalData` in `lib/db.ts` deletes the
 whole database file through `deleteDatabaseAsync` and removes the audio files of
 the recordings, while `wipeEverything` in `lib/lock.ts` additionally cancels the
 scheduled reminders, clears the SecureStore keys and resets the in-memory stores.
+It first deletes the lock-enabled flag: a failure there preserves the data and
+the lock screen for retry. After data deletion, the stores are reset in `finally`
+even if a remaining SecureStore key cannot be removed; without the enabled flag,
+leftover keys cannot turn protection back on at the next launch.
 If the reminders cannot be cancelled, the wipe still completes (it is the only
 way past a forgotten PIN), then writes `wipe_incomplete` and tells the person to
 turn off the app's notifications in the system settings.
@@ -756,7 +765,7 @@ created and filled in on open.
 | `scripture_books` | A local directory of book names per translation |
 | `favorites_legacy_backup` | A copy of the old favourites from before the migration |
 | `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value, and `prayer_minutes` - the duration of the last started prayer (0 = untimed), which `/setup` opens with; saved on the prayer start, so extending the timer does not change it; the default of 10 minutes applies until the first prayer |
-| `prayed_days` | The local calendar days of prayers shown in the journal, keyed by prayer start, plus legacy days kept by ADR-0042 until the last journal prayer of that day is cleared or deleted; the streak is computed from them |
+| `prayed_days` | The local calendar days of prayers shown in the journal, keyed by prayer start, plus legacy days kept until a day-sync write finds no visible prayer that day (ADR-0042); the streak is computed from them |
 
 A quote is tied to a prayer through `scripture_favorites.session_id`, which is set
 at the moment it is saved. For records made before the column existed, the link is

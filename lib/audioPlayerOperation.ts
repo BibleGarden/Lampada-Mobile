@@ -46,6 +46,15 @@ export function createPlaybackLeaseOperation() {
   };
 }
 
+export class JournalPlaybackStartError extends Error {
+  readonly reason: 'mode_failed' | 'play_failed';
+
+  constructor(reason: 'mode_failed' | 'play_failed', cause: unknown) {
+    super('Journal recording could not start', { cause });
+    this.reason = reason;
+  }
+}
+
 /** A journal item only starts after its lease has reactivated the native session. */
 export async function startJournalPlayback(
   operation: ReturnType<typeof createPlaybackLeaseOperation>,
@@ -55,6 +64,7 @@ export async function startJournalPlayback(
   uri: string,
 ): Promise<boolean> {
   const attempt = operation.begin(acquireSession);
+  let reason: 'mode_failed' | 'play_failed' = 'mode_failed';
   try {
     const grant = await requestPlayback();
     if (!operation.isCurrent(attempt)) return false;
@@ -62,13 +72,14 @@ export async function startJournalPlayback(
       await operation.cancel();
       return false;
     }
+    reason = 'play_failed';
     player.replace(uri);
     player.play();
     return true;
   } catch (error) {
     if (!operation.isCurrent(attempt)) return false;
     await operation.cancel();
-    throw error;
+    throw new JournalPlaybackStartError(reason, error);
   }
 }
 

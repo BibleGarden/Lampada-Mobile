@@ -39,6 +39,52 @@ export type NarrationNativeStatus = {
   isBuffering: boolean;
 };
 
+export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'interrupted' | 'error';
+
+type NarrationInterruptionEvent =
+  | { type: 'status'; status: NarrationNativeStatus; liveStatus: NarrationNativeStatus; started: boolean }
+  | { type: 'resume_requested' }
+  | { type: 'resume_denied' };
+
+/** Решение о фазе и lease общее для системной паузы и ручного возобновления. */
+export function narrationInterruptionTransition(
+  phase: ScriptureAudioPhase,
+  event: NarrationInterruptionEvent,
+): { phase: ScriptureAudioPhase; session: 'retain' | 'acquire' | 'release'; audioBusy: boolean } | null {
+  if (event.type === 'resume_requested') {
+    return { phase: 'loading', session: phase === 'interrupted' ? 'retain' : 'acquire', audioBusy: true };
+  }
+  if (event.type === 'resume_denied') {
+    const interrupted = phase === 'interrupted';
+    return { phase, session: interrupted ? 'retain' : 'release', audioBusy: interrupted };
+  }
+  if (phase === 'interrupted' && event.status.playing && event.liveStatus.playing) {
+    return { phase: 'playing', session: 'retain', audioBusy: true };
+  }
+  if (phase === 'playing'
+    && narrationNativeState(event.status, event.started) === 'stopped'
+    && narrationNativeState(event.liveStatus, true) === 'stopped') {
+    return { phase: 'interrupted', session: 'retain', audioBusy: true };
+  }
+  return null;
+}
+
+/** Подсветка сохраняется и при системной паузе между стихами. */
+export function narrationActiveVerse(
+  phase: ScriptureAudioPhase,
+  verses: readonly { number: number; startSeconds: number; endSeconds: number }[],
+  currentTime: number,
+): number | null {
+  if ((phase !== 'playing' && phase !== 'paused' && phase !== 'interrupted') || verses.length === 0) return null;
+  let active = verses[0].number;
+  for (let index = 1; index < verses.length; index++) {
+    const switchTime = (verses[index - 1].endSeconds + verses[index].startSeconds) / 2;
+    if (currentTime + 0.03 < switchTime) break;
+    active = verses[index].number;
+  }
+  return active;
+}
+
 /**
  * How the native player relates to a narration the interface shows as playing.
  * `started` once it plays; `waiting` while it buffers or has not started yet;

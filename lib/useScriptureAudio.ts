@@ -11,11 +11,11 @@ import {
   type AudioSessionLease,
 } from './audioModeCoordinator';
 import { audioModeCoordinator } from './audioSession';
-import { createScriptureAudioOperation, narrationNativeState } from './scriptureAudioOperation';
+import { createScriptureAudioOperation, narrationActiveVerse, narrationInterruptionTransition, narrationNativeState, type ScriptureAudioPhase } from './scriptureAudioOperation';
 import { watchNativePlaybackStart } from './nativePlaybackStart';
 import { errorKind, recordDiagnostic } from './db';
 
-export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'interrupted' | 'error';
+export type { ScriptureAudioPhase } from './scriptureAudioOperation';
 
 const SCRIPTURE_PLAYBACK_MODE = {
   allowsRecording: false,
@@ -161,31 +161,29 @@ export function useScriptureAudio({
       finishClip(clip);
       return;
     }
-    const native = narrationNativeState(status, nativeStartedRef.current);
-    if (native === 'started') {
-      nativeStartedRef.current = true;
-      if (phase === 'interrupted') {
-        setPhase('playing');
-        onAudioBusyChange(true);
-      }
-      return;
-    }
-    if (phase === 'interrupted') return;
-    if (native !== 'stopped') return;
     // Событие статуса могло отстать от недавнего play(): решает живой статус.
     const live = player.currentStatus;
-    if (narrationNativeState(live, true) !== 'stopped') return;
-    if (live.duration > 0 && live.currentTime + 0.5 >= live.duration) {
+    if (narrationNativeState(live, nativeStartedRef.current) === 'stopped'
+      && live.duration > 0 && live.currentTime + 0.5 >= live.duration) {
       // Последний стих главы может кончаться позже файла: плеер дошёл до конца сам.
       finishClip(clip);
       return;
     }
-    nativeStartedRef.current = false;
+    const transition = narrationInterruptionTransition(phase, {
+      type: 'status', status, liveStatus: live, started: nativeStartedRef.current,
+    });
+    if (status.playing) nativeStartedRef.current = true;
+    if (!transition) return;
+    if (transition.session === 'release') releaseSession();
+    nativeStartedRef.current = transition.phase === 'playing';
     // Android возобновит плеер после возврата audio focus, только пока lease
     // держит сессию активной. Deadline при этом не ждёт системную паузу.
-    setPhase('interrupted');
+    clearStartWatch();
+    setPhase(transition.phase);
+    onAudioBusyChange(transition.audioBusy);
   }, [
     finishClip,
+    clearStartWatch,
     onAudioBusyChange,
     phase,
     player,
@@ -215,12 +213,13 @@ export function useScriptureAudio({
       return;
     }
     if ((phase === 'paused' || phase === 'interrupted' || phase === 'idle') && clipRef.current) {
-      if (phase === 'interrupted') releaseSession();
       const continuation = playbackOperation.begin();
       if (!continuation) return;
-      const lease = acquireSession();
-      setPhase('loading');
-      onAudioBusyChange(true);
+      const transition = narrationInterruptionTransition(phase, { type: 'resume_requested' })!;
+      const lease = transition.session === 'retain' ? sessionLeaseRef.current : acquireSession();
+      if (!lease) throw new Error('Interrupted narration has no audio session lease');
+      setPhase(transition.phase);
+      onAudioBusyChange(transition.audioBusy);
       void audioModeCoordinator
         .requestPlayback(setAudioModeAsync, SCRIPTURE_PLAYBACK_MODE)
         .then((grant) => {
@@ -229,9 +228,10 @@ export function useScriptureAudio({
             return;
           }
           if (!grant?.isCurrent()) {
-            setPhase(phase);
-            onAudioBusyChange(false);
-            releaseSession(lease);
+            const denied = narrationInterruptionTransition(phase, { type: 'resume_denied' })!;
+            setPhase(denied.phase);
+            onAudioBusyChange(denied.audioBusy);
+            if (denied.session === 'release') releaseSession(lease);
             return;
           }
           playNative();
@@ -311,25 +311,10 @@ export function useScriptureAudio({
     })();
   }, [acquireSession, clearStartWatch, enabled, onAudioBusyChange, phase, playbackOperation, playNative, player, releaseSession, scripture, scriptureKey, voice]);
 
-  let activeVerseNumber: number | null = null;
   const clip = clipRef.current;
-  const currentScriptureKey = scriptureKey;
-  if (
-    (phase === 'playing' || phase === 'paused') &&
-    clip?.verses.length &&
-    scriptureKeyRef.current === currentScriptureKey
-  ) {
-    // Между стихами не оставляем пустой кадр: отметка переходит на следующий
-    // стих один раз, в середине паузы между end предыдущего и begin следующего.
-    activeVerseNumber = clip.verses[0].number;
-    for (let index = 1; index < clip.verses.length; index++) {
-      const previous = clip.verses[index - 1];
-      const current = clip.verses[index];
-      const switchTime = (previous.endSeconds + current.startSeconds) / 2;
-      if (status.currentTime + 0.03 < switchTime) break;
-      activeVerseNumber = current.number;
-    }
-  }
+  const activeVerseNumber = clip && scriptureKeyRef.current === scriptureKey
+    ? narrationActiveVerse(phase, clip.verses, status.currentTime)
+    : null;
 
   // Стабильный объект: читалка мемоизирована и получает его через props.
   return useMemo(() => ({ phase, activeVerseNumber, stop, toggle }), [phase, activeVerseNumber, stop, toggle]);

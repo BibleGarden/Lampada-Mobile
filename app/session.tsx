@@ -738,10 +738,10 @@ function SessionScreen() {
         <Animated.View
           exiting={FadeOut.duration(250)}
           pointerEvents="none"
-          style={[styles.expiryNotice, { top: insets.top + sc(8) }]}
+          style={[styles.expiryNoticePosition, { top: insets.top + sc(8) }]}
           testID="session-expiry-notice"
         >
-          <CardIn duration={200}>
+          <CardIn duration={200} style={styles.expiryNotice}>
             <Text style={styles.expiryNoticeText}>
               {t('screens.session.expiryNotice')}
             </Text>
@@ -915,18 +915,20 @@ function AdjustBtn({
 }
 
 const stylesFactory = () => StyleSheet.create({
-  expiryNotice: {
+  expiryNoticePosition: {
     position: 'absolute',
     alignSelf: 'center',
     maxWidth: sc(390),
     marginHorizontal: sc(16),
+    zIndex: 30,
+  },
+  expiryNotice: {
     paddingHorizontal: screenGutter(),
     paddingVertical: sc(12),
     borderRadius: sc(14),
     backgroundColor: '#21190f',
     borderWidth: 1,
     borderColor: 'rgba(214,182,120,.3)',
-    zIndex: 30,
     elevation: 30,
   },
   expiryNoticeText: {
