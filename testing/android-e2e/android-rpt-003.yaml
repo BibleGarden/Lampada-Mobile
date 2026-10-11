@@ -56,7 +56,7 @@ tags:
     id: content-report-send
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible: Сейчас не удалось отправить жалобу. Попробуйте ещё раз.
+- assertVisible: Сейчас не удалось отправить жалобу. Попробуй ещё раз.
 - assertVisible:
     id: content-report-dialog
 - assertVisible:

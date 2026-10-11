@@ -42,7 +42,7 @@ tags:
 - tapOn:
     id: "content-report-send"
 # Первый запрос в режиме fail-once получает 500: ошибка, диалог и текст живы.
-- assertVisible: "Сейчас не удалось отправить жалобу. Попробуйте ещё раз."
+- assertVisible: "Сейчас не удалось отправить жалобу. Попробуй ещё раз."
 - assertVisible:
     id: "content-report-dialog"
 - assertVisible:
