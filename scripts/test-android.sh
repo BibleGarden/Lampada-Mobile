@@ -30,7 +30,7 @@ else
   cat "$run_dir/environment.log" >&2
   exit "$result"
 fi
-[[ "$(adb -s "$device" shell getprop sys.boot_completed | tr -d '\r')" == 1 ]] || { echo 'Android has not booted' >&2; exit 1; }
+node scripts/android-guest-load.mjs boot --device "$device"
 adb -s "$device" shell dumpsys package com.nf404.twinkler > "$run_dir/installed-package.log"
 grep -q 'versionName=' "$run_dir/installed-package.log" || { echo 'Lampada is not installed' >&2; exit 1; }
 if grep -q DEBUGGABLE "$run_dir/installed-package.log"; then
@@ -48,19 +48,42 @@ rm "$run_dir/installed-base.apk"
 locale="$(adb -s "$device" shell settings get system system_locales | tr -d '\r')"
 [[ "$locale" == ru-RU* ]] || { echo "Expected Russian as the primary Android locale, got $locale" >&2; exit 1; }
 
+# Без --no-reinstall-driver Maestro переустанавливает драйвер в начале каждого
+# сценария, и установка нагружает гостя сразу после гейта.
+bash scripts/android-maestro-driver.sh "$device" "$run_dir"
+
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 printf 'flow\texit\n' > "$run_dir/results.tsv"
 for flow in "${flows[@]}"; do
   echo "Starting $flow"
   # Relaunch must immediately follow smoke-full: it verifies the saved data.
+  : > "$run_dir/$flow.log"
+  # Bash не передаёт сигналы дочернему процессу: гейт запускается в фоне,
+  # ловушка пересылает ему остановку, а он — Maestro.
+  stopped=0
+  node scripts/android-guest-load.mjs run --device "$device" --flow "$flow" --flow-log "$run_dir/$flow.log" -- \
+    maestro --device "$device" test --no-reinstall-driver --test-output-dir "$run_dir/$flow" \
+    "testing/android-e2e/$flow.yaml" &
+  pid=$!
+  trap 'stopped=1; kill -TERM "$pid" 2>/dev/null' TERM HUP INT
   set +e
-  maestro --device "$device" test --test-output-dir "$run_dir/$flow" \
-    "testing/android-e2e/$flow.yaml" > "$run_dir/$flow.log" 2>&1
+  wait "$pid"
   result=$?
+  # Сигнал прерывает wait раньше выхода процесса; ждём его настоящий код.
+  while (( stopped )) && kill -0 "$pid" 2>/dev/null; do
+    wait "$pid"
+    result=$?
+  done
+  (( stopped )) && { wait "$pid"; result=$?; }
   set -e
+  trap - TERM HUP INT
   printf '%s\t%s\n' "$flow" "$result" >> "$run_dir/results.tsv"
   printf '%s\n' "$result" > "$run_dir/$flow.exit"
   echo "$flow exit=$result"
+  if (( stopped )); then
+    echo "Stopped by a signal during $flow; full log: $run_dir/$flow.log" >&2
+    exit "$(( result ? result : 143 ))"
+  fi
   if [[ "$result" -ne 0 ]]; then
     echo "Stopped at first failure; full log: $run_dir/$flow.log" >&2
     exit "$result"
