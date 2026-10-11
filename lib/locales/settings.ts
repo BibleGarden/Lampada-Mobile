@@ -195,7 +195,7 @@ export const settingMessages = {
     "settings.privacy": "Конфіденційність",
     "settings.privacyRow": "Дані для ШІ",
     "settings.privacyAllowedCount": "Дозволено {count} з {total}",
-    "settings.privacyHint": "Ми надсилаємо ці дані лише з твого дозволу. На своєму сервері ми їх не зберігаємо.",
+    "settings.privacyHint": "Ми надсилаємо ці дані лише з вашого дозволу. На своєму сервері ми їх не зберігаємо.",
     "settings.prayerTopic": "Тема молитви",
     "settings.topicConsentHint": "Тему вашої молитви надсилаємо до Google Gemini, щоб запропонувати запитання й дібрати уривки з Писання.",
     "settings.answers": "Відповіді й розшифровки аудіо",
