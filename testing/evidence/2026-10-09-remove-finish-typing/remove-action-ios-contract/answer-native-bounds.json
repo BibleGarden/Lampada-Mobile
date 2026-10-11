@@ -1,0 +1,51 @@
+{
+  "platform": "ios",
+  "expected_mode": "docked",
+  "viewport": [
+    0,
+    0,
+    402,
+    539
+  ],
+  "observed_mode": "docked",
+  "boundary_source": "UIKit native inputView and window frames; safe-area insets are not exposed",
+  "elements": {
+    "answer-input": {
+      "bounds": [
+        23,
+        227,
+        379,
+        428
+      ],
+      "focused": false
+    },
+    "answer-save-button": {
+      "bounds": [
+        187,
+        472,
+        380,
+        517
+      ],
+      "focused": false
+    },
+    "answer-record-button": {
+      "bounds": [
+        22,
+        472,
+        66,
+        517
+      ],
+      "focused": false
+    },
+    "answer-cancel-button": {
+      "bounds": [
+        77,
+        472,
+        176,
+        517
+      ],
+      "focused": false
+    },
+    "answer-keyboard-dismiss": null
+  }
+}

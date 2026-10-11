@@ -18,7 +18,7 @@ tags:
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
 - inputText: JRN-002 брошенная сессия
-- pressKey: Enter
+- runFlow: helpers/dismiss-keyboard.yaml
 - tapOn:
     id: setup-preset-0
     waitToSettleTimeoutMs: 500

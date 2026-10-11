@@ -74,3 +74,33 @@ tags:
     id: "recordings-close-button"
 - assertVisible:
     id: "answer-save-button"
+- waitForAnimationToEnd:
+    timeout: 2500
+# Шторка ответа с закрытой клавиатурой: шторка и затемнение доходят до края
+# экрана, кнопки — над Home Indicator / системной навигацией.
+- takeScreenshot: ANS-023-answer-sheet
+# «Сохранить» доступна над закреплённой клавиатурой и закрывает шторку.
+# Что шторка уезжает за край целиком, смотрит человек (MANUAL_CHECKS.md).
+- tapOn:
+    id: "answer-input"
+- inputText: "ANS-023 keyboard save"
+- tapOn:
+    id: "answer-save-button"
+- runFlow:
+    when:
+      visible:
+        id: "privacy-consent-answer_context-allow"
+    commands:
+      - tapOn:
+          id: "privacy-consent-answer_context-allow"
+- assertNotVisible:
+    id: "answer-input"
+- assertVisible:
+    id: "dock-answer-edit-button"
+- takeScreenshot: ANS-023-saved-with-keyboard
+- tapOn:
+    id: "dock-answer-edit-button"
+- assertVisible:
+    id: "answer-input"
+    text: "ANS-023 keyboard save"
+- takeScreenshot: ANS-023-reopened
