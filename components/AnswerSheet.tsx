@@ -51,7 +51,7 @@ import {
   type AudioSessionLease,
 } from '../lib/audioModeCoordinator';
 import { audioModeCoordinator } from '../lib/audioSession';
-import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
@@ -1406,7 +1406,7 @@ const stylesFactory = () => StyleSheet.create({
   content: {
     flex: 1,
     ...column(),
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
     // Вместе с верхним отступом footer (sc(10)) — sc(14) от поля до кнопок.
     paddingBottom: sc(4),
   },

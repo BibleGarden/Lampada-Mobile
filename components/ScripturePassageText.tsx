@@ -16,6 +16,7 @@ type Props = {
   activeVerseNumber?: number | null;
   continuation?: boolean;
   compactTextOverride?: string;
+  accessibilityLabel?: string;
   /**
    * `compact` — карточка: только выделенные сервером стихи и один цвет шрифта.
    * `full` — читалка: весь отрывок с подсветкой ключевых стихов.
@@ -31,6 +32,7 @@ export default function ScripturePassageText({
   activeVerseNumber,
   continuation = false,
   compactTextOverride,
+  accessibilityLabel,
   variant = 'full',
 }: Props) {
   const styles = useStyles(stylesFactory);
@@ -40,7 +42,7 @@ export default function ScripturePassageText({
       ? `${testIDPrefix}-${compact.highlightedNumbers.join('-')}`
       : undefined;
     return (
-      <Text style={style} numberOfLines={numberOfLines} testID={compactTestID}>
+      <Text style={style} numberOfLines={numberOfLines} testID={compactTestID} accessibilityLabel={accessibilityLabel}>
         {continuation && compact.partial
           ? withContinuationEllipsis(compactTextOverride ?? compact.text)
           : compactTextOverride ?? compact.text}

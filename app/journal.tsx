@@ -38,6 +38,7 @@ import { ensureSettingsLoaded, useSettings } from '../lib/settings';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
+import PairedActions from '../components/PairedActions';
 
 export default function Journal() {
   const { t, language } = useI18n();
@@ -473,38 +474,28 @@ export default function Journal() {
               </View>
             )}
 
-            <View style={styles.actionsRow}>
-              <Pressable
-                onPress={() => sharePrayer(item)}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.journal.share')}
-                testID="journal-share"
-                style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.7 }]}
-              >
-                <ShareIcon size={14} color="rgba(255,255,255,.45)" />
-                <Text style={styles.actionLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-                  {t('screens.journal.share')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => askOrConfirmDelete(item.id)}
-                accessibilityRole="button"
-                accessibilityLabel={confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
-                testID={confirming ? 'journal-delete-confirm' : 'journal-delete'}
-                style={[styles.actionBtn, confirming && styles.actionBtnConfirming]}
-              >
-                <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
-                <Text
-                  style={[styles.actionLabel, confirming && { color: '#ec8a7a' }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.8}
-                >
-                  {confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
-                </Text>
-              </Pressable>
-            </View>
+            <PairedActions
+              style={styles.actionsRow}
+              gap={sc(8)}
+              labelStyle={styles.actionLabel}
+              actions={[
+                {
+                  label: t('screens.journal.share'),
+                  onPress: () => void sharePrayer(item),
+                  testID: 'journal-share',
+                  icon: <ShareIcon size={14} color="rgba(255,255,255,.45)" />,
+                  style: (pressed) => [styles.actionBtn, pressed && { opacity: 0.7 }],
+                },
+                {
+                  label: confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete'),
+                  onPress: () => askOrConfirmDelete(item.id),
+                  testID: confirming ? 'journal-delete-confirm' : 'journal-delete',
+                  icon: <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />,
+                  style: () => [styles.actionBtn, confirming && styles.actionBtnConfirming],
+                  labelStyle: confirming && { color: '#ec8a7a' },
+                },
+              ]}
+            />
           </Animated.View>
         )}
       </View>
@@ -1009,8 +1000,6 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.cardText,
   },
   actionsRow: {
-    flexDirection: 'row',
-    gap: sc(8),
     marginTop: sc(14),
   },
   actionBtn: {

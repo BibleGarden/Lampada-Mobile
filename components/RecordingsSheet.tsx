@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Animated, {
   Easing,
@@ -16,7 +16,8 @@ import { RecordingDraft, fmtTime } from '../lib/store';
 import { recordedSeconds } from '../lib/recordingFile';
 import { recordingSecondsRemaining } from '../lib/transcriptionLimits';
 import { transcriptionErrorMessageKey } from '../lib/transcriptionErrors';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { fitRecordingOverlay } from '../lib/recordingOverlayGeometry';
+import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
@@ -103,6 +104,20 @@ export default function RecordingsSheet({
   const recordingPending = recordingPhase === 'starting' || recordingPhase === 'stopping';
   const recordingBusy = recordingPhase !== 'idle';
   const [stopReady, setStopReady] = useState(false);
+  const [overlaySizes, setOverlaySizes] = useState({ height: 0, kicker: 0, elapsed: 0, hint: 0, error: 0 });
+  const measureOverlay = (part: keyof typeof overlaySizes) => (event: LayoutChangeEvent) => {
+    const height = event.nativeEvent.layout.height;
+    setOverlaySizes((current) => current[part] === height ? current : { ...current, [part]: height });
+  };
+  const overlayFit = overlaySizes.height === 0 ? { gap: sc(24), waveHeight: sc(48) } : fitRecordingOverlay(
+    overlaySizes.height - sc(28) - sc(8),
+    overlaySizes.kicker + overlaySizes.elapsed + overlaySizes.hint + (limitError ? overlaySizes.error : 0),
+    limitError ? 4 : 3,
+    sc(24),
+    sc(8),
+    sc(48),
+    sc(24),
+  );
 
   useEffect(() => {
     if (!recording) {
@@ -431,12 +446,19 @@ export default function RecordingsSheet({
 
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
-        <View style={styles.recOverlay}>
-          <View style={styles.recOverlayContent}>
-            <Text style={styles.recOverlayKicker}>{t('components.answers.recording')}</Text>
-            <View style={styles.waveRow}>
+        <View style={styles.recOverlay} onLayout={measureOverlay('height')}>
+          <ScrollView
+            style={styles.recOverlayScroll}
+            contentContainerStyle={[styles.recOverlayContent, { gap: overlayFit.gap }]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <Text style={styles.recOverlayKicker} onLayout={measureOverlay('kicker')}>
+              {t('components.answers.recording')}
+            </Text>
+            <View style={[styles.waveRow, { height: overlayFit.waveHeight }]}>
               {WAVE_BARS.map((b, i) => (
-                <WaveBar key={i} color={b.color} delay={b.delay} active={visible && screenVisible} />
+                <WaveBar key={i} color={b.color} delay={b.delay} active={visible && screenVisible} height={overlayFit.waveHeight} />
               ))}
             </View>
             {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
@@ -446,16 +468,19 @@ export default function RecordingsSheet({
                 : timeLabel}
               style={[styles.recElapsed, remainingSeconds !== null && styles.recElapsedWarning]}
               testID="recording-elapsed"
+              onLayout={measureOverlay('elapsed')}
             >
               {timeLabel}
             </Text>
-            <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
+            <Text style={styles.recOverlayHint} onLayout={measureOverlay('hint')}>
+              {t('components.answers.speakHint')}
+            </Text>
             {limitError && (
-              <Text style={styles.recOverlayError} testID="recording-limit-error">
+              <Text style={styles.recOverlayError} testID="recording-limit-error" onLayout={measureOverlay('error')}>
                 {t(limitError)}
               </Text>
             )}
-          </View>
+          </ScrollView>
         </View>
       )}
       </View>
@@ -503,7 +528,7 @@ function SlowTranscriptionHint({ index, onShown }: { index: number; onShown: () 
 }
 
 // столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
-function WaveBar({ color, delay, active }: { color: string; delay: number; active: boolean }) {
+function WaveBar({ color, delay, active, height }: { color: string; delay: number; active: boolean; height: number }) {
   const styles = useStyles(stylesFactory);
   const k = useSharedValue(0.3);
   useEffect(() => {
@@ -517,7 +542,7 @@ function WaveBar({ color, delay, active }: { color: string; delay: number; activ
     return () => cancelAnimation(k);
   }, [delay, k, active]);
   const style = useAnimatedStyle(() => ({ transform: [{ scaleY: k.value }] }));
-  return <Animated.View style={[styles.waveBar, { backgroundColor: color }, style]} />;
+  return <Animated.View style={[styles.waveBar, { backgroundColor: color, height }, style]} />;
 }
 
 const stylesFactory = () => StyleSheet.create({
@@ -547,15 +572,16 @@ const stylesFactory = () => StyleSheet.create({
   // ADR-0012: колонка держит меру строки и на планшете
   questionWrap: {
     ...column(),
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
   },
   stage: {
     flex: 1,
+    minHeight: 0,
   },
   content: {
     ...column(),
     flex: 1,
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
   },
   header: {
     flexDirection: 'row',
@@ -751,18 +777,19 @@ const stylesFactory = () => StyleSheet.create({
     right: SHEET_BORDER,
     bottom: 0,
     backgroundColor: RECORDING_BACKGROUND,
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: sc(28),
+  },
+  recOverlayScroll: {
+    flex: 1,
+    alignSelf: 'stretch',
   },
   // Оверлей всегда во всю высоту шторки: блок с волной центрируем, иначе он
   // висит у верхнего края, а до кнопки «готово» тянется пустая полоса.
   recOverlayContent: {
-    flex: 1,
-    minHeight: 0,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: sc(12),
+    paddingVertical: sc(4),
   },
   recOverlayKicker: {
     fontFamily: fonts.sans,

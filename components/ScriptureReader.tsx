@@ -5,7 +5,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import { Heart, Close, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
 import ScripturePassageText from './ScripturePassageText';
@@ -162,10 +162,11 @@ const stylesFactory = () => StyleSheet.create({
     width: sc(36),
   },
   header: {
+    ...column(),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
     paddingBottom: sc(12),
   },
   headerBtns: {
@@ -190,10 +191,8 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.white50,
   },
   content: {
-    width: '100%',
-    maxWidth: 600,
-    alignSelf: 'center',
-    paddingHorizontal: sc(18),
+    ...column(),
+    paddingHorizontal: screenGutter(),
   },
   text: {
     fontFamily: fonts.serif,

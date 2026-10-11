@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -16,7 +16,7 @@ import {
   type FavoriteScripture,
 } from '../lib/scripture';
 import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
-import { withoutPunctuationAtClippedLine } from '../lib/textTruncation';
+import { collapsedTextFromLines, shortenCollapsedText } from '../lib/textTruncation';
 
 /**
  * Сколько строк отрывка показывать в свёрнутой карточке. В доке лимит считается
@@ -27,9 +27,18 @@ const COLLAPSED_LINES = 4;
 function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
+  const { width, height } = useWindowDimensions();
+  const geometryKey = `${width}:${height}:${styles.text.fontSize}:${styles.text.lineHeight}`;
+  const geometryKeyRef = useRef(geometryKey);
+  geometryKeyRef.current = geometryKey;
   const [expanded, setExpanded] = useState(false);
   const [lines, setLines] = useState(0);
-  const [collapsedOverride, setCollapsedOverride] = useState<string | null>(null);
+  const [clip, setClip] = useState<{
+    geometryKey: string;
+    measuredLines: string[];
+    candidate: string;
+    fits: boolean;
+  } | null>(null);
 
   // Ответ сервера сохранён вместе с записью, поэтому карточку рисует тот же
   // компонент, что и во время молитвы: свёрнутая — только ключевые стихи,
@@ -38,6 +47,8 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
   const compact = display ? buildScriptureCompactText(display) : null;
   const collapsedText = compact?.text ?? favorite.text;
   const canExpand = !!compact?.partial || lines > COLLAPSED_LINES;
+  const activeClip = clip?.geometryKey === geometryKey ? clip : null;
+  const clippedText = activeClip?.fits ? activeClip.candidate : null;
 
   return (
     <View style={styles.card}>
@@ -52,14 +63,19 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
             <ScripturePassageText
               scripture={display}
               style={styles.text}
-              numberOfLines={expanded ? undefined : COLLAPSED_LINES}
-              compactTextOverride={expanded ? undefined : collapsedOverride ?? undefined}
+              numberOfLines={expanded || clippedText !== null ? undefined : COLLAPSED_LINES}
+              compactTextOverride={expanded ? undefined : clippedText ?? undefined}
+              accessibilityLabel={expanded ? undefined : favorite.text}
               testIDPrefix={`favorite-highlight-${favorite.id}`}
               variant={expanded ? 'full' : 'compact'}
             />
           ) : (
-            <Text style={styles.text} numberOfLines={expanded ? undefined : COLLAPSED_LINES}>
-              {expanded ? favorite.text : collapsedOverride ?? favorite.text}
+            <Text
+              style={styles.text}
+              numberOfLines={expanded || clippedText !== null ? undefined : COLLAPSED_LINES}
+              accessibilityLabel={expanded ? undefined : favorite.text}
+            >
+              {expanded ? favorite.text : clippedText ?? favorite.text}
             </Text>
           )}
           {/* Невидимая копия свёрнутого текста: по ней считаем реальное число
@@ -71,19 +87,44 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
             pointerEvents="none"
             style={[styles.text, styles.measure]}
             onTextLayout={({ nativeEvent }) => {
+              if (geometryKeyRef.current !== geometryKey) return;
               const measured = nativeEvent.lines;
               setLines((current) => current === measured.length ? current : measured.length);
-              const next = measured.length > COLLAPSED_LINES
-                ? withoutPunctuationAtClippedLine(collapsedText, measured[COLLAPSED_LINES - 1].text)
-                : collapsedText;
-              setCollapsedOverride((current) => {
-                const corrected = next === collapsedText ? null : next;
-                return current === corrected ? current : corrected;
+              setClip((current) => {
+                if (measured.length <= COLLAPSED_LINES) return null;
+                const measuredLines = measured.slice(0, COLLAPSED_LINES).map((line) => line.text);
+                if (current?.geometryKey === geometryKey &&
+                  current.measuredLines.every((line, index) => line === measuredLines[index])) return current;
+                return {
+                  geometryKey,
+                  measuredLines,
+                  candidate: collapsedTextFromLines(measuredLines, COLLAPSED_LINES),
+                  fits: false,
+                };
               });
             }}
           >
             {collapsedText}
           </Text>
+          {activeClip && !activeClip.fits ? (
+            <Text
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              pointerEvents="none"
+              style={[styles.text, styles.measure]}
+              onTextLayout={({ nativeEvent }) => {
+                setClip((current) => {
+                  if (current !== activeClip) return current;
+                  return nativeEvent.lines.length <= COLLAPSED_LINES
+                    ? { ...current, fits: true }
+                    : { ...current, candidate: shortenCollapsedText(current.candidate) };
+                });
+              }}
+            >
+              {activeClip.candidate}
+            </Text>
+          ) : null}
         </View>
       ) : null}
       {canExpand ? (

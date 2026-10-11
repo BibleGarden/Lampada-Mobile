@@ -110,6 +110,7 @@ upgrading it requires rebuilding the native app.
 | `components/RecordingsSheet.tsx` | A separate sheet for recordings, the player and transcripts, on top of the answer |
 | `components/PrivacyConsentDialog.tsx` | The equal-weight first-use disclosure and allow/deny actions for an AI purpose |
 | `components/ContentReportDialog.tsx` | Confirmation, optional comment and delivery state for reporting a generated question or selected passage |
+| `components/PairedActions.tsx` | A shared action pair that keeps both label sizes and stacks when either cannot fit horizontally |
 | `components/BottomSheet.tsx` | The in-screen bottom sheet used by the settings screen for option lists, the reminder editor and privacy consents; an overlay rather than a system Modal so the privacy screen and lock stay on top |
 | `lib/store.ts` | The state and the scenario of a prayer session |
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
@@ -160,20 +161,25 @@ upgrading it requires rebuilding the native app.
 | `store/` | App Store screenshots and preview videos |
 
 The recordings sheet places its question, list and footer within the same
-`column()` measure. A favourite card uses the shared gutter; when a collapsed
-line ends at sentence punctuation, it removes that visible punctuation before
-the native ellipsis without changing the saved passage or expanded text.
+`column()` measure and gutter. A favourite card builds its collapsed preview
+from the first four measured lines, trims trailing whitespace and punctuation,
+and appends one ellipsis. The preview is measured again to leave room for that
+mark. The saved passage, expanded text and full accessibility label stay intact.
+`PairedActions` measures both labels at their shared font size: if either wraps
+in the horizontal pair, both actions stack vertically without shrinking labels.
 
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
 font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032).
 Screen headers and content use the same `screenGutter()` inside `column()`.
-Settings sheets are centered and capped at the smaller of `sc(390)` and 480 pt
-in both orientations, keeping their controls compact on wide windows. The
-Scripture reader keeps a 600 pt reading measure. Scrollable reader and journal
+Settings sheets are centered and capped at `sc(294)` in both orientations,
+so their width scales with their controls. The Scripture reader uses the same
+`column()` and gutter for its header and text. Scrollable reader and journal
 content carry the bottom safe area in their content padding, so the final line
-can scroll clear of a navigation bar or Home Indicator. The session card keeps
-at least `sc(16)` below it when the device has little bottom safe area.
+can scroll clear of a navigation bar or Home Indicator. `bottomActionPadding()`
+adds a gap above the bottom safe area: `sc(12)` for session cards and settings
+sheets, and the existing larger `sc(16)` for keyboard-sheet footers, on every
+device and orientation.
 
 Accessibility baseline. Text tokens in `lib/theme.ts` (including
 `placeholder`) meet WCAG AA 4.5:1 on the lightest backgrounds they sit on - a
@@ -304,9 +310,10 @@ A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
 Preparation and reflection defer lower actions while typing. Reflection keeps
-the same column measure while editing, and preparation keeps a gap above the
-keyboard. Their field fills
-the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
+the same column measure while editing. Preparation keeps its bottom gap by
+relaxing the goal field's `sc(120)` minimum only in a tablet landscape window
+while the docked keyboard fills the form; phones and portrait keep that minimum.
+Their field fills the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
 when the hide starts, the form returns to its normal layout together with its
 actions, which move down with the viewport reservation above the keyboard, so
 the field does not stretch into the space the keyboard frees and nothing
@@ -558,7 +565,9 @@ previous solid text, without heuristics.
 The session card limits its preview to whole lines that fit its measured text
 area, including when only one line fits on a short foldable window. While the
 next passage loads, the previous passage's reference, narration, favourite
-action and position dots are hidden or disabled. Explicit continuation marks
+action and position dots are hidden or disabled. The tools row and dots stay
+mounted to preserve the text area's measured height and line limit.
+Explicit continuation marks
 strip terminal punctuation before adding an ellipsis.
 
 For narration the client requests the server `begin`/`end` of the verses, streams
@@ -796,7 +805,10 @@ Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.
 The recording overlay appears once the native recorder confirms `isRecording`.
-Its content contracts its gaps on short sheets and stays above the footer.
+The overlay measures its viewport and text. Roomy sheets keep `sc(24)` gaps and
+the `sc(48)` wave; short sheets reduce the gaps to `sc(8)`, then the wave to
+`sc(24)`. If the text still needs more room, the overlay scrolls within the body
+above the footer (`lib/recordingOverlayGeometry.ts`).
 Its elapsed time (m:ss) polls the recorder's native `durationMillis` every 250 ms.
 The saved duration comes from the same clock and is also floored to whole seconds.
 VoiceOver reads the elapsed time as the value of the Stop button and does not

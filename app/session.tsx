@@ -43,7 +43,7 @@ import { IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
-import { colors, column, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
@@ -606,10 +606,10 @@ function SessionScreen() {
           style={[
             styles.sessionContent,
             {
-              // Только отбивка от безопасной зоны: в альбоме на планшете
-              // высота дефицитна, и каждая точка тут отнимается у карточки.
+              // Нижний отступ держит карточку выше системной навигации;
+              // на низком окне его забираем из свободной высоты карточки.
               paddingTop: insets.top + sc(2),
-              paddingBottom: Math.max(insets.bottom + sc(4), sc(16)),
+              paddingBottom: bottomActionPadding(insets.bottom),
             },
           ]}
         >

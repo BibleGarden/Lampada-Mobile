@@ -16,6 +16,7 @@ import { sendContentReport, type ContentReportError } from '../lib/contentReport
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import KeyboardViewport from './keyboard/KeyboardViewport';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
+import PairedActions from './PairedActions';
 
 type Props = {
   visible: boolean;
@@ -161,36 +162,28 @@ export default function ContentReportDialog({
                 <Text style={styles.primaryActionText}>{t('components.contentReport.done')}</Text>
               </Pressable>
             ) : (
-              <>
-                <Pressable
-                  accessibilityRole="button"
-                  testID="content-report-cancel"
-                  disabled={submitting}
-                  onPress={dismiss}
-                  style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}
-                >
-                  <Text style={styles.secondaryActionText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-                    {t('components.contentReport.cancel')}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={submitting}
-                  onPress={() => void submit()}
-                  testID="content-report-send"
-                  style={({ pressed }) => [
-                    styles.primaryAction,
-                    submitting && styles.disabled,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={styles.primaryActionText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-                    {submitting
-                      ? t('components.contentReport.sending')
-                      : t('components.contentReport.send')}
-                  </Text>
-                </Pressable>
-              </>
+              <PairedActions
+                style={styles.pairedActions}
+                gap={sc(10)}
+                labelStyle={styles.primaryActionText}
+                actions={[
+                  {
+                    label: t('components.contentReport.cancel'),
+                    onPress: dismiss,
+                    testID: 'content-report-cancel',
+                    disabled: submitting,
+                    style: (pressed) => [styles.secondaryAction, pressed && styles.pressed],
+                    labelStyle: styles.secondaryActionText,
+                  },
+                  {
+                    label: submitting ? t('components.contentReport.sending') : t('components.contentReport.send'),
+                    onPress: () => void submit(),
+                    testID: 'content-report-send',
+                    disabled: submitting,
+                    style: (pressed) => [styles.primaryAction, submitting && styles.disabled, pressed && styles.pressed],
+                  },
+                ]}
+              />
             )}
           </View>
         </View>
@@ -227,6 +220,7 @@ const stylesFactory = () => StyleSheet.create({
     paddingTop: sc(14),
     paddingBottom: sc(22),
   },
+  pairedActions: { flex: 1 },
   kicker: {
     marginBottom: sc(10),
     color: colors.labelGold,
@@ -280,8 +274,6 @@ const stylesFactory = () => StyleSheet.create({
   },
   secondaryActionText: {
     color: colors.creamDim,
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(13),
   },
   primaryAction: {
     flex: 1,

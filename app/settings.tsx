@@ -944,7 +944,6 @@ export default function Settings() {
               value={language?.nameNational ?? scripturePreferences?.languageName ?? '—'}
               testID="scripture-language-picker"
               disabled={loadingCatalog && languages.length === 0}
-              divided
               onPress={() => openPicker('language')}
             />
             <SettingRow
@@ -960,6 +959,7 @@ export default function Settings() {
               value={voice?.name ?? (translation ? t('settings.chooseVoice') : (scripturePreferences?.voiceName ?? t('settings.chooseVoice')))}
               testID="scripture-voice-picker"
               disabled={!translation}
+              divided
               onPress={() => openPicker('voice')}
             />
           </View>

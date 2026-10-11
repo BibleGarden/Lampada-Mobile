@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -22,7 +23,7 @@ import { useSession } from '../lib/store';
 import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
-import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
+import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
 
 const EXAMPLES = [0, 1, 2, 3] as const;
@@ -63,6 +64,8 @@ export default function Setup() {
   }, []);
   const keyboard = useKeyboardLayout();
   const policy = useKeyboardFormPolicy();
+  const { width, height } = useWindowDimensions();
+  const compactKeyboardGoal = policy.fillInput && isTablet() && width > height;
   const editing = keyboard.visible;
   // Высоту слота поля вне закреплённой клавиатуры задаёт невидимая копия
   // текста. Пока клавиатура видна, копия держит текст на момент её открытия,
@@ -148,7 +151,7 @@ export default function Setup() {
             </View>
             <View style={[styles.topicSlot, policy.fillInput && styles.topicSlotDocked]}>
               <Text
-                style={[styles.topicInput, styles.topicSizer]}
+                style={[styles.topicInput, compactKeyboardGoal && styles.topicInputCompact, styles.topicSizer]}
                 accessibilityElementsHidden
                 importantForAccessibility="no-hide-descendants"
               >
@@ -160,7 +163,7 @@ export default function Setup() {
                 multiline
                 // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
                 // говорят достаточно, а любая подсказка навязывала тон
-                style={[styles.topicInput, styles.topicInputFill]}
+                style={[styles.topicInput, compactKeyboardGoal && styles.topicInputCompact, styles.topicInputFill]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
                 testID="setup-goal-input"
@@ -299,13 +302,13 @@ const presetHeight = () => sc(30);
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   dismissArea: { flex: 1 },
-  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: sc(18), ...column() },
+  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: screenGutter(), ...column() },
   // поле, растянутое до клавиатуры, перекрывает нижние блоки; длинная цель
   // ужимает слот поля до свободного места, чтобы «Далее» оставалась на экране
   goal: { flexShrink: 1, zIndex: 1 },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
   removedWhileEditing: { display: 'none' },
-  goalDocked: { flex: 1, marginTop: sc(24), marginBottom: sc(18) },
+  goalDocked: { flex: 1, marginTop: sc(24) },
   topicSlotDocked: { flex: 1, minHeight: 0 },
   headerRow: {
     flexDirection: 'row',
@@ -352,6 +355,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
   },
+  topicInputCompact: { minHeight: 0 },
   topicSlot: { flexShrink: 1, minHeight: sc(120) },
   topicSizer: { opacity: 0 },
   topicInputFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },

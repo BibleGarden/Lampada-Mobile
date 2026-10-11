@@ -16,6 +16,7 @@ import { useSession } from '../lib/store';
 import { useSettings } from '../lib/settings';
 import { buildScriptureCompactText } from '../lib/scripture';
 import { getContentReportTarget, type ContentReportTarget } from '../lib/contentReportTarget';
+import { screenReaderHiddenProps } from '../lib/a11y';
 import { colors, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
 import { CardIn, WindowDots } from './ui';
 import {
@@ -378,12 +379,16 @@ export default function CompanionDock({
               )
             )}
           </View>
-          {visibleScripture && (
-            <View style={styles.scriptureTools}>
-              {!curScripture.offline && (
+          {(curScripture || scriptureLoading) && (
+            <View
+              style={[styles.scriptureTools, scriptureLoading && styles.loadingHidden]}
+              pointerEvents={scriptureLoading ? 'none' : 'auto'}
+              {...screenReaderHiddenProps(scriptureLoading)}
+            >
+              {curScripture && !curScripture.offline && (
                 <Pressable
                   onPress={tap(scriptureAudio.toggle)}
-                  disabled={scriptureAudio.phase === 'loading'}
+                  disabled={scriptureLoading || scriptureAudio.phase === 'loading'}
                   accessibilityRole="button"
                   accessibilityState={{ busy: scriptureAudio.phase === 'loading' }}
                   hitSlop={touchSlop(listenButtonHeight())}
@@ -417,9 +422,11 @@ export default function CompanionDock({
                   </Text>
                 </Pressable>
               )}
-              <Text style={styles.scriptureReference} numberOfLines={1}>
-                {curScripture.reference}
-              </Text>
+              {curScripture && (
+                <Text style={styles.scriptureReference} numberOfLines={1}>
+                  {curScripture.reference}
+                </Text>
+              )}
             </View>
           )}
           <View style={styles.actionsRow}>
@@ -458,16 +465,18 @@ export default function CompanionDock({
               <ChevronRight />
             </SquareBtn>
           </View>
-          {!scriptureLoading && (
-            <View style={styles.dotsWrap}>
-              <WindowDots
-                total={Math.max(1, s.scrList.length)}
-                current={s.scrIndex}
-                onSet={s.jumpScripture}
-                accessibilityLabel={t('components.reader.quote')}
-              />
-            </View>
-          )}
+          <View
+            style={[styles.dotsWrap, scriptureLoading && styles.loadingHidden]}
+            pointerEvents={scriptureLoading ? 'none' : 'auto'}
+            {...screenReaderHiddenProps(scriptureLoading)}
+          >
+            <WindowDots
+              total={Math.max(1, s.scrList.length)}
+              current={s.scrIndex}
+              onSet={(index) => { if (!scriptureLoading) s.jumpScripture(index); }}
+              accessibilityLabel={t('components.reader.quote')}
+            />
+          </View>
         </CardIn>
       )}
       {reportTarget && (
@@ -562,6 +571,7 @@ const stylesFactory = () => StyleSheet.create({
     justifyContent: 'space-between',
     gap: sc(10),
   },
+  loadingHidden: { opacity: 0 },
   listenButton: {
     minHeight: listenButtonHeight(),
     flexDirection: 'row',

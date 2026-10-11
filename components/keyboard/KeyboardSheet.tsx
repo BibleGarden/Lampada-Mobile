@@ -8,7 +8,7 @@ import Animated, { useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSh
 import { State, TextInput as GestureTextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { screenReaderHiddenProps } from '../../lib/a11y';
-import { sc, column, useStyles } from '../../lib/theme';
+import { bottomActionPadding, sc, column, screenGutter, useStyles } from '../../lib/theme';
 import { sheetBodyHeight, sheetFooterPosition } from '../../lib/keyboardGeometry';
 import { useKeyboardFrames, useKeyboardLayout } from '../../lib/useKeyboardLayout';
 import { useSheetReflow } from '../../lib/useSheetReflow';
@@ -66,7 +66,7 @@ function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
       <View
         {...screenReaderHiddenProps(hidden)}
         pointerEvents={hidden ? 'none' : 'auto'}
-        style={[styles.footer, { paddingBottom: sc(16) + safeBottom }, footerStyle, hidden && styles.hidden]}
+        style={[styles.footer, { paddingBottom: bottomActionPadding(safeBottom, 16) }, footerStyle, hidden && styles.hidden]}
       >{footer}</View>
     </BottomSheetFooter>
   );
@@ -168,7 +168,7 @@ export function KeyboardSheetBody({ children, scrollable = true, ...props }: Omi
 
 const styles = StyleSheet.create({ body: { width: '100%' }, fill: { flex: 1 }, scrollContent: { flexGrow: 1 }, hidden: { opacity: 0 } });
 const stylesFactory = () => StyleSheet.create({
-  footer: { ...column(), paddingHorizontal: sc(16), paddingTop: sc(10) },
+  footer: { ...column(), paddingHorizontal: screenGutter(), paddingTop: sc(10) },
   hidden: { opacity: 0 },
   compactInput: { flex: 0, height: sc(128) },
 });
