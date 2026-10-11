@@ -73,7 +73,7 @@ export default function CompanionDock({
   const [textAreaHeight, setTextAreaHeight] = React.useState(0);
   const [reportTarget, setReportTarget] = React.useState<ContentReportTarget | null>(null);
   const scriptureLineLimit = textAreaHeight
-    ? Math.max(2, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
+    ? Math.max(1, Math.min(9, Math.floor(textAreaHeight / cardLineHeight())))
     : 3;
   // селектор без remaining/elapsed: карточка не должна ререндериться
   // каждую секунду от тика таймера
@@ -115,6 +115,7 @@ export default function CompanionDock({
   })();
 
   const curScripture = s.scrList[s.scrIndex];
+  const scriptureLoading = s.scrStatus === 'loading' || s.scrStatus === 'retrying';
   // В карточке показываем только выделенные сервером стихи; целиком — в читалке
   const compactScripture = curScripture ? buildScriptureCompactText(curScripture) : null;
   const scriptureMeasureKey = curScripture
@@ -128,9 +129,7 @@ export default function CompanionDock({
   const curFav = !!curScripture && s.scrFav.includes(curScripture.canonicalId);
   const onFrontier = s.qIndex === s.answeredCount;
   const questionText = s.questions[s.qIndex] ?? '';
-  const visibleScripture = s.scrStatus === 'loading' || s.scrStatus === 'retrying'
-    ? undefined
-    : curScripture;
+  const visibleScripture = scriptureLoading ? undefined : curScripture;
   const activeReportTarget = getContentReportTarget(s.dockMode, questionText, s.generating, visibleScripture);
 
   const onTextAreaLayout = React.useCallback((e: LayoutChangeEvent) => {
@@ -289,7 +288,7 @@ export default function CompanionDock({
           style={styles.body}
         >
           <View style={styles.textWrap} onLayout={onTextAreaLayout}>
-            {s.scrStatus === 'loading' || s.scrStatus === 'retrying' ? (
+            {scriptureLoading ? (
               <ActivityIndicator accessibilityLabel={t('components.reader.selecting')} color={colors.goldSoft} />
             ) : curScripture ? (
               <>
@@ -379,7 +378,7 @@ export default function CompanionDock({
               )
             )}
           </View>
-          {curScripture && (
+          {visibleScripture && (
             <View style={styles.scriptureTools}>
               {!curScripture.offline && (
                 <Pressable
@@ -426,7 +425,7 @@ export default function CompanionDock({
           <View style={styles.actionsRow}>
             <SquareBtn
               accessibilityLabel={t('components.reader.previousPassage')}
-              disabled={!curScripture || s.scrIndex === 0}
+              disabled={scriptureLoading || !curScripture || s.scrIndex === 0}
               onPress={tap(s.prevScripture)}
               dim
               testID="dock-scripture-prev"
@@ -434,39 +433,41 @@ export default function CompanionDock({
               <ChevronLeft />
             </SquareBtn>
             <Pressable
-              disabled={!curScripture}
+              disabled={scriptureLoading || !curScripture}
               onPress={tap(s.toggleFav)}
               accessibilityRole="button"
-              accessibilityLabel={curFav ? t('components.reader.saved') : t('components.reader.save')}
-              accessibilityState={{ selected: curFav }}
-              testID={curFav ? 'dock-scripture-favorite-active' : 'dock-scripture-favorite'}
+              accessibilityLabel={!scriptureLoading && curFav ? t('components.reader.saved') : t('components.reader.save')}
+              accessibilityState={{ selected: !scriptureLoading && curFav, disabled: scriptureLoading || !curScripture }}
+              testID={!scriptureLoading && curFav ? 'dock-scripture-favorite-active' : 'dock-scripture-favorite'}
               hitSlop={touchSlop(cardBtnSize())}
               style={({ pressed }) => [
                 styles.mainBtn,
-                !curScripture && { opacity: 0.35 },
+                (scriptureLoading || !curScripture) && { opacity: 0.35 },
                 pressed && { transform: [{ scale: 0.98 }] },
               ]}
             >
-              <Heart fill={curFav ? '#e7cf95' : 'none'} />
-              <Text style={styles.mainBtnLabel}>{curFav ? t('components.reader.saved') : t('components.reader.save')}</Text>
+              <Heart fill={!scriptureLoading && curFav ? '#e7cf95' : 'none'} />
+              <Text style={styles.mainBtnLabel}>{!scriptureLoading && curFav ? t('components.reader.saved') : t('components.reader.save')}</Text>
             </Pressable>
             <SquareBtn
               accessibilityLabel={t('components.reader.nextPassage')}
-              disabled={!curScripture || s.scrStatus === 'loading' || s.scrStatus === 'retrying'}
+              disabled={scriptureLoading || !curScripture}
               onPress={tap(() => void s.nextScripture())}
               testID="dock-scripture-next"
             >
               <ChevronRight />
             </SquareBtn>
           </View>
-          <View style={styles.dotsWrap}>
-            <WindowDots
-              total={Math.max(1, s.scrList.length)}
-              current={s.scrIndex}
-              onSet={s.jumpScripture}
-              accessibilityLabel={t('components.reader.quote')}
-            />
-          </View>
+          {!scriptureLoading && (
+            <View style={styles.dotsWrap}>
+              <WindowDots
+                total={Math.max(1, s.scrList.length)}
+                current={s.scrIndex}
+                onSet={s.jumpScripture}
+                accessibilityLabel={t('components.reader.quote')}
+              />
+            </View>
+          )}
         </CardIn>
       )}
       {reportTarget && (

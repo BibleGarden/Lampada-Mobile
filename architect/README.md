@@ -24,7 +24,8 @@ the app refreshes the calendar without resetting the session.
 The Home flame keeps its full size while the window has room for it. On a short
 window (a foldable's inner display, iPad Split View, landscape) it shrinks to
 the height left above Start and the saved notice, keeping its proportions; the
-captions keep their size (`lib/flameGeometry.ts`).
+captions keep their size (`lib/flameGeometry.ts`). A saved notice has its own
+gap above Start, including in a short landscape window.
 
 Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
@@ -158,10 +159,21 @@ upgrading it requires rebuilding the native app.
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
 | `store/` | App Store screenshots and preview videos |
 
+The recordings sheet places its question, list and footer within the same
+`column()` measure. A favourite card uses the shared gutter; when a collapsed
+line ends at sentence punctuation, it removes that visible punctuation before
+the native ellipsis without changing the saved passage or expanded text.
+
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
-font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032). Settings sheets are centered and capped at `sc(390)` in
-width to keep their controls compact on wide tablet windows.
+font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032).
+Screen headers and content use the same `screenGutter()` inside `column()`.
+Settings sheets are centered and capped at the smaller of `sc(390)` and 480 pt
+in both orientations, keeping their controls compact on wide windows. The
+Scripture reader keeps a 600 pt reading measure. Scrollable reader and journal
+content carry the bottom safe area in their content padding, so the final line
+can scroll clear of a navigation bar or Home Indicator. The session card keeps
+at least `sc(16)` below it when the device has little bottom safe area.
 
 Accessibility baseline. Text tokens in `lib/theme.ts` (including
 `placeholder`) meet WCAG AA 4.5:1 on the lightest backgrounds they sit on - a
@@ -291,7 +303,9 @@ register Gorhom's own keyboard handling, so the keyboard space is reserved once.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
-Preparation and reflection defer lower actions while typing. Their field fills
+Preparation and reflection defer lower actions while typing. Reflection keeps
+the same column measure while editing, and preparation keeps a gap above the
+keyboard. Their field fills
 the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
 when the hide starts, the form returns to its normal layout together with its
 actions, which move down with the viewport reservation above the keyboard, so
@@ -541,6 +555,12 @@ verse-level representation only when it reconstructs `passage.text` exactly; old
 snapshots without the array and inconsistent responses are displayed as the
 previous solid text, without heuristics.
 
+The session card limits its preview to whole lines that fit its measured text
+area, including when only one line fits on a short foldable window. While the
+next passage loads, the previous passage's reference, narration, favourite
+action and position dots are hidden or disabled. Explicit continuation marks
+strip terminal punctuation before adding an ellipsis.
+
 For narration the client requests the server `begin`/`end` of the verses, streams
 the Range-compatible MP3 of the whole chapter, starts at the first verse of the
 passage and stops at the end of the last one. The narration state follows the
@@ -776,6 +796,7 @@ Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.
 The recording overlay appears once the native recorder confirms `isRecording`.
+Its content contracts its gaps on short sheets and stays above the footer.
 Its elapsed time (m:ss) polls the recorder's native `durationMillis` every 250 ms.
 The saved duration comes from the same clock and is also floored to whole seconds.
 VoiceOver reads the elapsed time as the value of the Stop button and does not

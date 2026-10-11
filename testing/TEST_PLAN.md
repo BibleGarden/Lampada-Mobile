@@ -362,7 +362,7 @@ the stub; execution results belong in dated reports.
 | END-004 [main] | Two prayers in one day | the day counts once, both meaningful sessions are in the journal |
 | END-005 | Finishing around midnight and after a time zone change | the prayer counts for the local calendar day it started on; the streak and the seven dots agree with it (unit tests in `journalDays.test.mjs`) |
 | END-007 | Leave an expired prayer overnight, open the app the next day and finish it on reflection | the prayer counts for the day it started, not the day of "Done"; the streak stays unbroken |
-| END-006 [main, ipad] | Enter a takeaway with the keyboard open on iPhone and iPad; on iPad, rotate while typing | the input stays above the keyboard; on tablets the editing column widens and long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
+| END-006 [main, ipad] | Enter a takeaway with the keyboard open on iPhone and iPad; on iPad, rotate while typing | the input stays above the keyboard; the editing column and title retain their resting width and scale and long content is scrollable; the hidden actions do not glow through the keyboard; "Done" or a tap outside restores the finish and back actions without losing text |
 | END-008 | Type a takeaway with a hardware keyboard in an App Store video build | while the input is focused, the visible flame stays on one frame and each non-whitespace character causes a visible text or caret update; after blur the flame animates again; ordinary builds never freeze the flame (`reflectionFlame.test.mjs`). The ANS-034 smoothness expectation is a 150 ms maximum visible gap, reported as a metric in the video pipeline; its gross recording rejection gate is 250 ms. |
 | END-009 | Finish the prayer while the first question is still loading | the reflection question appears; the late first question does not leave reflection loading |
 | END-010 | Pray for more than a minute without finishing, or save an answer, then force-quit the app (also from the app switcher) and open it again | the prayer is in the journal with the time prayed up to the last minute or the moment the app left the foreground, and Home marks the day it started; ADR-0042 (unit tests in `journalDays.test.mjs` and `sessionResume.test.mjs`) |
@@ -618,3 +618,20 @@ expanded long text/audio details before activating the timed confirmation.
 SETUP-004 Android injects its full long goal in bounded driver transactions,
 then asserts the complete unchanged text; this avoids a single two-minute RPC
 deadline without weakening layout or persistence checks.
+
+### Screenshot layout regression
+
+These are visual checks on the final branch build; no result is implied by
+typecheck or unit tests. Compare both platforms where a shared component changed.
+
+| ID | Window and action | Expected result |
+| --- | --- | --- |
+| LAY-001 | Android 3-button navigation: scroll Settings and a long Scripture reader to the end; open a long journal detail on iPhone and iPad | the last content scrolls fully above system controls; the journal has no hard bottom clipping line |
+| LAY-002 | iPhone SE, Pixel and Fold: open the session card; finish a prayer on iPad landscape | the card keeps bottom space and the saved notice, streak caption and Start action remain separate |
+| LAY-003 | iPad portrait and landscape: open reminder editor, Scripture reader and recordings list | day buttons fit the centered sheet; reader text stays within a 600 pt measure; recordings question, list and action share one column |
+| LAY-004 | iPad landscape: focus the setup goal and reflection field | the setup field has a gap above the keyboard; reflection title and column keep their resting size and width |
+| LAY-005 | Fold inner short window: open Question and Quote session cards and start a recording | Scripture ends on a whole line with a continuation mark when needed; recording hint stays clear of Done |
+| LAY-006 | Request the next Scripture passage with a slow response | the previous reference, narration and favourite state are absent or disabled during loading; the new passage restores them |
+| LAY-007 | Fold outer: open a journal detail; iPhone SE: open a report dialog; compare Settings, Journal, Favourites and Home on Fold inner | paired action labels stay on one line; screen headers and cards share the same column gutter |
+| LAY-008 | Open an answer sheet question with a one-letter Russian or Ukrainian preposition | the preposition stays with the following word at a line break |
+| LAY-009 | On iPhone SE and Fold outer, collapse and expand a favourite whose fourth line ends with sentence punctuation | the collapsed native ellipsis has no punctuation immediately before it; expansion restores the exact saved passage |

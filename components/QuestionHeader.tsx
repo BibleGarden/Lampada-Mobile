@@ -2,6 +2,7 @@ import { useI18n } from '../lib/i18n';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, fonts, sc, useStyles } from '../lib/theme';
+import { keepShortPrepositions } from '../lib/questionTypography';
 
 type Props = {
   question: string;
@@ -21,7 +22,7 @@ export default function QuestionHeader({ question, testID, questionRef }: Props)
         <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
       </View>
       <Text ref={questionRef} style={styles.question} testID={testID}>
-        {question}
+        {keepShortPrepositions(question)}
       </Text>
     </View>
   );
