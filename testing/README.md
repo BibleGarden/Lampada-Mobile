@@ -35,6 +35,16 @@ Boot it cold and do not save a snapshot, so every run starts from the same state
 emulator -avd Pray_Pixel_API_35 -gpu host -no-snapshot-save -no-boot-anim
 ```
 
+Start the emulator with normal CPU priority. zsh's default `BG_NICE` runs
+background jobs at nice 5, and macOS then schedules qemu as background work:
+a cold start takes 5-7 s instead of ~0.7 s and flows time out on the splash
+screen. Run `setopt NO_BG_NICE` first, or start the emulator from bash or with
+`nohup`, and check that `ps -o nice -p <qemu pid>` prints 0.
+
+Two more host effects slow the guest the same way. macOS Low Power Mode slows
+the host; turn it off for e2e runs. Spotlight indexing right after `npm ci` can
+spike the host load; wait for it to finish.
+
 The emulator warns that host OpenGL is deprecated on macOS for API 35; no
 rendering problems were seen. Display overrides (`wm size`, `wm density`) are
 not needed with the host GPU: with Gboard shown, the journal screen's total
