@@ -1,0 +1,19 @@
+appId: com.nf404.twinkler
+tags:
+  - prepared
+---
+# Android version of ios-scripture-catalog-recovery.yaml (SCR-013, phase 3 of 4):
+# continues the prayer opened by android-scripture-catalog-reopen after the
+# runner sets catalog=ok.
+- assertVisible:
+    id: session-title
+- assertVisible: ".*Bible catalog unavailable.*"
+- tapOn:
+    id: scripture-retry-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 30000
+- assertNotVisible: ".*Bible catalog unavailable.*"

@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import { getLocales } from 'expo-localization';
-import { getDb } from './db';
+import { getDb, recordDiagnostic } from './db';
 import { initialUiLanguage, isUiLanguage, type UiLanguage } from './uiLanguage';
 import {
-  ENGLISH_SCRIPTURE_PREFERENCES,
   defaultPreferencesFromCatalog,
   parseStoredScripturePreferences,
   resolveInitialScriptureLanguage,
+  type ScriptureLanguageOption,
   type ScripturePreferences,
+  type ScriptureTranslation,
 } from './scripturePreferences';
 import {
   fetchScriptureLanguages,
@@ -49,7 +50,7 @@ type SettingsState = {
   coreAiConsent: ConsentDecision;
   answerContextConsent: ConsentDecision;
   audioTranscriptionConsent: ConsentDecision;
-  scripturePreferences: ScripturePreferences;
+  scripturePreferences: ScripturePreferences | null;
   reminderSchedule: ReminderSchedule;
   prayerMinutes: number; // длительность последней начатой молитвы; 0 = без таймера
   loaded: boolean;
@@ -63,6 +64,8 @@ type SettingsState = {
 let languageSavePromise: Promise<void> = Promise.resolve();
 let loadPromise: Promise<void> | null = null;
 let consentSavePromise: Promise<void> = Promise.resolve();
+let scriptureSavePromise: Promise<void> = Promise.resolve();
+let scriptureInitializationPromise: Promise<ScriptureInitialization> | null = null;
 
 export const useSettings = create<SettingsState>((set) => ({
   uiLanguage: initialUiLanguage(getLocales()),
@@ -70,7 +73,7 @@ export const useSettings = create<SettingsState>((set) => ({
   coreAiConsent: 'undecided',
   answerContextConsent: 'undecided',
   audioTranscriptionConsent: 'undecided',
-  scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
+  scripturePreferences: null,
   reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
   prayerMinutes: DEFAULT_PRAYER_MINUTES,
   loaded: false,
@@ -139,31 +142,16 @@ export const useSettings = create<SettingsState>((set) => ({
           ),
         ]);
         const storedPreferences = parseStoredScripturePreferences(scriptureRow?.value ?? null);
-        let scripturePreferences = storedPreferences;
-        if (!scripturePreferences) {
-          try {
-            const languages = await fetchScriptureLanguages();
-            const deviceLocale = getLocales()[0];
-            const language = resolveInitialScriptureLanguage(deviceLocale, languages);
-            if (language) {
-              const translations = await fetchScriptureTranslations(language.alias);
-              scripturePreferences = defaultPreferencesFromCatalog(language, translations);
-            }
-          } catch {
-            // Without a confirmed server catalog, English is the deterministic fallback.
-          }
-          scripturePreferences ??= ENGLISH_SCRIPTURE_PREFERENCES;
-          await d.runAsync(
-            `INSERT INTO meta (key, value) VALUES ('scripture_preferences', ?)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-            JSON.stringify(scripturePreferences),
-          );
+        // Повреждённая запись не считается выбором, но и не исчезает молча:
+        // инициализация заменит её подтверждённой тройкой, а след останется в диагностике.
+        if (scriptureRow && !storedPreferences) {
+          recordDiagnostic('scripture_preferences_invalid', new Error('Malformed meta.scripture_preferences'));
         }
         set({
           coreAiConsent,
           answerContextConsent,
           audioTranscriptionConsent,
-          scripturePreferences,
+          scripturePreferences: storedPreferences,
           // Расписание по умолчанию статично, поэтому его отсутствие не нужно
           // дописывать в meta: запись появится с первой правкой пользователя.
           reminderSchedule:
@@ -223,15 +211,7 @@ export const useSettings = create<SettingsState>((set) => ({
   },
 
   setScripturePreferences: async (preferences) => {
-    const d = await getDb();
-    // Persist the dependent triple as one value: readers can never observe a
-    // language combined with a translation or voice from another catalog.
-    await d.runAsync(
-      `INSERT INTO meta (key, value) VALUES ('scripture_preferences', ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-      JSON.stringify(preferences),
-    );
-    set({ scripturePreferences: preferences });
+    await persistScripturePreferences(preferences);
   },
 
   setReminderSchedule: async (schedule) => {
@@ -266,6 +246,8 @@ export const useSettings = create<SettingsState>((set) => ({
 export const resetSettingsStore = () => {
   loadPromise = null;
   consentSavePromise = Promise.resolve();
+  scriptureSavePromise = Promise.resolve();
+  scriptureInitializationPromise = null;
   languageSavePromise = Promise.resolve();
   useSettings.setState({
     uiLanguage: initialUiLanguage(getLocales()),
@@ -273,7 +255,7 @@ export const resetSettingsStore = () => {
     coreAiConsent: 'undecided',
     answerContextConsent: 'undecided',
     audioTranscriptionConsent: 'undecided',
-    scripturePreferences: ENGLISH_SCRIPTURE_PREFERENCES,
+    scripturePreferences: null,
     reminderSchedule: DEFAULT_REMINDER_SCHEDULE,
     prayerMinutes: DEFAULT_PRAYER_MINUTES,
     loaded: false,
@@ -290,10 +272,112 @@ export const answerContextAllowedNow = () =>
 export const audioTranscriptionAllowedNow = () =>
   consentAllowsTransfer(useSettings.getState().audioTranscriptionConsent);
 
-/** Current validated Bible selection for non-React request code. */
-export const scripturePreferencesNow = () => useSettings.getState().scripturePreferences;
-
 /** Privacy barrier for non-React code: persisted opt-out is loaded before networking. */
 export const ensureSettingsLoaded = async () => {
   if (!useSettings.getState().loaded) await useSettings.getState().load();
 };
+
+/** Каталог Библии недоступен: сеть, ответ сервера или неверный формат. */
+export class ScriptureCatalogUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super(`Scripture catalog unavailable: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
+    this.name = 'ScriptureCatalogUnavailableError';
+  }
+}
+
+// Отделяем сбой каталога от ошибок SQLite: экран должен назвать настоящую причину.
+const fromCatalog = <T>(request: Promise<T>) =>
+  request.catch((error: unknown) => {
+    throw new ScriptureCatalogUnavailableError(error);
+  });
+
+/** Каталог доступен, но не даёт полной тройки для языка интерфейса. */
+export class ScriptureDefaultUnavailableError extends Error {
+  constructor(message: string, readonly languages: ScriptureLanguageOption[]) {
+    super(message);
+    this.name = 'ScriptureDefaultUnavailableError';
+  }
+}
+
+/**
+ * Результат инициализации. Каталоги возвращаются, только если именно они дали
+ * сохранённую тройку: экран настроек не запрашивает их повторно.
+ */
+export type ScriptureInitialization = {
+  preferences: ScripturePreferences;
+  languages: ScriptureLanguageOption[] | null;
+  translations: ScriptureTranslation[] | null;
+};
+
+type PersistOutcome = 'saved' | 'kept' | 'interface_language_changed';
+
+// Сохраняем зависимую тройку последовательно: поздний дефолт не должен
+// перезаписать явный выбор, сделанный человеком во время загрузки каталога.
+async function persistScripturePreferences(
+  preferences: ScripturePreferences,
+  initialLanguage?: UiLanguage,
+): Promise<PersistOutcome> {
+  let outcome: PersistOutcome = 'saved';
+  scriptureSavePromise = scriptureSavePromise.catch(() => undefined).then(async () => {
+    if (initialLanguage) {
+      if (useSettings.getState().scripturePreferences) {
+        outcome = 'kept';
+        return;
+      }
+      if (useSettings.getState().uiLanguage !== initialLanguage) {
+        outcome = 'interface_language_changed';
+        return;
+      }
+    }
+    const d = await getDb();
+    await d.runAsync(
+      `INSERT INTO meta (key, value) VALUES ('scripture_preferences', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      JSON.stringify(preferences),
+    );
+    useSettings.setState({ scripturePreferences: preferences });
+  });
+  await scriptureSavePromise;
+  return outcome;
+}
+
+async function initializeScripturePreferences(): Promise<ScriptureInitialization> {
+  // Смена языка интерфейса во время загрузки — не ошибка: начинаем заново уже
+  // для нового языка, старый дефолт не сохраняется.
+  for (;;) {
+    const interfaceLanguage = useSettings.getState().uiLanguage;
+    const languages = await fromCatalog(fetchScriptureLanguages());
+    const language = resolveInitialScriptureLanguage(interfaceLanguage, languages);
+    // Язык интерфейса сменился во время загрузки: вывод «нет Библии» относился к старому.
+    if (useSettings.getState().uiLanguage !== interfaceLanguage) continue;
+    if (!language) {
+      throw new ScriptureDefaultUnavailableError('Scripture catalog does not contain the interface language', languages);
+    }
+    const translations = await fromCatalog(fetchScriptureTranslations(language.alias));
+    const preferences = defaultPreferencesFromCatalog(language, translations);
+    if (useSettings.getState().uiLanguage !== interfaceLanguage) continue;
+    if (!preferences) {
+      throw new ScriptureDefaultUnavailableError('Scripture catalog has no valid translation and voice', languages);
+    }
+    const outcome = await persistScripturePreferences(preferences, interfaceLanguage);
+    if (outcome === 'interface_language_changed') continue;
+    const saved = useSettings.getState().scripturePreferences;
+    if (!saved) throw new Error('Scripture preferences were not saved');
+    return { preferences: saved, languages, translations: outcome === 'saved' ? translations : null };
+  }
+}
+
+/** Не сохраняем никакого выбора до подтверждения языка и полной тройки каталогом. */
+export async function ensureScripturePreferences(): Promise<ScriptureInitialization> {
+  await ensureSettingsLoaded();
+  const saved = useSettings.getState().scripturePreferences;
+  if (saved) return { preferences: saved, languages: null, translations: null };
+  if (!scriptureInitializationPromise) {
+    const pending = initializeScripturePreferences();
+    scriptureInitializationPromise = pending;
+    void pending.finally(() => {
+      if (scriptureInitializationPromise === pending) scriptureInitializationPromise = null;
+    }).catch(() => undefined);
+  }
+  return scriptureInitializationPromise;
+}

@@ -2,8 +2,7 @@ appId: twinkler
 tags:
   - main
 ---
-# Дефолт теперь следует локали устройства (lib/scripturePreferences.ts),
-# английский остаётся только фолбэком.
+# Начальный язык цитат следует подтверждённому языку интерфейса.
 - launchApp:
     clearState: true
 - tapOn:
