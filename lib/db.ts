@@ -38,6 +38,7 @@ export function recordDiagnostic(
     | 'reminder_schedule_invalid'
     | 'settings_save_failed'
     | 'settings_load_failed'
+    | 'ai_question_invalid'
     | 'secure_store_failed'
     | 'biometry_check_failed'
     | 'wipe_incomplete',

@@ -7,6 +7,7 @@ import { coreAiAllowedNow, useSettings } from './settings';
 import { fallbackQuestions } from './locales/fallbackQuestions';
 import { buildQuestionRequest } from './questionRequest';
 import { normalizeQuestion, wasQuestionShown } from './questionNovelty';
+import { recordDiagnostic } from './db';
 import type { AnswerContext } from './answerContext';
 
 export type QuestionSource = 'ai' | 'fallback';
@@ -40,12 +41,20 @@ export const pickFallbackQuestion = (asked: string[], stage: 'next' | 'reflect' 
 const warn = (where: string, e: unknown, prefetch = false) =>
   console.warn(`[ai] ${where}: ${prefetch ? 'prefetch unavailable' : 'using fallback pool'} —`, e instanceof Error ? e.message : e);
 
-// один вопрос — одна строка: нумерация и маркеры из модели вычищаются
-const tidy = (q: string) =>
-  q.replace(/^[\s\d.\-—)*]+/, '').replace(/\s+/g, ' ').trim();
+const invalidQuestion = (where: string, prefetch: boolean) => {
+  recordDiagnostic('ai_question_invalid', { stage: where, prefetch: Number(prefetch) });
+  warn(where, 'Invalid question response', prefetch);
+};
+
+// Пробелы нормализуем, но мусор ответа модели не скрываем удалением символов.
+const tidy = (q: string) => q.replace(/\s+/g, ' ').trim();
 
 const isQuestion = (q: unknown): q is string =>
-  typeof q === 'string' && q.trim().length >= 8 && q.trim().length <= 180 && q.includes('?');
+  typeof q === 'string' && q.length >= 8 && q.length <= 180
+  && /^[\p{L}\p{N}«“„"'‘\-—–]/u.test(q)
+  && !/[{}\[\]<>`#*]/u.test(q)
+  && !/^(?:["'“«][^"'”»]{1,40}["'”»]|json|question|вопрос|питання)\s*:/iu.test(q)
+  && q.includes('?');
 
 /**
  * Первый вопрос молитвы — готовится заранее, на «пороге».
@@ -61,7 +70,7 @@ export async function generateFirstQuestion(topic: string, prefetch = false): Pr
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
-    if (!isQuestion(clean)) warn('firstQuestion', 'Invalid question response', prefetch);
+    if (!isQuestion(clean)) invalidQuestion('firstQuestion', prefetch);
     return isQuestion(clean) && q.novel !== false ? fromAi(clean) : fallback();
   } catch (e) {
     if (prefetch && e instanceof PrefetchDeniedError) return null;
@@ -93,7 +102,7 @@ export async function generateQuestion(
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
-    if (!isQuestion(clean)) warn('question', 'Invalid question response', prefetch);
+    if (!isQuestion(clean)) invalidQuestion('question', prefetch);
     return isQuestion(clean) ? { ...fromAi(clean), novel: q.novel } : fallback();
   } catch (e) {
     if (prefetch && e instanceof PrefetchDeniedError) return null;
@@ -120,7 +129,7 @@ export async function generateReflectQuestion(
       ...(prefetch ? { prefetch: true } : {}),
     });
     const clean = tidy(q.text);
-    if (!isQuestion(clean)) warn('reflect', 'Invalid question response', prefetch);
+    if (!isQuestion(clean)) invalidQuestion('reflect', prefetch);
     return isQuestion(clean) && q.novel !== false && !wasQuestionShown(clean, [...asked, ...skippedQuestions])
       ? fromAi(clean) : fallback();
   } catch (e) {

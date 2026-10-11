@@ -169,6 +169,7 @@ restarting Metro for Debug or rebuilding and reinstalling Release/EAS builds.
 `lib/apiConfig.ts` defines paths for questions, transcription, Scripture,
 catalogs, audio, contacts and version checks. About displays the normalized
 base origin in test builds.
+Malformed AI questions with JSON or Markdown debris are rejected and use the documented local-question fallback.
 
 When migrating an existing environment, replace `EXPO_PUBLIC_AI_PROXY_URL`,
 `EXPO_PUBLIC_AI_TRANSCRIBE_URL` and `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` with
