@@ -619,14 +619,16 @@ the Range-compatible MP3 of the whole chapter, starts at the first verse of the
 passage and stops at the end of the last one. Every requested verse must have a
 positive-duration timing. All-zero verse timings identify an absent recording:
 the server books list does not always mark these in `chapters_without_audio`.
-A chapter with no timings, or a passage with only partial alignment, is unavailable for narration even if the API supplies an
-audio link: playing a timed subset would skip verses and give misleading
+A chapter with no timings, or a passage with only partial alignment, is
+unavailable for narration even if the API supplies an audio link: playing a timed subset would skip verses and give misleading
 highlighting. The card shows the unavailable label and disables Listen; the
-reader hides its Listen control. The `scripture_audio_unavailable` diagnostic
-includes only the translation, voice, book and chapter identifiers; absence of
-a recording is not logged as playback failure. This state releases the prayer
-deadline. The narration state follows the
-native player (`lib/nativePlaybackStart.ts`): if it has not started two seconds
+reader keeps its Listen control disabled with the same accessible label.
+The `scripture_audio_unavailable` diagnostic
+includes a cause (`catalog_chapter`, `catalog_book_missing`, `no_timings` or
+`partial_timings`) and the translation, voice, book and chapter identifiers.
+Malformed or duplicate verse entries are `invalid_response`, shown as an error
+and recorded as `scripture_audio_failed`; absence of a recording is not logged as playback failure. This state releases the prayer
+deadline. The narration state follows the native player (`lib/nativePlaybackStart.ts`): if it has not started two seconds
 after `play()` and is not buffering, or is still buffering after 15 seconds,
 narration shows an error and writes a `scripture_audio_failed` record with the
 reason and the native playback state; if the

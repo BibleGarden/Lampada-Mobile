@@ -104,6 +104,7 @@ export function IconButton({
   style,
   accessibilityLabel,
   accessibilityState,
+  disabled = false,
   testID,
 }: {
   children: React.ReactNode;
@@ -115,6 +116,7 @@ export function IconButton({
   /** Кнопка из одной иконки: без подписи программа чтения с экрана её не назовёт */
   accessibilityLabel: string;
   accessibilityState?: AccessibilityState;
+  disabled?: boolean;
   testID?: string;
 }) {
   const styles = useStyles(stylesFactory);
@@ -124,6 +126,7 @@ export function IconButton({
       accessibilityRole="button"
       testID={testID}
       accessibilityState={accessibilityState}
+      disabled={disabled}
       onPress={() => {
         Haptics.selectionAsync();
         onPress();

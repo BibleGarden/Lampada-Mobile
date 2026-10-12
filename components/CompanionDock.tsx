@@ -118,6 +118,7 @@ export default function CompanionDock({
 
   const curScripture = s.scrList[s.scrIndex];
   const scriptureLoading = s.scrStatus === 'loading' || s.scrStatus === 'retrying';
+  const listenDisabled = scriptureLoading || scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable';
   // В карточке показываем только выделенные сервером стихи; целиком — в читалке
   const compactScripture = curScripture ? buildScriptureCompactText(curScripture) : null;
   const scriptureMeasureKey = curScripture
@@ -389,9 +390,9 @@ export default function CompanionDock({
               {curScripture && !curScripture.offline && (
                 <Pressable
                   onPress={tap(scriptureAudio.toggle)}
-                  disabled={scriptureLoading || scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable'}
+                  disabled={listenDisabled}
                   accessibilityRole="button"
-                  accessibilityState={{ busy: scriptureAudio.phase === 'loading', disabled: scriptureAudio.phase === 'unavailable' }}
+                  accessibilityState={{ busy: scriptureAudio.phase === 'loading', disabled: listenDisabled }}
                   hitSlop={touchSlop(listenButtonHeight())}
                   style={styles.listenButton}
                   accessibilityLabel={

@@ -5,7 +5,7 @@ import {
   useAudioPlayerStatus,
 } from 'expo-audio';
 import type { ScriptureDisplay } from './scripture';
-import { fetchScriptureAudioClip, type ScriptureAudioClip } from './scriptureAudioClient';
+import { fetchScriptureAudioClip, ScriptureAudioUnavailableError, type ScriptureAudioClip } from './scriptureAudioClient';
 import {
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type AudioSessionLease,
@@ -297,10 +297,11 @@ export function useScriptureAudio({
           releaseSession(lease);
           return;
         }
-        const unavailable = error instanceof Error && error.message === 'audio_unavailable';
+        const unavailable = error instanceof ScriptureAudioUnavailableError;
         const passage = scripture.selection.passage;
         if (unavailable) {
           recordDiagnostic('scripture_audio_unavailable', {
+            cause: error.cause,
             translation: String(passage.translation),
             voice: String(voice),
             book: String(passage.book_number),

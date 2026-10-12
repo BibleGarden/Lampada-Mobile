@@ -35,6 +35,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
   const scrFav = useSession((st) => st.scrFav);
   const toggleFav = useSession((st) => st.toggleFav);
   const cur = scrList[scrIndex];
+  const listenDisabled = scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable';
   const fav = !!cur && scrFav.includes(cur.canonicalId);
   const { mountKey, open, onIndexChange } = useSheetReflow();
   const referenceRef = useRef<Text>(null);
@@ -92,9 +93,11 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
           ) : null}
         </View>
         <View style={styles.headerBtns}>
-          {cur && !cur.offline && scriptureAudio.phase !== 'unavailable' ? (
+          {cur && !cur.offline ? (
             <IconButton
-              accessibilityLabel={scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
+              accessibilityLabel={scriptureAudio.phase === 'unavailable' ? t('components.reader.narrationUnavailable') : scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
+              disabled={listenDisabled}
+              accessibilityState={{ disabled: listenDisabled, busy: scriptureAudio.phase === 'loading' }}
               size={sc(32)}
               bg="rgba(255,255,255,.04)"
               border={colors.white08}
