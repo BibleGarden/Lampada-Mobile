@@ -140,9 +140,9 @@ or removal stops the run.
 Android device or one iOS simulator is available. With multiple targets, pass
 `--device` explicitly, for example `npm run android -- --variant release
 --device emulator-5554 --no-bundler`. The wrapper validates that serial and
-passes its running AVD name to Expo's `--device` option. Expo receives an explicit target;
-argument; `ANDROID_SERIAL` alone does not constrain Expo. The owner's Android
-phone is prohibited even if passed explicitly. The iOS `critical`, `main`,
+passes its running AVD name to Expo's `--device` option; a connected physical
+device is accepted by its adb serial. `ANDROID_SERIAL` alone does not constrain
+Expo. The iOS `critical`, `main`,
 `rare` and `all` tier commands always pass the named booted `Pray Smoke iPhone
 17 Pro` simulator to Maestro, or resolve the only booted simulator. To select
 another simulator, use `npm run test:e2e:critical -- --device <UDID>` (similarly

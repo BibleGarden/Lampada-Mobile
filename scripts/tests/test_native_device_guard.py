@@ -16,6 +16,7 @@ class NativeDeviceGuardTest(unittest.TestCase):
             binary.parent.mkdir()
             binary.write_text('#!/bin/sh\n'
                               'if [ "$1" = devices ]; then printf "%s\\n" "$ADB_LISTING"; '
+                              'elif [ "$3" = emu ]; then echo Pray_Pixel_API_35; '
                               'else [ "$2" = emulator-5554 ] && [ "$3" = get-state ]; fi\n')
             binary.chmod(0o755)
             return subprocess.run(['bash', str(GUARD), 'android', *args],
@@ -23,14 +24,20 @@ class NativeDeviceGuardTest(unittest.TestCase):
                                   env={**os.environ, 'ANDROID_HOME': sdk, 'ADB_LISTING': listing})
 
     def test_multiple_devices_require_an_explicit_target(self):
-        result = self.run_guard('List of devices attached\nemulator-5554\tdevice\nRFCW90KWKBH\tdevice')
+        result = self.run_guard('List of devices attached\nemulator-5554\tdevice\nR5CX00PHONE\tdevice')
         self.assertEqual(result.returncode, 2)
         self.assertIn('pass --device', result.stderr)
 
-    def test_explicit_emulator_is_accepted_and_owner_phone_is_rejected(self):
-        listing = 'List of devices attached\nemulator-5554\tdevice\nRFCW90KWKBH\tdevice'
+    def test_explicit_connected_targets_are_accepted(self):
+        listing = 'List of devices attached\nemulator-5554\tdevice\nR5CX00PHONE\tdevice'
         self.assertEqual(self.run_guard(listing, '--device', 'emulator-5554').stdout.strip(), 'emulator-5554')
-        self.assertEqual(self.run_guard(listing, '--device', 'RFCW90KWKBH').returncode, 2)
+        self.assertEqual(self.run_guard(listing, '--device', 'R5CX00PHONE').stdout.strip(), 'R5CX00PHONE')
+
+    def test_explicit_unknown_target_is_rejected(self):
+        listing = 'List of devices attached\nemulator-5554\tdevice'
+        result = self.run_guard(listing, '--device', 'R5CX00PHONE')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('not a running emulator', result.stderr)
 
     def test_single_device_is_resolved(self):
         result = self.run_guard('List of devices attached\nemulator-5554\tdevice')

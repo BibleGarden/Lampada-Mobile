@@ -26,7 +26,5 @@ else
   fi
 fi
 
-[[ "$device" != RFCW90KWKBH ]] || { echo 'Owner phone is prohibited.' >&2; exit 2; }
-
 MAESTRO_DRIVER_STARTUP_TIMEOUT=180000 maestro --device "$device" test "${tags[@]}" \
   --test-output-dir "${TMPDIR:-/tmp/}pray-e2e-output" testing/e2e/

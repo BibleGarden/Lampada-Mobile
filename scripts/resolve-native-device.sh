@@ -21,10 +21,11 @@ done
 
 if [[ -n "$explicit" ]]; then
   if [[ "$platform" == android ]]; then
-    [[ "$explicit" != RFCW90KWKBH ]] || { echo 'Owner phone is prohibited.' >&2; exit 2; }
     adb_bin="${ANDROID_HOME:-$HOME/Library/Android/sdk}/platform-tools/adb"
     if [[ "$explicit" == emulator-* ]]; then
       "$adb_bin" -s "$explicit" get-state >/dev/null
+    elif "$adb_bin" devices | awk -v s="$explicit" 'NR > 1 && $1 == s && $2 == "device" { found = 1 } END { exit !found }'; then
+      : # серийный номер подключённого устройства
     else
       matched=''
       while IFS= read -r serial; do
@@ -32,7 +33,7 @@ if [[ -n "$explicit" ]]; then
         name="$("$adb_bin" -s "$serial" emu avd name | head -1 | tr -d '\r')"
         [[ "$name" == "$explicit" ]] && matched="$serial"
       done < <("$adb_bin" devices | awk 'NR > 1 && $2 == "device" { print $1 }')
-      [[ -n "$matched" ]] || { echo "Android target $explicit is not a running emulator; use its serial or AVD name." >&2; exit 2; }
+      [[ -n "$matched" ]] || { echo "Android target $explicit is not a running emulator; use a connected serial or a running AVD name." >&2; exit 2; }
       explicit="$matched"
     fi
   else
@@ -58,5 +59,4 @@ if ((${#devices[@]} != 1)); then
   echo "Found ${#devices[@]} connected $platform targets; pass --device <serial or simulator> explicitly." >&2
   exit 2
 fi
-[[ "${devices[0]}" != RFCW90KWKBH ]] || { echo 'Owner phone is prohibited.' >&2; exit 2; }
 printf '%s\n' "${devices[0]}"
