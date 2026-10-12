@@ -204,6 +204,39 @@ presence → Main store listing. The category is Lifestyle.
 
 ### Play Console declarations
 
+Checked against Google's official guidance on **2026-10-12**. Complete app setup
+before starting a closed test; complete production access separately after the
+test. Sources: [App content](https://support.google.com/googleplay/android-developer/answer/9859455),
+[Data safety](https://support.google.com/googleplay/android-developer/answer/10787469),
+[content ratings](https://support.google.com/googleplay/android-developer/answer/9859655),
+[target audience](https://support.google.com/googleplay/android-developer/answer/9867159),
+[store assets](https://support.google.com/googleplay/android-developer/answer/1078870),
+[foreground service declaration](https://support.google.com/googleplay/android-developer/answer/13392821),
+and [AI-generated content policy](https://support.google.com/googleplay/android-developer/answer/13985936).
+
+| Play Console item | Select or enter | Basis |
+|---|---|---|
+| App details | App; free; Lifestyle. **Owner decision:** confirm free pricing and distribution countries. | `store/play/en-US.json` describes a prayer app; `store/README.md` sets Lifestyle. |
+| Privacy policy | `https://lampada.app/privacy?lang=en` (live on 2026-10-12). Add a link to the full policy **inside the app before release**; the current Settings text is only a processing summary. | `store/metadata/en-US.json`; `app/settings.tsx:1181` and `lib/locales/settings.ts`. |
+| App access / sign-in details | **All functionality is available without special access**; no reviewer credentials. The optional local PIN/biometric lock is user-created. | `app/setup.tsx`, `components/LockGate.tsx`, `architect/README.md` (lock gate). |
+| Ads | **No, my app does not contain ads.** | `package.json` has no ad SDK; `store/play/en-US.json` describes no ads or sponsored placements. |
+| Store listing contact | **Owner decision:** enter a monitored support email; recommend `support@lampada.app` if the owner controls it. | `store/metadata/en-US.json` points to the live privacy policy, which currently names that support address; no contact email is stored in this repository. |
+| Target audience and content | **Owner decision:** recommend **18 and over only**; do not select child age groups unless the product is deliberately designed and reviewed for children. Answer **No** to primarily appealing to children with the current listing. | `store/play/en-US.json` addresses personal prayer and adult concerns; there is no age gate in `app/setup.tsx`. |
+| Content ratings (IARC) | Choose **App**, then answer the live questionnaire truthfully: religious/Bible content **Yes** where asked; public user interaction / user-posted content **No**; user text remains private except explicit system sharing; AI-generated questions **Yes** where asked, with an in-app report control. **Owner decision:** review the final questionnaire and assigned ratings for each region; they cannot be predetermined from source. | `store/play/en-US.json`, `architect/README.md` (AI and sharing), `components/ContentReportDialog.tsx`, `lib/contentReportClient.ts`. |
+| AI-generated content | The app generates questions with AI and provides an in-app report control. **Owner decision:** for each Play listing image or video, check the AI-label box only if that submitted asset is in scope for AI-generated asset labeling. | `lib/ai.ts`, `components/ContentReportDialog.tsx`; [AI content policy](https://support.google.com/googleplay/android-developer/answer/13985936) and [asset declaration](https://support.google.com/googleplay/android-developer/answer/17262077). |
+| Data safety | **Yes**, data is collected off device; **No**, it is not shared with third parties when Gemini/Whisper act solely as service providers; **Yes**, data is encrypted in transit. Declare optional audio and text as below. **Owner decision:** verify server retention/logging and the final AAB's SDK inventory before submitting. | `lib/locales/settings.ts`, `lib/llm.ts`, `lib/transcription.ts`, `lib/contentReportClient.ts`; [Data safety definitions](https://support.google.com/googleplay/android-developer/answer/10787469#collection). |
+| Financial features | **My app doesn’t provide any financial features.** This form also applies to closed testing. | `store/play/en-US.json`; [Google's declaration choices](https://support.google.com/googleplay/android-developer/answer/13849271). |
+| Health apps | **My app doesn’t provide any health features.** Prayer is the purpose; there are no health claims, health data integrations or medical features. This form also applies to closed testing. | `store/play/en-US.json`, `app.json`; [Google's declaration choices](https://support.google.com/googleplay/android-developer/answer/14738291). |
+| Government apps / news and magazines / COVID-19 | **No** to each if shown. Lampada is not government affiliated and provides no government information, news or contact tracing. | `store/play/en-US.json`, `architect/README.md`; [App content guidance](https://support.google.com/googleplay/android-developer/answer/9859455). |
+| Advertising ID | **No** if the final merged AAB manifest has no `com.google.android.gms.permission.AD_ID`; check the uploaded artifact before answering. | `app.json` declares no AD_ID; `package.json` has no ad SDK. No merged release manifest is in this repository. |
+| Foreground service permissions | **Media playback** only; use the explanation and video below. | `app.json` enables expo-audio background playback; `architect/README.md` documents music and Scripture narration. |
+
+The [App content page](https://support.google.com/googleplay/android-developer/answer/9859455)
+requires the privacy policy, ads, access, target audience and content rating
+declarations; answer any additional card Play Console presents for the uploaded
+bundle. The IARC questionnaire determines the actual regional ratings. Do not
+claim a rating in advance.
+
 Verify the permissions against the merged release manifest (`PRE-004D`):
 
 | Permission | Source | Purpose |
@@ -222,7 +255,12 @@ must be absent (`android.blockedPermissions`).
 playback: background prayer music and Scripture narration that the user
 started keep playing while the screen is locked or another app is open. Attach
 a short video that starts music in a prayer, locks the screen and shows the
-playback notification.
+playback notification. If deferred, playback does not continue promptly after
+the app backgrounds; if interrupted, the prayer loses continuous music or
+narration and the user may need to resume it. Android's media playback type uses
+`FOREGROUND_SERVICE_MEDIA_PLAYBACK` ([Android documentation](https://developer.android.com/develop/background-work/services/fgs/service-types#media));
+[Play requires](https://support.google.com/googleplay/android-developer/answer/13392821)
+the use case, interruption impact and demo video in its declaration.
 
 **Data safety.** These answers follow the consent texts in
 `lib/locales/settings.ts` (`settings.privacyDetails` and the consent hints):
@@ -239,25 +277,77 @@ playback notification.
   voice recordings are never in the cloud backup and move only with a direct
   transfer to a new phone (Android 9 and later); the app PIN is never
   restored.
-- Collected, not shared: Google Gemini and the Whisper server act as service
-  providers.
+- Collected in the form, not shared if Google Gemini and the Whisper server
+  act solely as service providers. Ephemeral processing is still entered in
+  the form, though Google may omit it from the public Data safety section
+  ([Google's definition](https://support.google.com/googleplay/android-developer/answer/10787469#collection)).
   - Audio → Voice or sound recordings: optional, processed ephemerally, App
     functionality. Sent only when the user asks for a transcription and has
     given transcription consent.
-  - Messages → Other in-app messages, or App activity → Other user-generated
-    content: the prayer topic, answers and transcripts. Optional, processed
-    ephemerally, App functionality. Sent only with the topic and answer
-    consents.
-  - Content reports: the reported question or passage and an optional comment.
-    Optional, stored on the server for moderation (App functionality).
-  - Server logs: decide whether request logs count as App info and
-    performance → Diagnostics.
-- Not collected: location, contacts, photos, device or other identifiers,
-  financial or health data, analytics.
+  - App activity → Other user-generated content: the prayer topic, answers
+    and transcripts. Optional, processed ephemerally, App functionality. Sent
+    only with the topic and answer consents (`lib/locales/settings.ts`).
+  - App activity → Other user-generated content: an explicitly reported AI
+    question or Scripture passage and optional comment. Optional, retained
+    on the server for moderation, App functionality (`lib/contentReportClient.ts`).
+  - **Owner decision:** inspect server request logs and retention. If they
+    contain diagnostic data or device identifiers, declare the corresponding
+    Diagnostics and/or Device or other IDs types;
+    do not mark retained logs as ephemeral (`architect/README.md` documents
+    the API, not its server logging policy).
+- **Owner decision:** confirm the Data safety deletion-request answer after
+  checking whether retained server reports can be deleted on request. Local
+  journal deletion and reset do not by themselves erase server reports
+  (`lib/contentReportClient.ts`, `architect/README.md`).
+- No app-level collection of location, contacts, photos, financial or health
+  data, analytics or device identifiers (`package.json`, `app.json`); confirm
+  the server-log answer above before selecting **No** for identifiers.
 
-Not in the repository yet: the 1024×500 feature graphic and Android phone
-screenshots with an aspect ratio of at most 2:1. The App Store screenshots do
-not fit and show the iOS interface.
+**Store listing assets.** The [Play asset requirements](https://support.google.com/googleplay/android-developer/answer/1078870)
+call for a 512×512 high-resolution icon (32-bit PNG with alpha, at most 1 MB), a required
+1024×500 feature graphic (JPEG or 24-bit PNG without alpha), and at least two
+screenshots across supported device types (JPEG or 24-bit PNG, 320–3840 px,
+longest side at most twice the shortest). Use Android phone screenshots for
+Lampada. The 7-inch and 10-inch tablet screenshot slots are **optional for
+publication**; add them for the tablet listing. Four 1080 px screenshots per
+device type are recommended for discovery, not a release gate.
+`assets/icon.png` is 1024×1024 (checked with `sips` on 2026-10-12) and needs
+a separate Play icon export.
+
+Not in the repository yet: the exported 512×512 Play icon, the 1024×500
+feature graphic, Android phone and tablet screenshots, a full in-app privacy
+policy link, the uploaded AAB's merged permission list, and evidence of the
+server's request-log retention. The App Store screenshots show iOS UI and are
+not suitable for the Play listing.
+
+### Closed testing
+
+For personal Play developer accounts created after 2023-11-13, Google requires
+at least **12 testers opted in continuously for 14 days** before applying for
+production access. Closed testing starts after app setup; internal testing does
+not count ([testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465)).
+
+1. Create a Google Group for testers. In Play Console → Test and release →
+   Testing → Closed testing → Manage track → Testers, select **Google Groups**,
+   enter its group email, and set a feedback email or URL.
+2. Publish the closed-track release and copy its opt-in link. Invite at least
+   12 members to the Group, then send them the opt-in link. Each tester must
+   join the Group **and** opt in with a Google account; an invitation or install
+   alone does not start their 14-day clock. The link appears only when the app
+   status is Published, and may take hours to appear.
+3. Keep 12 or more opted in continuously for 14 days. Ask them to use the
+   prayer, voice, Scripture, journal, reminders and report flow, and collect
+   dated feedback, device coverage, defects and fixes. Do not remove them
+   early.
+4. Dashboard → **Apply for production** after the criterion is met. Prepare
+   answers on recruitment difficulty, tester engagement and real usage,
+   feedback and collection method, app audience and value, estimated first-year
+   installs, changes made from feedback, and why the app is ready. Google
+   reviews the application before production access.
+
+Sources checked 2026-10-12:
+[Set up an open, closed, or internal test](https://support.google.com/googleplay/android-developer/answer/9845334)
+and [personal-account testing / production access](https://support.google.com/googleplay/android-developer/answer/14151465).
 
 ### Build and submit
 
