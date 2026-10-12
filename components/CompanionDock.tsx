@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type LayoutChangeEvent,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { useSettings } from '../lib/settings';
 import { buildScriptureCompactText } from '../lib/scripture';
+import { collapsedTextFromLines, shortenCollapsedText, withContinuationEllipsis } from '../lib/textTruncation';
 import { getContentReportTarget, type ContentReportTarget } from '../lib/contentReportTarget';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { colors, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
@@ -66,9 +68,13 @@ export default function CompanionDock({
 }: Props) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
+  const { fontScale } = useWindowDimensions();
+  const [scriptureTextWidth, setScriptureTextWidth] = React.useState(0);
   const [measuredScripture, setMeasuredScripture] = React.useState<{
     key: string;
     lines: number;
+    candidate: string | null;
+    fits: boolean;
   } | null>(null);
   // Сколько строк отрывка реально помещается: карточка тянется по свободной
   // высоте экрана, поэтому лимит считаем по замеренной области, а не фиксируем.
@@ -121,12 +127,19 @@ export default function CompanionDock({
   const listenDisabled = scriptureLoading || scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable';
   // В карточке показываем только выделенные сервером стихи; целиком — в читалке
   const compactScripture = curScripture ? buildScriptureCompactText(curScripture) : null;
-  const scriptureMeasureKey = curScripture
-    ? `${curScripture.canonicalId}:${curScripture.receivedAt}`
+  const scripturePreviewText = compactScripture
+    ? compactScripture.partial
+      ? withContinuationEllipsis(compactScripture.text)
+      : compactScripture.text
     : null;
-  const scriptureIsTruncated = !!scriptureMeasureKey
-    && measuredScripture?.key === scriptureMeasureKey
-    && measuredScripture.lines > scriptureLineLimit;
+  const scriptureMeasureKey = scripturePreviewText && scriptureTextWidth
+    ? `${scripturePreviewText}:${scriptureTextWidth}:${fontScale}:${styles.cardText.fontSize}:${styles.cardText.lineHeight}:${scriptureLineLimit}`
+    : null;
+  const scriptureMeasureKeyRef = React.useRef(scriptureMeasureKey);
+  scriptureMeasureKeyRef.current = scriptureMeasureKey;
+  const activeMeasurement = measuredScripture?.key === scriptureMeasureKey ? measuredScripture : null;
+  const scriptureIsTruncated = !!activeMeasurement && activeMeasurement.lines > scriptureLineLimit;
+  const clippedScripture = activeMeasurement?.fits ? activeMeasurement.candidate : null;
   const canReadInFull = !!compactScripture
     && (scriptureIsTruncated || compactScripture.partial);
   const curFav = !!curScripture && s.scrFav.includes(curScripture.canonicalId);
@@ -299,6 +312,10 @@ export default function CompanionDock({
                     не задаём: VoiceOver читает сам отрывок, а действие — подсказкой.
                     testID различает неполный текст: по нему тесты ищут длинный отрывок. */}
                 <Pressable
+                  onLayout={({ nativeEvent }) => {
+                    const width = nativeEvent.layout.width;
+                    setScriptureTextWidth((current) => current === width ? current : width);
+                  }}
                   onPress={tap(onOpenReader)}
                   accessibilityRole="button"
                   accessibilityHint={t('components.reader.readFull')}
@@ -311,28 +328,57 @@ export default function CompanionDock({
                   <ScripturePassageText
                     scripture={curScripture}
                     style={styles.cardText}
-                    numberOfLines={scriptureLineLimit}
+                    numberOfLines={clippedScripture === null ? scriptureLineLimit : undefined}
                     testIDPrefix="scripture-preview-highlight"
                     variant="compact"
                     continuation={canReadInFull}
+                    compactTextOverride={clippedScripture ?? undefined}
+                    accessibilityLabel={compactScripture?.text}
                   />
                   <Text
+                    key={scriptureMeasureKey ?? 'unmeasured'}
                     accessible={false}
                     accessibilityElementsHidden
                     importantForAccessibility="no-hide-descendants"
                     pointerEvents="none"
                     style={[styles.cardText, styles.scriptureMeasureText]}
                     onTextLayout={({ nativeEvent }) => {
-                      const lines = nativeEvent.lines.length;
-                      setMeasuredScripture((current) =>
-                        current?.key === scriptureMeasureKey && current.lines === lines
-                          ? current
-                          : { key: scriptureMeasureKey as string, lines },
-                      );
+                      if (!scriptureMeasureKey || scriptureMeasureKeyRef.current !== scriptureMeasureKey) return;
+                      const lines = nativeEvent.lines;
+                      setMeasuredScripture((current) => {
+                        if (current?.key === scriptureMeasureKey) return current;
+                        return {
+                          key: scriptureMeasureKey,
+                          lines: lines.length,
+                          candidate: lines.length > scriptureLineLimit
+                            ? collapsedTextFromLines(lines.map((line) => line.text), scriptureLineLimit)
+                            : null,
+                          fits: false,
+                        };
+                      });
                     }}
                   >
-                    {compactScripture?.text ?? curScripture.text}
+                    {scripturePreviewText}
                   </Text>
+                  {activeMeasurement?.candidate && !activeMeasurement.fits ? (
+                    <Text
+                      accessible={false}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no-hide-descendants"
+                      pointerEvents="none"
+                      style={[styles.cardText, styles.scriptureMeasureText]}
+                      onTextLayout={({ nativeEvent }) => {
+                        setMeasuredScripture((current) => {
+                          if (current !== activeMeasurement || current.candidate === null) return current;
+                          return nativeEvent.lines.length <= scriptureLineLimit
+                            ? { ...current, fits: true }
+                            : { ...current, candidate: shortenCollapsedText(current.candidate) };
+                        });
+                      }}
+                    >
+                      {activeMeasurement.candidate}
+                    </Text>
+                  ) : null}
                 </Pressable>
                 {(s.scrStatus === 'offline_fallback' || curScripture.offline) && (
                   <Pressable

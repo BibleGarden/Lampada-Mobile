@@ -43,9 +43,9 @@ export default function ScripturePassageText({
       : undefined;
     return (
       <Text style={style} numberOfLines={numberOfLines} testID={compactTestID} accessibilityLabel={accessibilityLabel}>
-        {continuation && compact.partial
-          ? withContinuationEllipsis(compactTextOverride ?? compact.text)
-          : compactTextOverride ?? compact.text}
+        {compactTextOverride ?? (continuation && compact.partial
+          ? withContinuationEllipsis(compact.text)
+          : compact.text)}
       </Text>
     );
   }
