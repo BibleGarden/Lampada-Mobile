@@ -92,7 +92,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
           ) : null}
         </View>
         <View style={styles.headerBtns}>
-          {cur && !cur.offline ? (
+          {cur && !cur.offline && scriptureAudio.phase !== 'unavailable' ? (
             <IconButton
               accessibilityLabel={scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
               size={sc(32)}

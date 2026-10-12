@@ -203,7 +203,7 @@ export function useScriptureAudio({
 
   const toggle = useCallback(() => {
     if (!scripture || scripture.offline || !enabled || voice === null) return;
-    if (phase === 'loading') return;
+    if (phase === 'loading' || phase === 'unavailable') return;
     if (phase === 'playing') {
       clearStartWatch();
       player.pause();
@@ -293,16 +293,27 @@ export function useScriptureAudio({
         playNative();
         setPhase('playing');
       } catch (error) {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted || requestRef.current !== controller) {
           releaseSession(lease);
           return;
         }
-        reportNarrationFailure('play_failed', {
-          errorKind: errorKind(error),
-          // Коды клиента (not_configured, invalid_response…) не содержат данных.
-          ...(error instanceof Error && /^[a-z_]+$/.test(error.message) ? { code: error.message } : {}),
-        });
-        setPhase('error');
+        const unavailable = error instanceof Error && error.message === 'audio_unavailable';
+        const passage = scripture.selection.passage;
+        if (unavailable) {
+          recordDiagnostic('scripture_audio_unavailable', {
+            translation: String(passage.translation),
+            voice: String(voice),
+            book: String(passage.book_number),
+            chapter: String(passage.chapter_number),
+          });
+        } else {
+          reportNarrationFailure('play_failed', {
+            errorKind: errorKind(error),
+            // Коды клиента (not_configured, invalid_response…) не содержат данных.
+            ...(error instanceof Error && /^[a-z_]+$/.test(error.message) ? { code: error.message } : {}),
+          });
+        }
+        setPhase(unavailable ? 'unavailable' : 'error');
         onAudioBusyChange(false);
         releaseSession(lease);
       } finally {

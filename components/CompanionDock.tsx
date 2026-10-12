@@ -389,13 +389,15 @@ export default function CompanionDock({
               {curScripture && !curScripture.offline && (
                 <Pressable
                   onPress={tap(scriptureAudio.toggle)}
-                  disabled={scriptureLoading || scriptureAudio.phase === 'loading'}
+                  disabled={scriptureLoading || scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable'}
                   accessibilityRole="button"
-                  accessibilityState={{ busy: scriptureAudio.phase === 'loading' }}
+                  accessibilityState={{ busy: scriptureAudio.phase === 'loading', disabled: scriptureAudio.phase === 'unavailable' }}
                   hitSlop={touchSlop(listenButtonHeight())}
                   style={styles.listenButton}
                   accessibilityLabel={
-                    scriptureAudio.phase === 'playing'
+                    scriptureAudio.phase === 'unavailable'
+                      ? t('components.reader.narrationUnavailable')
+                      : scriptureAudio.phase === 'playing'
                       ? t('components.reader.pause')
                       : scriptureAudio.phase === 'paused' || scriptureAudio.phase === 'interrupted'
                         ? t('components.reader.resume')
@@ -405,13 +407,15 @@ export default function CompanionDock({
                 >
                   {scriptureAudio.phase === 'loading' ? (
                     <ActivityIndicator size="small" color={colors.goldSoft} />
-                  ) : scriptureAudio.phase === 'playing' ? (
+                  ) : scriptureAudio.phase === 'unavailable' ? null : scriptureAudio.phase === 'playing' ? (
                     <PauseIcon size={12} />
                   ) : (
                     <PlayIcon size={12} />
                   )}
                   <Text style={styles.readMoreLabel} testID={`scripture-audio-label-${scriptureAudio.phase}`}>
-                    {scriptureAudio.phase === 'loading'
+                    {scriptureAudio.phase === 'unavailable'
+                      ? t('components.reader.narrationUnavailable')
+                      : scriptureAudio.phase === 'loading'
                       ? t('components.reader.loading')
                       : scriptureAudio.phase === 'playing'
                         ? t('components.reader.pause')

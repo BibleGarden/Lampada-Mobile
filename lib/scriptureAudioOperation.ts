@@ -39,7 +39,7 @@ export type NarrationNativeStatus = {
   isBuffering: boolean;
 };
 
-export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'interrupted' | 'error';
+export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'interrupted' | 'error' | 'unavailable';
 
 type NarrationInterruptionEvent =
   | { type: 'status'; status: NarrationNativeStatus; liveStatus: NarrationNativeStatus; started: boolean }

@@ -29,6 +29,7 @@ export function recordDiagnostic(
     | 'scripture_preferences_save_failed'
     | 'transcription_failed'
     | 'scripture_audio_failed'
+    | 'scripture_audio_unavailable'
     | 'scripture_load_failed'
     | 'favorite_save_failed'
     | 'favorites_load_failed'

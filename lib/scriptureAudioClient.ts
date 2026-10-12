@@ -131,12 +131,13 @@ export async function fetchScriptureAudioClip(
   for (const verse of part.verses) {
     if (
       !isObject(verse) ||
-      typeof verse.number !== 'number' ||
+      typeof verse.number !== 'number' || !Number.isSafeInteger(verse.number) ||
       verse.number < passage.verse_start ||
       verse.number > passage.verse_end ||
       !isFiniteNumber(verse.begin) ||
       !isFiniteNumber(verse.end)
     ) continue;
+    if (verse.begin < 0 || verse.end <= verse.begin) continue;
     verses.push({
       number: verse.number,
       startSeconds: verse.begin,
@@ -144,13 +145,19 @@ export async function fetchScriptureAudioClip(
     });
   }
   verses.sort((left, right) => left.startSeconds - right.startSeconds);
+  // Нулевые тайминги означают отсутствие записи, даже с audio_link:
+  // каталог не всегда отмечает такие главы в chapters_without_audio.
+  // Частичная разметка обрезала бы отрывок и исказила подсветку стихов.
+  if (verses.length !== passage.verse_end - passage.verse_start + 1
+    || new Set(verses.map((verse) => verse.number)).size !== verses.length) {
+    throw new Error('audio_unavailable');
+  }
   const first = verses[0];
   const last = verses.at(-1);
   if (!first || !last) {
     throw new Error('audio_unavailable');
   }
   const startSeconds = Math.max(0, first.startSeconds - 0.2);
-  if (last.endSeconds <= startSeconds) throw new Error('invalid_response');
   return {
     url: publicAudioUrl(part.audio_link),
     startSeconds,

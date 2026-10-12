@@ -333,6 +333,7 @@ tier of its e2e runs.
 | SCR-030 | A local storage failure (SQLite) while the next passage is chosen, on entry and from the open block | the hidden entry attempt leaves the block idle; opening the block or Next shows "Could not select a passage right now." with "Try again" instead of an endless loading state; each failure appends `scripture_load_failed` (unit: `sessionResume.test.mjs`) |
 | SCR-031 | Add or remove a favourite while the database write fails | the heart returns to the stored state unless it was toggled again; a `favorite_save_failed` record is appended (unit: `sessionResume.test.mjs`) |
 | SCR-032 | Open Saved passages while reading the favourites fails | the screen says "Could not open saved passages. Tap to try again." instead of the empty-list text; a tap retries; a `favorites_load_failed` record is appended (manual, fault injection) |
+| SCR-033 | Select Isaiah 40:28-31 with SYN and voice 1, then tap Listen; repeat with a passage whose verses have only partial timings | the card shows narration unavailable, Listen is disabled, the reader has no Listen control, and an expired prayer proceeds after one second; the diagnostic records translation, voice, book and chapter without text (unit: `scriptureAudioClient.test.mjs`, `useScriptureAudio.test.mjs`) |
 
 ### Content reports
 
