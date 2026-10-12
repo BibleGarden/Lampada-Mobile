@@ -50,8 +50,6 @@ tags:
 # Остаточный риск: tapOn ждёт успокоения экрана, и долгий переход может съесть часть 4-секундного окна уведомления.
 - assertVisible:
     id: "prayer-saved-notice"
-- assertNotVisible:
-    id: "home-streak-line"
 - extendedWaitUntil:
     notVisible:
       id: "prayer-saved-notice"

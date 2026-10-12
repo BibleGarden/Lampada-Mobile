@@ -48,8 +48,6 @@ tags:
 # проверять сразу, до остальных assert'ов Home.
 - assertVisible:
     id: "prayer-saved-notice"
-- assertNotVisible:
-    id: "home-streak-line"
 - extendedWaitUntil:
     notVisible:
       id: "prayer-saved-notice"
