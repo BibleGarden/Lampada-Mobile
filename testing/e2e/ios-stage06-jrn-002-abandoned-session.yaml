@@ -37,6 +37,9 @@ tags:
     clearState: false
 - assertVisible:
     id: "start-prayer-button"
+# a prayer left within the first minute without answers does not mark the day (ADR-0042)
+- assertVisible:
+    id: "home-title"
 - tapOn:
     id: "journal-button"
 - assertVisible:

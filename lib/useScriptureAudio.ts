@@ -1,26 +1,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   setAudioModeAsync,
-  setIsAudioActiveAsync,
   useAudioPlayer,
   useAudioPlayerStatus,
 } from 'expo-audio';
 import type { ScriptureDisplay } from './scripture';
-import { fetchScriptureAudioClip, type ScriptureAudioClip } from './scriptureAudioClient';
+import { fetchScriptureAudioClip, ScriptureAudioUnavailableError, type ScriptureAudioClip } from './scriptureAudioClient';
 import {
-  audioModeCoordinator,
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type AudioSessionLease,
 } from './audioModeCoordinator';
-import { createScriptureAudioOperation } from './scriptureAudioOperation';
+import { audioModeCoordinator } from './audioSession';
+import { createScriptureAudioOperation, narrationActiveVerse, narrationInterruptionTransition, narrationNativeState, type ScriptureAudioPhase } from './scriptureAudioOperation';
+import { watchNativePlaybackStart } from './nativePlaybackStart';
+import { errorKind, recordDiagnostic } from './db';
 
-export type ScriptureAudioPhase = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+export type { ScriptureAudioPhase } from './scriptureAudioOperation';
 
 const SCRIPTURE_PLAYBACK_MODE = {
   allowsRecording: false,
   playsInSilentMode: true,
   shouldPlayInBackground: true,
   interruptionMode: 'doNotMix' as const,
+};
+
+type NarrationFailure =
+  | 'not_started'
+  | 'buffering_timeout'
+  | 'player_error'
+  | 'play_failed'
+  | 'mode_failed'
+  | 'rewind_failed';
+
+/** Лог и диагностика без текста ошибки: в нём может оказаться адрес с ключом. */
+const reportNarrationFailure = (reason: NarrationFailure, details: Record<string, string> = {}) => {
+  console.warn('Scripture narration failed', reason, details);
+  recordDiagnostic('scripture_audio_failed', { reason, ...details });
 };
 
 export type ScriptureAudioControl = {
@@ -62,9 +77,7 @@ export function useScriptureAudio({
   }, []);
   const acquireSession = useCallback(() => {
     if (sessionLeaseRef.current) throw new Error('Scripture audio already owns a session lease');
-    const lease = audioModeCoordinator.acquireSession(
-      () => setIsAudioActiveAsync(false),
-    );
+    const lease = audioModeCoordinator.acquireSession();
     sessionLeaseRef.current = lease;
     return lease;
   }, []);
@@ -73,6 +86,14 @@ export function useScriptureAudio({
     playbackOperationRef.current = createScriptureAudioOperation();
   }
   const playbackOperation = playbackOperationRef.current;
+  // Подтвердил ли нативный плеер последний play(). Android молча игнорирует
+  // play() при выключенной аудиосессии, поэтому фаза следует за плеером.
+  const nativeStartedRef = useRef(false);
+  const cancelStartWatchRef = useRef<(() => void) | null>(null);
+  const clearStartWatch = useCallback(() => {
+    cancelStartWatchRef.current?.();
+    cancelStartWatchRef.current = null;
+  }, []);
   const scriptureKey = scripture && voice !== null
     ? `${scripture.canonicalId}:${scripture.receivedAt}:${voice}`
     : null;
@@ -80,6 +101,8 @@ export function useScriptureAudio({
 
   const stop = useCallback((nextPhase: ScriptureAudioPhase = 'idle') => {
     playbackOperation.invalidate();
+    clearStartWatch();
+    nativeStartedRef.current = false;
     requestRef.current?.abort();
     requestRef.current = null;
     player.pause();
@@ -88,7 +111,35 @@ export function useScriptureAudio({
     scriptureKeyRef.current = null;
     setPhase(nextPhase);
     onAudioBusyChange(false);
-  }, [onAudioBusyChange, playbackOperation, player, releaseSession]);
+  }, [clearStartWatch, onAudioBusyChange, playbackOperation, player, releaseSession]);
+
+  const playNative = useCallback(() => {
+    clearStartWatch();
+    nativeStartedRef.current = false;
+    player.play();
+    cancelStartWatchRef.current = watchNativePlaybackStart({
+      readStatus: () => player.currentStatus,
+      hasStarted: () => nativeStartedRef.current,
+      onFailed: (reason, live) => {
+        cancelStartWatchRef.current = null;
+        reportNarrationFailure(reason, { playbackState: live.playbackState ?? 'unknown' });
+        stop('error');
+      },
+    });
+  }, [clearStartWatch, player, stop]);
+
+  const finishClip = useCallback((clip: ScriptureAudioClip) => {
+    clearStartWatch();
+    nativeStartedRef.current = false;
+    player.pause();
+    releaseSession();
+    setPhase('idle');
+    onAudioBusyChange(false);
+    void player.seekTo(clip.startSeconds, 0, 0).catch((error) => {
+      reportNarrationFailure('rewind_failed', { errorKind: errorKind(error) });
+      setPhase('error');
+    });
+  }, [clearStartWatch, onAudioBusyChange, player, releaseSession]);
 
   useEffect(() => {
     if (!enabled) stop();
@@ -100,43 +151,75 @@ export function useScriptureAudio({
 
   useEffect(() => {
     const clip = clipRef.current;
-    if (phase !== 'playing' || !clip) return;
+    if ((phase !== 'playing' && phase !== 'interrupted') || !clip) return;
     if (status.playbackState === 'error') {
+      reportNarrationFailure('player_error');
       stop('error');
       return;
     }
-    if (status.currentTime + 0.03 < clip.endSeconds) return;
-    player.pause();
-    releaseSession();
-    setPhase('idle');
-    onAudioBusyChange(false);
-    void player.seekTo(clip.startSeconds, 0, 0).catch(() => setPhase('error'));
-  }, [onAudioBusyChange, phase, player, releaseSession, status.currentTime, status.playbackState, stop]);
+    if (status.currentTime + 0.03 >= clip.endSeconds) {
+      finishClip(clip);
+      return;
+    }
+    // Событие статуса могло отстать от недавнего play(): решает живой статус.
+    const live = player.currentStatus;
+    if (narrationNativeState(live, nativeStartedRef.current) === 'stopped'
+      && live.duration > 0 && live.currentTime + 0.5 >= live.duration) {
+      // Последний стих главы может кончаться позже файла: плеер дошёл до конца сам.
+      finishClip(clip);
+      return;
+    }
+    const transition = narrationInterruptionTransition(phase, {
+      type: 'status', status, liveStatus: live, started: nativeStartedRef.current,
+    });
+    if (status.playing) nativeStartedRef.current = true;
+    if (!transition) return;
+    if (transition.session === 'release') releaseSession();
+    nativeStartedRef.current = transition.phase === 'playing';
+    // Android возобновит плеер после возврата audio focus, только пока lease
+    // держит сессию активной. Deadline при этом не ждёт системную паузу.
+    clearStartWatch();
+    setPhase(transition.phase);
+    onAudioBusyChange(transition.audioBusy);
+  }, [
+    finishClip,
+    clearStartWatch,
+    onAudioBusyChange,
+    phase,
+    player,
+    releaseSession,
+    status,
+    stop,
+  ]);
 
   useEffect(
     () => () => {
+      clearStartWatch();
       requestRef.current?.abort();
       releaseSession();
     },
-    [releaseSession],
+    [clearStartWatch, releaseSession],
   );
 
   const toggle = useCallback(() => {
     if (!scripture || scripture.offline || !enabled || voice === null) return;
-    if (phase === 'loading') return;
+    if (phase === 'loading' || phase === 'unavailable') return;
     if (phase === 'playing') {
+      clearStartWatch();
       player.pause();
       releaseSession();
       setPhase('paused');
       onAudioBusyChange(false);
       return;
     }
-    if ((phase === 'paused' || phase === 'idle') && clipRef.current) {
+    if ((phase === 'paused' || phase === 'interrupted' || phase === 'idle') && clipRef.current) {
       const continuation = playbackOperation.begin();
       if (!continuation) return;
-      const lease = acquireSession();
-      setPhase('loading');
-      onAudioBusyChange(true);
+      const transition = narrationInterruptionTransition(phase, { type: 'resume_requested' })!;
+      const lease = transition.session === 'retain' ? sessionLeaseRef.current : acquireSession();
+      if (!lease) throw new Error('Interrupted narration has no audio session lease');
+      setPhase(transition.phase);
+      onAudioBusyChange(transition.audioBusy);
       void audioModeCoordinator
         .requestPlayback(setAudioModeAsync, SCRIPTURE_PLAYBACK_MODE)
         .then((grant) => {
@@ -145,12 +228,13 @@ export function useScriptureAudio({
             return;
           }
           if (!grant?.isCurrent()) {
-            setPhase(phase);
-            onAudioBusyChange(false);
-            releaseSession(lease);
+            const denied = narrationInterruptionTransition(phase, { type: 'resume_denied' })!;
+            setPhase(denied.phase);
+            onAudioBusyChange(denied.audioBusy);
+            if (denied.session === 'release') releaseSession(lease);
             return;
           }
-          player.play();
+          playNative();
           setPhase('playing');
         })
         .catch((error) => {
@@ -158,7 +242,7 @@ export function useScriptureAudio({
             releaseSession(lease);
             return;
           }
-          console.warn('Failed to restore Scripture audio mode', error);
+          reportNarrationFailure('mode_failed', { errorKind: errorKind(error) });
           setPhase('error');
           onAudioBusyChange(false);
           releaseSession(lease);
@@ -206,45 +290,43 @@ export function useScriptureAudio({
         }
         clipRef.current = clip;
         scriptureKeyRef.current = scriptureKey;
-        player.play();
+        playNative();
         setPhase('playing');
       } catch (error) {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted || requestRef.current !== controller) {
           releaseSession(lease);
           return;
         }
-        console.warn(
-          'Failed to play Scripture passage',
-          error instanceof Error ? error.message : 'unknown error',
-        );
-        setPhase('error');
+        const unavailable = error instanceof ScriptureAudioUnavailableError;
+        const passage = scripture.selection.passage;
+        if (unavailable) {
+          recordDiagnostic('scripture_audio_unavailable', {
+            cause: error.cause,
+            translation: String(passage.translation),
+            voice: String(voice),
+            book: String(passage.book_number),
+            chapter: String(passage.chapter_number),
+          });
+        } else {
+          reportNarrationFailure('play_failed', {
+            errorKind: errorKind(error),
+            // Коды клиента (not_configured, invalid_response…) не содержат данных.
+            ...(error instanceof Error && /^[a-z_]+$/.test(error.message) ? { code: error.message } : {}),
+          });
+        }
+        setPhase(unavailable ? 'unavailable' : 'error');
         onAudioBusyChange(false);
         releaseSession(lease);
       } finally {
         if (requestRef.current === controller) requestRef.current = null;
       }
     })();
-  }, [acquireSession, enabled, onAudioBusyChange, phase, playbackOperation, player, releaseSession, scripture, scriptureKey, voice]);
+  }, [acquireSession, clearStartWatch, enabled, onAudioBusyChange, phase, playbackOperation, playNative, player, releaseSession, scripture, scriptureKey, voice]);
 
-  let activeVerseNumber: number | null = null;
   const clip = clipRef.current;
-  const currentScriptureKey = scriptureKey;
-  if (
-    (phase === 'playing' || phase === 'paused') &&
-    clip?.verses.length &&
-    scriptureKeyRef.current === currentScriptureKey
-  ) {
-    // Между стихами не оставляем пустой кадр: отметка переходит на следующий
-    // стих один раз, в середине паузы между end предыдущего и begin следующего.
-    activeVerseNumber = clip.verses[0].number;
-    for (let index = 1; index < clip.verses.length; index++) {
-      const previous = clip.verses[index - 1];
-      const current = clip.verses[index];
-      const switchTime = (previous.endSeconds + current.startSeconds) / 2;
-      if (status.currentTime + 0.03 < switchTime) break;
-      activeVerseNumber = current.number;
-    }
-  }
+  const activeVerseNumber = clip && scriptureKeyRef.current === scriptureKey
+    ? narrationActiveVerse(phase, clip.verses, status.currentTime)
+    : null;
 
   // Стабильный объект: читалка мемоизирована и получает его через props.
   return useMemo(() => ({ phase, activeVerseNumber, stop, toggle }), [phase, activeVerseNumber, stop, toggle]);

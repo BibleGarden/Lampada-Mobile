@@ -84,6 +84,15 @@ export const column = () => ({
   alignSelf: 'center' as const,
 });
 
+/** Одинаковый боковой отступ экрана и его заголовка внутри колонки. */
+export const screenGutter = () => sc(18);
+
+/** Общий предел ширины нижних шторок на широком окне. */
+export const sheetMaxWidth = () => column().maxWidth - 2 * screenGutter();
+
+/** Единый отступ нижнего действия от безопасной зоны. */
+export const bottomActionPadding = (bottomInset: number) => bottomInset + sc(12);
+
 export const colors = {
   // фоны
   bgHome: ['#2a1c0e', '#120b06', '#080604'] as const, // radial 85% 55% at 50% 52%

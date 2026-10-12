@@ -21,9 +21,9 @@ import { GoldButton, Kicker } from '../components/ui';
 import { Regen } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
-import KeyboardViewport from '../components/keyboard/KeyboardViewport';
+import KeyboardViewport, { KeyboardPendingSpace } from '../components/keyboard/KeyboardViewport';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
-import { colors, column, fonts, isTablet, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 
 const ReflectionFlame = React.memo(Flame);
 
@@ -92,10 +92,9 @@ function ReflectScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.body,
-              dockedKeyboard && styles.bodyEditing,
               {
                 paddingTop: insets.top + sc(16),
-                paddingBottom: dockedKeyboard ? sc(16) : sc(24),
+                paddingBottom: dockedKeyboard ? sc(16) : bottomActionPadding(0),
               },
             ]}
             keyboardShouldPersistTaps="handled"
@@ -146,7 +145,9 @@ function ReflectScreen() {
                 onSubmitEditing={dismissKeyboard}
               />
 
-              {!dockedKeyboard && <View style={{ flex: 1, minHeight: sc(16) }} />}
+              {dockedKeyboard
+                ? <KeyboardPendingSpace />
+                : <View style={{ flex: 1, minHeight: sc(16) }} />}
 
               {policy.actionsVisible && (
                 <View style={{ gap: sc(12) }}>
@@ -178,8 +179,7 @@ function ReflectScreen() {
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   fill: { flex: 1 },
-  body: { flexGrow: 1, paddingHorizontal: sc(18), ...column() },
-  bodyEditing: { maxWidth: isTablet() ? 960 : sc(360) },
+  body: { flexGrow: 1, paddingHorizontal: screenGutter(), ...column() },
   content: { flexGrow: 1 },
   emberWrap: {
     alignItems: 'center',

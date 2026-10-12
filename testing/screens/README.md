@@ -1,0 +1,7 @@
+# Screenshot sweep
+
+Run the platform flow on a clean Release installation. Set the app language to Russian before capture. Each run starts with clean app data, creates one prayer and saves up to 28 numbered screenshots in Maestro's `screenshots/` output directory. The flows never submit a content report.
+
+For iOS, resolve each named simulator with `testing/e2e/sim-udid.sh` and run `maestro --device "$UDID" test --env CAPTURE_ORIENTATION=PORTRAIT --test-output-dir "$OUTPUT" testing/screens/ios-capture.yaml`. Run the same flow on `Pray iPad2` with `CAPTURE_ORIENTATION=LANDSCAPE_LEFT` for landscape.
+
+For Android, use only `emulator-5554`. Before each pass, run `adb -s emulator-5554 shell pm clear app.lampada`, grant microphone and notification permissions, start `app.lampada/.MainActivity` explicitly, and wait for Home to render. The Android flow attaches to this running app without relaunching it. Prepare the driver with `bash scripts/android-maestro-driver.sh emulator-5554 "$LOG_DIR"`, then run through `scripts/android-guest-load.mjs run --device emulator-5554 --flow capture -- maestro --device emulator-5554 test --no-reinstall-driver --test-output-dir "$OUTPUT" testing/screens/android-capture.yaml`. Apply display size and density overrides before each Fold pass and reset them afterwards. Copy each run's `takeScreenshot/*.png` into the device directory and record omissions in `INDEX.md` outside the repository.

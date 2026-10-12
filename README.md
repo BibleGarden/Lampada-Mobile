@@ -5,6 +5,11 @@ A prayer app built with Expo (SDK 57) / React Native.
 The current shape of the project is described in
 [`architect/README.md`](architect/README.md); the history of architectural
 decisions lives in [`architect/decisions/`](architect/decisions/README.md).
+Settings sheets built with `components/BottomSheet` cap their width at `sc(294)`; answer and recordings `KeyboardSheet` overlays span the window width, retaining the landscape-tablet answer columns.
+
+Home shows the saved-prayer notice for four seconds in the streak caption's
+single-line slot, then restores the weekly streak text. The slot stays reserved
+with zero prayer days, keeping the flame and Start button stationary.
 
 ## Development
 
@@ -169,6 +174,7 @@ restarting Metro for Debug or rebuilding and reinstalling Release/EAS builds.
 `lib/apiConfig.ts` defines paths for questions, transcription, Scripture,
 catalogs, audio, contacts and version checks. About displays the normalized
 base origin in test builds.
+Malformed AI questions with JSON or Markdown debris are rejected and use the documented local-question fallback.
 
 When migrating an existing environment, replace `EXPO_PUBLIC_AI_PROXY_URL`,
 `EXPO_PUBLIC_AI_TRANSCRIBE_URL` and `EXPO_PUBLIC_SCRIPTURE_SELECT_URL` with

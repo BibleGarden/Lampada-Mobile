@@ -1,20 +1,21 @@
 import { useI18n } from '../lib/i18n';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import ScreenBg from '../components/ScreenBg';
 import ScripturePassageText from '../components/ScripturePassageText';
-import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
 import { getFavoriteScriptures } from '../lib/scriptureRepository';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   buildScriptureCompactText,
   favoriteToScriptureDisplay,
   type FavoriteScripture,
 } from '../lib/scripture';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
+import { collapsedTextFromLines, shortenCollapsedText } from '../lib/textTruncation';
 
 /**
  * Сколько строк отрывка показывать в свёрнутой карточке. В доке лимит считается
@@ -25,8 +26,18 @@ const COLLAPSED_LINES = 4;
 function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
+  const { width, height } = useWindowDimensions();
+  const geometryKey = `${width}:${height}:${styles.text.fontSize}:${styles.text.lineHeight}`;
+  const geometryKeyRef = useRef(geometryKey);
+  geometryKeyRef.current = geometryKey;
   const [expanded, setExpanded] = useState(false);
   const [lines, setLines] = useState(0);
+  const [clip, setClip] = useState<{
+    geometryKey: string;
+    measuredLines: string[];
+    candidate: string;
+    fits: boolean;
+  } | null>(null);
 
   // Ответ сервера сохранён вместе с записью, поэтому карточку рисует тот же
   // компонент, что и во время молитвы: свёрнутая — только ключевые стихи,
@@ -35,6 +46,8 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
   const compact = display ? buildScriptureCompactText(display) : null;
   const collapsedText = compact?.text ?? favorite.text;
   const canExpand = !!compact?.partial || lines > COLLAPSED_LINES;
+  const activeClip = clip?.geometryKey === geometryKey ? clip : null;
+  const clippedText = activeClip?.fits ? activeClip.candidate : null;
 
   return (
     <View style={styles.card}>
@@ -49,13 +62,19 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
             <ScripturePassageText
               scripture={display}
               style={styles.text}
-              numberOfLines={expanded ? undefined : COLLAPSED_LINES}
+              numberOfLines={expanded || clippedText !== null ? undefined : COLLAPSED_LINES}
+              compactTextOverride={expanded ? undefined : clippedText ?? undefined}
+              accessibilityLabel={expanded ? undefined : collapsedText}
               testIDPrefix={`favorite-highlight-${favorite.id}`}
               variant={expanded ? 'full' : 'compact'}
             />
           ) : (
-            <Text style={styles.text} numberOfLines={expanded ? undefined : COLLAPSED_LINES}>
-              {favorite.text}
+            <Text
+              style={styles.text}
+              numberOfLines={expanded || clippedText !== null ? undefined : COLLAPSED_LINES}
+              accessibilityLabel={expanded ? undefined : collapsedText}
+            >
+              {expanded ? favorite.text : clippedText ?? favorite.text}
             </Text>
           )}
           {/* Невидимая копия свёрнутого текста: по ней считаем реальное число
@@ -66,14 +85,45 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
             importantForAccessibility="no-hide-descendants"
             pointerEvents="none"
             style={[styles.text, styles.measure]}
-            onTextLayout={({ nativeEvent }) =>
-              setLines((current) =>
-                current === nativeEvent.lines.length ? current : nativeEvent.lines.length,
-              )
-            }
+            onTextLayout={({ nativeEvent }) => {
+              if (geometryKeyRef.current !== geometryKey) return;
+              const measured = nativeEvent.lines;
+              setLines((current) => current === measured.length ? current : measured.length);
+              setClip((current) => {
+                if (measured.length <= COLLAPSED_LINES) return null;
+                const measuredLines = measured.slice(0, COLLAPSED_LINES).map((line) => line.text);
+                if (current?.geometryKey === geometryKey &&
+                  current.measuredLines.every((line, index) => line === measuredLines[index])) return current;
+                return {
+                  geometryKey,
+                  measuredLines,
+                  candidate: collapsedTextFromLines(measuredLines, COLLAPSED_LINES),
+                  fits: false,
+                };
+              });
+            }}
           >
             {collapsedText}
           </Text>
+          {activeClip && !activeClip.fits ? (
+            <Text
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              pointerEvents="none"
+              style={[styles.text, styles.measure]}
+              onTextLayout={({ nativeEvent }) => {
+                setClip((current) => {
+                  if (current !== activeClip) return current;
+                  return nativeEvent.lines.length <= COLLAPSED_LINES
+                    ? { ...current, fits: true }
+                    : { ...current, candidate: shortenCollapsedText(current.candidate) };
+                });
+              }}
+            >
+              {activeClip.candidate}
+            </Text>
+          ) : null}
         </View>
       ) : null}
       {canExpand ? (
@@ -95,9 +145,22 @@ export default function Favorites() {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(() => {
-    void getFavoriteScriptures().then(setFavorites);
+    void getFavoriteScriptures().then(
+      (next) => {
+        setFavorites(next);
+        setLoadFailed(false);
+      },
+      (error: unknown) => {
+        console.error('Failed to read saved passages', errorKind(error));
+        recordDiagnostic('favorites_load_failed', { errorKind: errorKind(error) });
+        // Пустой список выглядел бы как «ничего не сохранено».
+        setFavorites([]);
+        setLoadFailed(true);
+      },
+    );
   }, []);
   useEffect(load, [load]);
   useFocusEffect(load);
@@ -107,24 +170,21 @@ export default function Favorites() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(400)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton
-            accessibilityLabel={t('settings.back')}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          >
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker>{t('screens.favorites.title')}</Kicker>
-          <View style={{ width: sc(34) }} />
+          <ScreenHeader title={t('screens.favorites.title')} backLabel={t('settings.back')} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
         <ScrollView
           contentContainerStyle={{
             paddingTop: sc(14),
-            paddingHorizontal: sc(10),
-            paddingBottom: insets.bottom + sc(28),
+            paddingHorizontal: screenGutter(),
+            paddingBottom: bottomActionPadding(insets.bottom),
             gap: sc(12),
           }}
         >
-          {favorites.length === 0 ? (
+          {loadFailed ? (
+            <Pressable accessibilityRole="button" onPress={load} testID="favorites-load-error">
+              <Text style={styles.empty}>{t('screens.favorites.loadFailed')}</Text>
+            </Pressable>
+          ) : favorites.length === 0 ? (
             <Text style={styles.empty}>{t('screens.favorites.empty')}</Text>
           ) : favorites.map((favorite) => (
             <FavoriteCard key={favorite.id} favorite={favorite} />
@@ -139,8 +199,7 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   screen: { flex: 1, ...column() },
   top: {
-    paddingHorizontal: sc(12), paddingBottom: sc(8),
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: screenGutter(), paddingBottom: sc(8),
   },
   empty: {
     marginTop: sc(32), fontFamily: fonts.serif, fontSize: sc(17),

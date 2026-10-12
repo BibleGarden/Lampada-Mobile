@@ -13,6 +13,24 @@
   record a new significant architectural decision as an ADR in
   `architect/decisions/`.
 
+# Visual changes
+
+- Any change to how the app looks or moves needs the owner's approval before
+  merge: layout, colors, typography, button styles, on-screen texts,
+  animations, sheet and keyboard motion. This includes side effects of a fix
+  made for other reasons.
+- Show the change to the owner as soon as it is built, not after the PR is
+  finished: install the build on the owner's device or open it in the running
+  simulator or emulator, and ask for approval. Attach before and after
+  screenshots, or a screen recording for motion, for every affected platform to
+  the PR.
+- Owner preview builds for visual approval are separate from the single final
+  Maestro and live validation run on the finished revision.
+- A change made for one platform that touches shared components is shown on
+  both platforms.
+- Passing Maestro and unit tests does not approve a visual change: they check
+  behavior, not appearance or smoothness.
+
 # Platform pitfalls
 
 - `useAudioPlayer` and `useAudioRecorder` from expo-audio release their native

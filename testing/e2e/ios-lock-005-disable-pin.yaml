@@ -37,7 +37,7 @@ tags:
     id: "lock-toggle"
 - assertVisible:
     id: "pin-prompt-disable-current"
-- assertVisible: "Подтвердите, что защиту выключаете вы"
+- assertVisible: "Подтверди, что это ты выключаешь защиту"
 - tapOn:
     id: "pin-prompt-cancel"
 - runFlow:

@@ -30,7 +30,6 @@ import * as scriptureRepository from './scriptureRepository';
 import { createSingleFlight } from './singleFlight';
 import { mergeOfflineTrail, shouldDeferLoadedNext } from './scriptureSessionState';
 import { adjustSessionTimer, sessionTimerSnapshot } from './sessionTimer';
-import { dayKey } from './streak';
 import { DEFAULT_PRAYER_MINUTES, MAX_PRAYER_MINUTES } from './prayerDuration';
 import {
   startPrayerSystemTimer,
@@ -132,6 +131,8 @@ type SessionActions = {
   enterSession: () => Promise<void>;
   resumeSession: () => void;
   tick: (nowMs?: number) => void;
+  /** Сохранить текущее время молитвы при уходе приложения из активного состояния. */
+  checkpointElapsed: () => void;
   adjustTimer: (deltaMin: number) => void;
 
   prevQuestion: () => void;
@@ -157,6 +158,29 @@ type SessionActions = {
 
 const isAnswered = (a: Answer | undefined) =>
   !!(a && (a.text.trim() || a.recordings.length));
+
+// Время идущей молитвы сохраняется раз в минуту и при уходе в фон: прерванная
+// молитва остаётся в дневнике со своей длительностью и засчитывает день
+// (ADR-0042). Первая точка — через минуту: молитва, открытая и сразу
+// брошенная без ответов, в дневник и серию не попадает.
+const ELAPSED_CHECKPOINT_SEC = 60;
+// Вне состояния store: контрольная точка не вызывает ре-рендеров.
+let savedElapsed: { sessionId: number | null; elapsed: number } = { sessionId: null, elapsed: 0 };
+
+const saveElapsedCheckpoint = (s: SessionState, anyProgress: boolean) => {
+  const { sessionId, elapsed } = s;
+  if (sessionId === null || elapsed < ELAPSED_CHECKPOINT_SEC) return;
+  const saved = savedElapsed.sessionId === sessionId ? savedElapsed.elapsed : 0;
+  const due = anyProgress
+    ? elapsed > saved
+    : Math.floor(elapsed / ELAPSED_CHECKPOINT_SEC) > Math.floor(saved / ELAPSED_CHECKPOINT_SEC);
+  if (!due) return;
+  savedElapsed = { sessionId, elapsed };
+  void db.saveElapsedCheckpoint(sessionId, elapsed).catch((error) => {
+    console.error('Could not save the prayer time checkpoint', error);
+    db.recordDiagnostic('elapsed_checkpoint_failed', { sessionId, reason: db.errorKind(error) });
+  });
+};
 
 const reportSystemTimerError = (action: string, error: unknown) => {
   console.warn(
@@ -419,6 +443,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     firstQuestionFetch = null;
     questionPool.invalidate();
     reflectPool.invalidate();
+    // После стирания данных id сессий начинаются заново: старая точка не должна
+    // подавить сохранение новой молитвы с тем же id.
+    savedElapsed = { sessionId, elapsed: 0 };
     set({
       sessionId,
       questions: [firstQuestion?.text ?? ''],
@@ -511,12 +538,15 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       };
     });
     const current = get();
+    saveElapsedCheckpoint(current, false);
     // Итоговый вопрос готовится заранее. Повторные тики с тем же ключом
     // дедуплицируются пулом, а изменение ответов создаёт новый ключ.
     if (current.remaining !== null && current.remaining > 0 && current.remaining <= 15) {
       prepareReflectQuestion(current);
     }
   },
+
+  checkpointElapsed: () => saveElapsedCheckpoint(get(), true),
 
   adjustTimer: (deltaMin) => {
     set((s) => {
@@ -719,11 +749,26 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         ? s.scrFav.filter((id) => id !== current.canonicalId)
         : [...s.scrFav, current.canonicalId],
     });
-    if (has) {
-      void scriptureRepository.removeFavoriteByCanonicalId(current.canonicalId);
-    } else {
-      void scriptureRepository.addFavoriteScripture(current, s.sessionId);
-    }
+    const write = has
+      ? scriptureRepository.removeFavoriteByCanonicalId(current.canonicalId)
+      : scriptureRepository.addFavoriteScripture(current, s.sessionId);
+    void write.catch((error: unknown) => {
+      console.error('Failed to save a favourite passage', db.errorKind(error));
+      db.recordDiagnostic('favorite_save_failed', {
+        operation: has ? 'remove' : 'add',
+        errorKind: db.errorKind(error),
+      });
+      // Сердце возвращается к тому, что лежит в базе, если его не успели
+      // переключить снова.
+      set((state) => {
+        if (state.scrFav.includes(current.canonicalId) === has) return state;
+        return {
+          scrFav: has
+            ? [...state.scrFav, current.canonicalId]
+            : state.scrFav.filter((id) => id !== current.canonicalId),
+        };
+      });
+    });
   },
 
   retryScripture: async () => {
@@ -745,6 +790,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   finish: async () => {
     const s = get();
+    // Экран итога не тикает: время молитвы до него сохраняется сразу.
+    saveElapsedCheckpoint(s, true);
     const token = ++reflectToken;
     const sessionToken = s.sessionId;
     const key = reflectKey(s);
@@ -789,10 +836,10 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     await stopPrayerSystemTimer().catch((error) =>
       reportSystemTimerError('stop', error),
     );
-    await db.finishSession(s.sessionId, s.elapsed, takeaway);
     // Молитва засчитывается дню, когда она началась, а не дню нажатия «Готово»:
-    // незавершённую с вечера сессию можно подтвердить и на следующее утро.
-    const streak = await db.markPrayedDay(dayKey(new Date(s.startedAtMs)));
+    // finishSession отмечает день по sessions.started_at в той же транзакции.
+    await db.finishSession(s.sessionId, s.elapsed, takeaway);
+    const streak = await db.getStreak();
     set({ takeaway, streak });
   },
 
@@ -915,7 +962,40 @@ async function confirmScriptureSelection(sessionId: number, token: number, foreg
   return true;
 }
 
-async function loadFirstScripture(sessionId: number, token: number, foreground = true) {
+/**
+ * Непредвиденный сбой (например, SQLite при записи истории показов) не должен
+ * оставить блок цитат в вечной загрузке: блок показывает ошибку с повтором.
+ * Скрытая попытка на входе, как и при сбое выбора Библии, ошибку не показывает:
+ * первое открытие блока повторит загрузку.
+ */
+async function guardScriptureLoad(
+  sessionId: number,
+  token: number,
+  step: 'first' | 'next',
+  foreground: boolean,
+  load: () => Promise<void>,
+) {
+  try {
+    await load();
+  } catch (error) {
+    console.error('Failed to load Scripture', step, db.errorKind(error));
+    db.recordDiagnostic('scripture_load_failed', { step, errorKind: db.errorKind(error) });
+    if (!sessionIsCurrent(sessionId, token)) return;
+    useSession.setState(
+      foreground || useSession.getState().dockMode === 'scripture'
+        ? { scrStatus: 'error', scrError: 'unavailable' }
+        : { scrStatus: 'idle', scrError: null },
+    );
+  }
+}
+
+function loadFirstScripture(sessionId: number, token: number, foreground = true) {
+  return guardScriptureLoad(sessionId, token, 'first', foreground, () =>
+    runFirstScriptureLoad(sessionId, token, foreground),
+  );
+}
+
+async function runFirstScriptureLoad(sessionId: number, token: number, foreground: boolean) {
   if (!sessionIsCurrent(sessionId, token)) return;
   const controller = scriptureAbortController;
   if (!controller) return;
@@ -929,7 +1009,7 @@ async function loadFirstScripture(sessionId: number, token: number, foreground =
   if (!sessionIsCurrent(sessionId, token)) return;
   if (!result.ok && !foreground) {
     if (useSession.getState().dockMode === 'scripture') {
-      await loadFirstScripture(sessionId, token);
+      await runFirstScriptureLoad(sessionId, token, true);
     } else {
       useSession.setState({ scrStatus: 'idle', scrError: null });
     }
@@ -958,10 +1038,21 @@ function startScripturePrefetch(sessionId: number, token: number) {
     // Successful results stay in the one-ahead slot until the user asks for them.
     // Failed background requests are discarded silently; an explicit Next retries.
     if (!result.ok) scripturePrefetch = null;
+  }, (error: unknown) => {
+    // Явный «Дальше», ждущий этот промис, покажет ошибку сам; здесь только след.
+    console.error('Failed to prefetch Scripture', db.errorKind(error));
+    db.recordDiagnostic('scripture_load_failed', { step: 'prefetch', errorKind: db.errorKind(error) });
+    if (scripturePrefetch === slot) scripturePrefetch = null;
   });
 }
 
-async function showNextScripture(sessionId: number, token: number) {
+function showNextScripture(sessionId: number, token: number) {
+  return guardScriptureLoad(sessionId, token, 'next', true, () =>
+    runNextScriptureLoad(sessionId, token),
+  );
+}
+
+async function runNextScriptureLoad(sessionId: number, token: number) {
   if (!sessionIsCurrent(sessionId, token)) return;
   const controller = scriptureAbortController;
   if (!controller) return;

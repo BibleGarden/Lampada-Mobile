@@ -16,7 +16,7 @@ in accessibility without proving that its entire native rectangle was usable.
 
 Separate software visibility from occupied space and field focus in a single
 application provider. A show or zero-height frame never implies hide; deferred
-actions wait for didHide, independently of field focus. Keyboard Controller owns native dismissal, including blur before
+actions wait for the keyboard to start hiding (iOS willHide, Android didHide), independently of field focus. Keyboard Controller owns native dismissal, including blur before
 IME hide. React Native responder release is unconditional because Controller
 dismissal is a no-op for an already hidden IME; single-phrase fields submit before explicitly dismissing. Classify narrow iPad frames against the current display; on Android a positive height alone means docked, because React Native reports the visible window width there, which says nothing about a floating keyboard and goes stale after a width-only window resize.
 
@@ -30,15 +30,26 @@ stale height after a fast input-method switch. Every keyboard viewport fills its
 window down to the bottom edge (screens, transparent full-screen Modals), so it
 reserves `max(bottom safe area, keyboard height)` as one UI-thread padding that
 follows the keyboard animation frame by frame; a floating keyboard reserves nothing.
-An inner frame constrains absolute children. A sheet fills the window with no
-reservation, so the sheet and its backdrop reach the screen edge and its
-container never changes with the keyboard. Its footer keeps a constant padding
+An inner frame constrains absolute children. `KeyboardSheet` fills the window
+width with no reservation; the answer retains its landscape-tablet columns.
+Its sheet and backdrop reach the screen edge, and its container never changes
+with the keyboard. Only settings sheets built with `components/BottomSheet`
+cap their width at `sc(294)`. The keyboard-sheet footer keeps a constant padding
 above the bottom safe area, which Gorhom measures once. The keyboard height not
 covered by that safe area is subtracted on the UI thread from the footer
 position Gorhom computes, and that lifted position is what Gorhom's footer
 container is placed at; the body ends above it. The actions never move outside
 their container, because a child shifted out of its parent's bounds is drawn
-but is not visible to Android accessibility. The lift stops at a minimum body
+but is not visible to Android accessibility. Only that footer transform follows
+the animations frame by frame; the body height, a layout of the whole form,
+changes once at the start of a transition to the height it will have above the
+footer at the sheet's and the keyboard's destinations, and the footer is painted
+with the sheet background so that it hides the body it has not uncovered yet.
+For the answer sheet, the Keyboard Controller target selects the
+full-height snap on the UI thread before the React-side Gorhom request arrives,
+so the body does not briefly shrink at the resting snap. A transient iOS
+`willHide` then `willShow` can briefly move the sheet down and back up; the
+convergent target restores the correct final snap. The lift stops at a minimum body
 height even when the keyboard is taller than the sheet allows (a full-screen
 input method, the low snap point on a small screen): Android clears focus inside
 a view that shrinks to zero size, and typing would go nowhere. Gorhom owns sheet
@@ -56,10 +67,19 @@ and a sheet rotated while open right after it closes. A closed sheet is neither
 presented nor touchable.
 
 Preparation and reflection defer lower actions while a software keyboard is
-visible; answers and reports do not hide actions. The answer sheet's snap is a
+visible; answers and reports do not hide actions. Their field fills the form
+only while a docked keyboard is opening or open: a closing keyboard
+(iOS `keyboardWillHide`) returns the form to its normal layout, actions
+included, when the hide starts; the actions ride down above the keyboard with
+the viewport reservation, because the viewport releases the keyboard space frame by frame and a
+filling field would first stretch into it and then shrink after
+`keyboardDidHide`. A filling field takes its final height when the opening
+starts: an empty strip below it holds the part of the final reservation the
+keyboard has not covered yet, and shrinks as the viewport reservation grows. The answer sheet's snap is a
 convergent reconciliation, not a command per event: a visible keyboard with a
 focused field requires the full-height snap, its hiding returns the sheet to
-the resting snap with one request, after which the person chooses the snap
+the resting snap with one request made when the hide starts (iOS
+`keyboardWillHide`), so the sheet and the keyboard move together, after which the person chooses the snap
 again, including by a gesture. A tap on the handle hides the keyboard and
 returns the sheet like any other hide; a drag of the handle leaves the snap to
 the person. Every

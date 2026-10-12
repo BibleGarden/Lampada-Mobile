@@ -10,10 +10,11 @@ import {
   ViewStyle,
   StyleProp,
   type AccessibilityState,
+  type AccessibilityValue,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { colors, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 
 /** Подпись капсом моноширинным — фирменный элемент прототипа */
@@ -44,6 +45,8 @@ export function GoldButton({
   testID,
   compact,
   disabled = false,
+  accessibilityLabel = label,
+  accessibilityValue,
 }: {
   label: string;
   onPress: () => void;
@@ -52,11 +55,15 @@ export function GoldButton({
   /** Низкий вариант: высота как у кнопок карточки-спутника */
   compact?: boolean;
   disabled?: boolean;
+  /** Действие, когда видимая подпись — его состояние («Готово» останавливает запись) */
+  accessibilityLabel?: string;
+  accessibilityValue?: AccessibilityValue;
 }) {
   const styles = useStyles(stylesFactory);
   return (
     <Pressable
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityValue={accessibilityValue}
       accessibilityRole="button"
       testID={testID}
       disabled={disabled}
@@ -97,6 +104,7 @@ export function IconButton({
   style,
   accessibilityLabel,
   accessibilityState,
+  disabled = false,
   testID,
 }: {
   children: React.ReactNode;
@@ -108,6 +116,7 @@ export function IconButton({
   /** Кнопка из одной иконки: без подписи программа чтения с экрана её не назовёт */
   accessibilityLabel: string;
   accessibilityState?: AccessibilityState;
+  disabled?: boolean;
   testID?: string;
 }) {
   const styles = useStyles(stylesFactory);
@@ -117,6 +126,7 @@ export function IconButton({
       accessibilityRole="button"
       testID={testID}
       accessibilityState={accessibilityState}
+      disabled={disabled}
       onPress={() => {
         Haptics.selectionAsync();
         onPress();
@@ -142,20 +152,32 @@ export function IconButton({
   );
 }
 
-/** Появление карточки снизу — аналог qIn из прототипа */
+/**
+ * Появление содержимого снизу — аналог qIn из прототипа: прозрачность и
+ * подъём на 25 pt за 350 мс при монтировании; новое появление — новый `key`.
+ * Анимированным стилем, а не layout-анимацией `entering`: на Android
+ * Reanimated теряет кадры `entering`, пришедшие до монтирования нативного
+ * вида, и восстанавливает только прозрачность — содержимое оставалось
+ * сдвинутым вниз и вылезало за рамку карточки.
+ */
 export function CardIn({
   children,
   style,
+  duration = 350,
 }: {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  duration?: number;
 }) {
-  const styles = useStyles(stylesFactory);
-  return (
-    <Animated.View entering={FadeInDown.duration(350)} style={style}>
-      {children}
-    </Animated.View>
-  );
+  const progress = useSharedValue(0);
+  React.useEffect(() => {
+    progress.value = withTiming(1, { duration });
+  }, [progress, duration]);
+  const enter = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ translateY: (1 - progress.value) * 25 }],
+  }));
+  return <Animated.View style={[style, enter]}>{children}</Animated.View>;
 }
 
 /**

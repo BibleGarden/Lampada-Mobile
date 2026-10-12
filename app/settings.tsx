@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import { IconButton, Kicker } from '../components/ui';
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import { Kicker } from '../components/ui';
+import { Check, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
 import {
   ScriptureCatalogUnavailableError,
   ScriptureDefaultUnavailableError,
@@ -33,6 +34,7 @@ import {
   reminderPermissionAsync,
   requestReminderPermissionAsync,
   syncRemindersAsync,
+  useReminderSyncStatus,
   type ReminderPermission,
 } from '../lib/prayerReminderScheduler';
 import {
@@ -63,7 +65,7 @@ import {
   verifyPin,
   type BiometryInfo,
 } from '../lib/lock';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
@@ -120,6 +122,7 @@ function ConsentSetting({
 }) {
   const styles = useStyles(stylesFactory);
   const { t } = useI18n();
+  const [failed, setFailed] = useState(false);
   return (
     <View style={styles.consentSetting} testID={`privacy-setting-${purpose}`}>
       <Text style={styles.rowTitle}>{title}</Text>
@@ -138,7 +141,9 @@ function ConsentSetting({
               testID={`privacy-setting-${purpose}-${option.decision}`}
               onPress={() => {
                 void Haptics.selectionAsync();
-                void onChange(purpose, option.decision);
+                setFailed(false);
+                // Лог и диагностику пишет settings.setConsent; выбор там же откатывается.
+                void onChange(purpose, option.decision).catch(() => setFailed(true));
               }}
               style={({ pressed }) => [
                 styles.consentAction,
@@ -155,6 +160,15 @@ function ConsentSetting({
       </View>
       {decision === 'undecided' ? (
         <Text style={styles.consentUndecided}>{t('settings.undecided')}</Text>
+      ) : null}
+      {failed ? (
+        <Text
+          accessibilityRole="alert"
+          style={[styles.settingHint, styles.reminderWarning]}
+          testID={`privacy-setting-${purpose}-error`}
+        >
+          {t('settings.consentSaveError')}
+        </Text>
       ) : null}
     </View>
   );
@@ -189,8 +203,8 @@ function SettingRow({ title, value, testID, accessibilityLabel, disabled, divide
         pressed && styles.optionPressed,
       ]}
     >
-      <Text style={[styles.rowTitle, value ? styles.settingRowTitle : styles.settingRowTitleWide]} numberOfLines={1}>{title}</Text>
-      {value ? <Text style={styles.settingRowValue} numberOfLines={1}>{value}</Text> : null}
+      <Text style={[styles.rowTitle, value ? styles.settingRowTitle : styles.settingRowTitleWide]}>{title}</Text>
+      {value ? <Text style={styles.settingRowValue}>{value}</Text> : null}
       <ChevronRight size={15} color={colors.labelGold} />
     </Pressable>
   );
@@ -328,6 +342,16 @@ export default function Settings() {
   const [biometry, setBiometry] = useState<BiometryInfo | null>(null);
   const [pinFlow, setPinFlow] = useState<PinFlow>(null);
   const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
+  const [reminderError, setReminderError] = useState(false);
+  const reminderScheduleInvalid = useSettings((s) => s.reminderScheduleInvalid);
+  const reminderSyncFailed = useReminderSyncStatus((s) => s.failed);
+  const reportReminderFailure = (step: 'save' | 'sync' | 'permission', error: unknown) => {
+    console.error('Failed to update prayer reminders', step, errorKind(error));
+    recordDiagnostic('reminders_failed', { step, place: 'settings', errorKind: errorKind(error) });
+    // Сбой синхронизации показывает useReminderSyncStatus: он же снимет
+    // предупреждение после следующей удачной синхронизации.
+    if (step !== 'sync') setReminderError(true);
+  };
   const [reminderEditorRuleIndex, setReminderEditorRuleIndex] = useState<number | null>(null);
   const [confirmReminderDelete, setConfirmReminderDelete] = useState<string | null>(null);
   const reminderDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -464,14 +488,20 @@ export default function Settings() {
     let alive = true;
     let known: ReminderPermission | null = null;
     const refresh = () => {
-      void reminderPermissionAsync().then((status) => {
+      reminderPermissionAsync().then((status) => {
         if (!alive) return;
         const changed = known !== null && known !== status;
         known = status;
         setReminderPermission(status);
         // Разрешение могли вернуть в системных настройках — тогда расписание
         // нужно снова уложить в систему. При запуске это уже сделал _layout.
-        if (changed) void syncRemindersAsync(useSettings.getState().reminderSchedule);
+        if (changed) {
+          syncRemindersAsync(useSettings.getState().reminderSchedule).catch((error: unknown) => {
+            if (alive) reportReminderFailure('sync', error);
+          });
+        }
+      }, (error: unknown) => {
+        if (alive) reportReminderFailure('permission', error);
       });
     };
     refresh();
@@ -555,6 +585,17 @@ export default function Settings() {
   };
 
   const toggleBiometrics = async (next: boolean) => {
+    try {
+      await applyBiometrics(next);
+    } catch (error) {
+      // Тумблер остаётся в прежнем положении: состояние меняется только после
+      // записи. Диагностику сбоя SecureStore пишет lib/lock.
+      console.error('Failed to change biometrics', errorKind(error));
+      Alert.alert(t('settings.continueError'), t('screens.retryMessage'));
+    }
+  };
+
+  const applyBiometrics = async (next: boolean) => {
     if (!next) {
       await setBiometrics(false);
       return;
@@ -619,13 +660,21 @@ export default function Settings() {
   // системе останется расписание, соответствующее последнему нажатию.
   const applyReminderSchedule = (next: ReminderSchedule) => {
     const normalized = normalizeReminderSchedule(next) ?? DEFAULT_REMINDER_SCHEDULE;
-    reminderSave.current = reminderSave.current
-      .catch(() => undefined)
-      .then(async () => {
+    setReminderError(false);
+    // Каждое звено сообщает о своём сбое само, поэтому цепочка ошибку не несёт.
+    reminderSave.current = reminderSave.current.then(async () => {
+      try {
         await setReminderSchedule(normalized);
+      } catch (error) {
+        reportReminderFailure('save', error);
+        return;
+      }
+      try {
         await syncRemindersAsync(normalized);
-      })
-      .catch(() => undefined);
+      } catch (error) {
+        reportReminderFailure('sync', error);
+      }
+    });
   };
 
   const editReminderRule = (ruleIndex: number, update: (rule: ReminderRule) => ReminderRule) => {
@@ -651,7 +700,14 @@ export default function Settings() {
     }
     // Разрешение спрашиваем ровно здесь — в момент, когда пользователь сам
     // включает напоминания, а не при старте приложения.
-    const status = await requestReminderPermissionAsync();
+    setReminderError(false);
+    let status: ReminderPermission;
+    try {
+      status = await requestReminderPermissionAsync();
+    } catch (error) {
+      reportReminderFailure('permission', error);
+      return;
+    }
     setReminderPermission(status);
     // Без разрешения включать нечего: тумблер честно остаётся выключенным.
     if (status !== 'granted') return;
@@ -744,6 +800,17 @@ export default function Settings() {
     });
     if (reminderEditorRuleIndex === ruleIndex) setReminderEditorRuleIndex(null);
   };
+
+  // Один и тот же текст под тумблером и в шторке правки: шторка закрывает экран.
+  const reminderWarning = reminderError || reminderSyncFailed || reminderScheduleInvalid ? (
+    <Text
+      accessibilityRole="alert"
+      style={[styles.settingHint, styles.shareAnswersHint, styles.reminderWarning]}
+      testID="reminders-error"
+    >
+      {t(reminderError || reminderSyncFailed ? 'settings.reminderSaveError' : 'settings.reminderScheduleInvalid')}
+    </Text>
+  ) : null;
 
   const activeReminderRule = reminderEditorRuleIndex === null
     ? null
@@ -840,11 +907,7 @@ export default function Settings() {
         {...screenReaderHiddenProps(!!pinPrompt || sheetOpen)}
       >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton accessibilityLabel={t('settings.back')} testID="settings-back-button" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker>{t('settings.title')}</Kicker>
-          <View style={styles.topSpacer} />
+          <ScreenHeader title={t('settings.title')} backLabel={t('settings.back')} backTestID="settings-back-button" onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
 
         <ScrollView
@@ -852,8 +915,8 @@ export default function Settings() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             paddingTop: sc(16),
-            paddingHorizontal: sc(12),
-            paddingBottom: insets.bottom + sc(24),
+            paddingHorizontal: screenGutter(),
+            paddingBottom: bottomActionPadding(insets.bottom),
           }}
         >
           <Kicker style={styles.sectionKicker}>{t('settings.interfaceLanguage')}</Kicker>
@@ -878,7 +941,6 @@ export default function Settings() {
               value={language?.nameNational ?? scripturePreferences?.languageName ?? '—'}
               testID="scripture-language-picker"
               disabled={loadingCatalog && languages.length === 0}
-              divided
               onPress={() => openPicker('language')}
             />
             <SettingRow
@@ -894,6 +956,7 @@ export default function Settings() {
               value={voice?.name ?? (translation ? t('settings.chooseVoice') : (scripturePreferences?.voiceName ?? t('settings.chooseVoice')))}
               testID="scripture-voice-picker"
               disabled={!translation}
+              divided
               onPress={() => openPicker('voice')}
             />
           </View>
@@ -947,6 +1010,7 @@ export default function Settings() {
                     {t('settings.notificationsDenied')}
                   </Text>
                 ) : null}
+                {reminderWarning}
               </View>
               <Toggle
                 value={reminderSchedule.enabled}
@@ -975,11 +1039,11 @@ export default function Settings() {
                     style={styles.reminderSettingsCopy}
                     testID={ruleIndex === 0 ? 'reminders-summary' : `reminders-summary-${ruleIndex}`}
                   >
-                    <Text style={styles.rowTitle} numberOfLines={1}>
+                    <Text style={styles.rowTitle}>
                       {formatReminderWeekdays(rule.weekdays, uiLanguage)}
                     </Text>
                   </View>
-                  <Text style={styles.settingRowValue} numberOfLines={1}>
+                  <Text style={styles.settingRowValue}>
                     {rule.times.map(formatReminderTime).join(', ')}
                   </Text>
                   <ChevronRight size={15} color={colors.labelGold} />
@@ -1104,7 +1168,11 @@ export default function Settings() {
                       setLanguageSaveError(false);
                       setInterfaceLanguageOpen(false);
                     })
-                    .catch(() => setLanguageSaveError(true));
+                    .catch((error: unknown) => {
+                      console.error('Failed to save the interface language', errorKind(error));
+                      recordDiagnostic('settings_save_failed', { setting: 'ui_language', errorKind: errorKind(error) });
+                      setLanguageSaveError(true);
+                    });
                 }}
               />
             ))}
@@ -1323,6 +1391,7 @@ export default function Settings() {
                 <Text style={styles.addTimeText}>{t('settings.addTime')}</Text>
               </Pressable>
             ) : null}
+            {reminderWarning}
           </View>
         </BottomSheet>
       ) : null}
@@ -1347,10 +1416,10 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   screen: { flex: 1, ...column() },
   top: {
-    paddingHorizontal: sc(12),
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: screenGutter(),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(214,182,120,.22)',
   },
-  topSpacer: { width: sc(34), height: sc(34) },
   sectionKicker: { marginBottom: sc(7), marginLeft: sc(4) },
   sectionGap: { marginTop: sc(18) },
   card: {
@@ -1365,10 +1434,10 @@ const stylesFactory = () => StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(214,182,120,.16)',
   },
-  settingRowTitle: { flexShrink: 1 },
+  settingRowTitle: { flex: 1, minWidth: 0 },
   settingRowTitleWide: { flex: 1 },
   settingRowValue: {
-    flex: 1, textAlign: 'right', fontFamily: fonts.sans, fontSize: sc(12),
+    maxWidth: '55%', textAlign: 'right', fontFamily: fonts.sans, fontSize: sc(12),
     color: colors.creamDim,
   },
   toggleRow: {
@@ -1383,7 +1452,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   shareAnswersHint: { marginTop: sc(3), fontSize: sc(9.25), lineHeight: sc(13.5) },
   reminderWarning: { color: 'rgba(240,170,120,.92)' },
-  reminderSettingsCopy: { flexShrink: 1 },
+  reminderSettingsCopy: { flex: 1, minWidth: 0 },
   addScheduleTitle: { flex: 1, color: colors.warmHint },
   sheetList: {
     paddingHorizontal: sc(11), borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,.025)',

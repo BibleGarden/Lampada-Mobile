@@ -8,6 +8,7 @@ import PinPad from './PinPad';
 import { Lamp } from './icons';
 import { colors, column, fonts, sc, useStyles } from '../lib/theme';
 import { useSettings } from '../lib/settings';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   authenticateWithBiometrics,
   biometryInfo,
@@ -103,11 +104,21 @@ function LockScreen() {
   const runWipe = async () => {
     setWiping(true);
     try {
-      await wipeEverything();
+      const { remindersCancelled } = await wipeEverything();
       // Настройки перечитываются как на новой установке: база пересоздаётся
-      // миграцией при первом же обращении.
-      void useSettings.getState().load().catch(() => undefined);
+      // миграцией при первом же обращении. Экраны при сбое повторят загрузку
+      // через ensureSettingsLoaded.
+      useSettings.getState().load().catch((error: unknown) => {
+        console.error('Failed to reload settings after the wipe', errorKind(error));
+        recordDiagnostic('settings_load_failed', { place: 'after_wipe', errorKind: errorKind(error) });
+      });
       router.replace('/');
+      if (!remindersCancelled) {
+        Alert.alert(
+          t('components.security.wipeRemindersFailed'),
+          t('components.security.wipeRemindersFailedHint'),
+        );
+      }
     } catch {
       // Стирание не удалось — защита остаётся включённой, и пользователь должен
       // это увидеть, а не остаться перед экраном, который «ничего не сделал».

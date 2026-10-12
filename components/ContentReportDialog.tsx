@@ -16,6 +16,7 @@ import { sendContentReport, type ContentReportError } from '../lib/contentReport
 import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
 import KeyboardViewport from './keyboard/KeyboardViewport';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
+import PairedActions from './PairedActions';
 
 type Props = {
   visible: boolean;
@@ -120,9 +121,11 @@ export default function ContentReportDialog({
           >
             <Text style={styles.kicker}>{t('components.contentReport.kicker')}</Text>
             <Text style={styles.title}>
-              {contentType === 'question'
-                ? t('components.contentReport.questionTitle')
-                : t('components.contentReport.scriptureTitle')}
+              {sent
+                ? t('components.contentReport.sentTitle')
+                : contentType === 'question'
+                  ? t('components.contentReport.questionTitle')
+                  : t('components.contentReport.scriptureTitle')}
             </Text>
             {sent ? (
               <Text style={styles.body}>{t('components.contentReport.sent')}</Text>
@@ -159,34 +162,30 @@ export default function ContentReportDialog({
                 <Text style={styles.primaryActionText}>{t('components.contentReport.done')}</Text>
               </Pressable>
             ) : (
-              <>
-                <Pressable
-                  accessibilityRole="button"
-                  testID="content-report-cancel"
-                  disabled={submitting}
-                  onPress={dismiss}
-                  style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}
-                >
-                  <Text style={styles.secondaryActionText}>{t('components.contentReport.cancel')}</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={submitting}
-                  onPress={() => void submit()}
-                  testID="content-report-send"
-                  style={({ pressed }) => [
-                    styles.primaryAction,
-                    submitting && styles.disabled,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={styles.primaryActionText}>
-                    {submitting
-                      ? t('components.contentReport.sending')
-                      : t('components.contentReport.send')}
-                  </Text>
-                </Pressable>
-              </>
+              <PairedActions
+                style={styles.pairedActions}
+                gap={sc(10)}
+                labelStyle={styles.primaryActionText}
+                actions={[
+                  {
+                    label: t('components.contentReport.cancel'),
+                    labels: [t('components.contentReport.cancel')],
+                    onPress: dismiss,
+                    testID: 'content-report-cancel',
+                    disabled: submitting,
+                    style: (pressed) => [styles.secondaryAction, pressed && styles.pressed],
+                    labelStyle: styles.secondaryActionText,
+                  },
+                  {
+                    label: submitting ? t('components.contentReport.sending') : t('components.contentReport.send'),
+                    labels: [t('components.contentReport.send'), t('components.contentReport.sending')],
+                    onPress: () => void submit(),
+                    testID: 'content-report-send',
+                    disabled: submitting,
+                    style: (pressed) => [styles.primaryAction, submitting && styles.disabled, pressed && styles.pressed],
+                  },
+                ]}
+              />
             )}
           </View>
         </View>
@@ -223,6 +222,7 @@ const stylesFactory = () => StyleSheet.create({
     paddingTop: sc(14),
     paddingBottom: sc(22),
   },
+  pairedActions: { flex: 1 },
   kicker: {
     marginBottom: sc(10),
     color: colors.labelGold,
@@ -276,8 +276,6 @@ const stylesFactory = () => StyleSheet.create({
   },
   secondaryActionText: {
     color: colors.creamDim,
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(13),
   },
   primaryAction: {
     flex: 1,

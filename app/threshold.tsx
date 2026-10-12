@@ -1,20 +1,21 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, useSharedValue, withTiming, Easing, ReduceMotion, cancelAnimation } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
+import ScreenHeader from '../components/ScreenHeader';
 import ProgressRing from '../components/ProgressRing';
-import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
+import { Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useSettings } from '../lib/settings';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
-import { colors, column, durations, fonts, isTablet, sc, useStyles } from '../lib/theme';
+import { THRESHOLD_DENSITIES, ThresholdDensity, fitThresholdDensity } from '../lib/thresholdLayout';
+import { colors, column, durations, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
 
 export default function Threshold() {
   const { t, language } = useI18n();
@@ -30,8 +31,10 @@ export default function Threshold() {
   const { width, height } = useWindowDimensions();
   const tablet = isTablet();
   const landscapeTablet = tablet && width > height;
-  const compactPhone = !tablet && height < 720;
-  const holdButtonSize = sc(compactPhone ? 136 : 158);
+  // Высоты блока под шапкой и брифинга: на низком окне интервалы и кнопка
+  // становятся плотнее, чтобы все пункты помещались над кнопкой целиком.
+  const [mainHeight, setMainHeight] = useState<number>();
+  const [briefSize, setBriefSize] = useState<{ height: number; density: ThresholdDensity }>();
   const insets = useSafeAreaInsets();
   const s = useSession();
   const answerContextConsent = useSettings((state) => state.answerContextConsent);
@@ -63,6 +66,25 @@ export default function Threshold() {
       text: t(`screens.threshold.answers.${answerContextConsent}`),
     },
   ];
+  const { density, overflow } = landscapeTablet || mainHeight === undefined || briefSize === undefined
+    ? { density: THRESHOLD_DENSITIES[0], overflow: false }
+    : fitThresholdDensity(
+      { mainHeight, briefHeight: briefSize.height, gaps: brief.length, density: briefSize.density },
+      sc,
+    );
+  const holdButtonSize = sc(density.button);
+  // внутренний диск отступает от кольца на ту же долю, что в макете (11 из 158)
+  const holdInset = sc(Math.round((density.button * 11) / 158));
+  const onMainLayout = (e: LayoutChangeEvent) => setMainHeight(e.nativeEvent.layout.height);
+  const onBriefLayout = (e: LayoutChangeEvent) =>
+    setBriefSize({ height: e.nativeEvent.layout.height, density });
+  // Брифинг не поместился и в самом плотном виде: на iOS мигает полоса
+  // прокрутки, на Android края списка гаснут, а не режут строку.
+  const briefScroll = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (overflow) briefScroll.current?.flashScrollIndicators();
+  }, [overflow]);
+
   const progress = useSharedValue(0);
   const visible = useVisibleScreen();
   const [hint, setHint] = useState('screens.threshold.hold');
@@ -148,54 +170,61 @@ export default function Threshold() {
         style={[
           styles.body,
           landscapeTablet && styles.bodyLandscape,
-          { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom + sc(34) },
+          { paddingTop: insets.top + sc(10), paddingBottom: insets.bottom },
         ]}
       >
-        {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
-        <View style={styles.headerRow}>
-          <IconButton size={sc(30)} accessibilityLabel={t('settings.back')} onPress={() => router.back()}>
-            <ChevronLeft size={18} color={colors.white55} />
-          </IconButton>
-          <Kicker style={{ fontSize: sc(11) }} testID="threshold-kicker">{t('screens.threshold.before')}</Kicker>
+        <View style={landscapeTablet && styles.headerRowLandscape}>
+          <ScreenHeader title={t('screens.threshold.before')} titleTestID="threshold-kicker" backLabel={t('settings.back')} onBack={() => router.back()} />
         </View>
 
-        <View style={[styles.main, landscapeTablet && styles.mainLandscape]}>
+        <View
+          style={[
+            styles.main,
+            landscapeTablet && styles.mainLandscape,
+            { paddingBottom: sc(density.bottom) },
+          ]}
+          onLayout={onMainLayout}
+        >
           {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
           <ScrollView
+            ref={briefScroll}
             style={styles.briefScroll}
-            contentContainerStyle={[styles.brief, compactPhone && styles.briefCompact]}
+            contentContainerStyle={[styles.brief, { paddingVertical: sc(density.padding) }]}
+            fadingEdgeLength={overflow ? sc(24) : 0}
           >
-            <Text style={styles.title}>{t('screens.threshold.title')}</Text>
-            {brief.map((b, i) => {
-              // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
-              // цель — часть той же строки, её длина тоже считается
-              const long = Math.ceil((b.text.length + (b.goal?.length ?? 0)) / 30) >= 3;
-              return (
-                <View
-                  key={i}
-                  testID={`threshold-brief-${i}`}
-                  style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
-                >
-                  <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
-                  {/* Text с вложенным Text меряет ширину криво (уезжает за
-                      край) — ширину ограничивает View-обёртка */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.briefText}>
-                      {b.text}
-                      {'goal' in b && !!b.goal && (
-                        <Text style={styles.briefGoal}>{b.goal}</Text>
-                      )}
-                    </Text>
+            <View style={{ gap: sc(density.gap) }} onLayout={onBriefLayout}>
+              <Text style={styles.title}>{t('screens.threshold.title')}</Text>
+              {brief.map((b, i) => {
+                // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
+                // цель — часть той же строки, её длина тоже считается
+                const long = Math.ceil((b.text.length + (b.goal?.length ?? 0)) / 30) >= 3;
+                return (
+                  <View
+                    key={i}
+                    testID={`threshold-brief-${i}`}
+                    style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
+                  >
+                    <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
+                    {/* Text с вложенным Text меряет ширину криво (уезжает за
+                        край) — ширину ограничивает View-обёртка */}
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.briefText}>
+                        {b.text}
+                        {'goal' in b && !!b.goal && (
+                          <Text style={styles.briefGoal}>{b.goal}</Text>
+                        )}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
           </ScrollView>
 
           <View style={[styles.holdWrap, landscapeTablet && styles.holdWrapLandscape]}>
             <GestureDetector gesture={hold}>
               <View
-                style={[styles.holdBtn, compactPhone && styles.holdBtnCompact]}
+                style={{ width: holdButtonSize, height: holdButtonSize }}
                 // без accessible VoiceOver фокусирует надписи внутри, и двойное
                 // касание по ним — короткий тап, который удержание отменяет
                 accessible
@@ -213,7 +242,12 @@ export default function Threshold() {
                 }}
                 testID="threshold-hold-button"
               >
-                <View style={[styles.holdInner, compactPhone && styles.holdInnerCompact]} />
+                <View
+                  style={[
+                    styles.holdInner,
+                    { top: holdInset, left: holdInset, right: holdInset, bottom: holdInset, borderRadius: holdButtonSize / 2 },
+                  ]}
+                />
                 <View style={StyleSheet.absoluteFill}>
                   <ProgressRing
                     size={holdButtonSize}
@@ -241,7 +275,7 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   body: {
     flex: 1,
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
     ...column(),
     justifyContent: 'space-between',
   },
@@ -256,11 +290,9 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row',
     gap: sc(32),
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(8),
-    marginLeft: -4,
+  headerRowLandscape: {
+    ...column(),
+    paddingHorizontal: screenGutter(),
   },
   title: {
     marginBottom: sc(6),
@@ -272,18 +304,11 @@ const stylesFactory = () => StyleSheet.create({
   briefScroll: {
     flex: 1,
   },
+  // поля и промежутки задаёт плотность экрана (lib/thresholdLayout.ts)
   brief: {
     flexGrow: 1,
-    paddingVertical: sc(16),
     justifyContent: 'center',
-    gap: sc(12),
     paddingHorizontal: 2,
-  },
-  // На коротких телефонах сохраняем кегль и освобождаем высоту за счёт
-  // декоративных интервалов. ScrollView остаётся страховкой для самых низких окон.
-  briefCompact: {
-    paddingVertical: sc(8),
-    gap: sc(8),
   },
   briefRow: {
     flexDirection: 'row',
@@ -319,29 +344,9 @@ const stylesFactory = () => StyleSheet.create({
     width: sc(190),
     justifyContent: 'center',
   },
-  holdBtn: {
-    width: sc(158),
-    height: sc(158),
-  },
-  holdBtnCompact: {
-    width: sc(136),
-    height: sc(136),
-  },
   holdInner: {
     position: 'absolute',
-    top: sc(11),
-    left: sc(11),
-    right: sc(11),
-    bottom: sc(11),
-    borderRadius: sc(79),
     backgroundColor: 'rgba(230,162,60,.07)',
-  },
-  holdInnerCompact: {
-    top: sc(9),
-    left: sc(9),
-    right: sc(9),
-    bottom: sc(9),
-    borderRadius: sc(68),
   },
   holdContent: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,

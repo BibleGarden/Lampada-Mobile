@@ -20,23 +20,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import KeyboardViewport from '../components/keyboard/KeyboardViewport';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { File } from 'expo-file-system';
 import ScreenBg from '../components/ScreenBg';
-import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Close, Heart, PauseIcon, Pen, PlayIcon, ShareIcon, Trash } from '../components/icons';
+import { IconButton } from '../components/ui';
+import { Close, Heart, PauseIcon, Pen, PlayIcon, ShareIcon, Trash } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
 import ScripturePassageText from '../components/ScripturePassageText';
 import * as db from '../lib/db';
 import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
 import { favoriteToScriptureDisplay, type FavoriteScripture } from '../lib/scripture';
 import { fmtTime } from '../lib/store';
 import { recordingAudioState } from '../lib/recordingFile';
-import { transcribeRecording } from '../lib/transcription';
+import { reportTranscriptionFailure, transcribeRecording } from '../lib/transcription';
 import { transcriptionErrorMessageKey, transcriptionFailureCode, type TranscriptionErrorCode } from '../lib/transcriptionErrors';
 import { DEFAULT_APP_NAME, buildPrayerExportText, prayerExportTitle } from '../lib/exportPrayer';
 import { ensureSettingsLoaded, useSettings } from '../lib/settings';
-import { colors, column, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
+import { audioModeCoordinator } from '../lib/audioSession';
+import { TRANSIENT_AUDIO_PLAYER_OPTIONS } from '../lib/audioModeCoordinator';
+import { createJournalPlaybackOperation } from '../lib/journalPlaybackOperation';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import PrivacyConsentDialog from '../components/PrivacyConsentDialog';
+import PairedActions from '../components/PairedActions';
 
 export default function Journal() {
   const { t, language } = useI18n();
@@ -61,9 +66,13 @@ export default function Journal() {
   const [entries, setEntries] = useState<db.JournalEntry[]>([]);
   const [query, setQuery] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // Повтор чтения дневника после сбоя: смена значения перезапускает загрузку.
+  const [loadAttempt, setLoadAttempt] = useState(0);
   // раскрытая молитва и её содержимое (грузится по требованию)
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<db.JournalDetail | null>(null);
+  const [detailFailed, setDetailFailed] = useState(false);
   // цитаты раскрытой молитвы и та, что читают во всплывающем окне
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
   const [openQuote, setOpenQuote] = useState<FavoriteScripture | null>(null);
@@ -78,25 +87,52 @@ export default function Journal() {
   >({});
   const [playingUri, setPlayingUri] = useState<string | null>(null);
   const [playbackFailedUri, setPlaybackFailedUri] = useState<string | null>(null);
-  const player = useAudioPlayer();
+  const player = useAudioPlayer(null, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   const playerStatus = useAudioPlayerStatus(player);
+  const [playback] = useState(() => createJournalPlaybackOperation({
+    player,
+    acquireSession: () => audioModeCoordinator.acquireSession(),
+    requestPlayback: () => audioModeCoordinator.requestPlayback(setAudioModeAsync, {
+      allowsRecording: false,
+      playsInSilentMode: true,
+    }),
+    onPlayingChange: setPlayingUri,
+    onFailure: (uri, reason, error) => {
+      console.error('Failed to play journal recording', reason, db.errorKind(error));
+      db.recordDiagnostic('recording_playback_failed', { place: 'journal', reason });
+      setPlaybackFailedUri(uri);
+    },
+    onReleaseFailure: (error) => console.error('Failed to release journal audio session', error),
+  }));
 
   // поиск с лёгким дебаунсом, чтобы не гонять SQL на каждую букву
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      const timer = setTimeout(async () => {
-        const nextEntries = await db.getJournal(query);
-        if (active) {
-          setEntries(nextEntries);
-          setLoaded(true);
-        }
+      const timer = setTimeout(() => {
+        db.getJournal(query).then(
+          (nextEntries) => {
+            if (!active) return;
+            setEntries(nextEntries);
+            setLoadFailed(false);
+            setLoaded(true);
+          },
+          (error: unknown) => {
+            console.error('Failed to read the journal', db.errorKind(error));
+            db.recordDiagnostic('journal_failed', { action: 'list', errorKind: db.errorKind(error) });
+            if (!active) return;
+            // Устаревший список нельзя выдавать за результат нового запроса.
+            setEntries([]);
+            setLoadFailed(true);
+            setLoaded(true);
+          },
+        );
       }, 150);
       return () => {
         active = false;
         clearTimeout(timer);
       };
-    }, [query]),
+    }, [query, loadAttempt]),
   );
 
   useEffect(
@@ -104,23 +140,14 @@ export default function Journal() {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       for (const controller of transcriptionControllers.current.values()) controller.abort();
       transcriptionControllers.current.clear();
+      playback.dispose();
     },
-    [],
+    [playback],
   );
 
   useEffect(() => {
-    if (playerStatus.didJustFinish) setPlayingUri(null);
-  }, [playerStatus.didJustFinish]);
-
-  // Сбой загрузки нельзя показывать как идущее воспроизведение. Зависимость —
-  // само событие плеера: смена playingUri не должна заново ловить старую ошибку.
-  useEffect(() => {
-    if (!playerStatus.error || playingUri === null) return;
-    console.warn('Failed to play journal recording', playerStatus.error);
-    db.recordDiagnostic('recording_playback_failed', { place: 'journal' });
-    setPlaybackFailedUri(playingUri);
-    setPlayingUri(null);
-  }, [playerStatus]);
+    playback.status(playerStatus);
+  }, [playerStatus, playback]);
 
   const toggleOpen = useCallback(async (id: number) => {
     for (const controller of transcriptionControllers.current.values()) controller.abort();
@@ -130,10 +157,7 @@ export default function Journal() {
     Haptics.selectionAsync();
     setConfirmDeleteId(null);
     setPlaybackFailedUri(null);
-    if (playingUri) {
-      player.pause();
-      setPlayingUri(null);
-    }
+    playback.stop();
     if (openId === id) {
       setOpenId(null);
       setDetail(null);
@@ -142,16 +166,23 @@ export default function Journal() {
     }
     setOpenId(id);
     setDetail(null);
+    setDetailFailed(false);
     setFavorites([]);
-    const [nextDetail, nextFavorites] = await Promise.all([
-      db.getJournalDetail(id),
-      getFavoriteScripturesBySession(id),
-    ]);
-    if (detailRequest.current === request) {
-      setDetail(nextDetail);
-      setFavorites(nextFavorites);
+    try {
+      const [nextDetail, nextFavorites] = await Promise.all([
+        db.getJournalDetail(id),
+        getFavoriteScripturesBySession(id),
+      ]);
+      if (detailRequest.current === request) {
+        setDetail(nextDetail);
+        setFavorites(nextFavorites);
+      }
+    } catch (error) {
+      console.error('Failed to open a journal prayer', db.errorKind(error));
+      db.recordDiagnostic('journal_failed', { action: 'detail', errorKind: db.errorKind(error) });
+      if (detailRequest.current === request) setDetailFailed(true);
     }
-  }, [openId, playingUri, player]);
+  }, [openId, playback]);
 
   const runJournalTranscription = async (recording: db.JournalDetail['recordings'][number]) => {
     transcriptionControllers.current.get(recording.id)?.abort();
@@ -184,10 +215,7 @@ export default function Journal() {
       });
     } catch (error) {
       if (controller.signal.aborted) return;
-      console.warn(
-        'Failed to transcribe journal recording',
-        error instanceof Error ? error.message : 'unknown error',
-      );
+      reportTranscriptionFailure('journal', error);
       setTranscriptionStates((current) => ({ ...current, [recording.id]: transcriptionFailureCode(error) }));
     } finally {
       if (transcriptionControllers.current.get(recording.id) === controller) {
@@ -222,13 +250,13 @@ export default function Journal() {
     if (decision === 'allowed' && recording) await runJournalTranscription(recording);
   };
 
-  const togglePlay = (recording: db.JournalDetail['recordings'][number]) => {
+  const togglePlay = async (recording: db.JournalDetail['recordings'][number]) => {
     const { uri } = recording;
     if (playingUri === uri) {
-      player.pause();
-      setPlayingUri(null);
+      playback.stop();
       return;
     }
+    playback.stop();
     setPlaybackFailedUri(null);
     // Файл могли удалить и после открытия молитвы: проверяем перед каждым запуском.
     const audio = recordingAudioState(() => new File(uri).exists);
@@ -246,9 +274,7 @@ export default function Journal() {
       );
       return;
     }
-    player.replace(uri);
-    player.play();
-    setPlayingUri(uri);
+    await playback.start(uri);
   };
 
   // экспорт молитвы текстом в системное «Поделиться»: только читаемое,
@@ -288,20 +314,24 @@ export default function Journal() {
     if (confirmDeleteId === id) {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
       setConfirmDeleteId(null);
-      if (playingUri) {
-        player.pause();
-        setPlayingUri(null);
-      }
+      playback.stop();
       for (const controller of transcriptionControllers.current.values()) controller.abort();
       transcriptionControllers.current.clear();
       setTranscriptionStates({});
-      await db.deleteSession(id);
+      try {
+        await db.deleteSession(id);
+      } catch (error) {
+        console.error('Failed to delete a journal prayer', db.errorKind(error));
+        db.recordDiagnostic('journal_failed', { action: 'delete', errorKind: db.errorKind(error) });
+        Alert.alert(t('screens.journal.deleteFailed'), t('screens.retryMessage'));
+        return;
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (openId === id) {
         setOpenId(null);
         setDetail(null);
       }
-      setEntries(await db.getJournal(query));
+      setEntries((current) => current.filter((entry) => entry.id !== id));
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -354,7 +384,11 @@ export default function Journal() {
 
         {open && (
           <Animated.View entering={FadeIn.duration(250)}>
-            {detail === null ? null : detail.answers.length === 0
+            {detailFailed ? (
+              <Text style={styles.emptyDetail} accessibilityRole="alert" testID="journal-detail-error">
+                {t('screens.journal.detailFailed')}
+              </Text>
+            ) : detail === null ? null : detail.answers.length === 0
               && detail.recordings.length === 0 && favorites.length === 0 ? (
               <Text style={styles.emptyDetail}>{t('screens.journal.noNotes')}</Text>
             ) : (
@@ -424,31 +458,30 @@ export default function Journal() {
               </View>
             )}
 
-            <View style={styles.actionsRow}>
-              <Pressable
-                onPress={() => sharePrayer(item)}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.journal.share')}
-                testID="journal-share"
-                style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.7 }]}
-              >
-                <ShareIcon size={14} color="rgba(255,255,255,.45)" />
-                <Text style={styles.actionLabel}>{t('screens.journal.share')}</Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => askOrConfirmDelete(item.id)}
-                accessibilityRole="button"
-                accessibilityLabel={confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
-                testID={confirming ? 'journal-delete-confirm' : 'journal-delete'}
-                style={[styles.actionBtn, confirming && styles.actionBtnConfirming]}
-              >
-                <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />
-                <Text style={[styles.actionLabel, confirming && { color: '#ec8a7a' }]}>
-                  {confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete')}
-                </Text>
-              </Pressable>
-            </View>
+            <PairedActions
+              style={styles.actionsRow}
+              gap={sc(8)}
+              labelStyle={styles.actionLabel}
+              actions={[
+                {
+                  label: t('screens.journal.share'),
+                  labels: [t('screens.journal.share')],
+                  onPress: () => void sharePrayer(item),
+                  testID: 'journal-share',
+                  icon: <ShareIcon size={14} color="rgba(255,255,255,.45)" />,
+                  style: (pressed) => [styles.actionBtn, pressed && { opacity: 0.7 }],
+                },
+                {
+                  label: confirming ? t('screens.journal.confirmDelete') : t('screens.journal.delete'),
+                  labels: [t('screens.journal.delete'), t('screens.journal.confirmDelete')],
+                  onPress: () => askOrConfirmDelete(item.id),
+                  testID: confirming ? 'journal-delete-confirm' : 'journal-delete',
+                  icon: <Trash size={14} color={confirming ? '#ec8a7a' : 'rgba(255,255,255,.45)'} />,
+                  style: () => [styles.actionBtn, confirming && styles.actionBtnConfirming],
+                  labelStyle: confirming && { color: '#ec8a7a' },
+                },
+              ]}
+            />
           </Animated.View>
         )}
       </View>
@@ -464,17 +497,10 @@ export default function Journal() {
       }}
     >
       <ScreenBg />
-      <KeyboardViewport>
+      <KeyboardViewport safeAreaInContent>
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
-          <IconButton
-            accessibilityLabel={t('settings.back')}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          >
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker testID="journal-title">{t('screens.journal.title')}</Kicker>
-          <View style={{ width: sc(34) }} />
+          <ScreenHeader title={t('screens.journal.title')} titleTestID="journal-title" backLabel={t('settings.back')} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
 
         <View style={[styles.searchWrap, { marginTop: insets.top + sc(56) }]}>
@@ -509,13 +535,21 @@ export default function Journal() {
           renderItem={renderEntry}
           onScrollBeginDrag={dismissKeyboard}
           contentContainerStyle={{
-            paddingHorizontal: sc(18),
+            paddingHorizontal: screenGutter(),
             paddingTop: sc(12),
-            paddingBottom: sc(24),
+            paddingBottom: bottomActionPadding(insets.bottom),
             gap: sc(10),
           }}
           ListEmptyComponent={
-            loaded ? (
+            loadFailed ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setLoadAttempt((attempt) => attempt + 1)}
+                testID="journal-load-error"
+              >
+                <Text style={styles.empty}>{t('screens.journal.loadFailed')}</Text>
+              </Pressable>
+            ) : loaded ? (
               <Text style={styles.empty} testID="journal-empty-state">
                 {query.trim()
                   ? t('screens.journal.noResults')
@@ -686,15 +720,12 @@ const stylesFactory = () => StyleSheet.create({
   screen: { flex: 1, ...column() },
   top: {
     position: 'absolute',
-    left: sc(12),
-    right: sc(12),
+    left: screenGutter(),
+    right: screenGutter(),
     zIndex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   searchWrap: {
-    marginHorizontal: sc(18),
+    marginHorizontal: screenGutter(),
     justifyContent: 'center',
   },
   search: {
@@ -945,8 +976,6 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.cardText,
   },
   actionsRow: {
-    flexDirection: 'row',
-    gap: sc(8),
     marginTop: sc(14),
   },
   actionBtn: {

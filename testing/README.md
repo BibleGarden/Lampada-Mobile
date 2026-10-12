@@ -10,6 +10,7 @@ duplicated here, otherwise the two pictures drift apart.
 | --- | --- | --- |
 | [`TEST_PLAN.md`](./TEST_PLAN.md) | Scenario identifiers (`SMK-*`, `REM-*`, `LOCK-*` and the rest) and the expected behaviour | A living document, it grows with the app |
 | `e2e/` | Executable Maestro scenarios | Living |
+| `screens/` | Cross-device screenshot capture flows, outside all test tiers | Living |
 | `reminder-fire/` | Clock-dependent Maestro flows run only by `e2e/run-rem-fire.sh` | Living |
 | `reports/` | Dated results of runs | Immutable: a new run means a new file |
 | `evidence/` | Evidence for the reports: final screenshots, decisive logs, data snapshots | Immutable, the rules are in [`evidence/README.md`](./evidence/README.md) |
@@ -132,6 +133,31 @@ uninstalled, and the first flow then installs the current one. A failed check
 or removal stops the run.
 
 ## Running
+
+### Device selection
+
+`npm run android` and `npm run ios` resolve a target only when exactly one
+Android device or one iOS simulator is available. With multiple targets, pass
+`--device` explicitly, for example `npm run android -- --variant release
+--device emulator-5554 --no-bundler`. The wrapper validates that serial and
+passes its running AVD name to Expo's `--device` option; a connected physical
+device is accepted by its adb serial. `ANDROID_SERIAL` alone does not constrain
+Expo. The iOS `critical`, `main`,
+`rare` and `all` tier commands always pass the named booted `Pray Smoke iPhone
+17 Pro` simulator to Maestro, or resolve the only booted simulator. To select
+another simulator, use `npm run test:e2e:critical -- --device <UDID>` (similarly
+for other tiers). Direct Maestro invocations must use `maestro --device <UDID or
+emulator serial> test ...`.
+
+### Known Android lint issue
+
+As checked on 2026-10-12, `./gradlew lint` fails on both `origin/main`
+(`fdceb39`) and PR #45 in `:react-native-worklets:lintAnalyzeDebug` with
+`Cannot find a KaModule for the VirtualFile`. This is an internal Kotlin lint
+analysis failure, so a complete lint result is unavailable. The main check used
+a separate worktree, `npm ci`, Android prebuild with test environment names,
+and `ANDROID_HOME=$HOME/Library/Android/sdk ./gradlew lint`; that worktree was
+removed after the check. Do not report the incomplete gate as passing.
 
 Android critical flows are kept separately in `android-e2e/`, so they are not
 picked up by the existing iOS tier commands. Build Android Release with test

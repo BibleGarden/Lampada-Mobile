@@ -28,10 +28,10 @@ mode, or a server log. It also says nothing about the wrapper-script groups —
 `run-lng.sh`, `run-rem-fire.sh`, `run-stub-phase.sh`, `run-lock-*.sh`, `run-ipad.sh` — unless
 those were run explicitly, with their prepared environments. See sitting 9.
 
-Of 179 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
+Of 180 scenario IDs (`TEST_PLAN.md` sections 6–8, `PRE-*` through `LOCK-*`
 including `START-*` and `RPT-*`, plus `LNG-001`–`LNG-013`, which the plan does
 not catalogue yet and which live in the e2e flows and this file), automation on
-main fully covers 107, partially covers 24, and does not cover 48. Section 9
+main fully covers 107, partially covers 25, and does not cover 48. Section 9
 of the plan has no IDs and is outside the count. How the count was made is at
 the end of this file.
 
@@ -270,6 +270,8 @@ tablets or accessibility.
 | --- | --- | --- | --- |
 | NAV-008 | Rotate Home and one other screen while JS is busy. | The background covers the canvas; no strip keeps the old size. Plain rotation is automated (`ios-ipad-nav-008-rotation.yaml`); look at its landscape screenshots. | iPad |
 | SETUP-004 | Inspect the iPad flow after a long goal and taps above the field and in both tablet margins. | The input remains readable and the actions remain reachable. Text retention and dismissal are automated in `ios-stage03-long-goal.yaml` and `ios-ipad-setup-004-keyboard-margins.yaml`. | iPad |
+| ANS-050 | On a physical iPad with ProMotion, open an answer, focus the field, then tap the question; repeat a few times, then once in landscape. | The sheet and its actions rise and fall together with the keyboard without stutter or a second movement after the keyboard has gone; the field does not resize when a motion ends, including the opening of the sheet. | Physical iPad |
+| END-011 | On a physical iPad with ProMotion, on the reflection screen focus the field, then tap outside it; repeat a few times, then once in landscape. | The field takes its size once when the keyboard starts opening and once when it starts hiding; it never stretches and shrinks back after the keyboard has gone. The buttons appear when the hide starts and slide down with the keyboard; they never stay missing after it has gone. Check the preparation screen the same way. | Physical iPad |
 | ANS-023 | Look at the `ANS-023-*` screenshots from the three devices and Android with 3-button navigation. Then type an answer, tap Save with the keyboard docked, and reopen the answer. | A margin remains between the buttons and the screen edge; the sheets and their dimming reach the screen edge. The answer sheet slides fully off screen while the keyboard hides, and the reopen starts from the screen edge. Visibility, taps and Save above a docked keyboard are automated (`ios-ans-023-recordings-actions.yaml`, `android-ans-023-recordings-actions.yaml`). | Three sizes + Android |
 | ANS-025 | VoiceOver on a short and a long transcript. | Full text; a short one is not a button; "Show in full" is its own focus. | VoiceOver + a transcript from sitting 6 |
 | SCR-025 | Look at `SCR-025-reader-expanded` from the `main` run. | Title and buttons below the status bar. Visibility and taps are automated (`ios-scr-025-reader-dynamic-island.yaml`). | iPhone with a Dynamic Island |
@@ -329,6 +331,7 @@ a substitute for the sittings above.
 | AI-012 | Withdraw each allowed AI purpose in Settings, then use that feature at once. | 09 |
 | SES-005 | Finish early with an unsaved answer sheet still open (finish-early without an open sheet is automated). | 09 |
 | START-001 | Move the finger off the hold control (a short hold is already automated). | 09 |
+| END-010 | Save an answer, force-quit, relaunch: the journal shows the prayer and Home marks its day (the rule and the checkpoints are unit-tested). | ADR-0042 |
 
 iPad, rotation and keyboard are not listed here — they are sitting 8,
 stage 07 (`86cb8k53f`).
@@ -399,14 +402,14 @@ slots.
 
 ---
 
-## How the 179 IDs were counted
+## How the 180 IDs were counted
 
 Every `PRE-*`, `SMK-*`, `NAV-*`, `SETUP-*`, `START-*`, `SES-*`, `MUS-*`,
 `ANS-*`, `AI-*`, `SCR-*`, `RPT-*`, `END-*`, `JRN-*`, `REM-*` and `LOCK-*` row
-in `TEST_PLAN.md` sections 6–8 (166 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
+in `TEST_PLAN.md` sections 6–8 (167 IDs), plus `LNG-001`–`LNG-013` (13 IDs)
 which the plan has no section for yet — they are catalogued by the
 `ios-lng-*.yaml` flows and this file. Section 9 of the plan has no IDs and is
-not in the 179.
+not in the 180.
 
 - **Covered (107):** a flow asserts the outcome the plan names and runs in one
   of the automated paths on main: a tier tag run (`critical` / `main` /
@@ -416,7 +419,7 @@ not in the 179.
   tests of the date arithmetic count, because the live-midnight pass is
   documented above as optional. Covered IDs whose only automation is a suite
   or a wrapper are not proven by the tier runs alone — sitting 9 names them.
-- **Partial (24):** an automated flow asserts a slice (usually UI, or the unit
+- **Partial (25):** an automated flow asserts a slice (usually UI, or the unit
   tests of the logic) and the rest is in this file.
 - **Not covered (48):** no flow at all (physical-device, airplane-mode,
   backlog and deliberate items, the Android backup checks `JRN-015` and

@@ -21,6 +21,15 @@ While Home is focused, its prayer calendar refreshes on app activation and at
 the next local midnight. Leaving Home removes the listener and timer; resuming
 the app refreshes the calendar without resetting the session.
 
+The Home flame keeps its full size while the window has room for it. On a short
+window (a foldable's inner display, iPad Split View, landscape) it shrinks to
+the height left above Start, keeping its proportions; the captions keep their
+size (`lib/flameGeometry.ts`). The flame fit uses the available center height
+and caption height, never the flame's own measured size. The four-second saved
+notice replaces the streak caption in the same single-line Text slot. The slot
+is reserved even with zero prayer days, so showing or hiding the notice does
+not move or resize the flame.
+
 Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.
 The flame's Reanimated clock stops when its route is covered or the app leaves
@@ -58,6 +67,11 @@ updates took frames from the text input, and typing showed up in batches.
   main thread can still make the system's 2 s splash hand-over time out; the
   residual risk and the rejected native signal module are in ADR-0040.
 - Reanimated 4.5.5, Gesture Handler and Skia for animations, gestures and graphics.
+  Content that slides in from below on mount (`CardIn` in `components/ui.tsx`)
+  uses an animated style, not an `entering` layout animation: on Android
+  Reanimated drops `entering` frames that arrive before the native view is
+  mounted and restores only the opacity, so the companion card's body stayed
+  shifted down past the card frame.
 - A custom native build: Expo Go does not support all the native modules in use.
 
 The Android build plugin permits cleartext traffic only when the build
@@ -72,6 +86,17 @@ non-production origin.
 `android.blockedPermissions` removes the template permissions
 `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`:
 recordings and the journal stay in app storage and prayers are shared as text.
+
+Android draws edge-to-edge (enforced from target SDK 35). The
+`app.json` configures `expo-navigation-bar` with contrast enforcement and light
+buttons. `withAndroidSystemBars` applies the same style to the native splash
+theme and after Activity creation, before the first frame; the root
+`NavigationBar` retains it after React Native mounts:
+Android draws a translucent dark contrast scrim behind three-button navigation,
+so scrolling text remains legible beneath the controls. Gesture navigation
+stays transparent and edge-to-edge, including a cold start in system light mode.
+On Android 8–9, the Activity sets the platform's dark translucent scrim color
+before React Native mounts; Android 10+ provides the contrast scrim itself.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
@@ -92,6 +117,7 @@ upgrading it requires rebuilding the native app.
 | `components/RecordingsSheet.tsx` | A separate sheet for recordings, the player and transcripts, on top of the answer |
 | `components/PrivacyConsentDialog.tsx` | The equal-weight first-use disclosure and allow/deny actions for an AI purpose |
 | `components/ContentReportDialog.tsx` | Confirmation, optional comment and delivery state for reporting a generated question or selected passage |
+| `components/PairedActions.tsx` | A shared action pair that keeps both label sizes and stacks when either cannot fit horizontally |
 | `components/BottomSheet.tsx` | The in-screen bottom sheet used by the settings screen for option lists, the reminder editor and privacy consents; an overlay rather than a system Modal so the privacy screen and lock stay on top |
 | `lib/store.ts` | The state and the scenario of a prayer session |
 | `lib/db.ts` | SQLite, migrations, the journal, favourites and the streak |
@@ -117,12 +143,15 @@ upgrading it requires rebuilding the native app.
 | `lib/scriptureAudioClient.ts` | Book aliases, verse-level timings and the public URLs of chapter audio |
 | `lib/useScriptureAudio.ts` | The player lifecycle for the selected passage and the temporary audio focus |
 | `lib/audioModeCoordinator.ts` | The single queue of the global Expo audio mode, the priority recording lease and reference-counted audio-session leases |
-| `lib/audioPlayerOperation.ts` | The draft player's readiness, stale-play cancellation, audio-session lease and native status-listener lifecycle |
+| `lib/audioSession.ts` | The app's single audio mode coordinator, bound to Expo's session activation |
+| `lib/audioPlayerOperation.ts` | Draft readiness, stale-play cancellation, audio-session leases and native status listeners; journal start after a playback grant (`startJournalPlayback`) |
+| `lib/journalPlaybackOperation.ts` | One operation per journal mount owns playback state, pause/row-switch cancellation, native completion/error and start-timeout handling; unmount releases leases without player calls |
+| `lib/nativePlaybackStart.ts` | The check that `play()` really started the native player, with a start timeout and an overall buffering limit; shared by narration, the journal and answer drafts |
 | `lib/audioCueOperation.ts` | A bounded, cancellable recording-limit cue with native status cleanup |
 | `lib/recordingOperation.ts` | The single-flight lifecycle of starting, stopping and interrupting a voice recording |
 | `lib/recordingLimitController.ts` | The single stop decision from the recorder's accumulated recorded milliseconds |
 | `lib/useRecordingLimit.ts` | The mounted recording-limit lifecycle: polling, per-recording reset, guarded manual stop, UI state and terminal failure reporting |
-| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations on stop and on a change of scripture context |
+| `lib/scriptureAudioOperation.ts` | Invalidation of late narration continuations, native interruption and resume lease decisions, and verse highlighting |
 | `lib/useSheetReflow.ts` | Rebuilding a sheet for the new window geometry |
 | `lib/scriptureCatalogClient.ts` | The HTTP client of languages, translations and available narrations |
 | `lib/scripturePreferences.ts` | The valid dependent triple of language, translation and narration |
@@ -139,10 +168,49 @@ upgrading it requires rebuilding the native app.
 | `testing/` | Scenarios, Maestro flows, reports and final evidence |
 | `store/` | App Store screenshots and preview videos |
 
+The recordings sheet places its question, list and footer within the same
+`column()` measure and gutter. The scrollable list reserves `sc(24)` below its
+last card, even when a wrapped question leaves less room above the actions.
+A favourite card builds its collapsed preview
+from the first four measured lines, trims trailing whitespace and punctuation,
+and appends one ellipsis. The preview is measured again to leave room for that
+mark. The saved passage and expanded text stay intact; the collapsed accessibility
+label reads the selected verses without truncation, matching the card's scope.
+`PairedActions` measures all label states at their shared font size: if any wraps
+in the horizontal pair, both actions stack vertically. Arming deletion or sending
+a report changes only the label, never the pair's placement.
+
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
-font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032). Settings sheets are centered and capped at `sc(390)` in
-width to keep their controls compact on wide tablet windows.
+font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032).
+Settings, journal, favourites, setup, pre-start and about use `ScreenHeader` for
+one `sc(34)` back button and centered title. Their headers and content use the
+same `screenGutter()` inside `column()`.
+The session measures its frame, header and goal and subtracts the safe-area
+padding, timer and three default `sc(22)` gaps, including the header/goal margin
+corrections. When at least `sc(230)` remains for the card, the gaps become
+`sc(14)` to give the passage more complete lines. This calculation uses the
+default gaps in both states, so changing density cannot toggle it back.
+Header/goal margin corrections are shared constants used by both styles and
+the calculation. The mounted card stays invisible and inaccessible until the
+first density measurement, then appears within the screen fade-in; windows
+whose maximum possible free card height is below `sc(230)` show it immediately.
+The passage line limit excludes its `sc(6)` top padding below the Question/Quote switch.
+Settings rows keep complete values by wrapping either text column, and the
+settings header has a hairline at its scroll boundary. Settings sheets built
+with `components/BottomSheet` are centered and capped by `sheetMaxWidth()`
+(the content column width minus its two gutters, matching the cards) in both
+orientations. Answer and recordings `KeyboardSheet` overlays
+span the window width; the answer retains its landscape-tablet columns.
+The Scripture reader uses the same
+`column()` and gutter for its header and text. Scrollable reader and journal
+content carry the bottom safe area in their content padding, so the final line
+can scroll clear of a navigation bar or Home Indicator. `bottomActionPadding()`
+reserves the bottom safe area for screen-ending content, bottom actions,
+settings sheets, keyboard-sheet footers, update and consent overlays, adding
+`sc(12)` above the safe area on both platforms. Forms inside `KeyboardViewport` pass a
+zero inset because the viewport already reserves the safe area. The recordings
+list fades at its scroll edges on Android, as the pre-start briefing does.
 
 Accessibility baseline. Text tokens in `lib/theme.ts` (including
 `placeholder`) meet WCAG AA 4.5:1 on the lightest backgrounds they sit on - a
@@ -212,6 +280,14 @@ the scenario is finished through explicit interface actions.
 
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
+Its back header follows the shared content column and gutter in either layout.
+In the vertical layout the threshold measures the briefing and the free height
+under its header and takes the first density in `lib/thresholdLayout.ts` at
+which all briefing items fit above the hold-to-start control: the original
+spacing first, then tighter spacing and a smaller control, then less air below
+it. The type size stays. Only when even the densest layout does not fit does
+the briefing scroll, with faded edges on Android and a flashed scroll indicator
+on iOS.
 
 Keyboard handling is shared by preparation, answers, reflection, content reports
 and history search (ADR-0038). `KeyboardSystemProvider` is the only application
@@ -223,7 +299,8 @@ Android compares no widths: there React Native reports the visible window width,
 not the IME width, so it says nothing about a floating keyboard, and it goes
 stale after a width-only window resize (Fold unfold, split screen) because
 `keyboardDidShow` is not repeated. Field focus alone does not imply
-a software keyboard. Deferred actions return only after `keyboardDidHide`.
+a software keyboard. Deferred actions return when the keyboard starts hiding
+(iOS `keyboardWillHide`, Android `keyboardDidHide`), not when a field loses focus.
 `dismissKeyboard` uses native Keyboard Controller dismissal even after input
 blur, and always clears the React Native responder even when no IME is open;
 single-phrase editors submit before dismissing, so Enter cannot leave
@@ -240,8 +317,8 @@ transition runs
 Controller height after a fast input-method switch leaves no padding. Forms do not subtract
 keyboard or screen heights themselves.
 
-`KeyboardSheet` puts a Gorhom sheet into a full-window overlay that reserves
-nothing, so the sheet and its backdrop reach the screen edge and the container
+`KeyboardSheet` puts a full-width Gorhom sheet into a full-window overlay that
+reserves nothing, so the sheet and its backdrop reach the screen edge and the container
 does not change with the keyboard. The footer holds the answer and recording
 actions, including Stop, above the bottom safe area with a constant padding.
 The keyboard height not covered by that padding is subtracted on the UI thread
@@ -249,17 +326,48 @@ from the footer position Gorhom computes, so Gorhom moves the whole footer
 container above the keyboard frame by frame and the actions stay inside its
 bounds, where Android accessibility finds them. The body takes the height
 above the footer but never less than a minimum, because Android clears focus
-inside a view that shrinks to zero (`sheetFooterPosition`). Sheet inputs do not
+inside a view that shrinks to zero (`sheetFooterPosition`). Callers cannot
+style the body: a `flex: 1` there overrode that height and stretched the body
+under the footer, out of reach of its scroll view. Only the footer
+moves frame by frame, as a transform. The body height is a layout of the whole
+form with its multiline field, so it changes once, when a transition starts:
+the body takes at once the height it will have above the footer when the sheet
+reaches the snap Gorhom animates to and the keyboard reaches the height Keyboard
+Controller reports at the start of its animation (`sheetBodyHeight`). For the
+answer sheet, that keyboard target also selects the full-height snap before
+Gorhom receives the React-side snap request; nothing
+changes when the motion ends. A closing sheet and a drag keep the body as it is.
+The footer is painted with the sheet background inside its side borders, so it
+hides the part of the body it has not uncovered yet. Sheet inputs do not
 register Gorhom's own keyboard handling, so the keyboard space is reserved once.
+A transient iOS `willHide` followed by `willShow` can briefly move the answer
+sheet toward its resting snap before it returns to full height; its final snap
+is correct.
 A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
-Preparation and reflection defer lower actions while typing. Answers and reports
+Preparation and reflection defer lower actions while typing. Reflection keeps
+the same column measure while editing. Preparation keeps a fixed `sc(16)` header-to-goal gap in both keyboard states;
+free space is distributed only below the goal. It keeps its bottom gap by
+relaxing the goal field's `sc(120)` minimum whenever the docked keyboard fills
+the form, regardless of the device or orientation.
+Their field fills the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):
+when the hide starts, the form returns to its normal layout together with its
+actions, which move down with the viewport reservation above the keyboard, so
+the field does not stretch into the space the keyboard frees and nothing
+changes after `keyboardDidHide`.
+Reflection keeps its filling field at its final height from the start of the
+opening: below the field, `KeyboardPendingSpace` holds the strip the keyboard
+has yet to cover in the viewport (`pendingKeyboardReserve`), and the keyboard
+rises into it. Answers and reports
 retain transaction actions within the available region. Floating answer inputs
 stay compact. Keyboard dismissal uses existing outside taps and native submission
 keys; no extra form action is added. Answer snap expansion is a form policy, not a geometry
 calculation: the target snap follows the keyboard and focus, every keyboard or
 focus change requests it, and returning to the resting snap is a single request,
+made when the keyboard starts hiding (`keyboardShowing`: iOS `keyboardWillHide`;
+Android reports the hide at the start of its animation), so the sheet returns
+together with the keyboard rather than after it,
 so a later drag stays where the person put it. Touching the handle hides the
 keyboard: a tap returns the sheet to the resting snap like any other hide, and a
 drag, which cancels the React Native touch once Gorhom's pan starts, leaves the
@@ -307,8 +415,9 @@ Screen → useSession → lib/db.ts → SQLite / local audio files
 The AI is not required to go through a prayer. When there is no configuration, or
 on a network error, a timeout or a malformed response, `lib/ai.ts` returns a
 question from the local pool for a user-requested generation. Background generation
-returns no content on failure and does not substitute a local question. Later
-questions use a buffer one question ahead;
+returns no content on failure and does not substitute a local question. Questions
+with JSON or Markdown debris are rejected, logged without response content and
+handled by the same fallback path. Later questions use a buffer one question ahead;
 stale asynchronous results are cut off by keys and tokens. Local-pool questions
 carry a visible backup-question label in both the session and reflection screens.
 
@@ -324,13 +433,25 @@ draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.
 The audio mode coordinator also owns the process-wide audio session through
-reference-counted leases. Music, narration, draft playback and recording acquire
+reference-counted leases. Music, narration, draft playback, journal playback and recording acquire
 a lease for their active interval. Pausing the last player or stopping the last
-recorder releases it and deactivates AVAudioSession in the serialized native
-queue; keeping a screen mounted does not retain the session. An untimed prayer
+recorder releases it and deactivates the audio session in the serialized native
+queue; keeping a screen mounted does not retain the session. On Android that
+deactivation is a sticky Expo flag that turns every later `play()` into a native
+no-op, so a playback request from a lease holder first reactivates the session in
+the same queue. Restoring the playback mode after a recording, without a lease,
+leaves an idle session inactive. An untimed prayer
 has no deadline: its music ends on the explicit prayer finish, after the normal
 fade, rather than on an invented timer (see
 [ADR-0036](decisions/0036-audio-session-leases.md)).
+System-paused narration retains its lease so Android can resume it when audio
+focus returns, but does not hold an expired prayer's completion deadline. User
+resume reuses that lease; a stale playback grant restores the interrupted phase
+with its lease and verse highlight intact. User
+pause, stop, completion and unmount release the lease. Journal playback takes
+its own lease and requests playback mode before calling `play()`. Its lifecycle
+operation owns all release paths and distinguishes mode failures from native
+replace/play failures.
 On answer-sheet unmount, Expo Audio may release its native player and recorder
 before the sheet's effect cleanup. That cleanup cancels pending cue work and
 status listeners and releases leases without calling native audio methods.
@@ -352,9 +473,16 @@ completion latency.
 Before transcription, the client reads the file duration again without rounding,
 including for older drafts whose stored durations came from the recorder clock. It rejects
 files above 14 MiB or recordings longer than 600 seconds without uploading
-them. HTTP 413, 429 and 5xx, transport
+them. The client builds the multipart body itself and declares the file part
+as `recording.m4a` with `audio/mp4`: `FormData` takes the part type from the
+platform MIME table, and Android maps `.m4a` to `audio/mpeg`, which Bible API
+rejects with 415. HTTP 413, 429 and 5xx, transport
 timeouts, and lost connections have separate retry messages in both the answer
-sheet and the journal. Existing recordings retain their original format.
+sheet and the journal. Every failure that is not a cancellation appends a
+`transcription_failed` record (`place`, category `code`, HTTP `status` when the
+server answered, `errorClass`) to `lampada-diagnostics.log` and logs the same
+fields to the console, without the audio, the transcript, error messages or
+the key. Existing recordings retain their original format.
 Scripture narration retains its position and continues playback when the screen
 is covered or the app is backgrounded. It stops when the user changes the
 scripture mode, the passage, or finishes the prayer.
@@ -376,8 +504,18 @@ An untimed prayer saves the wall-clock time from its start to the last tick of t
 session screen. A session unloaded by the OS is not
 restored yet.
 
+While the prayer runs, the store saves `elapsed` to `sessions.elapsed_sec`
+once a minute from the existing tick, when the app leaves the `active` state and
+on the transition to reflection, so an interrupted prayer keeps its duration in
+the journal (ADR-0042). The last saved value lives outside the store state, so the
+checkpoint adds no re-render. The first checkpoint comes after one minute: a
+prayer opened and left at once, without answers, stays out of the journal and the
+streak. The database keeps the larger of the stored and the written time, so a
+late checkpoint never lowers the duration saved on completion.
+
 Timer expiry waits while the reader or answer sheet is open, or narration is
-loading, playing, paused or showing an error. A non-interactive six-second notice
+loading, playing or paused. A narration error stays on the card but does not hold
+an expired prayer. A non-interactive six-second notice
 allows the user to finish that activity. Sheet opening is reported before its
 animation; closing is reported after the sheet settles and recording cleanup
 finishes. Once the active prayer screen has no such activity, reflection opens
@@ -399,7 +537,7 @@ See [ADR-0027](decisions/0027-resume-current-prayer.md).
 After the reflection is saved (or skipped), completion returns directly Home with
 `router.dismissTo`, removing the prayer flow from the navigation stack. Home shows
 a localized four-second saved notice and the updated flame/day state. The
-completed prayer counts for the local calendar day of its start, not the day
+prayer counts for the local calendar day of its start, not the day
 "Done" is tapped (ADR-0033). The takeaway
 remains in the journal; there is no separate success screen. A consumed route
 parameter triggers the notice once. Legacy `/done` links redirect without claiming
@@ -463,18 +601,41 @@ translation. The compact card and the key verses in the full reader use the same
 off-white text colour. Surrounding verses use that colour at 55% opacity; passages
 without a key-verse range stay at full opacity. The shared passage renderer also
 applies this hierarchy in favourites and the journal, with a translucent white
-underline for the currently narrated verse. The full reader is opened both by
-tapping the card text itself and by the "Read in full" link - both available when
-the card truncates the text and when it
+underline for the currently narrated verse. Tapping the card text always opens
+the full reader. A continuation mark shows that the card truncates the text or
 shows only the highlighted fragment. If there is no highlight, or it covers the
 whole passage, the card shows the passage in full. The client uses the
 verse-level representation only when it reconstructs `passage.text` exactly; old
 snapshots without the array and inconsistent responses are displayed as the
 previous solid text, without heuristics.
 
+The session card limits its preview to whole lines that fit its measured text
+area, including when only one line fits on a short foldable window. While the
+next passage loads, the previous passage's reference, narration, favourite
+action and position dots are hidden or disabled. The tools row and dots stay
+mounted to preserve the text area's measured height and line limit.
+Explicit continuation marks
+strip terminal punctuation before adding an ellipsis.
+
 For narration the client requests the server `begin`/`end` of the verses, streams
 the Range-compatible MP3 of the whole chapter, starts at the first verse of the
-passage and stops at the end of the last one. The text selection does not depend
+passage and stops at the end of the last one. Every requested verse must have a
+positive-duration timing. All-zero verse timings identify an absent recording:
+the server books list does not always mark these in `chapters_without_audio`.
+A chapter with no timings, or a passage with only partial alignment, is
+unavailable for narration even if the API supplies an audio link: playing a timed subset would skip verses and give misleading
+highlighting. The card shows the unavailable label and disables Listen; the
+reader keeps its Listen control disabled with the same accessible label.
+The `scripture_audio_unavailable` diagnostic
+includes a cause (`catalog_chapter`, `catalog_book_missing`, `no_timings` or
+`partial_timings`) and the translation, voice, book and chapter identifiers.
+Malformed or duplicate verse entries are `invalid_response`, shown as an error
+and recorded as `scripture_audio_failed`; absence of a recording is not logged as playback failure. This state releases the prayer
+deadline. The narration state follows the native player (`lib/nativePlaybackStart.ts`): if it has not started two seconds
+after `play()` and is not buffering, or is still buffering after 15 seconds,
+narration shows an error and writes a `scripture_audio_failed` record with the
+reason and the native playback state; if the
+system pauses a started player, narration becomes paused. The text selection does not depend
 on that extra request; the offline snapshot stays available without audio
 controls. In the full reader the current verse is determined by the same timings
 and marked with a light dotted underline; during the pause between verses the
@@ -537,7 +698,13 @@ affect the reminders: `prayed_days` takes no part in the schedule.
 
 The notification permission is requested at the moment the user turns the
 reminders on themselves. A refusal leaves the toggle off and is shown on the
-settings screen as text; anything scheduled is removed. `SCHEDULE_EXACT_ALARM` is
+settings screen as text; anything scheduled is removed. A failed permission
+check, schedule save or system scheduling is not treated as "nothing to
+schedule": `syncRemindersAsync` rejects, `useReminderSyncStatus` keeps the
+result of the last sync (also the one on launch), the settings screen shows a
+warning under the toggle and in the editor, and a `reminders_failed` record is
+written. An unreadable saved schedule falls back to the default but shows its own
+warning and writes `reminder_schedule_invalid`. `SCHEDULE_EXACT_ALARM` is
 not requested, so the display time is approximate. The reminders use their own
 Android channel `prayer_reminders` and are marked with `content.data.kind`: the
 scheduler only cancels its own notifications and does not touch the ongoing
@@ -565,7 +732,10 @@ PIN length; the length is needed by the unlock screen to show the right number o
 dots and to validate the input on the last digit. The keys are written with
 `WHEN_UNLOCKED_THIS_DEVICE_ONLY` and excluded from Android Auto Backup. An
 incomplete record and a storage read error are treated as protection being off: a
-SecureStore failure must not cut the person off from their own data.
+SecureStore failure must not cut the person off from their own data. Every
+SecureStore failure writes a `secure_store_failed` record with the operation and
+the key name; a failed write or delete is not swallowed, so the lock state never
+changes in memory without the keys changing on the device.
 
 The gate is `components/LockGate.tsx`, a conditional overlay above the `Stack` in
 the root `app/_layout.tsx` rather than a separate route: an overlay cannot be
@@ -607,6 +777,14 @@ your PIN?" link performs a full wipe: `wipeLocalData` in `lib/db.ts` deletes the
 whole database file through `deleteDatabaseAsync` and removes the audio files of
 the recordings, while `wipeEverything` in `lib/lock.ts` additionally cancels the
 scheduled reminders, clears the SecureStore keys and resets the in-memory stores.
+It wipes data before changing secure keys or live stores. A data-wipe failure
+preserves protection and the lock screen for retry. After data deletion, settings
+and session stores are reset in `finally`; any key-delete failure keeps the
+in-memory lock enabled and locked, so "Forgot your PIN?" can be retried over
+empty data. Only deleting all keys successfully dismisses that lock screen.
+If the reminders cannot be cancelled, the wipe still completes (it is the only
+way past a forgotten PIN), then writes `wipe_incomplete` and tells the person to
+turn off the app's notifications in the system settings.
 The schema is recreated by the ordinary migration on the very next access to the
 database. Encrypting the data on disk is out of scope: the lock protects against
 someone else's eyes in an unlocked phone, not against reading the files around
@@ -629,7 +807,7 @@ created and filled in on open.
 | `scripture_books` | A local directory of book names per translation |
 | `favorites_legacy_backup` | A copy of the old favourites from before the migration |
 | `meta` | Settings and service values, including `prayer_reminders` - the reminder schedule as a single JSON value, and `prayer_minutes` - the duration of the last started prayer (0 = untimed), which `/setup` opens with; saved on the prayer start, so extending the timer does not change it; the default of 10 minutes applies until the first prayer |
-| `prayed_days` | The local calendar days of completed prayers, keyed by the prayer start; the streak is computed from them |
+| `prayed_days` | The local calendar days of prayers shown in the journal, keyed by prayer start, plus legacy days kept until a day-sync write finds no visible prayer that day (ADR-0042); the streak is computed from them |
 
 A quote is tied to a prayer through `scripture_favorites.session_id`, which is set
 at the moment it is saved. For records made before the column existed, the link is
@@ -656,21 +834,46 @@ in the local search. `getJournalDetail` checks that each file exists; a recordin
 without its file (an Android cloud restore, a file lost on iOS) keeps its row and
 transcript, is marked "Audio is not on this device", cannot be played or
 transcribed, and writes `recording_audio_missing` to `lampada-diagnostics.log`.
-Play checks the file again, and a player load error ends the playing state with
-a visible message and a `recording_playback_failed` record. Deleting a session deletes its answers and recordings, but
-does not change the historical day in the streak.
+Play checks the file again, and a player load error, or a player that has not
+started two seconds after `play()`, ends the playing state with a visible
+message and a `recording_playback_failed` record (`place`, `reason`); the same
+applies to drafts in the answer sheet. A journal or saved-passages read that
+fails shows a tappable error instead of an empty list (`journal_failed`,
+`favorites_load_failed`); a failed favourite write puts the heart back
+(`favorite_save_failed`); a local failure while choosing a passage ends in the
+block's error with Retry (`scripture_load_failed`) rather than an endless
+loading state; a failed privacy decision save keeps the dialog open with an
+error (`consent_save_failed`). Deleting a session deletes its answers and recordings.
+
+A session is shown in the journal when it has saved time, a takeaway, a non-empty
+answer or a recording. This one predicate in `lib/db.ts` both filters the journal
+and decides the streak: a day is in `prayed_days` while the journal has a prayer
+started on that local day (ADR-0042). Every write that can change a session's
+visibility (an answer save, a time checkpoint, completion, deletion) brings the
+day of the session's start in line in the same transaction. The day comes from
+`dayKey(new Date(started_at))`, the same local-day function the calendar uses.
+Deleting the last journal prayer of a day removes the day; a prayer of the same
+day that stays keeps it. A one-time migration adds the days of the journal
+sessions saved before this rule; days counted earlier without a journal session
+are kept.
 
 While answering, the text and the voice recordings are split between two sheets
 (ADR-0016). `AnswerSheet` holds the answer field, `RecordingsSheet` holds the
 audio files and their transcripts. Transcripts can be expanded or appended to
 the editable answer; they are removed together with their recording.
 On landscape tablets, the question scrolls in a separate column beside the
-answer field and actions. While typing, the voice hint is hidden and the field
-uses the remaining height above the keyboard.
+answer field and actions. While typing, the field uses the remaining height
+above the keyboard.
 Within the recordings sheet, pausing retains the loaded audio and its progress;
 Play resumes that position. Switching recordings or replaying a completed one
 starts from the beginning. Closing the sheet clears the paused selection.
 The recording overlay appears once the native recorder confirms `isRecording`.
+The overlay measures its Gorhom scroll viewport and text; its content padding
+comes from the same styles used to render it. Roomy sheets keep `sc(24)` gaps and
+the `sc(48)` wave; short sheets reduce the gaps to `sc(8)`, then the wave to
+`sc(24)`. If the text still needs more room, `BottomSheetScrollView` scrolls it
+within the body above the footer, including on Android
+(`lib/recordingOverlayGeometry.ts`).
 Its elapsed time (m:ss) polls the recorder's native `durationMillis` every 250 ms.
 The saved duration comes from the same clock and is also floored to whole seconds.
 VoiceOver reads the elapsed time as the value of the Stop button and does not
@@ -962,6 +1165,7 @@ after a successful serialized write. The initial choice follows the first
 supported device language, with English as fallback. React screens and overlays
 subscribe through `useI18n`; library messages use `translate`. Bundled catalogs
 include accessibility, privacy, errors, dates and reminder copy.
+The interface addresses the user informally: Russian «ты», Ukrainian «ти».
 
 Changing the interface language reschedules system-held reminder text without
 altering the saved schedule. Timer labels are passed into native rendering.

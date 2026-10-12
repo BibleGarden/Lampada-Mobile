@@ -1,6 +1,6 @@
 import { useI18n, pluralCategory } from '../lib/i18n';
 import React, { useCallback, useEffect, useState } from 'react';
-import { AccessibilityInfo, AppState, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, AppState, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, NotebookText, Settings2 } from 'lucide-react-native';
@@ -10,8 +10,9 @@ import { GoldButton, IconButton } from '../components/ui';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { startHomeRefresh } from '../lib/homeRefresh';
+import { fitFlameWidth } from '../lib/flameGeometry';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
-import { colors, column, fonts, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, sc, screenGutter, useStyles } from '../lib/theme';
 
 const greetingByHour = (t: ReturnType<typeof useI18n>['t']) => {
   const h = new Date().getHours();
@@ -33,6 +34,13 @@ export default function Home() {
   const { prayerSaved } = useLocalSearchParams<{ prayerSaved?: string }>();
   const [showSavedNotice, setShowSavedNotice] = useState(false);
   const visible = useVisibleScreen();
+  // Высоты центрального блока и подписей под огоньком: на низком окне
+  // огонёк уменьшается до свободного места, иначе блок переполняется
+  // и подписи наезжают на кнопку. Размер самого огонька не измеряем.
+  const [centerHeight, setCenterHeight] = useState<number>();
+  const [captionsHeight, setCaptionsHeight] = useState<number>();
+  const onCenterLayout = (e: LayoutChangeEvent) => setCenterHeight(e.nativeEvent.layout.height);
+  const onCaptionsLayout = (e: LayoutChangeEvent) => setCaptionsHeight(e.nativeEvent.layout.height);
 
   useEffect(() => {
     if (prayerSaved !== '1') return;
@@ -70,6 +78,10 @@ export default function Home() {
   const streakLine = weekDays > 0
     ? t(`screens.home.week.${pluralCategory(language, weekDays)}`, { count: weekDays })
     : '';
+
+  const flameWidth = centerHeight === undefined || captionsHeight === undefined
+    ? sc(240)
+    : fitFlameWidth(sc(240), centerHeight - captionsHeight - styles.center.gap);
 
   return (
     <View style={styles.root}>
@@ -111,37 +123,44 @@ export default function Home() {
           </View>
         </View>
 
-        <View style={styles.center}>
+        <View style={styles.center} onLayout={onCenterLayout}>
           {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
               после — в полную силу: «поддержи» обретает буквальный смысл */}
-          <Flame width={sc(240)} lit={streak.prayedToday} />
-          <Text
-            style={styles.title}
-            testID={streak.prayedToday ? 'home-title-lit' : 'home-title'}
-          >
-            {streak.prayedToday ? t('screens.home.lit') : t('screens.home.keepFlame')}
-          </Text>
-          <View style={styles.dotsRow}>
-            {dots.map((kind, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  kind === 'filled' && styles.dotFilled,
-                  kind === 'today' && styles.dotToday,
-                ]}
-              />
-            ))}
+          <Flame width={flameWidth} lit={streak.prayedToday} />
+          <View style={styles.captions} onLayout={onCaptionsLayout}>
+            <Text
+              style={styles.title}
+              testID={streak.prayedToday ? 'home-title-lit' : 'home-title'}
+            >
+              {streak.prayedToday ? t('screens.home.lit') : t('screens.home.keepFlame')}
+            </Text>
+            <View style={styles.dotsRow}>
+              {dots.map((kind, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.dot,
+                    kind === 'filled' && styles.dotFilled,
+                    kind === 'today' && styles.dotToday,
+                  ]}
+                />
+              ))}
+            </View>
+            <Text
+              key={showSavedNotice ? 'saved-notice' : 'streak-caption'}
+              style={styles.streakLabel}
+              numberOfLines={1}
+              testID={showSavedNotice ? 'prayer-saved-notice' : 'home-streak-line'}
+              accessible={showSavedNotice || !!streakLine}
+              importantForAccessibility={showSavedNotice || streakLine ? 'auto' : 'no'}
+              accessibilityElementsHidden={!showSavedNotice && !streakLine}
+            >
+              {showSavedNotice ? t('screens.home.prayerSaved') : streakLine || ' '}
+            </Text>
           </View>
-          {!!streakLine && <Text style={styles.streakLabel}>{streakLine}</Text>}
         </View>
 
-        <View style={[styles.bottom, { paddingBottom: insets.bottom + sc(24) }]}>
-          {showSavedNotice && (
-            <Text style={styles.savedNotice} testID="prayer-saved-notice">
-              {t('screens.home.prayerSaved')}
-            </Text>
-          )}
+        <View style={[styles.bottom, { paddingBottom: bottomActionPadding(insets.bottom) }]}>
           <GoldButton label={t('screens.home.start')} testID="start-prayer-button" onPress={() => router.navigate('/setup')} />
         </View>
       </View>
@@ -154,8 +173,8 @@ const stylesFactory = () => StyleSheet.create({
   screen: { flex: 1, ...column() },
   top: {
     position: 'absolute',
-    left: sc(18),
-    right: sc(18),
+    left: screenGutter(),
+    right: screenGutter(),
     zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -173,8 +192,13 @@ const stylesFactory = () => StyleSheet.create({
   },
   center: {
     flex: 1,
+    minHeight: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: sc(8),
+  },
+  captions: {
+    alignItems: 'center',
     gap: sc(8),
   },
   title: {
@@ -209,6 +233,7 @@ const stylesFactory = () => StyleSheet.create({
   streakLabel: {
     fontFamily: fonts.mono,
     fontSize: sc(11),
+    lineHeight: sc(16),
     color: colors.labelGold,
     marginTop: sc(4),
   },
@@ -216,14 +241,6 @@ const stylesFactory = () => StyleSheet.create({
   // получать оставшуюся высоту, иначе на низком окне огонёк с подписями
   // центрируется по всему экрану и наезжает на кнопку.
   bottom: {
-    paddingHorizontal: sc(18),
-  },
-  savedNotice: {
-    marginBottom: sc(12),
-    fontFamily: fonts.sans,
-    fontSize: sc(13),
-    lineHeight: sc(18),
-    textAlign: 'center',
-    color: colors.goldSoft,
+    paddingHorizontal: screenGutter(),
   },
 });

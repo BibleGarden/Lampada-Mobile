@@ -1,6 +1,6 @@
 import { useI18n } from '../lib/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Animated, {
   Easing,
@@ -16,11 +16,14 @@ import { RecordingDraft, fmtTime } from '../lib/store';
 import { recordedSeconds } from '../lib/recordingFile';
 import { recordingSecondsRemaining } from '../lib/transcriptionLimits';
 import { transcriptionErrorMessageKey } from '../lib/transcriptionErrors';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { fitRecordingOverlay } from '../lib/recordingOverlayGeometry';
+import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ChevronDown, Mic, PlayIcon, PauseIcon, TextLines, Trash } from './icons';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 import KeyboardSheet, { KeyboardSheetBody } from './keyboard/KeyboardSheet';
+import QuestionHeader from './QuestionHeader';
+import { GoldButton } from './ui';
 
 // Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
 // нативный слой, поэтому «Показать полностью» вешаем по длине текста:
@@ -35,6 +38,8 @@ const SLOW_TRANSCRIPTION_MILLIS = 4_000;
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
   visible: boolean;
+  /** Вопрос ответа: шторка записей закрывает его в шторке ответа. */
+  question: string;
   recordings: RecordingDraft[];
   /** Идёт запись: поверх списка показывается оверлей с волной. */
   recording: boolean;
@@ -70,6 +75,7 @@ type Props = {
 export default function RecordingsSheet({
   sheetRef,
   visible,
+  question,
   recordings,
   recording,
   recordingPhase,
@@ -98,6 +104,20 @@ export default function RecordingsSheet({
   const recordingPending = recordingPhase === 'starting' || recordingPhase === 'stopping';
   const recordingBusy = recordingPhase !== 'idle';
   const [stopReady, setStopReady] = useState(false);
+  const [overlaySizes, setOverlaySizes] = useState({ viewport: 0, kicker: 0, elapsed: 0, hint: 0, error: 0 });
+  const measureOverlay = (part: keyof typeof overlaySizes) => (event: LayoutChangeEvent) => {
+    const height = event.nativeEvent.layout.height;
+    setOverlaySizes((current) => current[part] === height ? current : { ...current, [part]: height });
+  };
+  const overlayFit = overlaySizes.viewport === 0 ? { gap: sc(24), waveHeight: sc(48) } : fitRecordingOverlay(
+    overlaySizes.viewport - styles.recOverlayContent.paddingVertical * 2,
+    overlaySizes.kicker + overlaySizes.elapsed + overlaySizes.hint + (limitError ? overlaySizes.error : 0),
+    limitError ? 4 : 3,
+    sc(24),
+    sc(8),
+    sc(48),
+    sc(24),
+  );
 
   useEffect(() => {
     if (!recording) {
@@ -173,53 +193,44 @@ export default function RecordingsSheet({
   );
 
   const actions = recording ? (
-    <Pressable
+    // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
+    // и полупрозрачное «готово» выглядело как незапущенная запись.
+    <GoldButton
+      compact
+      label={recordingPhase === 'stopping' ? t('components.answers.saving') : t('components.answers.done')}
       accessibilityLabel={t('components.answers.stop')}
-      accessibilityRole="button"
       accessibilityValue={{ text: elapsedLabel }}
       testID="recordings-stop-button"
       disabled={stopDisabled}
       onPress={onStopRecording}
-      // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
-      // и полупрозрачное «готово» выглядело как незапущенная запись.
+    />
+  ) : (
+    <Pressable
+      accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
+      accessibilityRole="button"
+      testID="recordings-record-button"
+      disabled={recordingBusy}
+      onPress={() => {
+        // Reset synchronously before the overlay replaces this button,
+        // so the second physical tap cannot stop the new recording.
+        setStopReady(false);
+        onStartRecording();
+      }}
       style={({ pressed }) => [
-        styles.recDoneBtn,
-        pressed && !stopDisabled && { transform: [{ scale: 0.97 }] },
+        styles.recordBtn,
+        recordingBusy && { opacity: 0.5 },
+        pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
       ]}
     >
-      <Text style={styles.recDoneLabel}>
-        {recordingPhase === 'stopping' ? t('components.answers.savingLower') : t('components.answers.done')}
+      <Mic size={sc(16)} color={colors.greenSoft} />
+      <Text style={styles.recordLabel}>
+        {recordingPhase === 'starting'
+          ? t('components.answers.preparing')
+          : recordings.length
+            ? t('components.answers.recordMore')
+            : t('components.answers.record')}
       </Text>
     </Pressable>
-  ) : (
-    <View style={styles.actionsRow}>
-      <Pressable
-        accessibilityLabel={recordings.length ? t('components.answers.recordMore') : t('components.answers.record')}
-        accessibilityRole="button"
-        testID="recordings-record-button"
-        disabled={recordingBusy}
-        onPress={() => {
-          // Reset synchronously before the overlay replaces this button,
-          // so the second physical tap cannot stop the new recording.
-          setStopReady(false);
-          onStartRecording();
-        }}
-        style={({ pressed }) => [
-          styles.recordBtn,
-          recordingBusy && { opacity: 0.5 },
-          pressed && !recordingBusy && { transform: [{ scale: 0.97 }] },
-        ]}
-      >
-        <Mic size={sc(16)} color={colors.greenSoft} />
-        <Text style={styles.recordLabel}>
-          {recordingPhase === 'starting'
-            ? t('components.answers.preparing')
-            : recordings.length
-              ? t('components.answers.recordMore')
-              : t('components.answers.record')}
-        </Text>
-      </Pressable>
-    </View>
   );
 
   return (
@@ -239,21 +250,26 @@ export default function RecordingsSheet({
       backdropComponent={renderBackdrop}
       handleComponent={renderHandle}
       topInset={insets.top}
-      backgroundStyle={styles.sheetBg}
+      // Во время записи вся шторка — цвет оверлея: вопрос над ним и footer
+      // под ним не выделяются отдельными карточками.
+      backgroundStyle={recording ? styles.sheetBgRecording : styles.sheetBg}
       accessibilityModal={visible}
       onAccessibilityEscape={() => {
         if (!recordingBusy) sheetRef.current?.close();
       }}
       footer={actions}
       footerHidden={!visible}
-      footerStyle={recording ? styles.recordingFooter : undefined}
     >
       {/* закрытая шторка уехала за край, но без пометки осталась бы в обходе */}
       <KeyboardSheetBody
         scrollable={false}
-        style={styles.sheetBody}
         {...screenReaderHiddenProps(!visible)}
       >
+      <View style={styles.questionWrap}>
+        <QuestionHeader question={question} testID="recordings-question" />
+      </View>
+      {/* Оверлей записи закрывает список, но не вопрос: на него и отвечают голосом. */}
+      <View style={styles.stage}>
       <View style={styles.content} {...screenReaderHiddenProps(recording)}>
         <View style={styles.header}>
           <Text style={styles.kicker}>
@@ -275,6 +291,7 @@ export default function RecordingsSheet({
         <BottomSheetScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          fadingEdgeLength={sc(24)}
         >
           {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
 
@@ -431,11 +448,20 @@ export default function RecordingsSheet({
       {/* оверлей записи — как listening overlay в прототипе */}
       {recording && (
         <View style={styles.recOverlay}>
-          <View style={styles.recOverlayContent}>
-            <Text style={styles.recOverlayKicker}>{t('components.answers.recording')}</Text>
-            <View style={styles.waveRow}>
+          <BottomSheetScrollView
+            style={styles.recOverlayScroll}
+            contentContainerStyle={[styles.recOverlayContent, { gap: overlayFit.gap }]}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            nestedScrollEnabled
+            onLayout={measureOverlay('viewport')}
+          >
+            <Text style={styles.recOverlayKicker} onLayout={measureOverlay('kicker')}>
+              {t('components.answers.recording')}
+            </Text>
+            <View style={[styles.waveRow, { height: overlayFit.waveHeight }]}>
               {WAVE_BARS.map((b, i) => (
-                <WaveBar key={i} color={b.color} delay={b.delay} active={visible && screenVisible} />
+                <WaveBar key={i} color={b.color} delay={b.delay} active={visible && screenVisible} height={overlayFit.waveHeight} />
               ))}
             </View>
             {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
@@ -445,24 +471,31 @@ export default function RecordingsSheet({
                 : timeLabel}
               style={[styles.recElapsed, remainingSeconds !== null && styles.recElapsedWarning]}
               testID="recording-elapsed"
+              onLayout={measureOverlay('elapsed')}
             >
               {timeLabel}
             </Text>
-            <Text style={styles.recOverlayHint}>{t('components.answers.speakHint')}</Text>
+            <Text style={styles.recOverlayHint} onLayout={measureOverlay('hint')}>
+              {t('components.answers.speakHint')}
+            </Text>
             {limitError && (
-              <Text style={styles.recOverlayError} testID="recording-limit-error">
+              <Text style={styles.recOverlayError} testID="recording-limit-error" onLayout={measureOverlay('error')}>
                 {t(limitError)}
               </Text>
             )}
-          </View>
+          </BottomSheetScrollView>
         </View>
       )}
+      </View>
       </KeyboardSheetBody>
     </KeyboardSheet>
   );
 }
 
 const SNAP_POINTS = ['78%'];
+// Прежний оверлей rgba(18,12,7,.97) поверх фона шторки, без прозрачности.
+const RECORDING_BACKGROUND = '#120c07';
+const SHEET_BORDER = 1;
 
 const WAVE_BARS = [
   { color: '#d68a2e', delay: 0 },
@@ -498,7 +531,7 @@ function SlowTranscriptionHint({ index, onShown }: { index: number; onShown: () 
 }
 
 // столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
-function WaveBar({ color, delay, active }: { color: string; delay: number; active: boolean }) {
+function WaveBar({ color, delay, active, height }: { color: string; delay: number; active: boolean; height: number }) {
   const styles = useStyles(stylesFactory);
   const k = useSharedValue(0.3);
   useEffect(() => {
@@ -512,18 +545,20 @@ function WaveBar({ color, delay, active }: { color: string; delay: number; activ
     return () => cancelAnimation(k);
   }, [delay, k, active]);
   const style = useAnimatedStyle(() => ({ transform: [{ scaleY: k.value }] }));
-  return <Animated.View style={[styles.waveBar, { backgroundColor: color }, style]} />;
+  return <Animated.View style={[styles.waveBar, { backgroundColor: color, height }, style]} />;
 }
 
 const stylesFactory = () => StyleSheet.create({
-  recordingFooter: { backgroundColor: 'rgba(18,12,7,.97)' },
-  sheetBody: {
-    flex: 1,
-  },
   sheetBg: {
     backgroundColor: '#1d1710',
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: SHEET_BORDER,
+    borderColor: colors.white08,
+  },
+  sheetBgRecording: {
+    backgroundColor: RECORDING_BACKGROUND,
+    borderRadius: radius.md,
+    borderWidth: SHEET_BORDER,
     borderColor: colors.white08,
   },
   handleWrap: {
@@ -538,10 +573,18 @@ const stylesFactory = () => StyleSheet.create({
     borderRadius: sc(2),
   },
   // ADR-0012: колонка держит меру строки и на планшете
+  questionWrap: {
+    ...column(),
+    paddingHorizontal: screenGutter(),
+  },
+  stage: {
+    flex: 1,
+    minHeight: 0,
+  },
   content: {
     ...column(),
     flex: 1,
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
   },
   header: {
     flexDirection: 'row',
@@ -567,7 +610,7 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: sc(8),
+    paddingBottom: sc(24),
   },
   emptyHint: {
     marginTop: sc(28),
@@ -713,9 +756,6 @@ const stylesFactory = () => StyleSheet.create({
     letterSpacing: sc(0.9),
     color: colors.greenSoft,
   },
-  actionsRow: {
-    paddingTop: sc(10),
-  },
   recordBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -732,25 +772,27 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(13.5),
     color: colors.creamBright,
   },
+  // Оверлей прячет список, но не рамку шторки: боковые рамки идут до низа.
   recOverlay: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
+    left: SHEET_BORDER,
+    right: SHEET_BORDER,
     bottom: 0,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(18,12,7,.97)',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: RECORDING_BACKGROUND,
     paddingTop: sc(28),
+  },
+  recOverlayScroll: {
+    flex: 1,
+    alignSelf: 'stretch',
   },
   // Оверлей всегда во всю высоту шторки: блок с волной центрируем, иначе он
   // висит у верхнего края, а до кнопки «готово» тянется пустая полоса.
   recOverlayContent: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: sc(24),
+    paddingVertical: sc(4),
   },
   recOverlayKicker: {
     fontFamily: fonts.sans,
@@ -796,18 +838,5 @@ const stylesFactory = () => StyleSheet.create({
     color: '#ec9b8e',
     textAlign: 'center',
     paddingHorizontal: sc(24),
-  },
-  recDoneBtn: {
-    paddingVertical: sc(12),
-    paddingHorizontal: sc(30),
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(230,162,60,.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(230,162,60,.42)',
-  },
-  recDoneLabel: {
-    fontFamily: fonts.sansMedium,
-    fontSize: sc(14),
-    color: colors.creamBright,
   },
 });

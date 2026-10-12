@@ -5,6 +5,7 @@ import { Stack, router, usePathname } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationBar } from 'expo-navigation-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 import { useFonts } from 'expo-font';
@@ -32,6 +33,7 @@ import BootSplash from '../components/BootSplash';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { ScreenUncoveredContext } from '../lib/useVisibleScreen';
 import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
+import { errorKind, recordDiagnostic } from '../lib/db';
 import KeyboardSystemProvider from '../components/keyboard/KeyboardSystemProvider';
 
 // Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
@@ -84,7 +86,12 @@ export default function RootLayout() {
 
   // При смене языка заменяем уже сохранённый в системе текст напоминаний.
   useEffect(() => {
-    if (settingsLoaded) void syncRemindersAsync(useSettings.getState().reminderSchedule);
+    if (!settingsLoaded) return;
+    syncRemindersAsync(useSettings.getState().reminderSchedule).catch((error: unknown) => {
+      // Экрана здесь нет: предупреждение покажут настройки (useReminderSyncStatus).
+      console.error('Failed to schedule prayer reminders', errorKind(error));
+      recordDiagnostic('reminders_failed', { step: 'sync', place: 'startup', errorKind: errorKind(error) });
+    });
   }, [settingsLoaded, uiLanguage]);
 
   // Состояние блокировки читается отдельно от настроек и раньше них: пока оно
@@ -134,6 +141,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <KeyboardSystemProvider>
         <StatusBar style="light" />
+        <NavigationBar style="light" />
         {ready && <AppContent covered={covered} />}
         {!bootSplashHidden && (
           <BootSplash onFlameLoaded={hideNativeSplash} done={ready} onHidden={hideBootSplash} />

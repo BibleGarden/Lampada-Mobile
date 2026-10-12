@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { wipeLocalData } from './db';
+import { errorKind, recordDiagnostic, wipeLocalData } from './db';
 import { cancelRemindersAsync } from './prayerReminderScheduler';
 import { resetSettingsStore } from './settings';
 import { resetSessionStore } from './store';
@@ -69,29 +69,47 @@ const toHex = (bytes: Uint8Array) =>
 const hashPin = (salt: string, pin: string) =>
   Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${salt}:${pin}`);
 
+type SecureOperation = 'read' | 'write' | 'delete';
+
+/** В диагностику попадают имя ключа и вид ошибки, но не значения. */
+const reportSecureFailure = (operation: SecureOperation, key: string, error: unknown) => {
+  console.warn('SecureStore operation failed', operation, key, errorKind(error));
+  recordDiagnostic('secure_store_failed', { operation, key, errorKind: errorKind(error) });
+};
+
 // Чтение защищённого хранилища не должно ронять приложение: на платформе без
 // SecureStore (web) и при повреждённой записи блокировка просто считается
 // выключенной — иначе пользователь остался бы без доступа к своим данным.
 const readSecure = async (key: string): Promise<string | null> => {
   try {
     return await SecureStore.getItemAsync(key);
-  } catch {
+  } catch (error) {
+    reportSecureFailure('read', key, error);
     return null;
   }
 };
 
-const writeSecure = (key: string, value: string) =>
-  SecureStore.setItemAsync(key, value, {
-    // Ключи не должны уезжать в резервную копию и на другое устройство:
-    // блокировка — свойство именно этой установки.
-    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-  });
+const writeSecure = async (key: string, value: string) => {
+  try {
+    await SecureStore.setItemAsync(key, value, {
+      // Ключи не должны уезжать в резервную копию и на другое устройство:
+      // блокировка — свойство именно этой установки.
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+  } catch (error) {
+    reportSecureFailure('write', key, error);
+    throw error;
+  }
+};
 
+// Отсутствующий ключ SecureStore удаляет без ошибки, поэтому любой сбой здесь
+// настоящий: ключ защиты остался бы на устройстве при выключенной защите.
 const deleteSecure = async (key: string) => {
   try {
     await SecureStore.deleteItemAsync(key);
-  } catch {
-    // Отсутствующий ключ — не ошибка: цель вызова уже достигнута.
+  } catch (error) {
+    reportSecureFailure('delete', key, error);
+    throw error;
   }
 };
 
@@ -200,7 +218,10 @@ export async function biometryInfo(): Promise<BiometryInfo> {
       LocalAuthentication.supportedAuthenticationTypesAsync(),
     ]);
     return { available: hardware && enrolled, kind: biometryKind(Platform.OS, types) };
-  } catch {
+  } catch (error) {
+    // Без ответа системы биометрию не предлагаем, но след остаётся.
+    console.warn('Biometry check failed', errorKind(error));
+    recordDiagnostic('biometry_check_failed', { errorKind: errorKind(error) });
     return { available: false, kind: 'other' };
   }
 }
@@ -274,28 +295,56 @@ export async function authenticateWithBiometrics(
 
 // ---- полное стирание ----
 
+export type WipeResult = { remindersCancelled: boolean };
+
 /**
  * Сброс забытого пина. Восстановить код нельзя, поэтому единственный выход —
  * стереть всё: дневник, аудиозаписи, избранное, настройки и сами ключи защиты.
  * Экран вызывает это только после двух явных подтверждений.
+ *
+ * Сбой снятия системных напоминаний не останавливает стирание (иначе забытый
+ * пин нельзя было бы сбросить вовсе), но возвращается экрану, чтобы человек
+ * узнал о неполном стирании.
  */
-export async function wipeEverything(): Promise<void> {
+export async function wipeEverything(): Promise<WipeResult> {
+  // Сбой удаления данных не меняет ни ключи, ни живые состояния защиты.
+  await wipeLocalData();
   // Расписание напоминаний живёт в системе, а не только в базе: не сняв его,
   // приложение продолжало бы напоминать по стёртому расписанию.
-  await cancelRemindersAsync().catch(() => undefined);
-  await wipeLocalData();
-  await Promise.all(ALL_KEYS.map(deleteSecure));
-  resetSettingsStore();
-  resetSessionStore();
-  useLock.setState({
-    ready: true,
-    enabled: false,
-    biometrics: false,
-    locked: false,
-    obscured: false,
-    backgroundedAt: null,
-    pinLength: FALLBACK_PIN_LENGTH,
-  });
+  let remindersError: unknown = null;
+  let remindersCancelled = true;
+  let keysDeleted = false;
+  try {
+    try {
+      await cancelRemindersAsync();
+    } catch (error) {
+      remindersCancelled = false;
+      remindersError = error;
+    }
+    if (!remindersCancelled) {
+      // Пишем после wipeLocalData: стирание удаляет и диагностический лог.
+      console.error('Wipe could not cancel prayer reminders', errorKind(remindersError));
+      recordDiagnostic('wipe_incomplete', { step: 'reminders', errorKind: errorKind(remindersError) });
+    }
+    await Promise.all(ALL_KEYS.map(deleteSecure));
+    keysDeleted = true;
+  } finally {
+    // Даже если SecureStore не удалил ключ, память не должна ссылаться на
+    // уже стёртые сессии и согласия. LockGate остаётся до успешного удаления
+    // всех ключей: из него можно повторить «Забыли PIN?» над пустыми данными.
+    resetSettingsStore();
+    resetSessionStore();
+    useLock.setState({
+      ready: true,
+      enabled: !keysDeleted,
+      biometrics: false,
+      locked: !keysDeleted,
+      obscured: false,
+      backgroundedAt: null,
+      pinLength: FALLBACK_PIN_LENGTH,
+    });
+  }
+  return { remindersCancelled };
 }
 
 // ---- состояние экрана блокировки ----

@@ -11,9 +11,10 @@ import { Code, ExternalLink, Globe, Mail, Send } from 'lucide-react-native';
 import { fetchAboutContacts, type AboutContact } from '../lib/aboutClient';
 import { apiBaseUrl } from '../lib/apiConfig';
 import ScreenBg from '../components/ScreenBg';
-import { IconButton, Kicker } from '../components/ui';
-import { Book, ChevronLeft } from '../components/icons';
-import { colors, column, fonts, radius, sc, useStyles } from '../lib/theme';
+import { Kicker } from '../components/ui';
+import { Book } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
+import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 
 const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = (Constants.executionEnvironment === 'storeClient'
@@ -46,22 +47,15 @@ export default function About() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton
-            accessibilityLabel={t('settings.back')}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          >
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker>{t('screens.about.title')}</Kicker>
-          <View style={styles.topSpacer} />
+          <ScreenHeader title={t('screens.about.title')} backLabel={t('settings.back')} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
 
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
             paddingTop: sc(26),
-            paddingHorizontal: sc(12),
-            paddingBottom: insets.bottom + sc(28),
+            paddingHorizontal: screenGutter(),
+            paddingBottom: bottomActionPadding(insets.bottom),
           }}
         >
           <Kicker style={styles.sectionKicker}>{t('screens.about.lampada')}</Kicker>
@@ -155,10 +149,8 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080604' },
   screen: { flex: 1, ...column() },
   top: {
-    paddingHorizontal: sc(12),
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: screenGutter(),
   },
-  topSpacer: { width: sc(34), height: sc(34) },
   sectionKicker: { marginBottom: sc(8), marginLeft: sc(4) },
   sectionGap: { marginTop: sc(22) },
   card: {

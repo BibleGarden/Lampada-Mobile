@@ -24,33 +24,33 @@ step() { echo "== $1"; }
 
 step "UPDATE soft"
 control '{"version":{"update_type":"soft","latest_version":"9.9.9","store_url":"https://example.com/lampada","message":{"ru":"Доступно обновление. Обнови, пожалуйста.","en":"Update available.","uk":"Доступне оновлення."}}}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-update-soft.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-update-soft.yaml
 
 step "UPDATE hard"
 control '{"version":{"update_type":"hard","latest_version":"9.9.9","store_url":"https://example.com/lampada","message":{"ru":"Обнови Лампаду, чтобы продолжить.","en":"Update required.","uk":"Онови застосунок."}}}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-update-hard.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-update-hard.yaml
 control '{"version":{"update_type":"none","latest_version":"1.0.23","message":null}}'
 
 step "JRN-010/011: транскрипция успешна"
 control '{"transcription":"ok"}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-010-011-transcribe.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-010-011-transcribe.yaml
 
 step "JRN-012a: ошибка транскрипции"
 control '{"transcription":"fail"}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-012a-transcription-error.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-012a-transcription-error.yaml
 
 step "JRN-012b: повтор сохраняет текст"
 control '{"transcription":"ok"}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-012b-transcription-retry.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-012b-transcription-retry.yaml
 
 step "JRN-013a: закрытие во время расшифровки"
 control '{"transcription":"delay"}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-013a-close-during.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-013a-close-during.yaml
 
 step "JRN-013b: удаление во время расшифровки"
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-013b-delete-during.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-jrn-013b-delete-during.yaml
 step "ANS-013: подсказка и сохранение во время расшифровки"
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage04-ans-013-save-in-flight.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage04-ans-013-save-in-flight.yaml
 control '{"transcription":"ok"}'
 
 step "Проверка БД: осиротевшие записи отсутствуют"
@@ -61,33 +61,33 @@ echo "OK: осиротевших записей нет"
 
 step "AI-late: ответ ИИ с задержкой"
 control '{"questionDelayMs":15000}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage05-ai-late-stub.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage05-ai-late-stub.yaml
 control '{"questionDelayMs":0}'
 
 step "SCR-001: навигация по отрывкам"
 control '{"resetScripture":true}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage06-scr-001-navigation.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage06-scr-001-navigation.yaml
 
 step "SCR-002a/b: избранное переживает перезапуск"
 control '{"resetScripture":true}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage06-scr-002a-favorite-relaunch.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage06-scr-002a-favorite-relaunch.yaml
 control '{"resetScripture":true}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage06-scr-002b-favorite-relaunch.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage06-scr-002b-favorite-relaunch.yaml
 
 step "Legacy-избранное: миграция"
 bash testing/e2e/seed-legacy-favorites.sh
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-scripture-legacy-favorites.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-scripture-legacy-favorites.yaml
 
 step "STG: ошибка входа через хук и живой повтор"
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage03-start-sqlite-lock.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-stage03-start-sqlite-lock.yaml
 
 step "RPT-001/002: жалобы на вопрос и отрывок"
 control '{"contentReports":"ok"}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-rpt-001-002.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-rpt-001-002.yaml
 
 step "RPT-003: сбой и повтор (fail-once)"
 control '{"contentReports":"fail-once"}'
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-rpt-003.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-rpt-003.yaml
 control '{"contentReports":"ok"}'
 
 echo "== Stub-фаза завершена. Доказательства: $EVIDENCE"

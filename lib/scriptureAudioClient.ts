@@ -7,6 +7,18 @@ import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
 const SCRIPTURE_API_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 
+export type ScriptureAudioUnavailableCause =
+  | 'catalog_chapter' | 'catalog_book_missing' | 'no_timings' | 'partial_timings';
+
+export class ScriptureAudioUnavailableError extends Error {
+  readonly cause: ScriptureAudioUnavailableCause;
+
+  constructor(cause: ScriptureAudioUnavailableCause) {
+    super('audio_unavailable');
+    this.cause = cause;
+  }
+}
+
 export type ScriptureAudioClip = {
   url: string;
   startSeconds: number;
@@ -71,11 +83,13 @@ async function getBookAlias(
   const book = body.find(
     (item) => isObject(item) && item.book_number === bookNumber && typeof item.alias === 'string',
   );
-  if (!isObject(book) || typeof book.alias !== 'string') throw new Error('audio_unavailable');
+  if (!isObject(book) || typeof book.alias !== 'string') {
+    throw new ScriptureAudioUnavailableError('catalog_book_missing');
+  }
   if (
     Array.isArray(book.chapters_without_audio) &&
     book.chapters_without_audio.includes(chapterNumber)
-  ) throw new Error('audio_unavailable');
+  ) throw new ScriptureAudioUnavailableError('catalog_chapter');
   bookAliases.set(key, book.alias);
   return book.alias;
 }
@@ -128,15 +142,19 @@ export async function fetchScriptureAudioClip(
     throw new Error('invalid_response');
   }
   const verses: ScriptureAudioVerseTiming[] = [];
+  const numbers = new Set<number>();
   for (const verse of part.verses) {
     if (
       !isObject(verse) ||
-      typeof verse.number !== 'number' ||
+      typeof verse.number !== 'number' || !Number.isSafeInteger(verse.number) ||
       verse.number < passage.verse_start ||
       verse.number > passage.verse_end ||
       !isFiniteNumber(verse.begin) ||
-      !isFiniteNumber(verse.end)
-    ) continue;
+      !isFiniteNumber(verse.end) || verse.begin < 0 || verse.end < 0 ||
+      numbers.has(verse.number)
+    ) throw new Error('invalid_response');
+    numbers.add(verse.number);
+    if (verse.end <= verse.begin) continue;
     verses.push({
       number: verse.number,
       startSeconds: verse.begin,
@@ -144,13 +162,21 @@ export async function fetchScriptureAudioClip(
     });
   }
   verses.sort((left, right) => left.startSeconds - right.startSeconds);
+  // Нулевые тайминги означают отсутствие записи, даже с audio_link:
+  // каталог не всегда отмечает такие главы в chapters_without_audio.
+  // Частичная разметка обрезала бы отрывок и исказила подсветку стихов.
+  if (numbers.size !== passage.verse_end - passage.verse_start + 1) {
+    throw new Error('invalid_response');
+  }
+  if (verses.length !== numbers.size) {
+    throw new ScriptureAudioUnavailableError(verses.length === 0 ? 'no_timings' : 'partial_timings');
+  }
   const first = verses[0];
   const last = verses.at(-1);
   if (!first || !last) {
-    throw new Error('audio_unavailable');
+    throw new Error('invalid_response');
   }
   const startSeconds = Math.max(0, first.startSeconds - 0.2);
-  if (last.endSeconds <= startSeconds) throw new Error('invalid_response');
   return {
     url: publicAudioUrl(part.audio_link),
     startSeconds,

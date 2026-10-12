@@ -5,6 +5,16 @@ export const dayKey = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
+/**
+ * Границы локальных суток `YYYY-MM-DD` в формате `sessions.started_at`:
+ * [полночь, следующая полночь). Момент попадает в них ровно тогда, когда
+ * `dayKey` даёт этот день; сутки при DST длятся 23 или 25 часов.
+ */
+export const localDayBounds = (day: string): [string, string] => {
+  const [y, m, d] = day.split('-').map(Number);
+  return [new Date(y, m - 1, d).toISOString(), new Date(y, m - 1, d + 1).toISOString()];
+};
+
 /** Последние 7 дней: [0] — 6 дней назад, [6] — сегодня; true = молился */
 export async function getWeekIndicators(
   loadPrayedDays: (firstDay: string, lastDay: string) => Promise<string[]>,

@@ -1,3 +1,4 @@
+import { create } from 'zustand';
 import { translate } from './i18n';
 import { useSettings } from './settings';
 import { Platform } from 'react-native';
@@ -80,13 +81,13 @@ export async function ensureReminderChannelAsync(): Promise<void> {
   });
 }
 
-/** Текущее состояние разрешения без системного запроса. */
+/**
+ * Текущее состояние разрешения без системного запроса. Сбой системного вызова
+ * отклоняет промис: подменить его на «не спрашивали» значило бы снять
+ * напоминания у человека, который их разрешил.
+ */
 export async function reminderPermissionAsync(): Promise<ReminderPermission> {
-  try {
-    return readPermission(await Notifications.getPermissionsAsync());
-  } catch {
-    return 'undetermined';
-  }
+  return readPermission(await Notifications.getPermissionsAsync());
 }
 
 /**
@@ -94,19 +95,15 @@ export async function reminderPermissionAsync(): Promise<ReminderPermission> {
  * сам включает напоминания, а не при старте приложения.
  */
 export async function requestReminderPermissionAsync(): Promise<ReminderPermission> {
-  try {
-    await ensureReminderChannelAsync();
-    const current = await Notifications.getPermissionsAsync();
-    const status = readPermission(current);
-    if (status !== 'undetermined') return status;
-    return readPermission(
-      await Notifications.requestPermissionsAsync({
-        ios: { allowAlert: true, allowBadge: false, allowSound: true },
-      }),
-    );
-  } catch {
-    return 'undetermined';
-  }
+  await ensureReminderChannelAsync();
+  const current = await Notifications.getPermissionsAsync();
+  const status = readPermission(current);
+  if (status !== 'undetermined') return status;
+  return readPermission(
+    await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: false, allowSound: true },
+    }),
+  );
 }
 
 /** Снимает все ранее запланированные напоминания этого приложения. */
@@ -164,37 +161,41 @@ export async function rescheduleRemindersAsync(
  * Приводит состояние системы в соответствие с сохранённым расписанием.
  * Вызывается при каждом запуске приложения и после каждой правки расписания.
  * Разрешение здесь не запрашивается: без выданного разрешения планировать
- * нечего, и запланированное снимается.
+ * нечего, и запланированное снимается. Сбой системного планировщика отклоняет
+ * промис, чтобы его нельзя было спутать с «планировать нечего» (0).
  */
 async function synchronizeRemindersAsync(
   schedule: ReminderSchedule,
-  random: () => number = Math.random,
+  random: () => number,
 ): Promise<number> {
-  try {
-    if (!schedule.enabled) {
-      await cancelRemindersAsync();
-      return 0;
-    }
-    if ((await reminderPermissionAsync()) !== 'granted') {
-      await cancelRemindersAsync();
-      return 0;
-    }
-    return await rescheduleRemindersAsync(schedule, random);
-  } catch {
-    // Напоминания — вспомогательная функция: сбой планирования не должен
-    // ломать запуск приложения или экран настроек.
+  if (!schedule.enabled || (await reminderPermissionAsync()) !== 'granted') {
+    await cancelRemindersAsync();
     return 0;
   }
+  return rescheduleRemindersAsync(schedule, random);
 }
+
+/**
+ * Итог последней синхронизации с системой. Синхронизация идёт и без экрана
+ * (при запуске), поэтому её сбой хранится здесь и показывается в настройках.
+ */
+export const useReminderSyncStatus = create<{ failed: boolean }>(() => ({ failed: false }));
 
 let syncOperation: Promise<number> = Promise.resolve(0);
 export function syncRemindersAsync(
   schedule: ReminderSchedule,
   random: () => number = Math.random,
 ): Promise<number> {
-  syncOperation = syncOperation.then(
-    () => synchronizeRemindersAsync(schedule, random),
-    () => synchronizeRemindersAsync(schedule, random),
+  const run = () => synchronizeRemindersAsync(schedule, random).then(
+    (count) => {
+      useReminderSyncStatus.setState({ failed: false });
+      return count;
+    },
+    (error: unknown) => {
+      useReminderSyncStatus.setState({ failed: true });
+      throw error;
+    },
   );
+  syncOperation = syncOperation.then(run, run);
   return syncOperation;
 }

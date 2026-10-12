@@ -21,13 +21,12 @@ import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
-  setIsAudioActiveAsync,
   useAudioPlayer,
   useAudioPlayerStatus,
   useAudioRecorder,
 } from 'expo-audio';
 import { useSession, RecordingDraft } from '../lib/store';
-import { transcribeRecording } from '../lib/transcription';
+import { reportTranscriptionFailure, transcribeRecording } from '../lib/transcription';
 import { audioFileDurationSeconds } from '../lib/audioFileDuration';
 import { MAX_RECORDING_SECONDS, recordingLimitDisplay } from '../lib/transcriptionLimits';
 import { useRecordingLimit } from '../lib/useRecordingLimit';
@@ -47,23 +46,25 @@ import {
   startPreparedRecording,
 } from '../lib/recordingOperation';
 import {
-  audioModeCoordinator,
   TRANSIENT_AUDIO_PLAYER_OPTIONS,
   type RecordingAudioModeLease,
   type AudioSessionLease,
 } from '../lib/audioModeCoordinator';
-import { colors, column, fonts, isTablet, radius, sc, touchSlop, useStyles } from '../lib/theme';
+import { audioModeCoordinator } from '../lib/audioSession';
+import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
 import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
+import QuestionHeader from './QuestionHeader';
 import RecordingsSheet from './RecordingsSheet';
 import PrivacyConsentDialog from './PrivacyConsentDialog';
 import { GoldButton } from './ui';
 import KeyboardSheet, { KeyboardSheetBody, KeyboardSheetTextInput } from './keyboard/KeyboardSheet';
 import { useKeyboardLayout } from '../lib/useKeyboardLayout';
 import {
-  keyboardSnapOnHandleRelease, keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap,
+  keyboardShowing, keyboardSnapOnHandleRelease, keyboardSnapTarget, reconcileKeyboardSnap, settledKeyboardSnapRequest, type KeyboardSnap,
 } from '../lib/keyboardGeometry';
 
 const RECORDING_OPTIONS = {
@@ -90,6 +91,7 @@ type Props = {
 };
 
 const MIN_UI_RECORDING_MILLIS = 1_500;
+const REST_SNAP_FRACTION = 0.62;
 const DRAFT_PLAYBACK_MODE = {
   allowsRecording: false,
   playsInSilentMode: true,
@@ -241,7 +243,7 @@ function AnswerSheet({
 
   const playLimitCue = async () => {
     const generation = limitCueOperation.begin(() =>
-      audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false)),
+      audioModeCoordinator.acquireSession(),
     );
     limitCueActiveRef.current = true;
     try {
@@ -265,9 +267,9 @@ function AnswerSheet({
 
   // Вторая точка — вся высота под статус-баром (topInset): на неё шторку
   // поднимает эффект открытой клавиатуры ниже, чтобы поле ввода и кнопки
-  // остались видны. Высоту тела даёт Gorhom внутри KeyboardSheet.
+  // остались видны. Высоту тела держит KeyboardSheet.
   const [open, setOpen] = useState(false);
-  const snapPoints = useMemo(() => ['62%', '100%'], []);
+  const snapPoints = useMemo(() => [`${REST_SNAP_FRACTION * 100}%`, '100%'], []);
   const questionRef = useRef<Text>(null);
 
   // Экран под шторкой скрыт от программ чтения с экрана, и фокус с кнопки
@@ -277,6 +279,7 @@ function AnswerSheet({
   }, [open]);
   const keyboard = useKeyboardLayout();
   const keyboardOpen = keyboard.visible;
+  const keyboardShown = keyboardShowing(keyboard);
   const [inputFocused, setInputFocused] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const landscapeTablet = isTablet() && windowWidth > windowHeight;
@@ -327,10 +330,7 @@ function AnswerSheet({
         })
         .catch((error) => {
           if (controller.signal.aborted) return;
-          console.warn(
-            'Failed to transcribe audio recording',
-            error instanceof Error ? error.message : 'unknown error',
-          );
+          reportTranscriptionFailure('answer', error);
           updateRecs((current) =>
             current.map((item) =>
               item.id === recording.id
@@ -469,8 +469,9 @@ function AnswerSheet({
   // а полная высота проверяется снова при каждой остановке шторки
   // (settledKeyboardSnapRequest). Gorhom вызывает onChange только при смене
   // индекса, поэтому остановка видна по animatedIndex: он становится целым
-  // после движения. Размер доступного тела даёт Gorhom. Синхронный флаг
-  // закрытия защищает сохранение от позднего didHide.
+  // после движения. Закрывающаяся клавиатура полной высоты уже не требует
+  // (keyboardShowing): шторка опускается вместе с ней. Высоту тела держит
+  // KeyboardSheet. Синхронный флаг закрытия защищает сохранение от позднего didHide.
   const requestSnap = useCallback((step: { request: number | null; target: KeyboardSnap }) => {
     keyboardSnap.current = step.target;
     if (step.request !== null) sheetRef.current?.snapToIndex(step.request);
@@ -496,12 +497,12 @@ function AnswerSheet({
   useEffect(() => {
     const target = keyboardSnapTarget(keyboardSnap.current, {
       open: open && openSheetRef.current,
-      keyboardVisible: keyboard.visible,
+      keyboardShowing: keyboardShown,
       inputFocused,
       recording: recordingOverlayActiveRef.current,
     });
     requestSnap(reconcileKeyboardSnap(target, handlePressed.current));
-  }, [open, keyboard.visible, inputFocused, requestSnap]);
+  }, [open, keyboardShown, inputFocused, requestSnap]);
 
   const startRecording = async () => {
     if (!recordingSheetOpenRef.current) return;
@@ -546,9 +547,7 @@ function AnswerSheet({
       if (recordingSessionLeaseRef.current) {
         throw new Error('A recording already owns an audio session lease');
       }
-      sessionLease = audioModeCoordinator.acquireSession(
-        () => setIsAudioActiveAsync(false),
-      );
+      sessionLease = audioModeCoordinator.acquireSession();
       recordingSessionLeaseRef.current = sessionLease;
       audioModeLease = audioModeCoordinator.acquireRecording(setAudioModeAsync, {
         allowsRecording: true,
@@ -852,7 +851,7 @@ function AnswerSheet({
     setAudioError(null);
     onAudioBusyChange?.(true);
     const generation = draftPlaybackOperation.begin(() =>
-      audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false)),
+      audioModeCoordinator.acquireSession(),
     );
     activeDraftIdRef.current = r.id;
     void audioModeCoordinator
@@ -881,10 +880,36 @@ function AnswerSheet({
             observeRelease(draftPlaybackOperation.complete(generation));
             setPlayingId(null);
             setPausedId(null);
-            if (status.error) setAudioError('components.answers.playbackFailed');
+            if (status.error) {
+              console.warn('Draft recording playback failed', status.error);
+              recordDiagnostic('recording_playback_failed', { place: 'answer', reason: 'player_error' });
+              setAudioError('components.answers.playbackFailed');
+            }
             onAudioBusyChange?.(false);
           });
-          draftPlaybackOperation.attachStatus(generation, subscription);
+          // Android молча игнорирует play() при выключенной аудиосессии: черновик
+          // не должен остаться «играющим». Таймер снимается вместе со слушателем
+          // при любой отмене, в том числе при unmount (ADR-0036).
+          const cancelStartWatch = watchNativePlaybackStart({
+            readStatus: () => player.currentStatus,
+            onFailed: (reason, status) => {
+              if (!nativeAudioMountedRef.current || !draftPlaybackOperation.isCurrent(generation)) return;
+              console.warn('Draft recording did not start', reason, status.playbackState);
+              recordDiagnostic('recording_playback_failed', { place: 'answer', reason });
+              cancelDraftPlayback();
+              player.pause();
+              setPlayingId(null);
+              setPausedId(null);
+              setAudioError('components.answers.playbackFailed');
+              onAudioBusyChange?.(false);
+            },
+          });
+          draftPlaybackOperation.attachStatus(generation, {
+            remove: () => {
+              cancelStartWatch();
+              subscription.remove();
+            },
+          });
         }))) {
           if (draftPlaybackOperation.isCurrent(generation)) {
             cancelDraftPlayback();
@@ -899,6 +924,7 @@ function AnswerSheet({
       .catch((error) => {
         if (!draftPlaybackOperation.isCurrent(generation)) return;
         console.warn('Failed to play audio recording', error);
+        recordDiagnostic('recording_playback_failed', { place: 'answer', reason: 'start_error', errorKind: errorKind(error) });
         cancelDraftPlayback();
         setPausedId(null);
         setAudioError('components.answers.playbackFailed');
@@ -1041,7 +1067,7 @@ function AnswerSheet({
       }
       // После сохранения файлы принадлежат ответу и больше не являются черновиком.
       unsavedRecordingUris.current.clear();
-      // флаг снимаем до dismiss: событие keyboardDidHide приходит позже close()
+      // Флаг снимаем до dismiss: willHide может вернуть snap, пока close() идёт.
       // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
       openSheetRef.current = false;
       dismissKeyboard();
@@ -1142,15 +1168,7 @@ function AnswerSheet({
 
   const questionText = questions[answerIndexRef.current] ?? questions[qIndex] ?? '';
   const questionHeader = (
-    <View style={styles.header}>
-      <View style={styles.orbRow}>
-        <View style={styles.orb} />
-        <Text style={styles.orbLabel}>{t('components.answers.question')}</Text>
-      </View>
-      <Text ref={questionRef} style={styles.question} testID="answer-question">
-        {questionText}
-      </Text>
-    </View>
+    <QuestionHeader question={questionText} questionRef={questionRef} testID="answer-question" />
   );
 
   const actions = (
@@ -1207,6 +1225,8 @@ function AnswerSheet({
     <>
     <KeyboardSheet
       ref={sheetRef}
+      keyboardSnapPosition={0}
+      keyboardRestFraction={1 - REST_SNAP_FRACTION}
       animatedIndex={sheetIndex}
       index={-1}
       snapPoints={snapPoints}
@@ -1276,14 +1296,13 @@ function AnswerSheet({
       topInset={insets.top}
       backgroundStyle={styles.sheetBg}
       footer={actions}
-      footerHidden={!open || recordingsSheetOpen}
+      footerHidden={recordingsSheetOpen}
       footerStyle={landscapeTablet ? styles.landscapeFooter : undefined}
       onAccessibilityEscape={requestClose}
     >
       {/* В альбомном окне планшета вопрос стоит рядом с формой, оставляя
           полю высоту над клавиатурой. Длинный вопрос прокручивается отдельно. */}
       <KeyboardSheetBody
-        style={styles.dismissArea}
         {...screenReaderHiddenProps(!open || recordingsSheetOpen)}
         // Боковые поля шторки тоже закрывают клавиатуру, не перехватывая ввод.
         onStartShouldSetResponder={() => {
@@ -1319,8 +1338,6 @@ function AnswerSheet({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
             />
-
-            {!keyboardOpen && !text && recs.length === 0 && <Text style={styles.voiceHint}>{t('components.answers.voiceHint')}</Text>}
           </View>
         </View>
       </KeyboardSheetBody>
@@ -1329,6 +1346,7 @@ function AnswerSheet({
     <RecordingsSheet
       sheetRef={recSheetRef}
       visible={recordingsSheetOpen}
+      question={questionText}
       recordings={recs}
       recording={recording}
       recordingPhase={recordingPhase}
@@ -1386,14 +1404,14 @@ const stylesFactory = () => StyleSheet.create({
     height: sc(4),
     borderRadius: sc(2),
   },
-  dismissArea: { width: '100%' },
   // ADR-0012: колонка держит меру строки. Без неё на планшете строка ответа
   // уходила на ~70 символов, а «Сохранить» растягивалась во всю ширину окна.
   content: {
     flex: 1,
     ...column(),
-    paddingHorizontal: sc(16),
-    paddingBottom: sc(8),
+    paddingHorizontal: screenGutter(),
+    // Вместе с верхним отступом footer (sc(10)) — sc(14) от поля до кнопок.
+    paddingBottom: sc(4),
   },
   contentLandscape: {
     maxWidth: 1120,
@@ -1416,36 +1434,6 @@ const stylesFactory = () => StyleSheet.create({
   },
   // Шапка не сжимается скроллом: вопрос — контекст ответа и должен быть виден.
   // flexShrink на крайний случай очень длинного вопроса на низком экране.
-  header: {
-    flexShrink: 1,
-  },
-  orbRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: sc(4),
-    marginBottom: sc(8),
-  },
-  orb: {
-    width: sc(9),
-    height: sc(9),
-    borderRadius: sc(5),
-    backgroundColor: '#6fae93',
-  },
-  orbLabel: {
-    fontFamily: fonts.mono,
-    fontSize: sc(9),
-    letterSpacing: sc(1.4),
-    color: 'rgba(170,210,190,.65)',
-  },
-  question: {
-    fontFamily: fonts.serif,
-    fontSize: sc(16),
-    lineHeight: sc(22),
-    color: colors.cream,
-    textAlign: 'center',
-    marginBottom: sc(12),
-  },
   input: {
     // Всё тело шторки минус вопрос и кнопки. Длинный ответ прокручивается
     // внутри поля, поэтому коробка не растёт и ничего не выталкивает.
@@ -1461,13 +1449,6 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(23),
     fontFamily: fonts.serifRegular,
     textAlignVertical: 'top',
-  },
-  voiceHint: {
-    marginTop: sc(8),
-    fontFamily: fonts.serifItalic,
-    fontSize: sc(12),
-    textAlign: 'center',
-    color: colors.creamDim,
   },
   micBtn: {
     width: sc(32),
@@ -1504,7 +1485,6 @@ const stylesFactory = () => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: sc(8),
-    marginTop: sc(14),
   },
   footerContent: { width: '100%' },
   footerGrid: { flexDirection: 'row', gap: sc(24) },

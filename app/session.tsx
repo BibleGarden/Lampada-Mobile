@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
   FadeIn,
-  FadeInDown,
   FadeOut,
   cancelAnimation,
   useAnimatedStyle,
@@ -30,7 +29,6 @@ import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
   setAudioModeAsync,
-  setIsAudioActiveAsync,
   type AudioStatus,
   useAudioPlayer,
 } from 'expo-audio';
@@ -40,11 +38,11 @@ import ProgressRing from '../components/ProgressRing';
 import CompanionDock from '../components/CompanionDock';
 import AnswerSheet from '../components/AnswerSheet';
 import ScriptureReader from '../components/ScriptureReader';
-import { IconButton, Kicker } from '../components/ui';
+import { CardIn, IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
-import { colors, column, fonts, isTablet, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, column, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
 import { screenReaderHiddenProps } from '../lib/a11y';
@@ -57,11 +55,8 @@ import {
   startMusicFadeOut,
   type MusicFadeOut,
 } from '../lib/musicFade';
-import {
-  audioModeCoordinator,
-  type AudioModeRequest,
-  type AudioSessionLease,
-} from '../lib/audioModeCoordinator';
+import { type AudioSessionLease } from '../lib/audioModeCoordinator';
+import { audioModeCoordinator } from '../lib/audioSession';
 
 const MUSIC_PLAYBACK_MODE = {
   allowsRecording: false,
@@ -78,6 +73,11 @@ const MUSIC_CROSSFADE_LEAD_SECONDS = 2.2;
 // router.replace (плееры живут, пока смонтирован экран), поэтому оно короче.
 const MUSIC_BACKGROUND_FADE_OUT_MS = 3000;
 const MUSIC_FINISH_FADE_OUT_MS = 800;
+const SESSION_HEADER_MARGIN_CORRECTION = 9;
+const SESSION_GOAL_MARGIN_CORRECTION = 3;
+const SESSION_DEFAULT_GAP = 22;
+const SESSION_ROOMY_GAP = 14;
+const SESSION_ROOMY_CARD_MIN_HEIGHT = 230;
 type MusicPlayerSlot = 0 | 1;
 
 // Кольцо ограничиваем не только шириной, как остальные токены прототипа,
@@ -105,6 +105,27 @@ function SessionScreen() {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const ringSize = ringSizeFor(height);
+  const [sessionLayout, setSessionLayout] = useState({ frame: 0, header: 0, goal: 0 });
+  const measureSessionPart = (part: keyof typeof sessionLayout, value: number) => {
+    setSessionLayout((current) => Math.abs(current[part] - value) < 1
+      ? current : { ...current, [part]: value });
+  };
+  // Считаем место при исходных зазорах, независимо от выбранной плотности:
+  // иначе уменьшение gap само переключало бы правило обратно и вперёд.
+  // Высоты onLayout не включают отрицательные поля шапки и цели.
+  const reservedCardHeight = insets.top + sc(2) + bottomActionPadding(insets.bottom)
+    + ringSize + sc(SESSION_DEFAULT_GAP) * 3
+    - sc(SESSION_HEADER_MARGIN_CORRECTION) - sc(SESSION_GOAL_MARGIN_CORRECTION);
+  const freeCardHeight = sessionLayout.frame - reservedCardHeight
+    - sessionLayout.header - sessionLayout.goal;
+  const densityMeasured = sessionLayout.frame > 0 && sessionLayout.header > 0
+    && sessionLayout.goal > 0;
+  const roomyCard = densityMeasured && freeCardHeight >= sc(SESSION_ROOMY_CARD_MIN_HEIGHT);
+  // Даже без шапки и цели свободного места не может быть больше этой границы.
+  // На заведомо тесном окне карточку показываем сразу; иначе первый замер
+  // выбирает плотность до её появления в общем FadeIn экрана.
+  const cardReady = densityMeasured
+    || height - reservedCardHeight < sc(SESSION_ROOMY_CARD_MIN_HEIGHT);
   const s = useSession();
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [readerOpen, setReaderOpen] = useState(false);
@@ -189,14 +210,6 @@ function SessionScreen() {
     musicPlayerB.clearLockScreenControls();
   }, [cancelMusicCrossfade, musicPlayerA, musicPlayerB]);
 
-  const applyMusicAudioMode = useCallback(async (mode: AudioModeRequest) => {
-    // AVAudioSession activation is process-wide too. Keep it in the same queue
-    // as mode changes so a quick next recording cannot call record() while a
-    // late music activation is still reconfiguring the native session.
-    await setIsAudioActiveAsync(true);
-    await setAudioModeAsync(mode);
-  }, []);
-
   const reportReleaseError = useCallback((error: unknown) => {
     console.error('Failed to release audio session', error);
   }, []);
@@ -216,7 +229,10 @@ function SessionScreen() {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
+      // Из переключателя приложений iOS может завершить приложение, не прислав
+      // 'background', поэтому время сохраняется уже на 'inactive'.
       if (nextState === 'active') useSession.getState().tick();
+      else useSession.getState().checkpointElapsed();
     });
     return () => sub.remove();
   }, []);
@@ -230,11 +246,11 @@ function SessionScreen() {
         active = false;
       };
     }
-    const lease = audioModeCoordinator.acquireSession(() => setIsAudioActiveAsync(false));
+    const lease = audioModeCoordinator.acquireSession();
     musicLeaseRef.current = lease;
     void (async () => {
       const modeGrant = await audioModeCoordinator.requestPlayback(
-        applyMusicAudioMode,
+        setAudioModeAsync,
         MUSIC_PLAYBACK_MODE,
       );
       if (!modeGrant?.isCurrent()) return;
@@ -262,7 +278,6 @@ function SessionScreen() {
       if (musicLeaseRef.current === lease) musicLeaseRef.current = null;
     };
   }, [
-    applyMusicAudioMode,
     musicPlayerForSlot,
     pauseMusicPlayers,
     reportReleaseError,
@@ -415,7 +430,7 @@ function SessionScreen() {
     readerOpen,
     answerOpen,
     reportOpen,
-    scriptureAudioActive: scriptureAudio.phase !== 'idle',
+    scriptureAudioPhase: scriptureAudio.phase,
   });
   const handleAnswerAudioChange = useCallback(
     (busy: boolean) => {
@@ -615,15 +630,17 @@ function SessionScreen() {
         <View
           style={[
             styles.sessionContent,
+            roomyCard && styles.sessionContentRoomy,
             {
-              // Только отбивка от безопасной зоны: в альбоме на планшете
-              // высота дефицитна, и каждая точка тут отнимается у карточки.
+              // Нижний отступ держит карточку выше системной навигации;
+              // на низком окне его забираем из свободной высоты карточки.
               paddingTop: insets.top + sc(2),
-              paddingBottom: insets.bottom + sc(4),
+              paddingBottom: bottomActionPadding(insets.bottom),
             },
           ]}
+          onLayout={({ nativeEvent }) => measureSessionPart('frame', nativeEvent.layout.height)}
         >
-          <View style={styles.topBar}>
+          <View style={styles.topBar} onLayout={({ nativeEvent }) => measureSessionPart('header', nativeEvent.layout.height)}>
             <IconButton
               onPress={finishEarly}
               accessibilityLabel={t('screens.session.finish')}
@@ -709,7 +726,8 @@ function SessionScreen() {
             )}
           </View>
 
-          <View accessible style={styles.goalWrap} testID="session-goal">
+          <View accessible style={styles.goalWrap} testID="session-goal"
+            onLayout={({ nativeEvent }) => measureSessionPart('goal', nativeEvent.layout.height)}>
             <Kicker style={{ fontSize: sc(9), marginBottom: sc(5) }}>
               {t('screens.session.goal')}
             </Kicker>
@@ -718,7 +736,11 @@ function SessionScreen() {
             </Text>
           </View>
 
-          <View style={styles.dockWrap}>
+          <View
+            style={[styles.dockWrap, !cardReady && styles.dockUnmeasured]}
+            pointerEvents={cardReady ? 'auto' : 'none'}
+            {...screenReaderHiddenProps(!cardReady)}
+          >
             <CompanionDock
               onOpenAnswer={() => openAnswerRef.current?.()}
               onOpenReader={() => {
@@ -747,15 +769,16 @@ function SessionScreen() {
       />
       {showExpiryNotice && activityOpen && (
         <Animated.View
-          entering={FadeInDown.duration(200)}
           exiting={FadeOut.duration(250)}
           pointerEvents="none"
-          style={[styles.expiryNotice, { top: insets.top + sc(8) }]}
+          style={[styles.expiryNoticePosition, { top: insets.top + sc(8) }]}
           testID="session-expiry-notice"
         >
-          <Text style={styles.expiryNoticeText}>
-            {t('screens.session.expiryNotice')}
-          </Text>
+          <CardIn duration={200} style={styles.expiryNotice}>
+            <Text style={styles.expiryNoticeText}>
+              {t('screens.session.expiryNotice')}
+            </Text>
+          </CardIn>
         </Animated.View>
       )}
     </View>
@@ -896,8 +919,8 @@ function AdjustBtn({
 }) {
   const styles = useStyles(stylesFactory);
   return (
-    <Animated.View
-      entering={FadeInDown.duration(200)}
+    <CardIn
+      duration={200}
       style={[
         styles.adjustBtnWrap,
         { top: ringSize / 2 - sc(22) },
@@ -920,23 +943,25 @@ function AdjustBtn({
       >
         <Text style={[styles.adjustLabel, accent && { color: colors.amberBright }]}>{label}</Text>
       </Pressable>
-    </Animated.View>
+    </CardIn>
   );
 }
 
 const stylesFactory = () => StyleSheet.create({
-  expiryNotice: {
+  expiryNoticePosition: {
     position: 'absolute',
     alignSelf: 'center',
     maxWidth: sc(390),
     marginHorizontal: sc(16),
-    paddingHorizontal: sc(18),
+    zIndex: 30,
+  },
+  expiryNotice: {
+    paddingHorizontal: screenGutter(),
     paddingVertical: sc(12),
     borderRadius: sc(14),
     backgroundColor: '#21190f',
     borderWidth: 1,
     borderColor: 'rgba(214,182,120,.3)',
-    zIndex: 30,
     elevation: 30,
   },
   expiryNoticeText: {
@@ -951,7 +976,7 @@ const stylesFactory = () => StyleSheet.create({
     // Оптическая поправка к общему gap: зазор до кольца читается от строки
     // «Молитва», а она сидит по центру ряда — до низа кнопок ещё половина их
     // высоты, и геометрически равный отступ выглядит заметно больше.
-    marginBottom: -sc(9),
+    marginBottom: -sc(SESSION_HEADER_MARGIN_CORRECTION),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -976,8 +1001,9 @@ const stylesFactory = () => StyleSheet.create({
     // ограничена, и space-between раздаёт остаток поровну между теми же
     // стыками: лишняя высота становится воздухом, а не пустой карточкой.
     justifyContent: 'space-between',
-    gap: sc(22),
+    gap: sc(SESSION_DEFAULT_GAP),
   },
+  sessionContentRoomy: { gap: sc(SESSION_ROOMY_GAP) },
   timerWrap: {
     alignSelf: 'center',
   },
@@ -1024,7 +1050,7 @@ const stylesFactory = () => StyleSheet.create({
     paddingHorizontal: sc(12),
     alignItems: 'center',
     // Та же поправка снизу: нижний leading строки цели съедает часть зазора.
-    marginBottom: -sc(3),
+    marginBottom: -sc(SESSION_GOAL_MARGIN_CORRECTION),
   },
   goalText: {
     fontFamily: fonts.serifItalic,
@@ -1033,6 +1059,7 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.body,
     textAlign: 'center',
   },
+  dockUnmeasured: { opacity: 0 },
   dockWrap: {
     width: '100%',
     // Единственный растягивающийся блок: карточка добирает остаток высоты,
@@ -1043,6 +1070,6 @@ const stylesFactory = () => StyleSheet.create({
     // меньше, чем нужно даже минимальному набору.
     flexGrow: 1,
     flexShrink: 1,
-    maxHeight: isTablet() ? sc(230) : undefined,
+    maxHeight: isTablet() ? sc(310) : undefined,
   },
 });

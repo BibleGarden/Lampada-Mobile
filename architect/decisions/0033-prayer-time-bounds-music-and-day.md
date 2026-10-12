@@ -1,6 +1,6 @@
 # ADR-0033: Bound the music, the duration and the streak day by the prayer time
 
-- Status: Accepted
+- Status: Partly superseded by ADR-0042 (item 3: a prayer in the journal counts, not only a completed one)
 - Date: 2026-09-23
 - Participants: product owner, developer
 

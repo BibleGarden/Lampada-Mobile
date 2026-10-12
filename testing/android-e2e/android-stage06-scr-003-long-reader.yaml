@@ -3,6 +3,7 @@ tags:
   - rare
 ---
 # Избранное сохраняем, длинный отрывок выбираем по доступности раскрытия.
+# Бэкенд возвращал 429 с Retry-After 35 с; клиент ждёт и повторяет запрос.
 - launchApp:
     stopApp: true
     clearState: true
@@ -45,7 +46,7 @@ tags:
 - extendedWaitUntil:
     visible:
       id: scripture-audio-button
-    timeout: 20000
+    timeout: 75000
 - assertVisible:
     id: dock-scripture-favorite
 - tapOn:
@@ -58,6 +59,11 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: dock-scripture-favorite
+      enabled: true
+    timeout: 75000
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
@@ -68,6 +74,11 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: dock-scripture-favorite
+      enabled: true
+    timeout: 75000
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
@@ -78,8 +89,10 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible:
-    id: scripture-audio-button
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 75000
 - repeat:
     times: 12
     while:
@@ -93,7 +106,7 @@ tags:
       - extendedWaitUntil:
           visible:
             id: scripture-audio-button
-          timeout: 20000
+          timeout: 75000
 - assertVisible:
     id: scripture-read-full
 - tapOn:

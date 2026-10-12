@@ -56,7 +56,7 @@ tags:
     id: content-report-send
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible: Сейчас не удалось отправить жалобу. Попробуйте ещё раз.
+- assertVisible: Сейчас не удалось отправить жалобу. Попробуй ещё раз.
 - assertVisible:
     id: content-report-dialog
 - assertVisible:
@@ -66,7 +66,7 @@ tags:
     id: content-report-send
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible: Спасибо. Жалоба отправлена на проверку.
+- assertVisible: Спасибо. Мы её проверим.
 - takeScreenshot: RPT-003-retry-sent
 - tapOn:
     id: content-report-done

@@ -41,7 +41,7 @@ export type PinPadProps = {
   onSubmit: (pin: string) => string | null | Promise<string | null>;
   /** Кнопка биометрии в свободном углу клавиатуры. */
   biometry?: { label: string; onPress: () => void } | null;
-  /** Ссылки под клавиатурой: «Забыли пин-код?», «Отмена». */
+  /** Ссылки под клавиатурой: «Не помнишь пин-код?», «Отмена». */
   footer?: React.ReactNode;
   testID?: string;
   /** Стабильный id заголовка для e2e: шаги сценария различаются по нему. */

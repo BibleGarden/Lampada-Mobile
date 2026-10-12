@@ -1,0 +1,205 @@
+appId: app.lampada
+---
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+- tapOn:
+    id: settings-button
+- tapOn:
+    id: interface-language-picker
+- tapOn:
+    id: interface-language-ru
+- tapOn:
+    id: settings-back-button
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 01-home-before
+- tapOn:
+    id: settings-button
+- takeScreenshot: 02-settings-top
+- swipe:
+    start: "50%,80%"
+    end: "50%,40%"
+    duration: 600
+- scrollUntilVisible:
+    element:
+      id: reminders-settings-button-0
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: 03-settings-reminders
+- tapOn:
+    id: reminders-settings-button-0
+- takeScreenshot: 04-reminders-editor
+- tapOn:
+    id: reminders-editor-done
+- swipe:
+    start: "50%,80%"
+    end: "50%,35%"
+    duration: 600
+- scrollUntilVisible:
+    element:
+      id: about-button
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: 05-settings-bottom
+- scrollUntilVisible:
+    element:
+      id: lock-toggle
+    direction: UP
+- tapOn:
+    id: lock-toggle
+- takeScreenshot: 06-pin-setup
+- tapOn:
+    id: pin-prompt-cancel
+- tapOn:
+    id: settings-back-button
+- tapOn:
+    id: start-prayer-button
+- takeScreenshot: 07-setup-empty
+- tapOn:
+    id: setup-goal-input
+- inputText: "Снимок экрана"
+- takeScreenshot: 08-setup-keyboard
+- runFlow: ../android-e2e/helpers/dismiss-keyboard.yaml
+- tapOn:
+    id: setup-preset-5
+- takeScreenshot: 09-setup-duration
+- tapOn:
+    id: setup-next-button
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - takeScreenshot: 10-privacy-consent
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+- assertVisible:
+    id: threshold-kicker
+- takeScreenshot: 11-before-start
+- longPressOn:
+    id: threshold-hold-button
+- assertVisible:
+    id: session-title
+- takeScreenshot: 12-session-question
+- runFlow:
+    when:
+      visible:
+        id: question-report-button
+    commands:
+      - tapOn:
+          id: question-report-button
+      - takeScreenshot: 13-content-report-dialog
+      - tapOn:
+          id: content-report-cancel
+- tapOn:
+    id: dock-scripture-tab
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 20000
+- takeScreenshot: 14-session-scripture
+- tapOn:
+    id: dock-scripture-next
+- extendedWaitUntil:
+    visible:
+      id: scripture-read-full|scripture-preview
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 15-session-scripture-next
+- tapOn:
+    id: scripture-read-full
+- takeScreenshot: 16-scripture-reader
+- tapOn:
+    id: scripture-reader-close
+- runFlow:
+    when:
+      visible:
+        id: dock-scripture-favorite
+    commands:
+      - tapOn:
+          id: dock-scripture-favorite
+- tapOn:
+    id: dock-question-tab
+- tapOn:
+    id: dock-answer-button
+- takeScreenshot: 17-answer-empty
+- tapOn:
+    id: answer-input
+- inputText: "Ответ для проверки верстки"
+- takeScreenshot: 18-answer-keyboard
+- tapOn:
+    id: answer-record-button
+- waitForAnimationToEnd:
+    timeout: 2500
+- takeScreenshot: 19-recording-overlay
+- tapOn:
+    id: recordings-stop-button
+- takeScreenshot: 20-recordings-one
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: recordings-record-button
+      - waitForAnimationToEnd:
+          timeout: 2500
+      - tapOn:
+          id: recordings-stop-button
+- scrollUntilVisible:
+    element:
+      id: recording-card-0
+    direction: UP
+    centerElement: true
+- takeScreenshot: 21-recordings-three
+- scrollUntilVisible:
+    element:
+      id: recording-delete-2
+    direction: DOWN
+    centerElement: true
+- swipe:
+    start: "50%,75%"
+    end: "50%,60%"
+    duration: 500
+- takeScreenshot: 22-recordings-bottom
+- tapOn:
+    id: recordings-close-button
+- tapOn:
+    id: answer-save-button
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-answer_context-allow
+    commands:
+      - tapOn:
+          id: privacy-consent-answer_context-allow
+- tapOn:
+    id: session-finish-button
+- extendedWaitUntil:
+    visible:
+      id: reflect-question
+    timeout: 60000
+- takeScreenshot: 23-reflection-empty
+- tapOn:
+    id: reflection-input
+- inputText: "Вывод для проверки верстки"
+- takeScreenshot: 24-reflection-keyboard
+- runFlow: ../android-e2e/helpers/dismiss-keyboard.yaml
+- tapOn:
+    id: reflect-complete-button
+    waitToSettleTimeoutMs: 100
+- takeScreenshot: 25-home-saved
+- tapOn:
+    id: journal-button
+- takeScreenshot: 26-journal-list
+- tapOn: ".*Снимок экрана.*"
+- takeScreenshot: 27-journal-detail
+- tapOn: "Назад"
+- tapOn:
+    id: favorites-button
+- takeScreenshot: 28-favorites

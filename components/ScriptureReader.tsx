@@ -5,7 +5,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSession } from '../lib/store';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 import { Heart, Close, PauseIcon, PlayIcon } from './icons';
 import { IconButton } from './ui';
 import ScripturePassageText from './ScripturePassageText';
@@ -35,6 +35,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
   const scrFav = useSession((st) => st.scrFav);
   const toggleFav = useSession((st) => st.toggleFav);
   const cur = scrList[scrIndex];
+  const listenDisabled = scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable';
   const fav = !!cur && scrFav.includes(cur.canonicalId);
   const { mountKey, open, onIndexChange } = useSheetReflow();
   const referenceRef = useRef<Text>(null);
@@ -94,7 +95,9 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
         <View style={styles.headerBtns}>
           {cur && !cur.offline ? (
             <IconButton
-              accessibilityLabel={scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
+              accessibilityLabel={scriptureAudio.phase === 'unavailable' ? t('components.reader.narrationUnavailable') : scriptureAudio.phase === 'playing' ? t('components.reader.pause') : t('components.reader.listenPassage')}
+              disabled={listenDisabled}
+              accessibilityState={{ disabled: listenDisabled, busy: scriptureAudio.phase === 'loading' }}
               size={sc(32)}
               bg="rgba(255,255,255,.04)"
               border={colors.white08}
@@ -133,7 +136,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
       </View>
       <BottomSheetScrollView
         {...contentA11y}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + sc(40) }]}
         onContentSizeChange={(_, height) => setContentHeight(height)}
       >
         {cur?.title ? <Text style={styles.title}>{cur.title}</Text> : null}
@@ -162,10 +165,11 @@ const stylesFactory = () => StyleSheet.create({
     width: sc(36),
   },
   header: {
+    ...column(),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: sc(16),
+    paddingHorizontal: screenGutter(),
     paddingBottom: sc(12),
   },
   headerBtns: {
@@ -190,8 +194,8 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.white50,
   },
   content: {
-    paddingHorizontal: sc(18),
-    paddingBottom: sc(40),
+    ...column(),
+    paddingHorizontal: screenGutter(),
   },
   text: {
     fontFamily: fonts.serif,

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { checkVersion, type VersionCheck } from '../lib/versionCheck';
 import { recordDiagnostic } from '../lib/db';
 import { apiPaths, resolveApiUrl } from '../lib/apiConfig';
-import { colors, fonts, radius, sc, useStyles } from '../lib/theme';
+import { bottomActionPadding, colors, fonts, radius, sc, useStyles } from '../lib/theme';
 
 export default function UpdateGate({ covered, onVisibleChange }: {
   covered: boolean; onVisibleChange: (visible: boolean) => void;
@@ -49,7 +49,7 @@ export default function UpdateGate({ covered, onVisibleChange }: {
     ? localizedMessage
     : t('components.security.updateFallback');
   return (
-    <View style={[styles.overlay, { paddingTop: insets.top + sc(24), paddingBottom: insets.bottom + sc(24) }]}
+    <View style={[styles.overlay, { paddingTop: insets.top + sc(24), paddingBottom: bottomActionPadding(insets.bottom) }]}
       accessibilityViewIsModal testID={`update-${data.update_type}`}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{data.update_type === 'hard' ? t('components.security.updateRequired') : t('components.security.updateAvailable')}</Text>
