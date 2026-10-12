@@ -69,7 +69,7 @@ tags:
 - tapOn:
     id: "scripture-audio-button"
 - tapOn:
-    point: "84%,91%"
+    id: "dock-scripture-next"
 - extendedWaitUntil:
     visible:
       id: "scripture-audio-label-idle"

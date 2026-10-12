@@ -147,6 +147,7 @@ export default function Home() {
               ))}
             </View>
             <Text
+              key={showSavedNotice ? 'saved-notice' : 'streak-caption'}
               style={styles.streakLabel}
               numberOfLines={1}
               testID={showSavedNotice ? 'prayer-saved-notice' : 'home-streak-line'}
