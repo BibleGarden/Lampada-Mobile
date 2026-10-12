@@ -44,10 +44,18 @@ tags:
     id: "reflect-complete-button"
 - tapOn:
     id: "reflect-complete-button"
-# Баннер prayer-saved-notice автоскрывается через 4 с (app/index.tsx) —
+# Строка prayer-saved-notice заменяет подпись серии и скрывается через 4 с (app/index.tsx) —
 # проверять сразу, до остальных assert'ов Home.
 - assertVisible:
     id: "prayer-saved-notice"
+- assertNotVisible:
+    id: "home-streak-line"
+- extendedWaitUntil:
+    notVisible:
+      id: "prayer-saved-notice"
+    timeout: 6000
+- assertVisible:
+    id: "home-streak-line"
 - assertVisible:
     id: "home-title-lit"
 - assertVisible:

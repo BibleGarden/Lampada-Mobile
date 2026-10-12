@@ -23,9 +23,12 @@ the app refreshes the calendar without resetting the session.
 
 The Home flame keeps its full size while the window has room for it. On a short
 window (a foldable's inner display, iPad Split View, landscape) it shrinks to
-the height left above Start and the saved notice, keeping its proportions; the
-captions keep their size (`lib/flameGeometry.ts`). A saved notice has its own
-gap above Start, including in a short landscape window.
+the height left above Start, keeping its proportions; the captions keep their
+size (`lib/flameGeometry.ts`). The flame fit uses the available center height
+and caption height, never the flame's own measured size. The four-second saved
+notice replaces the streak caption in the same single-line Text slot. The slot
+is reserved even with zero prayer days, so showing or hiding the notice does
+not move or resize the flame.
 
 Screen backgrounds fill the entire Skia canvas. Gradient geometry follows the
 canvas size on the UI thread so rotation does not wait for JavaScript updates.

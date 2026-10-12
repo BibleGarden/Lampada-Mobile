@@ -36,7 +36,7 @@ export default function Home() {
   const visible = useVisibleScreen();
   // Высоты центрального блока и подписей под огоньком: на низком окне
   // огонёк уменьшается до свободного места, иначе блок переполняется
-  // и подписи наезжают на плашку «Молитва сохранена» и кнопку.
+  // и подписи наезжают на кнопку. Размер самого огонька не измеряем.
   const [centerHeight, setCenterHeight] = useState<number>();
   const [captionsHeight, setCaptionsHeight] = useState<number>();
   const onCenterLayout = (e: LayoutChangeEvent) => setCenterHeight(e.nativeEvent.layout.height);
@@ -123,7 +123,7 @@ export default function Home() {
           </View>
         </View>
 
-        <View style={[styles.center, showSavedNotice && { marginBottom: sc(12) }]} onLayout={onCenterLayout}>
+        <View style={styles.center} onLayout={onCenterLayout}>
           {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
               после — в полную силу: «поддержи» обретает буквальный смысл */}
           <Flame width={flameWidth} lit={streak.prayedToday} />
@@ -146,16 +146,18 @@ export default function Home() {
                 />
               ))}
             </View>
-            {!!streakLine && <Text style={styles.streakLabel}>{streakLine}</Text>}
+            <Text
+              style={styles.streakLabel}
+              numberOfLines={1}
+              testID={showSavedNotice ? 'prayer-saved-notice' : 'home-streak-line'}
+              accessible={showSavedNotice || !!streakLine}
+            >
+              {showSavedNotice ? t('screens.home.prayerSaved') : streakLine || ' '}
+            </Text>
           </View>
         </View>
 
         <View style={[styles.bottom, { paddingBottom: bottomActionPadding(insets.bottom) }]}>
-          {showSavedNotice && (
-            <Text style={styles.savedNotice} testID="prayer-saved-notice">
-              {t('screens.home.prayerSaved')}
-            </Text>
-          )}
           <GoldButton label={t('screens.home.start')} testID="start-prayer-button" onPress={() => router.navigate('/setup')} />
         </View>
       </View>
@@ -187,6 +189,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   center: {
     flex: 1,
+    minHeight: 0,
     alignItems: 'center',
     justifyContent: 'center',
     gap: sc(8),
@@ -227,6 +230,7 @@ const stylesFactory = () => StyleSheet.create({
   streakLabel: {
     fontFamily: fonts.mono,
     fontSize: sc(11),
+    lineHeight: sc(16),
     color: colors.labelGold,
     marginTop: sc(4),
   },
@@ -235,13 +239,5 @@ const stylesFactory = () => StyleSheet.create({
   // центрируется по всему экрану и наезжает на кнопку.
   bottom: {
     paddingHorizontal: screenGutter(),
-  },
-  savedNotice: {
-    marginBottom: sc(12),
-    fontFamily: fonts.sans,
-    fontSize: sc(13),
-    lineHeight: sc(18),
-    textAlign: 'center',
-    color: colors.goldSoft,
   },
 });

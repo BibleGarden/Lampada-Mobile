@@ -7,6 +7,10 @@ The current shape of the project is described in
 decisions lives in [`architect/decisions/`](architect/decisions/README.md).
 Settings sheets built with `components/BottomSheet` cap their width at `sc(294)`; answer and recordings `KeyboardSheet` overlays span the window width, retaining the landscape-tablet answer columns.
 
+Home shows the saved-prayer notice for four seconds in the streak caption's
+single-line slot, then restores the weekly streak text. The slot stays reserved
+with zero prayer days, keeping the flame and Start button stationary.
+
 ## Development
 
 ```bash
