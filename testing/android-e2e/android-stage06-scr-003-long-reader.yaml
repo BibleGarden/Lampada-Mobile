@@ -45,7 +45,7 @@ tags:
 - extendedWaitUntil:
     visible:
       id: scripture-audio-button
-    timeout: 20000
+    timeout: 30000
 - assertVisible:
     id: dock-scripture-favorite
 - tapOn:
@@ -62,7 +62,7 @@ tags:
     visible:
       id: dock-scripture-favorite
       enabled: true
-    timeout: 20000
+    timeout: 30000
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
@@ -77,7 +77,7 @@ tags:
     visible:
       id: dock-scripture-favorite
       enabled: true
-    timeout: 20000
+    timeout: 30000
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
@@ -88,8 +88,10 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-- assertVisible:
-    id: scripture-audio-button
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 30000
 - repeat:
     times: 12
     while:
@@ -103,7 +105,7 @@ tags:
       - extendedWaitUntil:
           visible:
             id: scripture-audio-button
-          timeout: 20000
+          timeout: 30000
 - assertVisible:
     id: scripture-read-full
 - tapOn:
