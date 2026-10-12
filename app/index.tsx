@@ -151,6 +151,8 @@ export default function Home() {
               numberOfLines={1}
               testID={showSavedNotice ? 'prayer-saved-notice' : 'home-streak-line'}
               accessible={showSavedNotice || !!streakLine}
+              importantForAccessibility={showSavedNotice || streakLine ? 'auto' : 'no'}
+              accessibilityElementsHidden={!showSavedNotice && !streakLine}
             >
               {showSavedNotice ? t('screens.home.prayerSaved') : streakLine || ' '}
             </Text>

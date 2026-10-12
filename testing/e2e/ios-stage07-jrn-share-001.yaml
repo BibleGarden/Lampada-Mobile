@@ -75,7 +75,7 @@ tags:
     id: "reflect-kicker"
 - tapOn:
     id: "reflect-complete-button"
-# Баннер prayer-saved-notice живёт 4 с и здесь может скрыться до assert —
+# Строка prayer-saved-notice заменяет подпись серии на 4 с и здесь может скрыться до assert —
 # для этого флоу достаточно сигнала «завершение сразу на Home» (ADR-0028).
 - assertVisible:
     id: "home-title-lit"
