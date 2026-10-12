@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import { IconButton, Kicker } from '../components/ui';
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import { Kicker } from '../components/ui';
+import { Check, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
 import {
   ScriptureCatalogUnavailableError,
   ScriptureDefaultUnavailableError,
@@ -906,11 +907,7 @@ export default function Settings() {
         {...screenReaderHiddenProps(!!pinPrompt || sheetOpen)}
       >
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton accessibilityLabel={t('settings.back')} testID="settings-back-button" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker>{t('settings.title')}</Kicker>
-          <View style={styles.topSpacer} />
+          <ScreenHeader title={t('settings.title')} backLabel={t('settings.back')} backTestID="settings-back-button" onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
 
         <ScrollView
@@ -1420,11 +1417,9 @@ const stylesFactory = () => StyleSheet.create({
   screen: { flex: 1, ...column() },
   top: {
     paddingHorizontal: screenGutter(),
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(214,182,120,.22)',
   },
-  topSpacer: { width: sc(34), height: sc(34) },
   sectionKicker: { marginBottom: sc(7), marginLeft: sc(4) },
   sectionGap: { marginTop: sc(18) },
   card: {

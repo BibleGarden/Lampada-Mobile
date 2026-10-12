@@ -291,6 +291,7 @@ export default function RecordingsSheet({
         <BottomSheetScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          fadingEdgeLength={sc(24)}
         >
           {!!audioError && <Text style={styles.audioError}>{audioError}</Text>}
 

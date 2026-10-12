@@ -23,8 +23,9 @@ import * as Haptics from 'expo-haptics';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { File } from 'expo-file-system';
 import ScreenBg from '../components/ScreenBg';
-import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Close, Heart, PauseIcon, Pen, PlayIcon, ShareIcon, Trash } from '../components/icons';
+import { IconButton } from '../components/ui';
+import { Close, Heart, PauseIcon, Pen, PlayIcon, ShareIcon, Trash } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
 import ScripturePassageText from '../components/ScripturePassageText';
 import * as db from '../lib/db';
 import { getFavoriteScripturesBySession } from '../lib/scriptureRepository';
@@ -499,14 +500,7 @@ export default function Journal() {
       <KeyboardViewport safeAreaInContent>
       <Animated.View entering={FadeIn.duration(500)} style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(10) }]}>
-          <IconButton
-            accessibilityLabel={t('settings.back')}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          >
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker testID="journal-title">{t('screens.journal.title')}</Kicker>
-          <View style={{ width: sc(34) }} />
+          <ScreenHeader title={t('screens.journal.title')} titleTestID="journal-title" backLabel={t('settings.back')} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
 
         <View style={[styles.searchWrap, { marginTop: insets.top + sc(56) }]}>
@@ -729,9 +723,6 @@ const stylesFactory = () => StyleSheet.create({
     left: screenGutter(),
     right: screenGutter(),
     zIndex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   searchWrap: {
     marginHorizontal: screenGutter(),

@@ -5,6 +5,7 @@ import { Stack, router, usePathname } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationBar } from 'expo-navigation-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 import { useFonts } from 'expo-font';
@@ -140,6 +141,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0e0a07' }}>
       <KeyboardSystemProvider>
         <StatusBar style="light" />
+        <NavigationBar style="light" />
         {ready && <AppContent covered={covered} />}
         {!bootSplashHidden && (
           <BootSplash onFlameLoaded={hideNativeSplash} done={ready} onHidden={hideBootSplash} />

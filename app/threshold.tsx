@@ -7,9 +7,9 @@ import Animated, { FadeIn, useSharedValue, withTiming, Easing, ReduceMotion, can
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
+import ScreenHeader from '../components/ScreenHeader';
 import ProgressRing from '../components/ProgressRing';
-import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Lamp, QuestionMark, Clock, Shield } from '../components/icons';
+import { Lamp, QuestionMark, Clock, Shield } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useSettings } from '../lib/settings';
 import { errorKind, recordDiagnostic } from '../lib/db';
@@ -170,15 +170,11 @@ export default function Threshold() {
         style={[
           styles.body,
           landscapeTablet && styles.bodyLandscape,
-          { paddingTop: insets.top + sc(12), paddingBottom: insets.bottom },
+          { paddingTop: insets.top + sc(10), paddingBottom: insets.bottom },
         ]}
       >
-        {/* шапка как на setup: кнопка и кикер в одной строке, на той же высоте */}
-        <View style={[styles.headerRow, landscapeTablet && styles.headerRowLandscape]}>
-          <IconButton size={sc(30)} accessibilityLabel={t('settings.back')} onPress={() => router.back()}>
-            <ChevronLeft size={18} color={colors.white55} />
-          </IconButton>
-          <Kicker style={{ fontSize: sc(11) }} testID="threshold-kicker">{t('screens.threshold.before')}</Kicker>
+        <View style={landscapeTablet && styles.headerRowLandscape}>
+          <ScreenHeader title={t('screens.threshold.before')} titleTestID="threshold-kicker" backLabel={t('settings.back')} onBack={() => router.back()} />
         </View>
 
         <View
@@ -293,11 +289,6 @@ const stylesFactory = () => StyleSheet.create({
   mainLandscape: {
     flexDirection: 'row',
     gap: sc(32),
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(8),
   },
   headerRowLandscape: {
     ...column(),

@@ -15,8 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
-import { GoldButton, IconButton, Kicker } from '../components/ui';
-import { ChevronLeft, Minus, Plus } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
+import { GoldButton, Kicker } from '../components/ui';
+import { Minus, Plus } from '../components/icons';
 import { useShallow } from 'zustand/react/shallow';
 import { useSession } from '../lib/store';
 import { useKeyboardLayout, useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
@@ -119,18 +120,9 @@ export default function Setup() {
       >
         <Animated.View
           entering={FadeIn.duration(450)}
-          style={[styles.body, { paddingTop: insets.top + sc(12), paddingBottom: bottomActionPadding(0) }]}
+          style={[styles.body, { paddingTop: insets.top + sc(10), paddingBottom: bottomActionPadding(0) }]}
         >
-          <View style={styles.headerRow}>
-            <IconButton
-              size={sc(30)}
-              accessibilityLabel={t('settings.back')}
-              onPress={() => router.back()}
-            >
-              <ChevronLeft size={18} color={colors.white65} />
-            </IconButton>
-            <Kicker style={{ fontSize: sc(11) }} testID="setup-kicker">{t('screens.setup.before')}</Kicker>
-          </View>
+          <ScreenHeader title={t('screens.setup.before')} titleTestID="setup-kicker" backLabel={t('settings.back')} onBack={() => router.back()} />
 
           <View style={[styles.goal, policy.fillInput && styles.goalDocked]}>
             <View style={styles.goalHeader}>
@@ -306,13 +298,8 @@ const stylesFactory = () => StyleSheet.create({
   goal: { flexShrink: 1, zIndex: 1 },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
   removedWhileEditing: { display: 'none' },
-  goalDocked: { flex: 1, marginTop: sc(24) },
+  goalDocked: { flex: 1 },
   topicSlotDocked: { flex: 1, minHeight: 0 },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: sc(8),
-  },
   goalHeader: {
     flexDirection: 'row',
     alignItems: 'center',

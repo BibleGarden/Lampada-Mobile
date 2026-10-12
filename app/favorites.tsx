@@ -6,8 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import ScreenBg from '../components/ScreenBg';
 import ScripturePassageText from '../components/ScripturePassageText';
-import { IconButton, Kicker } from '../components/ui';
-import { ChevronLeft } from '../components/icons';
+import ScreenHeader from '../components/ScreenHeader';
 import { getFavoriteScriptures } from '../lib/scriptureRepository';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import {
@@ -171,14 +170,7 @@ export default function Favorites() {
       <ScreenBg />
       <Animated.View entering={FadeIn.duration(400)} style={styles.screen}>
         <View style={[styles.top, { paddingTop: insets.top + sc(10) }]}>
-          <IconButton
-            accessibilityLabel={t('settings.back')}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          >
-            <ChevronLeft color={colors.goldSoft} />
-          </IconButton>
-          <Kicker>{t('screens.favorites.title')}</Kicker>
-          <View style={{ width: sc(34) }} />
+          <ScreenHeader title={t('screens.favorites.title')} backLabel={t('settings.back')} onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         </View>
         <ScrollView
           contentContainerStyle={{
@@ -208,7 +200,6 @@ const stylesFactory = () => StyleSheet.create({
   screen: { flex: 1, ...column() },
   top: {
     paddingHorizontal: screenGutter(), paddingBottom: sc(8),
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   empty: {
     marginTop: sc(32), fontFamily: fonts.serif, fontSize: sc(17),

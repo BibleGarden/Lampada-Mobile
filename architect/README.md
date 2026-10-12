@@ -84,12 +84,13 @@ non-production origin.
 `SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`:
 recordings and the journal stay in app storage and prayers are shared as text.
 
-Android draws edge-to-edge (enforced from target SDK 35). React Native picks
-the navigation bar button style and its contrast scrim from the system
-light/dark mode, while the app is always dark, so with button navigation a
-light-mode phone showed a white scrim under every screen. The
-`expo-navigation-bar` plugin sets `enforceContrast: false` and `style: light`
-in the app theme: the bar stays transparent over the app with light buttons.
+Android draws edge-to-edge (enforced from target SDK 35). The
+`expo-navigation-bar` plugin uses system contrast enforcement, while the root
+`NavigationBar` holds the light button style after React Native mounts:
+Android draws a translucent dark contrast scrim behind three-button navigation,
+so scrolling text remains legible beneath the controls. Gesture navigation
+stays transparent and edge-to-edge. `app.config.js` overrides the plugin option
+from `app.json` so the latter remains untouched by PR builds.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
@@ -176,7 +177,9 @@ a report changes only the label, never the pair's placement.
 Shared SVG icons accept prototype sizes and apply `sc()` internally; callers
 pass unscaled values. Text size depends only on window geometry: the system
 font size (iOS Dynamic Type, Android font scale) is ignored (ADR-0032).
-Screen headers and content use the same `screenGutter()` inside `column()`.
+Settings, journal, favourites, setup, pre-start and about use `ScreenHeader` for
+one `sc(34)` back button and centered title. Their headers and content use the
+same `screenGutter()` inside `column()`.
 The session measures its frame, header and goal and subtracts the safe-area
 padding, timer and three default `sc(22)` gaps, including the header/goal margin
 corrections. When at least `sc(230)` remains for the card, the gaps become
@@ -190,16 +193,18 @@ The passage line limit excludes its `sc(6)` top padding below the Question/Quote
 Settings rows keep complete values by wrapping either text column, and the
 settings header has a hairline at its scroll boundary. Settings sheets built
 with `components/BottomSheet` are centered and capped by `sheetMaxWidth()`
-(`sc(294)`) in both orientations. Answer and recordings `KeyboardSheet` overlays
+(the content column width) in both orientations. Answer and recordings `KeyboardSheet` overlays
 span the window width; the answer retains its landscape-tablet columns.
 The Scripture reader uses the same
 `column()` and gutter for its header and text. Scrollable reader and journal
 content carry the bottom safe area in their content padding, so the final line
 can scroll clear of a navigation bar or Home Indicator. `bottomActionPadding()`
-adds one `sc(12)` gap above the bottom safe area for screen-ending content,
-bottom actions, settings sheets, keyboard-sheet footers, update and consent
-overlays. Forms inside `KeyboardViewport` add that gap with a zero inset because
-the viewport already reserves the safe area.
+reserves the bottom safe area for screen-ending content, bottom actions,
+settings sheets, keyboard-sheet footers, update and consent overlays. On iOS it
+adds `sc(12)` above the Home Indicator; Android adds only `sc(2)` to cover native
+pixel rounding without the former large gap above the navigation bar. Forms inside `KeyboardViewport` pass a
+zero inset because the viewport already reserves the safe area. The recordings
+list fades at its scroll edges on Android, as the pre-start briefing does.
 
 Accessibility baseline. Text tokens in `lib/theme.ts` (including
 `placeholder`) meet WCAG AA 4.5:1 on the lightest backgrounds they sit on - a
