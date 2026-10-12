@@ -138,7 +138,17 @@ export default function CompanionDock({
   const scriptureMeasureKeyRef = React.useRef(scriptureMeasureKey);
   scriptureMeasureKeyRef.current = scriptureMeasureKey;
   const activeMeasurement = measuredScripture?.key === scriptureMeasureKey ? measuredScripture : null;
-  const scriptureIsTruncated = !!activeMeasurement && activeMeasurement.lines > scriptureLineLimit;
+  const scriptureMeasurementPending = !!scripturePreviewText
+    && (!activeMeasurement || (!!activeMeasurement.candidate && !activeMeasurement.fits));
+  const settledScriptureRef = React.useRef<{ text: string; truncated: boolean } | null>(null);
+  const scriptureIsTruncated = scriptureMeasurementPending
+    ? settledScriptureRef.current?.text === scripturePreviewText && settledScriptureRef.current.truncated
+    : !!activeMeasurement && activeMeasurement.lines > scriptureLineLimit;
+  React.useEffect(() => {
+    if (!scriptureMeasurementPending && scripturePreviewText) {
+      settledScriptureRef.current = { text: scripturePreviewText, truncated: scriptureIsTruncated };
+    }
+  }, [scriptureMeasurementPending, scripturePreviewText, scriptureIsTruncated]);
   const clippedScripture = activeMeasurement?.fits ? activeMeasurement.candidate : null;
   const canReadInFull = !!compactScripture
     && (scriptureIsTruncated || compactScripture.partial);
@@ -327,7 +337,7 @@ export default function CompanionDock({
                 >
                   <ScripturePassageText
                     scripture={curScripture}
-                    style={styles.cardText}
+                    style={[styles.cardText, scriptureMeasurementPending && { opacity: 0 }]}
                     numberOfLines={clippedScripture === null ? scriptureLineLimit : undefined}
                     testIDPrefix="scripture-preview-highlight"
                     variant="compact"
