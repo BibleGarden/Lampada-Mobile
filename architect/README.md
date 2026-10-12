@@ -92,6 +92,8 @@ theme and after Activity creation, before the first frame; the root
 Android draws a translucent dark contrast scrim behind three-button navigation,
 so scrolling text remains legible beneath the controls. Gesture navigation
 stays transparent and edge-to-edge, including a cold start in system light mode.
+On Android 8–9, the Activity sets the platform's dark translucent scrim color
+before React Native mounts; Android 10+ provides the contrast scrim itself.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
