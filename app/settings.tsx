@@ -2,6 +2,7 @@ import { languageNames } from '../lib/locales/languageNames';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -16,6 +17,7 @@ import {
   useSettings,
 } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
+import { privacyPolicyUrl } from '../lib/publicUrls';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   DEFAULT_REMINDER_SCHEDULE,
@@ -1298,6 +1300,17 @@ export default function Settings() {
               {t('settings.privacyDetails')}
             </Text>
           ) : null}
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t('settings.privacyPolicyLink')}
+            testID="settings-privacy-policy"
+            onPress={() => void Linking.openURL(privacyPolicyUrl(uiLanguage))
+              .catch(() => Alert.alert(t('screens.about.linkFailed'), t('screens.about.later')))}
+            style={({ pressed }) => [styles.privacyDetailsToggle, pressed && styles.optionPressed]}
+          >
+            <Text style={styles.privacyDetailsLabel}>{t('settings.privacyPolicyLink')}</Text>
+            <ChevronRight size={14} color={colors.labelGold} />
+          </Pressable>
         </BottomSheet>
       ) : null}
 

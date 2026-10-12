@@ -18,6 +18,8 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: privacy-sheet
+- assertVisible:
+    id: settings-privacy-policy
 - assertNotVisible:
     id: privacy-sheet-done
 - assertVisible:

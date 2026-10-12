@@ -11,6 +11,8 @@ tags:
     id: "privacy-settings-button"
 - assertVisible:
     id: "privacy-sheet"
+- assertVisible:
+    id: settings-privacy-policy
 - assertNotVisible:
     id: "privacy-sheet-done"
 - assertVisible:

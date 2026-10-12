@@ -10,13 +10,13 @@ import * as Linking from 'expo-linking';
 import { Code, ExternalLink, Globe, Mail, Send } from 'lucide-react-native';
 import { fetchAboutContacts, type AboutContact } from '../lib/aboutClient';
 import { apiBaseUrl } from '../lib/apiConfig';
+import { BIBLE_GARDEN_URL } from '../lib/publicUrls';
 import ScreenBg from '../components/ScreenBg';
 import { Kicker } from '../components/ui';
 import { Book } from '../components/icons';
 import ScreenHeader from '../components/ScreenHeader';
 import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 
-const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = (Constants.executionEnvironment === 'storeClient'
   ? Constants.expoConfig?.version
   : Application.nativeApplicationVersion ?? Constants.expoConfig?.version) ?? '—';
