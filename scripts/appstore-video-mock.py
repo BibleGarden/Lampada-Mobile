@@ -84,6 +84,16 @@ def selection(locale: str, item: dict, passage: dict):
     }
 
 
+def version_check_platform(query: str) -> str:
+    params = parse_qs(query)
+    if (set(params) != {"app", "app_version", "platform"}
+            or params.get("app") != ["lampada"]
+            or len(params.get("app_version", [])) != 1
+            or params.get("platform") not in (["ios"], ["android"])):
+        raise ValueError("Unexpected version-check query")
+    return params["platform"][0]
+
+
 def serve(fixture: dict, pacing: dict, port: int, log_path: Path):
     lock = threading.Lock()
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -132,11 +142,12 @@ def serve(fixture: dict, pacing: dict, port: int, log_path: Path):
             if not self.authorized():
                 return
             if url.path == "/api/version-check":
-                query = parse_qs(url.query)
-                if query.get("app") != ["lampada"] or len(query.get("app_version", [])) != 1 or set(query) != {"app", "app_version"}:
-                    self.error(422, "Unexpected version-check query")
+                try:
+                    platform = version_check_platform(url.query)
+                except ValueError as error:
+                    self.error(422, str(error))
                     return
-                self.respond(200, fixture["version_check"], "version")
+                self.respond(200, {**fixture["version_check"], "platform": platform}, "version")
                 return
             if url.path == "/api/languages" and not url.query:
                 body = [{"alias": locale, "name_en": item["language_name_en"],
