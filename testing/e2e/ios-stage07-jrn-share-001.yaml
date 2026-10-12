@@ -97,8 +97,12 @@ tags:
 # the system share sheet is outside the app, so match its own labels
 - assertVisible: ".*(Скопировать|Copy|Ещё|More|Отменить|Cancel).*"
 - takeScreenshot: JRN-014-share-sheet
-# Нативное действие закрытия системного меню доступно в AX-дереве.
-- tapOn: "закрыть всплывающее меню|Dismiss Popover"
+# На iOS 26.5 AX-действие Dismiss Popover возвращает успех, но оставляет лист открытым.
+- swipe:
+    start: "50%,62%"
+    end: "50%,94%"
+    duration: 650
+- assertNotVisible: ".*(Скопировать|Copy|Ещё|More).*"
 - assertVisible:
     id: "journal-title"
 - assertVisible:
