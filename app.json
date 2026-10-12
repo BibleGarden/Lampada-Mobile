@@ -71,10 +71,11 @@
         }
       ],
       "expo-status-bar",
+      "./plugins/withAndroidSystemBars",
       [
         "expo-navigation-bar",
         {
-          "enforceContrast": false,
+          "enforceContrast": true,
           "style": "light"
         }
       ],

@@ -2,7 +2,7 @@
 // Сам файл прототипа удалён из репозитория: интерфейс давно ушёл от него.
 
 import { useMemo } from 'react';
-import { Dimensions, Platform, useWindowDimensions } from 'react-native';
+import { Dimensions, useWindowDimensions } from 'react-native';
 
 // Прототип свёрстан в кадре 294×654 (экран «телефона» 320 минус рамка 13+13).
 // Реальные экраны шире, поэтому каждый размер из прототипа масштабируется
@@ -88,11 +88,10 @@ export const column = () => ({
 export const screenGutter = () => sc(18);
 
 /** Общий предел ширины нижних шторок на широком окне. */
-export const sheetMaxWidth = () => column().maxWidth;
+export const sheetMaxWidth = () => column().maxWidth - 2 * screenGutter();
 
 /** Единый отступ нижнего действия от безопасной зоны. */
-export const bottomActionPadding = (bottomInset: number) =>
-  bottomInset + sc(Platform.OS === 'android' ? 2 : 12);
+export const bottomActionPadding = (bottomInset: number) => bottomInset + sc(12);
 
 export const colors = {
   // фоны

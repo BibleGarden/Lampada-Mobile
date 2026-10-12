@@ -85,12 +85,13 @@ non-production origin.
 recordings and the journal stay in app storage and prayers are shared as text.
 
 Android draws edge-to-edge (enforced from target SDK 35). The
-`expo-navigation-bar` plugin uses system contrast enforcement, while the root
-`NavigationBar` holds the light button style after React Native mounts:
+`app.json` configures `expo-navigation-bar` with contrast enforcement and light
+buttons. `withAndroidSystemBars` applies the same style to the native splash
+theme and after Activity creation, before the first frame; the root
+`NavigationBar` retains it after React Native mounts:
 Android draws a translucent dark contrast scrim behind three-button navigation,
 so scrolling text remains legible beneath the controls. Gesture navigation
-stays transparent and edge-to-edge. `app.config.js` overrides the plugin option
-from `app.json` so the latter remains untouched by PR builds.
+stays transparent and edge-to-edge, including a cold start in system light mode.
 
 Changes to the app are made against the documentation of
 [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/) specifically.
@@ -193,16 +194,16 @@ The passage line limit excludes its `sc(6)` top padding below the Question/Quote
 Settings rows keep complete values by wrapping either text column, and the
 settings header has a hairline at its scroll boundary. Settings sheets built
 with `components/BottomSheet` are centered and capped by `sheetMaxWidth()`
-(the content column width) in both orientations. Answer and recordings `KeyboardSheet` overlays
+(the content column width minus its two gutters, matching the cards) in both
+orientations. Answer and recordings `KeyboardSheet` overlays
 span the window width; the answer retains its landscape-tablet columns.
 The Scripture reader uses the same
 `column()` and gutter for its header and text. Scrollable reader and journal
 content carry the bottom safe area in their content padding, so the final line
 can scroll clear of a navigation bar or Home Indicator. `bottomActionPadding()`
 reserves the bottom safe area for screen-ending content, bottom actions,
-settings sheets, keyboard-sheet footers, update and consent overlays. On iOS it
-adds `sc(12)` above the Home Indicator; Android adds only `sc(2)` to cover native
-pixel rounding without the former large gap above the navigation bar. Forms inside `KeyboardViewport` pass a
+settings sheets, keyboard-sheet footers, update and consent overlays, adding
+`sc(12)` above the safe area on both platforms. Forms inside `KeyboardViewport` pass a
 zero inset because the viewport already reserves the safe area. The recordings
 list fades at its scroll edges on Android, as the pre-start briefing does.
 
@@ -341,7 +342,8 @@ A closed sheet is hidden and untouchable. Gorhom does not reposition a closed
 sheet, so `KeyboardSheet` remounts it when the window geometry changes.
 
 Preparation and reflection defer lower actions while typing. Reflection keeps
-the same column measure while editing. Preparation keeps its bottom gap by
+the same column measure while editing. Preparation keeps a fixed `sc(16)` header-to-goal gap in both keyboard states;
+free space is distributed only below the goal. It keeps its bottom gap by
 relaxing the goal field's `sc(120)` minimum whenever the docked keyboard fills
 the form, regardless of the device or orientation.
 Their field fills the form only while a docked keyboard is opening or open (`keyboardFormPolicy`):

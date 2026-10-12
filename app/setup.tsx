@@ -126,7 +126,7 @@ export default function Setup() {
 
           <View style={[styles.goal, policy.fillInput && styles.goalDocked]}>
             <View style={styles.goalHeader}>
-              <Text style={styles.goalTitle}>{t('screens.setup.goal')}</Text>
+              <Text style={styles.goalTitle} testID="setup-goal-title">{t('screens.setup.goal')}</Text>
               <Pressable
                 onPress={() => setExamplesOpen(true)}
                 accessibilityRole="button"
@@ -166,85 +166,87 @@ export default function Setup() {
             </View>
           </View>
 
-          <View {...hiddenWhileEditing}>
-            <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
-              {t('screens.setup.duration')}
-            </Kicker>
-            <View style={styles.stepper}>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  s.decMinutes();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.setup.decreaseDuration')}
-                style={({ pressed }) => [
-                  styles.stepBtn,
-                  styles.stepBtnLeft,
-                  pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
-                ]}
-              >
-                <Minus color={colors.white65} />
-              </Pressable>
-              <View
-                accessible
-                accessibilityLabel={durationLabel(s.minutes)}
-                style={styles.stepValue}
-                testID="setup-duration-value"
-              >
-                <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
-                <Text style={styles.stepUnit}>{durationUnit}</Text>
+          <View {...hiddenWhileEditing} style={[styles.lower, hiddenWhileEditing.style]}>
+            <View>
+              <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
+                {t('screens.setup.duration')}
+              </Kicker>
+              <View style={styles.stepper}>
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    s.decMinutes();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('screens.setup.decreaseDuration')}
+                  style={({ pressed }) => [
+                    styles.stepBtn,
+                    styles.stepBtnLeft,
+                    pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
+                  ]}
+                >
+                  <Minus color={colors.white65} />
+                </Pressable>
+                <View
+                  accessible
+                  accessibilityLabel={durationLabel(s.minutes)}
+                  style={styles.stepValue}
+                  testID="setup-duration-value"
+                >
+                  <Text style={styles.stepBig}>{s.minutes === 0 ? '∞' : s.minutes}</Text>
+                  <Text style={styles.stepUnit}>{durationUnit}</Text>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    s.incMinutes();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('screens.setup.increaseDuration')}
+                  style={({ pressed }) => [
+                    styles.stepBtn,
+                    styles.stepBtnRight,
+                    pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
+                  ]}
+                >
+                  <Plus color={colors.white65} />
+                </Pressable>
               </View>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  s.incMinutes();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={t('screens.setup.increaseDuration')}
-                style={({ pressed }) => [
-                  styles.stepBtn,
-                  styles.stepBtnRight,
-                  pressed && { backgroundColor: 'rgba(255,255,255,.07)' },
-                ]}
-              >
-                <Plus color={colors.white65} />
-              </Pressable>
-            </View>
-            <View style={styles.presets}>
-              {PRESETS.map((p) => {
-                const active = s.minutes === p.v;
-                return (
-                  <Pressable
-                    key={p.v}
-                    testID={`setup-preset-${p.v}`}
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      s.setMinutes(p.v);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
-                    accessibilityState={{ selected: active }}
-                    hitSlop={touchSlop(presetHeight())}
-                    style={[styles.preset, active && styles.presetActive]}
-                  >
-                    <Text
-                      style={[
-                        styles.presetLabel,
-                        p.v === 0 && { fontSize: sc(18) },
-                        active && { color: colors.amberBright },
-                      ]}
+              <View style={styles.presets}>
+                {PRESETS.map((p) => {
+                  const active = s.minutes === p.v;
+                  return (
+                    <Pressable
+                      key={p.v}
+                      testID={`setup-preset-${p.v}`}
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        s.setMinutes(p.v);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={p.v === 60 ? t('screens.setup.hour') : durationLabel(p.v)}
+                      accessibilityState={{ selected: active }}
+                      hitSlop={touchSlop(presetHeight())}
+                      style={[styles.preset, active && styles.presetActive]}
                     >
-                      {p.v === 60 ? t('screens.setup.hour') : p.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.presetLabel,
+                          p.v === 0 && { fontSize: sc(18) },
+                          active && { color: colors.amberBright },
+                        ]}
+                      >
+                        {p.v === 60 ? t('screens.setup.hour') : p.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
-          </View>
 
-          <View {...hiddenWhileEditing}>
-            <GoldButton label={t('screens.setup.next')} testID="setup-next-button" disabled={!entranceReady} onPress={() => void next()} />
+            <View>
+              <GoldButton label={t('screens.setup.next')} testID="setup-next-button" disabled={!entranceReady} onPress={() => void next()} />
+            </View>
           </View>
         </Animated.View>
       </Pressable>
@@ -292,10 +294,11 @@ const presetHeight = () => sc(30);
 const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   dismissArea: { flex: 1 },
-  body: { flex: 1, justifyContent: 'space-between', paddingHorizontal: screenGutter(), ...column() },
+  body: { flex: 1, paddingHorizontal: screenGutter(), ...column() },
   // поле, растянутое до клавиатуры, перекрывает нижние блоки; длинная цель
   // ужимает слот поля до свободного места, чтобы «Далее» оставалась на экране
-  goal: { flexShrink: 1, zIndex: 1 },
+  goal: { flexShrink: 1, zIndex: 1, marginTop: sc(16) },
+  lower: { flexGrow: 1, justifyContent: 'space-between', gap: sc(12), paddingTop: sc(16) },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
   removedWhileEditing: { display: 'none' },
   goalDocked: { flex: 1 },
