@@ -45,7 +45,7 @@ if [ "${SKIP_RESET:-0}" != "1" ]; then
   echo "== Чистая установка + REM-001 (разрешение)"
   xcrun simctl uninstall "$UDID" twinkler
   xcrun simctl install "$UDID" "$APP"
-  maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-rem-001-permission-allow.yaml
+  maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-rem-001-permission-allow.yaml
 fi
 
 # now+DELAY минут, округление ВВЕРХ до кратности 5. Вывод "HH:MM".
@@ -77,7 +77,7 @@ T2=$(ceil_time 9)
 echo "== REM-004/011/013: цель $T1 (строка сейчас $ROW0)"
 helper_created=1
 node testing/e2e/gen-rem-set-time.mjs --init "$ROW0" "$T1" > "$HELPER"
-maestro test --test-output-dir "$EVIDENCE" testing/reminder-fire/ios-rem-fire.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/reminder-fire/ios-rem-fire.yaml
 sleep_until "$T1" 4
 shot REM-004-011-013-banner
 
@@ -86,21 +86,21 @@ T1=$(ceil_time 4)
 T2=$(ceil_time 9)
 echo "== REM-005: цели $T1, $T2 (исходная строка $INIT1)"
 node testing/e2e/gen-rem-set-time.mjs --init "$INIT1" "$T1" "$T2" > "$HELPER"
-maestro test --test-output-dir "$EVIDENCE" -e REM_T1="$T1" -e REM_T2="$T2" testing/reminder-fire/ios-rem-005-two-times.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" -e REM_T1="$T1" -e REM_T2="$T2" testing/reminder-fire/ios-rem-005-two-times.yaml
 sleep_until "$T1" 4
 shot REM-005-first
 sleep_until "$T2" 4
 shot REM-005-second
 
 echo "== REM-006: перезапуск"
-maestro test --test-output-dir "$EVIDENCE" testing/e2e/ios-rem-006-restart.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-rem-006-restart.yaml
 
 # REM-008: первая строка теперь на $T1. Сдвигаем вперёд, выключаем тумблер.
 PREV=$T1
 T1=$(ceil_time 4)
 echo "== REM-008: цель $T1, выключение тумблера"
 node testing/e2e/gen-rem-set-time.mjs --init "$PREV" "$T1" > "$HELPER"
-maestro test --test-output-dir "$EVIDENCE" testing/reminder-fire/ios-rem-008-toggle-off.yaml
+maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/reminder-fire/ios-rem-008-toggle-off.yaml
 sleep_until "$T1" 4
 shot REM-008-no-banner
 
