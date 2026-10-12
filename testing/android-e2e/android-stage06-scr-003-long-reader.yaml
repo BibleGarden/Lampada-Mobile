@@ -58,6 +58,11 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: dock-scripture-favorite
+      enabled: true
+    timeout: 20000
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
@@ -68,6 +73,11 @@ tags:
     id: dock-scripture-next
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible:
+      id: dock-scripture-favorite
+      enabled: true
+    timeout: 20000
 - tapOn:
     id: dock-scripture-favorite
     waitToSettleTimeoutMs: 500
