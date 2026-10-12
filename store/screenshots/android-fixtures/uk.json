@@ -1,0 +1,91 @@
+{
+ "status": "Google Play screenshot fixture: on-camera copy reproduces the owner-approved App Store screenshots (store/screenshots/iphone-6.9-uk-*), off-camera values from store/video/demo-content.json",
+ "version_check": {
+  "app": "lampada",
+  "update_type": "none",
+  "latest_version": "1.0.24",
+  "store_url": "https://example.com/lampada",
+  "message": null
+ },
+ "locales": {
+  "uk": {
+   "language_name_en": "Ukrainian",
+   "language_name_national": "Українська",
+   "typed": {
+    "intention": "Боюся помилитися з вибором.",
+    "answer": "Хочу сказати Йому, що вже знаю, як вчиню. Просто боюся потім пошкодувати.",
+    "takeaway": "Мені стало спокійніше. Тепер знаю, як вчинити, а далі довіряю Богові."
+   },
+   "seed": {
+    "intention": "Перед важкою розмовою",
+    "answer": "Хотілося сказати головне спокійно.",
+    "takeaway": "Зміг вислухати й не поспішати з відповіддю."
+   },
+   "questions": {
+    "first": "Про який найменший крок ти хочеш сказати Йому насамперед?",
+    "next": "Як думаєш, що цей вечір означав для твого сина?",
+    "reflect": "У чому саме зараз найбільше сумніву перед твоїм рішенням?"
+   },
+   "catalog": {
+    "translation": 20,
+    "translation_alias": "ubh",
+    "translation_name": "UBH",
+    "voice": 130,
+    "voice_alias": "kozlov_uk",
+    "voice_name": "Ігор Козлов",
+    "books": [
+     {
+      "book_number": 19,
+      "name": "Псалми",
+      "alias": "psa",
+      "chapters_count": 150
+     },
+     {
+      "book_number": 43,
+      "name": "Євангелія від Йоана",
+      "alias": "jhn",
+      "chapters_count": 21
+     }
+    ]
+   },
+   "passages": [
+    {
+     "canonical_id": "v3:19.023.001-006",
+     "book_number": 19,
+     "chapter_number": 23,
+     "verse_start": 1,
+     "verse_end": 6,
+     "title": null,
+     "text": "Псалом. Давида. Господь — мій пастир: Нічого мені не бракуватиме.\n\nНа буйних пасовиськах він дає мені лежати; веде мене на тихі води."
+    },
+    {
+     "canonical_id": "v3:43.003.016-016",
+     "book_number": 43,
+     "chapter_number": 3,
+     "verse_start": 16,
+     "verse_end": 16,
+     "title": null,
+     "text": "Бог бо так полюбив світ, що Сина свого Єдинородного дав, щоб кожен, хто вірує в нього, не загинув, а жив життям вічним."
+    },
+    {
+     "canonical_id": "v3:19.118.024-024",
+     "book_number": 19,
+     "chapter_number": 118,
+     "verse_start": 24,
+     "verse_end": 24,
+     "title": null,
+     "text": "Цей день учинив Господь, радіймо й веселімся в ньому!",
+     "expected_reference": "Псалми 118:24"
+    }
+   ],
+   "capture": {
+    "system_locale": "uk_UA",
+    "system_keyboard": "uk_UA@sw=Ukrainian;hw=Automatic",
+    "home_label": "Почати молитву",
+    "next_question_label": "Наступне питання",
+    "keyboard_probe": "і",
+    "host_keyboard_layout": "com.apple.keylayout.Ukrainian-PC"
+   }
+  }
+ }
+}

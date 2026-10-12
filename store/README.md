@@ -217,7 +217,7 @@ and [AI-generated content policy](https://support.google.com/googleplay/android-
 | Play Console item | Select or enter | Basis |
 |---|---|---|
 | App details | App; free; Lifestyle. **Owner decision:** confirm free pricing and distribution countries. | `store/play/en-US.json` describes a prayer app; `store/README.md` sets Lifestyle. |
-| Privacy policy | `https://lampada.app/privacy?lang=en` (live on 2026-10-12). Add a link to the full policy **inside the app before release**; the current Settings text is only a processing summary. | `store/metadata/en-US.json`; `app/settings.tsx:1181` and `lib/locales/settings.ts`. |
+| Privacy policy | `https://lampada.app/privacy?lang=en` (live on 2026-10-12). Settings links to the full policy in the interface language; its data-processing text remains a summary. | `store/metadata/en-US.json`; `app/settings.tsx:1181` and `lib/locales/settings.ts`. |
 | App access / sign-in details | **All functionality is available without special access**; no reviewer credentials. The optional local PIN/biometric lock is user-created. | `app/setup.tsx`, `components/LockGate.tsx`, `architect/README.md` (lock gate). |
 | Ads | **No, my app does not contain ads.** | `package.json` has no ad SDK; `store/play/en-US.json` describes no ads or sponsored placements. |
 | Store listing contact | **Owner decision:** enter a monitored support email; recommend `support@lampada.app` if the owner controls it. | `store/metadata/en-US.json` points to the live privacy policy, which currently names that support address; no contact email is stored in this repository. |
@@ -315,10 +315,29 @@ device type are recommended for discovery, not a release gate.
 a separate Play icon export.
 
 Not in the repository yet: the exported 512×512 Play icon, the 1024×500
-feature graphic, Android phone and tablet screenshots, a full in-app privacy
-policy link, the uploaded AAB's merged permission list, and evidence of the
-server's request-log retention. The App Store screenshots show iOS UI and are
+feature graphic, Android tablet screenshots, the uploaded AAB's merged
+permission list, and evidence of the server's request-log retention. The App Store screenshots show iOS UI and are
 not suitable for the Play listing.
+
+### Android screenshots
+
+The 24 Play phone images in `screenshots/android-phone-*.png` were captured on
+2026-10-12 at 1280×2560 for `ru`, `uk` and `en`. Their approved copy and the
+API responses live in `screenshots/android-fixtures/`. `scripts/capture-play-screenshots.sh
+<ru|uk|en>` rebuilds a test-channel Release APK against the shared
+`scripts/appstore-video-mock.py`, seeds the signed test database, and runs
+`testing/screens/play-screens-{1,2}.yaml`. It writes eight PNGs and full logs
+to a printed temporary directory for review; it does not overwrite approved
+images. Do not run capture just to check the tooling.
+
+Use only `emulator-5554` running the `Pray_Pixel_API_35` AVD. Start it as in
+`testing/README.md` after `setopt NO_BG_NICE`; set
+`ANDROID_HOME=~/Library/Android/sdk` before invoking the script. The script
+sets `wm size 1280x2560`, demo mode (09:41, full battery and Wi-Fi), the local
+mock and screenshot seed. On exit it restores native display size and density,
+turns demo mode off, restores the Moscow automatic timezone and spell checker
+setting, removes the mock app and probe, stops the mock and Gradle. Shut down
+the emulator when finished. Never use a connected physical device.
 
 ### Closed testing
 

@@ -1,0 +1,84 @@
+appId: app.lampada
+---
+# Google Play phone screenshots, one continuous take (state seeded by seed-android.py; texts from run-take.sh env).
+# Part 1 (01-06). Timer waits mirror the App Store set: 03 ~4:3x, 06 ~1:4x.
+- launchApp:
+    stopApp: true
+- assertVisible:
+    id: start-prayer-button
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 01-home
+- tapOn:
+    id: start-prayer-button
+- tapOn:
+    id: setup-goal-input
+- inputText: ${TOPIC}
+- tapOn:
+    id: setup-kicker
+- tapOn:
+    id: setup-preset-5
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 02-topic
+- tapOn:
+    id: setup-next-button
+- longPressOn:
+    id: threshold-hold-button
+- assertVisible:
+    id: session-title
+- extendedWaitUntil:
+    visible: "${QUESTION_RE}"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "4:[23][0-9]"
+    timeout: 60000
+- takeScreenshot: 03-question
+- tapOn:
+    id: dock-answer-button
+- tapOn:
+    id: answer-input
+- inputText: ${ANSWER}
+- tapOn:
+    id: answer-question
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 04-answer
+# Recording length = wall clock between these two taps (~33 s). Taps must not wait for the
+# animated recording screen to settle (default settle/retry added 7-12 s per tap), and the
+# pauses are plain wall-clock waits: the on-screen counter lags while Maestro polls.
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- extendedWaitUntil:
+    visible: "never-on-screen-pause-marker"
+    timeout: 7000
+    optional: true
+# The green microphone privacy chip shows in the status bar for the first few seconds only.
+- takeScreenshot: 05-audio
+- extendedWaitUntil:
+    visible: "never-on-screen-pause-marker"
+    timeout: 28000
+    optional: true
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: recordings-close-button
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: answer-save-button
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: dock-scripture-tab
+- extendedWaitUntil:
+    visible: "(?s)${PASSAGE_RE}.*"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "1:4[0-9]"
+    timeout: 120000
+- takeScreenshot: 06-passage
