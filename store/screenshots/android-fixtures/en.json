@@ -1,0 +1,47 @@
+{
+  "status": "Google Play screenshot fixture: on-camera copy reproduces the owner-approved App Store screenshots (store/screenshots/iphone-6.9-en-*), off-camera values from store/video/demo-content.json",
+  "locales": {
+    "en": {
+      "typed": {
+        "intention": "I’m afraid I’ll make the wrong decision.",
+        "answer": "I think I know which option feels right. I’m just scared I’ll regret it later.",
+        "takeaway": "I feel calmer now. I’ve made my decision, and I trust God with what comes next."
+      },
+      "questions": {
+        "first": "What makes this particular choice feel harder to reverse than others you have made?",
+        "next": "What do you think this evening meant to your son?",
+        "reflect": "What does bringing that fear of regret to God look like for you right now?"
+      },
+      "passages": [
+        {
+          "canonical_id": "v3:19.023.001-006",
+          "book_number": 19,
+          "chapter_number": 23,
+          "verse_start": 1,
+          "verse_end": 6,
+          "title": null,
+          "text": "The Lord Is My Shepherd The Lord is my shepherd; I shall not want. He makes me lie down in green pastures; He leads me beside quiet waters. He restores my soul; He guides me in the paths of righteousness for the sake of His name. Even though I walk through the valley of the shadow of death, I will fear no evil, for You are with me; Your rod and Your staff, they comfort me. You prepare a table before me in the presence of my enemies. You anoint my head with oil; my cup overflows. Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the Lord forever."
+        },
+        {
+          "canonical_id": "v3:43.003.016-016",
+          "book_number": 43,
+          "chapter_number": 3,
+          "verse_start": 16,
+          "verse_end": 16,
+          "title": null,
+          "text": "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life."
+        },
+        {
+          "canonical_id": "v3:19.118.024-024",
+          "book_number": 19,
+          "chapter_number": 118,
+          "verse_start": 24,
+          "verse_end": 24,
+          "title": null,
+          "text": "This is the day that the Lord has made; we will rejoice and be glad in it.",
+          "expected_reference": "Psalms 118:24"
+        }
+      ]
+    }
+  }
+}

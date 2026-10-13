@@ -1,5 +1,7 @@
 export const systemMessages = {
   en: {
+    'externalLink.openFailed': 'Could not open link',
+    'externalLink.tryAgain': 'Please try again later.',
     'system.prayer': 'Prayer',
     'system.timeEnded': 'Time is up',
     'system.musicHint': 'Pausing music does not stop the timer',
@@ -35,6 +37,8 @@ export const systemMessages = {
     'system.facePermission': 'The app is missing permission to use Face ID. Update the app and try again.',
   },
   ru: {
+    'externalLink.openFailed': 'Не удалось открыть ссылку',
+    'externalLink.tryAgain': 'Попробуй ещё раз позже.',
     'system.prayer': 'Молитва',
     'system.timeEnded': 'Время завершено',
     'system.musicHint': 'Пауза музыки не останавливает таймер',
@@ -70,6 +74,8 @@ export const systemMessages = {
     'system.facePermission': 'Приложению не хватает разрешения на использование Face ID. Обнови приложение и попробуй снова.',
   },
   uk: {
+    'externalLink.openFailed': 'Не вдалося відкрити посилання',
+    'externalLink.tryAgain': 'Спробуй ще раз пізніше.',
     'system.prayer': 'Молитва',
     'system.timeEnded': 'Час завершено',
     'system.musicHint': 'Пауза музики не зупиняє таймер',

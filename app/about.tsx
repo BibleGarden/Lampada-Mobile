@@ -10,13 +10,14 @@ import * as Linking from 'expo-linking';
 import { Code, ExternalLink, Globe, Mail, Send } from 'lucide-react-native';
 import { fetchAboutContacts, type AboutContact } from '../lib/aboutClient';
 import { apiBaseUrl } from '../lib/apiConfig';
+import { BIBLE_GARDEN_URL } from '../lib/publicUrls';
+import { openExternalUrl } from '../lib/externalLink';
 import ScreenBg from '../components/ScreenBg';
 import { Kicker } from '../components/ui';
 import { Book } from '../components/icons';
 import ScreenHeader from '../components/ScreenHeader';
 import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 
-const BIBLE_GARDEN_URL = 'https://bible.garden';
 const appVersion = (Constants.executionEnvironment === 'storeClient'
   ? Constants.expoConfig?.version
   : Application.nativeApplicationVersion ?? Constants.expoConfig?.version) ?? '—';
@@ -92,7 +93,7 @@ export default function About() {
                 accessibilityRole="link"
                 accessibilityLabel={`${contact.label}, ${contact.subtitle}`}
                 testID={`contacts-${contact.id}`}
-                onPress={() => void Linking.openURL(contact.url).catch(() => Alert.alert(t('screens.about.linkFailed'), t('screens.about.later')))}
+                onPress={() => void openExternalUrl(contact.url, t, Linking.openURL, Alert.alert)}
                 style={({ pressed }) => [styles.contactRow, index > 0 && styles.contactDivider, pressed && styles.contactPressed]}
               >
                 <View style={styles.iconCircle}><ContactIcon size={17} color={colors.amberBright} /></View>
@@ -112,7 +113,7 @@ export default function About() {
             accessibilityRole="link"
             accessibilityLabel={t('screens.about.openBible')}
             testID="bible-garden-link"
-            onPress={() => void Linking.openURL(BIBLE_GARDEN_URL)}
+            onPress={() => void openExternalUrl(BIBLE_GARDEN_URL, t, Linking.openURL, Alert.alert)}
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
           >
             <View style={styles.projectHeader}>

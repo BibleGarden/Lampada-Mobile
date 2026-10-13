@@ -271,7 +271,7 @@ the setup route rather than adding duplicate entries to the back stack.
 | `/reflect` | The closing question and the wording of the takeaway |
 | `/done` | Compatibility redirect to Home for older links |
 | `/journal` | Prayer history, search, playback, saved quotes and deletion |
-| `/settings` | Settings for the language, the translation, the narration, privacy, reminders and the lock |
+| `/settings` | Settings for the language, the translation, the narration, privacy consents and the language-specific privacy policy link, reminders and the lock |
 | `/favorites` | Saved quotes: the key verses, expandable into the full passage |
 | `/about` | The point of the app, API-backed contacts, the version and the author's other projects |
 

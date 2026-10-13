@@ -2,12 +2,14 @@ import { languageNames } from '../lib/locales/languageNames';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { Kicker } from '../components/ui';
 import { Check, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import { ExternalLink } from 'lucide-react-native';
 import ScreenHeader from '../components/ScreenHeader';
 import {
   ScriptureCatalogUnavailableError,
@@ -16,6 +18,8 @@ import {
   useSettings,
 } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
+import { privacyPolicyUrl } from '../lib/publicUrls';
+import { openExternalUrl } from '../lib/externalLink';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   DEFAULT_REMINDER_SCHEDULE,
@@ -1298,6 +1302,16 @@ export default function Settings() {
               {t('settings.privacyDetails')}
             </Text>
           ) : null}
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={t('settings.privacyPolicyLink')}
+            testID="settings-privacy-policy"
+            onPress={() => void openExternalUrl(privacyPolicyUrl(uiLanguage), t, Linking.openURL, Alert.alert)}
+            style={({ pressed }) => [styles.privacyDetailsToggle, pressed && styles.optionPressed]}
+          >
+            <Text style={styles.privacyDetailsLabel}>{t('settings.privacyPolicyLink')}</Text>
+            <ExternalLink size={sc(16)} color={colors.labelGold} strokeWidth={1.7} />
+          </Pressable>
         </BottomSheet>
       ) : null}
 

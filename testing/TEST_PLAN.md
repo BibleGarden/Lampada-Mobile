@@ -296,6 +296,7 @@ tier of its e2e runs.
 | AI-019 | Navigate through earlier questions while the next question is prepared | the prepared question is used when advancing from the frontier; navigation alone does not start another request |
 | AI-020 | Saving a privacy decision fails, in the first-use dialog and in Settings | the dialog stays open with "Could not save the decision. Please try again."; in Settings the choice returns to the stored one with the same message; a `consent_save_failed` record with the purpose is appended (unit: `scriptureInitialization.test.mjs`) |
 | AI-021 | Return questions at every prayer stage with a stray `}`, JSON object/array/key, HTML tag, Markdown or numbered/bulleted list marker; also request one in the background, then return real questions opening with a quote and colon, a Scripture reference or Ukrainian І/Ї/Є/Ґ | debris is never displayed or saved; foreground requests show a labelled local question, background requests return no content; each rejection logs `ai_question_invalid` and a console warning without response text; real question openings are accepted without a warning (unit: `questionContext.test.mjs`) |
+| AI-022 [main] | Open the privacy sheet in Settings | The Privacy policy link is visible beside data processing details (flows: `*-stage05-privacy-setting`); unit tests verify the `en`, `ru` and `uk` URLs passed to the shared opener and their localized failure alerts (`externalLink.test.mjs`) |
 
 ### Scripture
 
@@ -397,7 +398,7 @@ the stub; execution results belong in dated reports.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| REM-001 | Turn the reminders on for the first time | the system permission prompt appears once, at the moment of turning them on, not at app start |
+| REM-001 | Turn the reminders on for the first time | the system permission prompt appears once, at the moment of turning them on, not at app start; Android with permission pre-granted schedules a local reminder without an error (`android-rem-local-schedule.yaml`) |
 | REM-002 | Deny the permission | the toggle stays off, the settings screen works, a clear text about the system settings is shown |
 | REM-003 | Grant the permission in the system settings and return to the app | the schedule is set up without restarting the app |
 | REM-004 | Set the nearest time and wait for it | the notification arrives with a phrase from the pool |

@@ -1,0 +1,23 @@
+appId: app.lampada
+---
+# Part 2 (07-08): run when the prayer timer shows 0:5x, so the journal says 4 min.
+- tapOn:
+    id: session-finish-button
+- assertVisible:
+    id: reflection-input
+- tapOn:
+    id: reflection-input
+- inputText: ${TAKEAWAY}
+- tapOn:
+    id: reflect-question
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 07-reflection
+- tapOn:
+    id: reflect-complete-button
+- tapOn:
+    id: journal-button
+- tapOn: "${TOPIC_RE}"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 08-history
