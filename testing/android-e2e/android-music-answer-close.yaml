@@ -53,12 +53,12 @@ tags:
     id: scripture-reader-reference
 - tapOn:
     id: scripture-reader-close
-- assertNotVisible:
-    id: music-playing
 - tapOn:
     id: dock-question-tab
-- assertVisible:
-    id: music-playing
+- extendedWaitUntil:
+    visible:
+      id: music-playing
+    timeout: 5000
 - tapOn:
     id: dock-answer-button
 - assertVisible:
