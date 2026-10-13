@@ -1,11 +1,5 @@
 import type { AudioSessionLease, PlaybackAudioModeGrant } from './audioModeCoordinator';
 
-export const shouldClearDraftAudioBusy = (
-  activeDraftId: number | null,
-  playingId: number | null,
-  recordingIdle: boolean,
-) => recordingIdle && (activeDraftId !== null || playingId !== null);
-
 /** Владеет одной попыткой воспроизведения, нативным слушателем и lease. */
 export function createPlaybackLeaseOperation() {
   let generation = 0;

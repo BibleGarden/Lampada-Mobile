@@ -892,7 +892,13 @@ on iOS. The background music uses two automatically released `AudioPlayer`s: the
 next local track is loaded in advance and starts sounding two seconds before the
 end of the current one, with a crossfade of the volumes. During recording,
 scripture narration or when the music is turned off, both players are paused in
-sync and an unfinished crossfade is reset. When the prayer ends, the crossfade is
+sync and an unfinished crossfade is reset. The session screen keeps one busy
+flag per audio source, scripture narration and the answer sheet, and the music
+waits until both are clear (`lib/audioBusy.ts`): each source sets and clears
+only its own flag, so closing the answer sheet cannot resume the music over
+narration. The answer sheet clears its flag only when its recording phase is
+idle and neither a draft nor the limit cue sounds, so a late completion cannot
+release a recording that is still starting. When the prayer ends, the crossfade is
 reset, the active player fades out on the same curve and then both are paused.
 
 A prayer can leave the device only as plain text and only by an explicit action

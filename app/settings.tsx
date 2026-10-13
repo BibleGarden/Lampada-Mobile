@@ -1146,7 +1146,8 @@ export default function Settings() {
       {interfaceLanguageOpen ? (
         <BottomSheet
           title={t('settings.interfaceLanguage')}
-          closeLabel={t('settings.done')}
+          closeLabel={t('settings.closeLanguage')}
+          closeTestID="interface-language-sheet-close"
           testID="interface-language-sheet"
           onClose={() => setInterfaceLanguageOpen(false)}
         >
@@ -1193,7 +1194,8 @@ export default function Settings() {
         <BottomSheet
           kicker={t('settings.scripture')}
           title={scriptureSheetTitle}
-          closeLabel={t('settings.done')}
+          closeLabel={t('settings.closeScripture')}
+          closeTestID={`scripture-${open}-sheet-close`}
           testID={`scripture-${open}-sheet`}
           onClose={() => setOpen(null)}
         >

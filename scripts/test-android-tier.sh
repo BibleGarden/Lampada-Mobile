@@ -16,6 +16,7 @@ case "${1:-}" in
       android-lock-001-disabled-by-default
       android-music-finish-early
       android-music-finish-untimed
+      android-music-recording
       android-music-timer-finish
       android-music-toggle
       android-privacy-audio-consent
@@ -23,6 +24,7 @@ case "${1:-}" in
       android-scripture-default-language
       android-scripture-settings
       android-scripture-user-choice-overrides-locale
+      android-settings-close-labels
       android-stage03-deep-links
       android-stage03-long-goal
       android-stage03-session-infinite

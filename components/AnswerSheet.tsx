@@ -53,7 +53,8 @@ import {
 import { audioModeCoordinator } from '../lib/audioSession';
 import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { createPlaybackLeaseOperation, playAudioRecording, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { isAnswerAudioIdle } from '../lib/audioBusy';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
@@ -233,6 +234,15 @@ function AnswerSheet({
   const limitCueOperation = limitCueOperationRef.current;
   const limitCueCompletionRef = useRef<(() => void) | null>(null);
   const limitCueActiveRef = useRef(false);
+  // Флаг шторки выводится из её собственных источников: запоздалое завершение
+  // одного из них не снимает занятость, которую держит запись или другой звук.
+  const releaseAudioBusyIfIdle = () => {
+    if (isAnswerAudioIdle({
+      recordingPhase: recordingOperation.getPhase(),
+      draftActive: activeDraftIdRef.current !== null,
+      cueActive: limitCueActiveRef.current,
+    })) onAudioBusyChange?.(false);
+  };
   const cancelLimitCue = (pausePlayer = true) => {
     limitCueCompletionRef.current?.();
     limitCueCompletionRef.current = null;
@@ -257,11 +267,11 @@ function AnswerSheet({
       await playback.promise;
     } finally {
       limitCueCompletionRef.current = null;
-      const ownsCue = limitCueOperation.isCurrent(generation);
-      limitCueActiveRef.current = false;
+      // Отменённый сигнал уже сбросил флаг; новый сигнал держит свой.
+      if (limitCueOperation.isCurrent(generation)) limitCueActiveRef.current = false;
       if (nativeAudioMountedRef.current) limitCuePlayer.pause();
       await limitCueOperation.complete(generation);
-      if (ownsCue) onAudioBusyChange?.(false);
+      releaseAudioBusyIfIdle();
     }
   };
 
@@ -459,7 +469,7 @@ function AnswerSheet({
         }
       } else {
         observeRelease(releaseRecordingSession());
-        onAudioBusyChange?.(false);
+        releaseAudioBusyIfIdle();
       }
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
@@ -663,7 +673,7 @@ function AnswerSheet({
         // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
         attempt.finish();
         if (!started) {
-          onAudioBusyChange?.(false);
+          releaseAudioBusyIfIdle();
         }
       }
     }
@@ -772,22 +782,16 @@ function AnswerSheet({
   const finishLimitedRecording = async (): Promise<boolean> => {
     if (recordingOperation.getPhase() !== 'recording') return true;
     const sheetGeneration = recordingsSheetGenerationRef.current;
-    const releaseBusyIfIdle = () => {
-      if (
-        recordingOperation.getPhase() === 'idle' &&
-        activeDraftIdRef.current === null && !limitCueActiveRef.current
-      ) onAudioBusyChange?.(false);
-    };
     const draft = await stopRecording(true);
     if (!draft) {
-      releaseBusyIfIdle();
+      releaseAudioBusyIfIdle();
       return recordingOperation.getPhase() !== 'recording';
     }
     if (
       sheetGeneration !== recordingsSheetGenerationRef.current ||
       !recordingSheetOpenRef.current || !openSheetRef.current
     ) {
-      releaseBusyIfIdle();
+      releaseAudioBusyIfIdle();
       return true;
     }
     setAudioError(draft.durationSec === 0
@@ -800,7 +804,7 @@ function AnswerSheet({
       ]);
     } catch (error) {
       console.error('Failed to play recording limit cue', error);
-      releaseBusyIfIdle();
+      releaseAudioBusyIfIdle();
     }
     return true;
   };
@@ -840,7 +844,7 @@ function AnswerSheet({
       player.pause();
       setPlayingId(null);
       setPausedId(r.id);
-      onAudioBusyChange?.(false);
+      releaseAudioBusyIfIdle();
       return;
     }
     const resume = pausedId === r.id;
@@ -869,7 +873,7 @@ function AnswerSheet({
         }
         if (!grant?.isCurrent()) {
           cancelDraftPlayback();
-          onAudioBusyChange?.(false);
+          releaseAudioBusyIfIdle();
           return;
         }
         if (!(await playAudioRecording(player, r.uri, resume, isCurrent, () => {
@@ -885,7 +889,7 @@ function AnswerSheet({
               recordDiagnostic('recording_playback_failed', { place: 'answer', reason: 'player_error' });
               setAudioError('components.answers.playbackFailed');
             }
-            onAudioBusyChange?.(false);
+            releaseAudioBusyIfIdle();
           });
           // Android молча игнорирует play() при выключенной аудиосессии: черновик
           // не должен остаться «играющим». Таймер снимается вместе со слушателем
@@ -901,7 +905,7 @@ function AnswerSheet({
               setPlayingId(null);
               setPausedId(null);
               setAudioError('components.answers.playbackFailed');
-              onAudioBusyChange?.(false);
+              releaseAudioBusyIfIdle();
             },
           });
           draftPlaybackOperation.attachStatus(generation, {
@@ -913,7 +917,7 @@ function AnswerSheet({
         }))) {
           if (draftPlaybackOperation.isCurrent(generation)) {
             cancelDraftPlayback();
-            onAudioBusyChange?.(false);
+            releaseAudioBusyIfIdle();
           }
           return;
         }
@@ -928,34 +932,18 @@ function AnswerSheet({
         cancelDraftPlayback();
         setPausedId(null);
         setAudioError('components.answers.playbackFailed');
-        onAudioBusyChange?.(false);
+        releaseAudioBusyIfIdle();
       });
   };
 
   const handleRecordingsDismiss = () => {
     if (!nativeAudioMountedRef.current) return;
     recordingsSheetGenerationRef.current += 1;
-    const dismissedGeneration = recordingsSheetGenerationRef.current;
-    const cueWasActive = limitCueActiveRef.current;
-    const cueRelease = cancelLimitCue();
-    if (cueWasActive) {
-      void cueRelease.then(() => {
-        if (
-          recordingsSheetGenerationRef.current === dismissedGeneration &&
-          recordingOperation.getPhase() === 'idle'
-        ) onAudioBusyChange?.(false);
-      }).catch(reportReleaseError);
-    } else {
-      observeRelease(cueRelease);
-    }
-    const clearDraftAudioBusy = shouldClearDraftAudioBusy(
-      activeDraftIdRef.current,
-      playingId,
-      recordingOperation.getPhase() === 'idle',
-    );
+    observeRelease(cancelLimitCue());
     cancelDraftPlayback();
     player.pause();
-    if (clearDraftAudioBusy) onAudioBusyChange?.(false);
+    // Активную запись снимет её собственный stop ниже.
+    releaseAudioBusyIfIdle();
     setRecordingsSheetOpen(false);
     setPausedId(null);
     recordingSheetOpenRef.current = false;
@@ -973,10 +961,7 @@ function AnswerSheet({
         recSheetRef.current?.snapToIndex(0);
       });
     }
-    if (playingId !== null) {
-      setPlayingId(null);
-      onAudioBusyChange?.(false);
-    }
+    setPlayingId(null);
   };
 
   const discardUnsavedRecordings = () => {
@@ -1000,7 +985,7 @@ function AnswerSheet({
         cancelDraftPlayback();
         player.pause();
         setPlayingId(null);
-        onAudioBusyChange?.(false);
+        releaseAudioBusyIfIdle();
       }
       pendingTranscriptions.current.get(id)?.controller.abort();
       pendingTranscriptions.current.delete(id);
@@ -1282,7 +1267,7 @@ function AnswerSheet({
         if (i < 0) {
           recSheetRef.current?.close();
           abortAllTranscriptions();
-          onAudioBusyChange?.(false);
+          releaseAudioBusyIfIdle();
           setConfirmCancel(false);
           discardUnsavedRecordings();
           if (!openSheetRef.current) onOpenChange?.(false);

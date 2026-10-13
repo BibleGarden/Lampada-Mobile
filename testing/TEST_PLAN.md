@@ -205,13 +205,14 @@ tier of its e2e runs.
 | MUS-002 | Launch the app with no network and turn the music on | the bundled pieces are fully available offline |
 | MUS-003 | Wait for the end of the playlist | fifteen tracks play in sequence and the loop starts again |
 | MUS-004 | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
-| MUS-005 | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording |
+| MUS-005 [main] | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording. On Android, `android-music-recording.yaml` checks the pause during a recording and the resumption after the answer sheet closes; the draft playback and the recording content are checked manually |
 | MUS-006 [main] | Finish a timed prayer early or after timer expiry with music on | the music player stops and does not play on reflection or the next session screens (`ios-music-finish-early.yaml` covers early finish) |
 | MUS-007 [main] | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |
 | MUS-009 | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
 | MUS-010 [main] | Start an untimed prayer, play music, then finish it explicitly | music fades out before reflection opens, its audio session is released, and playback does not restart (`ios-music-finish-untimed.yaml`) |
 | MUS-011 | With music never enabled, play and stop scripture narration, play and pause a voice draft, then finish a microphone recording | each action releases the audio session after it stops; on a physical iPad, the app becomes suspended in the background after the last sound; verify with Instruments or the system process report |
+| MUS-012 | Narration and the answer sheet both report audio that pauses the music | music resumes only when both are idle: closing the answer sheet does not resume it over narration that still plays. The defect this guards against is latent and unreachable from the UI: the answer sheet opens from the Question tab, and switching to it stops narration. Covered by unit tests only (`audioBusy.test.mjs`) |
 
 ### Answers and audio
 
@@ -461,6 +462,9 @@ unit coverage in `lib/__tests__/lockBiometrics.test.mjs`.
   and dismissing the keyboard preserves the entered text;
 - long Russian strings are not clipped in a damaging way;
 - the buttons have a sufficient tap area and clear accessibility labels;
+- Settings sheet crosses announce a close action for Interface language and
+  Quotes and audio in English, Russian and Ukrainian; the Android Russian labels
+  are asserted on the crosses by id in `android-settings-close-labels.yaml`;
 - enlarged system text, VoiceOver/TalkBack, Reduce Motion;
 - the contrast of the text, of the toggle states and of the delete
   confirmations.
