@@ -212,6 +212,7 @@ tier of its e2e runs.
 | MUS-009 | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
 | MUS-010 [main] | Start an untimed prayer, play music, then finish it explicitly | music fades out before reflection opens, its audio session is released, and playback does not restart (`ios-music-finish-untimed.yaml`) |
 | MUS-011 | With music never enabled, play and stop scripture narration, play and pause a voice draft, then finish a microphone recording | each action releases the audio session after it stops; on a physical iPad, the app becomes suspended in the background after the last sound; verify with Instruments or the system process report |
+| MUS-012 [main] | On Android, play music, open a passage and start narration, close the reader, then switch to questions and close an empty answer sheet | music stays paused while narration plays; switching to questions stops narration and resumes music before the answer sheet opens; closing the answer sheet leaves music playing (`android-music-answer-close.yaml`). The shared busy flag is cleared on answer close only for answer-owned playback or its cue (`audioPlayerOperation.test.mjs`) |
 
 ### Answers and audio
 
@@ -461,6 +462,9 @@ unit coverage in `lib/__tests__/lockBiometrics.test.mjs`.
   and dismissing the keyboard preserves the entered text;
 - long Russian strings are not clipped in a damaging way;
 - the buttons have a sufficient tap area and clear accessibility labels;
+- Settings sheet crosses announce a close action for Interface language and
+  Scripture in English, Russian and Ukrainian; the Android Russian labels are
+  asserted by `android-settings-close-labels.yaml`;
 - enlarged system text, VoiceOver/TalkBack, Reduce Motion;
 - the contrast of the text, of the toggle states and of the delete
   confirmations.

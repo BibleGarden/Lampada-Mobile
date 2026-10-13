@@ -6,6 +6,13 @@ export const shouldClearDraftAudioBusy = (
   recordingIdle: boolean,
 ) => recordingIdle && (activeDraftId !== null || playingId !== null);
 
+export const shouldClearAnswerAudioBusy = (
+  activeDraftId: number | null,
+  playingId: number | null,
+  cueActive: boolean,
+  recordingIdle: boolean,
+) => recordingIdle && (cueActive || activeDraftId !== null || playingId !== null);
+
 /** Владеет одной попыткой воспроизведения, нативным слушателем и lease. */
 export function createPlaybackLeaseOperation() {
   let generation = 0;

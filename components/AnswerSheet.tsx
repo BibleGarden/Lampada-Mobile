@@ -53,7 +53,7 @@ import {
 import { audioModeCoordinator } from '../lib/audioSession';
 import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { createPlaybackLeaseOperation, playAudioRecording, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { createPlaybackLeaseOperation, playAudioRecording, shouldClearAnswerAudioBusy, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
@@ -427,6 +427,10 @@ function AnswerSheet({
   useEffect(() => {
     nativeAudioMountedRef.current = true;
     return () => {
+      const clearAnswerAudioBusy = shouldClearAnswerAudioBusy(
+        activeDraftIdRef.current, playingId, limitCueActiveRef.current,
+        recordingOperation.getPhase() === 'idle',
+      );
       // Expo уже мог освободить shared objects до cleanup этого эффекта.
       nativeAudioMountedRef.current = false;
       recordingSheetOpenRef.current = false;
@@ -459,7 +463,7 @@ function AnswerSheet({
         }
       } else {
         observeRelease(releaseRecordingSession());
-        onAudioBusyChange?.(false);
+        if (clearAnswerAudioBusy) onAudioBusyChange?.(false);
       }
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
@@ -1241,6 +1245,10 @@ function AnswerSheet({
       enableContentPanningGesture={false}
       onChange={async (i) => {
         if (!nativeAudioMountedRef.current) return;
+        const clearAnswerAudioBusy = i < 0 && shouldClearAnswerAudioBusy(
+          activeDraftIdRef.current, playingId, limitCueActiveRef.current,
+          recordingOperation.getPhase() === 'idle',
+        );
         setOpen(i >= 0);
         const editing = i >= 0;
         openSheetRef.current = editing;
@@ -1282,7 +1290,7 @@ function AnswerSheet({
         if (i < 0) {
           recSheetRef.current?.close();
           abortAllTranscriptions();
-          onAudioBusyChange?.(false);
+          if (clearAnswerAudioBusy) onAudioBusyChange?.(false);
           setConfirmCancel(false);
           discardUnsavedRecordings();
           if (!openSheetRef.current) onOpenChange?.(false);
