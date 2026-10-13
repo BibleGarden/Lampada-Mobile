@@ -166,8 +166,8 @@ export default function Setup() {
             </View>
           </View>
 
-          {/* display: none оставляет Text смонтированным с нулевой шириной:
-              Android может сохранить уменьшенный кегль после возврата футера. */}
+          {/* Футер снимается, а не скрывается: под display: none Android
+              ужимает подпись GoldButton на нулевом кадре и не растит её обратно. */}
           {!policy.fillInput && <View {...hiddenWhileEditing} style={[styles.lower, hiddenWhileEditing.style]}>
             <View>
               <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
