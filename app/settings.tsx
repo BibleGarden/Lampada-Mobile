@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import { Kicker } from '../components/ui';
 import { Check, ChevronRight, Minus, Plus, Trash } from '../components/icons';
+import { ExternalLink } from 'lucide-react-native';
 import ScreenHeader from '../components/ScreenHeader';
 import {
   ScriptureCatalogUnavailableError,
@@ -1309,7 +1310,7 @@ export default function Settings() {
             style={({ pressed }) => [styles.privacyDetailsToggle, pressed && styles.optionPressed]}
           >
             <Text style={styles.privacyDetailsLabel}>{t('settings.privacyPolicyLink')}</Text>
-            <ChevronRight size={14} color={colors.labelGold} />
+            <ExternalLink size={sc(16)} color={colors.labelGold} strokeWidth={1.7} />
           </Pressable>
         </BottomSheet>
       ) : null}
