@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Lampada feature graphic</title>
+<style>
+  @font-face { font-family: Spectral; font-weight: 300; src: url(../../node_modules/@expo-google-fonts/spectral/300Light/Spectral_300Light.ttf); }
+  @font-face { font-family: Spectral; font-weight: 300; font-style: italic; src: url(../../node_modules/@expo-google-fonts/spectral/300Light_Italic/Spectral_300Light_Italic.ttf); }
+  @font-face { font-family: Spectral; font-weight: 400; src: url(../../node_modules/@expo-google-fonts/spectral/400Regular/Spectral_400Regular.ttf); }
+  html, body { margin: 0; padding: 0; }
+  body { width: 1024px; height: 500px; overflow: hidden; background: #0e0a07; }
+  .canvas {
+    position: relative; width: 1024px; height: 500px; overflow: hidden;
+    background:
+      radial-gradient(ellipse 520px 380px at var(--glow-x) 50%, rgba(255, 150, 50, 0.13), rgba(255, 150, 50, 0) 70%),
+      #0e0a07;
+  }
+  .flame {
+    position: absolute; top: 50%; left: var(--flame-x);
+    width: 540px; height: 540px; transform: translate(-50%, -50%);
+    -webkit-mask-image: radial-gradient(circle closest-side, #000 70%, rgba(0,0,0,0) 100%);
+            mask-image: radial-gradient(circle closest-side, #000 70%, rgba(0,0,0,0) 100%);
+  }
+  .text {
+    position: absolute; top: 50%; left: 462px; right: 96px; transform: translateY(-50%);
+    color: #f3e6d3;
+  }
+  .name {
+    font-family: Spectral, serif; font-weight: 300; font-size: 92px; line-height: 1;
+    letter-spacing: 0.01em; margin: 0;
+  }
+  .rule { width: 64px; height: 2px; margin: 26px 0 22px; background: #e8a34a; opacity: 0.85; }
+  .tagline {
+    font-family: Spectral, serif; font-style: italic; font-weight: 300; font-size: 36px;
+    line-height: 1.22; margin: 0; color: #e9cfa8;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <img class="flame" src="../../assets/icon.png" alt="">
+  <div class="text">
+    <h1 class="name"></h1>
+    <div class="rule"></div>
+    <p class="tagline"></p>
+  </div>
+</div>
+<script>
+  // Тексты: название из title (до двоеточия) и начало shortDescription из store/play/*.json.
+  const copy = {
+    en: { name: 'Lampada', tagline: 'Prayer as a living conversation' },
+    ru: { name: 'Лампада', tagline: 'Молитва как живой разговор' },
+    uk: { name: 'Лампада', tagline: 'Молитва як жива розмова' },
+  };
+  const lang = new URLSearchParams(location.search).get('lang');
+  const canvas = document.querySelector('.canvas');
+  const c = copy[lang];
+  if (!c) throw new Error('Unknown lang: ' + lang);
+  document.documentElement.lang = lang;
+  document.querySelector('.name').textContent = c.name;
+  document.querySelector('.tagline').textContent = c.tagline;
+  canvas.style.setProperty('--flame-x', '286px');
+  canvas.style.setProperty('--glow-x', '300px');
+</script>
+</body>
+</html>

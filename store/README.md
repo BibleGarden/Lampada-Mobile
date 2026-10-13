@@ -317,12 +317,14 @@ longest side at most twice the shortest). Use Android phone screenshots for
 Lampada. The 7-inch and 10-inch tablet screenshot slots are **optional for
 publication**; add them for the tablet listing. Four 1080 px screenshots per
 device type are recommended for discovery, not a release gate.
-`assets/icon.png` is 1024×1024 (checked with `sips` on 2026-10-12) and needs
-a separate Play icon export.
+`play/icon-512.png` (32-bit RGBA, from `assets/icon.png`) and the
+owner-approved feature graphics `play/feature-graphic-{ru,uk,en}.png` (24-bit,
+source `play/feature-graphic.html`) are rendered by
+`scripts/render-play-feature-graphic.sh` (headless Google Chrome); upload each
+graphic to its listing language.
 
-Not in the repository yet: the exported 512×512 Play icon, the 1024×500
-feature graphic, Android tablet screenshots, the uploaded AAB's merged
-permission list, and evidence of the server's request-log retention. The App Store screenshots show iOS UI and are
+Not in the repository yet: Android tablet screenshots, the uploaded AAB's
+merged permission list, and evidence of the server's request-log retention. The App Store screenshots show iOS UI and are
 not suitable for the Play listing.
 
 ### Android screenshots
