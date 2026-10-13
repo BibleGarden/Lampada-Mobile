@@ -1,0 +1,17 @@
+/** Источники звука экрана молитвы, на время которых музыка замолкает. */
+export type AudioBusySource = 'scripture' | 'answer';
+
+export type AudioBusyBySource = Readonly<Record<AudioBusySource, boolean>>;
+
+export const IDLE_AUDIO_SOURCES: AudioBusyBySource = { scripture: false, answer: false };
+
+// Каждый источник ставит и снимает только свой флаг: закрытие шторки ответа
+// не снимает занятость озвучки цитаты, и наоборот.
+export const setAudioSourceBusy = (
+  state: AudioBusyBySource,
+  source: AudioBusySource,
+  busy: boolean,
+): AudioBusyBySource => ({ ...state, [source]: busy });
+
+/** Музыка играет, только когда свободны все источники. */
+export const isAudioBusy = (state: AudioBusyBySource) => state.scripture || state.answer;

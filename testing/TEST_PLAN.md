@@ -212,7 +212,7 @@ tier of its e2e runs.
 | MUS-009 | With the music on, send the app to the background or lock the screen before the timer reaches zero | the music stops at the deadline in the background; reflection opens after returning (`run-background-music-timer-end.sh`) |
 | MUS-010 [main] | Start an untimed prayer, play music, then finish it explicitly | music fades out before reflection opens, its audio session is released, and playback does not restart (`ios-music-finish-untimed.yaml`) |
 | MUS-011 | With music never enabled, play and stop scripture narration, play and pause a voice draft, then finish a microphone recording | each action releases the audio session after it stops; on a physical iPad, the app becomes suspended in the background after the last sound; verify with Instruments or the system process report |
-| MUS-012 [main] | On Android, play music, open a passage and start narration, close the reader, then switch to questions and close an empty answer sheet | music stays paused while narration plays; switching to questions stops narration and resumes music before the answer sheet opens; closing the answer sheet leaves music playing (`android-music-answer-close.yaml`). The shared busy flag is cleared on answer close only for answer-owned playback or its cue (`audioPlayerOperation.test.mjs`) |
+| MUS-012 | Narration and the answer sheet both report audio that pauses the music | music resumes only when both are idle: closing the answer sheet does not resume it over narration that still plays. The defect this guards against is latent and unreachable from the UI: the answer sheet opens from the Question tab, and switching to it stops narration. Covered by unit tests only (`audioBusy.test.mjs`) |
 
 ### Answers and audio
 

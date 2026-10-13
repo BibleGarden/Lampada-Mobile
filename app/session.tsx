@@ -50,6 +50,13 @@ import { useVisibleScreen } from '../lib/useVisibleScreen';
 import { backgroundDeadlineDelay } from '../lib/visibleActivity';
 import { hasSessionActivity, scheduleSessionCompletion } from '../lib/sessionCompletion';
 import {
+  IDLE_AUDIO_SOURCES,
+  isAudioBusy,
+  setAudioSourceBusy,
+  type AudioBusyBySource,
+  type AudioBusySource,
+} from '../lib/audioBusy';
+import {
   hastenMusicFadeOut,
   musicFadeOutVolume,
   startMusicFadeOut,
@@ -132,7 +139,7 @@ function SessionScreen() {
   const [answerOpen, setAnswerOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [showExpiryNotice, setShowExpiryNotice] = useState(false);
-  const [transientAudioBusy, setTransientAudioBusy] = useState(false);
+  const [audioBusy, setAudioBusy] = useState(false);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
@@ -143,9 +150,10 @@ function SessionScreen() {
   const expiryNotified = useRef(false);
   const finished = useRef(false);
   const musicLeaseRef = useRef<AudioSessionLease | null>(null);
-  // React-effect cleanup happens later than the press handler. The ref lets an
-  // already running music activation see recording/playback immediately.
-  const transientAudioBusyRef = useRef(false);
+  // Озвучка цитаты и шторка ответа держат каждая свой флаг занятости. Ref
+  // нужен потому, что cleanup React-effect запаздывает за обработчиком нажатия:
+  // уже запущенная активация музыки должна сразу увидеть запись или звук.
+  const audioBusySourcesRef = useRef<AudioBusyBySource>(IDLE_AUDIO_SOURCES);
   const [musicTracks] = useState(getPrayerTracks);
   const musicTrackIndex = useRef(0);
   const activeMusicPlayerSlot = useRef<MusicPlayerSlot>(0);
@@ -239,7 +247,7 @@ function SessionScreen() {
 
   useEffect(() => {
     let active = true;
-    const shouldPlay = s.musicOn && !transientAudioBusy;
+    const shouldPlay = s.musicOn && !audioBusy;
     if (!shouldPlay) {
       pauseMusicPlayers();
       return () => {
@@ -256,7 +264,7 @@ function SessionScreen() {
       if (!modeGrant?.isCurrent()) return;
       if (
         active &&
-        !transientAudioBusyRef.current &&
+        !isAudioBusy(audioBusySourcesRef.current) &&
         modeGrant.isCurrent()
       ) {
         const activeSlot = activeMusicPlayerSlot.current;
@@ -267,10 +275,10 @@ function SessionScreen() {
       }
     })().catch((error) => {
       console.warn('Failed to start background music', error);
-      if (active && !transientAudioBusyRef.current && useSession.getState().musicOn) {
+      if (active && !isAudioBusy(audioBusySourcesRef.current) && useSession.getState().musicOn) {
         useSession.getState().toggleMusic();
       }
-      if (active && !transientAudioBusyRef.current) void releaseMusicLease();
+      if (active && !isAudioBusy(audioBusySourcesRef.current)) void releaseMusicLease();
     });
     return () => {
       active = false;
@@ -284,7 +292,7 @@ function SessionScreen() {
     releaseMusicLease,
     s.musicOn,
     setMusicLockScreen,
-    transientAudioBusy,
+    audioBusy,
   ]);
 
   const startMusicCrossfade = useCallback((durationMs = MUSIC_CROSSFADE_MS) => {
@@ -292,7 +300,7 @@ function SessionScreen() {
       musicCrossfadeRunning.current ||
       musicFadeOut.current ||
       musicTracks.length === 0 ||
-      transientAudioBusyRef.current ||
+      isAudioBusy(audioBusySourcesRef.current) ||
       !useSession.getState().musicOn
     ) {
       return;
@@ -319,7 +327,7 @@ function SessionScreen() {
     const startedAt = Date.now();
     musicCrossfadeTimer.current = setInterval(() => {
       if (
-        transientAudioBusyRef.current ||
+        isAudioBusy(audioBusySourcesRef.current) ||
         !useSession.getState().musicOn
       ) {
         cancelMusicCrossfade();
@@ -405,26 +413,25 @@ function SessionScreen() {
     [releaseMusicLease],
   );
 
-  const handleTransientAudioChange = useCallback(
-    (busy: boolean) => {
-      // Playback completions can arrive after recording started. They do not
-      // own the recording lease and must not clear its synchronous busy guard.
-      if (!busy && audioModeCoordinator.hasRecordingLease()) return;
+  const setSourceAudioBusy = useCallback(
+    (source: AudioBusySource, busy: boolean) => {
+      audioBusySourcesRef.current = setAudioSourceBusy(audioBusySourcesRef.current, source, busy);
       // Эта остановка синхронна: запись не должна ждать React-effect.
-      transientAudioBusyRef.current = busy;
-      if (busy) {
-        pauseMusicPlayers();
-      }
-      setTransientAudioBusy(busy);
+      if (busy) pauseMusicPlayers();
+      setAudioBusy(isAudioBusy(audioBusySourcesRef.current));
     },
     [pauseMusicPlayers],
+  );
+  const handleScriptureAudioChange = useCallback(
+    (busy: boolean) => setSourceAudioBusy('scripture', busy),
+    [setSourceAudioBusy],
   );
   const currentScripture = s.scrList[s.scrIndex];
   const scriptureAudio = useScriptureAudio({
     scripture: currentScripture,
     voice: s.scriptureSelection?.voice ?? null,
     enabled: s.dockMode === 'scripture',
-    onAudioBusyChange: handleTransientAudioChange,
+    onAudioBusyChange: handleScriptureAudioChange,
   });
   const activityOpen = hasSessionActivity({
     readerOpen,
@@ -435,9 +442,9 @@ function SessionScreen() {
   const handleAnswerAudioChange = useCallback(
     (busy: boolean) => {
       if (busy) scriptureAudio.stop();
-      handleTransientAudioChange(busy);
+      setSourceAudioBusy('answer', busy);
     },
-    [handleTransientAudioChange, scriptureAudio.stop],
+    [scriptureAudio.stop, setSourceAudioBusy],
   );
 
   // Секундный тик нужен лишь видимому интерфейсу. Скрытая сессия
@@ -474,7 +481,7 @@ function SessionScreen() {
       if (useSession.getState().musicOn) useSession.getState().toggleMusic();
       await releaseMusicLease();
     };
-    if (!useSession.getState().musicOn || transientAudioBusyRef.current) return stop();
+    if (!useSession.getState().musicOn || isAudioBusy(audioBusySourcesRef.current)) return stop();
 
     cancelMusicCrossfade();
     const player = musicPlayerForSlot(activeMusicPlayerSlot.current);
@@ -484,7 +491,7 @@ function SessionScreen() {
       const current = musicFadeOut.current;
       if (!current) return;
       const volume = musicFadeOutVolume(current.fade, Date.now());
-      if (volume > 0 && !transientAudioBusyRef.current) {
+      if (volume > 0 && !isAudioBusy(audioBusySourcesRef.current)) {
         player.volume = volume;
         return;
       }
@@ -524,7 +531,7 @@ function SessionScreen() {
     const running = musicFadeOut.current;
     if (timeExpired || finished.current || !running) return;
     running.finish(false);
-    if (useSession.getState().musicOn && !transientAudioBusyRef.current) {
+    if (useSession.getState().musicOn && !isAudioBusy(audioBusySourcesRef.current)) {
       musicPlayerForSlot(activeMusicPlayerSlot.current).volume = MUSIC_VOLUME;
     }
   }, [timeExpired, musicPlayerForSlot]);
@@ -613,7 +620,7 @@ function SessionScreen() {
   const adjDuration = `${adjStep} ${t(`screens.minute.${pluralCategory(language, adjStep)}`)}`;
   // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
   // над таймером и прилипал к кольцу.
-  const musicPlaying = s.musicOn && !transientAudioBusy && musicPlayersPlaying;
+  const musicPlaying = s.musicOn && !audioBusy && musicPlayersPlaying;
 
   return (
     <View style={styles.root}>

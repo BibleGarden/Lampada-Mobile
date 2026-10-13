@@ -53,7 +53,7 @@ import {
 import { audioModeCoordinator } from '../lib/audioSession';
 import { colors, column, fonts, isTablet, radius, sc, screenGutter, touchSlop, useStyles } from '../lib/theme';
 import { screenReaderHiddenProps } from '../lib/a11y';
-import { createPlaybackLeaseOperation, playAudioRecording, shouldClearAnswerAudioBusy, shouldClearDraftAudioBusy, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
+import { createPlaybackLeaseOperation, playAudioRecording, waitForAudioPlayerReady } from '../lib/audioPlayerOperation';
 import { watchNativePlaybackStart } from '../lib/nativePlaybackStart';
 import { playCueUntilComplete } from '../lib/audioCueOperation';
 import { Mic } from './icons';
@@ -427,10 +427,6 @@ function AnswerSheet({
   useEffect(() => {
     nativeAudioMountedRef.current = true;
     return () => {
-      const clearAnswerAudioBusy = shouldClearAnswerAudioBusy(
-        activeDraftIdRef.current, playingId, limitCueActiveRef.current,
-        recordingOperation.getPhase() === 'idle',
-      );
       // Expo уже мог освободить shared objects до cleanup этого эффекта.
       nativeAudioMountedRef.current = false;
       recordingSheetOpenRef.current = false;
@@ -463,7 +459,7 @@ function AnswerSheet({
         }
       } else {
         observeRelease(releaseRecordingSession());
-        if (clearAnswerAudioBusy) onAudioBusyChange?.(false);
+        onAudioBusyChange?.(false);
       }
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
@@ -942,6 +938,9 @@ function AnswerSheet({
     const dismissedGeneration = recordingsSheetGenerationRef.current;
     const cueWasActive = limitCueActiveRef.current;
     const cueRelease = cancelLimitCue();
+    cancelDraftPlayback();
+    player.pause();
+    // Активную запись снимет её собственный stop ниже.
     if (cueWasActive) {
       void cueRelease.then(() => {
         if (
@@ -951,15 +950,8 @@ function AnswerSheet({
       }).catch(reportReleaseError);
     } else {
       observeRelease(cueRelease);
+      if (recordingOperation.getPhase() === 'idle') onAudioBusyChange?.(false);
     }
-    const clearDraftAudioBusy = shouldClearDraftAudioBusy(
-      activeDraftIdRef.current,
-      playingId,
-      recordingOperation.getPhase() === 'idle',
-    );
-    cancelDraftPlayback();
-    player.pause();
-    if (clearDraftAudioBusy) onAudioBusyChange?.(false);
     setRecordingsSheetOpen(false);
     setPausedId(null);
     recordingSheetOpenRef.current = false;
@@ -977,10 +969,7 @@ function AnswerSheet({
         recSheetRef.current?.snapToIndex(0);
       });
     }
-    if (playingId !== null) {
-      setPlayingId(null);
-      onAudioBusyChange?.(false);
-    }
+    setPlayingId(null);
   };
 
   const discardUnsavedRecordings = () => {
@@ -1245,10 +1234,6 @@ function AnswerSheet({
       enableContentPanningGesture={false}
       onChange={async (i) => {
         if (!nativeAudioMountedRef.current) return;
-        const clearAnswerAudioBusy = i < 0 && shouldClearAnswerAudioBusy(
-          activeDraftIdRef.current, playingId, limitCueActiveRef.current,
-          recordingOperation.getPhase() === 'idle',
-        );
         setOpen(i >= 0);
         const editing = i >= 0;
         openSheetRef.current = editing;
@@ -1290,7 +1275,7 @@ function AnswerSheet({
         if (i < 0) {
           recSheetRef.current?.close();
           abortAllTranscriptions();
-          if (clearAnswerAudioBusy) onAudioBusyChange?.(false);
+          onAudioBusyChange?.(false);
           setConfirmCancel(false);
           discardUnsavedRecordings();
           if (!openSheetRef.current) onOpenChange?.(false);
