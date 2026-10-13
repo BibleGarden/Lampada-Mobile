@@ -16,6 +16,7 @@ case "${1:-}" in
       android-lock-001-disabled-by-default
       android-music-finish-early
       android-music-finish-untimed
+      android-music-recording
       android-music-timer-finish
       android-music-toggle
       android-privacy-audio-consent

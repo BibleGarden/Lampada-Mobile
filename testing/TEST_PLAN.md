@@ -205,7 +205,7 @@ tier of its e2e runs.
 | MUS-002 | Launch the app with no network and turn the music on | the bundled pieces are fully available offline |
 | MUS-003 | Wait for the end of the playlist | fifteen tracks play in sequence and the loop starts again |
 | MUS-004 | Background the app with the music on and come back | in the background the music is paused and resumes after the return if the state was on |
-| MUS-005 | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording |
+| MUS-005 [main] | With the music on, record a voice answer and listen to the draft | the music stops before the recording or the playback begins and resumes afterwards; it is not present in the voice recording. On Android, `android-music-recording.yaml` checks the pause during a recording and the resumption after the answer sheet closes; the draft playback and the recording content are checked manually |
 | MUS-006 [main] | Finish a timed prayer early or after timer expiry with music on | the music player stops and does not play on reflection or the next session screens (`ios-music-finish-early.yaml` covers early finish) |
 | MUS-007 [main] | Let the timer reach zero with music on and no open reader, answer or narration | reflection opens after one second and both music players stop without a released-player crash |
 | MUS-008 | Start several prayers in a row | the starting track is chosen at random and does not repeat the start of the previous session within the current app launch |

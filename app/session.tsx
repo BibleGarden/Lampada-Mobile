@@ -140,6 +140,7 @@ function SessionScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [showExpiryNotice, setShowExpiryNotice] = useState(false);
   const [audioBusy, setAudioBusy] = useState(false);
+  const [musicRetry, setMusicRetry] = useState(0);
   const [musicPlayersPlaying, setMusicPlayersPlaying] = useState(false);
   const answerRef = useRef<BottomSheet>(null);
   const openAnswerRef = useRef<(() => void) | null>(null);
@@ -154,6 +155,9 @@ function SessionScreen() {
   // нужен потому, что cleanup React-effect запаздывает за обработчиком нажатия:
   // уже запущенная активация музыки должна сразу увидеть запись или звук.
   const audioBusySourcesRef = useRef<AudioBusyBySource>(IDLE_AUDIO_SOURCES);
+  // Запрос режима музыки отклонён: запись ещё держала lease или его обогнал
+  // более новый запрос. Следующий отчёт источника о свободе повторит запуск.
+  const musicRefusedRef = useRef(false);
   const [musicTracks] = useState(getPrayerTracks);
   const musicTrackIndex = useRef(0);
   const activeMusicPlayerSlot = useRef<MusicPlayerSlot>(0);
@@ -254,6 +258,7 @@ function SessionScreen() {
         active = false;
       };
     }
+    musicRefusedRef.current = false;
     const lease = audioModeCoordinator.acquireSession();
     musicLeaseRef.current = lease;
     void (async () => {
@@ -261,7 +266,10 @@ function SessionScreen() {
         setAudioModeAsync,
         MUSIC_PLAYBACK_MODE,
       );
-      if (!modeGrant?.isCurrent()) return;
+      if (!modeGrant?.isCurrent()) {
+        if (active) musicRefusedRef.current = true;
+        return;
+      }
       if (
         active &&
         !isAudioBusy(audioBusySourcesRef.current) &&
@@ -293,6 +301,7 @@ function SessionScreen() {
     s.musicOn,
     setMusicLockScreen,
     audioBusy,
+    musicRetry,
   ]);
 
   const startMusicCrossfade = useCallback((durationMs = MUSIC_CROSSFADE_MS) => {
@@ -415,10 +424,16 @@ function SessionScreen() {
 
   const setSourceAudioBusy = useCallback(
     (source: AudioBusySource, busy: boolean) => {
-      audioBusySourcesRef.current = setAudioSourceBusy(audioBusySourcesRef.current, source, busy);
+      const next = setAudioSourceBusy(audioBusySourcesRef.current, source, busy);
+      audioBusySourcesRef.current = next;
       // Эта остановка синхронна: запись не должна ждать React-effect.
-      if (busy) pauseMusicPlayers();
-      setAudioBusy(isAudioBusy(audioBusySourcesRef.current));
+      if (busy) {
+        pauseMusicPlayers();
+      } else if (!isAudioBusy(next) && musicRefusedRef.current) {
+        musicRefusedRef.current = false;
+        setMusicRetry((attempt) => attempt + 1);
+      }
+      setAudioBusy(isAudioBusy(next));
     },
     [pauseMusicPlayers],
   );

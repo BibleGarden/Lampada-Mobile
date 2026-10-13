@@ -896,7 +896,10 @@ sync and an unfinished crossfade is reset. The session screen keeps one busy
 flag per audio source, scripture narration and the answer sheet, and the music
 waits until both are clear (`lib/audioBusy.ts`): each source sets and clears
 only its own flag, so closing the answer sheet cannot resume the music over
-narration. When the prayer ends, the crossfade is
+narration. The answer sheet clears its flag only when its recording phase is
+idle and neither a draft nor the limit cue sounds, so a late completion cannot
+release a recording that is still starting. If the music's playback request is
+refused, the next report of a free source starts it again. When the prayer ends, the crossfade is
 reset, the active player fades out on the same curve and then both are paused.
 
 A prayer can leave the device only as plain text and only by an explicit action

@@ -1,3 +1,5 @@
+import type { RecordingOperationPhase } from './recordingOperation';
+
 /** Источники звука экрана молитвы, на время которых музыка замолкает. */
 export type AudioBusySource = 'scripture' | 'answer';
 
@@ -15,3 +17,13 @@ export const setAudioSourceBusy = (
 
 /** Музыка играет, только когда свободны все источники. */
 export const isAudioBusy = (state: AudioBusyBySource) => state.scripture || state.answer;
+
+/**
+ * Шторка ответа свободна, только когда в ней не идёт запись (в том числе её
+ * старт или остановка), не играет черновик и не звучит сигнал лимита.
+ */
+export const isAnswerAudioIdle = ({ recordingPhase, draftActive, cueActive }: {
+  recordingPhase: RecordingOperationPhase;
+  draftActive: boolean;
+  cueActive: boolean;
+}) => recordingPhase === 'idle' && !draftActive && !cueActive;

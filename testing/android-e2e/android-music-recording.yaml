@@ -1,0 +1,90 @@
+appId: app.lampada
+tags:
+  - main
+---
+# MUS-005: a voice recording pauses the music, and it plays again once the
+# answer sheet with the recording is closed.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- tapOn:
+    id: start-prayer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-goal-input
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- inputText: MUS-005 music and recording
+- pressKey: Enter
+- tapOn:
+    id: setup-preset-0
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: setup-next-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+          waitToSettleTimeoutMs: 500
+          retryTapIfNoChange: false
+- longPressOn:
+    id: threshold-hold-button
+    waitToSettleTimeoutMs: 500
+- tapOn:
+    id: session-music-off
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: music-playing
+# Пустой список записей сразу начинает запись.
+- tapOn:
+    id: dock-answer-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-record-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recordings-stop-button
+- assertNotVisible:
+    id: music-playing
+- takeScreenshot: MUS-005-recording
+- tapOn:
+    id: recordings-stop-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: recording-card-0
+- tapOn:
+    id: recordings-close-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+# Несохранённая запись: первое нажатие «Отмена» просит подтверждения.
+- tapOn:
+    id: answer-cancel-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- tapOn:
+    id: answer-cancel-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: answer-input
+- extendedWaitUntil:
+    visible:
+      id: music-playing
+    timeout: 5000
+- assertVisible:
+    id: session-music-on
+- takeScreenshot: MUS-005-music-resumed
