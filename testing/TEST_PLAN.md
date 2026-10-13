@@ -398,7 +398,7 @@ the stub; execution results belong in dated reports.
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| REM-001 | Turn the reminders on for the first time | the system permission prompt appears once, at the moment of turning them on, not at app start |
+| REM-001 | Turn the reminders on for the first time | the system permission prompt appears once, at the moment of turning them on, not at app start; Android with permission pre-granted schedules a local reminder without an error (`android-rem-local-schedule.yaml`) |
 | REM-002 | Deny the permission | the toggle stays off, the settings screen works, a clear text about the system settings is shown |
 | REM-003 | Grant the permission in the system settings and return to the app | the schedule is set up without restarting the app |
 | REM-004 | Set the nearest time and wait for it | the notification arrives with a phrase from the pool |

@@ -1,0 +1,26 @@
+appId: app.lampada
+tags:
+  - prepared
+---
+# Schedule a local Android reminder after the notification permission is granted.
+- launchApp:
+    stopApp: true
+    clearState: true
+    permissions:
+      notifications: allow
+      microphone: allow
+- assertVisible:
+    id: start-prayer-button
+- openLink: lampada://settings
+- scrollUntilVisible:
+    element:
+      id: reminders-toggle
+    direction: DOWN
+- tapOn:
+    id: reminders-toggle
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: reminders-error
+- assertVisible:
+    id: reminders-summary
