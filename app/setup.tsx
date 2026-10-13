@@ -73,7 +73,7 @@ export default function Setup() {
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
   if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
   const hiddenWhileEditing = !policy.actionsVisible ? {
-    style: policy.fillInput ? styles.removedWhileEditing : styles.hiddenWhileEditing,
+    style: styles.hiddenWhileEditing,
     accessibilityElementsHidden: true,
     importantForAccessibility: 'no-hide-descendants' as const,
   } : {};
@@ -166,7 +166,9 @@ export default function Setup() {
             </View>
           </View>
 
-          <View {...hiddenWhileEditing} style={[styles.lower, hiddenWhileEditing.style]}>
+          {/* Футер снимается, а не скрывается: под display: none Android
+              ужимает подпись GoldButton на нулевом кадре и не растит её обратно. */}
+          {!policy.fillInput && <View {...hiddenWhileEditing} style={[styles.lower, hiddenWhileEditing.style]}>
             <View>
               <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
                 {t('screens.setup.duration')}
@@ -247,7 +249,7 @@ export default function Setup() {
             <View>
               <GoldButton label={t('screens.setup.next')} testID="setup-next-button" disabled={!entranceReady} onPress={() => void next()} />
             </View>
-          </View>
+          </View>}
         </Animated.View>
       </Pressable>
       </KeyboardViewport>
@@ -300,7 +302,6 @@ const stylesFactory = () => StyleSheet.create({
   goal: { flexShrink: 1, zIndex: 1, marginTop: sc(16) },
   lower: { flexGrow: 1, justifyContent: 'space-between', gap: sc(12), paddingTop: sc(16) },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
-  removedWhileEditing: { display: 'none' },
   goalDocked: { flex: 1 },
   topicSlotDocked: { flex: 1, minHeight: 0 },
   goalHeader: {
