@@ -2,8 +2,9 @@ appId: app.lampada
 tags:
   - main
 ---
-# MUS-005: a voice recording pauses the music, and it plays again once the
-# answer sheet with the recording is closed.
+# MUS-005: the music plays again after a voice recording. While the answer
+# sheet is open, the session screen with the music indicator is hidden from the
+# accessibility tree, so the pause itself is not observable here.
 - launchApp:
     stopApp: true
     clearState: true
@@ -55,10 +56,17 @@ tags:
     id: answer-record-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
+- waitForAnimationToEnd:
+    timeout: 2500
 - assertVisible:
     id: recordings-stop-button
-- assertNotVisible:
-    id: music-playing
+# Остановка разрешена не раньше чем через 1,5 с записи: ждём двух секунд
+# на таймере, иначе нажатие без повтора может прийти слишком рано.
+- extendedWaitUntil:
+    visible:
+      id: recording-elapsed
+      text: ".*0:0[2-9]"
+    timeout: 5000
 - takeScreenshot: MUS-005-recording
 - tapOn:
     id: recordings-stop-button
