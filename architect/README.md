@@ -278,11 +278,16 @@ the setup route rather than adding duplicate entries to the back stack.
 `session` and `reflect` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
 
-Reflection measures the visible scroll viewport, question block and action pair.
-`lib/reflectLayout.ts` keeps the original layout while both actions fit, then
-reduces the question type by up to 4 design points before reducing the ember and
-takeaway field. The existing ScrollView handles unusually long questions and
-small windows. The docked keyboard retains its compact editing layout.
+Reflection fits against the window height minus safe-area insets and content
+padding, independently of the animated keyboard reserve. It measures the question
+block at each density in `lib/reflectLayout.ts`, starting with the original type
+and reducing it by 2 then 4 design points before reducing the ember and takeaway
+field. Each step waits for its own measurement after text reflow; measurements
+are tagged by question, geometry and density. A new question or window starts
+again at the original density. Fitting pauses throughout keyboard opening, open
+and closing phases; compact editing always uses the original question type and
+input basis. If the smallest layout still overflows, the ScrollView flashes its
+indicators and keeps all content reachable.
 
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.

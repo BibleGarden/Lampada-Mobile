@@ -16,28 +16,44 @@ export function reflectionQuestionType(question: string, fontStep = 0) {
   return { font: base.font - fontStep, line: base.line - fontStep };
 }
 
+// Общие интервалы для стилей экрана и расчёта занимаемой высоты.
+export const REFLECT_SPACING = { top: 16, question: 4, input: 20, actions: 16 } as const;
+
+export type ReflectFitState = { context: string; index: number };
+export type ReflectMeasurement = ReflectFitState & { blockHeight: number };
+
+// Новый вопрос или геометрия начинают подбор сразу, без эффекта сброса.
+export function reflectionDensityIndex(state: ReflectFitState, context: string): number {
+  return state.context === context ? state.index : 0;
+}
+
 type Measured = {
   availableHeight: number;
-  questionBlockHeight: number;
-  questionLines: number;
-  actionsHeight: number;
-  question: string;
-  densityIndex: number;
+  context: string;
+  index: number;
+  measurement: ReflectMeasurement | undefined;
+  actionsHeight: number | undefined;
+  keyboardPhase: 'hidden' | 'opening' | 'open' | 'closing';
 };
 
-/** Первый вариант, в котором весь экран помещается без прокрутки. */
+/**
+ * Проверяет только реально измеренный вариант. Следующий шаг измеряется
+ * заново: меньший кегль может убрать целую строку, а не только её высоту.
+ * Поэтому первый поместившийся шаг не пропускается из-за прогноза переноса.
+ */
 export function fitReflectDensity(
-  { availableHeight, questionBlockHeight, questionLines, actionsHeight, question, densityIndex }: Measured,
+  { availableHeight, context, index, measurement, actionsHeight, keyboardPhase }: Measured,
   sc: (v: number) => number,
 ): { index: number; overflow: boolean } {
-  const measuredLine = reflectionQuestionType(question, REFLECT_DENSITIES[densityIndex].fontStep).line;
-  const nonQuestionHeight = questionBlockHeight - questionLines * sc(measuredLine);
-  const fits = ({ fontStep, flame, input }: (typeof REFLECT_DENSITIES)[number]) =>
-    sc(flame) + sc(4) + nonQuestionHeight
-    + questionLines * sc(reflectionQuestionType(question, fontStep).line)
-    + sc(20) + sc(input) + sc(16) + actionsHeight <= availableHeight;
-  const index = REFLECT_DENSITIES.findIndex(fits);
-  return index >= 0
-    ? { index, overflow: false }
-    : { index: REFLECT_DENSITIES.length - 1, overflow: true };
+  if (keyboardPhase !== 'hidden' || measurement === undefined || actionsHeight === undefined
+    || measurement.context !== context || measurement.index !== index) {
+    return { index, overflow: false };
+  }
+  const density = REFLECT_DENSITIES[index];
+  const requiredHeight = sc(density.flame) + sc(REFLECT_SPACING.question)
+    + measurement.blockHeight + sc(REFLECT_SPACING.input) + sc(density.input)
+    + sc(REFLECT_SPACING.actions) + actionsHeight;
+  if (requiredHeight <= availableHeight) return { index, overflow: false };
+  const next = Math.min(index + 1, REFLECT_DENSITIES.length - 1);
+  return { index: next, overflow: next === index };
 }
