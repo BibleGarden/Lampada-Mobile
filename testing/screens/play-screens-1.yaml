@@ -1,6 +1,6 @@
 appId: app.lampada
 ---
-# Google Play phone screenshots, one continuous take (state seeded by seed-android.py; texts from run-take.sh env).
+# Google Play phone screenshots, one continuous take (state seeded by scripts/play-screens-seed.py; text from scripts/capture-play-screenshots.sh).
 # Part 1 (01-06). Timer waits mirror the App Store set: 03 ~4:3x, 06 ~1:4x.
 - launchApp:
     stopApp: true

@@ -7,15 +7,34 @@ locale="${1:?Usage: scripts/capture-play-screenshots.sh <ru|uk|en>}"
 case "$locale" in ru|uk|en) ;; *) echo 'Locale must be ru, uk or en' >&2; exit 2 ;; esac
 : "${ANDROID_HOME:?Set ANDROID_HOME to the Android SDK directory}"
 serial=emulator-5554
-adb_cmd=(adb -s "$serial")
-fixture="store/screenshots/android-fixtures/$locale.json"
+adb_cmd=("$ANDROID_HOME/platform-tools/adb" -s "$serial")
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
+overlay="store/screenshots/android-fixtures/$locale.json"
 run_dir="$(mktemp -d "${TMPDIR:-/tmp}/lampada-play-${locale}.XXXXXX")"
 printf 'Run artifacts: %s\n' "$run_dir"
 
-"${adb_cmd[@]}" get-state | grep -qx device
+if ! "${adb_cmd[@]}" get-state 2>"$run_dir/device-error.log" | grep -qx device; then
+  echo "Required emulator $serial is unavailable" >&2
+  tail -20 "$run_dir/device-error.log" >&2
+  exit 1
+fi
 avd="$("${adb_cmd[@]}" emu avd name | tr -d '\r' | head -1)"
 [ "$avd" = Pray_Pixel_API_35 ] || { echo "Wrong emulator: $avd" >&2; exit 1; }
+fixture="$run_dir/fixture.json"
+python3 scripts/build-play-screenshot-fixture.py store/video/demo-content.json "$overlay" "$locale" "$fixture"
 python3 scripts/appstore-video-mock.py --fixture "$fixture" --pacing store/video/pacing.json --validate
+
+original_timezone="$("${adb_cmd[@]}" shell getprop persist.sys.timezone | tr -d '\r')"
+original_auto_time_zone="$("${adb_cmd[@]}" shell settings get global auto_time_zone | tr -d '\r')"
+original_demo="$("${adb_cmd[@]}" shell settings get global sysui_demo_allowed | tr -d '\r')"
+original_spell_checker="$("${adb_cmd[@]}" shell settings get secure spell_checker_enabled | tr -d '\r')"
+original_wm_size="$("${adb_cmd[@]}" shell wm size | sed -n 's/^Override size: //p' | tr -d '\r')"
+original_wm_density="$("${adb_cmd[@]}" shell wm density | sed -n 's/^Override density: //p' | tr -d '\r')"
+restore_setting() {
+  local scope="$1" name="$2" value="$3"
+  if [ "$value" = null ]; then "${adb_cmd[@]}" shell settings delete "$scope" "$name" >/dev/null;
+  else "${adb_cmd[@]}" shell settings put "$scope" "$name" "$value"; fi
+}
 
 mock_pid=''
 mock_app_installed=0
@@ -24,12 +43,12 @@ restore() {
   trap - EXIT
   if [ -n "$mock_pid" ]; then kill "$mock_pid" 2>/dev/null || true; wait "$mock_pid" 2>/dev/null || true; fi
   "${adb_cmd[@]}" shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null || true
-  "${adb_cmd[@]}" shell settings put global sysui_demo_allowed 0 || true
-  "${adb_cmd[@]}" shell wm size reset || true
-  "${adb_cmd[@]}" shell wm density reset || true
-  "${adb_cmd[@]}" shell cmd alarm set-timezone Europe/Moscow || true
-  "${adb_cmd[@]}" shell settings put global auto_time_zone 1 || true
-  "${adb_cmd[@]}" shell settings delete secure spell_checker_enabled >/dev/null || true
+  restore_setting global sysui_demo_allowed "$original_demo" || true
+  if [ -n "$original_wm_size" ]; then "${adb_cmd[@]}" shell wm size "$original_wm_size"; else "${adb_cmd[@]}" shell wm size reset; fi
+  if [ -n "$original_wm_density" ]; then "${adb_cmd[@]}" shell wm density "$original_wm_density"; else "${adb_cmd[@]}" shell wm density reset; fi
+  "${adb_cmd[@]}" shell cmd alarm set-timezone "$original_timezone" || true
+  restore_setting global auto_time_zone "$original_auto_time_zone" || true
+  restore_setting secure spell_checker_enabled "$original_spell_checker" || true
   if [ "$mock_app_installed" -eq 1 ]; then
     "${adb_cmd[@]}" uninstall garden.lampada.testprobe >/dev/null 2>&1 || true
     "${adb_cmd[@]}" uninstall app.lampada >/dev/null 2>&1 || true
@@ -45,9 +64,9 @@ export ANDROID_HOME
 npx expo prebuild --platform android >"$run_dir/prebuild.log" 2>&1 || { tail -40 "$run_dir/prebuild.log" >&2; exit 1; }
 (cd android && NODE_ENV=production ./gradlew assembleRelease) >"$run_dir/gradle.log" 2>&1 || { tail -40 "$run_dir/gradle.log" >&2; exit 1; }
 ANDROID_PROBE_OUTPUT="$run_dir/probe" bash scripts/build-android-test-probe.sh >"$run_dir/probe-build.log" 2>&1 || { tail -40 "$run_dir/probe-build.log" >&2; exit 1; }
-"${adb_cmd[@]}" install -r android/app/build/outputs/apk/release/app-release.apk >"$run_dir/install.log"
+"${adb_cmd[@]}" install -r android/app/build/outputs/apk/release/app-release.apk >"$run_dir/install.log" 2>&1 || { echo "App install failed; see $run_dir/install.log" >&2; tail -40 "$run_dir/install.log" >&2; exit 1; }
 mock_app_installed=1
-"${adb_cmd[@]}" install -r "$run_dir/probe/LampadaTestProbe.apk" >>"$run_dir/install.log"
+"${adb_cmd[@]}" install -r "$run_dir/probe/LampadaTestProbe.apk" >>"$run_dir/install.log" 2>&1 || { echo "Probe install failed; see $run_dir/install.log" >&2; tail -40 "$run_dir/install.log" >&2; exit 1; }
 
 "${adb_cmd[@]}" shell settings put global auto_time_zone 0
 "${adb_cmd[@]}" shell cmd alarm set-timezone America/Bogota
@@ -80,7 +99,7 @@ curl -fsS http://127.0.0.1:9086/__health >/dev/null
 sleep 8
 "${adb_cmd[@]}" shell am force-stop app.lampada
 today="$("${adb_cmd[@]}" shell date +%F | tr -d '\r')"
-python3 scripts/play-screens-seed.py "$fixture" "$locale" "$today" >"$run_dir/seed.log"
+python3 scripts/play-screens-seed.py "$serial" "$fixture" "$locale" "$today" >"$run_dir/seed.log"
 
 flow_env=()
 while IFS= read -r value; do flow_env+=("$value"); done < <(python3 - "$fixture" "$locale" <<'PY'
@@ -91,11 +110,14 @@ for key, value in {'TOPIC': typed['intention'], 'ANSWER': typed['answer'], 'TAKE
     print(f'{key}={value}')
 PY
 )
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 args=()
 for value in "${flow_env[@]}"; do args+=(-e "$value"); done
-maestro --device "$serial" test --test-output-dir "$run_dir/part1" "${args[@]}" testing/screens/play-screens-1.yaml >"$run_dir/part1.log" 2>&1 || { tail -40 "$run_dir/part1.log" >&2; exit 1; }
+node scripts/android-guest-load.mjs boot --device "$serial" >"$run_dir/guest-boot.log" 2>&1
+bash scripts/android-maestro-driver.sh "$serial" "$run_dir" >"$run_dir/driver.log" 2>&1
+node scripts/android-guest-load.mjs run --device "$serial" --flow play-screens-1 --flow-log "$run_dir/part1.log" -- maestro --device "$serial" test --no-reinstall-driver --test-output-dir "$run_dir/part1" "${args[@]}" testing/screens/play-screens-1.yaml >"$run_dir/part1.runner.log" 2>&1 || { tail -40 "$run_dir/part1.log" >&2; exit 1; }
 sleep 40
-maestro --device "$serial" test --test-output-dir "$run_dir/part2" "${args[@]}" testing/screens/play-screens-2.yaml >"$run_dir/part2.log" 2>&1 || { tail -40 "$run_dir/part2.log" >&2; exit 1; }
+node scripts/android-guest-load.mjs run --device "$serial" --flow play-screens-2 --flow-log "$run_dir/part2.log" -- maestro --device "$serial" test --no-reinstall-driver --test-output-dir "$run_dir/part2" "${args[@]}" testing/screens/play-screens-2.yaml >"$run_dir/part2.runner.log" 2>&1 || { tail -40 "$run_dir/part2.log" >&2; exit 1; }
 mkdir "$run_dir/png"
 find "$run_dir/part1" "$run_dir/part2" -path '*/takeScreenshot/*.png' -exec cp {} "$run_dir/png/" \;
 [ "$(find "$run_dir/png" -name '*.png' | wc -l | tr -d ' ')" = 8 ] || { echo 'Expected eight screenshots' >&2; exit 1; }

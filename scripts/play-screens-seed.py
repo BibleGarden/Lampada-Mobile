@@ -4,12 +4,14 @@
 Reuses the App Store video seed contract (scripts/appstore-video-seed-db.py): ui_language,
 prayer_minutes=5, scripture_preferences from the fixture catalog, consents core/answer allowed and
 transcription undecided. Adds prayed_days for the last 5 local days so Home shows the 5-day week.
-Usage: play-screens-seed.py <fixture.json> <locale> <today YYYY-MM-DD in emulator local time>
+Usage: play-screens-seed.py <emulator serial> <fixture.json> <locale> <today YYYY-MM-DD in emulator local time>
 """
 import importlib.util, json, subprocess, sys
 from pathlib import Path
 from datetime import date, timedelta
-fixture_path, locale, today = sys.argv[1:4]
+serial, fixture_path, locale, today = sys.argv[1:5]
+if not serial.startswith("emulator-"):
+    raise ValueError("Screenshot seeding requires an emulator")
 repo = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("seed", f"{repo}/scripts/appstore-video-seed-db.py")
 seed = importlib.util.module_from_spec(spec); spec.loader.exec_module(seed)
@@ -30,6 +32,6 @@ statements += [f"INSERT OR REPLACE INTO meta (key,value) VALUES ({q(k)},{q(v)})"
 d0 = date.fromisoformat(today)
 statements.append("INSERT INTO prayed_days (day) VALUES " + ",".join(f"({q((d0 - timedelta(days=i)).isoformat())})" for i in range(5)))
 for sql in statements:
-    subprocess.run([sys.executable, f"{repo}/scripts/android-db-probe.py", "--device", "emulator-5554", "--mode", "execute", "--sql", sql],
+    subprocess.run([sys.executable, f"{repo}/scripts/android-db-probe.py", "--device", serial, "--mode", "execute", "--sql", sql],
                    check=True, stdout=subprocess.DEVNULL)
 print(f"seeded {len(statements)} statements")

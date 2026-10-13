@@ -217,7 +217,7 @@ and [AI-generated content policy](https://support.google.com/googleplay/android-
 | Play Console item | Select or enter | Basis |
 |---|---|---|
 | App details | App; free; Lifestyle. **Owner decision:** confirm free pricing and distribution countries. | `store/play/en-US.json` describes a prayer app; `store/README.md` sets Lifestyle. |
-| Privacy policy | `https://lampada.app/privacy?lang=en` (live on 2026-10-12). Settings links to the full policy in the interface language; its data-processing text remains a summary. | `store/metadata/en-US.json`; `app/settings.tsx:1181` and `lib/locales/settings.ts`. |
+| Privacy policy | `https://lampada.app/privacy?lang=en` (live on 2026-10-12). Settings links to the full policy in the interface language; its data-processing text remains a summary. | `store/metadata/en-US.json`; `settings-privacy-policy` and `lib/locales/settings.ts`. |
 | App access / sign-in details | **All functionality is available without special access**; no reviewer credentials. The optional local PIN/biometric lock is user-created. | `app/setup.tsx`, `components/LockGate.tsx`, `architect/README.md` (lock gate). |
 | Ads | **No, my app does not contain ads.** | `package.json` has no ad SDK; `store/play/en-US.json` describes no ads or sponsored placements. |
 | Store listing contact | **Owner decision:** enter a monitored support email; recommend `support@lampada.app` if the owner controls it. | `store/metadata/en-US.json` points to the live privacy policy, which currently names that support address; no contact email is stored in this repository. |
@@ -228,7 +228,7 @@ and [AI-generated content policy](https://support.google.com/googleplay/android-
 | Financial features | **My app doesn’t provide any financial features.** This form also applies to closed testing. | `store/play/en-US.json`; [Google's declaration choices](https://support.google.com/googleplay/android-developer/answer/13849271). |
 | Health apps | **My app doesn’t provide any health features.** Prayer is the purpose; there are no health claims, health data integrations or medical features. This form also applies to closed testing. | `store/play/en-US.json`, `app.json`; [Google's declaration choices](https://support.google.com/googleplay/android-developer/answer/14738291). |
 | Government apps / news and magazines / COVID-19 | **No** to each if shown. Lampada is not government affiliated and provides no government information, news or contact tracing. | `store/play/en-US.json`, `architect/README.md`; [App content guidance](https://support.google.com/googleplay/android-developer/answer/9859455). |
-| Advertising ID | **No** if the final merged AAB manifest has no `com.google.android.gms.permission.AD_ID`; check the uploaded artifact before answering. | `app.json` declares no AD_ID; `package.json` has no ad SDK. No merged release manifest is in this repository. |
+| Advertising ID | **No** for the local release merged manifest checked on 2026-10-13; confirm the uploaded AAB manifest before submission. | The local release merged manifest has no `com.google.android.gms.permission.AD_ID`; `package.json` has no ad SDK. |
 | Foreground service permissions | **Media playback** only; use the explanation and video below. | `app.json` enables expo-audio background playback; `architect/README.md` documents music and Scripture narration. |
 
 The [App content page](https://support.google.com/googleplay/android-developer/answer/9859455)
@@ -247,9 +247,15 @@ Verify the permissions against the merged release manifest (`PRE-004D`):
 | `RECEIVE_BOOT_COMPLETED`, `WAKE_LOCK` | expo-notifications, WorkManager | rescheduling reminders after a restart |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | expo-local-authentication | the optional app lock |
 | `INTERNET`, `ACCESS_NETWORK_STATE`, `MODIFY_AUDIO_SETTINGS`, `VIBRATE` | template and libraries | network requests, audio routing, haptics |
+| `app.lampada.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX | restricts the app's internal dynamically registered receivers |
 
-`SYSTEM_ALERT_WINDOW`, `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE`
-must be absent (`android.blockedPermissions`).
+`android.blockedPermissions` excludes unused `SYSTEM_ALERT_WINDOW`, storage, FCM
+`com.google.android.c2dm.permission.RECEIVE`, install referrer
+`BIND_GET_INSTALL_REFERRER_SERVICE`, and 16 launcher badge permissions.
+The app schedules local notifications only (`lib/prayerReminderScheduler.ts`)
+and never requests a push token or an install referrer. The merged Release
+manifest, checked on 2026-10-13 after prebuild and `assembleRelease`, must
+contain none of these or `com.google.android.gms.permission.AD_ID`.
 
 **Foreground service.** App content → Foreground service permissions → Media
 playback: background prayer music and Scripture narration that the user
@@ -322,8 +328,9 @@ not suitable for the Play listing.
 ### Android screenshots
 
 The 24 Play phone images in `screenshots/android-phone-*.png` were captured on
-2026-10-12 at 1280×2560 for `ru`, `uk` and `en`. Their approved copy and the
-API responses live in `screenshots/android-fixtures/`. `scripts/capture-play-screenshots.sh
+2026-10-12 at 1280×2560 for `ru`, `uk` and `en`. Their Play-only copy lives in
+`screenshots/android-fixtures/`; the capture script builds a complete fixture
+from `video/demo-content.json`. `scripts/capture-play-screenshots.sh
 <ru|uk|en>` rebuilds a test-channel Release APK against the shared
 `scripts/appstore-video-mock.py`, seeds the signed test database, and runs
 `testing/screens/play-screens-{1,2}.yaml`. It writes eight PNGs and full logs
@@ -334,9 +341,9 @@ Use only `emulator-5554` running the `Pray_Pixel_API_35` AVD. Start it as in
 `testing/README.md` after `setopt NO_BG_NICE`; set
 `ANDROID_HOME=~/Library/Android/sdk` before invoking the script. The script
 sets `wm size 1280x2560`, demo mode (09:41, full battery and Wi-Fi), the local
-mock and screenshot seed. On exit it restores native display size and density,
-turns demo mode off, restores the Moscow automatic timezone and spell checker
-setting, removes the mock app and probe, stops the mock and Gradle. Shut down
+mock and screenshot seed. On exit it restores the prior display overrides,
+demo-mode setting, timezone, automatic-timezone setting and spell-checker setting,
+removes the mock app and probe, and stops the mock and Gradle. Shut down
 the emulator when finished. Never use a connected physical device.
 
 ### Closed testing
