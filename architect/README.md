@@ -278,16 +278,19 @@ the setup route rather than adding duplicate entries to the back stack.
 `session` and `reflect` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
 
-Reflection fits against the window height minus safe-area insets and content
-padding, independently of the animated keyboard reserve. It measures the question
+Reflection fits against the native root container's measured height minus
+safe-area insets and content padding, independently of the animated keyboard
+reserve and Android's reported window height. It measures the question
 block at each density in `lib/reflectLayout.ts`, starting with the original type
 and reducing it by 2 then 4 design points before reducing the ember and takeaway
-field. Each step waits for its own measurement after text reflow; measurements
-are tagged by question, geometry and density. A new question or window starts
+field. Font changes wait for their own measurement after text reflow; subsequent
+decoration-only steps are selected together using the same measured text height.
+Measurements are tagged by question, geometry and density. A new question or window starts
 again at the original density. Fitting pauses throughout keyboard opening, open
 and closing phases; compact editing always uses the original question type and
 input basis. If the smallest layout still overflows, the ScrollView flashes its
-indicators and keeps all content reachable.
+indicators once when overflow begins and keeps all content reachable. Keyboard
+opening and closing preserve the question block's identity.
 
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.

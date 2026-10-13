@@ -27,8 +27,15 @@ export function reflectionDensityIndex(state: ReflectFitState, context: string):
   return state.context === context ? state.index : 0;
 }
 
+// Размеры берутся из одного нативного контейнера, а не из Dimensions.
+export function reflectionAvailableHeight(
+  rootHeight: number | undefined, topPadding: number, bottomPadding: number, bottomInset: number,
+): number | undefined {
+  return rootHeight === undefined ? undefined : rootHeight - topPadding - bottomPadding - bottomInset;
+}
+
 type Measured = {
-  availableHeight: number;
+  availableHeight: number | undefined;
   context: string;
   index: number;
   measurement: ReflectMeasurement | undefined;
@@ -37,23 +44,26 @@ type Measured = {
 };
 
 /**
- * Проверяет только реально измеренный вариант. Следующий шаг измеряется
- * заново: меньший кегль может убрать целую строку, а не только её высоту.
- * Поэтому первый поместившийся шаг не пропускается из-за прогноза переноса.
+ * Новый кегль измеряется заново: перенос может убрать целую строку.
+ * Варианты с тем же кеглем подбираются сразу по измеренной высоте текста.
+ * overflow неизвестен, пока нет подходящего измерения или скрытой клавиатуры.
  */
 export function fitReflectDensity(
   { availableHeight, context, index, measurement, actionsHeight, keyboardPhase }: Measured,
   sc: (v: number) => number,
-): { index: number; overflow: boolean } {
-  if (keyboardPhase !== 'hidden' || measurement === undefined || actionsHeight === undefined
+): { index: number; overflow: boolean | undefined } {
+  if (keyboardPhase !== 'hidden' || availableHeight === undefined || measurement === undefined || actionsHeight === undefined
     || measurement.context !== context || measurement.index !== index) {
-    return { index, overflow: false };
+    return { index, overflow: undefined };
   }
   const density = REFLECT_DENSITIES[index];
-  const requiredHeight = sc(density.flame) + sc(REFLECT_SPACING.question)
-    + measurement.blockHeight + sc(REFLECT_SPACING.input) + sc(density.input)
-    + sc(REFLECT_SPACING.actions) + actionsHeight;
-  if (requiredHeight <= availableHeight) return { index, overflow: false };
-  const next = Math.min(index + 1, REFLECT_DENSITIES.length - 1);
-  return { index: next, overflow: next === index };
+  for (let next = index; next < REFLECT_DENSITIES.length; next++) {
+    const candidate = REFLECT_DENSITIES[next];
+    if (candidate.fontStep !== density.fontStep) return { index: next, overflow: undefined };
+    const requiredHeight = sc(candidate.flame) + sc(REFLECT_SPACING.question)
+      + measurement.blockHeight + sc(REFLECT_SPACING.input) + sc(candidate.input)
+      + sc(REFLECT_SPACING.actions) + actionsHeight;
+    if (requiredHeight <= availableHeight) return { index: next, overflow: false };
+  }
+  return { index: REFLECT_DENSITIES.length - 1, overflow: true };
 }
