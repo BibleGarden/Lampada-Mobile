@@ -1,0 +1,18 @@
+appId: app.lampada
+tags:
+  - main
+---
+# The cross, not a Done action, closes each settings sheet.
+- launchApp:
+    stopApp: true
+    clearState: true
+- tapOn:
+    id: settings-button
+- tapOn:
+    id: interface-language-picker
+- assertVisible: Закрыть настройки языка
+- tapOn: Закрыть настройки языка
+- tapOn:
+    id: scripture-language-picker
+- assertVisible: Закрыть настройки Писания
+- tapOn: Закрыть настройки Писания
