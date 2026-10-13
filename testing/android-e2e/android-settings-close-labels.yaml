@@ -2,17 +2,38 @@ appId: app.lampada
 tags:
   - main
 ---
-# The cross, not a Done action, closes each settings sheet.
+# The cross, not a Done action, closes each settings sheet. The backdrop shares
+# the close label, so the cross is found by id and its label is asserted.
 - launchApp:
     stopApp: true
     clearState: true
 - tapOn:
     id: settings-button
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
 - tapOn:
     id: interface-language-picker
-- assertVisible: Закрыть настройки языка
-- tapOn: Закрыть настройки языка
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: interface-language-sheet-close
+    text: Закрыть настройки языка
+- tapOn:
+    id: interface-language-sheet-close
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: interface-language-sheet
 - tapOn:
     id: scripture-language-picker
-- assertVisible: Закрыть настройки Писания
-- tapOn: Закрыть настройки Писания
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertVisible:
+    id: scripture-language-sheet-close
+    text: Закрыть настройки цитат и озвучки
+- tapOn:
+    id: scripture-language-sheet-close
+    waitToSettleTimeoutMs: 500
+    retryTapIfNoChange: false
+- assertNotVisible:
+    id: scripture-language-sheet

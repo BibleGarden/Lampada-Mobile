@@ -463,8 +463,8 @@ unit coverage in `lib/__tests__/lockBiometrics.test.mjs`.
 - long Russian strings are not clipped in a damaging way;
 - the buttons have a sufficient tap area and clear accessibility labels;
 - Settings sheet crosses announce a close action for Interface language and
-  Scripture in English, Russian and Ukrainian; the Android Russian labels are
-  asserted by `android-settings-close-labels.yaml`;
+  Quotes and audio in English, Russian and Ukrainian; the Android Russian labels
+  are asserted on the crosses by id in `android-settings-close-labels.yaml`;
 - enlarged system text, VoiceOver/TalkBack, Reduce Motion;
 - the contrast of the text, of the toggle states and of the delete
   confirmations.

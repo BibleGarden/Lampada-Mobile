@@ -23,6 +23,7 @@ case "${1:-}" in
       android-scripture-default-language
       android-scripture-settings
       android-scripture-user-choice-overrides-locale
+      android-settings-close-labels
       android-stage03-deep-links
       android-stage03-long-goal
       android-stage03-session-infinite
