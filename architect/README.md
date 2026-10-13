@@ -278,6 +278,12 @@ the setup route rather than adding duplicate entries to the back stack.
 `session` and `reflect` cannot be left by an accidental system gesture:
 the scenario is finished through explicit interface actions.
 
+Reflection measures the visible scroll viewport, question block and action pair.
+`lib/reflectLayout.ts` keeps the original layout while both actions fit, then
+reduces the question type by up to 4 design points before reducing the ember and
+takeaway field. The existing ScrollView handles unusually long questions and
+small windows. The docked keyboard retains its compact editing layout.
+
 On landscape tablets, the threshold places its scrollable briefing beside the
 hold-to-start control. Portrait and phone windows retain a vertical layout.
 Its back header follows the shared content column and gutter in either layout.

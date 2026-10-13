@@ -5,10 +5,12 @@ import {
   BackHandler,
   ActivityIndicator,
   Pressable,
+  type LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Redirect, router } from 'expo-router';
@@ -23,6 +25,7 @@ import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy } from '../lib/useKeyboardLayout';
 import KeyboardViewport, { KeyboardPendingSpace } from '../components/keyboard/KeyboardViewport';
 import { shouldPauseReflectionFlame } from '../lib/reflectionFlame';
+import { REFLECT_DENSITIES, fitReflectDensity, reflectionQuestionType } from '../lib/reflectLayout';
 import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, useStyles } from '../lib/theme';
 
 const ReflectionFlame = React.memo(Flame);
@@ -35,12 +38,6 @@ export default function Reflect() {
   return <ReflectScreen />;
 }
 
-function questionTypography(question: string) {
-  if (question.length > 110) return { fontSize: sc(18), lineHeight: sc(24) };
-  if (question.length > 75) return { fontSize: sc(20), lineHeight: sc(26) };
-  return { fontSize: sc(22), lineHeight: sc(29) };
-}
-
 function ReflectScreen() {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);
@@ -50,7 +47,38 @@ function ReflectScreen() {
   const [inputFocused, setInputFocused] = useState(false);
   const policy = useKeyboardFormPolicy();
   const dockedKeyboard = policy.fillInput;
+  const { width, height } = useWindowDimensions();
+  const [densityIndex, setDensityIndex] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState<number>();
+  const [questionBlockHeight, setQuestionBlockHeight] = useState<number>();
+  const [questionLines, setQuestionLines] = useState<number>();
+  const [actionsHeight, setActionsHeight] = useState<number>();
+  const density = REFLECT_DENSITIES[densityIndex];
+  const questionType = reflectionQuestionType(s.reflectQ, density.fontStep);
   const completing = useRef(false);
+
+  // После смены окна или вопроса подбор начинается с исходной раскладки.
+  useEffect(() => {
+    setDensityIndex(0);
+    setQuestionBlockHeight(undefined);
+    setQuestionLines(undefined);
+  }, [width, height, s.reflectQ]);
+
+  useEffect(() => {
+    if (dockedKeyboard || viewportHeight === undefined || questionBlockHeight === undefined
+      || questionLines === undefined || actionsHeight === undefined) return;
+    const fitted = fitReflectDensity({
+      availableHeight: viewportHeight - insets.top - sc(16) - bottomActionPadding(0),
+      questionBlockHeight,
+      questionLines,
+      actionsHeight,
+      question: s.reflectQ,
+      densityIndex,
+    }, sc);
+    // Повторное измерение уменьшенного текста не возвращает большой кегль:
+    // иначе перенос строки на границе может вызвать цикл размеров.
+    if (fitted.index > densityIndex) setDensityIndex(fitted.index);
+  }, [actionsHeight, densityIndex, dockedKeyboard, insets.top, questionBlockHeight, questionLines, s.reflectQ, viewportHeight]);
 
   // Android «назад» тут некуда вести — только явное завершение
   useEffect(() => {
@@ -90,6 +118,7 @@ function ReflectScreen() {
       <Animated.View entering={FadeIn.duration(500)} style={styles.fill}>
         <KeyboardViewport>
           <ScrollView
+            onLayout={(e: LayoutChangeEvent) => setViewportHeight(e.nativeEvent.layout.height)}
             contentContainerStyle={[
               styles.body,
               {
@@ -107,11 +136,14 @@ function ReflectScreen() {
             >
               {!dockedKeyboard && (
                 <View style={styles.emberWrap}>
-                  <ReflectionFlame width={sc(104)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
+                  <ReflectionFlame width={sc(density.flame)} ember paused={shouldPauseReflectionFlame(process.env.EXPO_PUBLIC_APPSTORE_VIDEO, inputFocused)} />
                 </View>
               )}
 
-              <View style={[styles.questionBlock, dockedKeyboard && styles.questionBlockCompact]}>
+              <View
+                style={[styles.questionBlock, dockedKeyboard && styles.questionBlockCompact]}
+                onLayout={(e) => setQuestionBlockHeight(e.nativeEvent.layout.height)}
+              >
                 {!dockedKeyboard && (
                   <Kicker style={{ textAlign: 'center', marginBottom: sc(10) }} testID="reflect-kicker">
                     {s.reflectSource === 'fallback' ? t('screens.reflect.fallback') : t('screens.reflect.before')}
@@ -123,7 +155,11 @@ function ReflectScreen() {
                     <Text style={styles.loadingText}>{t('screens.questionLoading')}</Text>
                   </View>
                 ) : (
-                  <Text style={[styles.question, questionTypography(s.reflectQ)]} testID="reflect-question">{s.reflectQ}</Text>
+                  <Text
+                    style={[styles.question, { fontSize: sc(questionType.font), lineHeight: sc(questionType.line) }]}
+                    onTextLayout={(e) => setQuestionLines(e.nativeEvent.lines.length)}
+                    testID="reflect-question"
+                  >{s.reflectQ}</Text>
                 )}
               </View>
 
@@ -135,7 +171,7 @@ function ReflectScreen() {
                 multiline
                 placeholder={t('screens.reflect.placeholder')}
                 placeholderTextColor={colors.placeholder}
-                style={[styles.input, dockedKeyboard && styles.inputEditing]}
+                style={[styles.input, { flexBasis: sc(density.input) }, dockedKeyboard && styles.inputEditing]}
                 accessibilityLabel={t('screens.reflect.placeholder')}
                 accessibilityHint={t('screens.reflect.inputHint')}
                 testID="reflection-input"
@@ -150,7 +186,7 @@ function ReflectScreen() {
                 : <View style={{ flex: 1, minHeight: sc(16) }} />}
 
               {policy.actionsVisible && (
-                <View style={{ gap: sc(12) }}>
+                <View style={{ gap: sc(12) }} onLayout={(e) => setActionsHeight(e.nativeEvent.layout.height)}>
                   <GoldButton
                     label={takeaway.trim() ? t('screens.reflect.save') : t('screens.reflect.finish')}
                     testID="reflect-complete-button"
@@ -209,7 +245,6 @@ const stylesFactory = () => StyleSheet.create({
   },
   input: {
     marginTop: sc(20),
-    flexBasis: sc(128),
     flexShrink: 1,
     minHeight: sc(72),
     padding: sc(13),
