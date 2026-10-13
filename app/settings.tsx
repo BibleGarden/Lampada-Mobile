@@ -19,6 +19,7 @@ import {
 } from '../lib/settings';
 import { useI18n } from '../lib/i18n';
 import { privacyPolicyUrl } from '../lib/publicUrls';
+import { openExternalUrl } from '../lib/externalLink';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import {
   DEFAULT_REMINDER_SCHEDULE,
@@ -1305,8 +1306,7 @@ export default function Settings() {
             accessibilityRole="link"
             accessibilityLabel={t('settings.privacyPolicyLink')}
             testID="settings-privacy-policy"
-            onPress={() => void Linking.openURL(privacyPolicyUrl(uiLanguage))
-              .catch(() => Alert.alert(t('screens.about.linkFailed'), t('screens.about.later')))}
+            onPress={() => void openExternalUrl(privacyPolicyUrl(uiLanguage), t, Linking.openURL, Alert.alert)}
             style={({ pressed }) => [styles.privacyDetailsToggle, pressed && styles.optionPressed]}
           >
             <Text style={styles.privacyDetailsLabel}>{t('settings.privacyPolicyLink')}</Text>
