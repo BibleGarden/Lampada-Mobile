@@ -112,7 +112,7 @@ export default function About() {
             accessibilityRole="link"
             accessibilityLabel={t('screens.about.openBible')}
             testID="bible-garden-link"
-            onPress={() => void Linking.openURL(BIBLE_GARDEN_URL)}
+            onPress={() => void Linking.openURL(BIBLE_GARDEN_URL).catch(() => Alert.alert(t('screens.about.linkFailed'), t('screens.about.later')))}
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
           >
             <View style={styles.projectHeader}>
