@@ -66,8 +66,15 @@ instead of removing it in one place.
 
 ## Consequences
 
-- After unfolding, a display-size change or a split-screen resize, the Skia
-  drawings stay inside their views and centred in the content column.
+- After unfolding or a display-size change, the Skia drawings stay inside
+  their views and centred in the content column.
+- Accepted limitation: after `RNSkiaModule.invalidate()` on a JS reload, a
+  queued draw may read the density through the old raw `JniPlatformContext*`,
+  the same pattern as the existing `runTaskOnMainThread` and `raiseError`.
+  Release builds do not reload in normal use.
+- Accepted limitation: the density comes from the Application resources, so an
+  activity on a secondary display (DeX, an external monitor) would use the
+  default display's density.
 - The patch must be recreated or dropped on every `react-native-skia` update;
   `patch-package --error-on-fail --error-on-warn` fails the install until then.
 - Upstream issue: not filed yet (no link).
