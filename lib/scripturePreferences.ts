@@ -78,7 +78,8 @@ export function resolveInitialScriptureLanguage(
 }
 
 const preferredCodes: Readonly<Record<string, { translation: number; voice: number }>> = {
-  ru: { translation: 1, voice: 1 },
+  // BTI (перевод Кулаковых), читает Никита Семёнов-Прозоровский.
+  ru: { translation: 11, voice: 123 },
   uk: { translation: 20, voice: 130 },
   en: { translation: 16, voice: 151 },
 };
