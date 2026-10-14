@@ -1,8 +1,13 @@
 appId: app.lampada
 ---
-# Part 2 (07-08): run when the prayer timer shows 0:5x, so the journal says 4 min.
-- tapOn:
-    id: session-finish-button
+# Part 2 (07-08): the five-minute prayer may finish while Maestro starts this flow.
+- runFlow:
+    when:
+      visible:
+        id: session-finish-button
+    commands:
+      - tapOn:
+          id: session-finish-button
 - assertVisible:
     id: reflection-input
 - tapOn:
@@ -12,6 +17,10 @@ appId: app.lampada
     id: reflect-question
 - waitForAnimationToEnd:
     timeout: 2000
+- swipe:
+    start: 50%, 80%
+    end: 50%, 74%
+    duration: 400
 - takeScreenshot: 07-reflection
 - tapOn:
     id: reflect-complete-button

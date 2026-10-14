@@ -1,7 +1,7 @@
 appId: app.lampada
 ---
 # Google Play phone screenshots, one continuous take (state seeded by scripts/play-screens-seed.py; text from scripts/capture-play-screenshots.sh).
-# Part 1 (01-06). Timer waits mirror the App Store set: 03 ~4:3x, 06 ~1:4x.
+# Part 1 (01-06). Capture Scripture when the passage is actually visible.
 - launchApp:
     stopApp: true
 - assertVisible:
@@ -78,7 +78,4 @@ appId: app.lampada
 - extendedWaitUntil:
     visible: "(?s)${PASSAGE_RE}.*"
     timeout: 30000
-- extendedWaitUntil:
-    visible: "1:4[0-9]"
-    timeout: 120000
 - takeScreenshot: 06-passage
