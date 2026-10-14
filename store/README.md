@@ -410,24 +410,30 @@ and [personal-account testing / production access](https://support.google.com/go
 From the repository root:
 
 ```sh
-npm run eas:production:android                     # new release, Android only
-npm run eas:production:all                         # new release, both stores
-npm run eas:production:android -- --keep-version   # Android for the release iOS already has
-npx eas-cli@latest submit --platform android --profile production
+npm run eas:production:android                     # build and submit to Play internal testing
+npm run eas:production:all                         # build both; submit Android only
+npm run eas:production:android -- --keep-version   # build and submit Android at the reserved version
+npm run eas:production:ios                         # build iOS without submitting
+npx eas-cli@latest submit --platform android --profile production --latest  # recover a failed auto-submit without rebuilding
 ```
 
 The build uses the EAS `production` environment and produces an AAB; EAS
 increments `versionCode` remotely. On the first Android build EAS offers to
 generate the upload keystore; keep it in EAS. Play App Signing holds the app
-signing key. The submit profile uploads to the `internal` track with
-`releaseStatus: draft`; promote the release in Play Console. Uploading the
-first AAB manually to internal testing in Play Console is the most predictable
-start.
+signing key. Android builds automatically submit to the `internal` track with
+`releaseStatus: completed`, making the release available to internal testers
+without Google review. Check it on a phone, then use Play Console's **Copy
+release** (promote) action to move the same release to closed testing. An `all`
+build submits only Android; iOS builds are not submitted automatically.
+If Android fails during `all`, finish iOS with
+`npm run eas:production:ios -- --keep-version`.
 
-`eas submit` needs a Google Cloud service account that has access to the app in
-Play Console → Users and permissions. Upload its JSON key to EAS, never to git:
-`npx eas-cli@latest credentials --platform android` → `production` → Google
-Service Account → Manage your Google Service Account Key for Play Store
-Submissions → Set up a Google Service Account Key for Play Store Submissions.
-EAS assigns the key to `app.lampada`, so `eas.json` has no
-`serviceAccountKeyPath`.
+The `eas-submit@lampada-play.iam.gserviceaccount.com` service account has only
+**Release to testing tracks** permission for Lampada in Play Console: no
+production release or tester-list management. Its JSON key is stored in EAS,
+never in git. In `npx eas-cli@latest credentials --platform android`, choose
+`production` → Google Service Account → Manage your Google Service Account Key
+for Play Store Submissions → **Upload a Google Service Account Key**, then
+return to Manage → Play Store Submissions → **Select an existing key** for
+`app.lampada`. The uploaded key is shared at the EAS account level; the
+selection assigns it to this app. `eas.json` needs no `serviceAccountKeyPath`.

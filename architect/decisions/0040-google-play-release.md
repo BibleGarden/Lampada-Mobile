@@ -1,6 +1,6 @@
 # ADR-0040: Release on Google Play alongside the App Store
 
-- Status: Accepted
+- Status: Partly superseded by ADR-0044 (Submission)
 - Date: 2026-10-10
 - Participants: product owner, developer
 
@@ -39,7 +39,8 @@ use, and biometric texts named Face ID and Touch ID on Android.
   `internal` track with `releaseStatus: draft`; the owner promotes releases in
   Play Console. The Google service account key is stored in EAS credentials
   for `app.lampada`, never in the repository, so the profile has no
-  `serviceAccountKeyPath`.
+  `serviceAccountKeyPath`. This submission choice is superseded by
+  [ADR-0044](0044-automatic-android-internal-submission.md).
 - **Platform-aware update check.** The client sends `platform=ios|android` and
   accepts only responses that echo the same `platform`. A response without it
   comes from a server that does not distinguish stores and is ignored like any
