@@ -343,11 +343,26 @@ PNGs and full logs to a printed temporary directory for review, fails if any
 PNG is not exactly 1440×2560, and does not overwrite approved images. Do not
 run capture just to check the tooling.
 
-Build the capture APK and signed database probe once with the script's mock
-build variables, then set `PLAY_CAPTURE_APK` and `PLAY_CAPTURE_PROBE_APK` to
-those files for all three language runs. Both paths are required together;
-without them the script builds both APKs. Gradle is stopped before capture.
-Run one language at a time and let the guest settle before each run.
+To build the capture APK and signed database probe once, run from the repo root:
+
+```sh
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export EXPO_NO_DOTENV=1 EXPO_PUBLIC_API_URL=http://10.0.2.2:9086
+export EXPO_PUBLIC_AI_PROXY_KEY=video-preview-mock EXPO_PUBLIC_BUILD_CHANNEL=test
+npx expo prebuild --platform android
+(cd android && NODE_ENV=production ./gradlew assembleRelease)
+export ANDROID_PROBE_OUTPUT="$(mktemp -d "${TMPDIR:-/tmp}/lampada-play-probe.XXXXXX")"
+bash scripts/build-android-test-probe.sh
+export PLAY_CAPTURE_APK="$PWD/android/app/build/outputs/apk/release/app-release.apk"
+export PLAY_CAPTURE_PROBE_APK="$ANDROID_PROBE_OUTPUT/LampadaTestProbe.apk"
+```
+
+Both APK paths are required together; without them the capture script builds
+both APKs. Before installation it checks that the APK bundle contains the mock
+URL and key, then compares the installed APK byte for byte with that verified
+file. The signed probe checks the test build channel. Gradle is stopped when
+`android/` exists. Run one language at a time; the script waits for the guest
+and capture database to become ready.
 
 Use only `emulator-5554` running the `Pray_Pixel_API_35` AVD. Start it as in
 `testing/README.md` after `setopt NO_BG_NICE`; set

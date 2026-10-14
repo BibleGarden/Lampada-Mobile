@@ -32,6 +32,10 @@ original_demo="$("${adb_cmd[@]}" shell settings get global sysui_demo_allowed | 
 original_spell_checker="$("${adb_cmd[@]}" shell settings get secure spell_checker_enabled | tr -d '\r')"
 original_wm_size="$("${adb_cmd[@]}" shell wm size | sed -n 's/^Override size: //p' | tr -d '\r')"
 original_wm_density="$("${adb_cmd[@]}" shell wm density | sed -n 's/^Override density: //p' | tr -d '\r')"
+if [ -z "$original_timezone" ] || [ "$original_timezone" = null ]; then
+  echo 'Emulator timezone is empty; refusing to change device settings' >&2
+  exit 1
+fi
 restore_setting() {
   local scope="$1" name="$2" value="$3"
   if [ "$value" = null ]; then "${adb_cmd[@]}" shell settings delete "$scope" "$name" >/dev/null;
@@ -40,22 +44,49 @@ restore_setting() {
 
 mock_pid=''
 mock_app_installed=0
+cleanup_step() {
+  local label="$1" code
+  shift
+  if "$@"; then return 0; else code=$?; fi
+  printf 'Cleanup failed: %s (exit %s)\n' "$label" "$code" >&2
+  cleanup_failed=1
+}
+stop_gradle() {
+  [ -d android ] || return 0
+  if (cd android && ./gradlew --stop) >"$run_dir/gradle-stop.log" 2>&1; then return 0; fi
+  tail -40 "$run_dir/gradle-stop.log" >&2
+  return 1
+}
 restore() {
   local status=$?
+  local cleanup_failed=0
   trap - EXIT
-  if [ -n "$mock_pid" ]; then kill "$mock_pid" 2>/dev/null || true; wait "$mock_pid" 2>/dev/null || true; fi
-  "${adb_cmd[@]}" shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null || true
-  restore_setting global sysui_demo_allowed "$original_demo" || true
-  if [ -n "$original_wm_size" ]; then "${adb_cmd[@]}" shell wm size "$original_wm_size"; else "${adb_cmd[@]}" shell wm size reset; fi
-  if [ -n "$original_wm_density" ]; then "${adb_cmd[@]}" shell wm density "$original_wm_density"; else "${adb_cmd[@]}" shell wm density reset; fi
-  "${adb_cmd[@]}" shell cmd alarm set-timezone "$original_timezone" || true
-  restore_setting global auto_time_zone "$original_auto_time_zone" || true
-  restore_setting secure spell_checker_enabled "$original_spell_checker" || true
-  if [ "$mock_app_installed" -eq 1 ]; then
-    "${adb_cmd[@]}" uninstall garden.lampada.testprobe >/dev/null 2>&1 || true
-    "${adb_cmd[@]}" uninstall app.lampada >/dev/null 2>&1 || true
+  set +e
+  if [ -n "$mock_pid" ] && kill -0 "$mock_pid" 2>/dev/null; then
+    cleanup_step 'stop mock server' kill "$mock_pid"
+    wait "$mock_pid" 2>/dev/null
   fi
-  (cd android && ./gradlew --stop) >"$run_dir/gradle-stop.log" 2>&1 || true
+  cleanup_step 'exit SystemUI demo mode' "${adb_cmd[@]}" shell am broadcast -a com.android.systemui.demo -e command exit
+  cleanup_step 'restore demo-mode setting' restore_setting global sysui_demo_allowed "$original_demo"
+  if [ -n "$original_wm_size" ]; then
+    cleanup_step 'restore display size' "${adb_cmd[@]}" shell wm size "$original_wm_size"
+  else
+    cleanup_step 'reset display size' "${adb_cmd[@]}" shell wm size reset
+  fi
+  if [ -n "$original_wm_density" ]; then
+    cleanup_step 'restore display density' "${adb_cmd[@]}" shell wm density "$original_wm_density"
+  else
+    cleanup_step 'reset display density' "${adb_cmd[@]}" shell wm density reset
+  fi
+  cleanup_step 'restore timezone' "${adb_cmd[@]}" shell cmd alarm set-timezone "$original_timezone"
+  cleanup_step 'restore automatic timezone' restore_setting global auto_time_zone "$original_auto_time_zone"
+  cleanup_step 'restore spell checker' restore_setting secure spell_checker_enabled "$original_spell_checker"
+  if [ "$mock_app_installed" -eq 1 ]; then
+    cleanup_step 'remove database probe' "${adb_cmd[@]}" uninstall garden.lampada.testprobe
+    cleanup_step 'remove capture app' "${adb_cmd[@]}" uninstall app.lampada
+  fi
+  cleanup_step 'stop Gradle' stop_gradle
+  if [ "$cleanup_failed" -ne 0 ]; then status=1; fi
   exit "$status"
 }
 trap restore EXIT
@@ -74,13 +105,27 @@ else
   PLAY_CAPTURE_APK=android/app/build/outputs/apk/release/app-release.apk
   PLAY_CAPTURE_PROBE_APK="$run_dir/probe/LampadaTestProbe.apk"
 fi
-(cd android && ./gradlew --stop) >"$run_dir/gradle-stop-before-capture.log" 2>&1
+if [ -d android ]; then
+  (cd android && ./gradlew --stop) >"$run_dir/gradle-stop-before-capture.log" 2>&1 || { tail -40 "$run_dir/gradle-stop-before-capture.log" >&2; exit 1; }
+fi
+python3 - "$PLAY_CAPTURE_APK" <<'PY'
+import sys, zipfile
+with zipfile.ZipFile(sys.argv[1]) as apk:
+    bundle = apk.read('assets/index.android.bundle')
+for expected in (b'http://10.0.2.2:9086', b'video-preview-mock'):
+    if expected not in bundle:
+        sys.exit('Capture APK does not contain the required mock build variables')
+PY
 "${adb_cmd[@]}" install -r "$PLAY_CAPTURE_APK" >"$run_dir/install.log" 2>&1 || { echo "App install failed; see $run_dir/install.log" >&2; tail -40 "$run_dir/install.log" >&2; exit 1; }
 mock_app_installed=1
+installed_apk="$("${adb_cmd[@]}" shell pm path app.lampada | tr -d '\r' | sed -n 's/^package:\(.*\/base\.apk\)$/\1/p')"
+[ -n "$installed_apk" ] || { echo 'Installed capture APK path is missing' >&2; exit 1; }
+"${adb_cmd[@]}" pull "$installed_apk" "$run_dir/installed-capture.apk" >"$run_dir/pull.log" 2>&1 || { tail -40 "$run_dir/pull.log" >&2; exit 1; }
+cmp -s "$PLAY_CAPTURE_APK" "$run_dir/installed-capture.apk" || { echo 'Installed APK differs from the verified mock build' >&2; exit 1; }
 "${adb_cmd[@]}" install -r "$PLAY_CAPTURE_PROBE_APK" >>"$run_dir/install.log" 2>&1 || { echo "Probe install failed; see $run_dir/install.log" >&2; tail -40 "$run_dir/install.log" >&2; exit 1; }
 
 "${adb_cmd[@]}" shell settings put global auto_time_zone 0
-# Etc/GMT signs are reversed: choose an offset that makes local time 09:xx.
+# У Etc/GMT знаки обратные: выбираем смещение для местного времени 09:xx.
 morning_zone="$(python3 - <<'PY'
 from datetime import datetime, timezone
 utc_hour = datetime.now(timezone.utc).hour
@@ -109,13 +154,18 @@ for _ in {1..30}; do
 done
 curl -fsS http://127.0.0.1:9086/__health >/dev/null
 
-node scripts/android-guest-load.mjs boot --device "$serial" >"$run_dir/guest-boot.log" 2>&1
-node scripts/android-guest-load.mjs run --device "$serial" --flow seed-ready --flow-log "$run_dir/seed-ready.log" -- true >"$run_dir/seed-ready.runner.log" 2>&1
+node scripts/android-guest-load.mjs boot --device "$serial" >"$run_dir/guest-boot.log" 2>&1 || { tail -40 "$run_dir/guest-boot.log" >&2; exit 1; }
+node scripts/android-guest-load.mjs run --device "$serial" --flow seed-ready --flow-log "$run_dir/seed-ready.log" -- true >"$run_dir/seed-ready.runner.log" 2>&1 || { tail -40 "$run_dir/seed-ready.runner.log" "$run_dir/seed-ready.log" >&2; exit 1; }
 "${adb_cmd[@]}" shell pm clear app.lampada >"$run_dir/reset.log"
 "${adb_cmd[@]}" shell pm grant app.lampada android.permission.RECORD_AUDIO
 "${adb_cmd[@]}" shell pm grant app.lampada android.permission.POST_NOTIFICATIONS
 "${adb_cmd[@]}" shell am start -W -n app.lampada/.MainActivity >>"$run_dir/reset.log"
-sleep 8
+db_ready=0
+for _ in {1..60}; do
+  if python3 scripts/android-db-probe.py --device "$serial" --mode query --sql 'SELECT 1' >"$run_dir/db-ready.log" 2>&1; then db_ready=1; break; fi
+  sleep 1
+done
+[ "$db_ready" -eq 1 ] || { echo 'Capture database did not become ready within 60 seconds' >&2; tail -40 "$run_dir/db-ready.log" >&2; exit 1; }
 "${adb_cmd[@]}" shell am force-stop app.lampada
 today="$("${adb_cmd[@]}" shell date +%F | tr -d '\r')"
 python3 scripts/play-screens-seed.py "$serial" "$fixture" "$locale" "$today" >"$run_dir/seed.log"
@@ -141,7 +191,7 @@ broadcast network -e mobile hide
 broadcast network -e airplane hide
 broadcast notifications -e visible false
 broadcast status -e volume hide -e bluetooth hide -e location hide -e alarm hide -e zen hide -e mute hide -e speakerphone hide -e cast hide -e hotspot hide -e sync hide -e tty hide -e eri hide
-bash scripts/android-maestro-driver.sh "$serial" "$run_dir" >"$run_dir/driver.log" 2>&1
+bash scripts/android-maestro-driver.sh "$serial" "$run_dir" >"$run_dir/driver.log" 2>&1 || { tail -40 "$run_dir/driver.log" >&2; exit 1; }
 node scripts/android-guest-load.mjs run --device "$serial" --flow play-screens-1 --flow-log "$run_dir/part1.log" -- maestro --device "$serial" test --no-reinstall-driver --test-output-dir "$run_dir/part1" "${args[@]}" testing/screens/play-screens-1.yaml >"$run_dir/part1.runner.log" 2>&1 || { tail -40 "$run_dir/part1.log" >&2; exit 1; }
 maestro --device "$serial" test --no-reinstall-driver --test-output-dir "$run_dir/part2" "${args[@]}" testing/screens/play-screens-2.yaml >"$run_dir/part2.log" 2>&1 || { tail -40 "$run_dir/part2.log" >&2; exit 1; }
 mkdir "$run_dir/png"
