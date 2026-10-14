@@ -671,8 +671,8 @@ and the audio of the chosen passage. On a fresh install, the resolved interface
 language is matched against the server catalogue, which then supplies the
 language's preferred translation and voice (`preferredCodes` in
 `lib/scripturePreferences.ts`; Russian: BTI read by Nikita Semyonov-Prozorovsky)
-or, if that pair is absent, its first narrated translation. Local settings load independently
-of this network initialization, with a nullable Bible selection until a complete
+or, if that pair is absent, its first narrated translation. Local settings load
+independently of this network initialization, with a nullable Bible selection until a complete
 valid triple is confirmed. Catalog errors and missing matches never substitute
 English or write a preference. A prayer starts without waiting for the catalogue:
 the session snapshot stays null, and the scripture block confirms it in the
