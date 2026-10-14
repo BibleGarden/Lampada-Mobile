@@ -154,22 +154,27 @@ export async function fetchScriptureAudioClip(
       numbers.has(verse.number)
     ) throw new Error('invalid_response');
     numbers.add(verse.number);
-    if (verse.end <= verse.begin) continue;
     verses.push({
       number: verse.number,
       startSeconds: verse.begin,
       endSeconds: verse.end,
     });
   }
-  verses.sort((left, right) => left.startSeconds - right.startSeconds);
-  // Нулевые тайминги означают отсутствие записи, даже с audio_link:
-  // каталог не всегда отмечает такие главы в chapters_without_audio.
-  // Частичная разметка обрезала бы отрывок и исказила подсветку стихов.
+  verses.sort((left, right) => left.number - right.number);
   if (numbers.size !== passage.verse_end - passage.verse_start + 1) {
     throw new Error('invalid_response');
   }
-  if (verses.length !== numbers.size) {
-    throw new ScriptureAudioUnavailableError(verses.length === 0 ? 'no_timings' : 'partial_timings');
+  // Все нулевые тайминги отрывка обозначают отсутствие записи в API.
+  if (verses.every((verse) => verse.startSeconds === 0 && verse.endSeconds === 0)) {
+    throw new ScriptureAudioUnavailableError('no_timings');
+  }
+  for (let index = 0; index < verses.length; index++) {
+    const verse = verses[index];
+    if ((verse.startSeconds === 0 && verse.endSeconds === 0) ||
+      verse.endSeconds < verse.startSeconds ||
+      (index > 0 && verse.startSeconds < verses[index - 1].endSeconds)) {
+      throw new ScriptureAudioUnavailableError('partial_timings');
+    }
   }
   const first = verses[0];
   const last = verses.at(-1);
