@@ -1,0 +1,137 @@
+diff --git a/node_modules/@shopify/react-native-skia/android/cpp/jni/JniPlatformContext.cpp b/node_modules/@shopify/react-native-skia/android/cpp/jni/JniPlatformContext.cpp
+index 87d1b1e..c000e41 100644
+--- a/node_modules/@shopify/react-native-skia/android/cpp/jni/JniPlatformContext.cpp
++++ b/node_modules/@shopify/react-native-skia/android/cpp/jni/JniPlatformContext.cpp
+@@ -65,6 +65,8 @@ void JniPlatformContext::registerNatives() {
+       makeNativeMethod("initHybrid", JniPlatformContext::initHybrid),
+       makeNativeMethod("notifyTaskReadyNative",
+                        JniPlatformContext::notifyTaskReadyNative),
++      makeNativeMethod("setPixelDensityNative",
++                       JniPlatformContext::setPixelDensityNative),
+   });
+ }
+ 
+diff --git a/node_modules/@shopify/react-native-skia/android/cpp/jni/include/JniPlatformContext.h b/node_modules/@shopify/react-native-skia/android/cpp/jni/include/JniPlatformContext.h
+index abf27cd..b5c047f 100644
+--- a/node_modules/@shopify/react-native-skia/android/cpp/jni/include/JniPlatformContext.h
++++ b/node_modules/@shopify/react-native-skia/android/cpp/jni/include/JniPlatformContext.h
+@@ -3,6 +3,7 @@
+ #include <fbjni/fbjni.h>
+ #include <jsi/jsi.h>
+ 
++#include <atomic>
+ #include <exception>
+ #include <functional>
+ #include <memory>
+@@ -40,7 +41,11 @@ public:
+ 
+   void notifyTaskReadyNative();
+ 
+-  float getPixelDensity() { return _pixelDensity; }
++  float getPixelDensity() { return _pixelDensity.load(); }
++
++  void setPixelDensityNative(float pixelDensity) {
++    _pixelDensity.store(pixelDensity);
++  }
+ 
+   sk_sp<SkImage> takeScreenshotFromViewTag(size_t tag);
+ 
+@@ -50,7 +55,7 @@ private:
+   friend HybridBase;
+   jni::global_ref<JniPlatformContext::javaobject> javaPart_;
+ 
+-  float _pixelDensity;
++  std::atomic<float> _pixelDensity;
+   std::mutex _mainThreadTasksMutex;
+   std::queue<std::function<void()>> _mainThreadTasks;
+   bool _mainThreadDispatchScheduled = false;
+diff --git a/node_modules/@shopify/react-native-skia/android/cpp/rnskia-android/RNSkAndroidPlatformContext.h b/node_modules/@shopify/react-native-skia/android/cpp/rnskia-android/RNSkAndroidPlatformContext.h
+index f9f8a15..90907bf 100644
+--- a/node_modules/@shopify/react-native-skia/android/cpp/rnskia-android/RNSkAndroidPlatformContext.h
++++ b/node_modules/@shopify/react-native-skia/android/cpp/rnskia-android/RNSkAndroidPlatformContext.h
+@@ -40,6 +40,11 @@ public:
+ 
+   ~RNSkAndroidPlatformContext() override = default;
+ 
++  // Read on every draw: on Android the density changes at runtime.
++  float getPixelDensity() override {
++    return _jniPlatformContext->getPixelDensity();
++  }
++
+   void performStreamOperation(
+       const std::string &sourceUri,
+       const std::function<void(std::unique_ptr<SkStreamAsset>)> &op) override {
+diff --git a/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/PlatformContext.java b/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/PlatformContext.java
+index 724776a..1a422de 100644
+--- a/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/PlatformContext.java
++++ b/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/PlatformContext.java
+@@ -1,5 +1,7 @@
+ package com.shopify.reactnative.skia;
+ 
++import android.content.ComponentCallbacks;
++import android.content.res.Configuration;
+ import android.os.Handler;
+ import android.os.Looper;
+ 
+@@ -27,9 +29,29 @@ public class PlatformContext {
+ 
+     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+ 
++    // The display density changes while the process lives: a foldable moves from its
++    // cover screen to the inner screen, or the user changes the display size. Canvases
++    // must scale by the current density, otherwise every drawing is scaled from its
++    // top-left corner and drifts off its view.
++    private final ComponentCallbacks mDensityCallbacks = new ComponentCallbacks() {
++        @Override
++        public void onConfigurationChanged(Configuration newConfig) {
++            setPixelDensityNative(mContext.getResources().getDisplayMetrics().density);
++        }
++
++        @Override
++        public void onLowMemory() {
++        }
++    };
++
+     public PlatformContext(ReactContext reactContext) {
+         mContext = reactContext;
+         mHybridData = initHybrid(reactContext.getResources().getDisplayMetrics().density);
++        mContext.registerComponentCallbacks(mDensityCallbacks);
++    }
++
++    public void destroy() {
++        mContext.unregisterComponentCallbacks(mDensityCallbacks);
+     }
+ 
+     @DoNotStrip
+@@ -128,4 +150,6 @@ public class PlatformContext {
+     private native HybridData initHybrid(float pixelDensity);
+ 
+     private native void notifyTaskReadyNative();
++
++    private native void setPixelDensityNative(float pixelDensity);
+ }
+diff --git a/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/SkiaManager.java b/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/SkiaManager.java
+index bf31a79..7649fea 100644
+--- a/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/SkiaManager.java
++++ b/node_modules/@shopify/react-native-skia/android/src/main/java/com/shopify/reactnative/skia/SkiaManager.java
+@@ -32,6 +32,7 @@ public class SkiaManager {
+     }
+ 
+     public void destroy() {
++        mPlatformContext.destroy();
+         mHybridData.resetNative();
+     }
+ 
+diff --git a/node_modules/@shopify/react-native-skia/cpp/rnskia/RNSkPlatformContext.h b/node_modules/@shopify/react-native-skia/cpp/rnskia/RNSkPlatformContext.h
+index 596bb93..6fc3b44 100644
+--- a/node_modules/@shopify/react-native-skia/cpp/rnskia/RNSkPlatformContext.h
++++ b/node_modules/@shopify/react-native-skia/cpp/rnskia/RNSkPlatformContext.h
+@@ -191,7 +191,7 @@ public:
+   /**
+    * @return Current scale factor for pixels
+    */
+-  float getPixelDensity() { return _pixelDensity; }
++  virtual float getPixelDensity() { return _pixelDensity; }
+ 
+ private:
+   float _pixelDensity;

@@ -80,3 +80,4 @@ implementation details do not need one.
 - [0040: Release on Google Play alongside the App Store](0040-google-play-release.md)
 - [0041: Patch the Android shared object registry of expo-modules-core](0041-patch-android-shared-object-registry.md)
 - [0042: A prayer in the journal counts the day it started](0042-journal-prayer-counts-its-day.md) — partly supersedes ADR-0033
+- [0043: Skia canvases follow the current Android display density](0043-skia-follows-android-display-density.md)
