@@ -634,9 +634,10 @@ strip terminal punctuation before adding an ellipsis.
 For narration the client requests the server `begin`/`end` of the verses, streams
 the Range-compatible MP3 of the whole chapter, starts at the first verse of the
 passage and stops at the end of the last one. Verse intervals follow verse order,
-do not overlap and may have zero duration; highlighting passes over a zero-length
-verse when the next verse starts at the same time. All-zero verse timings
-identify an absent recording:
+do not overlap and may have zero duration. The midpoint rule gives a zero-length
+verse part of the pause before its boundary with the next verse. A `0`–`0`
+timing among timed verses marks missing alignment and is unavailable. All-zero
+verse timings identify an absent recording:
 the server books list does not always mark these in `chapters_without_audio`.
 A chapter with no timings, or a passage with only partial alignment, is
 unavailable for narration even if the API supplies an audio link: playing a timed subset would skip verses and give misleading

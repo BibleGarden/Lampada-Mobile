@@ -164,13 +164,14 @@ export async function fetchScriptureAudioClip(
   if (numbers.size !== passage.verse_end - passage.verse_start + 1) {
     throw new Error('invalid_response');
   }
-  // Все нулевые тайминги главы обозначают отсутствие записи в API.
+  // Все нулевые тайминги отрывка обозначают отсутствие записи в API.
   if (verses.every((verse) => verse.startSeconds === 0 && verse.endSeconds === 0)) {
     throw new ScriptureAudioUnavailableError('no_timings');
   }
   for (let index = 0; index < verses.length; index++) {
     const verse = verses[index];
-    if (verse.endSeconds < verse.startSeconds ||
+    if ((verse.startSeconds === 0 && verse.endSeconds === 0) ||
+      verse.endSeconds < verse.startSeconds ||
       (index > 0 && verse.startSeconds < verses[index - 1].endSeconds)) {
       throw new ScriptureAudioUnavailableError('partial_timings');
     }
