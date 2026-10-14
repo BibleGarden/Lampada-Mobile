@@ -1,7 +1,8 @@
 # Android reflection fit — 2026-10-14
 
-**Fit PASS; owner visual approval pending. Full Android critical gate FAIL
-(readiness timeout, not an app assertion).** No reflection clipping defect or
+**Fit PASS; Android critical coverage PASS across the original and completion
+runs; owner visual approval pending.** The original critical command exited 1
+at a readiness timeout before a flow started. No reflection clipping defect or
 app crash was observed. App source and `app.json` were not changed.
 
 - Tested source: `fa264d2307d8a7d1e7f5a5972e1e8e2bd95bb74d`, branch `fix/reflect-short-screens`, base `main` `269209d`.
@@ -47,7 +48,7 @@ layout remains. In e, the input fits above IME and both actions are absent.
 - `npm run test:e2e:android:critical`: exit 1, run once, no retry. All 10 main
   critical flows passed; setup native geometry/restore and answer geometry passed.
   Answer restore was **not started** by the load gate; later critical native
-  phases and window-resize contract were not run. The generic requested
+  phases and window-resize contract were not run in that invocation. The generic requested
   `test:e2e:critical` targets iOS in this revision, so its documented Android
   counterpart was used with explicit `ANDROID_TEST_DEVICE=emulator-5554`.
 
@@ -69,3 +70,25 @@ launching shell exited; one cold recovery kept it in a foreground session.
 Original size/density/navigation/demo state restored; emulator shut down;
 Gradle stopped; temporary stub/local environment removed. Crash buffer empty,
 no crash signatures in logcat. App code/version unchanged; report only; no PR.
+
+## Android critical completion — 2026-10-14
+
+The remaining checks used the same source commit `fa264d2307d8a7d1e7f5a5972e1e8e2bd95bb74d`
+and the same Release APK SHA-256 `e433e7b755654533002ec08f3ac12a4f26f190fcdb42775d57d31d4b5db9a4b8`
+on `emulator-5554` only. The installed APK hash and test-channel/API metadata
+matched; Gradle was stopped before Maestro. Full command logs and exit codes:
+`/private/tmp/claude-501/-Users-maria-Desktop-Dev-cep-pray/5c3bfe2f-1cc9-48b5-9a76-c02a9c0c3c65/scratchpad/e2e/logs/reflect-fit/critical-completion/`.
+
+- Answer restore: PASS. Answer open was repeated only to establish its required
+  screen state. Reflect, report and journal docked keyboard bounds/restoration:
+  PASS. Native window resize, focused bounds and save/reopen: PASS. Combined
+  with the original 10/10 flows and setup contract, all Android critical
+  components passed; there was no single successful full-tier command.
+- Two report-restore readiness attempts stopped **before Maestro started** at
+  the default 300-second gate (last loads 4.82–4.22 and 3.36–3.62). The guest
+  reached load 16.7 after report open; process snapshots are in this artifact
+  directory. One cold recovery was used. The load threshold stayed at 3; a
+  900-second wait admitted the still-unstarted restore, which passed. Journal
+  and resize used the same longer wait. No failed app assertion was rerun.
+- The final crash buffer was empty; the physical 1280×2856 display and 480 dpi
+  were restored. Owner visual approval remains pending.
