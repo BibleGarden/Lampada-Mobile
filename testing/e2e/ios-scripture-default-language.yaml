@@ -8,5 +8,5 @@ tags:
 - tapOn:
     id: "settings-button"
 - assertVisible: ".*Русский.*"
-- assertVisible: ".*SYNO.*"
-- assertVisible: ".*Александр Бондаренко.*"
+- assertVisible: ".*BTI.*"
+- assertVisible: ".*Никита Семёнов-Прозоровский.*"
