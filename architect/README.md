@@ -1139,9 +1139,11 @@ raise the patch of the current store version (`1.2` → `1.2.1`). See
 `scripts/build-production.sh` requires `android`, `ios` or `all` and reserves
 one store version per release for both platforms; `--keep-version` builds one
 platform of an already reserved release (the other platform or a retry) and is
-refused with `all`. The EAS submit profile sends
-Android builds to the internal track as drafts with the service account key
-held in EAS credentials. See [ADR-0040](decisions/0040-google-play-release.md).
+refused with `all`. Android production builds automatically submit completed
+releases to Play internal testing. `all` builds Android with auto-submit, then
+builds iOS without submitting it. The service account key is held in EAS
+credentials. See [ADR-0040](decisions/0040-google-play-release.md) and
+[ADR-0044](decisions/0044-automatic-android-internal-submission.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo
 config fallback for web and Expo Go. This matches the installed version used

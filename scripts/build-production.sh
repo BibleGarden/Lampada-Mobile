@@ -31,4 +31,13 @@ export EXPO_PUBLIC_BUILD_CHANNEL=store
 
 bash scripts/check-runtime-env.sh eas production
 node scripts/bump-version.mjs "$VERSION_MODE"
-exec npx eas-cli@latest build --platform "$PLATFORM" --profile production "$@"
+
+if [ "$PLATFORM" = all ]; then
+  # Android отправляем во внутренний тест; iOS только собираем.
+  npx eas-cli@latest build --platform android --profile production --auto-submit "$@"
+  exec npx eas-cli@latest build --platform ios --profile production "$@"
+elif [ "$PLATFORM" = android ]; then
+  exec npx eas-cli@latest build --platform android --profile production --auto-submit "$@"
+else
+  exec npx eas-cli@latest build --platform ios --profile production "$@"
+fi
