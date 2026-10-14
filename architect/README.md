@@ -38,6 +38,17 @@ The Skia halo behind the session timer is memoized and pauses its breathing
 while a sheet or a report dialog is open or the session is covered: its scene
 updates took frames from the text input, and typing showed up in batches.
 
+Large Android screens ignore the portrait lock. With `targetSdk 36`, Android 16
+disregards `"orientation": "portrait"` on displays whose smallest width is at
+least 600 dp, so the unfolded Galaxy Z TriFold, tablets and their split-screen
+halves run the app in landscape and wide windows. Every screen keeps the single
+centred `column()` layout fitted to the window (ADR-0012), and a TriFold or
+tablet window counts as a tablet by its short side (`isTablet()` in
+`lib/theme.ts`). The display density can change while the app runs (a foldable
+moving from its cover to its inner screen, a display-size change); Skia
+canvases then scale by the new density, so the lamp, the reflection ember and
+the backgrounds stay centred in their views (ADR-0043).
+
 ## Technology outline
 
 - Expo SDK 57, React Native 0.86 and React 19.
@@ -47,7 +58,9 @@ updates took frames from the text input, and typing showed up in batches.
 - Expo SQLite for persistent structured data.
 - `patch-package` applies `patches/` on install: the Android shared object
   registry of `expo-modules-core` reads under its lock, so parallel SQLite
-  queries do not fail on a live statement (ADR-0041).
+  queries do not fail on a live statement (ADR-0041); Android Skia canvases
+  scale by the current display density, not the one at process start
+  (ADR-0043).
 - Expo File System and Expo Audio for local voice recordings, the bundled music
   and the streamed scripture narration.
 - Expo Widgets and Expo UI for the system countdown in an iOS Live Activity.
