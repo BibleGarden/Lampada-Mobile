@@ -329,24 +329,52 @@ not suitable for the Play listing.
 
 ### Android screenshots
 
-The 24 Play phone images in `screenshots/android-phone-*.png` were captured on
-2026-10-12 at 1280×2560 for `ru`, `uk` and `en`. Their Play-only copy lives in
+Play accepts phone screenshots only at 16:9 or 9:16, each side 320–3840 px.
+The 24 `ru`, `uk` and `en` images in `screenshots/android-phone-*.png` were
+captured on 2026-10-14 at 1440×2560 (9:16), checked from each PNG header and
+visually reviewed against the approved scenes. Their Play-only copy lives in
 `screenshots/android-fixtures/`; the capture script builds a complete fixture
-from `video/demo-content.json`. `scripts/capture-play-screenshots.sh
-<ru|uk|en>` rebuilds a test-channel Release APK against the shared
-`scripts/appstore-video-mock.py`, seeds the signed test database, and runs
-`testing/screens/play-screens-{1,2}.yaml`. It writes eight PNGs and full logs
-to a printed temporary directory for review; it does not overwrite approved
-images. Do not run capture just to check the tooling.
+from `video/demo-content.json`. The prayer timer and saved duration vary with
+emulator speed; the screens and fixture content are the stable references.
+`scripts/capture-play-screenshots.sh <ru|uk|en>` uses a test-channel Release APK
+against the shared `scripts/appstore-video-mock.py`, seeds the signed test
+database, and runs `testing/screens/play-screens-{1,2}.yaml`. It writes eight
+PNGs and full logs to a printed temporary directory for review, fails if any
+PNG is not exactly 1440×2560, and does not overwrite approved images. Do not
+run capture just to check the tooling.
+
+To build the capture APK and signed database probe once, run from the repo root:
+
+```sh
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export EXPO_NO_DOTENV=1 EXPO_PUBLIC_API_URL=http://10.0.2.2:9086
+export EXPO_PUBLIC_AI_PROXY_KEY=video-preview-mock EXPO_PUBLIC_BUILD_CHANNEL=test
+npx expo prebuild --platform android
+(cd android && NODE_ENV=production ./gradlew assembleRelease)
+export ANDROID_PROBE_OUTPUT="$(mktemp -d "${TMPDIR:-/tmp}/lampada-play-probe.XXXXXX")"
+bash scripts/build-android-test-probe.sh
+export PLAY_CAPTURE_APK="$PWD/android/app/build/outputs/apk/release/app-release.apk"
+export PLAY_CAPTURE_PROBE_APK="$ANDROID_PROBE_OUTPUT/LampadaTestProbe.apk"
+```
+
+Both APK paths are required together; without them the capture script builds
+both APKs. Before installation it checks that the APK bundle contains the mock
+URL and key, then compares the installed APK byte for byte with that verified
+file. The signed probe checks the test build channel. Gradle is stopped when
+`android/` exists. Run one language at a time; the script waits for the guest
+and capture database to become ready.
 
 Use only `emulator-5554` running the `Pray_Pixel_API_35` AVD. Start it as in
 `testing/README.md` after `setopt NO_BG_NICE`; set
 `ANDROID_HOME=~/Library/Android/sdk` before invoking the script. The script
-sets `wm size 1280x2560`, demo mode (09:41, full battery and Wi-Fi), the local
-mock and screenshot seed. On exit it restores the prior display overrides,
-demo-mode setting, timezone, automatic-timezone setting and spell-checker setting,
-removes the mock app and probe, and stops the mock and Gradle. Shut down
-the emulator when finished. Never use a connected physical device.
+sets `wm size 1440x2560` and `wm density 480`, giving 480×853 dp: the same
+height as the approved 1280×2560 set with a slightly wider viewport. It also
+selects a timezone where the local hour is 08–11 to match the 09:41 demo clock,
+then sets demo mode (full battery and Wi-Fi), the local mock and screenshot
+seed. On exit it restores the prior display overrides, demo-mode setting,
+timezone, automatic-timezone setting and spell-checker setting, removes the
+mock app and probe, and stops the mock and Gradle. Shut down the emulator when
+finished. Never use a connected physical device.
 
 ### Closed testing
 
