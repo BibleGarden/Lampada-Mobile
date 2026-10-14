@@ -77,7 +77,8 @@ implementation details do not need one.
 - [0037: Native window for the Android lock gate](0037-android-lock-native-window.md)
 - [0038: Shared keyboard state and bounded form viewports](0038-shared-keyboard-viewports.md)
 - [0039: Confirm Bible defaults before persisting them](0039-scripture-language-initialization.md) — partly supersedes ADR-0005
-- [0040: Release on Google Play alongside the App Store](0040-google-play-release.md)
+- [0040: Release on Google Play alongside the App Store](0040-google-play-release.md) — partly superseded by ADR-0044 (Submission)
 - [0041: Patch the Android shared object registry of expo-modules-core](0041-patch-android-shared-object-registry.md)
 - [0042: A prayer in the journal counts the day it started](0042-journal-prayer-counts-its-day.md) — partly supersedes ADR-0033
 - [0043: Skia canvases follow the current Android display density](0043-skia-follows-android-display-density.md)
+- [0044: Automatically submit Android production builds to internal testing](0044-automatic-android-internal-submission.md) — partly supersedes ADR-0040

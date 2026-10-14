@@ -414,6 +414,7 @@ npm run eas:production:android                     # build and submit to Play in
 npm run eas:production:all                         # build both; submit Android only
 npm run eas:production:android -- --keep-version   # build and submit Android at the reserved version
 npm run eas:production:ios                         # build iOS without submitting
+npx eas-cli@latest submit --platform android --profile production --latest  # recover a failed auto-submit without rebuilding
 ```
 
 The build uses the EAS `production` environment and produces an AAB; EAS
@@ -424,6 +425,8 @@ signing key. Android builds automatically submit to the `internal` track with
 without Google review. Check it on a phone, then use Play Console's **Copy
 release** (promote) action to move the same release to closed testing. An `all`
 build submits only Android; iOS builds are not submitted automatically.
+If Android fails during `all`, finish iOS with
+`npm run eas:production:ios -- --keep-version`.
 
 The `eas-submit@lampada-play.iam.gserviceaccount.com` service account has only
 **Release to testing tracks** permission for Lampada in Play Console: no
