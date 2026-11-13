@@ -3,11 +3,11 @@ import { limitQuestionRequest } from './questionRequest';
 import type { QuestionRequest } from './questionRequest';
 import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
-// Низкоуровневый клиент AI-прокси на api.bible.garden.
+// Низкоуровневый клиент AI-прокси Bible-API.
 // Модель и системные инструкции выбираются и хранятся на сервере.
 //
 // Конфигурация — через .env.local (не коммитится, см. .gitignore):
-//   EXPO_PUBLIC_API_URL=https://api.bible.garden
+//   EXPO_PUBLIC_API_URL=https://test-api.bible.garden (тестовый сервер)
 //   EXPO_PUBLIC_AI_PROXY_KEY=… — отдельный ограниченный ключ прокси
 //
 // EXPO_PUBLIC_* зашиваются в бандл при сборке: после правки .env.local
