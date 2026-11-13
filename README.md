@@ -74,14 +74,14 @@ configuration; editing `.env.local` alone does not change an installed Release.
 
 ## AI
 
-AI requests go through `https://api.bible.garden/api/ai/question` to an existing
-FastAPI service. Requests contain `topic`, `stage` (`first`, `next`, `reflect`) and
+AI requests go to `/api/ai/question` on the `EXPO_PUBLIC_API_URL` origin, an
+existing FastAPI service. Requests contain `topic`, `stage` (`first`, `next`, `reflect`) and
 `messages` (chronological assistant/user turns); responses
 remain `{ "text": "..." }`. See [ADR-0019](architect/decisions/0019-structured-question-history.md).
 It routes each stage to a company-hosted model; neither model
 configuration nor system instructions are embedded into the app. To enable AI,
 copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_AI_PROXY_KEY` to
-Bible-API's dedicated `LAMPADA_API_KEY` value. The owner supplies this value;
+the test Bible-API's dedicated `LAMPADA_API_KEY` value. The owner supplies this value;
 never commit it or use the Bible Garden or operations key.
 That client key is visible in the built app and does not replace the server-side
 limits. Voice answers are sent only when "Transcribe" is pressed, as a separate
@@ -110,36 +110,26 @@ year.
 `preview` does not read `.env.local`: that file is excluded from git and from the
 cloud archive. Before a preview build the command checks automatically that the
 required variables `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_AI_PROXY_KEY` are
-present and that the URL is a valid HTTP(S) origin. Set the Lampada key in local
-`.env.local` and EAS `preview` and `production` using the procedure below; set
-it in EAS `development` before using that profile. These
+present and that the URL is a valid HTTP(S) origin. Set the production Lampada
+key in EAS `preview` and `production` using the procedure below; set it in EAS
+`development` before using that profile. `.env.local` holds the test server's
+key instead. These
 environments keep the variable name `EXPO_PUBLIC_AI_PROXY_KEY`.
 
 ### Application key transfer
 
 After the Bible-API release, run the following as a temporary Bash script from
 this repository's root. It reads the production Lampada key over SSH without
-printing it, replaces the local value, and creates or updates the EAS values.
+printing it and creates or updates the EAS values.
 `--force` replaces an existing variable. The owner copies the key into the
 password manager manually; never put its value in git, chat, or logs.
 
 ```bash
 set +x
 set -euo pipefail
-umask 077
-test -f .env.local
 lampada_key="$(ssh bible.garden "sed -n 's/^LAMPADA_API_KEY=//p' /root/cep/bible-api/.env")"
 trap 'unset lampada_key' EXIT
 test "${#lampada_key}" -ge 32
-printf '%s' "$lampada_key" | node -e '
-  const fs = require("node:fs");
-  const path = ".env.local";
-  const key = fs.readFileSync(0, "utf8");
-  let env = fs.readFileSync(path, "utf8").replace(/^EXPO_PUBLIC_AI_PROXY_KEY=.*(?:\r?\n|$)/gm, "");
-  if (env && !env.endsWith("\n")) env += "\n";
-  fs.writeFileSync(path, env + `EXPO_PUBLIC_AI_PROXY_KEY=${key}\n`);
-'
-chmod 600 .env.local
 for environment in preview production development; do
   npx eas-cli@latest env:create --environment "$environment" \
     --name EXPO_PUBLIC_AI_PROXY_KEY --visibility sensitive \
@@ -148,9 +138,10 @@ for environment in preview production development; do
 done
 ```
 
-The final command lists names only. For a build targeting the local API, read
-`LAMPADA_API_KEY` from the local `Bible-API/.env` instead, so it matches that
-server. Restart Metro for Debug; rebuild and reinstall local Release or EAS
+The final command lists names only. The key in `.env.local` must match the
+server in `EXPO_PUBLIC_API_URL`: for `https://test-api.bible.garden` it is that
+server's `LAMPADA_API_KEY`, which the owner shares through a password manager;
+for your own Bible-API, read it from that server's `.env`. Restart Metro for Debug; rebuild and reinstall local Release or EAS
 builds after any key change.
 
 ```bash
