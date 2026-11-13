@@ -32,7 +32,8 @@ Maestro flows the `appId` of the custom build is `twinkler`, not
 Use Node.js 22.13 or newer, Java and Android SDK 36 with Build Tools 36.0.0,
 NDK 27.1.12297006 and CMake 3.22.1. Start the test emulator as
 [`testing/README.md`](testing/README.md#android-emulator) describes and
-configure `.env.local` with the **test** API origin and its dedicated Lampada
+configure `.env.local` with the **test** API origin
+(`https://test-api.bible.garden`) and its dedicated Lampada
 key before running tests. Keep production credentials in a separate file
 outside Expo's automatic dotenv loading.
 
@@ -166,8 +167,9 @@ reinstalled.
 
 ### API configuration
 
-Set `EXPO_PUBLIC_API_URL=https://api.bible.garden` (an origin only, without
-`/api` or an endpoint path). Local HTTP origins with a port are supported for
+Set `EXPO_PUBLIC_API_URL` to an origin only, without `/api` or an endpoint
+path: `https://test-api.bible.garden` for development and tests,
+`https://api.bible.garden` for store builds. Local HTTP origins with a port are supported for
 emulators. `EXPO_PUBLIC_AI_PROXY_KEY` contains Lampada's own application key
 (`LAMPADA_API_KEY` on Bible-API), embedded in each build. A key change requires
 restarting Metro for Debug or rebuilding and reinstalling Release/EAS builds.
