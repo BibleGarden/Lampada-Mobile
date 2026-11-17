@@ -27,6 +27,21 @@ Refresh and looks healthy, so the crash is only visible on a cold start. For
 Maestro flows the `appId` of the custom build is `twinkler`, not
 `host.exp.Exponent`.
 
+### Running the CI checks locally
+
+CI runs `npm ci`, `npm run typecheck` and `npm test` on every pull request
+(`.github/workflows/ci.yml`). Run the same checks locally before opening one:
+
+```bash
+npm ci               # install dependencies (postinstall runs patch-package)
+npm run typecheck    # tsc --noEmit
+npm test
+```
+
+`npm test` first runs the Node unit tests in `lib/__tests__`, then the Python
+keyboard unit tests (`npm run test:keyboard:unit`), so it needs Node.js 22 or
+newer and a local Python 3.
+
 ## Running locally on Android
 
 Use Node.js 22.13 or newer, Java and Android SDK 36 with Build Tools 36.0.0,
