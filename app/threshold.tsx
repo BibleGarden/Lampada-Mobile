@@ -31,16 +31,16 @@ export default function Threshold() {
   const { width, height } = useWindowDimensions();
   const tablet = isTablet();
   const landscapeTablet = tablet && width > height;
-  // Высоты блока под шапкой и брифинга: на низком окне интервалы и кнопка
-  // становятся плотнее, чтобы все пункты помещались над кнопкой целиком.
+  // Heights of the block under the header and of the brief: on short windows
+  // the gaps and the button get denser so every item fits above the button.
   const [mainHeight, setMainHeight] = useState<number>();
   const [briefSize, setBriefSize] = useState<{ height: number; density: ThresholdDensity }>();
   const insets = useSafeAreaInsets();
   const s = useSession();
   const answerContextConsent = useSettings((state) => state.answerContextConsent);
 
-  // Брифинг сохраняет тему ровно в формулировке человека и только визуально
-  // продолжает ею нейтральную подпись «Тема молитвы».
+  // The brief keeps the topic exactly as the person worded it and merely
+  // continues the neutral "Prayer topic" caption with it visually.
   const topicTrim = s.topic.trim();
   const goal = topicTrim;
   const timeText = topicTrim
@@ -57,7 +57,7 @@ export default function Threshold() {
       goal: goal || undefined,
     },
     {
-      // размер здесь в px прототипа — sc() применяется внутри иконок
+      // the size here is in prototype px — sc() is applied inside the icons
       icon: <QuestionMark size={16} color={colors.amberBright} />,
       text: t('screens.threshold.questions'),
     },
@@ -73,13 +73,13 @@ export default function Threshold() {
       sc,
     );
   const holdButtonSize = sc(density.button);
-  // внутренний диск отступает от кольца на ту же долю, что в макете (11 из 158)
+  // the inner disc insets from the ring by the same fraction as in the design (11 of 158)
   const holdInset = sc(Math.round((density.button * 11) / 158));
   const onMainLayout = (e: LayoutChangeEvent) => setMainHeight(e.nativeEvent.layout.height);
   const onBriefLayout = (e: LayoutChangeEvent) =>
     setBriefSize({ height: e.nativeEvent.layout.height, density });
-  // Брифинг не поместился и в самом плотном виде: на iOS мигает полоса
-  // прокрутки, на Android края списка гаснут, а не режут строку.
+  // The brief did not fit even in the densest form: on iOS the scroll bar
+  // flashes, on Android the list edges fade instead of cutting the line.
   const briefScroll = useRef<ScrollView>(null);
   useEffect(() => {
     if (overflow) briefScroll.current?.flashScrollIndicators();
@@ -100,7 +100,8 @@ export default function Threshold() {
 
   useEffect(() => clearTimers, []);
   useEffect(() => {
-    // Во время входа экран уходит сам: подпись загрузки и полное кольцо остаются.
+    // While entering, the screen navigates away on its own: the loading
+    // caption and the full ring remain.
     if (visible || entering.current) return;
     clearTimers();
     cancelAnimation(progress);
@@ -117,7 +118,7 @@ export default function Threshold() {
     } catch (error) {
       recordDiagnostic('session_start_failed', { errorKind: errorKind(error) });
       Alert.alert(t('screens.threshold.error'), t('screens.retryMessage'), [{ text: t('screens.understood') }]);
-      // при ошибке enterSession кнопка не должна остаться мёртвой
+      // on an enterSession error the button must not be left dead
       entering.current = false;
       return;
     }
@@ -131,11 +132,11 @@ export default function Threshold() {
     progress.value = withTiming(1, {
       duration: durations.holdToStart,
       easing: Easing.out(Easing.quad),
-      // заполнение кольца — функциональная обратная связь удержания, а не
-      // украшение: при «Уменьшении движения» оно не должно прыгать к концу
+      // filling the ring is functional feedback for the hold, not decoration:
+      // with "Reduce motion" it must not jump to the end
       reduceMotion: ReduceMotion.Never,
     });
-    // нарастающая хаптика: тики учащаются к завершению
+    // escalating haptics: the ticks speed up towards completion
     [0, 300, 550, 750, 920, 1060, 1180, 1280].forEach((t, i) => {
       hapticTimers.current.push(
         setTimeout(() => {
@@ -185,7 +186,7 @@ export default function Threshold() {
           ]}
           onLayout={onMainLayout}
         >
-          {/* заголовок прижат к списку: свободный воздух — над ним, не под ним */}
+           {/* the heading hugs the list: spare air goes above it, not below */}
           <ScrollView
             ref={briefScroll}
             style={styles.briefScroll}
@@ -195,8 +196,9 @@ export default function Threshold() {
             <View style={{ gap: sc(density.gap) }} onLayout={onBriefLayout}>
               <Text style={styles.title}>{t('screens.threshold.title')}</Text>
               {brief.map((b, i) => {
-                // ≤2 строки — иконка по центру, длиннее — по верху (как в прототипе);
-                // цель — часть той же строки, её длина тоже считается
+                // ≤2 lines — icon centered, longer — icon at the top (as in
+                // the prototype); the goal is part of the same line, its
+                // length counts too
                 const long = Math.ceil((b.text.length + (b.goal?.length ?? 0)) / 30) >= 3;
                 return (
                   <View
@@ -205,8 +207,8 @@ export default function Threshold() {
                     style={[styles.briefRow, { alignItems: long ? 'flex-start' : 'center' }]}
                   >
                     <View style={[styles.briefIcon, long && { marginTop: 4 }]}>{b.icon}</View>
-                    {/* Text с вложенным Text меряет ширину криво (уезжает за
-                        край) — ширину ограничивает View-обёртка */}
+                    {/* Nested Text measures width poorly (it overflows the
+                        edge) — a View wrapper constrains the width */}
                     <View style={{ flex: 1 }}>
                       <Text style={styles.briefText}>
                         {b.text}
@@ -225,16 +227,17 @@ export default function Threshold() {
             <GestureDetector gesture={hold}>
               <View
                 style={{ width: holdButtonSize, height: holdButtonSize }}
-                // без accessible VoiceOver фокусирует надписи внутри, и двойное
-                // касание по ним — короткий тап, который удержание отменяет
+                // without accessible, VoiceOver focuses the labels inside, and
+                // a double tap on them is a short tap that cancels the hold
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={t('screens.threshold.start')}
-                // Программа чтения с экрана двойным касанием не удерживает: для
-                // неё кнопка срабатывает сразу, без ритуала удержания. На iOS
-                // (Fabric) двойное касание приходит только в onAccessibilityTap,
-                // а действие «activate» там стало бы лишним пунктом ротора
-                // «Действия»; TalkBack, наоборот, знает только действие.
+                // A screen reader cannot hold a double tap: for it the button
+                // fires immediately, without the hold ritual. On iOS (Fabric)
+                // the double tap arrives only in onAccessibilityTap, and an
+                // "activate" action there would become a redundant item in
+                // the Actions rotor; TalkBack, on the contrary, only knows
+                // the action.
                 onAccessibilityTap={() => void enter()}
                 accessibilityActions={Platform.OS === 'android' ? [{ name: 'activate' }] : undefined}
                 onAccessibilityAction={({ nativeEvent }) => {
@@ -304,7 +307,7 @@ const stylesFactory = () => StyleSheet.create({
   briefScroll: {
     flex: 1,
   },
-  // поля и промежутки задаёт плотность экрана (lib/thresholdLayout.ts)
+  // paddings and gaps are set by the screen density (lib/thresholdLayout.ts)
   brief: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -330,7 +333,7 @@ const stylesFactory = () => StyleSheet.create({
     lineHeight: sc(20),
     color: colors.body,
   },
-  // цель — внутри фразы, тем же кеглем, выделена только золотом
+  // the goal sits inside the phrase, same font size, set apart only by gold
   briefGoal: {
     fontFamily: fonts.sansMedium,
     color: colors.goldSoft,
@@ -355,7 +358,7 @@ const stylesFactory = () => StyleSheet.create({
     gap: sc(4),
   },
   holdHint: {
-    // Две строки остаются внутри круга; высота не меняется при удержании.
+    // Two lines stay inside the circle; the height does not change while holding.
     width: sc(112),
     height: sc(32),
     textAlign: 'center',

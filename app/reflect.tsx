@@ -57,7 +57,7 @@ function ReflectScreen() {
   const [questionMeasurement, setQuestionMeasurement] = useState<ReflectMeasurement>();
   const [actionsMeasurement, setActionsMeasurement] = useState<{ context: string; height: number }>();
   const densityIndex = reflectionDensityIndex(fitState, fitContext);
-  // Редактирование всегда использует прежние размеры, независимо от подбора.
+  // Editing always uses the original sizes, regardless of the fitted density.
   const density = REFLECT_DENSITIES[dockedKeyboard ? 0 : densityIndex];
   const questionType = reflectionQuestionType(s.reflectQ, density.fontStep);
   const scroll = useRef<ScrollView>(null);
@@ -67,8 +67,8 @@ function ReflectScreen() {
 
   useEffect(() => {
     const fitted = fitReflectDensity({
-      // KeyboardViewport анимирует резерв отдельно: высота ScrollView во время
-      // скрытия клавиатуры не отражает доступное место обычной раскладки.
+      // KeyboardViewport animates the reserve separately: during keyboard
+      // dismissal the ScrollView height does not reflect the normal layout's space.
       availableHeight: reflectionAvailableHeight(rootHeight, topPadding, bottomPadding, insets.bottom),
       context: fitContext,
       index: densityIndex,
@@ -77,8 +77,8 @@ function ReflectScreen() {
       keyboardPhase: keyboard.phase,
     }, sc);
     if (fitted.index !== densityIndex) setFitState({ context: fitContext, index: fitted.index });
-    // Не сбрасываем подтверждённый overflow на время анимации клавиатуры:
-    // её закрытие не должно повторно мигать индикатором прокрутки.
+    // Do not reset the confirmed overflow during the keyboard animation:
+    // its dismissal should not flash the scroll indicator again.
     if (fitted.overflow !== undefined) setOverflowState({ context: fitContext, value: fitted.overflow });
   }, [actionsMeasurement, densityIndex, fitContext, rootHeight, topPadding, bottomPadding, insets.bottom, keyboard.phase, questionMeasurement]);
 
@@ -86,14 +86,14 @@ function ReflectScreen() {
     if (overflow) scroll.current?.flashScrollIndicators();
   }, [overflow]);
 
-  // Android «назад» тут некуда вести — только явное завершение
+  // Android "back" has nowhere to go here — only explicit completion
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
   }, []);
 
   const complete = async (saveText: string) => {
-    if (completing.current) return; // двойной тап не должен завершать дважды
+    if (completing.current) return; // a double tap must not complete twice
     completing.current = true;
     try {
       await s.complete(saveText);
@@ -105,7 +105,7 @@ function ReflectScreen() {
     }
   };
 
-  // Новый отсчёт внутри той же молитвы, с сохранением всей истории.
+  // A new countdown within the same prayer, keeping the full history.
   const continuePraying = async () => {
     if (completing.current) return;
     completing.current = true;
@@ -185,7 +185,7 @@ function ReflectScreen() {
                 accessibilityLabel={t('screens.reflect.placeholder')}
                 accessibilityHint={t('screens.reflect.inputHint')}
                 testID="reflection-input"
-                // вывод — короткая фраза: ввод = «Готово», закрывает клавиатуру
+                // the takeaway is a short phrase: enter key = "Done", dismisses the keyboard
                 returnKeyType="done"
                 submitBehavior="submit"
                 onSubmitEditing={dismissKeyboard}
