@@ -186,7 +186,7 @@ export default function Threshold() {
           ]}
           onLayout={onMainLayout}
         >
-           {/* the heading hugs the list: spare air goes above it, not below */}
+          {/* the heading hugs the list: spare air goes above it, not below */}
           <ScrollView
             ref={briefScroll}
             style={styles.briefScroll}

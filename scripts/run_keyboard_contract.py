@@ -52,8 +52,8 @@ def main():
             if mode == 'hardware':
                 command(f'{form}-hardware-input', ['adb', '-s', args.device, 'shell', 'input', 'text', 'Matrix_hardware'])
                 native_window = adb('shell', 'dumpsys', 'window')
-            # Gboard opens an empty IME window after hardware key input.
-            # Dismiss it after typing while keeping the editor focused.
+                # Gboard opens an empty IME window after hardware key input.
+                # Dismiss it after typing while keeping the editor focused.
                 if re.search(r'type=ime[^\n]*visible=true', native_window):
                     command(f'{form}-hide-ime-layer', ['adb', '-s', args.device, 'shell', 'input', 'keyevent', 'KEYCODE_BACK'])
             if not adb('shell', 'pidof', 'app.lampada'):
