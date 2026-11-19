@@ -52,8 +52,8 @@ def main():
             if mode == 'hardware':
                 command(f'{form}-hardware-input', ['adb', '-s', args.device, 'shell', 'input', 'text', 'Matrix_hardware'])
                 native_window = adb('shell', 'dumpsys', 'window')
-                # Gboard открывает пустое окно IME после аппаратных клавиш.
-                # Закрываем его после ввода, сохраняя фокус редактора.
+            # Gboard opens an empty IME window after hardware key input.
+            # Dismiss it after typing while keeping the editor focused.
                 if re.search(r'type=ime[^\n]*visible=true', native_window):
                     command(f'{form}-hide-ime-layer', ['adb', '-s', args.device, 'shell', 'input', 'keyevent', 'KEYCODE_BACK'])
             if not adb('shell', 'pidof', 'app.lampada'):
@@ -68,7 +68,7 @@ def main():
             if absent: argv += ['--absent', *absent]
             if lower_actions: argv += ['--below-input', *lower_actions]
             command(f'{form}-bounds', argv)
-            # Скриншоты остаются в каталоге прогона, вне репозитория.
+            # Screenshots stay in the run directory, outside the repository.
             with (output / f'{form}-open.png').open('wb') as screenshot:
                 result = subprocess.run(['adb', '-s', args.device, 'exec-out', 'screencap', '-p'], stdout=screenshot, stderr=subprocess.DEVNULL)
             if result.returncode: raise RuntimeError('Native screenshot failed')

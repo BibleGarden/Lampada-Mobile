@@ -32,7 +32,7 @@ type NarrationFailure =
   | 'mode_failed'
   | 'rewind_failed';
 
-/** Лог и диагностика без текста ошибки: в нём может оказаться адрес с ключом. */
+/** Logs and diagnostics without the error text: it could contain a URL with a key. */
 const reportNarrationFailure = (reason: NarrationFailure, details: Record<string, string> = {}) => {
   console.warn('Scripture narration failed', reason, details);
   recordDiagnostic('scripture_audio_failed', { reason, ...details });
@@ -52,7 +52,7 @@ export function useScriptureAudio({
   onAudioBusyChange,
 }: {
   scripture: ScriptureDisplay | undefined;
-  // null, пока первый выбор Библии не подтверждён: тогда и отрывка нет.
+  // null until the first Bible selection is confirmed: there is no passage then either.
   voice: number | null;
   enabled: boolean;
   onAudioBusyChange: (busy: boolean) => void;
@@ -86,8 +86,8 @@ export function useScriptureAudio({
     playbackOperationRef.current = createScriptureAudioOperation();
   }
   const playbackOperation = playbackOperationRef.current;
-  // Подтвердил ли нативный плеер последний play(). Android молча игнорирует
-  // play() при выключенной аудиосессии, поэтому фаза следует за плеером.
+  // Whether the native player acknowledged the latest play(). Android silently
+  // ignores play() while the audio session is off, so the phase follows the player.
   const nativeStartedRef = useRef(false);
   const cancelStartWatchRef = useRef<(() => void) | null>(null);
   const clearStartWatch = useCallback(() => {
@@ -161,11 +161,11 @@ export function useScriptureAudio({
       finishClip(clip);
       return;
     }
-    // Событие статуса могло отстать от недавнего play(): решает живой статус.
+    // The status event may lag behind a recent play(): the live status decides.
     const live = player.currentStatus;
     if (narrationNativeState(live, nativeStartedRef.current) === 'stopped'
       && live.duration > 0 && live.currentTime + 0.5 >= live.duration) {
-      // Последний стих главы может кончаться позже файла: плеер дошёл до конца сам.
+      // A chapter's last verse may end later than the file does: the player reached the end on its own.
       finishClip(clip);
       return;
     }
@@ -176,8 +176,9 @@ export function useScriptureAudio({
     if (!transition) return;
     if (transition.session === 'release') releaseSession();
     nativeStartedRef.current = transition.phase === 'playing';
-    // Android возобновит плеер после возврата audio focus, только пока lease
-    // держит сессию активной. Deadline при этом не ждёт системную паузу.
+    // Android resumes the player after audio focus returns only while the
+    // lease keeps the session active. The deadline does not wait out the
+    // system pause meanwhile.
     clearStartWatch();
     setPhase(transition.phase);
     onAudioBusyChange(transition.audioBusy);
@@ -310,7 +311,7 @@ export function useScriptureAudio({
         } else {
           reportNarrationFailure('play_failed', {
             errorKind: errorKind(error),
-            // Коды клиента (not_configured, invalid_response…) не содержат данных.
+            // Client codes (not_configured, invalid_response…) carry no data.
             ...(error instanceof Error && /^[a-z_]+$/.test(error.message) ? { code: error.message } : {}),
           });
         }
@@ -328,6 +329,6 @@ export function useScriptureAudio({
     ? narrationActiveVerse(phase, clip.verses, status.currentTime)
     : null;
 
-  // Стабильный объект: читалка мемоизирована и получает его через props.
+  // A stable object: the reader is memoized and receives it via props.
   return useMemo(() => ({ phase, activeVerseNumber, stop, toggle }), [phase, activeVerseNumber, stop, toggle]);
 }

@@ -10,7 +10,7 @@ function runtimeMetadata(environment = process.env) {
   if (!['test', 'store'].includes(channel)) {
     throw new Error('EXPO_PUBLIC_BUILD_CHANNEL must be test or store for Android builds.');
   }
-  // Проверка адреса и запрет HTTP вне тестового канала общие с transport policy.
+  // Origin validation and the HTTP ban outside the test channel are shared with transport policy.
   allowsCleartextApi(environment);
   return { channel, apiOrigin: new URL(environment.EXPO_PUBLIC_API_URL).origin };
 }

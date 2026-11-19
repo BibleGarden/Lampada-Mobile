@@ -2,7 +2,7 @@ import { recordingFileIssue, type RecordingFileMetadata } from './recordingFile.
 import { recordingExceedsDurationLimit, recordingExceedsUploadLimit } from './transcriptionLimits.ts';
 import { TranscriptionError } from './transcriptionErrors.ts';
 
-/** Проверяет реальный файл до создания запроса; длительность остаётся дробной. */
+/** Validates the real file before building the request; duration stays fractional. */
 export async function validateTranscriptionFile(
   file: RecordingFileMetadata,
   readDuration: () => Promise<number>,

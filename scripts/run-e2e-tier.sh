@@ -16,7 +16,7 @@ if (($#)); then
   }
   device="$2"
 else
-  # Предпочитаем именованный iOS-симулятор, используемый этими наборами.
+  # Prefer the named iOS simulator used by these suites.
   udid="$(testing/e2e/sim-udid.sh 'Pray Smoke iPhone 17 Pro')"
   if xcrun simctl list devices booted -j | python3 -c \
     'import json,sys; udid=sys.argv[1]; sys.exit(not any(d["udid"] == udid and d["state"] == "Booted" for ds in json.load(sys.stdin)["devices"].values() for d in ds))' "$udid"; then

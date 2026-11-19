@@ -6,16 +6,16 @@ export const dayKey = (date: Date) => {
 };
 
 /**
- * Границы локальных суток `YYYY-MM-DD` в формате `sessions.started_at`:
- * [полночь, следующая полночь). Момент попадает в них ровно тогда, когда
- * `dayKey` даёт этот день; сутки при DST длятся 23 или 25 часов.
+ * Bounds of the local day `YYYY-MM-DD` in the `sessions.started_at` format:
+ * [midnight, next midnight). A moment falls within them exactly when `dayKey`
+ * yields that day; a DST-transition day lasts 23 or 25 hours.
  */
 export const localDayBounds = (day: string): [string, string] => {
   const [y, m, d] = day.split('-').map(Number);
   return [new Date(y, m - 1, d).toISOString(), new Date(y, m - 1, d + 1).toISOString()];
 };
 
-/** Последние 7 дней: [0] — 6 дней назад, [6] — сегодня; true = молился */
+/** The last 7 days: [0] — 6 days ago, [6] — today; true = prayed */
 export async function getWeekIndicators(
   loadPrayedDays: (firstDay: string, lastDay: string) => Promise<string[]>,
   today = new Date(),

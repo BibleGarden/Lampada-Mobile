@@ -415,7 +415,7 @@ class Driver:
         def typing_span(after, before, *, omit_return=False):
             keys = [(at, line) for at, line in self.key_times if touch[after] < at < touch[before]]
             if omit_return:
-                keys = keys[:-2]  # AXe пишет нажатие и отпускание Return двумя последними событиями.
+                keys = keys[:-2]  # AXe logs the Return press and release as the last two events.
             if len(keys) < 2:
                 raise RuntimeError(f"Typing markers need at least two key events: {after}, {before}")
             return round(keys[0][0] - 0.03, 3), round(keys[-1][0] + 0.09, 3)

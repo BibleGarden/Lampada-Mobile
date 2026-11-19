@@ -14,9 +14,9 @@ import java.net.URI;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-// Подписанный тем же тестовым ключом probe получает доступ к БД Release
-// без root и без изменения приложения. На физическом устройстве и для
-// production-сборки он явно отказывается выполнять любые операции.
+// Signed with the same test key, the probe gets access to the Release database
+// without root and without modifying the app. On a physical device and for a
+// production build it explicitly refuses to perform any operations.
 public final class DatabaseProbe extends Instrumentation {
     private Bundle arguments;
 

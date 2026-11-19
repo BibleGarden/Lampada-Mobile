@@ -11,7 +11,7 @@ export function initialUiLanguage(locales: readonly { languageCode: string | nul
 export const localeTag = (language: UiLanguage): string =>
   ({ en: 'en-US', ru: 'ru-RU', uk: 'uk-UA' })[language];
 
-/** Формы количественных числительных для трёх языков, без Intl.PluralRules. */
+/** Plural forms for the three languages, without Intl.PluralRules. */
 export function pluralCategory(language: UiLanguage, value: number): 'one' | 'few' | 'many' | 'other' {
   const count = Math.abs(value);
   if (language === 'en') return count === 1 ? 'one' : 'other';

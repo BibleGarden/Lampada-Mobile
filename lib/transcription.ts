@@ -14,13 +14,13 @@ import {
 
 const PROXY_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
 const TIMEOUT_MS = 60_000;
-// Рекордер пишет AAC в контейнере MPEG-4 (.m4a) на обеих платформах. Тип части
-// задаём явно: Android по расширению .m4a подставляет audio/mpeg, и сервер
-// отвечает 415.
+// The recorder writes AAC in an MPEG-4 container (.m4a) on both platforms.
+// The part type is set explicitly: Android maps the .m4a extension to
+// audio/mpeg, and the server replies 415.
 const AUDIO_FILENAME = 'recording.m4a';
 const AUDIO_MIME_TYPE = 'audio/mp4';
 
-/** Собирает multipart-тело сами: FormData берёт тип части из таблицы MIME платформы. */
+/** Builds the multipart body ourselves: FormData takes the part type from the platform MIME table. */
 export function transcriptionRequestBody(
   audio: Uint8Array,
   locale: string | null,
@@ -43,7 +43,7 @@ export function transcriptionRequestBody(
   return { body, contentType: `multipart/form-data; boundary=${boundary}` };
 }
 
-/** Пишет причину сбоя в консоль и диагностический журнал без аудио, текста и ключа. */
+/** Reports the failure cause to the console and diagnostics without audio, text, or the key. */
 export function reportTranscriptionFailure(place: 'answer' | 'journal', error: unknown) {
   const details = transcriptionFailureDetails(error);
   console.warn('Failed to transcribe audio recording', { place, ...details });

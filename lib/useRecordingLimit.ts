@@ -24,7 +24,7 @@ type HookRuntime = {
   useState: typeof useState;
 };
 
-/** В тестах runtime подменяется, чтобы проверить весь жизненный цикл без UI. */
+/** Tests swap out the runtime to exercise the whole lifecycle without UI. */
 export function createUseRecordingLimit(runtime: HookRuntime) {
   return function useRecordingLimit(inputs: RecordingLimitInputs) {
     const [limitReached, setLimitReached] = runtime.useState(false);

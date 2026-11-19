@@ -2,10 +2,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Один релиз — одна магазинная версия на обе платформы (ADR-0034, ADR-0040).
-# По умолчанию сборка резервирует следующую минорную версию. --keep-version
-# собирает одну платформу уже зарезервированного релиза без нового номера:
-# вторую платформу или повтор после сбоя сборки.
+# One release ships one store version on both platforms (ADR-0034, ADR-0040).
+# By default a build reserves the next minor version. --keep-version builds
+# one platform of an already reserved release without a new number: the other
+# platform, or a retry after a failed build.
 usage() {
   echo "Usage: $0 android|ios|all [eas build options]" >&2
   echo "       $0 android|ios --keep-version [eas build options]" >&2
@@ -20,8 +20,8 @@ esac
 
 VERSION_MODE=release
 if [ "${1:-}" = "--keep-version" ]; then
-  # Зарезервированная версия уже собрана хотя бы для одной платформы:
-  # пересборка обеих повторила бы ту, что ушла в магазин.
+  # The reserved version is already built for at least one platform:
+  # rebuilding both would repeat the one already shipped to the store.
   [ "$PLATFORM" = all ] && usage
   VERSION_MODE=keep
   shift
@@ -33,7 +33,7 @@ bash scripts/check-runtime-env.sh eas production
 node scripts/bump-version.mjs "$VERSION_MODE"
 
 if [ "$PLATFORM" = all ]; then
-  # Android отправляем во внутренний тест; iOS только собираем.
+  # Android goes to internal testing; iOS is only built.
   npx eas-cli@latest build --platform android --profile production --auto-submit "$@"
   exec npx eas-cli@latest build --platform ios --profile production "$@"
 elif [ "$PLATFORM" = android ]; then

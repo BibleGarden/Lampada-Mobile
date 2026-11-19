@@ -5,7 +5,7 @@ import { isVisibleScreen } from './visibleActivity';
 
 export const ScreenUncoveredContext = createContext<boolean | null>(null);
 
-/** Экран виден только пока он наверху стека и приложение на переднем плане. */
+/** A screen is visible only while it is on top of the stack and the app is in the foreground. */
 export function useVisibleScreen(): boolean {
   const focused = useIsFocused();
   const uncovered = useContext(ScreenUncoveredContext);

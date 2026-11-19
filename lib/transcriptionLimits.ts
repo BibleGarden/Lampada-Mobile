@@ -3,7 +3,7 @@ import { pluralCategory, type UiLanguage } from './uiLanguage.ts';
 export const MAX_RECORDING_SECONDS = 600;
 export const MAX_TRANSCRIPTION_BYTES = 14 * 1024 * 1024;
 
-// Останавливаем до серверных 600 с: последнему кадру AAC нужен запас.
+// Stop short of the server's 600 s: the final AAC frame needs headroom.
 export const RECORDING_STOP_HEADROOM_SECONDS = 1;
 
 export function recordingStopSeconds(limitSeconds = MAX_RECORDING_SECONDS): number {

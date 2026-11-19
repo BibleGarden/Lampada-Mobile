@@ -84,8 +84,8 @@ def native_hash() -> str:
 
 
 def pbxproj_fingerprint(path: Path) -> bytes:
-    """prebuild генерирует случайные 24-символьные PBX ID и сортирует записи по ним;
-    сравниваем содержимое без ID и без порядка строк."""
+    """prebuild generates random 24-character PBX IDs and sorts entries by them;
+    compare the content without the IDs and without line order."""
     lines = re.sub(rb"\b[0-9A-F]{24}\b", b"ID", path.read_bytes()).splitlines()
     return b"\n".join(sorted(lines))
 
@@ -118,7 +118,7 @@ def preflight(work: Path, env: dict[str, str]) -> tuple[str, Path]:
                        ("grep", "install macOS command-line tools")):
         if shutil.which(name, path=env["PATH"]) is None:
             raise RuntimeError(f"Missing {name}; {hint}")
-    # pod install внутри prebuild падает на Encoding::CompatibilityError без UTF-8 локали
+    # pod install inside prebuild fails with Encoding::CompatibilityError without a UTF-8 locale
     run(["npx", "expo", "prebuild", "--platform", "ios"],
         work / "preflight/prebuild.log",
         {**env, **MOCK_ENV, "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"})
@@ -385,7 +385,7 @@ def main() -> int:
         try:
             udid = subprocess.check_output([str(ROOT / "testing/e2e/sim-udid.sh"), simulator], text=True).strip()
             shutdown = subprocess.run(["xcrun", "simctl", "shutdown", udid], capture_output=True, text=True)
-            # уже выключенный симулятор — не ошибка очистки
+            # an already shut-down simulator is not a cleanup error
             if shutdown.returncode != 0 and "current state: Shutdown" not in shutdown.stderr:
                 raise RuntimeError(f"simctl shutdown failed: {shutdown.stderr.strip()}")
         except Exception as error:

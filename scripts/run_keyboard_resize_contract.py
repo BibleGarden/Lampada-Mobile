@@ -48,10 +48,10 @@ def main():
                                '--below-input', 'answer-save-button', 'answer-cancel-button', 'answer-record-button',
                                '--output', str(output / 'resized-native-bounds.json')])
         finally:
-            # Снимок после перекладки, даже при провале проверки, до восстановления окна.
+            # Capture the relaid-out state even when the check fails, before restoring the window.
             with (output / 'resized.png').open('wb') as screenshot:
                 result = subprocess.run(['adb', '-s', args.device, 'exec-out', 'screencap', '-p'], stdout=screenshot)
-        # Ошибка снимка не заслоняет провал проверки границ.
+        # A screenshot error must not mask a bounds-check failure.
         if result.returncode:
             raise RuntimeError('Native resize screenshot failed')
     finally:

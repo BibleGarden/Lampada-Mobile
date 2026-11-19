@@ -2,18 +2,19 @@ const fs = require('fs');
 const path = require('path');
 const { withAndroidManifest, withDangerousMod, AndroidConfig } = require('expo/config-plugins');
 
-// Правила Android Auto Backup (ADR-0040). Любой <include> ограничивает копию
-// перечисленным, поэтому всё остальное в неё не попадает: кэш, диагностический
-// лог и все SharedPreferences, включая ключи SecureStore. Эти ключи зашифрованы
-// ключом Android Keystore этого устройства и на другом не расшифруются.
+// Android Auto Backup rules (ADR-0040). Any <include> restricts the copy to
+// what is listed, so everything else stays out of it: cache, the diagnostic
+// log, and all SharedPreferences, including SecureStore keys. Those keys are
+// encrypted with this device's Android Keystore key and cannot be decrypted
+// on another device.
 //
-// - `files/SQLite/` — дневник: `lampada.db` из expo-sqlite с файлами WAL.
-//   В облако он уходит только со сквозным шифрованием, то есть при заданной
-//   блокировке экрана.
-// - `files/Audio/` — голосовые записи expo-audio. Только при прямом переносе
-//   на новый телефон: облачная копия ограничена 25 МБ на приложение, при
-//   превышении Android перестаёт копировать приложение целиком, а записи при
-//   48 кбит/с занимают около 22 МБ в час.
+// - `files/SQLite/` — the journal: `lampada.db` from expo-sqlite with its WAL
+//   files. It goes to the cloud only with end-to-end encryption, that is,
+//   when a screen lock is set.
+// - `files/Audio/` — expo-audio voice recordings. Only for a direct transfer
+//   to a new phone: the cloud copy is capped at 25 MB per app, and past that
+//   Android stops backing up the app entirely, while recordings at 48 kbit/s
+//   take up about 22 MB per hour.
 const backupFiles = {
   fullBackupContent: 'lampada_backup_rules',
   dataExtractionRules: 'lampada_data_extraction_rules',
@@ -33,20 +34,20 @@ const xml = (root, lines) => [
 const section = (name, attributes, lines) =>
   [`<${name}${attributes}>`, ...lines.map((line) => `  ${line}`), `</${name}>`];
 
-// Ресурсы по путям внутри `res/`.
+// Resources by their paths inside `res/`.
 const backupRules = {
-  // Android 7–8.1 не знают requireFlags, а копия там не шифруется сквозным
-  // ключом: исключение всех каталогов оставляет данные только на устройстве.
+  // Android 7–8.1 do not know requireFlags, and the copy there is not
+  // end-to-end encrypted: excluding every domain keeps data on-device only.
   [`xml/${backupFiles.fullBackupContent}.xml`]: xml('full-backup-content',
     ['root', 'file', 'database', 'sharedpref', 'external', 'device_root']
       .map((domain) => `<exclude domain="${domain}" path="."/>`)),
-  // Android 9–11: одни правила на облако и перенос, условие задаёт requireFlags.
+  // Android 9–11: one rule set for cloud and transfer; requireFlags sets the condition.
   [`xml-v28/${backupFiles.fullBackupContent}.xml`]: xml('full-backup-content', [
     `<include ${journal} requireFlags="clientSideEncryption"/>`,
     `<include ${journal} requireFlags="deviceToDeviceTransfer"/>`,
     `<include ${recordings} requireFlags="deviceToDeviceTransfer"/>`,
   ]),
-  // Android 12 и выше.
+  // Android 12 and newer.
   [`xml/${backupFiles.dataExtractionRules}.xml`]: xml('data-extraction-rules', [
     ...section('cloud-backup', ' disableIfNoEncryptionCapabilities="true"', [`<include ${journal}/>`]),
     ...section('device-transfer', '', [`<include ${journal}/>`, `<include ${recordings}/>`]),

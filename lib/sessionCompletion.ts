@@ -19,15 +19,15 @@ export function hasSessionActivity({
   reportOpen,
   scriptureAudioPhase,
 }: SessionActivityState): boolean {
-  // Ошибка озвучки остаётся на карточке, но не держит истёкшую молитву:
-  // её ничто не завершит, кроме действия пользователя.
+  // A narration error stays on the card but does not hold an expired prayer:
+  // nothing except a user action will complete it.
   const narrationActive = scriptureAudioPhase === 'loading'
     || scriptureAudioPhase === 'playing'
     || scriptureAudioPhase === 'paused';
   return readerOpen || answerOpen || reportOpen || narrationActive;
 }
 
-/** Переход планируется только для свободного экрана молитвы. */
+/** Completion is scheduled only when the prayer screen is free. */
 export function scheduleSessionCompletion(
   { timeExpired, screenVisible, activityOpen }: CompletionState,
   onFinish: () => void,

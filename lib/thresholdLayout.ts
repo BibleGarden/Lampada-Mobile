@@ -1,6 +1,7 @@
-// Плотности экрана «Перед началом» в px прототипа, от исходного макета к самой
-// плотной: поля и промежутки брифинга, размер кнопки «Начать» и воздух под ней.
-// Кегль не меняется — высоту освобождают декоративные интервалы и кнопка.
+// "Before starting" screen densities in prototype px, from the original
+// layout to the densest: briefing paddings and gaps, the Start button size,
+// and the air beneath it. The type size never changes — height is freed by
+// the decorative spacing and the button.
 export const THRESHOLD_DENSITIES = [
   { padding: 16, gap: 12, button: 158, bottom: 34 },
   { padding: 8, gap: 8, button: 136, bottom: 34 },
@@ -10,20 +11,20 @@ export const THRESHOLD_DENSITIES = [
 export type ThresholdDensity = (typeof THRESHOLD_DENSITIES)[number];
 
 type Measured = {
-  /** высота блока под шапкой: брифинг, кнопка и воздух под ней */
+  /** height of the block below the header: briefing, button, and the air beneath it */
   mainHeight: number;
-  /** высота заголовка и пунктов вместе с промежутками между ними */
+  /** height of the heading and items, including the gaps between them */
   briefHeight: number;
-  /** число промежутков в брифинге */
+  /** number of gaps in the briefing */
   gaps: number;
-  /** плотность, при которой сняты высоты */
+  /** the density the heights were measured at */
   density: ThresholdDensity;
 };
 
 /**
- * Первая по порядку плотность, при которой брифинг целиком помещается над
- * кнопкой: пока помещается исходный макет, он и остаётся. `overflow` — не
- * помещается и самая плотная: тогда брифинг прокручивается.
+ * The first density in order where the briefing fully fits above the button:
+ * while the original layout fits, it stays. `overflow` — not even the densest
+ * one fits: the briefing scrolls then.
  */
 export function fitThresholdDensity(
   { mainHeight, briefHeight, gaps, density }: Measured,
