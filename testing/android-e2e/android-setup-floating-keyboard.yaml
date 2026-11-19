@@ -2,8 +2,8 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# До запуска выбрать плавающий режим в клавиатуре Samsung.
-# Сценарий не очищает данные на личном телефоне.
+# Before running, enable floating mode in the Samsung keyboard.
+# The scenario does not clear data on the personal phone.
 - launchApp:
     stopApp: true
 - tapOn:

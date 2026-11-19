@@ -3,11 +3,12 @@ tags:
   - reminders
   - prepared
 ---
-# REM-004 + REM-011 + REM-013: напоминание срабатывает в заданное время,
-# показывается баннером поверх открытого приложения, приходит в день молитвы.
+# REM-004 + REM-011 + REM-013: the reminder fires at the configured time,
+# shows up as a banner over the open app, and arrives on the prayer day.
 #
-# Предусловия: разрешение выдано (прогон ios-rem-001); /tmp/rem-set-time.yaml
-# сгенерирован одной целью now+4мин (кратно 5): gen-rem-set-time.mjs HH:MM.
+# Preconditions: permission granted (ios-rem-001 run); /tmp/rem-set-time.yaml
+# is generated with a single now+4min target (rounded to a multiple of 5):
+# gen-rem-set-time.mjs HH:MM.
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
@@ -18,7 +19,7 @@ tags:
 - assertVisible:
     id: "reminders-toggle"
     checked: true
-# Ставим ближайшее время.
+# Set the nearest time.
 - tapOn:
     id: "reminders-settings-button-0"
 - assertVisible:
@@ -29,8 +30,8 @@ tags:
     id: "reminders-editor-done"
 - assertVisible: ".*Настроить расписание 1: Каждый день:.*"
 
-# REM-013: сначала молитва в тот же день. Сетап идемпотентен: eraseText чистит
-# сохранённую цель, если она есть.
+# REM-013: first, a prayer on the same day. The setup is idempotent: eraseText
+# clears the saved goal if there is one.
 - openLink: "lampada://"
 - assertVisible:
     id: "start-prayer-button"
@@ -60,13 +61,13 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# Накопить elapsed_sec > 0, иначе сессия не попадёт в дневник.
+# Accumulate elapsed_sec > 0, otherwise the session will not reach the diary.
 - waitForAnimationToEnd:
     timeout: 9000
 - tapOn:
     point: "10%,11%"
-# Назад ведёт на экран итога: «Завершить» (или диалог «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» со
-# своей кнопкой «Завершить» в старых сборках).
+# Back leads to the summary screen: the "Finish" button (or the "BEFORE
+# CLOSING" dialog with its own "Finish" button in older builds).
 - assertVisible:
     id: "reflect-complete-button"
 - runFlow:
@@ -86,9 +87,9 @@ tags:
 - assertVisible:
     id: "home-title-lit"
 
-# REM-004/011: приложение открыто на Home — баннер должен появиться в T1.
-# Срабатывание фиксирует run-rem-fire.sh скриншотом (simctl io screenshot):
-# баннер живёт в SpringBoard и в accessibility-иерархию приложения не попадает.
+# REM-004/011: the app is open on Home — the banner should appear at T1.
+# The firing is captured by run-rem-fire.sh with a screenshot (simctl io screenshot):
+# the banner lives in SpringBoard and never appears in the app's accessibility tree.
 - openLink: "lampada://"
 - assertVisible:
     id: "start-prayer-button"

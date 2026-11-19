@@ -9,7 +9,7 @@ tags:
     id: "start-prayer-button"
 - tapOn:
     id: "start-prayer-button"
-# число и единица — один элемент доступности: VoiceOver читает их фразой
+# The number and the unit form a single accessibility element: VoiceOver reads them as one phrase
 - assertVisible:
     id: "setup-duration-value"
     text: "10 минут"
@@ -35,12 +35,12 @@ tags:
 - tapOn:
     id: "setup-example-3"
 - assertVisible: "Подготовиться к разговору"
-# Выбираем редактор, а не одноимённый пункт закрывающегося списка примеров.
+# Target the editor, not the same-named item in the closing examples list.
 - assertVisible:
     id: "setup-goal-input"
 - tapOn:
     id: "setup-goal-input"
-# Справа от короткой темы первой строки: курсор после текста, не в середине.
+# Right of the short first-row topic: the cursor ends up after the text, not in the middle.
 - tapOn:
     point: "90%,32%"
 - eraseText: 100
@@ -95,7 +95,7 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# кикер «цель» и тема VoiceOver читает одной фразой
+# VoiceOver reads the goal kicker and topic as a single phrase
 - assertVisible:
     text: ".*Свободная молитва — без конкретной темы"
     childOf:

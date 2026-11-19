@@ -22,20 +22,20 @@ tags:
     id: "privacy-consent-core_prayer_ai-allow"
 - tapOn:
     id: "privacy-consent-core_prayer_ai-deny"
-# После отказа приложение идёт на пороговый экран «Перед началом»
-# (screens.threshold.before/title); отдельного экрана «Прежде чем войти» больше нет.
+# After denial the app goes to the threshold "Before you start" screen
+# (screens.threshold.before/title); the separate pre-entry screen no longer exists.
 - assertVisible:
     id: "threshold-kicker"
 - openLink: "lampada://settings"
-# iOS 26 подтверждает переход по схеме системным диалогом на языке
-# симулятора; неотвеченный, он переживает перезапуск и валит следующие флоу.
+# iOS 26 confirms URL-scheme navigation with a system dialog in the
+# simulator's language; left unanswered, it survives a restart and breaks later flows.
 - runFlow:
     when:
       visible: "Open|Открыть"
     commands:
       - tapOn: "Open|Открыть"
-# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
-# На iPhone SE строка ниже первого экрана, а невидимых узлов XCTest не отдаёт.
+# Consents live in the "Data for AI" BottomSheet (app/settings.tsx:913,1076).
+# On iPhone SE the row is below the first screen, and XCTest does not expose off-screen nodes.
 - scrollUntilVisible:
     element:
       id: "privacy-settings-button"

@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Геометрия проверяется хостовым runner после остановки драйвера Maestro.
+# Geometry is verified by the host runner after the Maestro driver stops.
 - launchApp:
     stopApp: true
     clearState: true

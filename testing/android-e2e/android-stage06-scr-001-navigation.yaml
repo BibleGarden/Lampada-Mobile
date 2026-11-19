@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-stage06-scr-001-navigation.yaml.
+# Android version of the instrumented ios-stage06-scr-001-navigation.yaml scenario.
 - launchApp:
     stopApp: true
     clearState: true

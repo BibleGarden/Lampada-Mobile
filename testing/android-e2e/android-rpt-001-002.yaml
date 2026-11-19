@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-rpt-001-002.yaml.
+# Android version of the instrumented ios-rpt-001-002.yaml scenario.
 - launchApp:
     stopApp: true
     clearState: true

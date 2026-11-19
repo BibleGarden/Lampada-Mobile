@@ -2,11 +2,10 @@ appId: app.lampada
 tags:
   - critical
 ---
-# Клавиатура закрывается клавишей ввода (returnKeyType="done" +
-# submitBehavior="blurAndSubmit" у поля цели: ввод снимает фокус, а не
-# вставляет перенос; подпись клавиши зависит от раскладки), а не `hideKeyboard`: на iOS 26.5 / Maestro 2.6.1 тот закрывает свайпом вниз и
-# уводит вместе с клавиатурой сам лист настройки молитвы. Тот же приём — в
-# testing/e2e/ios-lock-*.yaml.
+# The keyboard is dismissed by tapping outside the field (helpers/dismiss-keyboard.yaml),
+# not with `hideKeyboard`: on iOS 26.5 / Maestro 2.6.1 the latter closes it with a
+# downward swipe and dismisses the prayer setup sheet along with the keyboard.
+# The same trick is used in testing/e2e/ios-lock-*.yaml.
 - launchApp:
     stopApp: true
     clearState: true
@@ -52,7 +51,7 @@ tags:
 - tapOn:
     id: "answer-input"
 - inputText: "Финальный ответ"
-# Кнопки шторки видны и с открытой клавиатурой, гасить её отдельно не нужно.
+# The sheet's buttons are visible even with the keyboard open; no need to dismiss it separately.
 - tapOn:
     id: "answer-save-button"
 - runFlow:
@@ -76,8 +75,8 @@ tags:
     id: "reflect-complete-button"
 - assertVisible:
     id: "home-title-lit"
-# Цитата takeaway на Home больше не показывается (ADR-0028: завершение сразу
-# на Home); её наличие проверяется ниже в дневнике и в smoke-full-relaunch.
+# The takeaway quote is no longer shown on Home (ADR-0028: finishing lands
+# directly on Home); its presence is checked below in the journal and in smoke-full-relaunch.
 - assertVisible:
     id: "journal-button"
 - tapOn:

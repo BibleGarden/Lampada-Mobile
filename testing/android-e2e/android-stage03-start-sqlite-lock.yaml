@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-stage03-start-sqlite-lock.yaml.
+# Android version of the instrumented ios-stage03-start-sqlite-lock.yaml scenario.
 - launchApp:
     stopApp: true
     clearState: true
