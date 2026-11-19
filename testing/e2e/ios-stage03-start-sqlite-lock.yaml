@@ -1,14 +1,14 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-ENV: сборка с EXPO_PUBLIC_FORCE_SESSION_ERROR=1 — e2e-хук в lib/store.ts
-# один раз падает на входе и воспроизводит путь generic-catch порога
-# (app/threshold.tsx:102) без внешней блокировки SQLite: с WAL (lib/db.ts:60)
-# BEGIN EXCLUSIVE / locking_mode=EXCLUSIVE / chmod писателей приложения не
-# держат (проверено 20.09, см. testing/reports/2026-09-20-stub-run.md).
-# В теговые прогоны не входит.
+# NEEDS-ENV: a build with EXPO_PUBLIC_FORCE_SESSION_ERROR=1 — the e2e hook in
+# lib/store.ts fails once on entry and reproduces the threshold generic-catch
+# path (app/threshold.tsx:102) without an external SQLite lock: with WAL
+# (lib/db.ts:60) the app's writers hold no BEGIN EXCLUSIVE /
+# locking_mode=EXCLUSIVE / chmod (verified 20.09, see
+# testing/reports/2026-09-20-stub-run.md). Not included in tagged runs.
 ---
-# STG-SQLITE: ошибка входа в молитву — понятный алерт, живой повтор.
+# STG-SQLITE: entering the prayer fails — a clear alert, a working retry.
 - launchApp:
     stopApp: true
     clearState: true
@@ -31,7 +31,7 @@ tags:
           id: "privacy-consent-core_prayer_ai-allow"
 - assertVisible:
     id: "threshold-kicker"
-# Первая попытка входа падает (хук).
+# The first entry attempt fails (the hook).
 - swipe:
     start: "50%,78%"
     end: "50%,78%"
@@ -40,7 +40,7 @@ tags:
 - assertVisible: "Попробуй ещё раз."
 - takeScreenshot: STG-sqlite-error
 - tapOn: "Понятно"
-# Кнопка не мёртвая: повторный вход проходит (хук одноразовый).
+# The button is not dead: the second entry succeeds (the hook is one-shot).
 - assertVisible:
     id: "threshold-hold-button"
 - swipe:

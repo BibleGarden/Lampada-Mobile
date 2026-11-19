@@ -3,7 +3,8 @@ tags:
   - rare
 ---
 # JRN-014: share a prayer from the journal as plain text through the system share sheet.
-# Самодостаточен: создаёт запись дневника сам (clearState: true), порядок прогона не важен.
+# Self-contained: creates the journal entry itself (clearState: true); the run
+# order does not matter.
 - launchApp:
     stopApp: true
     clearState: true
@@ -16,7 +17,7 @@ tags:
           point: "10%,8%"
 - assertVisible:
     id: "start-prayer-button"
-# --- сетап: молитва с одним сохранённым ответом ---
+# --- setup: a prayer with one saved answer ---
 - tapOn:
     id: "start-prayer-button"
 - tapOn:
@@ -40,7 +41,8 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# накопить elapsed_sec > 0, иначе сессия не попадёт в дневник (lib/db.ts:223)
+# accumulate elapsed_sec > 0, otherwise the session does not reach the journal
+# (lib/db.ts:223)
 - waitForAnimationToEnd:
     timeout: 9000
 - tapOn:
@@ -59,9 +61,10 @@ tags:
           id: "privacy-consent-answer_context-allow"
 - assertVisible:
     id: "dock-answer-edit-button"
-# Шторка ответа после сохранения может быть уже закрыта (consent-диалог её
-# гасит) или нет — первый тап либо уводит сразу на «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ»,
-# либо только закрывает шторку; во втором случае «Ответить» виден и жмём ещё раз.
+# After saving, the answer sheet may already be closed (the consent dialog
+# dismisses it) or not — the first tap either goes straight to "BEFORE YOU
+# CLOSE" or only closes the sheet; in the latter case "Answer" is visible and
+# we tap again.
 - tapOn:
     point: "10%,11%"
 - runFlow:
@@ -75,11 +78,12 @@ tags:
     id: "reflect-kicker"
 - tapOn:
     id: "reflect-complete-button"
-# Строка prayer-saved-notice заменяет подпись серии на 4 с и здесь может скрыться до assert —
-# для этого флоу достаточно сигнала «завершение сразу на Home» (ADR-0028).
+# The prayer-saved-notice row replaces the streak caption for 4 s and here may
+# hide before the assert — for this flow the "finishing goes straight to Home"
+# signal (ADR-0028) is enough.
 - assertVisible:
     id: "home-title-lit"
-# --- конец сетапа ---
+# --- end of setup ---
 - tapOn:
     id: "journal-button"
 - assertVisible:
@@ -97,7 +101,8 @@ tags:
 # the system share sheet is outside the app, so match its own labels
 - assertVisible: ".*(Скопировать|Copy|Ещё|More|Отменить|Cancel).*"
 - takeScreenshot: JRN-014-share-sheet
-# На iOS 26.5 AX-действие Dismiss Popover возвращает успех, но оставляет лист открытым.
+# On iOS 26.5 the Dismiss Popover AX action reports success but leaves the
+# sheet open.
 - swipe:
     start: "50%,62%"
     end: "50%,94%"

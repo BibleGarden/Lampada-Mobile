@@ -17,7 +17,7 @@ appId: app.lampada
     id: reflect-question
 - waitForAnimationToEnd:
     timeout: 2000
-# Небольшой сдвиг оставляет вопрос, введённый вывод и кнопку в утверждённой композиции кадра 07.
+# A small swipe keeps the question, the entered takeaway and the button within the approved composition of shot 07.
 - swipe:
     start: 50%, 80%
     end: 50%, 74%

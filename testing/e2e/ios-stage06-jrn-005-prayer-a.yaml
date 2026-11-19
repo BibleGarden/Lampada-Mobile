@@ -3,8 +3,9 @@ tags:
   - main
 ---
 # JRN-005 (data setup A): a finished prayer that has both a text answer and a real voice recording.
-# Без clearState: флоу входит в ios-jrn-suite.yaml и должен накапливать данные
-# (в теговых прогонах ассертит только собственную запись — clearState не нужен).
+# No clearState: the flow is part of ios-jrn-suite.yaml and must accumulate
+# data (in tagged runs it asserts only its own entry — clearState is not
+# needed).
 - launchApp:
     stopApp: true
 - tapOn:

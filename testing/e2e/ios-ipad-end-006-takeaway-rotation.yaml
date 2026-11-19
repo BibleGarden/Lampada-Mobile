@@ -2,17 +2,19 @@ appId: twinkler
 tags:
   - ipad
 ---
-# END-006 (iPad): вывод вводится при открытой клавиатуре — действия
-# «Завершить»/«Вернуться» скрыты; поворот портрет→ландшафт→портрет во время
-# ввода сохраняет текст дословно; тапы по левому и правому полю вне колонки и
-# по вопросу закрывают клавиатуру и возвращают действия без потери текста.
+# END-006 (iPad): the takeaway is typed with the keyboard open — the
+# "Finish"/"Return" actions are hidden; rotating portrait→landscape→portrait
+# while typing preserves the text verbatim; taps on the left and right margins
+# outside the column and on the question close the keyboard and bring the
+# actions back without losing text.
 #
-# Видимость клавиатуры — по нелокализованному идентификатору клавиши `shift`
-# (см. ios-stage03-long-goal.yaml). Экранную клавиатуру поднимает `inputText`:
-# при подключённой аппаратной клавиатуре симулятора тап по полю только ставит
-# фокус, поэтому каждый цикл начинается с ввода. Тап по полю ставит курсор в
-# точку тапа, а не в конец текста, поэтому исходные части фразы и дописанные
-# числа проверяются независимо от их позиции, а не в порядке вставки.
+# Keyboard visibility is checked via the locale-independent `shift` key
+# identifier (see ios-stage03-long-goal.yaml). The on-screen keyboard is raised
+# by `inputText`: with the simulator's hardware keyboard connected, tapping the
+# field only focuses it, so every cycle starts with typing. A tap on the field
+# places the cursor at the tap point rather than at the end of the text, so the
+# original parts of the phrase and the appended digits are checked independently
+# of their position, not in insertion order.
 - launchApp:
     stopApp: true
     clearState: true
@@ -53,7 +55,7 @@ tags:
 - setOrientation: LANDSCAPE_LEFT
 - waitForAnimationToEnd:
     timeout: 3000
-# поворот посреди ввода: дописываем после поворота
+# rotation in the middle of typing: continue typing after the rotation
 - inputText: " и вторая"
 - assertVisible:
     id: "reflection-input"

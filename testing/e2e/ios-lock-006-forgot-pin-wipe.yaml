@@ -2,20 +2,23 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-006: «Не помнишь пин-код?» — единственный выход из забытого кода, и он стоит
-# всех данных. Проверяется, что оба подтверждения действительно защищают от
-# случайного нажатия, и что после стирания уходит и дневник, и сама защита.
+# LOCK-006: "Forgot PIN?" is the only way out of a forgotten code, and it costs
+# all the data. Verifies that both confirmations really guard against an
+# accidental tap, and that after the wipe both the journal and the protection
+# itself are gone.
 #
-# Предусловие: ios-lock-006-forgot-pin-prepare (запись «LOCK-006 запись», пин 4321).
+# Precondition: ios-lock-006-forgot-pin-prepare (journal entry "LOCK-006 entry",
+# PIN 4321).
 - launchApp:
     stopApp: true
 - assertVisible:
     id: "lock-screen"
 
-# Отмена на первом подтверждении ничего не стирает.
+# Cancelling at the first confirmation wipes nothing.
 #
-# Повторный тап — обход того же поведения, что и на главной: первый тап после
-# холодного старта, пока идёт появление экрана, до обработчика не доходит.
+# The repeated tap works around the same behaviour as on the home screen: the
+# first tap after a cold start, while the screen is still appearing, never
+# reaches the handler.
 - tapOn:
     id: "forgot-pin"
 - runFlow:
@@ -29,7 +32,7 @@ tags:
 - assertVisible:
     id: "lock-screen"
 
-# Отмена на втором подтверждении тоже ничего не стирает.
+# Cancelling at the second confirmation also wipes nothing.
 - tapOn:
     id: "forgot-pin"
 - tapOn: "Стереть данные"
@@ -38,7 +41,7 @@ tags:
 - assertVisible:
     id: "lock-screen"
 
-# Данные на месте: код всё ещё тот же.
+# The data is intact: the code is still the same.
 - tapOn:
     id: "pin-key-4"
 - tapOn:
@@ -55,7 +58,7 @@ tags:
 - tapOn:
     point: "10%,11%"
 
-# Полный путь: два подтверждения — и приложение стёрто.
+# Full path: two confirmations — and the app is wiped.
 - launchApp:
     stopApp: true
 - assertVisible:
@@ -72,7 +75,8 @@ tags:
 - assertVisible: "Точно стереть всё?"
 - tapOn: "Да, стереть"
 
-# Защита снята вместе с данными: экран блокировки уходит без ввода кода.
+# Protection is removed along with the data: the lock screen goes away without
+# entering the code.
 - extendedWaitUntil:
     notVisible:
       id: "lock-screen"
@@ -80,7 +84,7 @@ tags:
 - assertVisible:
     id: "start-prayer-button"
 
-# Дневник пуст.
+# The journal is empty.
 - tapOn:
     id: "journal-button"
 - assertVisible:
@@ -91,7 +95,7 @@ tags:
 - tapOn:
     point: "10%,11%"
 
-# Настройки снова показывают выключенную защиту.
+# Settings again show protection as disabled.
 - tapOn:
     id: "settings-button"
 - scrollUntilVisible:
@@ -101,7 +105,7 @@ tags:
 - assertNotVisible:
     id: "change-pin-button"
 
-# Холодный старт больше не спрашивает код.
+# The cold start no longer asks for the code.
 - launchApp:
     stopApp: true
 - assertVisible:

@@ -3,7 +3,7 @@ tags:
   - main
 ---
 # ANS-003: a downward swipe must not discard a non-empty draft. Discarding it
-# remains possible only through the explicit two-step "Отмена" confirmation.
+# remains possible only through the explicit two-step "Cancel" confirmation.
 - launchApp:
     stopApp: true
     clearState: true
@@ -43,8 +43,9 @@ tags:
     end: "50%,92%"
     duration: 500
 - assertVisible: ".*ANS-003.*"
-# Окно «Точно закрыть?» живёт 3 с (AnswerSheet.tsx:849) — меньше задержки
-# Maestro между tapOn и assert. doubleTapOn шлёт оба касания одной командой.
+# The "Really close?" confirmation lives for 3 s (AnswerSheet.tsx:849) — less
+# than Maestro's delay between tapOn and assert. doubleTapOn sends both taps
+# as one command.
 - doubleTapOn: "Отмена"
 - assertVisible:
     id: "session-title"

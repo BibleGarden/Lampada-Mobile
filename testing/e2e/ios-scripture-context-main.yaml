@@ -35,15 +35,16 @@ tags:
 - extendedWaitUntil:
     visible: ".*22:1.*6.*"
     timeout: 10000
-# Компактная карточка показывает выделенные сервером стихи — в фикстуре
-# это стих 2 (highlight), а не 1.
+# The compact card shows the verses highlighted by the server — in the fixture
+# that is verse 2 (highlight), not 1.
 - assertVisible: "Он покоит меня.*"
 - assertVisible:
     id: "scripture-read-full"
 - tapOn:
     id: "scripture-read-full"
 - takeScreenshot: reader-short-wrapped
-# Шторка ридера не закрывается тапом по фону — только по ✕ (правый верх).
+# The reader sheet does not close on a background tap — only via ✕ (top
+# right).
 - tapOn:
     point: "89%,18%"
 - tapOn:

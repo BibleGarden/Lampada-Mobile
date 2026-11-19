@@ -1,20 +1,20 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
-# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+# NEEDS-RUNNER: the device locale is switched between flows by run-lng.sh
+# (the order and locales are hardcoded in the script). Not part of tagged runs.
 ---
-# LNG-003: чистая установка при украинском языке устройства.
+# LNG-003: clean install with the device language set to Ukrainian.
 #
-# Предусловие: симулятор уже на locale=uk_UA (AppleLocale + AppleLanguages=uk).
-# Maestro не умеет менять системный язык iOS внутри флоу — это делает
-# scripts/run-all-tests.sh перед запуском.
+# Precondition: the simulator is already on locale=uk_UA (AppleLocale + AppleLanguages=uk).
+# Maestro cannot change the iOS system language inside a flow — that is done by
+# scripts/run-all-tests.sh before the run.
 - launchApp:
     stopApp: true
     clearState: true
-    # Lampada не использует геолокацию; явный список не даёт Maestro
-    # дёргать locationd (simctl privacy location) сразу после холодной
-    # перезагрузки, где locationd зависает.
+    # Lampada does not use geolocation; the explicit list keeps Maestro from
+    # poking locationd (simctl privacy location) right after a cold reboot,
+    # where locationd hangs.
     permissions:
       notifications: allow
       microphone: allow

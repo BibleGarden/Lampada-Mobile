@@ -2,7 +2,7 @@ appId: twinkler
 tags:
   - prepared
 ---
-# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+# Continuation of the open phase: no launch/clearState, so persistence can be verified.
 # Enter must restore actions and preserve the text.
 - pressKey: Enter
 - assertVisible:

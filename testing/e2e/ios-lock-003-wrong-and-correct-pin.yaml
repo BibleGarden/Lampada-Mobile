@@ -2,17 +2,18 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-003: неверный пин оставляет на экране блокировки с ошибкой, верный —
-# впускает. Длина пина известна из хранилища, поэтому проверка запускается сама
-# на последней цифре: отдельного подтверждения на разблокировке нет.
+# LOCK-003: a wrong PIN keeps the user on the lock screen with an error, the
+# correct one lets them in. The PIN length is known from storage, so the check
+# runs by itself on the last digit: there is no separate confirmation when
+# unlocking.
 #
-# Предусловие: включён пин 123456 (состояние после ios-lock-002).
+# Precondition: PIN 123456 enabled (state after ios-lock-002).
 - launchApp:
     stopApp: true
 - assertVisible:
     id: "lock-screen"
 
-# Неверный код той же длины.
+# A wrong code of the same length.
 - tapOn:
     id: "pin-key-6"
 - tapOn:
@@ -33,7 +34,7 @@ tags:
 - assertNotVisible:
     id: "start-prayer-button"
 
-# Верный код впускает без дополнительного подтверждения.
+# The correct code unlocks without extra confirmation.
 - tapOn:
     id: "pin-key-1"
 - tapOn:

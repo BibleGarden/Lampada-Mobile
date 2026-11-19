@@ -1,10 +1,10 @@
 #!/bin/bash
-# ADR-0033: музыка останавливается, когда таймер молитвы истекает в фоне.
+# ADR-0033: music stops when the prayer timer expires in the background.
 #
-# Maestro не видит звук, поэтому остановку плеера проверяет unified log
-# симулятора: у процесса Lampada после старта FigPlayer должна быть его
-# остановка, и всё это до возврата в приложение. Затем возврат в тот же процесс
-# открывает итог молитвы.
+# Maestro cannot hear audio, so the player stop is verified via the
+# simulator's unified log: the Lampada process must stop FigPlayer after
+# starting it, all before returning to the app. Returning to the same process
+# then opens the prayer summary.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
@@ -20,15 +20,15 @@ PLAYER_EVENTS="$(xcrun simctl spawn "$UDID" log show --start "$STARTED" --style 
   | grep -oE 'client (starting|stopping)')"
 echo "$PLAYER_EVENTS"
 if ! grep -q 'client starting' <<< "$PLAYER_EVENTS"; then
-  echo "FAIL: музыка не запускалась" >&2
+  echo "FAIL: music never started" >&2
   exit 1
 fi
 STARTS="$(grep -c 'client starting' <<< "$PLAYER_EVENTS")"
 STOPS="$(grep -c 'client stopping' <<< "$PLAYER_EVENTS" || true)"
 if [ "$STARTS" != "$STOPS" ]; then
-  echo "FAIL: после истечения таймера в фоне играет плееров: $((STARTS - STOPS))" >&2
+  echo "FAIL: players still playing after the background timer expired: $((STARTS - STOPS))" >&2
   exit 1
 fi
-echo "OK: музыка остановлена в фоне"
+echo "OK: music stopped in the background"
 
 maestro --device "$UDID" test --test-output-dir "$OUT" testing/e2e/ios-background-timer-resume.yaml

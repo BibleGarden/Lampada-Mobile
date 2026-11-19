@@ -11,7 +11,7 @@ tags:
       visible: "Open|Открыть"
     commands:
       - tapOn: "Open|Открыть"
-# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+# Consent settings live in the "Data for AI" bottom sheet (app/settings.tsx:913,1076).
 - tapOn:
     id: "privacy-settings-button"
 - assertVisible:
@@ -57,6 +57,7 @@ tags:
           id: "privacy-consent-answer_context-allow"
 - assertVisible:
     id: "dock-answer-edit-button"
-# Цель флоу (opt-in payload отправлен с ответом) достигнута — состояние
-# «Изменить» подтверждает сохранение. Шторку больше не закрываем координатой:
-# вёрстка дока менялась, точка 85%,77% попадает в кнопку «+» (коммит 595a742).
+# The flow's goal (the opt-in payload sent with the answer) is reached — the
+# "Edit" state confirms the save. The sheet is no longer closed by
+# coordinates: the dock layout has changed, and the point 85%,77% now lands
+# on the "+" button (commit 595a742).

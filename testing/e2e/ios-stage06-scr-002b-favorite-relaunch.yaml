@@ -1,11 +1,11 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: продолжение ios-stage06-scr-002a; stub-счётчик сброшен раннером.
-# В теговые прогоны не входит.
+# NEEDS-STUB: a continuation of ios-stage06-scr-002a; the stub counter is
+# reset by the runner. Not included in tagged runs.
 ---
-# SCR-002 (часть 2): после перезапуска избранное восстановилось из SQLite;
-# снятие избранного тоже переживает перезапуск.
+# SCR-002 (part 2): after the relaunch the favorite is restored from SQLite;
+# removing the favorite also survives a relaunch.
 - launchApp:
     stopApp: true
 - assertVisible:

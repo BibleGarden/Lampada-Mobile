@@ -5,14 +5,15 @@ tags:
 - launchApp
 - tapOn:
     id: "settings-button"
-# Дефолт языка теперь следует локали устройства (ru) — для английских подписей
-# переводов (BSB/WEBUS) пикер переводится на en.
+# The language default now follows the device locale (ru) — to get the English
+# translation labels (BSB/WEBUS) the picker is switched to en.
 - tapOn:
     id: "scripture-language-picker"
 - tapOn:
     id: "scripture-language-en"
-# Новый UX (app/settings.tsx:796-820): выбор языка сам переключает шторку на
-# шаг перевода — пикер отдельно не открываем, подписи проверяем прямо в шторке.
+# New UX (app/settings.tsx:796-820): choosing a language itself advances the
+# sheet to the translation step — do not open the picker separately; check the
+# labels right in the sheet.
 - assertVisible: ".*BSB.*"
 - assertVisible: ".*Berean Standard Bible.*"
 - assertVisible: ".*WEBUS.*"

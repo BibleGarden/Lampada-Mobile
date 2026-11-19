@@ -1,22 +1,22 @@
 appId: twinkler
 tags:
   - prepared
-# Только через run-lock-biometrics.sh: скрипт шлёт pearl.nomatch после холодного старта.
+# Only through run-lock-biometrics.sh: the script sends pearl.nomatch after the cold start.
 ---
-# LOCK-009 (часть 3): отказ биометрии оставляет вход пин-кодом — лицо не
-# распознано, экран блокировки на месте, пин работает.
+# LOCK-009 (part 3): a biometrics refusal keeps PIN entry as the way in — the
+# face is not recognized, the lock screen stays, the PIN works.
 #
-# Предусловия: пин 123456, биометрия включена (прогон 009a/009b).
+# Preconditions: PIN 123456, biometrics enabled (009a/009b run).
 - launchApp:
     stopApp: true
-# Системный запрос скрывает AX-дерево приложения: ждём сам запрос.
+# The system prompt hides the app's AX tree: wait for the prompt itself.
 - extendedWaitUntil:
     visible:
       id: "com.apple.localauthentication.ax.authentication.alert"
     timeout: 10000
-# Скрипт шлёт несовпадение, пока флоу спит.
+# The script sends the non-match while the flow sleeps.
 - evalScript: "java.lang.Thread.sleep(20000)"
-# iOS оставляет запрос открытым после несовпадения и предлагает повтор.
+# iOS keeps the prompt open after a non-match and offers a retry.
 - assertVisible:
     id: "com.apple.localauthentication.ax.authentication.alert"
     text: "Повторите|Try Again"
@@ -29,7 +29,8 @@ tags:
     timeout: 10000
 - assertVisible:
     id: "lock-pin-title"
-# Запасной вход — пин: ошибочный не пускает, верный пускает.
+# The fallback entry is the PIN: a wrong one does not unlock, the correct one
+# does.
 - tapOn:
     id: "pin-key-0"
 - tapOn:

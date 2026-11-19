@@ -1,28 +1,28 @@
 appId: twinkler
 tags:
   - prepared
-# Только через run-lock-biometrics.sh: скрипт снимает регистрацию образца перед стартом.
+# Only through run-lock-biometrics.sh: the script unenrolls the template before the start.
 ---
-# LOCK-010: после удаления биометрических образцов в системе экран блокировки
-# больше не предлагает Face ID, а пин продолжает работать.
+# LOCK-010: after the biometric templates are removed from the system, the lock
+# screen no longer offers Face ID, while the PIN keeps working.
 #
-# Предусловия: пин 123456, биометрия включена (прогон 009a/009b). Скрипт
-# выполнил unenroll: образцов в системе больше нет, флаг биометрии в
-# приложении сохранился.
+# Preconditions: PIN 123456, biometrics enabled (009a/009b run). The script has
+# performed the unenroll: no templates remain in the system, but the app's
+# biometrics flag has persisted.
 - launchApp:
     stopApp: true
-# LockGate поднимается асинхронно: ждём появления экрана блокировки.
+# LockGate initializes asynchronously: wait for the lock screen to appear.
 - extendedWaitUntil:
     visible:
       id: "lock-screen"
     timeout: 10000
 - assertVisible:
     id: "lock-pin-title"
-# Face ID больше не предлагается: ни кнопки входа через биометрию, ни
-# автозапроса (он недоступен без зарегистрированного образца).
+# Face ID is no longer offered: neither the biometrics login button nor the
+# automatic prompt (it is unavailable without an enrolled template).
 - assertNotVisible:
     id: "pin-key-biometry"
-# Пин работает.
+# The PIN works.
 - tapOn:
     id: "pin-key-1"
 - tapOn:
@@ -41,7 +41,7 @@ tags:
     id: "settings-button"
 - takeScreenshot: LOCK-010-pin-after-unenroll
 
-# Разбираем защиту: биометрия выключается вместе с пином.
+# Tear down protection: biometrics is disabled together with the PIN.
 - tapOn:
     id: "settings-button"
 - scrollUntilVisible:

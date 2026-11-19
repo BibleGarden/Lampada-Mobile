@@ -1,9 +1,10 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: против живого сервера число и порядок отрывков плавают; под stub
-# каталог детерминирован — две фикстуры (Псалом 22 и Иакова 1), прогон через
-# run-stub-phase.sh (задача 86cbj95j4). В теговые прогоны не входит.
+# NEEDS-STUB: against the live server the number and order of passages vary;
+# under the stub the catalog is deterministic — two fixtures (Psalm 22 and
+# James 1), run via run-stub-phase.sh (task 86cbj95j4). Not included in tagged
+# runs.
 ---
 # SCR-001: open reader (companion dock, scripture mode) and page forward/backward;
 # navigation must stay stable at list boundaries.
@@ -65,8 +66,8 @@ tags:
     id: "dock-scripture-prev"
 - takeScreenshot: SCR-001-A6-prev-after-noop-forward
 # Part B: favorite each item while paging forward. Stub cycles two fixtures:
-# после двух «вперёд» каталог повторяется, и состояние избранного при повторе
-# сохраняется — это и есть граница каталога.
+# after two "forward" taps the catalog repeats, and the favorite state is
+# preserved across the repeat — that is the catalog boundary.
 - tapOn:
     id: "dock-scripture-favorite"
 - assertVisible:
@@ -80,11 +81,11 @@ tags:
     id: "dock-scripture-favorite-active"
 - tapOn:
     id: "dock-scripture-next"
-# Каталог исчерпан: тот же отрывок снова, избранное на месте.
+# Catalog exhausted: the same passage again, the favorite is in place.
 - assertVisible:
     id: "dock-scripture-favorite-active"
 - takeScreenshot: SCR-001-B10-next-catalog-exhausted
-# Part C: обратно к началу; на первом элементе prev не уходит дальше.
+# Part C: back to the start; on the first item prev does not go further.
 - tapOn:
     id: "dock-scripture-prev"
 - assertVisible:
@@ -94,7 +95,7 @@ tags:
 - assertVisible:
     id: "dock-scripture-favorite-active"
 - takeScreenshot: SCR-001-C10-prev-at-start
-# Prev на границе — безопасное no-op (состояние не меняется).
+# Prev at the boundary is a safe no-op (the state does not change).
 - tapOn:
     id: "dock-scripture-prev"
 - assertVisible:

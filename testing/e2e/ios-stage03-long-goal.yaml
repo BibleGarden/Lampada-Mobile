@@ -2,23 +2,24 @@ appId: twinkler
 tags:
   - main
 ---
-# SETUP-004 (iPhone): длинная цель при открытой клавиатуре. Поле остаётся над
-# клавиатурой, тап внутри поля продолжает ввод, тап над полем закрывает
-# клавиатуру без потери текста, после этого «Далее» ведёт в молитву.
+# SETUP-004 (iPhone): a long goal with the keyboard open. The field stays above
+# the keyboard, a tap inside the field continues entry, a tap above the field
+# closes the keyboard without losing the text, and after that "Next" leads
+# into the prayer.
 #
-# Видимость клавиатуры проверяется по элементам самой системной клавиатуры в
-# иерархии XCTest: `id: "shift"` — клавиша регистра, `id: "inputView"` — её
-# контейнер (для `above:`). Идентификаторы не локализованы (подпись «сдвиг»
-# локализована), и `shift` есть в буквенной раскладке iPhone и iPad в обеих
-# ориентациях, так что проверка не зависит от языка клавиатуры симулятора.
-# В ландшафте iPad Maestro отдаёт клавиатуру неполной и с неповёрнутыми
-# координатами, поэтому `above: inputView` проверяется только в портрете.
+# Keyboard visibility is checked via the system keyboard's own elements in the
+# XCTest hierarchy: `id: "shift"` is the shift key, `id: "inputView"` is its
+# container (for `above:`). The identifiers are not localized (the "shift"
+# label is), and `shift` exists in the letter layout of iPhone and iPad in
+# both orientations, so the check does not depend on the simulator keyboard
+# language. In iPad landscape Maestro reports the keyboard incomplete and with
+# unrotated coordinates, so `above: inputView` is checked in portrait only.
 #
-# Экранную клавиатуру поднимает именно `inputText`: при подключённой
-# аппаратной клавиатуре симулятора (I/O → Keyboard, по умолчанию включена)
-# тап по полю только ставит фокус. Поэтому флоу не проверяет «после тапа
-# клавиатура появилась» — только «после ввода видна» и «после тапа снаружи
-# скрыта», что верно в обоих режимах симулятора.
+# It is `inputText` that raises the on-screen keyboard: with the simulator's
+# hardware keyboard connected (I/O → Keyboard, on by default) a tap on the
+# field only focuses it. Hence the flow does not check "the keyboard appeared
+# after the tap" — only "visible after input" and "hidden after a tap
+# outside", which holds in both simulator modes.
 - launchApp:
     stopApp: true
     clearState: true
@@ -35,19 +36,20 @@ tags:
     id: "setup-duration-value"
 - assertVisible:
     id: "setup-kicker"
-# тап внутри поля (ниже единственной строки — курсор встаёт в конец) не
-# закрывает клавиатуру, ввод продолжается с того же места. Текст до тапа —
-# одна короткая строка: тап рядом со словом, которое проверка орфографии
-# считает ошибкой, выделяет его, и ввод заменил бы слово. По той же причине
-# выключен повтор тапа Maestro: второй тап подряд выделяет слово.
+# a tap inside the field (below the single line — the cursor lands at the end)
+# does not close the keyboard; typing continues from the same spot. The text
+# before the tap is one short line: a tap next to a word the spell check
+# considers a mistake selects it, and typing would replace the word. For the
+# same reason Maestro's tap retry is disabled: a second tap in a row selects
+# the word.
 - tapOn:
     id: "setup-goal-input"
     retryTapIfNoChange: false
 - assertVisible:
     id: "shift"
 - inputText: " very long prayer goal with multiple clauses and repeated context for layout verification. This text must remain editable while the keyboard is open and must not cover the primary action. Second paragraph equivalent with more content for threshold and session rendering. Third segment adds enough characters to exceed three display lines safely."
-# длинный текст прокручивается внутри поля: шапка и заголовок остаются на
-# месте, поле по-прежнему заканчивается над клавиатурой
+# the long text scrolls inside the field: the header and title stay in place,
+# the field still ends above the keyboard
 - assertVisible:
     id: "setup-kicker"
 - assertVisible:

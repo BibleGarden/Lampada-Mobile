@@ -32,7 +32,8 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# накопить elapsed_sec > 0, иначе сессия не попадёт в дневник (lib/db.ts:223)
+# accumulate elapsed_sec > 0, otherwise the session does not reach the journal
+# (lib/db.ts:223)
 - waitForAnimationToEnd:
     timeout: 9000
 - tapOn:
@@ -44,8 +45,8 @@ tags:
     id: "reflect-complete-button"
 - tapOn:
     id: "reflect-complete-button"
-# Строка prayer-saved-notice заменяет подпись серии и скрывается через 4 с (app/index.tsx) —
-# проверять сразу, до остальных assert'ов Home.
+# The prayer-saved-notice row replaces the streak caption and hides after 4 s
+# (app/index.tsx) — check it right away, before the other Home asserts.
 - assertVisible:
     id: "prayer-saved-notice"
 - extendedWaitUntil:

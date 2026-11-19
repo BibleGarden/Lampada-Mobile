@@ -1,10 +1,10 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: режим fail выставлен через POST /__control (run-jrn-transcription.sh).
+# NEEDS-STUB: fail mode is set via POST /__control (run-jrn-transcription.sh).
 ---
-# JRN-012 (часть 1): ошибка расшифровки — запись остаётся доступной,
-# предложен повтор.
+# JRN-012 (part 1): transcription error — the recording stays available,
+# a retry is offered.
 - launchApp:
     stopApp: true
     clearState: true
@@ -71,7 +71,7 @@ tags:
 - tapOn: ".*JRN-012 повтор расшифровки.*"
 - assertVisible:
     id: "journal-recording-0"
-# Stub в режиме fail: ошибка понятна, аудио на месте, есть кнопка повтора.
+# Stub in fail mode: the error is clear, the audio is intact, and a retry button is shown.
 - tapOn:
     id: "journal-recording-0-transcribe"
 - runFlow:

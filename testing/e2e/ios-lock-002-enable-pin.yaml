@@ -1,14 +1,15 @@
 appId: twinkler
 tags:
   - prepared
-# Покрытие — только через ios-lock-suite.yaml (порядок: 002 → 003/004 требуют
-# включённого пина). В теговые прогоны не входит.
+# Covered only through ios-lock-suite.yaml (order: 002 → 003/004, which require
+# an enabled PIN). Not included in tagged runs.
 ---
-# LOCK-002: включение защиты пином из шести цифр и блокировка на холодном старте.
-# Шесть цифр выбраны намеренно: при свободном вводе завершает набор только сам
-# пользователь галочкой, и четырёхзначный автосабмит не должен срабатывать.
+# LOCK-002: enabling protection with a six-digit PIN and the lock screen on a
+# cold start. Six digits are chosen deliberately: with free-form entry only the
+# user finishes entry with the checkmark, so a four-digit auto-submit must not
+# fire.
 #
-# Предусловие: защита выключена (состояние после ios-lock-001).
+# Precondition: protection disabled (state after ios-lock-001).
 - launchApp:
     stopApp: true
 - tapOn:
@@ -24,7 +25,8 @@ tags:
 - assertVisible:
     id: "pin-prompt"
 
-# Придумать 123456: после четвёртой цифры экран не должен уйти сам.
+# Enter a new PIN 123456: after the fourth digit the screen must not advance on
+# its own.
 - tapOn:
     id: "pin-key-1"
 - tapOn:
@@ -59,17 +61,18 @@ tags:
 - tapOn:
     id: "pin-key-confirm"
 
-# Ввод закрылся, защита включена: появилась строка смены кода.
+# Entry closed, protection enabled: the change-PIN row has appeared.
 - assertNotVisible:
     id: "pin-prompt"
 - assertVisible:
     id: "change-pin-button"
 
-# Холодный старт упирается в экран блокировки.
+# The cold start hits the lock screen.
 - launchApp:
     stopApp: true
-# Холодный старт: подсистема пина поднимается асинхронно — без паузы быстрый
-# ввод кода после реланча гарантированно отклоняется (LockGate не готов).
+# Cold start: the PIN subsystem initializes asynchronously — without this pause
+# a quick code entry right after the relaunch is reliably rejected (LockGate is
+# not ready).
 - waitForAnimationToEnd:
     timeout: 5000
 - assertVisible:

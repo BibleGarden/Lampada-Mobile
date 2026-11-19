@@ -2,22 +2,22 @@ appId: twinkler
 tags:
   - main
 ---
-# ANS-032 и клавиатура в шторке ответа (раздел 9 плана), iPhone.
-# Записи открываются, запись играет и ставится на паузу, шеврон закрывает
-# записи — поле и действия ответа остаются рабочими; то же после цикла
-# клавиатуры. Клавиатура не закрывает поле и «Сохранить»; тап внутри поля
-# продолжает ввод; вопрос и ручка шторки закрывают клавиатуру без потери
-# текста; тап по фону не выбрасывает несохранённый ответ; после сохранения
-# фон уходит и экран сессии нажимается.
+# ANS-032 and the keyboard in the answer sheet (plan section 9), iPhone.
+# Recordings open, a recording plays and pauses, the chevron closes the
+# recordings — the answer field and actions stay usable; likewise after a
+# keyboard cycle. The keyboard does not cover the field and "Save"; a tap inside
+# the field continues typing; the question and the sheet handle close the
+# keyboard without losing text; a tap on the scrim does not discard the unsaved
+# answer; after saving, the scrim goes away and the session screen is tappable.
 #
-# Видимость клавиатуры — по нелокализованным идентификаторам системной
-# клавиатуры `shift` и `inputView` (см. ios-stage03-long-goal.yaml). Текст
-# до тапа внутри поля — цифры, повтор тапа выключен: иначе iOS выделила бы
-# слово, и ввод заменил бы его.
+# Keyboard visibility is checked via the locale-independent system keyboard
+# identifiers `shift` and `inputView` (see ios-stage03-long-goal.yaml). The text
+# before the tap inside the field is digits, and the repeat tap is disabled:
+# otherwise iOS would select the word and typing would replace it.
 - launchApp:
     stopApp: true
     clearState: true
-    # системный диалог микрофона локализован — разрешаем заранее
+    # the microphone system dialog is localized — grant the permission up front
     permissions:
       microphone: allow
 - tapOn:
@@ -47,7 +47,7 @@ tags:
 - waitForAnimationToEnd:
     timeout: 2000
 
-# Записей нет — шторка записей открывается сразу с записью
+# No recordings yet — the recordings sheet opens straight into recording
 - tapOn:
     id: "answer-record-button"
 - waitForAnimationToEnd:
@@ -73,7 +73,7 @@ tags:
 - assertVisible:
     id: "answer-save-button"
 
-# Цикл клавиатуры
+# Keyboard cycle
 - tapOn:
     id: "answer-input"
 - inputText: "3217"
@@ -113,16 +113,16 @@ tags:
 - assertVisible:
     id: "answer-input"
     text: "3217 ответ дальше"
-# Фон над шторкой (она на 62 % высоты): при несохранённом ответе тап по нему
-# ничего не закрывает
+# Scrim above the sheet (the sheet sits at 62% of the height): with an
+# unsaved answer, tapping it does not dismiss anything
 - tapOn:
     point: "50%,20%"
 - assertVisible:
     id: "answer-input"
     text: "3217 ответ дальше"
 
-# Записи после цикла клавиатуры: открываются списком, играют, закрываются
-# шевроном
+# Recordings after the keyboard cycle: open as a list, play, and close with
+# the chevron
 - tapOn:
     id: "answer-record-button"
 - assertVisible:
@@ -155,7 +155,7 @@ tags:
     commands:
       - tapOn:
           id: "privacy-consent-answer_context-allow"
-# фон ушёл вместе с шторкой: кнопка дока под ним нажимается
+# the scrim is gone along with the sheet: the dock button beneath it is tappable
 - tapOn:
     id: "dock-answer-edit-button"
 - assertVisible:

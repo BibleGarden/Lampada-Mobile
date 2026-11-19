@@ -1,10 +1,10 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: stub /api/version-check с update_type=hard (run-stub-phase.sh).
-# В теговые прогоны не входит.
+# NEEDS-STUB: the stub /api/version-check with update_type=hard
+# (run-stub-phase.sh). Not included in tagged runs.
 ---
-# Жёсткое обновление: баннер без «позже», переживает перезапуск.
+# Hard update: a banner without "later" that survives a restart.
 - launchApp:
     stopApp: true
 - extendedWaitUntil:
@@ -16,14 +16,14 @@ tags:
 - assertNotVisible:
     id: update-later
 - takeScreenshot: UPDATE-hard-banner
-# Смена экрана не снимает жёсткий баннер.
+# Switching screens does not remove the hard banner.
 - openLink: "lampada://settings"
 - assertVisible:
     id: update-hard
 - openLink: "lampada://"
 - assertVisible:
     id: update-hard
-# Холодный старт: баннер снова.
+# Cold start: the banner again.
 - launchApp:
     stopApp: true
 - extendedWaitUntil:

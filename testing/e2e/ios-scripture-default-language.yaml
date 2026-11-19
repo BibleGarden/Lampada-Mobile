@@ -2,7 +2,7 @@ appId: twinkler
 tags:
   - main
 ---
-# Начальный язык цитат следует подтверждённому языку интерфейса.
+# The initial quotation language follows the confirmed UI language.
 - launchApp:
     clearState: true
 - tapOn:

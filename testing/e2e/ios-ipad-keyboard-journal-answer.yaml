@@ -2,21 +2,22 @@ appId: twinkler
 tags:
   - ipad
 ---
-# Раздел 9 плана (iPad): тапы по левому и правому полю вне колонки закрывают
-# клавиатуру в поиске журнала и в шторке ответа, в портрете и в ландшафте,
-# без потери текста. В портрете поле и «Сохранить» остаются над клавиатурой.
+# Plan section 9 (iPad): taps on the left and right margins outside the column
+# close the keyboard in journal search and in the answer sheet, in portrait and
+# in landscape, without losing text. In portrait, the field and "Save" stay
+# above the keyboard.
 #
-# Видимость клавиатуры — по нелокализованным идентификаторам системной
-# клавиатуры `shift` и `inputView` (см. ios-stage03-long-goal.yaml). Экранную
-# клавиатуру поднимает `inputText`, поэтому каждый цикл начинается с ввода.
-# Текст — цифры: тап рядом со словом, которое проверка орфографии считает
-# ошибкой, выделил бы его.
+# Keyboard visibility is checked via the locale-independent system keyboard
+# identifiers `shift` and `inputView` (see ios-stage03-long-goal.yaml). The
+# on-screen keyboard is raised by `inputText`, so every cycle starts with
+# typing. The text is digits: a tap next to a word the spell checker considers
+# misspelled would select it.
 - launchApp:
     stopApp: true
     clearState: true
 - setOrientation: PORTRAIT
 
-# Поиск журнала
+# Journal search
 - tapOn:
     id: "journal-button"
 - tapOn:
@@ -66,7 +67,7 @@ tags:
     id: "journal-search-input"
     text: "4821 7 8 9"
 
-# Шторка ответа
+# Answer sheet
 - setOrientation: PORTRAIT
 - launchApp:
     stopApp: true

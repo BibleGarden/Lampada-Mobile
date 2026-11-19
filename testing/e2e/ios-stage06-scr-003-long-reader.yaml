@@ -65,16 +65,16 @@ tags:
     start: "50%,78%"
     end: "50%,78%"
     duration: 1700
-# Режим цитаты открывается табом дока (CompanionDock.tsx:144), а не точкой:
-# на старом месте координаты теперь кнопка жалобы на вопрос.
+# The scripture mode is opened via the dock tab (CompanionDock.tsx:144), not
+# by point: the report-question button now sits at the old coordinates.
 - tapOn:
     id: "dock-scripture-tab"
 - assertVisible:
     id: "dock-scripture-favorite"
 - tapOn:
     id: "dock-scripture-favorite"
-# После добавления надпись меняется на «В избранном» (CompanionDock.tsx:368) —
-# ждём её, затем листаем к следующему отрывку, где состояние сброшено.
+# After favoriting, the label changes to "In favorites" (CompanionDock.tsx:368)
+# — wait for it, then page to the next passage, where the state is reset.
 - assertVisible:
     id: "dock-scripture-favorite-active"
 - tapOn:
@@ -91,8 +91,9 @@ tags:
     id: "dock-scripture-favorite-active"
 - tapOn:
     id: "dock-scripture-next"
-# Конкретный отрывок не фиксируем: список цитат зависит от ответа сервера
-# (в 08-22 флоу жил на старых фикстурах). Проверяем, что 4-й отрывок загружен.
+# No specific passage is pinned: the quotation list depends on the server's
+# answer (in the 08-22 run the flow lived on old fixtures). We check that the
+# 4th passage has loaded.
 - assertVisible:
     id: "scripture-audio-button"
 - assertVisible:

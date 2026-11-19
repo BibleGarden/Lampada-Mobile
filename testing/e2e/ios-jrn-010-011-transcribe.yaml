@@ -1,12 +1,12 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: транскрипция детерминирована через stub :9085 (86cbj95j4).
-# В теговые прогоны не входит.
+# NEEDS-STUB: transcription is made deterministic via the :9085 stub (86cbj95j4).
+# Not part of tagged runs.
 ---
-# JRN-010: расшифровка голосового ответа — лоадинг, текст под плеером,
-# сохранение после переоткрытия. JRN-011: поиск по слову расшифровки в другом
-# регистре. Stub отвечает текстом «Стабильная расшифровка лампады номер семь».
+# JRN-010: transcribing a voice answer — loading state, text under the player,
+# persistence after reopening. JRN-011: searching by a transcript word in a
+# different case. The stub replies with a fixed Russian transcript phrase.
 - launchApp:
     stopApp: true
     clearState: true
@@ -33,7 +33,7 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# Голосовой ответ без текста.
+# A voice answer with no text.
 - tapOn:
     id: "dock-answer-button"
 - tapOn:
@@ -67,7 +67,7 @@ tags:
     id: "reflect-complete-button"
 - assertVisible:
     id: "prayer-saved-notice"
-# Дневник: открываем детали и расшифровываем.
+# Journal: open the details and transcribe.
 - tapOn:
     id: "journal-button"
 - assertVisible:
@@ -77,7 +77,7 @@ tags:
     id: "journal-recording-0"
 - tapOn:
     id: "journal-recording-0-transcribe"
-# Первое нажатие спрашивает согласие на расшифровку.
+# The first tap asks for transcription consent.
 - runFlow:
     when:
       visible:
@@ -85,18 +85,18 @@ tags:
     commands:
       - tapOn:
           id: "privacy-consent-audio_transcription-allow"
-# Stub отвечает мгновенно — состояние «Расшифровываю…» недетерминировано
-# для ассерта; ждём сразу готовый текст.
+# The stub replies instantly — the "Transcribing…" state is not deterministic
+# enough to assert; wait for the finished text right away.
 - extendedWaitUntil:
     visible: "Стабильная расшифровка лампады номер семь"
     timeout: 30000
 - takeScreenshot: JRN-010-transcript
-# JRN-010: после закрытия и переоткрытия текст на месте (сохранён в SQLite).
+# JRN-010: after closing and reopening, the text is still there (stored in SQLite).
 - tapOn: ".*JRN-010 расшифровка.*"
 - tapOn: ".*JRN-010 расшифровка.*"
 - assertVisible: "Стабильная расшифровка лампады номер семь"
 - tapOn: ".*JRN-010 расшифровка.*"
-# JRN-011: поиск слова из расшифровки в другом регистре.
+# JRN-011: search by a transcript word typed in a different case.
 - tapOn:
     id: "journal-search-input"
 - inputText: "стабильная"

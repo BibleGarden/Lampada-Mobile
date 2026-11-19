@@ -1,11 +1,11 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: перед прогоном скрипт переключил stub обратно в ok (run-jrn-transcription.sh).
+# NEEDS-STUB: before this run the script switched the stub back to ok (run-jrn-transcription.sh).
 ---
-# JRN-012 (часть 2): повтор после ошибки сохраняет текст. Состояние ошибки не
-# персистится: после перезапуска приложения запись снова предлагает
-# «Расшифровать» — это ожидаемое поведение, повтор идёт с чистого листа.
+# JRN-012 (part 2): retrying after the error saves the text. The error state
+# is not persisted: after an app restart the recording offers "Transcribe"
+# again — this is expected behavior, the retry starts from a clean slate.
 - launchApp:
     stopApp: true
 - assertVisible:
@@ -25,7 +25,7 @@ tags:
     visible: "Стабильная расшифровка лампады номер семь"
     timeout: 30000
 - takeScreenshot: JRN-012-retry-saved
-# Текст пережил переоткрытие деталей.
+# The text survived reopening the details.
 - tapOn: ".*JRN-012 повтор расшифровки.*"
 - tapOn: ".*JRN-012 повтор расшифровки.*"
 - assertVisible: "Стабильная расшифровка лампады номер семь"

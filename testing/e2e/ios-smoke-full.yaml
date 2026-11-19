@@ -2,11 +2,12 @@ appId: twinkler
 tags:
   - critical
 ---
-# Клавиатура закрывается клавишей ввода (returnKeyType="done" +
-# submitBehavior="blurAndSubmit" у поля цели: ввод снимает фокус, а не
-# вставляет перенос; подпись клавиши зависит от раскладки), а не `hideKeyboard`: на iOS 26.5 / Maestro 2.6.1 тот закрывает свайпом вниз и
-# уводит вместе с клавиатурой сам лист настройки молитвы. Тот же приём — в
-# testing/e2e/ios-lock-*.yaml.
+# The keyboard is closed with the Enter key (returnKeyType="done" +
+# submitBehavior="blurAndSubmit" on the goal field: entry blurs the field
+# rather than inserting a newline; the key label depends on the layout), not
+# with `hideKeyboard`: on iOS 26.5 / Maestro 2.6.1 the latter closes with a
+# downward swipe and drags the prayer setup sheet away together with the
+# keyboard. The same trick is used in testing/e2e/ios-lock-*.yaml.
 - launchApp:
     stopApp: true
     clearState: true
@@ -45,12 +46,12 @@ tags:
     id: "session-title"
 - assertVisible:
     id: "dock-answer-button"
-# Повтор тапа — защита от дефекта dev-сборки: баннер LogBox поверх нижней
-# части экрана съедает первый тап. Оба известных источника предупреждений
-# устранены (устаревший Skia-API на главной, односторонний dashed-бордер на
-# молитвенном экране, 86cbbqzcj), обычно ветка пропускается; ретрай оставлен
-# на случай новых предупреждений. Именно повтор, а не `doubleTapOn`: два
-# быстрых тапа успевают и открыть шторку, и закрыть её обратно.
+# The repeated tap guards against a dev-build defect: a LogBox banner over the
+# lower part of the screen swallows the first tap. Both known warning sources
+# are fixed (the deprecated Skia API on the home screen, the one-sided dashed
+# border on the prayer screen, 86cbbqzcj); the branch is usually skipped, and
+# the retry stays in case of new warnings. A repeat, not `doubleTapOn`: two
+# quick taps manage to both open the sheet and close it right back.
 - tapOn:
     id: "dock-answer-button"
 - runFlow:
@@ -65,7 +66,8 @@ tags:
 - tapOn:
     id: "answer-input"
 - inputText: "Финальный ответ"
-# Кнопки шторки видны и с открытой клавиатурой, гасить её отдельно не нужно.
+# The sheet's buttons are visible with the keyboard open too; no need to
+# dismiss it separately.
 - tapOn:
     id: "answer-save-button"
 - runFlow:
@@ -89,8 +91,9 @@ tags:
     id: "reflect-complete-button"
 - assertVisible:
     id: "home-title-lit"
-# Цитата takeaway на Home больше не показывается (ADR-0028: завершение сразу
-# на Home); её наличие проверяется ниже в дневнике и в smoke-full-relaunch.
+# The takeaway quotation is no longer shown on Home (ADR-0028: finishing goes
+# straight to Home); its presence is checked below in the journal and in
+# smoke-full-relaunch.
 - assertVisible:
     id: "journal-button"
 - tapOn:

@@ -9,7 +9,8 @@ tags:
     id: "start-prayer-button"
 - tapOn:
     id: "start-prayer-button"
-# число и единица — один элемент доступности: VoiceOver читает их фразой
+# the number and the unit are one accessibility element: VoiceOver reads them
+# as a phrase
 - assertVisible:
     id: "setup-duration-value"
     text: "10 минут"
@@ -87,7 +88,7 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# кикер «цель» и тема VoiceOver читает одной фразой
+# VoiceOver reads the "goal" kicker and the topic as one phrase
 - assertVisible:
     id: "session-goal"
     text: ".*Свободная молитва — без конкретной темы"

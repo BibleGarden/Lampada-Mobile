@@ -1,19 +1,19 @@
 appId: twinkler
 tags:
   - prepared
-# Только через run-lock-biometrics.sh: после тапа по тумблеру скрипт шлёт
-# сигнал совпадения Face ID (simctl spawn ... notifyutil -p ...pearl.match).
+# Only through run-lock-biometrics.sh: after the tap on the toggle the script
+# sends a Face ID match signal (simctl spawn ... notifyutil -p ...pearl.match).
 ---
-# LOCK-009 (часть 1): тумблер биометрии виден при включённом пине и
-# зарегистрированном образце; включение подтверждается успешным Face ID.
+# LOCK-009 (part 1): the biometrics toggle is visible with the PIN enabled and
+# a template enrolled; enabling is confirmed by a successful Face ID.
 #
-# Предусловия (обеспечивает скрипт): защита включена пином 123456, образец
-# Face ID зарегистрирован, приложение разблокировано.
+# Preconditions (set up by the script): protection enabled with PIN 123456, a
+# Face ID template enrolled, the app unlocked.
 - launchApp:
     stopApp: true
-# LockGate поднимается асинхронно: даём ему появиться перед проверкой.
+# LockGate initializes asynchronously: give it time to appear before checking.
 - evalScript: "java.lang.Thread.sleep(2500)"
-# Холодный старт при включённом пине открывается на экране блокировки.
+# With the PIN enabled, a cold start opens on the lock screen.
 - runFlow:
     when:
       visible:
@@ -43,8 +43,8 @@ tags:
     id: "change-pin-button"
 - assertVisible:
     id: "biometrics-toggle"
-# Включаем: приложение сразу просит подтвердить лицом. Скрипт шлёт match,
-# пока флоу спит; включение происходит без ввода пина.
+# Enabling: the app immediately asks to confirm with the face. The script sends
+# the match while the flow sleeps; enabling happens without entering the PIN.
 - tapOn:
     id: "biometrics-toggle"
 - extendedWaitUntil:

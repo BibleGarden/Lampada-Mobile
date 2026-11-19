@@ -1,17 +1,18 @@
 appId: twinkler
 tags:
   - prepared
-# Гибридный сценарий: снапшот в переключателе приложений фиксирует
-# run-lock-appswitcher.sh (AppleScript → меню Simulator → App Switcher →
-# simctl io screenshot). В теговые прогоны не входит.
+# Hybrid scenario: the app-switcher snapshot is captured by
+# run-lock-appswitcher.sh (AppleScript → Simulator menu → App Switcher →
+# simctl io screenshot). Not included in tagged runs.
 ---
-# LOCK-008: с защитой уход в фон накрывает шторкой приватности — снимок
-# приложения для переключателя не содержит контент.
-# Предусловие: защита выключена.
+# LOCK-008: with protection enabled, going to the background covers the app
+# with the privacy curtain — the app snapshot for the switcher contains no
+# content.
+# Precondition: protection disabled.
 - launchApp:
     stopApp: true
 - evalScript: "java.lang.Thread.sleep(2500)"
-# Холодный старт при включённом пине открывается на экране блокировки.
+# With the PIN enabled, a cold start opens on the lock screen.
 - runFlow:
     when:
       visible:
@@ -37,7 +38,7 @@ tags:
     element:
       id: "lock-toggle"
     direction: DOWN
-# Если защита ещё не включена — включаем пин 123456.
+# If protection is not enabled yet — enable PIN 123456.
 - runFlow:
     when:
       notVisible:
@@ -79,13 +80,14 @@ tags:
           id: "pin-key-confirm"
 - assertVisible:
     id: "change-pin-button"
-# Контент до сворачивания: дневник с записью.
+# Content before backgrounding: the journal with an entry.
 - openLink: "lampada://journal"
 - assertVisible:
     id: "journal-title"
-# Уход домой: приложение в фоне, активна шторка приватности (obscured).
+# Going home: the app is in the background, the privacy curtain is active
+# (obscured).
 - pressKey: HOME
 - assertNotVisible:
     id: "journal-title"
 - takeScreenshot: LOCK-008-home-screen
-# Скрипт открывает переключатель приложений и снимает снапшот.
+# The script opens the app switcher and captures the snapshot.

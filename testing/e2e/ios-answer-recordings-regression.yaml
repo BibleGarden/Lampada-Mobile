@@ -57,8 +57,8 @@ tags:
 - tapOn:
     id: "answer-input"
 - inputText: "Клавиатура должна закрыться"
-# ANS-024: клавиша `shift` — нелокализованный идентификатор системной
-# клавиатуры (см. ios-stage03-long-goal.yaml)
+# ANS-024: the `shift` key is a locale-independent identifier of the system
+# keyboard (see ios-stage03-long-goal.yaml)
 - assertVisible:
     id: "shift"
 - tapOn:

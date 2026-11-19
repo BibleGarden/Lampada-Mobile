@@ -35,19 +35,21 @@ tags:
     point: "10%,11%"
 - assertVisible:
     id: "reflect-kicker"
-# по testID, а не по точке: на iPhone SE в 47% высоты лежит вопрос, а не поле
+# by testID, not by point: on iPhone SE the question, not the field, lies at
+# 47% height
 - tapOn:
     id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
-# Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
-# (app/reflect.tsx:144) — гасим клавиатуру через Enter (как в smoke-full).
+# The "BEFORE YOU CLOSE" kicker is hidden while the keyboard is open
+# (app/reflect.tsx:144) — dismiss the keyboard with Enter (as in smoke-full).
 - pressKey: Enter
 - assertVisible:
     id: "reflect-complete-button"
 - takeScreenshot: END-002-reflect-filled
 - tapOn:
     id: "reflect-complete-button"
-# Остаточный риск: tapOn ждёт успокоения экрана, и долгий переход может съесть часть 4-секундного окна уведомления.
+# Residual risk: tapOn waits for the screen to settle, and a long transition
+# can eat part of the 4-second notice window.
 - assertVisible:
     id: "prayer-saved-notice"
 - extendedWaitUntil:

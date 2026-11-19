@@ -1,20 +1,20 @@
 #!/bin/bash
-# LOCK-011: пин нигде не хранится и не логируется; в Keychain — только соль,
-# хэш, длина и флаги.
+# LOCK-011: the PIN is never stored or logged; the Keychain holds only the
+# salt, hash, length and flags.
 #
-# Проверки:
-#   1. Контейнер приложения не содержит строку пина (Documents/Library/tmp).
-#   2. Keychain содержит только ключи lampada.lock.* (salt/hash/enabled/
-#      biometrics/length) — по именам ключей, расшифровка не требуется.
-#   3. Системный лог устройства за время ввода пина (верного и неверного)
-#      не содержит строку пина.
+# Checks:
+#   1. The app container contains no PIN string (Documents/Library/tmp).
+#   2. The Keychain contains only lampada.lock.* keys (salt/hash/enabled/
+#      biometrics/length) — by key names, no decryption needed.
+#   3. The device system log during PIN entry (valid and invalid) contains
+#      no PIN string.
 #
-# Предусловия: защита выключена; приложение установлено.
-# Скрипт сам включает пин 123456, гонит проверки и снимает защиту при любом
-# выходе, в том числе после упавшей проверки.
+# Preconditions: protection off; the app installed.
+# The script enables PIN 123456 itself, runs the checks and removes protection
+# on any exit, including after a failed check.
 #
-# По умолчанию доказательства идут во временную папку (не в репозиторий).
-# Для сохранения в отчёт передайте EVIDENCE_DIR=testing/evidence/<дата>-<тема>.
+# By default evidence goes to a temporary folder (not the repository).
+# To keep it for a report, pass EVIDENCE_DIR=testing/evidence/<date>-<topic>.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 UDID="${UDID:-$(testing/e2e/sim-udid.sh "Pray Smoke iPhone 17 Pro")}"
@@ -32,8 +32,8 @@ disable_test_pin() {
     { echo "FAIL: PIN cleanup flow failed, see $log" >&2; return 1; }
   PIN_ON=0
 }
-# Любой выход останавливает поток системного лога и, пока пин включён,
-# снимает его tracked-флоу уборки. Код выхода прогона сохраняется.
+# Any exit stops the system log stream and, while the PIN is on,
+# removes it with the tracked cleanup flow. The run's exit code is preserved.
 cleanup() {
   local status=$?
   if [ -n "$LPID" ] && kill -0 "$LPID" 2>/dev/null; then
@@ -41,7 +41,7 @@ cleanup() {
     wait "$LPID" || true
   fi
   if [ "$PIN_ON" = 1 ]; then
-    echo "== Уборка: снимаем тестовый пин" >&2
+    echo "== Cleanup: removing the test PIN" >&2
     if ! disable_test_pin && [ "$status" = 0 ]; then
       status=1
     fi
@@ -52,42 +52,42 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-echo "== Включаем защиту пином $PIN"
+echo "== Enabling protection with PIN $PIN"
 PREPARE_LOG="$EVIDENCE/ios-lock-011-prepare.log"
 maestro test "${DEV[@]}" --test-output-dir "$EVIDENCE" testing/e2e/ios-lock-011-prepare.yaml > "$PREPARE_LOG" 2>&1 || { echo "FAIL: PIN preparation, see $PREPARE_LOG" >&2; exit 1; }
 PIN_ON=1
 
 CONTAINER=$(xcrun simctl get_app_container "$UDID" twinkler data)
 
-echo "== 1. Поиск строки пина в контейнере (Documents, Library, tmp)"
+echo "== 1. Searching the container for the PIN string (Documents, Library, tmp)"
 HITS=$(grep -r -l "$PIN" "$CONTAINER/Documents" "$CONTAINER/Library" "$CONTAINER/tmp" 2>/dev/null | grep -v "Keychains/keychain" || true)
 if [ -n "$HITS" ]; then
-  echo "FAIL: пин найден в: $HITS"; exit 1
+  echo "FAIL: PIN found in: $HITS"; exit 1
 fi
-echo "OK: строка пина в файлах контейнера не найдена"
+echo "OK: PIN string not found in container files"
 
-echo "== 2. Ключи защиты в Keychain"
-# Keychain симулятора — на уровне устройства: data/Library/Keychains/
-# keychain-2-debug.db. Имена записей (acct/svce) в базе захэшированы
-# (SHA-1), поэтому проверяем две вещи: количество записей группы приложения
-# (ровно столько, сколько ключей пишет lib/lock.ts: salt, hash, length,
-# enabled — плюс biometrics, когда включён) и отсутствие пина в открытом виде
-# в базе и WAL.
+echo "== 2. Protection keys in the Keychain"
+# The simulator Keychain is device-level: data/Library/Keychains/
+# keychain-2-debug.db. Item names (acct/svce) in the database are hashed
+# (SHA-1), so we check two things: the number of records in the app group
+# (exactly as many keys as lib/lock.ts writes: salt, hash, length,
+# enabled — plus biometrics when on) and the absence of the PIN in plain
+# text in the database and WAL.
 KEYCHAIN=~/Library/Developer/CoreSimulator/Devices/"$UDID"/data/Library/Keychains/keychain-2-debug.db
-[ -f "$KEYCHAIN" ] || { echo "FAIL: keychain не найден"; exit 1; }
+[ -f "$KEYCHAIN" ] || { echo "FAIL: keychain not found"; exit 1; }
 GROUP=$(sqlite3 "file:$KEYCHAIN?mode=ro" "SELECT DISTINCT agrp FROM genp WHERE agrp LIKE '%twinkler%'")
-echo "   группа приложения: $GROUP"
+echo "   app group: $GROUP"
 ITEMS=$(sqlite3 "file:$KEYCHAIN?mode=ro" "SELECT COUNT(*) FROM genp WHERE agrp='$GROUP'")
-echo "   записей в группе: $ITEMS (ожидается 4 без биометрии / 5 с биометрией)"
+echo "   records in group: $ITEMS (expected 4 without biometrics / 5 with biometrics)"
 if [ "$ITEMS" -lt 4 ] || [ "$ITEMS" -gt 5 ]; then
-  echo "FAIL: неожиданное число ключей: $ITEMS"; exit 1
+  echo "FAIL: unexpected number of keys: $ITEMS"; exit 1
 fi
 if grep -aq "$PIN" "$KEYCHAIN" "${KEYCHAIN}-wal"; then
-  echo "FAIL: строка пина найдена в Keychain в открытом виде"; exit 1
+  echo "FAIL: PIN string found in plain text in the Keychain"; exit 1
 fi
-echo "OK: только служебные ключи; пина в открытом виде нет"
+echo "OK: only service keys; no PIN in plain text"
 
-echo "== 3. Логи устройства за время ввода пина"
+echo "== 3. Device logs during PIN entry"
 LOG="$EVIDENCE/ios-lock-011-device.log"
 : > "$LOG"
 xcrun simctl spawn "$UDID" log stream --style compact > "$LOG" 2>&1 &
@@ -100,12 +100,12 @@ kill "$LPID"
 wait "$LPID" || true
 LPID=
 if grep -q "$PIN" "$LOG"; then
-  echo "FAIL: строка пина есть в системном логе:"
+  echo "FAIL: PIN string is present in the system log:"
   grep "$PIN" "$LOG" | head -3
   exit 1
 fi
-echo "OK: строка пина в системном логе не найдена ($(wc -l < "$LOG" | tr -d ' ') строк проверено)"
+echo "OK: PIN string not found in the system log ($(wc -l < "$LOG" | tr -d ' ') lines checked)"
 
-echo "== Снимаем защиту"
+echo "== Removing protection"
 disable_test_pin
-echo "== LOCK-011: все проверки пройдены"
+echo "== LOCK-011: all checks passed"
