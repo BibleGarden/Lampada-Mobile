@@ -3,9 +3,12 @@
 - Before changing the app, read the documentation for Expo SDK 57 specifically:
   https://docs.expo.dev/versions/v57.0.0/.
 - Everything written into the repository is in English: commit messages (as
-  Conventional Commits, `feat(session): add music crossfade`), documentation,
-  README files, ADRs and test reports. Russian stays the language of the
-  conversation with the owner and of the comments inside the code.
+  Conventional Commits, `feat(session): add music crossfade`), code comments,
+  documentation, README files, ADRs and test reports. All communication is in
+  English too: issues, pull requests, review comments and messages to the
+  owner. Russian and Ukrainian are allowed only as product content: interface
+  translations, localized store metadata, bundled scripture, and test data
+  that checks that text.
 - Keep `testing/` limited to scenarios, Maestro flows, reports and final
   evidence.
 - Keep the code and the architecture documentation in sync: when the actual
