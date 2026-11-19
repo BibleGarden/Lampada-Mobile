@@ -1,22 +1,22 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Image, StyleSheet } from 'react-native';
 
-// Копия нативного сплэша из плагина expo-splash-screen в app.json: тот же фон
-// и пламя 200×200 в центре окна. Нативный сплэш снимается, как только пламя
-// копии готово к отрисовке, а не после загрузки приложения: Android 12+ после
-// первого кадра даёт приложению 2 с на приём системного сплэша, и тяжёлый
-// первый кадр со всем интерфейсом под нагрузкой не успевал (ADR-0040).
-// Сам вызов SplashScreen.hide() — в корневом layout: он же по этому сигналу
-// разрешает монтировать приложение.
+// A copy of the native splash from the expo-splash-screen plugin in app.json:
+// the same background and a 200×200 flame centered in the window. The native
+// splash is removed as soon as the copy's flame is ready to draw, not after
+// the app loads: on Android 12+ the app gets 2 s after the first frame to
+// take over the system splash, and a heavy first frame with the whole UI under
+// load did not make it (ADR-0040). The SplashScreen.hide() call itself is in
+// the root layout: on this same signal it allows the app to mount.
 
 const FADE_MS = 350;
 
 type Props = {
-  /** Пламя готово к отрисовке (или не загрузилось): нативный сплэш можно снять. */
+  /** The flame is ready to draw (or failed to load): the native splash can be removed. */
   onFlameLoaded: () => void;
-  /** Приложение готово: копия плавно уходит, открывая его. */
+  /** The app is ready: the copy fades out smoothly, revealing it. */
   done: boolean;
-  /** Копия полностью прозрачна, её можно размонтировать. */
+  /** The copy is fully transparent and can be unmounted. */
   onHidden: () => void;
 };
 
@@ -25,8 +25,8 @@ export default function BootSplash({ onFlameLoaded, done, onHidden }: Props) {
 
   useEffect(() => {
     if (!done) return;
-    // Прерванное затухание тоже убирает копию: иначе она осталась бы поверх
-    // приложения навсегда.
+    // An interrupted fade also removes the copy: otherwise it would stay over
+    // the app forever.
     Animated.timing(opacity, { toValue: 0, duration: FADE_MS, useNativeDriver: true }).start(
       onHidden,
     );
@@ -34,8 +34,8 @@ export default function BootSplash({ onFlameLoaded, done, onHidden }: Props) {
 
   return (
     <Animated.View style={[styles.root, { opacity }]}>
-      {/* onLoadEnd приходит и при ошибке загрузки: нативный сплэш не
-          зависает ни в каком исходе. */}
+      {/* onLoadEnd fires on load failure too: the native splash never hangs
+          in any outcome. */}
       <Image
         source={require('../assets/splash.png')}
         style={styles.flame}

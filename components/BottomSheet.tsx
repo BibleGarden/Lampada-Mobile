@@ -6,10 +6,10 @@ import { Close } from './icons';
 import { bottomActionPadding, colors, fonts, radius, sc, sheetMaxWidth, useStyles } from '../lib/theme';
 
 /**
- * Нижняя шторка поверх экрана, а не системный Modal: иначе окно закрыло бы
- * собой шторку приватности и экран блокировки при сворачивании приложения.
- * Родитель сам решает, когда её рисовать; пока она открыта, аппаратная кнопка
- * «назад» на Android закрывает шторку, а не уводит с экрана.
+ * A bottom sheet over the screen, not a system Modal: otherwise the window
+ * would cover the privacy curtain and the lock screen when the app is
+ * minimized. The parent decides when to draw it; while it is open, Android's
+ * hardware back button closes the sheet instead of leaving the screen.
  */
 export default function BottomSheet({
   kicker,

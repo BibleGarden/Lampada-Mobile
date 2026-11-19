@@ -5,16 +5,16 @@ import { resolveRecordingUri, toStoredRecordingUri } from './recordingUri';
 import { migrateScriptureStorage } from './scriptureSchema';
 import { recordingAudioState } from './recordingFile';
 
-// Все данные — только на устройстве.
+// All data stays on the device only.
 
 const diagnosticLog = new File(Paths.document, 'lampada-diagnostics.log');
 
-/** Вид ошибки без её текста: сообщения могут содержать пользовательские данные. */
+/** The kind of error without its message: messages may contain user data. */
 export const errorKind = (error: unknown) => (error instanceof Error ? 'error' : typeof error);
 
 /**
- * Безопасная диагностическая запись, доступная даже при ошибке SQLite.
- * В детали попадают только коды и причины, без содержимого молитв.
+ * A safe diagnostic record, available even when SQLite fails.
+ * Details include only codes and causes, never prayer content.
  */
 export function recordDiagnostic(
   event:
@@ -51,7 +51,7 @@ export function recordDiagnostic(
       { append: true },
     );
   } catch {
-    // Диагностика не должна менять пользовательский сценарий при ошибке файловой системы.
+    // Diagnostics must not change the user's flow on a file-system error.
   }
 }
 
@@ -59,7 +59,7 @@ export type SessionRow = {
   id: number;
   startedAt: string; // ISO
   topic: string;
-  plannedMinutes: number; // 0 = без таймера
+  plannedMinutes: number; // 0 = no timer
   elapsedSec: number;
   takeaway: string;
 };
@@ -71,20 +71,21 @@ export type AnswerRow = {
   text: string;
 };
 
-// кэшируем промис, а не результат: параллельные первые вызовы
-// не должны открывать базу и гнать DDL дважды
+// Cache the promise, not the result: parallel first calls must not open
+// the database and run the DDL twice
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-// busy_timeout действует на соединение: без него запись при чужой блокировке
-// сразу падает с «database is locked», а не ждёт её снятия. Эксклюзивная
-// транзакция expo-sqlite открывает новое соединение, поэтому задаём и там.
+// busy_timeout applies per connection: without it, a write under someone
+// else's lock fails immediately with "database is locked" instead of
+// waiting for it to clear. An expo-sqlite exclusive transaction opens a
+// new connection, so set it there too.
 const BUSY_TIMEOUT_PRAGMA = 'PRAGMA busy_timeout = 5000;';
 
 /**
- * Единственное определение молитвы, видимой в дневнике, над алиасом `s`
- * таблицы sessions: есть сохранённое время, вывод, непустой ответ или запись.
- * Такая молитва засчитывает день своего начала в prayed_days (ADR-0042),
- * поэтому дневник и серия не могут разойтись.
+ * The single definition of a prayer visible in the journal, over the `s`
+ * alias of the sessions table: it has saved time, a takeaway, a non-empty
+ * answer, or a recording. Such a prayer counts its start day in
+ * prayed_days (ADR-0042), so the journal and the streak cannot diverge.
  */
 const JOURNAL_VISIBLE_SESSION = `(s.elapsed_sec > 0 OR s.takeaway != ''
   OR EXISTS (SELECT 1 FROM answers a WHERE a.session_id = s.id AND TRIM(a.text) != '')
@@ -92,7 +93,7 @@ const JOURNAL_VISIBLE_SESSION = `(s.elapsed_sec > 0 OR s.takeaway != ''
 
 type DbConnection = Pick<SQLite.SQLiteDatabase, 'getFirstAsync' | 'runAsync'>;
 
-/** День в prayed_days есть, пока в дневнике есть молитва, начатая в этот день. */
+/** A day exists in prayed_days as long as the journal has a prayer started that day. */
 async function syncPrayedDay(conn: DbConnection, day: string) {
   const [from, to] = localDayBounds(day);
   const visible = await conn.getFirstAsync(
@@ -118,7 +119,7 @@ async function sessionDay(conn: DbConnection, sessionId: number): Promise<string
   return dayKey(new Date(row.started_at));
 }
 
-/** Вызывается в транзакции каждой записи, меняющей видимость сессии в дневнике. */
+/** Called inside the transaction of every write that changes a session's journal visibility. */
 async function syncSessionDay(conn: DbConnection, sessionId: number) {
   await syncPrayedDay(conn, await sessionDay(conn, sessionId));
 }
@@ -126,7 +127,7 @@ async function syncSessionDay(conn: DbConnection, sessionId: number) {
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
     dbPromise = openAndMigrate().catch((e) => {
-      dbPromise = null; // не кэшировать неудачное открытие
+      dbPromise = null; // do not cache a failed open
       throw e;
     });
   }
@@ -180,13 +181,15 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
   return db;
 }
 
-// Миграции ниже идут при открытии, пока getDb() не отдал соединение другим
-// модулям, поэтому общая транзакция соединения здесь не перемешивается.
+// The migrations below run during opening, before getDb() has handed the
+// connection to other modules, so other work on the connection cannot
+// interleave here.
 
 /**
- * Старый стрик (count дней, заканчивая last_day) переносится в prayed_days
- * один раз: ключи удаляются в той же транзакции. Иначе каждое открытие
- * возвращало бы день, снятый удалением его последней молитвы.
+ * The old streak (count of days ending at last_day) is migrated into
+ * prayed_days once: the keys are deleted in the same transaction.
+ * Otherwise every open would resurrect a day removed by deleting its last
+ * prayer.
  */
 async function migrateLegacyStreak(db: SQLite.SQLiteDatabase) {
   const last = await db.getFirstAsync<{ value: string }>(
@@ -213,11 +216,12 @@ async function migrateLegacyStreak(db: SQLite.SQLiteDatabase) {
 const JOURNAL_DAYS_BACKFILL_KEY = 'prayed_days_journal_backfill';
 
 /**
- * До ADR-0042 день отмечало только завершение, и прерванная молитва из
- * дневника его не получала. Разовое дозаполнение: день каждой видимой в
- * дневнике сессии. Локальный день берётся тем же `dayKey` от момента
- * `started_at` (UTC ISO), что и при записи, в текущем часовом поясе.
- * Существующие дни не удаляются: они засчитаны по прежнему правилу.
+ * Before ADR-0042 only completion marked the day, so an interrupted prayer
+ * from the journal never got one. A one-time backfill: the day of every
+ * session visible in the journal. The local day is derived with the same
+ * `dayKey` from `started_at` (UTC ISO) as when saving, in the current time
+ * zone. Existing days are not deleted: they were earned under the old
+ * rule.
  */
 async function backfillJournalDays(db: SQLite.SQLiteDatabase) {
   const done = await db.getFirstAsync('SELECT 1 AS found FROM meta WHERE key = ?', JOURNAL_DAYS_BACKFILL_KEY);
@@ -259,10 +263,10 @@ export async function createSession(
   return res.lastInsertRowId;
 }
 
-// Время молитвы в store только растёт; MAX делает запись независимой от
-// порядка: поздняя контрольная точка не уменьшит итоговое время.
+// Prayer time in the store only grows; MAX makes the write order-independent:
+// a late checkpoint cannot reduce the total time.
 
-/** Контрольная точка времени идущей молитвы (ADR-0042). */
+/** Elapsed-time checkpoint of a running prayer (ADR-0042). */
 export async function saveElapsedCheckpoint(id: number, elapsedSec: number) {
   const d = await getDb();
   await d.withExclusiveTransactionAsync(async (txn) => {
@@ -291,9 +295,10 @@ export async function finishSession(id: number, elapsedSec: number, takeaway: st
 }
 
 /**
- * Ответ и его записи пишутся одной транзакцией: текст без записей в БД не
- * остаётся. Записи перезаписываются полностью — без дублей, удалённые уходят.
- * В той же транзакции день молитвы приводится к её видимости в дневнике.
+ * The answer and its recordings are written in one transaction: text never
+ * stays in the DB without recordings. Recordings are rewritten in full — no
+ * duplicates, deleted ones go away. In the same transaction the prayer's
+ * day is synced to its journal visibility.
  */
 export async function saveAnswer(
   a: AnswerRow,
@@ -306,12 +311,13 @@ export async function saveAnswer(
     transcript: r.transcript?.trim() ?? '',
   }));
   let previous: { uri: string }[] = [];
-  // Отдельное соединение транзакции: чужие запросы не вклиниваются в неё.
+  // The transaction has its own connection: other requests cannot interleave.
   await d.withExclusiveTransactionAsync(async (txn) => {
     await txn.execAsync(BUSY_TIMEOUT_PRAGMA);
-    // Первой идёт запись: она берёт блокировку с ожиданием. Чтение первым
-    // сделало бы транзакцию читающей, и её повышение до записи после чужого
-    // коммита упало бы SQLITE_BUSY_SNAPSHOT без учёта busy_timeout.
+    // The write goes first: it takes the lock with waiting. A leading read
+    // would make the transaction read-only, and its upgrade to a write
+    // after someone else's commit would fail with SQLITE_BUSY_SNAPSHOT,
+    // which busy_timeout does not cover.
     await txn.runAsync(
       `INSERT INTO answers (session_id, question_index, question, text) VALUES (?, ?, ?, ?)
        ON CONFLICT(session_id, question_index) DO UPDATE SET question = excluded.question, text = excluded.text`,
@@ -349,7 +355,7 @@ export async function saveAnswer(
   deleteRecordingFiles(previous.map((r) => r.uri).filter((uri) => !retained.has(uri)));
 }
 
-// ---- дневник: история молитв, поиск, удаление ----
+// ---- journal: prayer history, search, deletion ----
 
 export type JournalEntry = {
   id: number;
@@ -369,20 +375,22 @@ export type JournalDetail = {
     uri: string;
     durationSec: number;
     transcript: string | null;
-    /** Файл записи есть на этом устройстве; без него строка остаётся ради расшифровки. */
+    /** The recording file exists on this device; without it the row remains for its transcript. */
     audioAvailable: boolean;
   }[];
 };
 
 /**
- * Список молитв для дневника, свежие сверху. Сессии без сохранённого времени,
- * ответа, записи и вывода не показываются — это брошенные заходы, не молитвы.
- * query ищет по цели, выводу и текстам вопросов-ответов.
+ * The prayer list for the journal, newest first. Sessions without saved
+ * time, an answer, a recording, or a takeaway are not shown — they are
+ * abandoned attempts, not prayers. The query searches the topic, takeaway,
+ * and question/answer texts.
  *
- * Регистр сворачивается в JS: LIKE в SQLite регистронезависим только для
- * ASCII, кириллицу он не сворачивает («Тревога» != «тревога»), а lower()
- * без ICU-расширения — тоже. Поэтому тянем искомый текст одной строкой и
- * фильтруем через toLowerCase().includes() (Unicode понимает правильно).
+ * Case folding happens in JS: SQLite's LIKE is case-insensitive only for
+ * ASCII and does not fold Cyrillic (a capitalized word does not match its
+ * lowercase form), and lower() without the ICU extension does not either.
+ * So the searchable text is fetched as one string and filtered with
+ * toLowerCase().includes() (which handles Unicode correctly).
  */
 export async function getJournal(query = ''): Promise<JournalEntry[]> {
   const d = await getDb();
@@ -430,7 +438,7 @@ export async function getJournal(query = ''): Promise<JournalEntry[]> {
     }));
 }
 
-/** Содержимое одной молитвы: пары вопрос-ответ и аудиозаписи */
+/** Contents of one prayer: question-answer pairs and audio recordings */
 export async function getJournalDetail(sessionId: number): Promise<JournalDetail> {
   const d = await getDb();
   const answers = await d.getAllAsync<{ question_index: number; question: string; text: string }>(
@@ -475,7 +483,7 @@ export async function getJournalDetail(sessionId: number): Promise<JournalDetail
   };
 }
 
-/** Сохранить расшифровку одной записи без перезаписи остальных файлов ответа. */
+/** Save one recording's transcript without rewriting the answer's other files. */
 export async function updateRecordingTranscript(recordingId: number, transcript: string) {
   const d = await getDb();
   await d.runAsync(
@@ -486,13 +494,13 @@ export async function updateRecordingTranscript(recordingId: number, transcript:
 }
 
 /**
- * Удалить молитву со всеми ответами и записями. День в стрике остаётся,
- * только если в дневнике есть другая молитва, начатая в тот же день.
+ * Delete a prayer with all its answers and recordings. The streak day
+ * remains only if the journal has another prayer started the same day.
  */
 export async function deleteSession(sessionId: number) {
   const d = await getDb();
-  // started_at неизменен, поэтому читается до транзакции: её первой
-  // операцией должна быть запись (см. saveAnswer).
+  // started_at never changes, so it is read before the transaction: the
+  // transaction's first operation must be a write (see saveAnswer).
   const day = await sessionDay(d, sessionId);
   const recordings = await d.getAllAsync<{ uri: string }>(
     'SELECT uri FROM recordings WHERE session_id = ?',
@@ -520,16 +528,18 @@ function deleteRecordingFiles(uris: string[]) {
 }
 
 /**
- * Полное стирание локальных данных: дневник, ответы, аудиозаписи, избранное,
- * кэш Писания, streak и настройки. Используется только сбросом забытого
- * пин-кода (ADR-0014), где безвозвратность подтверждена пользователем дважды.
+ * Complete erasure of local data: the journal, answers, audio recordings,
+ * favorites, the scripture cache, streak, and settings. Used only by the
+ * forgotten-PIN reset (ADR-0014), where irreversibility is confirmed by
+ * the user twice.
  *
- * База удаляется файлом целиком, а не через DELETE по таблицам: так не
- * остаётся ни забытой таблицы, ни содержимого WAL. Следующий `getDb()`
- * пересоздаёт пустую схему обычной миграцией.
+ * The database is deleted as a whole file rather than via DELETE per
+ * table: this leaves behind neither a forgotten table nor WAL contents.
+ * The next `getDb()` recreates the empty schema through the usual
+ * migration.
  */
 export async function wipeLocalData(): Promise<void> {
-  // Пути к аудиофайлам живут в базе, поэтому собираем их до её удаления.
+  // Audio file paths live in the database, so collect them before deleting it.
   let recordingUris: string[] = [];
   try {
     const d = await getDb();
@@ -537,19 +547,19 @@ export async function wipeLocalData(): Promise<void> {
     recordingUris = rows.map((r) => r.uri);
     await d.closeAsync();
   } catch {
-    // Повреждённую или незакрытую базу всё равно нужно удалить: файлы записей
-    // в этом случае останутся только если их не удалось перечислить.
+    // A corrupted or unclosed database must still be deleted: recording
+    // files then survive only if they could not be enumerated.
   }
-  // Кэш промиса сбрасывается до удаления файла: параллельный getDb() не должен
-  // вернуть handle уже удалённой базы.
+  // The promise cache is reset before deleting the file: a parallel
+  // getDb() must not return a handle to an already deleted database.
   dbPromise = null;
   await SQLite.deleteDatabaseAsync('lampada.db');
   deleteRecordingFiles(recordingUris);
   try {
     if (diagnosticLog.exists) diagnosticLog.delete();
   } catch {
-    // Диагностический лог не содержит пользовательских данных: его отсутствие
-    // или ошибка удаления не должны срывать стирание.
+    // The diagnostic log holds no user data: its absence or a deletion
+    // error must not break the wipe.
   }
 }
 
@@ -570,7 +580,7 @@ export async function getFavorites(): Promise<string[]> {
   return rows.map((r) => r.ref);
 }
 
-// ---- стрик: день засчитывается по локальной дате начала молитвы из дневника ----
+// ---- streak: a day counts by the local start date of a journal prayer ----
 
 export type Streak = { count: number; prayedToday: boolean; week: boolean[] };
 
@@ -586,8 +596,8 @@ async function getWeek(): Promise<boolean[]> {
   });
 }
 
-// Стрик выводится из prayed_days, отдельного счётчика нет — точки-календарь
-// и подпись «N-й день подряд» не могут разойтись.
+// The streak is derived from prayed_days with no separate counter — the
+// calendar dots and the "N-day streak" caption cannot diverge.
 export async function getStreak(): Promise<Streak> {
   const week = await getWeek();
   const d = await getDb();
@@ -597,8 +607,8 @@ export async function getStreak(): Promise<Streak> {
   const prayed = new Set(rows.map((r) => r.day));
   const prayedToday = prayed.has(dayKey(new Date()));
 
-  // серия: подряд идущие календарные дни, заканчивая сегодня либо вчера.
-  // Дата через setDate, а не минус 24 часа: DST делает сутки 23-часовыми
+  // Streak: consecutive calendar days ending today or yesterday.
+  // Dates step via setDate, not minus 24 hours: DST can make a day 23 hours long.
   const cursor = new Date();
   if (!prayedToday) cursor.setDate(cursor.getDate() - 1);
   let count = 0;

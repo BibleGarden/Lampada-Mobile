@@ -13,9 +13,9 @@ export function startMusicFadeOut(
 }
 
 /**
- * Повторный запрос может только ускорить уже идущее затухание: более долгий
- * запрос не отодвигает его конец. Ускоренное затухание продолжается с текущей
- * громкости, без скачка.
+ * A repeated request can only speed up an ongoing fade-out: a longer request
+ * never pushes its end further. The hastened fade continues from the current
+ * volume, without a jump.
  */
 export function hastenMusicFadeOut(
   fade: MusicFadeOut,
@@ -26,7 +26,7 @@ export function hastenMusicFadeOut(
   return startMusicFadeOut(musicFadeOutVolume(fade, nowMs), nowMs, durationMs);
 }
 
-/** Громкость на косинусной кривой, как у кроссфейда треков; 0 в конце. */
+/** Volume on a cosine curve, like the track crossfade; 0 at the end. */
 export function musicFadeOutVolume(fade: MusicFadeOut, nowMs: number): number {
   const span = fade.endsAtMs - fade.startedAtMs;
   const progress = span <= 0 ? 1 : Math.min(1, Math.max(0, (nowMs - fade.startedAtMs) / span));

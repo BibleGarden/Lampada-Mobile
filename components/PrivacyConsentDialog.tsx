@@ -59,7 +59,7 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
     try {
       await onDecision(decision);
     } catch {
-      // Лог и диагностику пишет сохранение решения (settings.setConsent).
+      // Saving the decision does the logging and diagnostics (settings.setConsent).
       setFailed(true);
       setSubmitting(false);
     }
@@ -68,7 +68,7 @@ export default function PrivacyConsentDialog({ visible, purpose, onDecision, onD
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <View
         accessibilityViewIsModal
-        // escape VoiceOver — то же, что «назад» Android: без решения
+        // VoiceOver escape — the same as Android's back: dismisses without a decision
         onAccessibilityEscape={onDismiss}
         style={[styles.backdrop, { paddingTop: insets.top + sc(20), paddingBottom: bottomActionPadding(insets.bottom) }]}
       >

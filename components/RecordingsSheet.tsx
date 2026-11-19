@@ -25,28 +25,28 @@ import KeyboardSheet, { KeyboardSheetBody } from './keyboard/KeyboardSheet';
 import QuestionHeader from './QuestionHeader';
 import { GoldButton } from './ui';
 
-// Свёрнутая расшифровка показывает три строки. Точную обрезку знает только
-// нативный слой, поэтому «Показать полностью» вешаем по длине текста:
-// ~150 символов — это примерно те же три строки на телефоне.
+// A collapsed transcript shows three lines. Only the native layer knows the
+// exact truncation, so "Show more" keys off text length: ~150 chars is
+// roughly those same three lines on a phone.
 const isLongTranscript = (transcript: string) => transcript.trim().length > 150;
 const STOP_GUARD_MILLIS = 1_500;
-// Таймер показывает целые секунды; опрос чаще секунды не даёт ему запаздывать.
+// The timer shows whole seconds; polling faster than a second keeps it from lagging.
 const ELAPSED_POLL_MILLIS = 250;
-// Обычно расшифровка приходит за пару секунд; дольше — показываем, что ждать не обязательно.
+// A transcript usually arrives within seconds; past this mark we hint that waiting is optional.
 const SLOW_TRANSCRIPTION_MILLIS = 4_000;
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
   visible: boolean;
-  /** Вопрос ответа: шторка записей закрывает его в шторке ответа. */
+  /** The answer's question: the recordings sheet covers it inside the answer sheet. */
   question: string;
   recordings: RecordingDraft[];
-  /** Идёт запись: поверх списка показывается оверлей с волной. */
+  /** Recording in progress: a wave overlay is shown over the list. */
   recording: boolean;
   recordingPhase: 'idle' | 'starting' | 'recording' | 'stopping';
   limitReached: boolean;
   limitError: string | null;
-  /** Длительность записи по часам нативного рекордера. */
+  /** Recording duration per the native recorder's clock. */
   getRecordedMillis: () => number;
   playingId: number | null;
   pausedId: number | null;
@@ -65,12 +65,13 @@ type Props = {
 };
 
 /**
- * Голосовые записи ответа — отдельная шторка поверх шторки ответа.
+ * The answer's voice recordings — a separate sheet on top of the answer sheet.
  *
- * В одном окне с ответом список записей конкурировал с полем ввода за высоту:
- * длинная расшифровка выталкивала поле за кромку, а на телефоне с открытой
- * клавиатурой в шторке оставалось ~6 строк на всё сразу. Здесь у записей вся
- * высота, а в ответе от них остаётся только счётчик на микрофоне.
+ * Sharing one window with the answer, the recording list competed with the
+ * input field for height: a long transcript pushed the field off the edge, and
+ * on a phone with the keyboard open only ~6 lines remained for everything at
+ * once. Here the recordings get the full height, and the answer keeps only the
+ * counter on the mic.
  */
 export default function RecordingsSheet({
   sheetRef,
@@ -130,8 +131,8 @@ export default function RecordingsSheet({
 
   const stopDisabled = recordingPending || !stopReady;
 
-  // Сколько уже записано. Считаем только в фазе recording: во время stopping
-  // таймер замирает на последнем значении, после записи сбрасывается.
+  // How much has been recorded. Counted only in the recording phase: during
+  // stopping the timer freezes at the last value; after recording it resets.
   const [elapsedSec, setElapsedSec] = useState(0);
   useEffect(() => {
     if (!recording) {
@@ -150,9 +151,9 @@ export default function RecordingsSheet({
     ? elapsedLabel
     : t('components.answers.recordingRemaining', { time: fmtTime(remainingSeconds) });
 
-  // VoiceOver слышит подсказку о долгой расшифровке один раз на шторку, пока
-  // хоть одна расшифровка идёт. Не озвучиваем за закрытой шторкой и во время
-  // записи: тогда совет «можно закрыть» неверен.
+  // VoiceOver hears the slow-transcription hint once per sheet while any
+  // transcription is running. Do not announce behind a closed sheet or during
+  // a recording: the "you can close" advice would be wrong then.
   const transcribing = recordings.some((r) => r.transcriptState === 'loading');
   const slowHintAnnouncedRef = useRef(false);
   useEffect(() => {
@@ -174,9 +175,9 @@ export default function RecordingsSheet({
         appearsOnIndex={0}
         disappearsOnIndex={-1}
         opacity={0.55}
-        // Во время записи фон не закрывает шторку: микрофон остановит «готово».
+        // While recording, the backdrop does not close the sheet: the "Done" button stops the mic.
         pressBehavior={recordingBusy ? 'none' : 'close'}
-        // Фон без локализованной подписи; закрывает кнопка-шеврон.
+        // The backdrop has no localized label; the chevron button closes the sheet.
         accessible={false}
       />
     ),
@@ -193,8 +194,8 @@ export default function RecordingsSheet({
   );
 
   const actions = recording ? (
-    // Защита от двойного тапа не приглушает кнопку: запись уже идёт,
-    // и полупрозрачное «готово» выглядело как незапущенная запись.
+    // The double-tap guard does not dim the button: the recording is already
+    // running, and a translucent "Done" would look like a recording not started.
     <GoldButton
       compact
       label={recordingPhase === 'stopping' ? t('components.answers.saving') : t('components.answers.done')}
@@ -240,18 +241,18 @@ export default function RecordingsSheet({
       snapPoints={SNAP_POINTS}
       enableDynamicSizing={false}
       enablePanDownToClose={!recordingBusy}
-      // Как и в шторке ответа: иначе внутренний список прокручивается только
-      // на верхней snap-точке, а на нижней жест перехватывает сама шторка.
+      // Same as the answer sheet: otherwise the inner list scrolls only at the
+      // top snap point, and at the lower one the sheet itself grabs the gesture.
       enableContentPanningGesture={false}
       onClose={onDismiss}
-      // Контейнер шторки по умолчанию — единый элемент доступности, и всё
-      // внутри скрыто от VoiceOver и Maestro. Раскрываем детей.
+      // By default the sheet's container is a single accessibility element and
+      // everything inside is hidden from VoiceOver and Maestro. Expose the children.
       accessible={false}
       backdropComponent={renderBackdrop}
       handleComponent={renderHandle}
       topInset={insets.top}
-      // Во время записи вся шторка — цвет оверлея: вопрос над ним и footer
-      // под ним не выделяются отдельными карточками.
+      // While recording the whole sheet takes the overlay color: the question
+      // above and the footer below are not set off as separate cards.
       backgroundStyle={recording ? styles.sheetBgRecording : styles.sheetBg}
       accessibilityModal={visible}
       onAccessibilityEscape={() => {
@@ -260,7 +261,7 @@ export default function RecordingsSheet({
       footer={actions}
       footerHidden={!visible}
     >
-      {/* закрытая шторка уехала за край, но без пометки осталась бы в обходе */}
+      {/* a closed sheet is off-screen, but without the flag it would stay in the traversal */}
       <KeyboardSheetBody
         scrollable={false}
         {...screenReaderHiddenProps(!visible)}
@@ -268,7 +269,7 @@ export default function RecordingsSheet({
       <View style={styles.questionWrap}>
         <QuestionHeader question={question} testID="recordings-question" />
       </View>
-      {/* Оверлей записи закрывает список, но не вопрос: на него и отвечают голосом. */}
+      {/* The recording overlay covers the list but not the question: that is what the voice answers. */}
       <View style={styles.stage}>
       <View style={styles.content} {...screenReaderHiddenProps(recording)}>
         <View style={styles.header}>
@@ -332,8 +333,8 @@ export default function RecordingsSheet({
                         ]}
                       />
                     </View>
-                    {/* Ход расшифровки занимает всю строку метаданных: рядом
-                        с «Запись N · время» он не помещается и обрезается. */}
+                    {/* Transcription progress takes the whole metadata line:
+                        next to "Recording N · time" it would not fit and gets cut. */}
                     <Text
                       style={[styles.recMeta, loading && styles.recMetaState]}
                       numberOfLines={1}
@@ -349,7 +350,7 @@ export default function RecordingsSheet({
                         })}
                     </Text>
                   </View>
-                  {/* Кнопка расшифровки доступна, пока у записи нет текста. */}
+                  {/* The transcribe button is available while the recording has no text. */}
                   {r.transcript === null && (
                     <Pressable
                       accessibilityLabel={
@@ -397,9 +398,9 @@ export default function RecordingsSheet({
                 {r.transcript !== null && (
                   <View style={styles.transcriptBlock}>
                     <Text style={styles.transcriptLabel}>{t('components.answers.transcriptTitle')}</Text>
-                    {/* Расшифровка — не черновик ответа, а результат распознания:
-                        читается, но не правится. Нужное переносят в поле ответа
-                        кнопкой и правят уже там. */}
+                    {/* The transcript is not an answer draft but recognition
+                        output: readable, not editable. People move the useful
+                        part into the answer field with the button and edit there. */}
                     <Text
                       accessibilityLabel={t('components.answers.transcriptIndex', { index: i + 1, transcript: r.transcript ?? '' })}
                       style={styles.transcriptPreview}
@@ -445,7 +446,7 @@ export default function RecordingsSheet({
         </BottomSheetScrollView>
       </View>
 
-      {/* оверлей записи — как listening overlay в прототипе */}
+      {/* recording overlay — like the prototype's listening overlay */}
       {recording && (
         <View style={styles.recOverlay}>
           <BottomSheetScrollView
@@ -464,7 +465,7 @@ export default function RecordingsSheet({
                 <WaveBar key={i} color={b.color} delay={b.delay} active={visible && screenVisible} height={overlayFit.waveHeight} />
               ))}
             </View>
-            {/* Без live region: VoiceOver читает время по фокусу, а не каждую секунду. */}
+            {/* No live region: VoiceOver reads the time on focus, not every second. */}
             <Text
               accessibilityLabel={remainingSeconds === null
                 ? t('components.answers.recordedTime', { time: elapsedLabel })
@@ -493,7 +494,7 @@ export default function RecordingsSheet({
 }
 
 const SNAP_POINTS = ['78%'];
-// Прежний оверлей rgba(18,12,7,.97) поверх фона шторки, без прозрачности.
+// The former overlay rgba(18,12,7,.97) over the sheet background, without transparency.
 const RECORDING_BACKGROUND = '#120c07';
 const SHEET_BORDER = 1;
 
@@ -506,9 +507,10 @@ const WAVE_BARS = [
   { color: '#d68a2e', delay: 750 },
 ];
 
-// Подсказка появляется, только пока расшифровка идёт дольше порога. Обещание
-// честное: закрытие шторки записей её не прерывает, а «Сохранить» и уход
-// на рефлексию ждут результат (AnswerSheet.save). Озвучивает её шторка.
+// The hint appears only while a transcription runs past the threshold. The
+// promise is honest: closing the recordings sheet does not interrupt it, and
+// "Save" and moving on to reflection wait for the result (AnswerSheet.save).
+// The sheet announces it.
 function SlowTranscriptionHint({ index, onShown }: { index: number; onShown: () => void }) {
   const styles = useStyles(stylesFactory);
   const { t } = useI18n();
@@ -530,13 +532,13 @@ function SlowTranscriptionHint({ index, onShown }: { index: number; onShown: () 
   );
 }
 
-// столбик эквалайзера: scaleY качается 0.3 → 1 (анимация wave из прототипа)
+// equalizer bar: scaleY swings 0.3 → 1 (the prototype's wave animation)
 function WaveBar({ color, delay, active, height }: { color: string; delay: number; active: boolean; height: number }) {
   const styles = useStyles(stylesFactory);
   const k = useSharedValue(0.3);
   useEffect(() => {
     if (!active) return;
-    // Размах задаёт стартовое значение повтора: после паузы начинаем с 0.3.
+    // The swing comes from the repeat's start value: after a pause we begin at 0.3.
     k.value = 0.3;
     k.value = withDelay(
       delay,
@@ -572,7 +574,7 @@ const stylesFactory = () => StyleSheet.create({
     height: sc(4),
     borderRadius: sc(2),
   },
-  // ADR-0012: колонка держит меру строки и на планшете
+  // ADR-0012: the column holds the line measure on tablets too
   questionWrap: {
     ...column(),
     paddingHorizontal: screenGutter(),
@@ -671,7 +673,7 @@ const stylesFactory = () => StyleSheet.create({
   recMetaState: {
     color: colors.greenSoft,
   },
-  // тот же квадрат, что и у кнопки расшифровки — рядом они читаются как пара
+  // the same square as the transcribe button — side by side they read as a pair
   recDel: {
     width: sc(28),
     height: sc(28),
@@ -728,7 +730,7 @@ const stylesFactory = () => StyleSheet.create({
     letterSpacing: sc(1.2),
     color: colors.labelGold,
   },
-  // Свёрнутая расшифровка: та же карточка, но три строки и без курсора
+  // Collapsed transcript: the same card, but three lines and no cursor
   transcriptPreview: {
     padding: sc(9),
     borderRadius: radius.sm,
@@ -772,7 +774,7 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(13.5),
     color: colors.creamBright,
   },
-  // Оверлей прячет список, но не рамку шторки: боковые рамки идут до низа.
+  // The overlay hides the list but not the sheet frame: the side borders run to the bottom.
   recOverlay: {
     position: 'absolute',
     top: 0,
@@ -786,8 +788,9 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
     alignSelf: 'stretch',
   },
-  // Оверлей всегда во всю высоту шторки: блок с волной центрируем, иначе он
-  // висит у верхнего края, а до кнопки «готово» тянется пустая полоса.
+  // The overlay always spans the sheet's full height: center the wave block,
+  // otherwise it hangs at the top and an empty strip stretches down to the
+  // "Done" button.
   recOverlayContent: {
     flexGrow: 1,
     alignItems: 'center',

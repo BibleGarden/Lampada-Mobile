@@ -6,26 +6,26 @@ import ScreenBg from './ScreenBg';
 import PinPad from './PinPad';
 import { colors, column, fonts, sc, useStyles } from '../lib/theme';
 
-// Ввод пин-кода поверх экрана настроек: установка, смена и подтверждение перед
-// выключением защиты.
+// PIN entry over the settings screen: setup, change, and confirmation before
+// turning protection off.
 //
-// Это обычный оверлей, а не системный Modal и не отдельный маршрут. Модальное
-// окно всплывает над корневым layout и закрыло бы собой экран блокировки, если
-// бы приложение свернули прямо во время ввода; отдельный маршрут добавил бы в
-// историю навигации шаг, с которого можно вернуться назад посреди сценария.
+// This is a plain overlay, not a system Modal and not a separate route. A
+// modal pops above the root layout and would cover the lock screen if the app
+// were minimized right during entry; a separate route would add a step to the
+// navigation history that could be navigated back from mid-flow.
 //
-// За это приходится доплачивать `accessibilityViewIsModal` вручную: системный
-// Modal изолирует дерево доступности сам, а обычный оверлей — нет, и VoiceOver
-// иначе уводил бы фокус на настройки под вводом пина.
+// The price is setting `accessibilityViewIsModal` manually: a system Modal
+// isolates the accessibility tree itself, a plain overlay does not, and
+// otherwise VoiceOver would drag focus to the settings under the PIN entry.
 
 export type PinPromptProps = {
   title: string;
   subtitle?: string | null;
-  /** Известная длина пина: ввод проверяется автоматически, без подтверждения. */
+  /** Known PIN length: input is checked automatically, without confirmation. */
   expectedLength?: number;
   onSubmit: (pin: string) => string | null | Promise<string | null>;
   onCancel: () => void;
-  /** Стабильный id заголовка для e2e (пробрасывается в PinPad). */
+  /** Stable title id for e2e (passed through to PinPad). */
   titleTestID?: string;
 };
 

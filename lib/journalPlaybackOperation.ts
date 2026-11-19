@@ -5,7 +5,7 @@ import { watchNativePlaybackStart, type NativePlaybackStartFailure, type NativeP
 type JournalPlaybackStatus = NativePlaybackStatus & { didJustFinish: boolean; error: string | null };
 type JournalPlaybackFailure = NativePlaybackStartFailure | 'player_error' | 'mode_failed' | 'play_failed' | 'start_failed';
 
-/** Вся жизнь одного плеера дневника; dispose не вызывает нативные методы. */
+/** The whole life of one journal player; dispose calls no native methods. */
 export function createJournalPlaybackOperation({
   player,
   acquireSession,

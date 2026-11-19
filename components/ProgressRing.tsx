@@ -7,15 +7,15 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 type Props = {
   size: number;
   strokeWidth?: number;
-  /** 0..1 — заполнение кольца */
+  /** 0..1 — ring fill level */
   progress: SharedValue<number>;
   trackColor?: string;
   color?: string;
-  /** Градиентная обводка (как у hold-кнопки в прототипе) */
+  /** Gradient stroke (like the prototype's hold button) */
   gradient?: [string, string];
 };
 
-// Кольцо прогресса: круг с анимируемым strokeDashoffset, повёрнутый на -90°
+// Progress ring: a circle with an animated strokeDashoffset, rotated -90°
 export default function ProgressRing({
   size,
   strokeWidth = 3,

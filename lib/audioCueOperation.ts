@@ -8,7 +8,7 @@ type CuePlayer = {
   pause: () => void;
 };
 
-/** Отмена и устаревший playback grant завершают сигнал без ошибки. */
+/** Cancellation and a stale playback grant finish the cue without an error. */
 export function playCueUntilComplete(
   player: CuePlayer,
   isCurrent: () => boolean,

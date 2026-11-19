@@ -13,8 +13,8 @@ const enqueue = (work: () => Promise<void>) => {
 };
 
 const hasNotificationPermission = async (request: boolean) => {
-  // Platform.Version в типах кроссплатформенный (string | number); на Android
-  // это всегда число API level.
+  // Platform.Version is cross-platform in the typings (string | number); on
+  // Android it is always the numeric API level.
   if (Number(Platform.Version) < 33) return true;
   if (await PermissionsAndroid.check(notificationPermission)) return true;
   if (!request) return false;

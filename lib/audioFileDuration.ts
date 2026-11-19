@@ -2,7 +2,7 @@ import { createAudioPlayer } from 'expo-audio';
 import { TRANSIENT_AUDIO_PLAYER_OPTIONS } from './audioModeCoordinator';
 import { recordedFileDurationSeconds } from './recordingFile';
 
-/** Загружает длительность из файла, не запуская воспроизведение. */
+/** Loads the duration from the file without starting playback. */
 export async function audioFileDurationSeconds(uri: string): Promise<number> {
   const player = createAudioPlayer(uri, TRANSIENT_AUDIO_PLAYER_OPTIONS);
   try {

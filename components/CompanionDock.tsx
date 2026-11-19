@@ -45,20 +45,21 @@ type Props = {
   scriptureAudio: ScriptureAudioControl;
 };
 
-// Функции, а не константы: значения зависят от текущей геометрии окна и
-// пересчитываются на каждом рендере вместе со стилями.
+// Functions, not constants: the values depend on the current window geometry
+// and are recomputed on every render together with the styles.
 const cardLineHeight = () => sc(20);
 const cardTextPaddingTop = () => sc(6);
-// Кнопки в карточке ниже, чем ряд действий на весь экран: карточка и так
-// набирает высоту, а строки отрывка нужнее.
+// Card buttons are lower than the full-screen action row: the card already
+// grows tall, and the passage lines matter more.
 const cardBtnSize = () => sc(32);
 const switchBtnHeight = () => sc(32);
-// Текстовые кнопки карточки ниже 44 pt: зону касания добирает hitSlop.
+// The card's text buttons are under 44 pt: hitSlop makes up the touch area.
 const offlineActionHeight = () => sc(24);
 const listenButtonHeight = () => sc(26);
 
-// Карточка-спутник внизу сессии: режим «вопросы» и режим «Писание».
-// Механика следа/фронтира живёт в store; здесь только отображение.
+// Companion card at the bottom of the session: "questions" mode and
+// "Scripture" mode. The trail/frontier mechanics live in the store; only the
+// display is here.
 export default function CompanionDock({
   onOpenAnswer,
   onOpenReader,
@@ -76,15 +77,15 @@ export default function CompanionDock({
     candidate: string | null;
     fits: boolean;
   } | null>(null);
-  // Сколько строк отрывка реально помещается: карточка тянется по свободной
-  // высоте экрана, поэтому лимит считаем по замеренной области, а не фиксируем.
+  // How many passage lines actually fit: the card stretches with the free
+  // screen height, so the limit is computed from the measured area, not fixed.
   const [textAreaHeight, setTextAreaHeight] = React.useState(0);
   const [reportTarget, setReportTarget] = React.useState<ContentReportTarget | null>(null);
   const scriptureLineLimit = textAreaHeight
     ? Math.max(1, Math.min(9, Math.floor((textAreaHeight - cardTextPaddingTop()) / cardLineHeight())))
     : 3;
-  // селектор без remaining/elapsed: карточка не должна ререндериться
-  // каждую секунду от тика таймера
+  // selector without remaining/elapsed: the card must not re-render
+  // every second from the timer tick
   const s = useSession(
     useShallow((st) => ({
       dockMode: st.dockMode,
@@ -111,7 +112,7 @@ export default function CompanionDock({
     })),
   );
   const isQ = s.dockMode === 'question';
-  // Выбор Библии, сделанный в настройках поверх сессии, сразу оживляет блок цитат.
+  // A Bible chosen in settings during the session immediately revives the quotes block.
   const bibleChosen = useSettings((state) => state.scripturePreferences !== null);
   React.useEffect(() => {
     if (bibleChosen && s.scrError === 'no_default_bible') void s.retryScripture();
@@ -125,7 +126,7 @@ export default function CompanionDock({
   const curScripture = s.scrList[s.scrIndex];
   const scriptureLoading = s.scrStatus === 'loading' || s.scrStatus === 'retrying';
   const listenDisabled = scriptureLoading || scriptureAudio.phase === 'loading' || scriptureAudio.phase === 'unavailable';
-  // В карточке показываем только выделенные сервером стихи; целиком — в читалке
+  // The card shows only the server-highlighted verses; the full text is in the reader
   const compactScripture = curScripture ? buildScriptureCompactText(curScripture) : null;
   const scripturePreviewText = compactScripture
     ? compactScripture.partial
@@ -180,7 +181,7 @@ export default function CompanionDock({
 
   return (
     <View style={styles.card}>
-      {/* Подписи внутри переключателя делают отдельный заголовок избыточным. */}
+      {/* The labels inside the switcher make a separate header redundant. */}
       <View style={styles.header}>
         <View style={styles.switcher}>
           <Pressable
@@ -216,7 +217,7 @@ export default function CompanionDock({
             <Text style={[styles.switchLabel, !isQ && styles.switchLabelActive]}>{t('components.reader.quote')}</Text>
           </Pressable>
         </View>
-        {/* В углу одна кнопка жалобы на активный текст карточки. */}
+        {/* A single corner button to report the card's active text. */}
         {activeReportTarget && (
           <Pressable
             accessibilityRole="button"
@@ -240,8 +241,8 @@ export default function CompanionDock({
             {s.generating ? (
               <ActivityIndicator accessibilityLabel={t('components.reader.preparing')} color={colors.goldSoft} />
             ) : (
-              // maxHeight + прокрутка: длинный вопрос не выталкивает карточку
-              // за экран, а листается внутри неё
+              // maxHeight + scroll: a long question does not push the card
+              // off screen but scrolls inside it
               <ScrollView
                 style={styles.textScroll}
                 contentContainerStyle={styles.textScrollContent}
@@ -288,8 +289,8 @@ export default function CompanionDock({
               testID="dock-next-question-button"
               onPress={tap(() => s.nextQuestion())}
             >
-              {/* Plus и Regen — сплошные фигуры на всю кегль, в отличие от
-                  узкого шеврона, поэтому в кнопке им нужен меньший размер */}
+              {/* Plus and Regen are solid full-size glyphs, unlike the narrow
+                  chevron, so they need a smaller size in the button */}
               {!onFrontier ? (
                 <ChevronRight />
               ) : answered ? (
@@ -318,9 +319,9 @@ export default function CompanionDock({
               <ActivityIndicator accessibilityLabel={t('components.reader.selecting')} color={colors.goldSoft} />
             ) : curScripture ? (
               <>
-                {/* Текст отрывка всегда открывает полную читалку. Подпись
-                    не задаём: VoiceOver читает сам отрывок, а действие — подсказкой.
-                    testID различает неполный текст: по нему тесты ищут длинный отрывок. */}
+                {/* The passage text always opens the full reader. No label:
+                    VoiceOver reads the passage itself, and the action is the hint.
+                    testID distinguishes partial text: tests use it to find a long passage. */}
                 <Pressable
                   onLayout={({ nativeEvent }) => {
                     const width = nativeEvent.layout.width;
@@ -404,8 +405,8 @@ export default function CompanionDock({
                 )}
               </>
             ) : (
-              // Подпись не задаём: VoiceOver должен прочитать и причину, и действие.
-              // Без Библии для языка интерфейса повтор бесполезен: ведём в настройки.
+              // No label: VoiceOver must read both the reason and the action.
+              // Without a Bible for the interface language retrying is useless: lead to settings.
               s.scrError === 'no_default_bible' ? (
                 <Pressable
                   accessibilityRole="button"
@@ -599,8 +600,8 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.cardBorder,
   },
-  // Тело карточки тянется на всю её высоту, чтобы текстовая область
-  // получила остаток под заголовком, кнопками и точками.
+  // The card body stretches to the card's full height so the text area gets
+  // the remainder below the header, buttons, and dots.
   body: {
     flexGrow: 1,
     flexShrink: 1,
@@ -668,22 +669,23 @@ const stylesFactory = () => StyleSheet.create({
   },
   switchLabelActive: { color: '#f0e6c8' },
   textWrap: {
-    // flexBasis: 0 — высота области задаётся карточкой, а не длиной текста:
-    // иначе лимит строк и высота тянули бы друг друга по кругу. Потолок роста
-    // карточки на планшете живёт в `dockWrap` экрана сессии.
+    // flexBasis: 0 — the area's height is set by the card, not the text
+    // length: otherwise the line limit and the height would pull each other
+    // in a loop. The card's growth ceiling on tablets lives in the session
+    // screen's `dockWrap`.
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
-    // Пол текстовой области — он же нижняя граница карточки: всё остальное в
-    // ней фиксировано. Слишком высокий пол не давал карточке ужаться под
-    // доступную высоту, и ряды снизу вываливались за рамку.
+    // The text area's floor is also the card's bottom bound: everything else
+    // in it is fixed. Too high a floor kept the card from shrinking to the
+    // available height, and the bottom rows fell out of the frame.
     minHeight: sc(28),
     paddingTop: cardTextPaddingTop(),
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: sc(4),
   },
-  // Вопрос листается внутри отведённой высоты, не выталкивая карточку
+  // The question scrolls within its allotted height without pushing the card
   textScroll: {
     flex: 1,
     alignSelf: 'stretch',
@@ -765,7 +767,7 @@ const stylesFactory = () => StyleSheet.create({
     marginTop: sc(8),
   },
   squareBtn: {
-    // Квадрат: ширина и высота идут от одного токена.
+    // Square: width and height come from one token.
     width: cardBtnSize(),
     height: cardBtnSize(),
     borderRadius: radius.sm,
@@ -781,7 +783,7 @@ const stylesFactory = () => StyleSheet.create({
   },
   mainBtn: {
     flex: 1,
-    // Высота от того же токена, что и у квадратных: ряд остаётся ровным.
+    // Height from the same token as the square buttons: the row stays even.
     height: cardBtnSize(),
     flexDirection: 'row',
     alignItems: 'center',

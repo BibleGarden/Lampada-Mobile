@@ -69,7 +69,7 @@ export function parseStoredScripturePreferences(value: string | null): Scripture
 const normalizeLanguage = (value: string | null | undefined) =>
   value?.trim().replaceAll('_', '-').toLowerCase() ?? '';
 
-/** Начальный язык цитат следует уже определённому языку интерфейса. */
+/** The initial Scripture language follows the already chosen UI language. */
 export function resolveInitialScriptureLanguage(
   interfaceLanguage: string,
   languages: readonly ScriptureLanguageOption[],
@@ -78,7 +78,7 @@ export function resolveInitialScriptureLanguage(
 }
 
 const preferredCodes: Readonly<Record<string, { translation: number; voice: number }>> = {
-  // BTI (перевод Кулаковых), читает Никита Семёнов-Прозоровский.
+  // BTI (the Kulakov translation), narrated by Nikita Semyonov-Prozorovsky.
   ru: { translation: 11, voice: 123 },
   uk: { translation: 20, voice: 130 },
   en: { translation: 16, voice: 151 },

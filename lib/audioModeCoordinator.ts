@@ -9,7 +9,7 @@ type ApplyAudioMode = (mode: AudioModeRequest) => Promise<void>;
 type SetAudioSessionActive = (active: boolean) => Promise<void>;
 
 export type AudioSessionLease = {
-  /** Повторный вызов безопасен; последний владелец дожидается деактивации. */
+  /** Repeated calls are safe; the last holder awaits the deactivation. */
   release: () => Promise<void>;
 };
 
@@ -75,8 +75,8 @@ export function createAudioModeCoordinator(setSessionActive: SetAudioSessionActi
           token.released = true;
           sessionLeases.delete(token);
           if (sessionLeases.size > 0) return Promise.resolve();
-          // Новый владелец может появиться до выполнения этой операции.
-          // Изменение его режима остаётся в той же нативной очереди.
+          // A new holder may appear before this operation runs.
+          // Its mode change stays in the same native queue.
           return enqueue(async () => {
             if (sessionLeases.size === 0) await setSessionActive(false);
           });

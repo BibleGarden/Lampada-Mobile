@@ -30,16 +30,18 @@ function useSheetLayout() {
   return context;
 }
 
-// Позицию footer считает Gorhom по его постоянной измеренной высоте
-// (отступ над безопасной зоной меряется один раз). Подъём над клавиатурой
-// вычитается из этой же позиции на UI-потоке, кадр в кадр с её анимацией:
-// Gorhom двигает контейнер footer целиком, и кнопки остаются в его границах —
-// там, где они нарисованы, их находит доступность Android (TalkBack, Maestro).
-// Тело кончается над footer и не сжимается ниже минимума (sheetFooterPosition).
-// Кадр в кадр движется только footer (трансформация). Высота тела меняется
-// один раз в начале перехода шторки или клавиатуры — сразу на целевую
-// (sheetBodyHeight), поэтому footer закрашен фоном шторки и прячет часть тела,
-// которую он ещё не открыл.
+// Gorhom computes the footer position from its constant measured height
+// (the inset above the safe area is measured once). The rise over the keyboard
+// is subtracted from that same position on the UI thread, frame for frame with
+// its animation: Gorhom moves the whole footer container, and the buttons stay
+// within its bounds — where they are drawn is where Android accessibility
+// (TalkBack, Maestro) finds them.
+// The body ends above the footer and never compresses below the minimum
+// (sheetFooterPosition). Only the footer moves frame for frame
+// (transformation). The body height changes once at the start of a sheet or
+// keyboard transition — straight to the target (sheetBodyHeight), so the footer
+// is painted in the sheet's background and hides the part of the body it has
+// not yet uncovered.
 function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   const { footer, hidden, footerStyle, footerBackground, bodyHeight, keyboardSnapPosition, keyboardRestFraction } = useSheetLayout();
   const keyboard = useKeyboardFrames();
@@ -74,7 +76,7 @@ function SheetFooter({ animatedFooterPosition }: BottomSheetFooterProps) {
   );
 }
 
-// Фон footer — фон шторки внутри её боковых рамок.
+// The footer background is the sheet's background inside its side borders.
 function footerBackgroundOf(backgroundStyle: BottomSheetProps['backgroundStyle']): ViewStyle {
   const { backgroundColor, borderWidth = 0 } = StyleSheet.flatten(backgroundStyle) ?? {};
   if (!backgroundColor) throw new Error('KeyboardSheet requires backgroundStyle.backgroundColor: the footer covers the body with it');
@@ -90,20 +92,21 @@ type Props = Omit<BottomSheetProps, 'footerComponent' | 'bottomInset' | 'animate
   keyboardRestFraction?: number;
 };
 
-// KeyboardSheet и её фон занимают всю ширину окна, включая две колонки
-// ответа на планшете. Предел ширины есть только у обычной BottomSheet.
-// Клавиатуру и безопасную зону резервирует footer, контейнер от них не зависит.
+// KeyboardSheet and its background span the window's full width, including the
+// tablet's two answer columns. Only the plain BottomSheet has a width cap.
+// The footer reserves the keyboard and safe area; the container is independent of them.
 const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, footerStyle, keyboardSnapPosition, keyboardRestFraction, accessibilityModal = false, onAccessibilityEscape, onChange, onAnimate, children, ...props }, ref) => {
   const bodyHeight = useSharedValue(0);
   const footerBackground = useMemo(() => footerBackgroundOf(props.backgroundStyle), [props.backgroundStyle]);
-  // Gorhom 5.2.14 не переставляет закрытую или закрывающуюся шторку при
-  // смене контейнера, а контейнер меняется только вместе с окном. Поэтому
-  // KeyboardSheet — единственный владелец пересборки: закрытую шторку
-  // пересоздаём при смене окна, а повёрнутую открытой — сразу после закрытия
-  // (useSheetReflow). Открытой шторка считается с начала анимации открытия.
+  // Gorhom 5.2.14 does not re-layout a closed or closing sheet when the
+  // container changes, and the container changes only together with the window.
+  // So KeyboardSheet is the sole owner of the remount: a closed sheet is
+  // recreated when the window changes, and one rotated while open — right after
+  // closing (useSheetReflow). The sheet counts as open from the start of the
+  // opening animation.
   const { mountKey, open: present, onIndexChange } = useSheetReflow();
-  // Кнопки едут вместе со шторкой с начала анимации открытия, а не появляются
-  // после того, как она встанет (на iPad с клавиатурой это 1–2 секунды).
+  // The buttons ride with the sheet from the start of the opening animation
+  // instead of appearing once it settles (on an iPad with a keyboard that is 1–2 seconds).
   const hidden = footerHidden || !present;
   const context = useMemo(
     () => ({ footer, hidden, footerStyle, footerBackground, bodyHeight, keyboardSnapPosition, keyboardRestFraction }),
@@ -142,9 +145,9 @@ const KeyboardSheet = forwardRef<BottomSheet, Props>(({ footer, footerHidden, fo
 KeyboardSheet.displayName = 'KeyboardSheet';
 export default KeyboardSheet;
 
-// Обычный gesture-handler input намеренно не регистрируется в механизме
-// клавиатуры Gorhom: место над клавиатурой уже резервирует footer. Это исключает
-// второй отступ, в том числе для ненулевого плавающего прямоугольника iPad.
+// A plain gesture-handler input is deliberately not registered with Gorhom's
+// keyboard machinery: the footer already reserves the space above the keyboard.
+// This rules out a second inset, including for the iPad's non-zero floating rectangle.
 export const KeyboardSheetTextInput = forwardRef<GestureTextInput, React.ComponentProps<typeof GestureTextInput>>(({ style, ...props }, ref) => {
   useSheetLayout();
   const keyboard = useKeyboardLayout();
@@ -153,8 +156,9 @@ export const KeyboardSheetTextInput = forwardRef<GestureTextInput, React.Compone
 });
 KeyboardSheetTextInput.displayName = 'KeyboardSheetTextInput';
 
-// Размер тела задаёт только шторка: стиль снаружи (например, flex: 1)
-// перебил бы высоту над footer, и низ тела ушёл бы под кнопки.
+// Only the sheet sets the body size: an outside style (e.g. flex: 1) would
+// override the height above the footer, and the body's bottom would slip under
+// the buttons.
 export function KeyboardSheetBody({ children, scrollable = true, ...props }: Omit<ViewProps, 'style'> & { scrollable?: boolean }) {
   const { bodyHeight } = useSheetLayout();
   const size = useAnimatedStyle(() => ({ height: bodyHeight.value }));

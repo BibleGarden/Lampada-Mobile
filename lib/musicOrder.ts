@@ -1,6 +1,6 @@
 /**
- * Возвращает циклический порядок каталога со случайной стартовой позицией.
- * Если треков больше одного, старт предыдущей сессии не повторяется.
+ * Returns the catalog order as a cycle with a random start position.
+ * With more than one track, the previous session's start is not repeated.
  */
 export function prayerTrackOrder(
   trackCount: number,

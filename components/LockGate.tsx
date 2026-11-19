@@ -19,22 +19,21 @@ import {
   type BiometryInfo,
 } from '../lib/lock';
 
-// Гейт блокировки. Живёт в корневом layout поверх Stack, а не отдельным
-// маршрутом: экран, до которого можно дойти навигацией, можно и обойти —
-// диплинком, возвратом назад или уведомлением. Оверлей поверх всей навигации
-// обойти нечем.
+// Lock gate. Lives in the root layout above the Stack, not as a separate
+// route: any screen reachable by navigation can also be bypassed — via a
+// deeplink, back navigation, or a notification. An overlay over the whole
+// navigation cannot be bypassed.
 
 const APP_NAME = 'Lampada';
 
 /**
- * Шторка приватности. Показывается, когда приложение неактивно, чтобы снимок в
- * переключателе приложений не сохранил открытый дневник, и пока конфигурация
- * защиты ещё не прочитана — до этого момента неизвестно, можно ли показывать
- * контент вообще.
+ * Privacy curtain. Shown while the app is inactive so the snapshot in the app
+ * switcher does not capture the open diary, and while the protection config is
+ * not yet loaded — before that it is unknown whether content may be shown at all.
  *
- * `accessibilityViewIsModal` — не косметика: перекрытие пикселей прячет контент
- * только от глаз и от касаний. VoiceOver ходит по дереву доступности, а не по
- * экрану, и без этого флага читал бы вслух дневник под шторкой.
+ * `accessibilityViewIsModal` is not cosmetic: covering pixels hides content
+ * only from eyes and touches. VoiceOver walks the accessibility tree, not the
+ * screen, and without this flag it would read the diary under the curtain aloud.
  */
 function PrivacyCurtain() {
   const styles = useStyles(stylesFactory);
@@ -57,13 +56,13 @@ function LockScreen() {
   const unlock = useLock((s) => s.unlock);
   const [biometry, setBiometry] = useState<BiometryInfo | null>(null);
   const [wiping, setWiping] = useState(false);
-  // Ошибка биометрии (не отмена) на экране блокировки. Alert'ом не показываем:
-  // автозапрос при каждом появлении экрана заспамил бы им пользователя —
-  // вместо этого подсказка под пин-падом объясняет, почему Face ID не сработал.
+  // A biometry error (not a cancellation) on the lock screen. Not shown as an
+  // Alert: the automatic prompt on every appearance would spam the user with
+  // it — instead the hint under the pin pad explains why Face ID failed.
   const [biometryError, setBiometryError] = useState<string | null>(null);
-  // Автозапрос выполняется один раз за появление экрана. Системный лист Face ID
-  // сам переводит приложение в inactive, и без этого флага возврат из него
-  // запускал бы запрос заново — бесконечным кольцом.
+  // The automatic prompt runs once per screen appearance. The system Face ID
+  // sheet itself makes the app inactive, and without this flag returning from
+  // it would trigger the prompt again — an endless loop.
   const autoPrompted = useRef(false);
 
   const runBiometrics = async () => {
@@ -73,8 +72,8 @@ function LockScreen() {
       unlock();
       return;
     }
-    // Отмена (в том числе автозапросом на фоне) — не повод что-то говорить:
-    // человек и так видит пин-пад и может им воспользоваться.
+    // A cancellation (including a backgrounded auto-prompt) is no reason to say
+    // anything: the person already sees the pin pad and can use it.
     if (result.reason === 'error') setBiometryError(result.message);
   };
 
@@ -84,8 +83,8 @@ function LockScreen() {
     void biometryInfo().then((info) => {
       if (!alive) return;
       setBiometry(info);
-      // Образцы могли удалить в системе уже после включения тумблера: тогда
-      // остаётся только пин, и предлагать биометрию бессмысленно.
+      // Enrollments may have been removed in the system after the toggle was
+      // enabled: only the pin remains then, and offering biometry is pointless.
       if (!info.available || autoPrompted.current) return;
       autoPrompted.current = true;
       void runBiometrics();
@@ -105,9 +104,9 @@ function LockScreen() {
     setWiping(true);
     try {
       const { remindersCancelled } = await wipeEverything();
-      // Настройки перечитываются как на новой установке: база пересоздаётся
-      // миграцией при первом же обращении. Экраны при сбое повторят загрузку
-      // через ensureSettingsLoaded.
+      // Settings reload as on a fresh install: the database is recreated by a
+      // migration on first access. On failure, screens retry loading via
+      // ensureSettingsLoaded.
       useSettings.getState().load().catch((error: unknown) => {
         console.error('Failed to reload settings after the wipe', errorKind(error));
         recordDiagnostic('settings_load_failed', { place: 'after_wipe', errorKind: errorKind(error) });
@@ -120,8 +119,8 @@ function LockScreen() {
         );
       }
     } catch {
-      // Стирание не удалось — защита остаётся включённой, и пользователь должен
-      // это увидеть, а не остаться перед экраном, который «ничего не сделал».
+      // The wipe failed — protection stays enabled, and the user must see that
+      // instead of facing a screen that "did nothing".
       Alert.alert(
         t('components.security.wipeError'),
         t('components.security.wipeErrorHint'),
@@ -131,8 +130,8 @@ function LockScreen() {
     }
   };
 
-  // Два подтверждения подряд: стирание безвозвратно, и случайное нажатие на
-  // ссылку под клавиатурой не должно стоить человеку всего дневника.
+  // Two confirmations in a row: the wipe is irreversible, and an accidental tap
+  // on the link under the keyboard must not cost the person their whole diary.
   const askWipe = () => {
     Alert.alert(
       t('components.security.forgotPin'),
@@ -157,9 +156,9 @@ function LockScreen() {
 
   const canUseBiometry = biometricsOn && !!biometry?.available;
 
-  // Модальность для VoiceOver обязательна ровно по той же причине, что и у
-  // шторки: заблокированное приложение не должно ни читаться, ни активироваться
-  // жестами в обход оверлея.
+  // Modality for VoiceOver is mandatory for exactly the same reason as for the
+  // curtain: a locked app must be neither readable nor activated by gestures
+  // bypassing the overlay.
   return (
     <View style={styles.overlay} accessibilityViewIsModal testID="lock-screen">
       <ScreenBg />
@@ -199,9 +198,9 @@ function LockScreen() {
 }
 
 /**
- * Единственная точка, где приложение решает, показывать ли контент. Подписка на
- * AppState живёт здесь же: точечные подписки других экранов (настройки, сессия)
- * работают независимо и этой не мешают.
+ * The single point where the app decides whether to show content. The AppState
+ * subscription lives here too: the focused subscriptions of other screens
+ * (settings, session) run independently and do not interfere with it.
  */
 export default function LockGate() {
   const ready = useLock((s) => s.ready);
@@ -218,16 +217,16 @@ export default function LockGate() {
     return () => sub.remove();
   }, []);
 
-  // До чтения конфигурации контент не показывается: иначе при включённой защите
-  // дневник успел бы мелькнуть на первом кадре.
-  // Экран блокировки приватного содержимого не показывает, поэтому при уходе в
-  // фон он остаётся на месте: подменять его шторкой значило бы размонтировать
-  // его и заново запрашивать Face ID на каждом возврате.
+  // Content is not shown before the config is loaded: with protection enabled,
+  // the diary would flash in the first frame otherwise.
+  // The lock screen shows no private content, so it stays in place when the
+  // app goes to the background: swapping it for the curtain would unmount it
+  // and re-request Face ID on every return.
   const content = locked && ready ? <LockScreen />
     : !ready || obscured ? <PrivacyCurtain /> : null;
   if (!content || Platform.OS !== 'android') return content;
-  // Отдельное нативное окно исключает Stack из дерева TalkBack: обычная
-  // View-обёртка не скрывает перенесённые native-stack экраны на Android.
+  // A separate native window removes the Stack from TalkBack's tree: a plain
+  // View wrapper does not hide the hosted native-stack screens on Android.
   return (
     <Modal visible statusBarTranslucent navigationBarTranslucent onRequestClose={() => {}}>
       {content}

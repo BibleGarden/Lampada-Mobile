@@ -46,7 +46,7 @@ type NarrationInterruptionEvent =
   | { type: 'resume_requested' }
   | { type: 'resume_denied' };
 
-/** Решение о фазе и lease общее для системной паузы и ручного возобновления. */
+/** Phase and lease decisions are shared between the system pause and manual resume. */
 export function narrationInterruptionTransition(
   phase: ScriptureAudioPhase,
   event: NarrationInterruptionEvent,
@@ -69,7 +69,7 @@ export function narrationInterruptionTransition(
   return null;
 }
 
-/** Подсветка сохраняется и при системной паузе между стихами. */
+/** The highlight also survives a system pause between verses. */
 export function narrationActiveVerse(
   phase: ScriptureAudioPhase,
   verses: readonly { number: number; startSeconds: number; endSeconds: number }[],

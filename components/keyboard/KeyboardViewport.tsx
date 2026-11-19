@@ -5,21 +5,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { pendingKeyboardReserve } from '../../lib/keyboardGeometry';
 import { useKeyboardFrames } from '../../lib/useKeyboardLayout';
 
-// Единственный владелец доступной области обычной формы и нативного Modal.
-// Каждый viewport занимает окно до нижнего края, поэтому снизу резервируется
-// max(безопасная зона, клавиатура) одним значением UI-потока. Прокручиваемый
-// экран может перенести безопасную зону внутрь своего contentContainer.
-// Внутренний flex-контейнер ограничивает также absoluteFill-детей:
-// сами они не обязаны учитывать padding внешнего View.
-// Шторки сюда не входят: их резерв держит footer (KeyboardSheet).
+// The sole owner of the available area of a plain form and a native Modal.
+// Each viewport fills the window down to the bottom edge, so the bottom
+// reserves max(safe area, keyboard) as a single UI-thread value. A scrollable
+// screen may move the safe area into its own contentContainer.
+// The inner flex container also constrains absoluteFill children:
+// they need not account for the outer View's padding themselves.
+// Sheets are not included here: their reserve is held by the footer (KeyboardSheet).
 export default function KeyboardViewport({ children, style, contentContainerStyle, safeAreaInContent = false, ...props }: ViewProps & {
   contentContainerStyle?: StyleProp<ViewStyle>;
   safeAreaInContent?: boolean;
 }) {
   const safeBottom = useSafeAreaInsets().bottom;
   const keyboard = useKeyboardFrames().reserved;
-  // Прокручиваемый экран может держать safe area в собственном contentContainer:
-  // тогда пустой нижний край не обрезает его видимую область.
+  // A scrollable screen may keep the safe area in its own contentContainer:
+  // then the empty bottom strip does not clip its visible area.
   const reserved = useAnimatedStyle(() => ({
     paddingBottom: Math.max(safeAreaInContent ? 0 : safeBottom, keyboard.value),
   }), [safeAreaInContent, safeBottom]);
@@ -30,9 +30,9 @@ export default function KeyboardViewport({ children, style, contentContainerStyl
   );
 }
 
-// Полоса под полем, которое заполняет форму над закреплённой клавиатурой:
-// место, которое открывающаяся клавиатура ещё займёт в KeyboardViewport
-// (pendingKeyboardReserve). Её монтирует только раскладка редактирования.
+// A strip below the field that fills the form above a docked keyboard:
+// the space the opening keyboard will still take in KeyboardViewport
+// (pendingKeyboardReserve). Only the editing layout mounts it.
 export function KeyboardPendingSpace() {
   const safeBottom = useSafeAreaInsets().bottom;
   const { reserved, target } = useKeyboardFrames();

@@ -5,8 +5,8 @@ type Slot<T> =
   | { key: string; status: 'ready'; value: T };
 
 /**
- * Одноэлементный буфер: готовое значение забирается синхронно, а pending
- * можно дождаться через wait(), не запуская повторный загрузчик.
+ * A single-slot buffer: a ready value is taken synchronously, while a pending
+ * one can be awaited via wait() without starting the loader again.
  */
 export const createOneAheadPool = <T>() => {
   let version = 0;

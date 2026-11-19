@@ -1,17 +1,17 @@
 import type { JournalDetail, JournalEntry } from './db';
 import type { FavoriteScripture } from './scripture';
 
-// Текстовый экспорт молитвы из дневника: только то, что человек может
-// прочитать. Аудиофайлы никогда не покидают устройство — уходят лишь
-// расшифровки, которые пользователь уже видит в дневнике.
+// Text export of a prayer from the journal: only what a person can read.
+// Audio files never leave the device — only the transcripts the user
+// already sees in the journal go out.
 //
-// Текст читают в заметках и мессенджерах, где нет разметки, поэтому
-// структуру держат явные подписи («Тема:», «Вопрос 1:», «Ответ:») и
-// разделители из трёх длинных тире между смысловыми частями.
+// The text is read in notes and messengers with no markup, so the
+// structure is carried by explicit labels (topic, question, answer) and
+// separators of three em dashes between sections.
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
-/** Поля дневниковой карточки, которых достаточно для экспорта. */
+/** Journal card fields sufficient for the export. */
 export type PrayerExportEntry = Pick<
   JournalEntry,
   'topic' | 'startedAt' | 'elapsedSec' | 'takeaway'
@@ -23,11 +23,11 @@ export const DEFAULT_APP_NAME = 'Lampada';
 
 const SEPARATOR = '———';
 
-/** Заголовок молитвы: цель, а если её нет — нейтральное «Молитва». */
+/** Prayer title: the topic, or a neutral "Prayer" when it is empty. */
 export const prayerExportTitle = (entry: PrayerExportEntry, t: Translate): string =>
   entry.topic.trim() || t('screens.journal.exportPrayer');
 
-// Дата и время начала в языке интерфейса; битую строку просто опускаем.
+// Start date and time in the UI language; a broken value is simply omitted.
 function formatStartedAt(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
@@ -36,7 +36,7 @@ function formatStartedAt(iso: string, locale: string): string {
   return `${day}, ${time}`;
 }
 
-// Длительность считаем ровно так же, как карточка дневника.
+// Duration is formatted exactly like the journal card.
 function formatDuration(seconds: number, t: Translate): string {
   if (!(seconds > 0)) return '';
   const minutes = Math.round(seconds / 60);
@@ -49,8 +49,8 @@ function formatDuration(seconds: number, t: Translate): string {
       });
 }
 
-// Расшифровки записей одного вопроса. Записи без текста пропускаем:
-// в экспорте от них остался бы пустой заголовок.
+// Transcripts of one question's recordings. Recordings without text are
+// skipped: they would leave an empty heading in the export.
 function transcriptLines(
   recordings: readonly Recording[],
   questionIndex: number,
@@ -63,15 +63,15 @@ function transcriptLines(
     .map((transcript) => `${t('screens.journal.exportVoiceNote')}: ${transcript}`);
 }
 
-// «Вопрос N» с текстом вопроса, если он сохранился.
+// "Question N" with the question text, when it was saved.
 function questionHeading(position: number, question: string, t: Translate): string {
   const label = t('screens.journal.exportQuestion', { count: position });
   return question ? `${label}: ${question}` : label;
 }
 
 /**
- * Собирает читаемый текст молитвы для системного «Поделиться».
- * Чистая функция: ни базы, ни сети, ни нативных модулей.
+ * Builds the readable prayer text for the system share sheet.
+ * A pure function: no database, no network, no native modules.
  */
 export function buildPrayerExportText(
   entry: PrayerExportEntry,
@@ -81,7 +81,7 @@ export function buildPrayerExportText(
   locale: string,
   appName: string = DEFAULT_APP_NAME,
 ): string {
-  // Шапка: тема есть всегда, дата и длительность — если их удалось собрать.
+  // Header: the topic is always present, date and duration only when they resolve.
   const metaLines = [`${t('screens.journal.exportTopic')}: ${prayerExportTitle(entry, t)}`];
   const startedAt = formatStartedAt(entry.startedAt, locale);
   if (startedAt) metaLines.push(`${t('screens.journal.exportDate')}: ${startedAt}`);
@@ -91,8 +91,8 @@ export function buildPrayerExportText(
   const recordings = detail?.recordings ?? [];
   const answers = [...(detail?.answers ?? [])].sort((a, b) => a.questionIndex - b.questionIndex);
 
-  // Нумерация — по порядку показа, а не по questionIndex: пропуски в индексах
-  // не должны оставлять дыр в «Вопрос N».
+  // Numbering follows display order, not questionIndex: gaps in the
+  // indexes must not leave holes in "Question N".
   const answerBlocks: string[] = [];
   for (const answer of answers) {
     const lines = [questionHeading(answerBlocks.length + 1, answer.question.trim(), t)];
@@ -102,7 +102,7 @@ export function buildPrayerExportText(
     answerBlocks.push(lines.join('\n'));
   }
 
-  // Записи, у которых нет своего ответа, идут хвостом — как в карточке дневника.
+  // Recordings without their own answer go at the tail — as in the journal card.
   const answered = new Set(answers.map((a) => a.questionIndex));
   const orphanIndexes = [
     ...new Set(recordings.filter((r) => !answered.has(r.questionIndex)).map((r) => r.questionIndex)),
@@ -113,7 +113,7 @@ export function buildPrayerExportText(
     answerBlocks.push([questionHeading(answerBlocks.length + 1, '', t), ...transcripts].join('\n'));
   }
 
-  // Цитаты и итог — один смысловой раздел, поэтому и разделитель у них общий.
+  // Quotes and the takeaway form one section, so they share a separator.
   const closingBlocks: string[] = [];
   const quotes = favorites
     .map((favorite) => {
@@ -131,7 +131,7 @@ export function buildPrayerExportText(
   const takeaway = entry.takeaway.trim();
   if (takeaway) closingBlocks.push(`${t('screens.journal.exportTakeaway')}:\n${takeaway}`);
 
-  // Пустые разделы выпадают вместе со своими разделителями.
+  // Empty sections drop out together with their separators.
   const sections = [[metaLines.join('\n')], answerBlocks, closingBlocks]
     .filter((blocks) => blocks.length > 0)
     .map((blocks) => blocks.join('\n\n'));

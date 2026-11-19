@@ -1,5 +1,6 @@
-// Плотности экрана рефлексии: сначала кегль вопроса, затем уголёк и поле.
-// Значения в единицах макета; sc() применяется в компоненте и при подборе.
+// Reflect screen densities: first the question type size, then the flame and
+// the input. Values are in layout units; sc() is applied in the component and
+// during fitting.
 export const REFLECT_DENSITIES = [
   { fontStep: 0, flame: 104, input: 128 },
   { fontStep: 2, flame: 104, input: 128 },
@@ -16,18 +17,18 @@ export function reflectionQuestionType(question: string, fontStep = 0) {
   return { font: base.font - fontStep, line: base.line - fontStep };
 }
 
-// Общие интервалы для стилей экрана и расчёта занимаемой высоты.
+// Shared spacing for screen styles and the occupied-height calculation.
 export const REFLECT_SPACING = { top: 16, question: 4, input: 20, actions: 16 } as const;
 
 export type ReflectFitState = { context: string; index: number };
 export type ReflectMeasurement = ReflectFitState & { blockHeight: number };
 
-// Новый вопрос или геометрия начинают подбор сразу, без эффекта сброса.
+// A new question or geometry restarts fitting immediately, with no reset effect.
 export function reflectionDensityIndex(state: ReflectFitState, context: string): number {
   return state.context === context ? state.index : 0;
 }
 
-// Размеры берутся из одного нативного контейнера, а не из Dimensions.
+// Sizes come from a single native container, not from Dimensions.
 export function reflectionAvailableHeight(
   rootHeight: number | undefined, topPadding: number, bottomPadding: number, bottomInset: number,
 ): number | undefined {
@@ -44,9 +45,10 @@ type Measured = {
 };
 
 /**
- * Новый кегль измеряется заново: перенос может убрать целую строку.
- * Варианты с тем же кеглем подбираются сразу по измеренной высоте текста.
- * overflow неизвестен, пока нет подходящего измерения или скрытой клавиатуры.
+ * A new type size is measured anew: a reflow can remove a whole line.
+ * Variants sharing the same type size are fitted at once from the measured
+ * text height. overflow stays unknown until there is a matching measurement
+ * and the keyboard is hidden.
  */
 export function fitReflectDensity(
   { availableHeight, context, index, measurement, actionsHeight, keyboardPhase }: Measured,
