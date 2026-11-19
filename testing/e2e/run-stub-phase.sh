@@ -23,11 +23,11 @@ control() { curl -s -X POST "$STUB/__control" -d "$1" > /dev/null; }
 step() { echo "== $1"; }
 
 step "UPDATE soft"
-control '{"version":{"update_type":"soft","latest_version":"9.9.9","store_url":"https://example.com/lampada","message":{"ru":"Доступно обновление. Обнови, пожалуйста.","en":"Update available.","uk":"Доступне оновлення."}}}'
+control '{"version":{"update_type":"soft","latest_version":"9.9.9","message":{"ru":"Доступно обновление. Обнови, пожалуйста.","en":"Update available.","uk":"Доступне оновлення."},"store_url":"https://example.com/lampada"}}'
 maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-update-soft.yaml
 
 step "UPDATE hard"
-control '{"version":{"update_type":"hard","latest_version":"9.9.9","store_url":"https://example.com/lampada","message":{"ru":"Обнови Лампаду, чтобы продолжить.","en":"Update required.","uk":"Онови застосунок."}}}'
+control '{"version":{"update_type":"hard","latest_version":"9.9.9","message":{"ru":"Обнови Лампаду, чтобы продолжить.","en":"Update required.","uk":"Онови застосунок."},"store_url":"https://example.com/lampada"}}'
 maestro --device "$UDID" test --test-output-dir "$EVIDENCE" testing/e2e/ios-update-hard.yaml
 control '{"version":{"update_type":"none","latest_version":"1.0.23","message":null}}'
 
