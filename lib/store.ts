@@ -37,15 +37,17 @@ import {
   updatePrayerSystemTimer,
 } from './prayerSystemTimer';
 
-// Логика сессии, перенесённая из прототипа.
+// Session logic carried over from the prototype.
 //
-// Вопросы: линейный «след» открытых вопросов + «фронтир» (текущий неотвеченный).
-// ◀ ▶ ходят только по открытым (0..answeredCount). На фронтире правая кнопка:
-//  - вопрос отвечен → открыть следующий из пула;
-//  - не отвечен → заменить вопрос на месте из того же пула.
-// Ready-слот показывается сразу, pending-слот дожидается своего запроса.
+// Questions: a linear "trail" of opened questions + a "frontier" (the current
+// unanswered one). ◀ ▶ move only over opened items (0..answeredCount). On the
+// frontier the right button:
+//  - answered → open the next question from the pool;
+//  - unanswered → replace the question in place from the same pool.
+// A ready slot is shown immediately; a pending slot waits for its request.
 //
-// Писание: та же механика, но «след» растёт сердечком (избранное), не ответом.
+// Scripture: the same mechanics, but the "trail" grows by a heart (favourite),
+// not by an answer.
 
 export type RecordingDraft = {
   id: number;
@@ -58,7 +60,7 @@ export type RecordingDraft = {
 
 export type Answer = { text: string; recordings: RecordingDraft[] };
 
-/** Тройка Библии, замороженная на сессию. */
+/** The scripture triple frozen for the session. */
 export type ScriptureSelection = {
   language: ScriptureLanguage;
   translation: number;
@@ -74,7 +76,7 @@ const selectionFromPreferences = (preferences: ScripturePreferences): ScriptureS
 type SessionState = {
   // setup
   topic: string;
-  minutes: number; // 0 = без таймера
+  minutes: number; // 0 = no timer
 
   // session runtime
   sessionId: number | null;
@@ -87,14 +89,15 @@ type SessionState = {
   answers: Record<number, Answer>;
   generating: boolean;
 
-  scrList: ScriptureDisplay[]; // фактически показанный след текущей сессии
-  scrIndex: number; // позиция в scrList
-  scrFav: string[]; // canonical ID серверных записей в избранном
-  // Снимок выбора на входе в сессию; null, пока каталог не подтвердил первый выбор.
+  scrList: ScriptureDisplay[]; // the trail actually shown in the current session
+  scrIndex: number; // position in scrList
+  scrFav: string[]; // canonical IDs of favourite server records
+  // Snapshot of the selection taken when entering the session; null until the catalog confirms the first selection.
   scriptureSelection: ScriptureSelection | null;
   scrStatus: 'idle' | 'loading' | 'ready' | 'retrying' | 'error' | 'offline_fallback';
-  // catalog_unavailable — каталог не ответил; no_default_bible — для языка
-  // интерфейса нет Библии с озвучкой; selection_failed — сбой на устройстве.
+  // catalog_unavailable — the catalog did not respond; no_default_bible — no
+  // Bible with narration for the interface language; selection_failed — an
+  // on-device failure.
   scrError:
     | 'not_configured'
     | 'unavailable'
@@ -106,7 +109,7 @@ type SessionState = {
   dockMode: 'question' | 'scripture';
   musicOn: boolean;
 
-  remaining: number | null; // сек; null = без таймера
+  remaining: number | null; // seconds; null = no timer
   elapsed: number;
   startedAtMs: number | null;
   endsAtMs: number | null;
@@ -131,14 +134,14 @@ type SessionActions = {
   enterSession: () => Promise<void>;
   resumeSession: () => void;
   tick: (nowMs?: number) => void;
-  /** Сохранить текущее время молитвы при уходе приложения из активного состояния. */
+  /** Save the current prayer time when the app leaves the active state. */
   checkpointElapsed: () => void;
   adjustTimer: (deltaMin: number) => void;
 
   prevQuestion: () => void;
   nextQuestion: () => Promise<void>;
   jumpQuestion: (pos: number) => void;
-  /** Сначала пишет ответ в SQLite; ошибка записи пробрасывается, память не меняется. */
+  /** Writes the answer to SQLite first; a write error is thrown and memory stays unchanged. */
   saveAnswer: (questionIndex: number, text: string, recordings: RecordingDraft[]) => Promise<void>;
 
   prevScripture: () => void;
@@ -159,12 +162,13 @@ type SessionActions = {
 const isAnswered = (a: Answer | undefined) =>
   !!(a && (a.text.trim() || a.recordings.length));
 
-// Время идущей молитвы сохраняется раз в минуту и при уходе в фон: прерванная
-// молитва остаётся в дневнике со своей длительностью и засчитывает день
-// (ADR-0042). Первая точка — через минуту: молитва, открытая и сразу
-// брошенная без ответов, в дневник и серию не попадает.
+// The elapsed prayer time is saved once a minute and when going to the
+// background: an interrupted prayer stays in the journal with its duration and
+// counts for the day (ADR-0042). The first checkpoint is after a minute: a
+// prayer opened and immediately abandoned with no answers never reaches the
+// journal or the streak.
 const ELAPSED_CHECKPOINT_SEC = 60;
-// Вне состояния store: контрольная точка не вызывает ре-рендеров.
+// Kept outside the store state: the checkpoint causes no re-renders.
 let savedElapsed: { sessionId: number | null; elapsed: number } = { sessionId: null, elapsed: 0 };
 
 const saveElapsedCheckpoint = (s: SessionState, anyProgress: boolean) => {
@@ -189,14 +193,14 @@ const reportSystemTimerError = (action: string, error: unknown) => {
   );
 };
 
-// Реплики для промпта — только с отдельным answer-context consent;
-// без него ответы и готовые расшифровки не покидают устройство.
+// Replies for the prompt — only with a separate answer-context consent;
+// without it, answers and ready transcripts never leave the device.
 const answersForAi = (answers: Record<number, Answer>) =>
   answerContextAllowedNow() ? answers : {};
 
 let prepareToken = 0;
 let reflectToken = 0;
-// Одноразовость хука принудительной ошибки enterSession (EXPO_PUBLIC_FORCE_SESSION_ERROR).
+// One-shot behavior of the forced enterSession error hook (EXPO_PUBLIC_FORCE_SESSION_ERROR).
 let forcedSessionErrorSpent = false;
 let scriptureToken = 0;
 let scriptureAbortController: AbortController | null = null;
@@ -207,8 +211,9 @@ let firstQuestionFetch: {
   result?: ai.GeneratedQuestion | null;
 } | null = null;
 
-// Готовый слот показывается синхронно. Если слот ещё pending, кнопка ждёт
-// именно уже запущенный запрос; новый refill стартует только после показа.
+// A ready slot is shown synchronously. While a slot is still pending, the
+// button waits for the request already in flight; a new refill starts only
+// after the reveal.
 const questionPool = createOneAheadPool<ai.GeneratedQuestion | null>();
 const reflectPool = createOneAheadPool<ai.GeneratedQuestion | null>();
 
@@ -227,15 +232,16 @@ let scripturePrefetch: {
 const runScriptureExclusive = (load: () => Promise<ScriptureLoadResult>) =>
   scriptureSingleFlight.run(load);
 
-// Язык входит в ключ буфера и передаётся как default_language в completePrayerContent.
+// The language is part of the buffer key and passed as default_language to completePrayerContent.
 const poolKey = (
   s: SessionState,
   index: number,
   answers: Record<number, Answer> = s.answers,
 ) => JSON.stringify([s.sessionId, index, s.topic, s.questions, skippedForAi(s, answers), answersForAi(answers), useSettings.getState().uiLanguage]);
 
-// Текущий неотвеченный вопрос уже показан: prefetch должен исключить и его.
-// Проверяем реальные ответы до privacy gate, включая ещё не расшифрованный голос.
+// The current unanswered question is already shown: prefetch must exclude it
+// too. Real answers are checked before the privacy gate, including voice not
+// yet transcribed.
 const skippedForAi = (s: SessionState, answers = s.answers) => [
   ...s.skippedQuestions,
   ...s.questions.filter((question, index) => question.trim() && !isAnswered(answers[index])),
@@ -369,13 +375,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   prepareThreshold: () => {
     const { topic } = get();
-    // токен отсекает результаты устаревших промисов: повторный заход
-    // на порог с другой темой или reset() делают старый ответ неактуальным
+    // the token discards stale promise results: re-entering the threshold with
+    // a different topic or reset() makes the old answer obsolete
     const token = ++prepareToken;
-    // заранее готовится только первый вопрос: остальные генерируются
-    // по ходу молитвы, с учётом живых ответов (если человек разрешил).
-    // Результат применяется только до входа в сессию: опоздавший вопрос
-    // не должен затирать уже идущую молитву
+    // only the first question is prepared in advance: the rest are generated
+    // during the prayer from live answers (if the person consented).
+    // The result applies only before the session starts: a late question must
+    // not overwrite a prayer already in progress
     const promise = ai.generateFirstQuestion(topic, true);
     const fetch: NonNullable<typeof firstQuestionFetch> = { topic, promise, language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
@@ -398,11 +404,11 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
   enterSession: async () => {
     const { topic, minutes } = get();
     reflectToken++;
-    // Тестовый хук e2e: сборка с EXPO_PUBLIC_FORCE_SESSION_ERROR=1 один раз
-    // падает на входе с темой-маркером «STG», воспроизводя путь generic-catch
-    // порога (app/threshold.tsx) без внешней блокировки SQLite — с WAL
-    // (lib/db.ts) она уже не работает. Маркер-тема не даёт хуку ломать
-    // остальные сценарии той же сборки.
+    // E2E test hook: a build with EXPO_PUBLIC_FORCE_SESSION_ERROR=1 fails entry
+    // once on the "STG" marker topic, reproducing the threshold's
+    // generic-catch path (app/threshold.tsx) without an external SQLite lock —
+    // with WAL (lib/db.ts) that no longer works. The marker topic keeps the
+    // hook from breaking other scenarios in the same build.
     if (
       process.env.EXPO_PUBLIC_FORCE_SESSION_ERROR === '1'
       && topic.startsWith('STG')
@@ -411,40 +417,41 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       forcedSessionErrorSpent = true;
       throw new Error('Forced session start failure (e2e hook)');
     }
-    // Вход не зависит от сети. Пока первый вопрос готовится, карточка вопроса
-    // показывает spinner; fallback появляется только когда AI-слой вернул его
-    // из-за явной ошибки.
+    // Entry does not depend on the network. While the first question is being
+    // prepared, the question card shows a spinner; the fallback appears only
+    // when the AI layer returned it due to an explicit error.
     const fetch: NonNullable<typeof firstQuestionFetch> =
       firstQuestionFetch?.topic === topic && firstQuestionFetch.language === useSettings.getState().uiLanguage
         ? firstQuestionFetch
         : { topic, promise: ai.generateFirstQuestion(topic), language: useSettings.getState().uiLanguage };
     firstQuestionFetch = fetch;
     const firstQuestion = fetch.result;
-    // Запоминаем длительность, с которой начинается молитва: следующая
-    // настройка откроется с ней. Продление таймера в молитве её не меняет —
-    // сюда попадает только выбор на экране настройки. Сохраняем до записи
-    // журнала: сбой сохранения не оставит сессию, а повтор старта не создаст
-    // вторую. Если же упадёт создание сессии, запомненная, но не начатая
-    // длительность безвредна.
+    // Remember the duration the prayer starts with: the next setup screen
+    // opens with it. Extending the timer mid-prayer does not change it — only
+    // a choice on the setup screen lands here. Save before the journal write:
+    // a save failure leaves no session behind, and a repeated start creates
+    // no second one. If session creation fails instead, a remembered but
+    // unstarted duration is harmless.
     await useSettings.getState().setPrayerMinutes(minutes);
-    // Момент начала берётся один раз: по нему датируются и запись журнала
-    // (sessions.started_at), и день молитвы в серии (ADR-0033), иначе около
-    // полуночи они могли разойтись на разные дни.
+    // The start moment is taken once: both the journal record
+    // (sessions.started_at) and the streak day (ADR-0033) are dated by it;
+    // otherwise near midnight they could land on different days.
     const startedAtMs = Date.now();
     const [sessionId, favoriteScriptures] = await Promise.all([
       db.createSession(topic, minutes, startedAtMs),
       ensureSettingsLoaded().then(() => scriptureRepository.getFavoriteScriptures()),
     ]);
-    // Неподтверждённый первый выбор Библии не задерживает вход: блок цитат
-    // сам подтвердит его по каталогу или покажет ошибку с повтором.
+    // An unconfirmed first Bible selection does not delay entry: the scripture
+    // block will confirm it from the catalog itself or show an error with a
+    // retry.
     const scripturePreferences = useSettings.getState().scripturePreferences;
-    // висящая генерация первого вопроса с порога больше не применится
+    // a pending first-question generation from the threshold no longer applies
     prepareToken++;
     firstQuestionFetch = null;
     questionPool.invalidate();
     reflectPool.invalidate();
-    // После стирания данных id сессий начинаются заново: старая точка не должна
-    // подавить сохранение новой молитвы с тем же id.
+    // After a data wipe, session ids start over: an old checkpoint must not
+    // suppress saving a new prayer with the same id.
     savedElapsed = { sessionId, elapsed: 0 };
     set({
       sessionId,
@@ -488,7 +495,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     scripturePrefetch = null;
     void loadFirstScripture(sessionId, currentScriptureToken, false);
     if (firstQuestion) {
-      // Первый запасной вопрос начинает готовиться сразу после входа.
+      // The first one-ahead question starts preparing right after entry.
       prepareQuestion(get(), 0);
       return;
     }
@@ -513,8 +520,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     const nowMs = Date.now();
     const remaining = s.minutes === 0 ? null : s.minutes * 60;
     const endsAtMs = remaining === null ? null : nowMs + remaining * 1_000;
-    // Возвращаемся в ту же молитву: ответы, цитаты и позиции не сбрасываем.
-    // Поздний итоговый вопрос с экрана завершения больше не применяется.
+    // Return to the same prayer: answers, passages, and positions are kept.
+    // A late closing question from the completion screen no longer applies.
     reflectToken++;
     set({
       remaining,
@@ -539,8 +546,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     });
     const current = get();
     saveElapsedCheckpoint(current, false);
-    // Итоговый вопрос готовится заранее. Повторные тики с тем же ключом
-    // дедуплицируются пулом, а изменение ответов создаёт новый ключ.
+    // The closing question is prepared in advance. Repeated ticks with the
+    // same key are deduplicated by the pool; changed answers create a new key.
     if (current.remaining !== null && current.remaining > 0 && current.remaining <= 15) {
       prepareReflectQuestion(current);
     }
@@ -554,8 +561,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       const nowMs = Date.now();
       const snapshot = sessionTimerSnapshot(s.startedAtMs, s.endsAtMs, nowMs);
       const adjusted = adjustSessionTimer(s.endsAtMs, nowMs, deltaMin * 60);
-      // minutes двигаем на фактическое изменение remaining, а не на deltaMin:
-      // у нижней границы (5 сек) иначе разъезжаются total и кольцо прогресса
+      // Move minutes by the actual remaining change, not by deltaMin:
+      // at the lower bound (5 sec) the total and the progress ring would
+      // otherwise drift apart
       const minutes = Math.max(
         1,
         Math.round(s.minutes + adjusted.actualDeltaSeconds / 60),
@@ -586,7 +594,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     if (s.generating) return;
     if (s.qIndex < s.answeredCount) {
       set({ qIndex: s.qIndex + 1,
-        shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[s.qIndex + 1]) }); // вперёд по открытым
+        shownQuestions: rememberShownQuestion(s.shownQuestions, s.questions[s.qIndex + 1]) }); // forward over opened questions
       return;
     }
     const sessionToken = s.sessionId;
@@ -633,7 +641,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       q = localQuestion(shown, 'next');
     } else if (q.novel === false || wasQuestionShown(q.text, shown)) {
       if (!isAnswered(s.answers[frontier])) {
-        // Слот уже забран: следующее нажатие попробует снова, без фонового цикла.
+        // The slot is already taken: the next press will try again, with no background loop.
         set({ generating: false });
         return;
       }
@@ -641,7 +649,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     }
 
     if (isAnswered(s.answers[frontier])) {
-      // плюс: открыть следующий вопрос в след
+      // growth: open the next question into the trail
       const nf = s.answeredCount + 1;
       if (s.questions[nf] !== undefined) {
         set({ answeredCount: nf, qIndex: nf, generating: false,
@@ -667,7 +675,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       });
     }
 
-    // Уже показанный вопрос не зависит от этого запроса: refill идёт в фоне.
+    // The question already shown does not depend on this request: the refill runs in the background.
     prepareQuestion(get(), get().qIndex);
   },
 
@@ -696,13 +704,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       );
     }
     const current = get();
-    // Пока шла запись, сессия могла смениться: чужие ответы в память не кладём.
+    // The session may have changed while the recording ran: foreign answers never go into memory.
     if (current.sessionId !== s.sessionId) return;
     const answers = { ...current.answers, [questionIndex]: { text, recordings } };
     set({ answers });
-    // Любое изменение доступного AI-контекста инвалидирует старый слот.
-    // Для отвеченного фронтира готовится следующий индекс, иначе — замена
-    // текущего вопроса на месте.
+    // Any change to the AI-visible context invalidates the old slot.
+    // An answered frontier prepares the next index; otherwise the current
+    // question is replaced in place.
     if (current.sessionId !== null && questionIndex <= current.answeredCount) {
       const updated = get();
       const frontier = updated.answeredCount;
@@ -758,8 +766,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         operation: has ? 'remove' : 'add',
         errorKind: db.errorKind(error),
       });
-      // Сердце возвращается к тому, что лежит в базе, если его не успели
-      // переключить снова.
+      // The heart reverts to whatever the database holds, unless it was
+      // toggled again in the meantime.
       set((state) => {
         if (state.scrFav.includes(current.canonicalId) === has) return state;
         return {
@@ -790,7 +798,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
 
   finish: async () => {
     const s = get();
-    // Экран итога не тикает: время молитвы до него сохраняется сразу.
+    // The summary screen does not tick: prayer time before it is saved immediately.
     saveElapsedCheckpoint(s, true);
     const token = ++reflectToken;
     const sessionToken = s.sessionId;
@@ -804,8 +812,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         set({ reflectGenerating: false });
         return;
       }
-      // Итоговый вопрос относится к состоянию на момент завершения: поздний
-      // первый вопрос, которого человек уже не увидел, не отменяет ожидание.
+      // The closing question belongs to the state at completion time: a late
+      // first question the person will never see does not cancel the wait.
       q = await pending;
       reflectPool.takeReady(key);
       if (token !== reflectToken || get().sessionId !== sessionToken) return;
@@ -836,8 +844,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     await stopPrayerSystemTimer().catch((error) =>
       reportSystemTimerError('stop', error),
     );
-    // Молитва засчитывается дню, когда она началась, а не дню нажатия «Готово»:
-    // finishSession отмечает день по sessions.started_at в той же транзакции.
+    // The prayer counts for the day it started, not the day "Done" was pressed:
+    // finishSession marks the day from sessions.started_at in the same transaction.
     await db.finishSession(s.sessionId, s.elapsed, takeaway);
     const streak = await db.getStreak();
     set({ takeaway, streak });
@@ -847,7 +855,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     void stopPrayerSystemTimer().catch((error) =>
       reportSystemTimerError('stop', error),
     );
-    prepareToken++; // висящие prepareThreshold-промисы больше не применятся
+    prepareToken++; // pending prepareThreshold promises no longer apply
     reflectToken++;
     scriptureToken++;
     scriptureAbortController?.abort();
@@ -933,8 +941,9 @@ const handleScriptureFailure = async (
 };
 
 /**
- * Подтверждает первый выбор Библии внутри уже начатой сессии. Ничего не
- * подставляет: без каталога блок цитат показывает ошибку с повтором.
+ * Confirms the first Bible selection inside an already started session.
+ * Substitutes nothing: without the catalog, the scripture block shows an
+ * error with a retry.
  */
 async function confirmScriptureSelection(sessionId: number, token: number, foreground: boolean) {
   let preferences: ScripturePreferences;
@@ -949,7 +958,7 @@ async function confirmScriptureSelection(sessionId: number, token: number, foreg
         : 'selection_failed';
     if (scrError === 'selection_failed') db.recordDiagnostic('scripture_selection_failed', { errorKind: db.errorKind(error) });
     else console.warn('Bible selection is not confirmed', error instanceof Error ? error.message : error);
-    // Скрытая попытка на входе не показывает ошибку: её покажет первое открытие блока.
+    // A hidden attempt at entry shows no error: the first opening of the block will show it.
     useSession.setState(
       foreground || useSession.getState().dockMode === 'scripture'
         ? { scrStatus: 'error', scrError }
@@ -963,10 +972,10 @@ async function confirmScriptureSelection(sessionId: number, token: number, foreg
 }
 
 /**
- * Непредвиденный сбой (например, SQLite при записи истории показов) не должен
- * оставить блок цитат в вечной загрузке: блок показывает ошибку с повтором.
- * Скрытая попытка на входе, как и при сбое выбора Библии, ошибку не показывает:
- * первое открытие блока повторит загрузку.
+ * An unexpected failure (e.g., SQLite while recording show history) must not
+ * leave the scripture block loading forever: the block shows an error with a
+ * retry. A hidden attempt at entry, as with a Bible-selection failure, shows
+ * no error: the first opening of the block retries the load.
  */
 async function guardScriptureLoad(
   sessionId: number,
@@ -1039,7 +1048,7 @@ function startScripturePrefetch(sessionId: number, token: number) {
     // Failed background requests are discarded silently; an explicit Next retries.
     if (!result.ok) scripturePrefetch = null;
   }, (error: unknown) => {
-    // Явный «Дальше», ждущий этот промис, покажет ошибку сам; здесь только след.
+    // An explicit "Next" waiting on this promise will show the error itself; here only a trace is left.
     console.error('Failed to prefetch Scripture', db.errorKind(error));
     db.recordDiagnostic('scripture_load_failed', { step: 'prefetch', errorKind: db.errorKind(error) });
     if (scripturePrefetch === slot) scripturePrefetch = null;
@@ -1087,9 +1096,9 @@ async function runNextScriptureLoad(sessionId: number, token: number) {
 }
 
 /**
- * Полный сброс сессии вместе со streak. Обычный `reset()` сохраняет streak: он
- * отражает историю в базе и не должен теряться при выходе из молитвы. После
- * стирания данных истории больше нет, поэтому обнуляется и он.
+ * Full session reset including the streak. The plain `reset()` keeps the
+ * streak: it mirrors database history and must not be lost when leaving a
+ * prayer. After a data wipe the history is gone, so it is zeroed too.
  */
 export const resetSessionStore = () => {
   useSession.getState().reset();

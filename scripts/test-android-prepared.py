@@ -16,8 +16,9 @@ parser.add_argument('--start-at', help='Resume from a diagnosed and corrected sc
 arguments = parser.parse_args()
 if not arguments.device.startswith('emulator-'):
     parser.error('Prepared Android tests require an emulator')
-# Фазы SCR-013 опираются на сохранённое состояние предыдущей фазы, а recovery —
-# ещё и на молитву, открытую в reopen: цепочку можно начать только с её первой фазы.
+# SCR-013 phases build on the saved state of the previous phase, and recovery
+# also needs the prayer opened in reopen: the chain can only start from its
+# first phase.
 if arguments.start_at in ('android-scripture-catalog-reopen', 'android-scripture-catalog-recovery',
                           'android-scripture-catalog-saved-offline'):
     parser.error('SCR-013 phases form one chain; use --start-at android-scripture-catalog-failure')
@@ -35,7 +36,7 @@ def control(payload):
 
 
 def run(name, command):
-    # Шаги до точки старта пропускаются целиком, включая правки базы и проверки.
+    # Steps before the start point are skipped entirely, including database edits and checks.
     if not started:
         return
     environment = dict(os.environ, ANDROID_TEST_DEVICE=arguments.device,
@@ -125,11 +126,11 @@ def expect_english_bible(values, ui_language, phase):
         sys.exit(phase + ': expected ui_language=' + ui_language + ', got ' + repr(values.get('ui_language')))
 
 
-# SCR-013. Проба базы — это `am instrument` по пакету приложения, и Android
-# останавливает приложение перед её запуском. Поэтому проба завершает фазу, а
-# следующая фаза перезапускает приложение с проверенного пробой сохранённого
-# состояния. Recovery повторяет запрос в молитве, открытой в reopen, — между
-# ними пробы нет.
+# SCR-013. A database probe is `am instrument` against the app package, and
+# Android stops the app before running it. So the probe ends a phase, and the
+# next phase restarts the app from the saved state the probe verified.
+# Recovery repeats the request in the prayer opened in reopen — there is no
+# probe between them.
 control({'catalog': 'fail'})
 flow('android-scripture-catalog-failure')
 if started:
@@ -145,7 +146,7 @@ control({'catalog': 'fail'})
 flow('android-scripture-catalog-saved-offline')
 if started:
     expect_english_bible(scripture_meta('scripture-catalog-saved-offline-meta'), 'ru', 'Saved selection offline')
-# SCR-027: каталог без озвученного русского перевода, выбор вручную из сессии.
+# SCR-027: catalog without a voiced Russian translation; the selection is made manually during the session.
 control({'catalog': 'unvoiced-ru'})
 flow('android-scripture-catalog-no-default')
 if started:

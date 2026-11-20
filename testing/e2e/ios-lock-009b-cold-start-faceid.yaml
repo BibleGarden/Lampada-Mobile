@@ -1,22 +1,22 @@
 appId: twinkler
 tags:
   - prepared
-# Только через run-lock-biometrics.sh: скрипт шлёт pearl.match после холодного старта.
+# Only through run-lock-biometrics.sh: the script sends pearl.match after the cold start.
 ---
-# LOCK-009 (часть 2): холодный старт при включённой биометрии сразу показывает
-# запрос Face ID; совпадение пускает в приложение без пин-кода.
+# LOCK-009 (part 2): with biometrics enabled, a cold start immediately shows
+# the Face ID prompt; a match lets the user into the app without the PIN.
 #
-# Предусловия: пин 123456, биометрия включена, образец зарегистрирован
-# (прогон ios-lock-009a через run-lock-biometrics.sh).
+# Preconditions: PIN 123456, biometrics enabled, a template enrolled
+# (ios-lock-009a run via run-lock-biometrics.sh).
 - launchApp:
     stopApp: true
-# Системный запрос скрывает AX-дерево приложения: ждём сам запрос.
+# The system prompt hides the app's AX tree: wait for the prompt itself.
 - extendedWaitUntil:
     visible:
       id: "com.apple.localauthentication.ax.authentication.alert"
     timeout: 10000
-# Автозапрос Face ID выполнился один раз за появление экрана; скрипт шлёт
-# совпадение, пока флоу спит.
+# The automatic Face ID request fires once per screen appearance; the script
+# sends the match while the flow sleeps.
 - evalScript: "java.lang.Thread.sleep(20000)"
 - extendedWaitUntil:
     notVisible:

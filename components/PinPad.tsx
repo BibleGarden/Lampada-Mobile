@@ -12,15 +12,15 @@ import { Check, Delete, ScanFace } from 'lucide-react-native';
 import { colors, fonts, sc, useStyles } from '../lib/theme';
 import { PIN_MAX_LENGTH, PIN_MIN_LENGTH } from '../lib/lock';
 
-// Клавиатура пин-кода: точки-индикаторы + круглые цифры в стиле приложения.
+// PIN keypad: indicator dots + round digits in the app's style.
 //
-// Два режима ввода. На разблокировке длина пина известна из хранилища, поэтому
-// проверка запускается сама на последней цифре — лишнее подтверждение там
-// только замедляло бы вход. При установке и смене длину выбирает пользователь
-// (4–8 цифр), и закончить ввод может только он сам кнопкой «готово»: иначе
-// шестизначный пин проверялся бы на четвёртой цифре.
+// Two input modes. On unlock the PIN length is known from storage, so the
+// check starts by itself on the last digit — an extra confirmation there would
+// only slow entry down. When setting or changing it, the user picks the length
+// (4–8 digits) and only they can finish input with the "Done" button: otherwise
+// a six-digit PIN would be checked on the fourth digit.
 
-// Ограничиваем только геометрию клавиш; текст сохраняет масштаб приложения.
+// Only the key geometry is clamped; text keeps the app's scale.
 const keyScale = (value: number) => Math.min(sc(value), value * 1.25);
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
@@ -29,29 +29,29 @@ export type PinPadProps = {
   title: string;
   subtitle?: string | null;
   /**
-   * Известная длина пина. Задана — ввод проверяется автоматически; не задана —
-   * пользователь вводит от PIN_MIN_LENGTH до PIN_MAX_LENGTH цифр и подтверждает.
+   * Known PIN length. When set, input is checked automatically; when not, the
+   * user enters PIN_MIN_LENGTH to PIN_MAX_LENGTH digits and confirms.
    */
   expectedLength?: number;
   /**
-   * `null` — ввод принят. Строка — текст ошибки под точками: тряска, хаптик и
-   * очистка поля. Сообщение возвращает вызывающий, потому что на одном и том же
-   * поле «неверный код» и «коды не совпали» — разные ошибки.
+   * `null` — input accepted. A string — error text under the dots: shake,
+   * haptic, and the field is cleared. The caller returns the message because
+   * "wrong code" and "codes do not match" are different errors on the same field.
    */
   onSubmit: (pin: string) => string | null | Promise<string | null>;
-  /** Кнопка биометрии в свободном углу клавиатуры. */
+  /** Biometry button in the keypad's free corner. */
   biometry?: { label: string; onPress: () => void } | null;
-  /** Ссылки под клавиатурой: «Не помнишь пин-код?», «Отмена». */
+  /** Links under the keypad: "Forgot your PIN?" (components.security.forgotPin), "Cancel". */
   footer?: React.ReactNode;
   testID?: string;
-  /** Стабильный id заголовка для e2e: шаги сценария различаются по нему. */
+  /** Stable title id for e2e: the scenario steps are told apart by it. */
   titleTestID?: string;
 };
 
 /**
- * Точки ввода. При известной длине их ровно столько, сколько цифр в пине. При
- * свободном вводе показаны все восемь (минимум и необязательный остаток) —
- * визуально круги одинаковы по размеру и цвету, различается только заполненность.
+ * Input dots. With a known length there are exactly as many as PIN digits.
+ * With free input all eight are shown (the minimum plus the optional rest) —
+ * visually the circles are the same size and color, differing only in fill.
  */
 function PinDots({ entered, expectedLength }: { entered: number; expectedLength?: number }) {
   const styles = useStyles(stylesFactory);
@@ -83,7 +83,7 @@ function KeyButton({
   disabled?: boolean;
   dim?: boolean;
   plain?: boolean;
-  /** Янтарная заливка со свечением — для главного действия (галочка «Готово»). */
+  /** Amber fill with a glow — for the main action (the "Done" checkmark). */
   emphasis?: boolean;
   children?: React.ReactNode;
   testID?: string;
@@ -126,8 +126,8 @@ export default function PinPad({
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // Проверка асинхронна (хэширование + Keychain). Ref, а не состояние: он
-  // должен закрыть повторный вход в submit синхронно, до следующего рендера.
+  // The check is asynchronous (hashing + Keychain). A ref, not state: it must
+  // block re-entry into submit synchronously, before the next render.
   const checking = useRef(false);
   const shake = useSharedValue(0);
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
@@ -154,8 +154,8 @@ export default function PinPad({
     setBusy(true);
     try {
       const message = await onSubmit(candidate);
-      // Поле очищается в любом случае: при успехе экран уходит либо сценарий
-      // переходит к следующему шагу, и набранные цифры не должны там остаться.
+      // The field is cleared either way: on success the screen goes away or
+      // the flow moves to the next step, and the typed digits must not remain.
       if (message === null) {
         setPin('');
         setError(null);
@@ -176,7 +176,7 @@ export default function PinPad({
     const next = pin + digit;
     setError(null);
     setPin(next);
-    // Автопроверка только когда длина известна заранее.
+    // Auto-check only when the length is known in advance.
     if (expectedLength !== undefined && next.length === expectedLength) void submit(next);
   };
 
@@ -222,8 +222,8 @@ export default function PinPad({
           />
         ))}
 
-        {/* Левый нижний угол: биометрия там, где её ждут, иначе — стирание,
-            чтобы при свободном вводе «готово» осталось справа под большим пальцем. */}
+        {/* Bottom-left corner: biometry where it is expected, otherwise
+            backspace, so with free input "Done" stays on the right under the thumb. */}
         {expectedLength !== undefined ? (
           biometry ? (
             <KeyButton
@@ -301,9 +301,9 @@ const stylesFactory = () => StyleSheet.create({
     marginTop: sc(20),
     minHeight: sc(14),
   },
-  // Все круги одного размера и цвета независимо от режима (свободный ввод,
-  // разблокировка) и от того, обязательна ли эта цифра при свободном вводе —
-  // заполненность видна только по заливке против контура.
+  // All circles are the same size and color regardless of mode (free input,
+  // unlock) and of whether the digit is required in free input — fill level is
+  // visible only as fill against outline.
   dot: {
     width: sc(10),
     height: sc(10),
@@ -315,8 +315,8 @@ const stylesFactory = () => StyleSheet.create({
   dotFilled: { backgroundColor: colors.goldSoft, borderColor: colors.goldSoft },
   hint: {
     marginTop: sc(14),
-    // Три строки: столько занимает предупреждение о невосстановимости кода
-    // при установке; резерв фиксированный, чтобы клавиатура не прыгала.
+    // Three lines: that much is taken by the code-recovery warning during
+    // setup; the reserve is fixed so the keypad does not jump.
     minHeight: sc(45),
     fontFamily: fonts.sans,
     fontSize: sc(10.5),
@@ -344,12 +344,12 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.btnGoldBorder,
   },
-  // Пустой угол клавиатуры: держит сетку, но не выглядит нажимаемой кнопкой.
+  // Empty keypad corner: holds the grid but does not look like a pressable button.
   keySpacer: { width: KEY_SIZE(), height: KEY_SIZE() },
-  // Контур стирания без круга; область касания совпадает с цифровой кнопкой.
+  // Backspace outline without a circle; the touch area matches a digit key.
   keyPlain: { backgroundColor: 'transparent', borderColor: 'transparent' },
   keyDim: { backgroundColor: colors.btnGoldBgDim, borderColor: colors.btnGoldBorderDim },
-  // Как GoldButton: главная CTA-кнопка экрана должна бросаться в глаза.
+  // Like GoldButton: the screen's main CTA must stand out.
   keyEmphasis: {
     backgroundColor: colors.amber,
     borderColor: colors.amber,

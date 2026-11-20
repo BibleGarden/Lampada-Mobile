@@ -8,7 +8,7 @@ export type TranscriptionErrorCode =
 
 export class TranscriptionError extends Error {
   readonly code: TranscriptionErrorCode;
-  /** HTTP-статус ответа сервера, если сбой пришёл ответом. */
+  /** The server's HTTP status, when the failure arrived as a response. */
   readonly status?: number;
 
   constructor(code: TranscriptionErrorCode, options: { cause?: unknown; status?: number } = {}) {
@@ -31,8 +31,8 @@ export function transcriptionFailureCode(error: unknown): TranscriptionErrorCode
 }
 
 /**
- * Диагностика сбоя без текста сообщений: код категории, HTTP-статус и класс
- * исходной ошибки (для транспортных сбоев — класс причины).
+ * Failure diagnostics without message text: a category code, the HTTP status,
+ * and the original error's class (for transport failures, the cause's class).
  */
 export function transcriptionFailureDetails(error: unknown): Record<string, string | number> {
   const source = error instanceof TranscriptionError && error.cause !== undefined ? error.cause : error;

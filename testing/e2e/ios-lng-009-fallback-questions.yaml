@@ -1,18 +1,18 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
-# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+# NEEDS-RUNNER: the device locale is switched between flows by run-lng.sh
+# (the order and locales are hardcoded in the script). Not part of tagged runs.
 ---
-# LNG-009: локальный пул запасных вопросов следует языку интерфейса.
-# Ядро ИИ заранее запрещаем в настройках, чтобы не уйти в живой ответ сервера.
-# Поле default_language в HTTP — это LNG-011, его Maestro не видит.
+# LNG-009: the local pool of fallback questions follows the interface language.
+# The AI core is denied in settings up front so the flow never hits a live server answer.
+# The default_language field in HTTP is LNG-011, invisible to Maestro.
 - launchApp:
     stopApp: true
     clearState: true
-    # Lampada не использует геолокацию; явный список не даёт Maestro
-    # дёргать locationd (simctl privacy location) сразу после холодной
-    # перезагрузки, где locationd зависает.
+    # Lampada does not use geolocation; the explicit list keeps Maestro from
+    # poking locationd (simctl privacy location) right after a cold reboot,
+    # where locationd hangs.
     permissions:
       notifications: allow
       microphone: allow

@@ -18,8 +18,8 @@ type Props = {
   compactTextOverride?: string;
   accessibilityLabel?: string;
   /**
-   * `compact` — карточка: только выделенные сервером стихи и один цвет шрифта.
-   * `full` — читалка: весь отрывок с подсветкой ключевых стихов.
+   * `compact` — the card: only the server-highlighted verses, one font color.
+   * `full` — the reader: the whole passage with key verses highlighted.
    */
   variant?: 'full' | 'compact';
 };
@@ -103,7 +103,7 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serifSemiBold,
   },
   contextVerse: {
-    // Тот же белый, что у карточки и ключевого стиха, с непрозрачностью 55%.
+    // The same white as the card and the key verse, at 55% opacity.
     color: `${colors.cardText}8C`,
   },
   activeVerse: {

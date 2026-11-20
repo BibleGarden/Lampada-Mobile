@@ -75,9 +75,10 @@ import type { ConsentDecision, ConsentPurpose } from '../lib/privacyConsent';
 type OpenPicker = 'language' | 'translation' | 'voice' | null;
 
 /**
- * Шаг сценария ввода пина. `current` подтверждает право менять защиту,
- * `create` — придумать новый код, `repeat` — сверить его с повтором.
- * `current` хранит подтверждённый код только до конца смены пина.
+ * A step of the PIN entry flow. `current` confirms the right to change the
+ * protection, `create` — to come up with a new code, `repeat` — to match it
+ * against a re-entry. `current` holds the confirmed code only until the PIN
+ * change is finished.
  */
 type PinFlow = {
   kind: 'enable' | 'disable' | 'change';
@@ -146,7 +147,7 @@ function ConsentSetting({
               onPress={() => {
                 void Haptics.selectionAsync();
                 setFailed(false);
-                // Лог и диагностику пишет settings.setConsent; выбор там же откатывается.
+                // Logging and diagnostics are handled by settings.setConsent; the choice is rolled back there too.
                 void onChange(purpose, option.decision).catch(() => setFailed(true));
               }}
               style={({ pressed }) => [
@@ -178,7 +179,7 @@ function ConsentSetting({
   );
 }
 
-/** Строка настройки: название слева, текущее значение справа, шеврон. */
+/** A settings row: title on the left, current value on the right, chevron. */
 function SettingRow({ title, value, testID, accessibilityLabel, disabled, divided, onPress }: {
   title: string;
   value?: string;
@@ -269,7 +270,7 @@ function StepButton({ label, onPress, children, testID }: {
   );
 }
 
-/** Час шагает по часу, минуты — по пять; значение закольцовано внутри суток. */
+/** Hours step by one, minutes by five; the value wraps around within a day. */
 function TimeRow({ time, ruleIndex, canRemove, confirmingRemove, onShift, onRemove }: {
   time: ReminderTime;
   ruleIndex: number;
@@ -352,8 +353,8 @@ export default function Settings() {
   const reportReminderFailure = (step: 'save' | 'sync' | 'permission', error: unknown) => {
     console.error('Failed to update prayer reminders', step, errorKind(error));
     recordDiagnostic('reminders_failed', { step, place: 'settings', errorKind: errorKind(error) });
-    // Сбой синхронизации показывает useReminderSyncStatus: он же снимет
-    // предупреждение после следующей удачной синхронизации.
+    // Sync failures are shown by useReminderSyncStatus: it also clears the
+    // warning after the next successful sync.
     if (step !== 'sync') setReminderError(true);
   };
   const [reminderEditorRuleIndex, setReminderEditorRuleIndex] = useState<number | null>(null);
@@ -394,7 +395,7 @@ export default function Settings() {
     };
   }, [reminderEditorRuleIndex, reminderSchedule, visible]);
 
-  // Как в журнале и аудиозаписях: первый тап подсвечивает, второй удаляет.
+  // Like in the journal and audio recordings: the first tap highlights, the second deletes.
   const askOrConfirmReminderDelete = (target: string, remove: () => void) => {
     if (reminderDeleteTimer.current) clearTimeout(reminderDeleteTimer.current);
     if (confirmReminderDelete === target) {
@@ -412,7 +413,7 @@ export default function Settings() {
   };
 
   const hydrate = async () => {
-    // Повторный hydrate (смена языка интерфейса, Retry) отменяет результат прежнего.
+    // A repeated hydrate (UI language change, Retry) cancels the previous one's result.
     const request = ++hydrateRequest.current;
     const current = () => request === hydrateRequest.current;
     setLoadingCatalog(true);
@@ -433,8 +434,9 @@ export default function Settings() {
         } catch (error) {
           if (!(error instanceof ScriptureDefaultUnavailableError)) throw error;
           if (!current()) return;
-          // Каталог доступен, но не подходит к языку интерфейса: выбор остаётся
-          // за человеком, ошибка видна рядом с открытыми списками.
+          // The catalog is available but does not match the UI language: the
+          // choice is left to the person, and the error is shown next to the
+          // open lists.
           setLanguages(error.languages);
           setDefaultUnavailable(true);
           return;
@@ -447,7 +449,7 @@ export default function Settings() {
         throw new ScriptureCatalogUnavailableError(error);
       });
       if (!current()) return;
-      // Подтверждённый здесь выбор заменяет прежнюю неудачную попытку сохранения.
+      // A choice confirmed here replaces a previous failed save attempt.
       if (initializing) setScriptureSaveError(false);
       const savedLanguage = languageResult.find((item) => item.alias === saved.language) ?? null;
       const savedTranslation = translationResult.find(
@@ -461,7 +463,7 @@ export default function Settings() {
       setVoice(savedVoice);
     } catch (error) {
       if (!current()) return;
-      // Сбой SQLite — не сбой каталога: показываем и записываем его как есть.
+      // An SQLite failure is not a catalog failure: show and record it as such.
       if (error instanceof ScriptureCatalogUnavailableError) {
         setCatalogError(true);
       } else {
@@ -477,16 +479,16 @@ export default function Settings() {
     void hydrate();
   }, []);
 
-  // Без сохранённой Библии начальный выбор зависит от языка интерфейса:
-  // после его смены на этом же экране проверяем каталог заново.
+  // Without a saved Bible the initial selection depends on the UI language:
+  // after changing it on this very screen, re-check the catalog.
   useEffect(() => {
     if (hydratedLanguage.current === uiLanguage) return;
     hydratedLanguage.current = uiLanguage;
     if (!useSettings.getState().scripturePreferences) void hydrate();
   }, [uiLanguage]);
 
-  // Разрешение могло измениться в системных настройках, пока приложение было в
-  // фоне: перечитываем его при каждом возвращении на передний план.
+  // The permission may have changed in system settings while the app was in
+  // the background: re-read it on every return to the foreground.
   useEffect(() => {
     if (!visible) return;
     let alive = true;
@@ -497,8 +499,9 @@ export default function Settings() {
         const changed = known !== null && known !== status;
         known = status;
         setReminderPermission(status);
-        // Разрешение могли вернуть в системных настройках — тогда расписание
-        // нужно снова уложить в систему. При запуске это уже сделал _layout.
+        // The permission may have been re-granted in system settings — then
+        // the schedule needs to be pushed to the system again. At startup
+        // _layout already did this.
         if (changed) {
           syncRemindersAsync(useSettings.getState().reminderSchedule).catch((error: unknown) => {
             if (alive) reportReminderFailure('sync', error);
@@ -518,8 +521,9 @@ export default function Settings() {
     };
   }, [visible]);
 
-  // Биометрию могли зарегистрировать или удалить в системных настройках, пока
-  // приложение было в фоне: тумблер должен появляться и исчезать вслед за этим.
+  // Biometrics may have been enrolled or removed in system settings while
+  // the app was in the background: the toggle should appear and disappear
+  // accordingly.
   useEffect(() => {
     if (!visible) return;
     let alive = true;
@@ -546,8 +550,9 @@ export default function Settings() {
   };
 
   /**
-   * Один обработчик на все шаги ввода. Возвращает `null`, когда ввод принят, и
-   * текст ошибки, когда нет: поле само трясётся и очищается.
+   * One handler for every entry step. Returns `null` when the input is
+   * accepted and an error message otherwise: the field shakes and clears
+   * itself.
    */
   const submitPinFlow = async (pin: string): Promise<string | null> => {
     const flow = pinFlow;
@@ -570,8 +575,8 @@ export default function Settings() {
     }
 
     if (pin !== flow.first) {
-      // Не совпало — возвращаемся к придумыванию кода: заставлять человека
-      // вслепую повторять код, который он мог набрать с опечаткой, бессмысленно.
+      // No match — go back to coming up with a code: making the person
+      // blindly repeat a code they may have mistyped is pointless.
       setPinFlow({ ...flow, step: 'create', first: undefined });
       return t('settings.pinMismatch');
     }
@@ -592,8 +597,8 @@ export default function Settings() {
     try {
       await applyBiometrics(next);
     } catch (error) {
-      // Тумблер остаётся в прежнем положении: состояние меняется только после
-      // записи. Диагностику сбоя SecureStore пишет lib/lock.
+      // The toggle stays where it was: state changes only after the write.
+      // SecureStore failure diagnostics are logged by lib/lock.
       console.error('Failed to change biometrics', errorKind(error));
       Alert.alert(t('settings.continueError'), t('screens.retryMessage'));
     }
@@ -607,17 +612,16 @@ export default function Settings() {
     const info = await biometryInfo();
     setBiometry(info);
     if (!info.available) return;
-    // Включаем только после успешной проверки: человек сразу видит, что способ
-    // работает, а не обнаруживает это на заблокированном экране.
+    // Enable only after a successful check: the person sees right away that
+    // the method works instead of discovering otherwise on the lock screen.
     const result = await authenticateWithBiometrics(biometryText(Platform.OS, info.kind, 'confirm', t));
     if (result.ok) {
       await setBiometrics(true);
       return;
     }
-    // Отмену пользователем не комментируем — тумблер просто остаётся
-    // выключенным, как если бы его и не трогали. А вот настоящую ошибку
-    // молчать нельзя: до этой правки человек не видел, почему включение
-    // не сработало.
+    // User cancellation gets no message — the toggle simply stays off as if
+    // untouched. A real error, however, must not be silenced: before this
+    // change the person never saw why enabling failed.
     if (result.reason === 'error') {
       Alert.alert(biometryText(Platform.OS, info.kind, 'enableError', t), result.message);
     }
@@ -638,8 +642,8 @@ export default function Settings() {
     if (pinFlow.step === 'create') {
       return {
         title: pinFlow.kind === 'change' ? t('settings.newPin') : t('settings.createPin'),
-        // Предупреждение о невосстановимости показывается именно в момент
-        // установки кода — на экране настроек его больше нет.
+        // The irreversibility warning is shown exactly when the code is
+        // being set — it is no longer on the settings screen.
         subtitle:
           pinFlow.kind === 'change'
             ? t('settings.pinLengthHint', { min: PIN_MIN_LENGTH, max: PIN_MAX_LENGTH })
@@ -654,18 +658,18 @@ export default function Settings() {
     };
   })();
 
-  // Экран редактирует тот же массив правил, который модель разворачивает в
-  // WEEKLY-триггеры: у каждого набора дней может быть собственный список времён.
+  // The screen edits the same rule array the model expands into WEEKLY
+  // triggers: each set of days can have its own list of times.
   const reminderRules = reminderSchedule.rules.length
     ? reminderSchedule.rules
     : DEFAULT_REMINDER_SCHEDULE.rules;
 
-  // Запись и переплан идут строго последовательно: при быстрых нажатиях в
-  // системе останется расписание, соответствующее последнему нажатию.
+  // Saving and rescheduling run strictly in sequence: under rapid taps the
+  // system ends up with the schedule matching the last tap.
   const applyReminderSchedule = (next: ReminderSchedule) => {
     const normalized = normalizeReminderSchedule(next) ?? DEFAULT_REMINDER_SCHEDULE;
     setReminderError(false);
-    // Каждое звено сообщает о своём сбое само, поэтому цепочка ошибку не несёт.
+    // Each link reports its own failure, so the chain carries no error.
     reminderSave.current = reminderSave.current.then(async () => {
       try {
         await setReminderSchedule(normalized);
@@ -702,8 +706,8 @@ export default function Settings() {
       applyReminderSchedule({ enabled: false, rules: reminderRules });
       return;
     }
-    // Разрешение спрашиваем ровно здесь — в момент, когда пользователь сам
-    // включает напоминания, а не при старте приложения.
+    // The permission is requested exactly here — the moment the user enables
+    // the reminders themselves, not at app startup.
     setReminderError(false);
     let status: ReminderPermission;
     try {
@@ -713,7 +717,7 @@ export default function Settings() {
       return;
     }
     setReminderPermission(status);
-    // Без разрешения включать нечего: тумблер честно остаётся выключенным.
+    // Without permission there is nothing to enable: the toggle honestly stays off.
     if (status !== 'granted') return;
     applyReminderSchedule({ enabled: true, rules: reminderRules });
   };
@@ -721,8 +725,8 @@ export default function Settings() {
   const toggleReminderWeekday = (ruleIndex: number, isoWeekday: number) => {
     const reminderRule = reminderRules[ruleIndex];
     const selected = reminderRule.weekdays.includes(isoWeekday);
-    // Последний день снять нельзя: расписание без дней — это выключенные
-    // напоминания, а для этого есть тумблер.
+    // The last day cannot be removed: a schedule without days means reminders
+    // off, and the toggle already exists for that.
     if (selected && reminderRule.weekdays.length === 1) return;
     editReminderRule(ruleIndex, (rule) => ({
       ...rule,
@@ -741,8 +745,8 @@ export default function Settings() {
     const takenMinutes = new Set(reminderRule.times.map((time) => time.hour * 60 + time.minute));
     const current = reminderRule.times[timeIndex];
     const next = (current.hour * 60 + current.minute + deltaMinutes + 1440) % 1440;
-    // Наехать одним временем на другое нельзя: нормализация слила бы их, и одно
-    // напоминание молча исчезло бы после одного нажатия.
+    // One time must not land on another: normalization would merge them and
+    // a reminder would silently disappear after a single tap.
     if (takenMinutes.has(next)) return;
     editReminderRule(ruleIndex, (rule) => ({
       ...rule,
@@ -805,7 +809,7 @@ export default function Settings() {
     if (reminderEditorRuleIndex === ruleIndex) setReminderEditorRuleIndex(null);
   };
 
-  // Один и тот же текст под тумблером и в шторке правки: шторка закрывает экран.
+  // The same text under the toggle and in the edit sheet: the sheet covers the screen.
   const reminderWarning = reminderError || reminderSyncFailed || reminderScheduleInvalid ? (
     <Text
       accessibilityRole="alert"
@@ -861,15 +865,15 @@ export default function Settings() {
     if (!language || !translation) return;
     const preferences = preferencesFromCatalog(language, translation, next);
     if (!preferences) {
-      // Ошибка этой попытки не должна скрыться завершением более ранней записи.
+      // This attempt's error must not be hidden by an earlier write finishing.
       scriptureSaveRequest.current++;
       recordDiagnostic('scripture_preferences_save_failed', { reason: 'incompatible_bible_triple' });
       setScriptureSaveError(true);
       return;
     }
-    // Записи идут последовательно: при быстром выборе нескольких голосов
-    // последним в SQLite гарантированно останется последний выбор пользователя.
-    // Ошибку на экране определяет только последняя запись.
+    // Writes run sequentially: when several voices are picked quickly, the
+    // user's last choice is guaranteed to remain last in SQLite.
+    // Only the last write decides the error shown on screen.
     const request = ++scriptureSaveRequest.current;
     preferenceSave.current = preferenceSave.current
       .catch(() => undefined)
@@ -896,9 +900,9 @@ export default function Settings() {
       ? t('settings.translation')
       : t('settings.voice');
 
-  // Пока сверху лежит любая шторка, экран под ней для программы чтения с
-  // экрана не существует (см. lib/a11y). ScreenBg остаётся непомеченным
-  // намеренно: это декоративный холст Skia, узлов доступности он не создаёт.
+  // While any sheet is open on top, the screen beneath it does not exist for
+  // screen readers (see lib/a11y). ScreenBg is intentionally left unmarked:
+  // it is a decorative Skia canvas that creates no accessibility nodes.
   const sheetOpen =
     reminderEditorRuleIndex !== null || open !== null || interfaceLanguageOpen || privacyOpen;
 
@@ -1112,8 +1116,8 @@ export default function Settings() {
               />
             ) : null}
 
-            {/* Биометрия существует только поверх пина: без кода не осталось бы
-                запасного входа, если датчик перестанет узнавать. */}
+            {/* Biometrics exists only on top of a PIN: without the code there
+                would be no fallback way in if the sensor stops recognizing you. */}
             {lockEnabled && biometry?.available ? (
               <View style={[styles.toggleRow, styles.settingRowDivided]}>
                 <View style={{ flex: 1 }}>
@@ -1412,8 +1416,9 @@ export default function Settings() {
         </BottomSheet>
       ) : null}
 
-      {/* Поверх экрана, а не системным Modal: иначе окно ввода закрыло бы собой
-          шторку приватности и экран блокировки при сворачивании приложения. */}
+      {/* On top of the screen rather than in a system Modal: otherwise the
+          entry box would cover the privacy sheet and the lock screen when
+          the app is minimized. */}
       {pinPrompt ? (
         <PinPrompt
           title={pinPrompt.title}

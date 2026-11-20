@@ -23,7 +23,7 @@ tags:
     id: setup-next-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-# Чистое состояние гарантирует undecided; ждём кнопку, а не мгновенный when.
+# A clean state guarantees undecided; wait for the button instead of an instant when.
 - tapOn:
     id: privacy-consent-core_prayer_ai-deny
     waitToSettleTimeoutMs: 500
@@ -55,8 +55,8 @@ tags:
     id: reminder-rule-0-time-10:00
 - assertVisible:
     id: reminder-delete-time-10:00-confirm
-# Отдельные AX-проверки могут занять больше трёх секунд подтверждения.
-# Возвращаем исходное состояние и посылаем оба пользовательских тапа вместе.
+# Separate accessibility checks may take longer than the three-second confirmation.
+# Restore the initial state and send both user taps together.
 - evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
 - assertNotVisible:
     id: reminder-delete-time-10:00-confirm
@@ -139,8 +139,8 @@ tags:
     id: reminder-delete-time-10:00
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-# Отдельные AX-проверки могут занять больше трёх секунд подтверждения.
-# Возвращаем исходное состояние и посылаем оба пользовательских тапа вместе.
+# Separate accessibility checks may take longer than the three-second confirmation.
+# Restore the initial state and send both user taps together.
 - evalScript: ${ const until = Date.now() + 3600; while (Date.now() < until) {} }
 - assertNotVisible:
     id: reminder-delete-time-10:00-confirm

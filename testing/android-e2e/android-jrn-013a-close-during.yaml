@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-jrn-013a-close-during.yaml.
+# Android version of the instrumented ios-jrn-013a-close-during.yaml scenario.
 - launchApp:
     stopApp: true
     clearState: true

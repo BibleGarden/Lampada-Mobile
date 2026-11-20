@@ -97,8 +97,8 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: com.google.android.inputmethod.latin:id/keyboard_holder
-# Unicode inputText переключает IME Maestro и теряет фокус RN.
-# Кириллицу вводим настоящей клавишей Gboard, сохраняя пользовательский путь.
+# Unicode inputText switches Maestro's IME and makes RN lose focus.
+# Type Cyrillic with a real Gboard key to stay close to the user's path.
 - tapOn:
     id: com.google.android.inputmethod.latin:id/key_pos_1_3
     text: "а"

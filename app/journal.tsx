@@ -67,13 +67,13 @@ export default function Journal() {
   const [query, setQuery] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
-  // Повтор чтения дневника после сбоя: смена значения перезапускает загрузку.
+  // Retry reading the journal after a failure: changing this value restarts the load.
   const [loadAttempt, setLoadAttempt] = useState(0);
-  // раскрытая молитва и её содержимое (грузится по требованию)
+  // the expanded prayer and its content (loaded on demand)
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<db.JournalDetail | null>(null);
   const [detailFailed, setDetailFailed] = useState(false);
-  // цитаты раскрытой молитвы и та, что читают во всплывающем окне
+  // quotes of the expanded prayer and the one shown in the popup
   const [favorites, setFavorites] = useState<FavoriteScripture[]>([]);
   const [openQuote, setOpenQuote] = useState<FavoriteScripture | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -105,7 +105,7 @@ export default function Journal() {
     onReleaseFailure: (error) => console.error('Failed to release journal audio session', error),
   }));
 
-  // поиск с лёгким дебаунсом, чтобы не гонять SQL на каждую букву
+  // search with a light debounce to avoid running SQL on every keystroke
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -121,7 +121,7 @@ export default function Journal() {
             console.error('Failed to read the journal', db.errorKind(error));
             db.recordDiagnostic('journal_failed', { action: 'list', errorKind: db.errorKind(error) });
             if (!active) return;
-            // Устаревший список нельзя выдавать за результат нового запроса.
+            // A stale list must not be passed off as the new query's result.
             setEntries([]);
             setLoadFailed(true);
             setLoaded(true);
@@ -258,7 +258,7 @@ export default function Journal() {
     }
     playback.stop();
     setPlaybackFailedUri(null);
-    // Файл могли удалить и после открытия молитвы: проверяем перед каждым запуском.
+    // The file may have been deleted even after the prayer was opened: check before every playback.
     const audio = recordingAudioState(() => new File(uri).exists);
     if (audio !== 'available') {
       db.recordDiagnostic('recording_audio_missing', { recordingId: recording.id, reason: audio });
@@ -277,8 +277,8 @@ export default function Journal() {
     await playback.start(uri);
   };
 
-  // экспорт молитвы текстом в системное «Поделиться»: только читаемое,
-  // никаких аудиофайлов и никакой сети
+  // export the prayer as text to the system share sheet: readable content
+  // only, no audio files and no network
   const sharePrayer = async (item: db.JournalEntry) => {
     Haptics.selectionAsync();
     try {
@@ -298,7 +298,7 @@ export default function Journal() {
         localeTag(language),
         Constants.expoConfig?.name ?? DEFAULT_APP_NAME,
       );
-      // отказ пользователя приходит как dismissedAction, а не как ошибка
+      // user cancellation arrives as dismissedAction, not as an error
       await Share.share({ message, title }, { subject: title });
     } catch (error) {
       console.warn(
@@ -309,7 +309,7 @@ export default function Journal() {
     }
   };
 
-  // удаление в два тапа, как записи в шторке ответа
+  // two-tap delete, like entries in the answer sheet
   const askOrConfirmDelete = async (id: number) => {
     if (confirmDeleteId === id) {
       if (confirmTimer.current) clearTimeout(confirmTimer.current);
@@ -335,7 +335,7 @@ export default function Journal() {
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // смена подписи на кнопке под фокусом сама не озвучивается
+    // a label change on the focused button is not announced by itself
     AccessibilityInfo.announceForAccessibility(t('screens.journal.confirmDelete'));
     setConfirmDeleteId(id);
     if (confirmTimer.current) clearTimeout(confirmTimer.current);
@@ -350,8 +350,8 @@ export default function Journal() {
         <Pressable
           onPress={() => toggleOpen(item.id)}
           accessibilityRole="button"
-          // без подписи: VoiceOver читает саму карточку — дату, длительность,
-          // тему и вывод, а не одну дату
+          // no label: VoiceOver reads the card itself — date, duration,
+          // topic and takeaway, not just the date
           accessibilityState={{ expanded: open }}
         >
           <View style={styles.cardHead}>
@@ -417,7 +417,7 @@ export default function Journal() {
                 );
               })
             )}
-            {/* записи без текста ответа — отдельным хвостом */}
+            {/* recordings without answer text go in a separate tail */}
             {detail !== null &&
               detail.recordings
                 .filter((r) => !detail.answers.some((a) => a.questionIndex === r.questionIndex))
@@ -521,7 +521,7 @@ export default function Journal() {
               onPress={() => setQuery('')}
               accessibilityRole="button"
               accessibilityLabel={t('screens.journal.clearSearch')}
-              hitSlop={touchSlop(sc(14))} // по размеру крестика
+              hitSlop={touchSlop(sc(14))} // matches the cross icon size
               style={styles.searchClear}
             >
               <Close size={14} />
@@ -561,8 +561,8 @@ export default function Journal() {
       </Animated.View>
       </KeyboardViewport>
 
-      {/* Цитата целиком: то же оформление, что и на экране сохранённых цитат,
-          с подсветкой ключевых стихов, когда сервер их отметил */}
+      {/* Full quote: the same styling as the saved quotes screen, with key
+          verses highlighted when the server marked them */}
       <Modal
         visible={openQuote !== null}
         transparent
@@ -571,8 +571,8 @@ export default function Journal() {
         onRequestClose={() => setOpenQuote(null)}
       >
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setOpenQuote(null)}>
-          {/* Pressable по умолчанию — единый элемент доступности: карточка
-              съела бы крестик и текст цитаты */}
+          {/* A Pressable is a single accessibility element by default: the
+              card would swallow the close button and the quote text */}
           <Pressable
             accessible={false}
             style={[styles.modalCard, { maxHeight: '78%' }]}
@@ -639,7 +639,7 @@ function RecordingRow({
   durationSec: number;
   transcript: string | null;
   playing: boolean;
-  /** Без файла запись нельзя ни прослушать, ни расшифровать; расшифровка остаётся. */
+  /** Without the file the recording can be neither played nor transcribed; the transcript remains. */
   audioAvailable: boolean;
   playbackFailed: boolean;
   onToggle: () => void;
@@ -691,7 +691,7 @@ function RecordingRow({
             accessibilityRole="button"
             accessibilityLabel={t('screens.journal.retry')}
             style={{ flexShrink: 0 }}
-            hitSlop={touchSlop(sc(15))} // по высоте строки подписи
+            hitSlop={touchSlop(sc(15))} // matches the caption line height
             testID={`journal-recording-${index}-transcribe`}
           >
             <Text style={styles.recTranscriptionRetry}>{t('screens.journal.retry')}</Text>
@@ -702,7 +702,7 @@ function RecordingRow({
           onPress={onTranscribe}
           accessibilityRole="button"
           accessibilityLabel={t('screens.journal.transcribe')}
-          hitSlop={touchSlop(sc(26))} // по высоте пилюли с подписью
+          hitSlop={touchSlop(sc(26))} // matches the height of the label pill
           style={styles.recTranscriptionAction}
           testID={`journal-recording-${index}-transcribe`}
         >
@@ -769,10 +769,10 @@ const stylesFactory = () => StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.labelGold,
   },
-  // счётчики ответов и цитат словами не помещались в строку, поэтому
-  // числа стоят при иконках; словесная форма осталась для VoiceOver.
-  // Иконки — сплошным золотом: в цвет соседнего текста они сливались.
-  // Размер им передаётся сырым числом: sc() применяется внутри компонента
+  // answer and quote counters in words did not fit the row, so the
+  // numbers sit next to icons; the word form remains for VoiceOver.
+  // Icons are solid gold: at the neighbouring text colour they blended in.
+  // Their size is passed as a raw number: sc() is applied inside the component
   cardMetaRow: {
     flexShrink: 1,
     flexDirection: 'row',

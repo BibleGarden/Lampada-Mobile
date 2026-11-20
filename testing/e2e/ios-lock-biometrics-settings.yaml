@@ -1,11 +1,11 @@
 appId: twinkler
 tags:
   - prepared
-# Только через run-lock-biometrics.sh: открывает настройки после включения пина.
+# Only through run-lock-biometrics.sh: opens Settings after enabling the PIN.
 ---
-# Экран настроек опрашивает биометрию при монтировании: возвращаемся home и
-# открываем настройки заново через openLink (simctl openurl показывает
-# системный диалог «Open in Lampada?»). Возможный диалог «Open» снимаем.
+# The Settings screen queries biometrics on mount: go home and reopen Settings
+# via openLink (simctl openurl shows the system "Open in Lampada?" dialog).
+# Dismiss the possible "Open" dialog.
 - openLink: "lampada://"
 - tapOn:
     text: "Open|Открыть"

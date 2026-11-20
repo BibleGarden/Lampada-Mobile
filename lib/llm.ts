@@ -3,16 +3,16 @@ import { limitQuestionRequest } from './questionRequest';
 import type { QuestionRequest } from './questionRequest';
 import { apiPaths, resolveApiUrl } from './apiConfig.ts';
 
-// Низкоуровневый клиент AI-прокси Bible-API.
-// Модель и системные инструкции выбираются и хранятся на сервере.
+// Low-level client of the Bible-API AI proxy.
+// The model and system instructions are chosen and stored on the server.
 //
-// Конфигурация — через .env.local (не коммитится, см. .gitignore):
-//   EXPO_PUBLIC_API_URL=https://test-api.bible.garden (тестовый сервер)
-//   EXPO_PUBLIC_AI_PROXY_KEY=… — отдельный ограниченный ключ прокси
+// Configuration goes through .env.local (not committed, see .gitignore):
+//   EXPO_PUBLIC_API_URL=https://test-api.bible.garden (test server)
+//   EXPO_PUBLIC_AI_PROXY_KEY=... — a separate restricted proxy key
 //
-// EXPO_PUBLIC_* зашиваются в бандл при сборке: после правки .env.local
-// нужен перезапуск dev-сервера. Секретов уровня «мастер-ключ» тут быть
-// не должно — все серверные секреты остаются в bible-api.
+// EXPO_PUBLIC_* values are baked into the bundle at build time: after
+// editing .env.local the dev server must be restarted. There must be no
+// master-key-grade secrets here — all server secrets stay in bible-api.
 
 const PROXY_URL = resolveApiUrl(apiPaths.question);
 const PROXY_KEY = process.env.EXPO_PUBLIC_AI_PROXY_KEY;
@@ -23,9 +23,10 @@ const TIMEOUT_MS = 25_000;
 export const llmConfigured = () => Boolean(PROXY_URL);
 
 /**
- * Один вызов модели: структурированный диалог → текст ответа.
- * System prompt хранится на сервере и не может переопределяться клиентом.
- * Бросает при любой проблеме: не настроено, таймаут, не-2xx, пустой ответ.
+ * A single model call: structured dialog → response text.
+ * The system prompt is stored on the server and cannot be overridden by
+ * the client. Throws on any problem: not configured, timeout, non-2xx,
+ * empty response.
  *
  */
 export type QuestionResponse = { text: string; novel?: boolean };
@@ -78,13 +79,13 @@ export async function completePrayerContent(
   if (request.messages.some((message) => message.role === 'user') && !answerContextAllowedNow()) {
     throw new Error('Answer context consent is not allowed');
   }
-  // Все потоки вопросов берут актуальный язык интерфейса перед отправкой.
+  // All question flows take the current UI language before sending.
   return completeQuestion({ ...request, default_language: useSettings.getState().uiLanguage });
 }
 
 /**
- * Вызов, от которого ждём JSON. Модель иногда оборачивает ответ в
- * ```json-блок или добавляет фразу до/после — вырезаем первый JSON-фрагмент.
+ * A call that expects JSON. The model sometimes wraps the answer in a
+ * ```json block or adds a phrase before/after — cut out the first JSON fragment.
  */
 export async function completeJson<T>(request: QuestionRequest): Promise<T> {
   const raw = await complete(request);

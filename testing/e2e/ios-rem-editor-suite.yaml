@@ -3,9 +3,10 @@ tags:
   - reminders
   - prepared
 ---
-# REM-014/REM-015: двухтактное удаление времён и правил напоминаний.
-# Предусловие: чистая установка (xcrun simctl uninstall/install Release).
-# Разрешение уведомлений не требуется — редактор доступен и при выключенном тумблере.
+# REM-014/REM-015: two-step deletion of reminder times and rules.
+# Precondition: a clean install (xcrun simctl uninstall/install Release).
+# Notification permission is not required — the editor is accessible even with
+# the toggle off.
 - launchApp:
     stopApp: true
 - tapOn:
@@ -31,7 +32,7 @@ tags:
       id: "reminders-toggle"
     direction: DOWN
 
-# === REM-014: первый тап на корзину — только подтверждение, второй — удаление ===
+# === REM-014: the first tap on the trash can only arms it, the second deletes ===
 - tapOn:
     id: "reminders-settings-button-0"
 - assertVisible:
@@ -40,14 +41,14 @@ tags:
     id: "reminder-add-time-0"
 - assertVisible:
     id: "reminder-rule-0-time-10:00"
-# Первый тап: строка остаётся, кнопка перешла в состояние подтверждения.
+# First tap: the row stays, the button switched to the confirm state.
 - tapOn:
     id: "reminder-delete-time-10:00"
 - assertVisible:
     id: "reminder-rule-0-time-10:00"
 - assertVisible:
     id: "reminder-delete-time-10:00-confirm"
-# Второй тап: строка удалена, подтверждение исчезло, 09:00 на месте.
+# Second tap: the row is deleted, the confirmation is gone, 09:00 is in place.
 - tapOn:
     id: "reminder-delete-time-10:00-confirm"
 - assertNotVisible:
@@ -57,9 +58,9 @@ tags:
 - assertVisible:
     id: "reminder-rule-0-time-09:00"
 
-# === REM-015: таймаут 3 с сбрасывает подтверждение ===
-# У единственного времени корзины нет (canRemove = times.length > 1), поэтому
-# работаем с двумя строками: добавляем 10:00 и вооружаем удаление именно его.
+# === REM-015: the 3 s timeout resets the confirmation ===
+# A lone time has no trash can (canRemove = times.length > 1), so we work with
+# two rows: add 10:00 and arm its deletion specifically.
 - tapOn:
     id: "reminder-add-time-0"
 - assertVisible:
@@ -68,14 +69,14 @@ tags:
     id: "reminder-delete-time-10:00"
 - assertVisible:
     id: "reminder-delete-time-10:00-confirm"
-# Java.sleep через Rhino — единственный надёжный sleep в Maestro.
+# Java.sleep via Rhino is the only reliable sleep in Maestro.
 - evalScript: "java.lang.Thread.sleep(3600)"
 - assertVisible:
     id: "reminder-delete-time-10:00"
 - assertNotVisible:
     id: "reminder-delete-time-10:00-confirm"
 
-# === REM-015: закрытие редактора сбрасывает подтверждение ===
+# === REM-015: closing the editor resets the confirmation ===
 - tapOn:
     id: "reminder-delete-time-10:00"
 - assertVisible:
@@ -91,7 +92,7 @@ tags:
 - assertNotVisible:
     id: "reminder-delete-time-10:00-confirm"
 
-# === REM-015: вооружение другой цели отменяет предыдущую ===
+# === REM-015: arming another target cancels the previous one ===
 - tapOn:
     id: "reminder-delete-time-10:00"
 - assertVisible:
@@ -103,19 +104,19 @@ tags:
 - assertNotVisible:
     id: "reminder-delete-time-10:00-confirm"
 
-# === REM-015: правка расписания сбрасывает подтверждение ===
+# === REM-015: editing the schedule resets the confirmation ===
 - tapOn:
     id: "reminder-time-09:00-minutes-forward"
 - assertNotVisible:
     id: "reminder-delete-time-09:00-confirm"
 - assertVisible:
     id: "reminder-delete-time-09:05"
-# Возвращаем расписание в дефолт.
+# Restore the default schedule.
 - tapOn:
     id: "reminder-time-09:05-minutes-back"
 - assertVisible:
     id: "reminder-rule-0-time-09:00"
-# Убираем вторую строку, чтобы дальше работать с дефолтным расписанием.
+# Remove the second row so the rest works with the default schedule.
 - tapOn:
     id: "reminder-delete-time-10:00"
 - tapOn:
@@ -123,10 +124,11 @@ tags:
 - assertNotVisible:
     id: "reminder-rule-0-time-10:00"
 
-# === REM-014: двухтактное удаление правила (расписания) ===
-# Второе правило появляется с днями «Сб–Вс» и временем +1 час от последнего.
-# Редактор открывается на новом правиле: внутри модалки проверяем чипсы дней и
-# строку времени (строка «Сб–Вс» списка под модалкой не видна).
+# === REM-014: two-step deletion of a rule (schedule) ===
+# The second rule appears with Sat–Sun days and a time +1 hour from the last
+# one. The editor opens on the new rule: inside the modal we check the day
+# chips and the time row (the list's Sat–Sun row under the modal is not
+# visible).
 - tapOn:
     id: "reminders-editor-done"
 - tapOn:
@@ -143,13 +145,15 @@ tags:
     selected: true
 - assertVisible:
     id: "reminder-rule-1-time-10:00"
-# Первый тап: правило не удалено — кнопка перешла в подтверждение.
-# (Список правил под модалкой редактора не виден — проверяем по testID кнопки.)
+# First tap: the rule is not deleted — the button switched to confirmation.
+# (The rule list under the editor modal is not visible — check by the button's
+# testID.)
 - tapOn:
     id: "reminders-delete-rule"
 - assertVisible:
     id: "reminders-delete-rule-confirm"
-# Второй тап: правило удалено, редактор закрылся, в списке снова одно расписание.
+# Second tap: the rule is deleted, the editor closed, the list again has one
+# schedule.
 - tapOn:
     id: "reminders-delete-rule-confirm"
 - waitForAnimationToEnd:

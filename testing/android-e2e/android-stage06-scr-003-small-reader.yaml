@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - main
 ---
-# Выбираем длинный отрывок по доступности раскрытия, а не по его номеру.
+# Pick the long passage by the availability of the expand action, not by its index.
 - launchApp:
     stopApp: true
     clearState: true

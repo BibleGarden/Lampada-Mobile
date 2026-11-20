@@ -99,8 +99,8 @@ export default function ContentReportDialog({
         style={styles.backdrop}
         contentContainerStyle={[styles.backdropContent, { paddingTop: insets.top + sc(20), paddingBottom: sc(20) }]}
       >
-        {/* тап по фону гасит клавиатуру, но не закрывает диалог: иначе
-            набранный комментарий пропадал бы вместе с ним */}
+        {/* a backdrop tap dismisses the keyboard but does not close the
+            dialog: otherwise the typed comment would vanish with it */}
         <Pressable
           accessible={false}
           testID="content-report-backdrop"
@@ -108,8 +108,9 @@ export default function ContentReportDialog({
           style={StyleSheet.absoluteFill}
         />
         <View accessibilityViewIsModal style={styles.card} testID="content-report-dialog">
-          {/* текст и поле скроллятся, а кнопки закреплены внизу карточки:
-              с открытой клавиатурой на узких экранах они иначе уезжают под неё */}
+          {/* the text and field scroll while the buttons stay pinned to the
+              card's bottom: with the keyboard open on narrow screens they
+              would otherwise slip under it */}
           <ScrollView
             ref={scrollRef}
             contentContainerStyle={styles.cardContent}

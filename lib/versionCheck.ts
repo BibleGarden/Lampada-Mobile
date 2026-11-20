@@ -1,4 +1,4 @@
-/** Магазин, из которого установлена сборка: от него зависят пороги и ссылка на обновление. */
+/** The store the build was installed from: update thresholds and the update link depend on it. */
 export type StorePlatform = 'ios' | 'android';
 
 export type VersionCheck = {
@@ -10,7 +10,7 @@ export type VersionCheck = {
   message: { ru: string; en: string; uk: string } | null;
 };
 
-/** Почему ответ сервера не применён; причина пишется в диагностику. */
+/** Why the server response was not applied; the reason goes to diagnostics. */
 export type VersionCheckRejection =
   | 'unconfigured' | 'network' | 'status' | 'invalid' | 'app-mismatch' | 'platform-mismatch';
 
@@ -19,9 +19,9 @@ export type VersionCheckResult =
   | { ok: false; reason: VersionCheckRejection; status?: number };
 
 /**
- * Ответ принимается только для своего приложения и своей платформы: сервер без
- * поля `platform` (до раздельных iOS/Android-настроек) отдаёт ссылку App Store,
- * и Android-сборка не должна показывать её как обновление.
+ * The response is accepted only for our own app and platform: a server without
+ * the `platform` field (before split iOS/Android settings) returns an App
+ * Store link, and an Android build must not show it as an update.
  */
 export function parseVersionCheck(value: unknown, platform: StorePlatform): VersionCheckResult {
   if (!value || typeof value !== 'object') return { ok: false, reason: 'invalid' };
@@ -47,8 +47,8 @@ export function parseVersionCheck(value: unknown, platform: StorePlatform): Vers
 }
 
 /**
- * Проверка не блокирует приложение при сбое (ADR-0020), но и не молчит:
- * вызывающий получает причину отказа и записывает её в диагностику.
+ * The check never blocks the app on failure (ADR-0020), but it is not silent
+ * either: the caller gets the rejection reason and records it to diagnostics.
  */
 export async function checkVersion(
   endpoint: string | null, version: string, platform: StorePlatform, apiKey: string | undefined, signal: AbortSignal,

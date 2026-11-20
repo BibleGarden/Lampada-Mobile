@@ -12,39 +12,39 @@ import {
   type ReminderSchedule,
 } from './prayerReminders';
 
-// Планировщик локальных напоминаний поверх expo-notifications.
+// Local reminder scheduler on top of expo-notifications.
 //
-// Уведомления полностью локальные: push-токен не запрашивается и в момент
-// срабатывания сеть не нужна. Система сама держит WEEKLY-триггеры, поэтому
-// расписание переживает выгрузку приложения и перезагрузку устройства
-// (expo-notifications добавляет RECEIVE_BOOT_COMPLETED на Android).
+// The notifications are fully local: no push token is requested and no network
+// is needed at fire time. The OS keeps the WEEKLY triggers itself, so the
+// schedule survives app eviction and device reboots (expo-notifications adds
+// RECEIVE_BOOT_COMPLETED on Android).
 //
-// Текст уходит в систему в момент планирования и на лету не подставляется —
-// именно поэтому фразы перетасовываются при каждом полном перепланировании.
+// The text is handed to the OS at scheduling time and cannot be swapped on the
+// fly — which is why the phrases are shuffled on every full reschedule.
 
 /**
- * Отдельный канал: ongoing-хронометр молитвы из
- * `modules/prayer-timer-notification` живёт в канале `twinkler_prayer_timer` и
- * с этим каналом не пересекается.
+ * A separate channel: the ongoing prayer stopwatch from
+ * `modules/prayer-timer-notification` lives in the `twinkler_prayer_timer`
+ * channel and never intersects this one.
  */
 export const REMINDER_CHANNEL_ID = 'prayer_reminders';
 
 /**
- * Метка в `content.data`. Планировщик снимает только свои уведомления, поэтому
- * чужие запланированные уведомления (если они появятся) не пострадают.
+ * A marker in `content.data`. The scheduler cancels only its own notifications,
+ * so foreign scheduled notifications (should any appear) stay untouched.
  */
 const REMINDER_KIND = 'prayer-reminder';
 
 /**
- * Заголовок уведомления — имя приложения из конфигурации, а не строковая
- * константа: переименование приложения не должно требовать правки здесь.
- * Фраза идёт телом, потому что заголовок на iOS показывается одной строкой и
- * обрезается, а на несколько строк переносится именно тело.
+ * The notification title is the app name from the config, not a string
+ * constant: renaming the app must not require an edit here. The phrase goes
+ * into the body because iOS renders the title as a single truncated line,
+ * while it is the body that wraps to multiple lines.
  */
 const appName = () => Constants.expoConfig?.name;
 
-// Регистрируется на уровне модуля: без обработчика уведомление, пришедшее при
-// открытом приложении, система молча отбрасывает.
+// Registered at module level: without a handler, the OS silently drops
+// notifications that arrive while the app is open.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -57,8 +57,8 @@ Notifications.setNotificationHandler({
 export type ReminderPermission = 'granted' | 'denied' | 'undetermined';
 
 const readPermission = (settings: Notifications.NotificationPermissionsStatus): ReminderPermission => {
-  // На iOS осмысленный ответ даёт ios.status: provisional — это тоже разрешение,
-  // просто тихая доставка.
+  // On iOS the meaningful answer is ios.status: provisional — that is also a
+  // grant, just with silent delivery.
   const granted =
     settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
   if (granted) return 'granted';
@@ -66,8 +66,8 @@ const readPermission = (settings: Notifications.NotificationPermissionsStatus): 
 };
 
 /**
- * Канал нужен и для маршрутизации уведомлений, и для того, чтобы на Android 13+
- * вообще появился системный запрос разрешения.
+ * The channel is needed both to route notifications and for the Android 13+
+ * system permission prompt to appear at all.
  */
 export async function ensureReminderChannelAsync(): Promise<void> {
   if (Platform.OS !== 'android') return;
@@ -82,17 +82,17 @@ export async function ensureReminderChannelAsync(): Promise<void> {
 }
 
 /**
- * Текущее состояние разрешения без системного запроса. Сбой системного вызова
- * отклоняет промис: подменить его на «не спрашивали» значило бы снять
- * напоминания у человека, который их разрешил.
+ * Current permission state without a system prompt. A failing system call
+ * rejects the promise: masking it as "never asked" would strip reminders from
+ * someone who granted them.
  */
 export async function reminderPermissionAsync(): Promise<ReminderPermission> {
   return readPermission(await Notifications.getPermissionsAsync());
 }
 
 /**
- * Системный запрос разрешения. Вызывается только в момент, когда пользователь
- * сам включает напоминания, а не при старте приложения.
+ * System permission prompt. Called only at the moment the user enables
+ * reminders themselves, not at app startup.
  */
 export async function requestReminderPermissionAsync(): Promise<ReminderPermission> {
   await ensureReminderChannelAsync();
@@ -106,7 +106,7 @@ export async function requestReminderPermissionAsync(): Promise<ReminderPermissi
   );
 }
 
-/** Снимает все ранее запланированные напоминания этого приложения. */
+/** Cancels all previously scheduled reminders of this app. */
 export async function cancelRemindersAsync(): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   await Promise.all(
@@ -117,11 +117,12 @@ export async function cancelRemindersAsync(): Promise<void> {
 }
 
 /**
- * Полный переплан: сначала снимаем прежние уведомления, затем планируем набор
- * заново. Частичного обновления нет намеренно — так расписание в системе всегда
- * равно сохранённому, а фразы гарантированно меняются.
+ * Full replan: cancel the previous notifications first, then schedule the set
+ * from scratch. Partial updates are deliberate non-existent — this way the
+ * system schedule always equals the stored one, and the phrases are guaranteed
+ * to change.
  *
- * @returns сколько уведомлений фактически запланировано.
+ * @returns how many notifications were actually scheduled.
  */
 export async function rescheduleRemindersAsync(
   schedule: ReminderSchedule,
@@ -147,7 +148,7 @@ export async function rescheduleRemindersAsync(
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
         channelId: REMINDER_CHANNEL_ID,
-        // weekday здесь уже в нумерации expo-notifications: 1 = воскресенье.
+        // weekday is already in expo-notifications numbering here: 1 = Sunday.
         weekday: trigger.weekday,
         hour: trigger.hour,
         minute: trigger.minute,
@@ -158,11 +159,11 @@ export async function rescheduleRemindersAsync(
 }
 
 /**
- * Приводит состояние системы в соответствие с сохранённым расписанием.
- * Вызывается при каждом запуске приложения и после каждой правки расписания.
- * Разрешение здесь не запрашивается: без выданного разрешения планировать
- * нечего, и запланированное снимается. Сбой системного планировщика отклоняет
- * промис, чтобы его нельзя было спутать с «планировать нечего» (0).
+ * Brings the system state in line with the stored schedule. Called on every
+ * app launch and after every schedule edit. No permission is requested here:
+ * without a grant there is nothing to schedule, and anything scheduled is
+ * cancelled. A scheduler failure rejects the promise so it cannot be confused
+ * with "nothing to schedule" (0).
  */
 async function synchronizeRemindersAsync(
   schedule: ReminderSchedule,
@@ -176,8 +177,8 @@ async function synchronizeRemindersAsync(
 }
 
 /**
- * Итог последней синхронизации с системой. Синхронизация идёт и без экрана
- * (при запуске), поэтому её сбой хранится здесь и показывается в настройках.
+ * Outcome of the last system sync. Sync runs off-screen too (at launch), so
+ * its failure is stored here and shown in settings.
  */
 export const useReminderSyncStatus = create<{ failed: boolean }>(() => ({ failed: false }));
 

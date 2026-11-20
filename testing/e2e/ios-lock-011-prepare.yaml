@@ -1,12 +1,12 @@
 appId: twinkler
 tags:
   - prepared
-# Фрагмент для run-lock-storage-check.sh: включает защиту пином 123456.
-# Предусловие: защита выключена.
+# Fragment for run-lock-storage-check.sh: enables protection with PIN 123456.
+# Precondition: protection disabled.
 ---
 - launchApp:
     stopApp: true
-# LockGate поднимается асинхронно: даём ему появиться перед проверкой.
+# LockGate initializes asynchronously: give it time to appear before checking.
 - evalScript: "java.lang.Thread.sleep(2500)"
 - runFlow:
     when:
@@ -33,7 +33,7 @@ tags:
     element:
       id: "lock-toggle"
     direction: DOWN
-# Если защита уже включена — ничего не делаем.
+# If protection is already enabled — do nothing.
 - runFlow:
     when:
       notVisible:

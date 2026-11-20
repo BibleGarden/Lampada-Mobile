@@ -42,7 +42,7 @@ tags:
     waitToSettleTimeoutMs: 500
 - assertVisible:
     id: session-title
-# Android отдаёт время и подпись отдельными дочерними элементами.
+# Android exposes the elapsed time and the label as separate child elements.
 - assertVisible:
     text: "ИДЁТ"
     below:

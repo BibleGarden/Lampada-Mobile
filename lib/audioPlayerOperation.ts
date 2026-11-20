@@ -1,6 +1,6 @@
 import type { AudioSessionLease, PlaybackAudioModeGrant } from './audioModeCoordinator';
 
-/** Владеет одной попыткой воспроизведения, нативным слушателем и lease. */
+/** Owns a single playback attempt, the native listener, and the lease. */
 export function createPlaybackLeaseOperation() {
   let generation = 0;
   let lease: AudioSessionLease | null = null;

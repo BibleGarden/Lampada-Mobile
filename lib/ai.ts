@@ -1,5 +1,5 @@
-// Вопросы и рефлексия используют серверные промпты и настройки модели.
-// Неудачная фоновая подготовка не даёт контента; явный запрос сохраняет прежнюю обработку ошибок.
+// Questions and reflection use server-side prompts and model settings.
+// A failed background prefetch yields no content; an explicit request keeps the usual error handling.
 
 import { PrefetchDeniedError } from './prefetch.ts';
 import { completePrayerContent, llmConfigured } from './llm';
@@ -23,12 +23,12 @@ export const hasUnseenFallbackQuestion = (shown: readonly string[], stage: 'next
 
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
-/** Мгновенный локальный вопрос на случай, если фоновый слот ещё не готов. */
+/** An instant local question for when the background slot is not ready yet. */
 export const pickFallbackQuestion = (asked: string[], stage: 'next' | 'reflect' = 'next'): string => {
   const questionPool = currentFallbacks()[stage];
   const fresh = questionPool.filter((q) => !wasQuestionShown(q, asked));
   if (fresh.length) return pickRandom(fresh);
-  // Все варианты уже были показаны: берём тот, который видели раньше остальных.
+  // Every option has already been shown: pick the one seen earliest.
   const lastShown = new Map(asked.map((question, index) => [normalizeQuestion(question), index]));
   return questionPool.reduce((oldest, candidate) =>
     (lastShown.get(normalizeQuestion(candidate)) ?? -1)
@@ -36,8 +36,8 @@ export const pickFallbackQuestion = (asked: string[], stage: 'next' | 'reflect' 
   );
 };
 
-// деградация тихая для человека, но не для разработчика: причина отката
-// на курируемый пул видна в логах dev-сервера
+// Degradation is silent for the user but not for the developer: the reason
+// for falling back to the curated pool shows up in dev-server logs
 const warn = (where: string, e: unknown, prefetch = false) =>
   console.warn(`[ai] ${where}: ${prefetch ? 'prefetch unavailable' : 'using fallback pool'} —`, e instanceof Error ? e.message : e);
 
@@ -46,7 +46,7 @@ const invalidQuestion = (where: string, prefetch: boolean) => {
   warn(where, 'Invalid question response', prefetch);
 };
 
-// Пробелы нормализуем, но мусор ответа модели не скрываем удалением символов.
+// Whitespace is normalized, but model garbage is not hidden by deleting characters.
 const tidy = (q: string) => q.replace(/\s+/g, ' ').trim();
 
 const isQuestion = (q: unknown): q is string =>
@@ -58,9 +58,9 @@ const isQuestion = (q: unknown): q is string =>
   && q.includes('?');
 
 /**
- * Первый вопрос молитвы — готовится заранее, на «пороге».
- * Остальные вопросы не заготавливаются пакетом: одноэлементный буфер
- * пополняется по ходу молитвы и пересобирается после нового ответа.
+ * The first prayer question — prepared in advance, at the "threshold".
+ * The remaining questions are not prepared as a batch: a single-item buffer
+ * is replenished during the prayer and rebuilt after each new answer.
  */
 export async function generateFirstQuestion(topic: string, prefetch = false): Promise<GeneratedQuestion | null> {
   const fallback = () => prefetch ? null : fromFallback(pickRandom(currentFallbacks().first));
@@ -81,10 +81,10 @@ export async function generateFirstQuestion(topic: string, prefetch = false): Pr
 }
 
 /**
- * Один новый вопрос, не повторяющий уже заданные.
- * answers передаются только при отдельном answer-context consent — иначе
- * вызывающий обязан передать {}, а transport повторно проверит gate.
- * Индекс ответа сохраняет связь с соответствующим вопросом.
+ * One new question that does not repeat the ones already asked.
+ * `answers` are passed only under a separate answer-context consent —
+ * otherwise the caller must pass {}, and the transport re-checks the gate.
+ * The answer index preserves the link to the corresponding question.
  */
 export async function generateQuestion(
   topic: string,
@@ -112,7 +112,7 @@ export async function generateQuestion(
   }
 }
 
-/** Вопрос рефлексии по цели и ответам сессии */
+/** A reflection question based on the topic and the session's answers */
 export async function generateReflectQuestion(
   topic: string,
   asked: string[],

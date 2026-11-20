@@ -2,9 +2,10 @@ appId: twinkler
 tags:
   - ipad
 ---
-# START-005 (iPad): порог с многострочной целью. Ландшафт — брифинг слева,
-# кнопка удержания справа, все три пункта видны; портрет — кнопка под
-# брифингом; после поворотов удержание запускает молитву.
+# START-005 (iPad): the threshold screen with a multi-line goal. Landscape —
+# the briefing on the left, the hold button on the right, all three items
+# visible; portrait — the button below the briefing; after the rotations,
+# holding starts the prayer.
 - launchApp:
     stopApp: true
     clearState: true

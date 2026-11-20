@@ -24,20 +24,20 @@ import { colors } from '../lib/theme';
 import { useVisibleScreen } from '../lib/useVisibleScreen';
 
 type Props = {
-  /** Ширина холста; всё масштабируется от неё */
+  /** Canvas width; everything scales from it */
   width?: number;
-  /** Огонёк горит (true) или тлеет углём в ожидании (false) */
+  /** The flame burns (true) or smolders as an ember while waiting (false) */
   lit?: boolean;
-  /** Только пламя с гало, без чаши — тёплый уголёк на экране рефлексии */
+  /** Only the flame with its halo, no bowl — a warm ember on the reflection screen */
   ember?: boolean;
-  /** Остановить анимацию на текущем кадре */
+  /** Freeze the animation on the current frame */
   paused?: boolean;
 };
 
-// Детерминированный value-noise: гладкий фрактальный шум без периода.
-// hash — псевдослучайные узлы, между ними smoothstep-интерполяция;
-// fbm — три октавы. Результат в [-1, 1], непрерывный и «дышащий»,
-// как запись настоящего огня, а не сумма синусоид.
+// Deterministic value noise: smooth fractal noise with no period.
+// hash gives pseudo-random nodes with smoothstep interpolation between them;
+// fbm is three octaves. The result lies in [-1, 1], continuous and "breathing"
+// like a recording of a real fire, not a sum of sine waves.
 const hash = (n: number) => {
   'worklet';
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -54,54 +54,55 @@ const vnoise = (x: number) => {
 
 const wave = (tt: number) => {
   'worklet';
-  const x = tt * 0.55; // базовая скорость дрожания
+  const x = tt * 0.55; // base jitter speed
   const n =
     vnoise(x) * 0.55 + vnoise(x * 2.17 + 7.3) * 0.3 + vnoise(x * 4.31 + 13.7) * 0.15;
   return (n * 2 - 1) * 1.6;
 };
 
-// Огибающая-«сквозняк»: тоже шум, но очень медленный. Большую часть
-// времени тихо, изредка — оживление; интервалы неравномерные.
+// A "draft" envelope: also noise, but very slow. Quiet most of the time,
+// with an occasional flurry; the intervals are uneven.
 const gust = (tt: number) => {
   'worklet';
   const s = vnoise(tt * 0.045 + 51.3);
   return 0.25 + 0.75 * s * s;
 };
 
-// Огонёк лампады: гало + пламя-«яйцо» + яркое ядро у фитиля + чаша-плошка.
-// t идёт 2π в секунду, поэтому sin(t·k) имеет период 1/k секунд.
+// A vigil lamp flame: halo + "egg"-shaped flame + bright core at the wick + shallow bowl.
+// t advances 2π per second, so sin(t·k) has a period of 1/k seconds.
 //
-// «Живость» построена так:
-// - возмущение поднимается по пламени снизу вверх: кончик повторяет
-//   движение «талии» с запаздыванием ~200 мс (волна, а не шарнир);
-// - высота дышит: пламя чуть подрастает и оседает вместе с порывами;
-// - ядро у фитиля почти неподвижно — танцует только оболочка;
-// - гало подсвечивается тем же сигналом, свет отзывается на вздрагивания.
+// The "liveliness" works like this:
+// - disturbance climbs the flame bottom-up: the tip repeats the "waist's"
+//   motion with a ~200 ms lag (a wave, not a hinge);
+// - the height breathes: the flame grows slightly and settles with the gusts;
+// - the core at the wick is nearly still — only the shell dances;
+// - the halo is lit by the same signal; the light responds to the flickers.
 export default function Flame({ width = 240, lit = true, ember = false, paused = false }: Props) {
   const visible = useVisibleScreen();
   const W = width;
   const H = ember ? width : width * FLAME_HEIGHT_RATIO;
-  // холст больше занимаемого места: гало должно растворяться,
-  // а не обрезаться прямоугольником по краю Canvas
+  // the canvas is larger than the footprint: the halo must dissolve,
+  // not get clipped by the Canvas rectangle at the edge
   const pad = W * 0.45;
   const cx = pad + W / 2;
   const bowlTop = pad + H * 0.72;
   const bowlH = W * 0.195;
   const bowlHW = W * 0.285;
 
-  // в прототипе чаша 120 и пламя 36×62 / 24×34, но вживую пламя давило
-  // чашу: чаша здесь крупнее прототипа, горящее пламя скромнее,
-  // незажжённое — совсем маленькое. Уголёк на рефлексии — 22×32 при 104
+  // in the prototype the bowl is 120 and the flame 36×62 / 24×34, but live
+  // the flame dwarfed the bowl: the bowl here is larger than in the prototype,
+  // the burning flame more modest, the unlit one tiny. The reflection ember is 22×32 at 104
   const flameH = ember ? W * 0.31 : lit ? W * 0.225 : W * 0.117;
   const flameRW = ember ? W * 0.106 : lit ? W * 0.066 : W * 0.042;
   const flameBase = ember ? pad + H * 0.66 : bowlTop + W / 60;
   const flameMidY = flameBase - flameH * 0.5;
 
-  // t — «часы» анимации; скрытый экран не создаёт новые Skia-пути.
+  // t is the animation's "clock"; a hidden screen creates no new Skia paths.
   const t = useSharedValue(0);
   useEffect(() => {
-    // Пауза видео-сборки оставляет текущий кадр; сброс нужен лишь при запуске:
-    // повтор идёт от стартового значения, и без него пламя замедлялось бы.
+    // Pausing the frame assembly keeps the current frame; a reset is only
+    // needed on start: the repeat runs from the start value, and without it
+    // the flame would slow down.
     if (!visible || paused) return;
     t.value = 0;
     t.value = withRepeat(
@@ -112,9 +113,9 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
     return () => cancelAnimation(t);
   }, [t, paused, visible]);
 
-  // оболочка: яйцо с блуждающим кончиком и дышащей высотой.
-  // Талия движется «сейчас», кончик — с запаздыванием 1.2 рад (~190 мс):
-  // возмущение рождается у фитиля и уходит вверх.
+  // shell: an egg with a wandering tip and breathing height.
+  // The waist moves "now", the tip with a 1.2 rad (~190 ms) lag:
+  // the disturbance is born at the wick and travels upward.
   const flamePath = useDerivedValue(() => {
     const env = gust(t.value);
     const amp = flameRW * (lit ? 0.5 : 0.38) * env;
@@ -152,7 +153,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
     return b.detach();
   });
 
-  // ядро у фитиля: маленькое, яркое, почти неподвижное
+  // core at the wick: small, bright, nearly still
   const corePath = useDerivedValue(() => {
     const env = gust(t.value);
     const sway = wave(t.value) * flameRW * (lit ? 0.5 : 0.38) * env * 0.18;
@@ -166,10 +167,10 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
     () => (lit ? 0.85 : 0.6) + (vnoise(t.value * 1.1 + 3.7) * 2 - 1) * 0.08,
   );
 
-  // чаша-плошка: плоский верх, полуэллипс снизу
+  // shallow bowl: flat top, half-ellipse below
   const bowlPath = useMemo(() => {
     const b = Skia.PathBuilder.Make();
-    const k = 0.5523; // множитель Безье для дуги эллипса
+    const k = 0.5523; // Bezier constant for an ellipse arc
     b.moveTo(cx - bowlHW, bowlTop);
     b.lineTo(cx + bowlHW, bowlTop);
     b.cubicTo(cx + bowlHW, bowlTop + bowlH * k, cx + bowlHW * k, bowlTop + bowlH, cx, bowlTop + bowlH);
@@ -178,8 +179,8 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
     return b.detach();
   }, [cx, bowlTop, bowlH, bowlHW]);
 
-  // тихий пульс 2.6 с; вытягиваясь вверх, пламя чуть сужается —
-  // объём сохраняется, и пульс читается как колебание огня
+  // quiet 2.6 s pulse; stretching upward, the flame narrows slightly —
+  // volume is preserved and the pulse reads as the fire's oscillation
   const flameTransform = useDerivedValue(() => {
     const s =
       Math.sin(t.value * 0.385) * (lit ? 0.04 : 0.02) +
@@ -190,7 +191,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
     () => (lit ? 0.825 : 0.62) + Math.sin(t.value * 0.385) * (lit ? 0.125 : 0.09),
   );
 
-  // гало: медленное дыхание 6 с + отклик на вздрагивания пламени
+  // halo: slow 6 s breathing + response to the flame's flickers
   const haloR = W * 0.5;
   const haloTransform = useDerivedValue(() => {
     const k = 1.08 + Math.sin(t.value * 0.167) * 0.08;
@@ -208,8 +209,8 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
   const glowOpacity = useDerivedValue(
     () => (lit ? 0.7 : 0.42) + Math.sin(t.value * 0.385) * (lit ? 0.15 : 0.1),
   );
-  // «смаз движения»: чем быстрее дёргается кончик, тем сильнее размыт
-  // светящийся слой — быстрые рывки читаются мягко, а не машут флагом
+  // "motion blur": the faster the tip jerks, the more the glowing layer is
+  // blurred — quick snaps read softly instead of waving like a flag
   const glowBlur = useDerivedValue(() => {
     const vel = Math.abs(wave(t.value) - wave(t.value - 0.35)) * gust(t.value);
     return (lit ? 11 : 9) + vel * (lit ? 9 : 6);
@@ -220,7 +221,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
 
   return (
     <Canvas style={{ width: W + pad * 2, height: H + pad * 2, margin: -pad }}>
-      {/* гало */}
+      {/* halo */}
       <Group origin={haloCenter} transform={haloTransform}>
         <Circle cx={cx} cy={flameMidY} r={haloR} opacity={haloOpacity}>
           <RadialGradient
@@ -231,7 +232,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
         </Circle>
       </Group>
 
-      {/* свечение пламени (размытая копия) */}
+      {/* flame glow (blurred copy) */}
       <Group origin={flameOrigin} transform={flameTransform}>
         <Path path={flamePath} opacity={glowOpacity}>
           <RadialGradient
@@ -241,7 +242,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
           />
           <BlurMask blur={glowBlur} style="normal" />
         </Path>
-        {/* оболочка пламени */}
+        {/* flame shell */}
         <Path path={flamePath} opacity={flameOpacity}>
           <RadialGradient
             c={vec(cx, flameBase - flameH * 0.3)}
@@ -250,7 +251,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
             positions={[0, 0.4, 1]}
           />
         </Path>
-        {/* ядро у фитиля */}
+        {/* core at the wick */}
         <Path path={corePath} opacity={coreOpacity}>
           <RadialGradient
             c={vec(cx, flameBase - flameH * 0.18)}
@@ -262,7 +263,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
         </Path>
       </Group>
 
-      {/* чаша лампады */}
+      {/* lamp bowl */}
       {!ember && (
         <Group>
           <Path path={bowlPath}>
@@ -272,7 +273,7 @@ export default function Flame({ width = 240, lit = true, ember = false, paused =
               colors={[colors.bowlTop, colors.bowlBottom]}
             />
           </Path>
-          {/* блик на кромке */}
+          {/* highlight on the rim */}
           <RoundedRect
             x={cx - bowlHW}
             y={bowlTop}

@@ -1,7 +1,7 @@
 #!/bin/bash
-# LOCK-008: подготовка и снимок переключателя приложений Device Hub.
-# Между prepare и capture откройте App Switcher двойным нажатием Home
-# в Device Hub. Снимок требует визуальной проверки шторки приватности.
+# LOCK-008: Device Hub app switcher preparation and snapshot.
+# Between prepare and capture, open the App Switcher with a double Home
+# press in Device Hub. The snapshot requires visual inspection of the privacy curtain.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000

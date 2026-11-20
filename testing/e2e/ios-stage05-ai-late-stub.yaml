@@ -1,12 +1,13 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: questionDelayMs=15000 выставлен run-stub-phase.sh; ответ приходит
-# через 15 с — позже входа в сессию. В теговые прогоны не входит.
+# NEEDS-STUB: questionDelayMs=15000 is set by run-stub-phase.sh; the answer
+# arrives after 15 s — later than entering the session. Not included in tagged
+# runs.
 ---
-# Ответ ИИ опаздывает: сессия открывается со спиннером, вопрос появляется,
-# когда ответ дошёл; фрагмент ios-stage05-ai-late-response.yaml выполняется
-# внутри такой сессии.
+# The AI answer is late: the session opens with a spinner, the question
+# appears once the answer has arrived; the ios-stage05-ai-late-response.yaml
+# fragment runs inside such a session.
 - launchApp:
     stopApp: true
     clearState: true
@@ -27,7 +28,8 @@ tags:
     commands:
       - tapOn:
           id: "privacy-consent-core_prayer_ai-allow"
-# Предзапрос первого вопроса ушёл на пороге; ответ задержан на 15 с.
+# The first question's pre-request went out on the threshold screen; the
+# answer is delayed by 15 s.
 - assertVisible:
     id: "threshold-kicker"
 - swipe:
@@ -36,12 +38,13 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# Вопрос приходит, только когда stub ответил. (?s) — dotall: текст элемента
-# переносится на две строки, точка без флага newline не пересекает.
+# The question arrives only after the stub has answered. (?s) is dotall: the
+# element text wraps onto two lines, and without the flag the dot does not
+# cross the newline.
 - extendedWaitUntil:
     visible: "(?s).*STUB вопрос с опозданием.*"
     timeout: 40000
 - takeScreenshot: AI-late-question-arrived
-# Оригинальный фрагмент сценария (см. ios-stage05-ai-late-response.yaml).
+# The original scenario fragment (see ios-stage05-ai-late-response.yaml).
 - runFlow:
     file: ios-stage05-ai-late-response.yaml

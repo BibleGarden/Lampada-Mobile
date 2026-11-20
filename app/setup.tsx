@@ -41,8 +41,8 @@ export default function Setup() {
   const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  // Экран остаётся в стеке под сессией: без выборки он перерисовывался бы
-  // на каждом секундном тике таймера.
+  // The screen stays in the stack under the session: without a selector it
+  // would re-render on every tick of the timer.
   const s = useSession(
     useShallow((st) => ({
       minutes: st.minutes,
@@ -58,17 +58,18 @@ export default function Setup() {
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
   const [entranceReady, setEntranceReady] = useState(false);
   useEffect(() => {
-    // Второй тап по Home не должен попасть в «Далее» на том же месте
-    // во время появления нового экрана. Окно совпадает с переходом Stack.
+    // A second tap on Home must not land on "Continue" (screens.setup.next)
+    // in the same spot while the new screen is appearing. The window matches
+    // the Stack transition.
     const timer = setTimeout(() => setEntranceReady(true), 350);
     return () => clearTimeout(timer);
   }, []);
   const keyboard = useKeyboardLayout();
   const policy = useKeyboardFormPolicy();
   const editing = keyboardShowing(keyboard);
-  // Высоту слота поля вне закреплённой клавиатуры задаёт невидимая копия
-  // текста. Пока клавиатура видна, копия держит текст на момент её открытия,
-  // чтобы набор не сдвигал поле.
+  // Outside a docked keyboard, the input slot's height is set by an invisible
+  // copy of the text. While the keyboard is visible, the copy holds the text
+  // as of its opening so typing does not shift the field.
   const [editingStartTopic, setEditingStartTopic] = useState<string | null>(null);
   if (editing && editingStartTopic === null) setEditingStartTopic(s.topic);
   if (!editing && editingStartTopic !== null) setEditingStartTopic(null);
@@ -81,7 +82,7 @@ export default function Setup() {
   const durationUnitFor = (minutes: number) => minutes === 0
     ? t('screens.setup.untimed')
     : t(`screens.minute.${pluralCategory(language, minutes)}`);
-  // «15 минут» и «без таймера» VoiceOver читает одной фразой, без знака «∞»
+  // VoiceOver reads "15 minutes" and "no timer" as one phrase, without the "∞" symbol
   const durationLabel = (minutes: number) =>
     minutes === 0 ? durationUnitFor(0) : `${minutes} ${durationUnitFor(minutes)}`;
   const durationUnit = durationUnitFor(s.minutes);
@@ -110,8 +111,8 @@ export default function Setup() {
   return (
     <View style={styles.root}>
       <ScreenBg />
-      {/* Область закрытия клавиатуры занимает весь экран, включая поля
-          по бокам ограниченной по ширине колонки на планшете. */}
+      {/* The keyboard dismiss area covers the whole screen, including the
+          areas beside the width-limited column on tablets. */}
       <KeyboardViewport>
       <Pressable
         onPress={dismissKeyboard}
@@ -151,14 +152,15 @@ export default function Setup() {
                 value={s.topic}
                 onChangeText={s.setTopic}
                 multiline
-                // без плейсхолдера: заголовок «Цель молитвы» и примеры под «?»
-                // говорят достаточно, а любая подсказка навязывала тон
+                // no placeholder: the "Prayer intention" heading
+                // (screens.setup.goal) and the examples under "?" say enough,
+                // and any hint would impose a tone
                 style={[styles.topicInput, policy.fillInput && styles.topicInputCompact, styles.topicInputFill]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
                 testID="setup-goal-input"
-                // цель — одна фраза, переносы строк не нужны: клавиша ввода
-                // становится синей «Готово» и закрывает клавиатуру
+                // the goal is one phrase, no line breaks needed: the enter
+                // key becomes a blue "Done" that closes the keyboard
                 returnKeyType="done"
                 submitBehavior="submit"
                 onSubmitEditing={dismissKeyboard}
@@ -166,8 +168,8 @@ export default function Setup() {
             </View>
           </View>
 
-          {/* Футер снимается, а не скрывается: под display: none Android
-              ужимает подпись GoldButton на нулевом кадре и не растит её обратно. */}
+          {/* The footer is unmounted, not hidden: under display: none Android
+              squeezes the GoldButton caption to a zero frame and never grows it back. */}
           {!policy.fillInput && <View {...hiddenWhileEditing} style={[styles.lower, hiddenWhileEditing.style]}>
             <View>
               <Kicker style={{ fontSize: sc(11), marginBottom: sc(12), marginHorizontal: 2 }}>
@@ -256,8 +258,8 @@ export default function Setup() {
 
       <Modal visible={examplesOpen} transparent animationType="fade" onRequestClose={() => setExamplesOpen(false)}>
         <Pressable accessible={false} style={styles.modalBackdrop} onPress={() => setExamplesOpen(false)}>
-          {/* Закрывается тапом по фону, «назад» Android (onRequestClose) и
-              жестом escape VoiceOver — фон для программ чтения не фокусируется */}
+          {/* Closes on backdrop tap, Android "back" (onRequestClose) and the
+              VoiceOver escape gesture — the backdrop is not focusable for screen readers */}
           <View
             style={[styles.examplesCard, { marginTop: insets.top + sc(92) }]}
             onAccessibilityEscape={() => setExamplesOpen(false)}
@@ -297,8 +299,9 @@ const stylesFactory = () => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0806' },
   dismissArea: { flex: 1 },
   body: { flex: 1, paddingHorizontal: screenGutter(), ...column() },
-  // поле, растянутое до клавиатуры, перекрывает нижние блоки; длинная цель
-  // ужимает слот поля до свободного места, чтобы «Далее» оставалась на экране
+  // the field stretched to the keyboard covers the lower blocks; a long
+  // goal shrinks the field slot to the free space so "Continue"
+  // (screens.setup.next) stays on screen
   goal: { flexShrink: 1, zIndex: 1, marginTop: sc(16) },
   lower: { flexGrow: 1, justifyContent: 'space-between', gap: sc(12), paddingTop: sc(16) },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },
@@ -367,14 +370,14 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // высота фиксирована: у «∞» глиф из шрифта-фоллбэка с другими
-    // метриками, без фиксации степпер прыгает при переключении
+    // fixed height: the "∞" glyph comes from a fallback font with different
+    // metrics; without the fix the stepper jumps on switching
     height: sc(76),
   },
   stepBig: {
     fontFamily: fonts.serif,
     fontSize: sc(36),
-    // у Spectral высокие цифры: lineHeight ниже ~1.25 em срезает их сверху
+    // Spectral digits are tall: lineHeight below ~1.25 em clips them at the top
     lineHeight: sc(45),
     height: sc(45),
     color: colors.creamBright,
@@ -383,8 +386,8 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: sc(11),
     color: colors.creamDim,
-    // lineHeight цифры оставляет запас снизу (сверху резать нельзя —
-    // Spectral срежет верх), поэтому подпись подтягивается к цифре
+    // the digit's lineHeight leaves spare room below (the top cannot be cut —
+    // Spectral would clip it), so the caption is pulled up to the digit
     marginTop: -sc(8),
   },
   presets: {

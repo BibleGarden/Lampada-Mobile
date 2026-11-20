@@ -1,26 +1,26 @@
 import type { UiLanguage } from './uiLanguage';
 import { reminderCopy } from './locales/reminders.ts';
 
-// Чистая модель расписания локальных напоминаний о молитве.
+// Pure model of the local prayer-reminder schedule.
 //
-// Модуль намеренно не знает, каким способом расписание было задано: сейчас его
-// собирает экран настроек из выбора дней и времени, позже сверху может лечь
-// разбор фразы ИИ. Поэтому здесь нет ни expo-notifications, ни react-native —
-// только валидация, разворачивание в триггеры и рендер строки.
+// The module deliberately does not know how the schedule was entered: today the
+// settings screen assembles it from picked days and times, and AI phrase
+// parsing may sit on top later. Hence no expo-notifications and no
+// react-native here — only validation, expansion into triggers, and rendering.
 //
-// Дни недели внутри модели — ISO: 1 = понедельник … 7 = воскресенье. Это
-// совпадает с порядком, в котором дни показываются пользователю. Нумерация
-// expo-notifications другая (1 = воскресенье), и перевод выполняется ровно в
-// одном месте — `expoWeekday`.
+// Weekdays inside the model are ISO: 1 = Monday … 7 = Sunday. This matches the
+// order in which days are shown to the user. expo-notifications numbers them
+// differently (1 = Sunday), and the conversion lives in exactly one place —
+// `expoWeekday`.
 
 export type ReminderTime = {
   hour: number;
   minute: number;
 };
 
-/** Одно правило: набор дней недели и времена внутри каждого из этих дней. */
+/** One rule: a set of weekdays and the times within each of those days. */
 export type ReminderRule = {
-  /** ISO-дни недели, 1 = понедельник … 7 = воскресенье. */
+  /** ISO weekdays, 1 = Monday … 7 = Sunday. */
   weekdays: number[];
   times: ReminderTime[];
 };
@@ -30,7 +30,7 @@ export type ReminderSchedule = {
   rules: ReminderRule[];
 };
 
-/** WEEKLY-триггер в нумерации expo-notifications: 1 = воскресенье … 7 = суббота. */
+/** WEEKLY trigger in expo-notifications numbering: 1 = Sunday … 7 = Saturday. */
 export type ReminderWeeklyTrigger = {
   weekday: number;
   hour: number;
@@ -41,24 +41,24 @@ export const WEEKDAY_SHORT_NAMES = reminderCopy.ru.weekdays;
 export const weekdayShortNames = (language: UiLanguage): readonly string[] => reminderCopy[language].weekdays;
 export const reminderPhrases = (language: UiLanguage): readonly string[] => reminderCopy[language].phrases;
 
-/** Правил больше, чем дней в неделе, быть не может: они бы дублировали друг друга. */
+/** There cannot be more rules than weekdays: they would duplicate each other. */
 export const MAX_REMINDER_RULES = 7;
-/** Разумный потолок времён в одном правиле; защищает и лимит iOS, и интерфейс. */
+/** A sane cap on times within one rule; protects both the iOS limit and the UI. */
 export const MAX_REMINDER_TIMES_PER_RULE = 8;
 /**
- * iOS держит не больше 64 запланированных уведомлений на приложение. Каждый
- * WEEKLY-триггер занимает ровно один слот, поэтому лишние отбрасываются здесь,
- * а не молча теряются в системе.
+ * iOS keeps at most 64 scheduled notifications per app. Each WEEKLY trigger
+ * occupies exactly one slot, so extras are dropped here rather than silently
+ * lost by the system.
  */
 export const MAX_REMINDER_TRIGGERS = 64;
 
 /**
- * Тёплые короткие фразы для тела уведомления. Текст уносится в систему в момент
- * планирования, поэтому ротация возможна только за счёт перепланирования.
+ * Warm short phrases for the notification body. The text is handed to the OS
+ * at scheduling time, so rotation is only possible through rescheduling.
  */
 export const REMINDER_PHRASES: readonly string[] = reminderCopy.ru.phrases;
 
-/** Расписание новой установки: напоминания выключены, заготовка — каждый день в 9:00. */
+/** Fresh-install schedule: reminders off, the placeholder is every day at 9:00. */
 export const DEFAULT_REMINDER_SCHEDULE: ReminderSchedule = {
   enabled: false,
   rules: [{ weekdays: [1, 2, 3, 4, 5, 6, 7], times: [{ hour: 9, minute: 0 }] }],
@@ -98,9 +98,9 @@ const normalizeTimes = (value: unknown): ReminderTime[] => {
 };
 
 /**
- * Приводит произвольное значение к валидному расписанию либо возвращает `null`.
- * Правила с одинаковым набором дней сливаются: два одинаковых набора дней — это
- * одно правило с объединёнными временами, и в интерфейсе, и в триггерах.
+ * Coerces an arbitrary value into a valid schedule, or returns `null`. Rules
+ * with the same weekdays are merged: two identical weekday sets are one rule
+ * with combined times, both in the UI and in the triggers.
  */
 export function normalizeReminderSchedule(value: unknown): ReminderSchedule | null {
   if (!isObject(value) || typeof value.enabled !== 'boolean') return null;
@@ -128,7 +128,7 @@ export function normalizeReminderSchedule(value: unknown): ReminderSchedule | nu
   return { enabled: value.enabled, rules };
 }
 
-/** Читает сохранённое в `meta` JSON-значение; повреждённое значение — не расписание. */
+/** Reads the JSON value stored in `meta`; a corrupt value is not a schedule. */
 export function parseStoredReminderSchedule(value: string | null): ReminderSchedule | null {
   if (!value) return null;
   try {
@@ -138,20 +138,20 @@ export function parseStoredReminderSchedule(value: string | null): ReminderSched
   }
 }
 
-/** ISO-день (1 = понедельник) → нумерация expo-notifications (1 = воскресенье). */
+/** ISO day (1 = Monday) → expo-notifications numbering (1 = Sunday). */
 export const expoWeekday = (isoWeekday: number) => (isoWeekday % 7) + 1;
 
 /**
- * Разворачивает правила в плоский набор WEEKLY-триггеров. Выключенное
- * расписание триггеров не даёт вовсе, поэтому планировщику не нужна отдельная
- * ветка «напоминания отключены».
+ * Expands the rules into a flat set of WEEKLY triggers. A disabled schedule
+ * yields no triggers at all, so the scheduler needs no separate
+ * "reminders off" branch.
  */
 export function reminderWeeklyTriggers(schedule: ReminderSchedule): ReminderWeeklyTrigger[] {
   if (!schedule.enabled) return [];
   const seen = new Set<number>();
   const triggers: ReminderWeeklyTrigger[] = [];
-  // Порядок обхода — по дням недели с понедельника, внутри дня по времени:
-  // так первая фраза перетасованного пула достаётся ближайшему дню недели.
+  // Traversal goes by weekday starting Monday, then by time within the day:
+  // this way the first phrase of the shuffled pool goes to the nearest weekday.
   for (let isoWeekday = 1; isoWeekday <= 7; isoWeekday += 1) {
     const times = new Map<number, ReminderTime>();
     for (const rule of schedule.rules) {
@@ -173,7 +173,8 @@ const pad = (value: number) => String(value).padStart(2, '0');
 
 export const formatReminderTime = (time: ReminderTime) => `${pad(time.hour)}:${pad(time.minute)}`;
 
-/** «Пн–Пт», «Сб–Вс», «Пн, Ср, Пт», «Каждый день». */
+/** Renders ranges and lists of short weekday names ("Mon–Fri", "Sat–Sun",
+ *  "Mon, Wed, Fri"), or the "Every day" label. */
 export function formatReminderWeekdays(weekdays: readonly number[], language: UiLanguage = 'ru'): string {
   if (weekdays.length === 0) return '';
   if (weekdays.length === 7) return reminderCopy[language].everyDay;
@@ -193,7 +194,7 @@ export function formatReminderWeekdays(weekdays: readonly number[], language: Ui
     .join(', ');
 }
 
-/** Человеческая строка расписания: «Пн–Пт: 11:00, 19:00 · Сб–Вс: 22:00». */
+/** Human-readable schedule string: "Mon–Fri: 11:00, 19:00 · Sat–Sun: 22:00". */
 export function describeReminderSchedule(schedule: ReminderSchedule, language: UiLanguage = 'ru'): string {
   return schedule.rules
     .filter((rule) => rule.weekdays.length > 0 && rule.times.length > 0)
@@ -204,7 +205,7 @@ export function describeReminderSchedule(schedule: ReminderSchedule, language: U
     .join(' · ');
 }
 
-/** Перетасовка Фишера — Йетса с внедряемым источником случайности. */
+/** Fisher–Yates shuffle with an injectable source of randomness. */
 export function shuffleReminderPhrases(
   pool: readonly string[] = REMINDER_PHRASES,
   random: () => number = Math.random,

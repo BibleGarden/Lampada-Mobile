@@ -18,8 +18,8 @@ import { bottomActionPadding, colors, column, fonts, radius, sc, screenGutter, u
 import { collapsedTextFromLines, shortenCollapsedText } from '../lib/textTruncation';
 
 /**
- * Сколько строк отрывка показывать в свёрнутой карточке. В доке лимит считается
- * по свободной высоте экрана, здесь список прокручивается — поэтому фиксируем.
+ * How many passage lines to show in a collapsed card. The spec derives the
+ * limit from free screen height; here the list scrolls, so it is fixed.
  */
 const COLLAPSED_LINES = 4;
 
@@ -39,9 +39,9 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
     fits: boolean;
   } | null>(null);
 
-  // Ответ сервера сохранён вместе с записью, поэтому карточку рисует тот же
-  // компонент, что и во время молитвы: свёрнутая — только ключевые стихи,
-  // развёрнутая — весь отрывок с их подсветкой.
+  // The server response is stored with the record, so the card is rendered by
+  // the same component as during prayer: collapsed shows only the key verses,
+  // expanded shows the whole passage with them highlighted.
   const display = favoriteToScriptureDisplay(favorite);
   const compact = display ? buildScriptureCompactText(display) : null;
   const collapsedText = compact?.text ?? favorite.text;
@@ -77,8 +77,8 @@ function FavoriteCard({ favorite }: { favorite: FavoriteScripture }) {
               {expanded ? favorite.text : clippedText ?? favorite.text}
             </Text>
           )}
-          {/* Невидимая копия свёрнутого текста: по ней считаем реальное число
-              строк, иначе «Читать целиком» появлялось бы и там, где всё видно */}
+          {/* Invisible copy of the collapsed text: used to count the actual
+              number of lines, otherwise "Read in full" would appear even where everything is visible */}
           <Text
             accessible={false}
             accessibilityElementsHidden
@@ -156,7 +156,7 @@ export default function Favorites() {
       (error: unknown) => {
         console.error('Failed to read saved passages', errorKind(error));
         recordDiagnostic('favorites_load_failed', { errorKind: errorKind(error) });
-        // Пустой список выглядел бы как «ничего не сохранено».
+        // An empty list would look like "nothing saved".
         setFavorites([]);
         setLoadFailed(true);
       },

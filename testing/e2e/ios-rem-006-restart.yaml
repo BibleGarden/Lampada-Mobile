@@ -3,11 +3,12 @@ tags:
   - reminders
   - prepared
 ---
-# REM-006: перезапуск приложения сохраняет расписание (системные WEEKLY-триггеры
-# не зависят от процесса; приложение при старте лишь сверяет их с сохранённым).
+# REM-006: restarting the app preserves the schedule (the system WEEKLY
+# triggers do not depend on the process; at startup the app merely reconciles
+# them with the stored one).
 #
-# Предусловия: прогон ios-rem-005 (в правиле две строки времени; текст строки
-# расписания с двумя времёнами виден на экране настроек).
+# Preconditions: the ios-rem-005 run (the rule has two time rows; the schedule
+# row text with two times is visible on the Settings screen).
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
@@ -18,11 +19,11 @@ tags:
 - assertVisible:
     id: "reminders-toggle"
     checked: true
-# Строка расписания пережила перезапуск.
+# The schedule row survived the restart.
 - assertVisible:
     id: "reminders-summary"
 - assertVisible: ".*Настроить расписание 1: Каждый день:.*"
-# Холодный старт: stopApp + launchApp.
+# Cold start: stopApp + launchApp.
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"

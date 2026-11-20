@@ -1,11 +1,11 @@
-// Что из ответа человека может уйти в ИИ-контекст.
+// What parts of a person's answer may go into the AI context.
 //
-// Ответ — это не только набранный текст: голосовая запись для модели
-// существует ровно своей расшифровкой. Само аудио в промпт не попадает
-// никогда — ни в вопросы, ни в подбор Писания.
+// An answer is more than typed text: as far as the model is concerned, a
+// voice recording exists only as its transcript. The audio itself never
+// enters a prompt — neither for questions nor for scripture selection.
 //
-// Модуль чистый: privacy gate для answer context применяется вызывающим
-// перед сборкой запроса и повторно перед сетевым вызовом.
+// The module is pure: the answer-context privacy gate is applied by the
+// caller before building the request and again before the network call.
 
 export type AnswerContext = {
   text: string;
@@ -13,9 +13,10 @@ export type AnswerContext = {
 };
 
 /**
- * Реплики человека в порядке разговора: по возрастанию индекса вопроса,
- * внутри ответа — сначала текст, затем расшифровки его записей.
- * Пустые реплики (нет текста, запись без расшифровки) отбрасываются.
+ * The person's replies in conversation order: by ascending question index,
+ * and within an answer its text first, then the transcripts of its
+ * recordings. Empty replies (no text, a recording without a transcript)
+ * are dropped.
  */
 export function replyTexts(answers: Record<number, AnswerContext>): string[] {
   return Object.keys(answers)

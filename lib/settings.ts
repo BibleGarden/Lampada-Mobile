@@ -32,10 +32,10 @@ import {
   serializePrayerMinutes,
 } from './prayerDuration';
 
-// Настройки приложения; хранятся в таблице meta (key/value).
+// App settings; stored in the meta table (key/value).
 //
-// Каждая передача молитвенного контента имеет независимое versioned-согласие.
-// Отсутствие записи и старые разрешающие значения никогда не означают consent.
+// Each prayer-content transfer has an independent versioned consent.
+// A missing record and legacy permissive values never mean consent.
 
 const CONSENT_KEYS: Record<ConsentPurpose, string> = {
   core_prayer_ai: 'privacy_consent_core_prayer_ai',
@@ -52,10 +52,10 @@ type SettingsState = {
   audioTranscriptionConsent: ConsentDecision;
   scripturePreferences: ScripturePreferences | null;
   reminderSchedule: ReminderSchedule;
-  // Сохранённое расписание не прочиталось и заменено расписанием по умолчанию;
-  // флаг держится до первой успешной записи расписания.
+  // The saved schedule failed to parse and was replaced with the default one;
+  // the flag stays until the first successful schedule write.
   reminderScheduleInvalid: boolean;
-  prayerMinutes: number; // длительность последней начатой молитвы; 0 = без таймера
+  prayerMinutes: number; // duration of the last started prayer; 0 = no timer
   loaded: boolean;
   load: () => Promise<void>;
   setConsent: (purpose: ConsentPurpose, decision: Exclude<ConsentDecision, 'undecided'>) => Promise<void>;
@@ -109,9 +109,9 @@ export const useSettings = create<SettingsState>((set) => ({
           d.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'ui_language'"),
           d.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = 'prayer_minutes'"),
         ]);
-        // Длительность публикуется вместе с языком: корневой layout показывает
-        // экраны после uiLanguageReady, и первый сброс сессии на Home уже
-        // видит сохранённое значение.
+        // Duration is published together with the language: the root layout
+        // reveals screens after uiLanguageReady, so the first session reset on
+        // Home already sees the stored value.
         set({
           uiLanguage: isUiLanguage(languageRow?.value) ? languageRow.value : initialUiLanguage(getLocales()),
           prayerMinutes: parseStoredPrayerMinutes(minutesRow?.value ?? null),
@@ -123,8 +123,8 @@ export const useSettings = create<SettingsState>((set) => ({
           legacyShareRow?.value ?? null,
         );
         const audioTranscriptionConsent = resolveConsentDecision(audioRow?.value ?? null);
-        // Нормализуем отсутствующие, malformed и obsolete записи сразу. Так
-        // последующие чтения не зависят от legacy-ключа и версии приложения.
+        // Normalize missing, malformed, and obsolete records right away, so
+        // later reads do not depend on the legacy key or the app version.
         await Promise.all([
           d.runAsync(
             `INSERT INTO meta (key, value) VALUES (?, ?)
@@ -146,14 +146,15 @@ export const useSettings = create<SettingsState>((set) => ({
           ),
         ]);
         const storedPreferences = parseStoredScripturePreferences(scriptureRow?.value ?? null);
-        // Повреждённая запись не считается выбором, но и не исчезает молча:
-        // инициализация заменит её подтверждённой тройкой, а след останется в диагностике.
+        // A corrupted record does not count as a choice but does not vanish
+        // silently: initialization replaces it with a confirmed triple and
+        // leaves a trace in diagnostics.
         if (scriptureRow && !storedPreferences) {
           recordDiagnostic('scripture_preferences_invalid', { reason: 'malformed_scripture_preferences' });
         }
         const storedReminders = parseStoredReminderSchedule(remindersRow?.value ?? null);
-        // Отсутствие записи — обычное расписание по умолчанию. Повреждённая
-        // запись тоже заменяется им, но человек видит предупреждение в настройках.
+        // A missing record is just the default schedule. A corrupted record is
+        // replaced with it too, but the person sees a warning in Settings.
         const reminderScheduleInvalid = !!remindersRow && !storedReminders;
         if (reminderScheduleInvalid) {
           console.warn('Saved reminder schedule is unreadable');
@@ -164,8 +165,8 @@ export const useSettings = create<SettingsState>((set) => ({
           answerContextConsent,
           audioTranscriptionConsent,
           scripturePreferences: storedPreferences,
-          // Расписание по умолчанию статично, поэтому его отсутствие не нужно
-          // дописывать в meta: запись появится с первой правкой пользователя.
+          // The default schedule is static, so its absence needs no meta row:
+          // one appears with the first user edit.
           reminderSchedule: storedReminders ?? DEFAULT_REMINDER_SCHEDULE,
           reminderScheduleInvalid,
           loaded: true,
@@ -200,8 +201,8 @@ export const useSettings = create<SettingsState>((set) => ({
         ? 'answerContextConsent'
         : 'audioTranscriptionConsent';
     const previousDecision = useSettings.getState()[stateKey];
-    // Сначала закрываем барьер в памяти: отзыв уже действует для следующего
-    // request builder, даже пока SQLite завершает запись.
+    // Close the barrier in memory first: the revocation already applies to the
+    // next request builder while SQLite is still completing the write.
     set({ [stateKey]: decision } as Pick<SettingsState, typeof stateKey>);
     consentSavePromise = consentSavePromise.catch(() => undefined).then(async () => {
       const d = await getDb();
@@ -230,8 +231,8 @@ export const useSettings = create<SettingsState>((set) => ({
 
   setReminderSchedule: async (schedule) => {
     const d = await getDb();
-    // Флаг включения, дни и времена — одно зависимое значение: читатель не
-    // может увидеть включённые напоминания с полурасписанием.
+    // The enabled flag, days, and times are one dependent value: a reader must
+    // never see enabled reminders with a half-written schedule.
     await d.runAsync(
       `INSERT INTO meta (key, value) VALUES ('prayer_reminders', ?)
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
@@ -252,10 +253,10 @@ export const useSettings = create<SettingsState>((set) => ({
 }));
 
 /**
- * Вернуть настройки к состоянию новой установки. Нужен только полному стиранию
- * данных: база к этому моменту удалена, поэтому в памяти не должно остаться ни
- * значений из неё, ни закэшированного промиса загрузки — иначе `load()` решил
- * бы, что настройки уже прочитаны.
+ * Reset settings to a fresh-install state. Needed only for a full data wipe:
+ * the database is deleted by that point, so memory must keep neither its
+ * values nor the cached load promise — otherwise `load()` would decide the
+ * settings are already loaded.
  */
 export const resetSettingsStore = () => {
   loadPromise = null;
@@ -277,7 +278,7 @@ export const resetSettingsStore = () => {
   });
 };
 
-/** Текущие privacy-барьеры для не-React кода, без подписки. */
+/** Current privacy barriers for non-React code, without a subscription. */
 export const coreAiAllowedNow = () =>
   consentAllowsTransfer(useSettings.getState().coreAiConsent);
 
@@ -292,7 +293,7 @@ export const ensureSettingsLoaded = async () => {
   if (!useSettings.getState().loaded) await useSettings.getState().load();
 };
 
-/** Каталог Библии недоступен: сеть, ответ сервера или неверный формат. */
+/** The scripture catalog is unavailable: network, server response, or bad format. */
 export class ScriptureCatalogUnavailableError extends Error {
   constructor(cause: unknown) {
     super(`Scripture catalog unavailable: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
@@ -300,13 +301,13 @@ export class ScriptureCatalogUnavailableError extends Error {
   }
 }
 
-// Отделяем сбой каталога от ошибок SQLite: экран должен назвать настоящую причину.
+// Separate catalog failures from SQLite errors: the screen must name the real cause.
 const fromCatalog = <T>(request: Promise<T>) =>
   request.catch((error: unknown) => {
     throw new ScriptureCatalogUnavailableError(error);
   });
 
-/** Каталог доступен, но не даёт полной тройки для языка интерфейса. */
+/** The catalog is available but yields no complete triple for the interface language. */
 export class ScriptureDefaultUnavailableError extends Error {
   constructor(message: string, readonly languages: ScriptureLanguageOption[]) {
     super(message);
@@ -315,8 +316,8 @@ export class ScriptureDefaultUnavailableError extends Error {
 }
 
 /**
- * Результат инициализации. Каталоги возвращаются, только если именно они дали
- * сохранённую тройку: экран настроек не запрашивает их повторно.
+ * Initialization result. Catalogs are returned only when they were the source
+ * of the saved triple: the settings screen does not request them again.
  */
 export type ScriptureInitialization = {
   preferences: ScripturePreferences;
@@ -326,8 +327,8 @@ export type ScriptureInitialization = {
 
 type PersistOutcome = 'saved' | 'kept' | 'interface_language_changed';
 
-// Сохраняем зависимую тройку последовательно: поздний дефолт не должен
-// перезаписать явный выбор, сделанный человеком во время загрузки каталога.
+// Persist the dependent triple serially: a late default must not overwrite an
+// explicit choice made while the catalog was loading.
 async function persistScripturePreferences(
   preferences: ScripturePreferences,
   initialLanguage?: UiLanguage,
@@ -357,13 +358,13 @@ async function persistScripturePreferences(
 }
 
 async function initializeScripturePreferences(): Promise<ScriptureInitialization> {
-  // Смена языка интерфейса во время загрузки — не ошибка: начинаем заново уже
-  // для нового языка, старый дефолт не сохраняется.
+  // An interface-language change during loading is not an error: start over
+  // with the new language; the old default is not saved.
   for (;;) {
     const interfaceLanguage = useSettings.getState().uiLanguage;
     const languages = await fromCatalog(fetchScriptureLanguages());
     const language = resolveInitialScriptureLanguage(interfaceLanguage, languages);
-    // Язык интерфейса сменился во время загрузки: вывод «нет Библии» относился к старому.
+    // The interface language changed during loading: the "no Bible" verdict applied to the old one.
     if (useSettings.getState().uiLanguage !== interfaceLanguage) continue;
     if (!language) {
       throw new ScriptureDefaultUnavailableError('Scripture catalog does not contain the interface language', languages);
@@ -382,7 +383,7 @@ async function initializeScripturePreferences(): Promise<ScriptureInitialization
   }
 }
 
-/** Не сохраняем никакого выбора до подтверждения языка и полной тройки каталогом. */
+/** Save no choice until the catalog confirms the language and a complete triple. */
 export async function ensureScripturePreferences(): Promise<ScriptureInitialization> {
   await ensureSettingsLoaded();
   const saved = useSettings.getState().scripturePreferences;

@@ -72,15 +72,15 @@ def expect_english_bible(values, ui_language, phase):
         fail(phase + ': expected ui_language=' + ui_language + ', got ' + repr(values.get('ui_language')))
 
 
-# Фазы опираются на русский как основной язык системы: ошибка до переключения
-# интерфейса проверяется по-русски, а восстановление — что выбор идёт за
-# английским интерфейсом, а не за системной локалью.
+# The phases rely on Russian as the primary system language: the error before
+# the UI switch is verified in Russian, and recovery — that the selection
+# follows the English UI rather than the system locale.
 language = primary_language()
 if not language.startswith('ru'):
     fail('the simulator primary language must be Russian, got ' + language)
 
-# failure → recovery → saved-offline — одна цепочка над общим состоянием
-# приложения; no-default начинается с чистой установки.
+# failure → recovery → saved-offline is one chain over shared app state;
+# no-default starts from a clean install.
 phases = [('failure', 'fail'), ('recovery', 'ok'), ('saved-offline', 'fail'), ('no-default', 'unvoiced-ru')]
 for phase, mode in phases:
     control(mode)

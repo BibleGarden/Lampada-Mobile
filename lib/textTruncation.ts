@@ -1,17 +1,17 @@
 const TRAILING_PUNCTUATION = /[\s.,;:!?…。！？；：，]+$/u;
 
-/** Убираем завершающие знаки фразы перед явным многоточием продолжения. */
+/** Strips trailing phrase punctuation before an explicit continuation ellipsis. */
 export function withContinuationEllipsis(text: string): string {
   const trimmed = text.replace(TRAILING_PUNCTUATION, '');
   return `${trimmed} …`;
 }
 
-/** Нативное измерение возвращает точные фрагменты текста, включая пробелы и переносы. */
+/** Native measurement returns exact text fragments, including spaces and line breaks. */
 export function collapsedTextFromLines(lines: readonly string[], lineLimit: number): string {
   return `${lines.slice(0, lineLimit).join('').replace(TRAILING_PUNCTUATION, '')}…`;
 }
 
-/** Каждый шаг подгонки делает уже очищенный текст строго короче. */
+/** Each fitting step makes the already-cleaned text strictly shorter. */
 export function shortenCollapsedText(candidate: string): string {
   if (!candidate.endsWith('…') || candidate === '…') {
     throw new Error('Collapsed text cannot be shortened further');

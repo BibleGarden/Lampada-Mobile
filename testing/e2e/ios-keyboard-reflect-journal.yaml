@@ -2,15 +2,16 @@ appId: twinkler
 tags:
   - main
 ---
-# Раздел 9 плана, iPhone: клавиатура в размышлении и в поиске журнала. Поле и
-# действия не закрыты клавиатурой, тап внутри поля продолжает ввод, тап
-# снаружи закрывает клавиатуру без потери текста.
+# Plan section 9, iPhone: the keyboard in reflection and in journal search. The
+# field and actions are not covered by the keyboard, a tap inside the field
+# continues typing, a tap outside closes the keyboard without losing text.
 #
-# Видимость клавиатуры — по нелокализованным идентификаторам системной
-# клавиатуры: `shift` (клавиша регистра) и `inputView` (контейнер для
-# `above:`); подробности в ios-stage03-long-goal.yaml. Текст до тапа внутри
-# поля — цифры: тап рядом со словом, которое проверка орфографии считает
-# ошибкой, выделил бы его. Повтор тапа выключен по той же причине.
+# Keyboard visibility is checked via the locale-independent system keyboard
+# identifiers: `shift` (the shift key) and `inputView` (the container used with
+# `above:`); see ios-stage03-long-goal.yaml for details. The text before the
+# tap inside the field is digits: a tap next to a word the spell checker
+# considers misspelled would select it. The repeat tap is disabled for the same
+# reason.
 - launchApp:
     stopApp: true
     clearState: true
@@ -41,7 +42,8 @@ tags:
 - assertVisible:
     id: "reflect-kicker"
 
-# Размышление: при клавиатуре действия скрыты, поле над клавиатурой
+# Reflection: with the keyboard up, the actions are hidden and the field sits
+# above the keyboard
 - tapOn:
     id: "reflection-input"
 - inputText: "4821"
@@ -64,7 +66,7 @@ tags:
     id: "reflect-question"
     above:
       id: "inputView"
-# тап по вопросу — снаружи поля
+# tap on the question — outside the field
 - tapOn:
     id: "reflect-question"
 - assertNotVisible:
@@ -79,7 +81,7 @@ tags:
 - assertVisible:
     id: "home-title-lit"
 
-# Поиск журнала
+# Journal search
 - tapOn:
     id: "journal-button"
 - tapOn:

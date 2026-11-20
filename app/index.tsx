@@ -26,17 +26,18 @@ export default function Home() {
   const { t, language } = useI18n();
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  // Главная остаётся в стеке под сессией: подписка на весь store
-  // перерисовывала бы её на каждом секундном тике таймера.
+  // Home stays in the stack under the session: subscribing to the whole
+  // store would re-render it on every tick of the timer.
   const { streak, loadStreak, reset } = useSession(
     useShallow((st) => ({ streak: st.streak, loadStreak: st.loadStreak, reset: st.reset })),
   );
   const { prayerSaved } = useLocalSearchParams<{ prayerSaved?: string }>();
   const [showSavedNotice, setShowSavedNotice] = useState(false);
   const visible = useVisibleScreen();
-  // Высоты центрального блока и подписей под огоньком: на низком окне
-  // огонёк уменьшается до свободного места, иначе блок переполняется
-  // и подписи наезжают на кнопку. Размер самого огонька не измеряем.
+  // Heights of the central block and the captions under the flame: on short
+  // windows the flame shrinks to the available space, otherwise the block
+  // overflows and the captions collide with the button. The flame itself
+  // is not measured.
   const [centerHeight, setCenterHeight] = useState<number>();
   const [captionsHeight, setCaptionsHeight] = useState<number>();
   const onCenterLayout = (e: LayoutChangeEvent) => setCenterHeight(e.nativeEvent.layout.height);
@@ -45,10 +46,10 @@ export default function Home() {
   useEffect(() => {
     if (prayerSaved !== '1') return;
     setShowSavedNotice(true);
-    // Плашка сама не озвучивается; в очередь — чтобы объявление смены экрана
-    // его не перебило.
+    // The banner does not announce itself; queue it so the screen-change
+    // announcement does not cut it off.
     AccessibilityInfo.announceForAccessibilityWithOptions(t('screens.home.prayerSaved'), { queue: true });
-    // Забираем одноразовое сообщение, чтобы оно не повторялось при возврате.
+    // Consume the one-shot message so it does not repeat on return.
     router.setParams({ prayerSaved: undefined });
   }, [prayerSaved]);
 
@@ -58,7 +59,7 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [showSavedNotice, visible]);
 
-  // Сброс сессии — только при переходе на Home; календарь обновляется и без навигации.
+  // The session resets only when navigating to Home; the calendar refreshes without navigation too.
   useFocusEffect(
     useCallback(() => {
       reset();
@@ -66,14 +67,14 @@ export default function Home() {
     }, [loadStreak, reset]),
   );
 
-  // календарь последней недели: правая точка — сегодня, левая — 6 дней назад.
-  // Молился — золотая, пропустил — потухшая, сегодня ещё нет — контур «ждёт»
+  // last week's calendar: the right dot is today, the left one is 6 days ago.
+  // Prayed — gold, missed — dimmed, today not yet — a "pending" outline
   const dots = streak.week.map((prayed, i) => {
     if (prayed) return 'filled';
     return i === 6 ? 'today' : 'empty';
   });
 
-  // Подпись мягко суммирует неделю и не обнуляет достижение после пропуска.
+  // The caption gently sums up the week and does not reset the streak after a miss.
   const weekDays = streak.week.filter(Boolean).length;
   const streakLine = weekDays > 0
     ? t(`screens.home.week.${pluralCategory(language, weekDays)}`, { count: weekDays })
@@ -86,9 +87,9 @@ export default function Home() {
   return (
     <View style={styles.root}>
       <ScreenBg variant="home" />
-      {/* без entering-анимации: на холодном старте, пока JS-поток занят
-          загрузкой бандла, FadeIn замирает на полупрозрачности — весь экран
-          остаётся «бледным». Home — первый экран, ему проявление не нужно */}
+      {/* no entering animation: on a cold start, while the JS thread is
+          busy loading the bundle, FadeIn freezes at semi-transparency — the
+          whole screen stays "washed out". Home is the first screen; it needs no fade-in */}
       <View style={styles.screen}>
         <View style={[styles.top, { top: insets.top + sc(18) }]}>
           <Text style={styles.greeting}>{greetingByHour(t)}</Text>
@@ -124,8 +125,8 @@ export default function Home() {
         </View>
 
         <View style={styles.center} onLayout={onCenterLayout}>
-          {/* пламя горит всегда; до молитвы — чуть скромнее (lit=false),
-              после — в полную силу: «поддержи» обретает буквальный смысл */}
+          {/* the flame always burns; before prayer it is slightly dimmer
+              (lit=false), after — at full strength: "keep the flame" becomes literal */}
           <Flame width={flameWidth} lit={streak.prayedToday} />
           <View style={styles.captions} onLayout={onCaptionsLayout}>
             <Text
@@ -213,7 +214,7 @@ const stylesFactory = () => StyleSheet.create({
     alignItems: 'center',
     marginTop: sc(14),
   },
-  // потухший день: пепельный, без золота
+  // missed day: ash-grey, no gold
   dot: {
     width: sc(8),
     height: sc(8),
@@ -237,9 +238,9 @@ const stylesFactory = () => StyleSheet.create({
     color: colors.labelGold,
     marginTop: sc(4),
   },
-  // Кнопка стоит в потоке, а не поверх экрана: центральный блок должен
-  // получать оставшуюся высоту, иначе на низком окне огонёк с подписями
-  // центрируется по всему экрану и наезжает на кнопку.
+  // The button sits in the flow, not on top of the screen: the central block
+  // must receive the remaining height, otherwise on short windows the flame
+  // with its captions centers against the whole screen and overlaps the button.
   bottom: {
     paddingHorizontal: screenGutter(),
   },

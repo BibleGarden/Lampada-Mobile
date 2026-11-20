@@ -1,35 +1,36 @@
-// Дизайн-токены, перенесённые из первоначального прототипа Claude Design.
-// Сам файл прототипа удалён из репозитория: интерфейс давно ушёл от него.
+// Design tokens carried over from the original Claude Design prototype.
+// The prototype file itself is gone from the repo: the UI has long moved on.
 
 import { useMemo } from 'react';
 import { Dimensions, useWindowDimensions } from 'react-native';
 
-// Прототип свёрстан в кадре 294×654 (экран «телефона» 320 минус рамка 13+13).
-// Реальные экраны шире, поэтому каждый размер из прототипа масштабируется
-// пропорционально ширине экрана; на планшетах рост ограничен.
+// The prototype is laid out in a 294×654 frame (a 320 "phone" screen minus a
+// 13+13 bezel). Real screens are wider, so every prototype size scales
+// proportionally to the screen width; growth is capped on tablets.
 const PROTO_WIDTH = 294;
 
-// Потолок роста токенов. На телефоне 460 не даёт кнопкам и кеглю раздуться на
-// «плюсовых» моделях. На планшете колонка идёт во всю ширину, и телефонный
-// потолок оставлял строку в 80+ символов — читать неудобно; более высокий
-// потолок тянет вместе со шрифтом отступы и кнопки, сохраняя пропорции макета.
+// Token growth caps. On phones, 460 keeps buttons and type from bloating on
+// "plus" models. On tablets the column spans the full width, and the phone cap
+// left lines at 80+ characters — hard to read; the higher cap scales indents
+// and buttons along with the font, preserving the layout's proportions.
 const SCALE_CAP_PHONE = 460;
 const SCALE_CAP_TABLET = 620;
 
-// Вторая опора масштаба — высота окна. Экраны вертикальные, поэтому кадр
-// прототипа сжимается по высоте лучше, чем разворачивается: 500 вместо
-// исходных 654 — это самый низкий кадр, на котором вёрстка ещё дышит
-// (iPhone SE, 667 pt при масштабе от ширины). Масштаб от ширины остаётся
-// ведущим на всех портретных экранах, а в альбомной ориентации, где ширина
-// втрое больше нужной высоты, ограничение берёт на себя высота: композиция
-// та же, просто уменьшенная, вместо раздутой и обрезанной снизу.
+// The second scale anchor is the window height. Screens are portrait, so the
+// prototype frame squeezes by height more easily than it stretches: 500
+// instead of the original 654 is the shortest frame where the layout still
+// breathes (iPhone SE, 667 pt at the width-based scale). The width-based scale
+// stays leading on all portrait screens; in landscape, where the width is
+// triple the needed height, the height takes over the limiting: the
+// composition stays the same, just smaller, instead of bloated and cut off at
+// the bottom.
 const PROTO_MIN_HEIGHT = 500;
 
 type Geometry = { scale: number; isTablet: boolean };
 
 const geometryFor = (width: number, height: number): Geometry => {
-  // Планшет определяем по короткой стороне — она не меняется при повороте,
-  // поэтому тип раскладки остаётся тем же в портрете и в альбоме.
+  // A tablet is detected by its short side — it does not change on rotation,
+  // so the layout type stays the same in portrait and landscape.
   const tablet = Math.min(width, height) >= 600;
   return {
     scale: Math.min(
@@ -43,26 +44,26 @@ const geometryFor = (width: number, height: number): Geometry => {
 const initial = Dimensions.get('window');
 let geometry = geometryFor(initial.width, initial.height);
 
-// Слушатель поднимает геометрию до первого рендера после смены окна:
-// `useWindowDimensions` внутри компонентов сработает уже на свежих токенах.
+// The listener updates geometry before the first render after a window change:
+// `useWindowDimensions` inside components then fires on fresh tokens.
 Dimensions.addEventListener('change', ({ window }) => {
   geometry = geometryFor(window.width, window.height);
 });
 
-/** px из прототипа → pt на текущем экране (шаг 0.5 для чёткости линий) */
+/** prototype px → pt on the current screen (0.5 step for crisp lines) */
 export const sc = (v: number) => Math.round(v * geometry.scale * 2) / 2;
 /**
- * hitSlop, который добирает сторону `size` (в pt) до 44 pt — минимальной зоны
- * касания по HIG. Нужен компактным кнопкам: на iPhone SE sc(32) — это 41 pt.
+ * A hitSlop that grows a side of `size` (in pt) to 44 pt — the HIG minimum
+ * touch target. Meant for compact buttons: on iPhone SE, sc(32) is 41 pt.
  */
 export const touchSlop = (size: number) => Math.max(0, Math.ceil((44 - size) / 2));
-/** Планшетная раскладка. Функция, а не константа: зависит от текущего окна. */
+/** Tablet layout. A function, not a constant: depends on the current window. */
 export const isTablet = () => geometry.isTablet;
 
 /**
- * Пересобирает стили при смене геометрии окна — поворот, Split View, Stage
- * Manager. `StyleSheet.create` замораживает числа в момент вызова, поэтому
- * фабрика стилей должна выполняться внутри рендера, а не на уровне модуля.
+ * Rebuilds styles when the window geometry changes — rotation, Split View,
+ * Stage Manager. `StyleSheet.create` freezes numbers at call time, so the
+ * style factory must run inside the render, not at module level.
  */
 export function useStyles<T>(factory: () => T): T {
   const { width, height } = useWindowDimensions();
@@ -73,10 +74,11 @@ export function useStyles<T>(factory: () => T): T {
 }
 
 /**
- * Колонка контента. Ширину задаём в единицах прототипа, а не экрана: на
- * телефоне этот потолок недостижим и ничего не меняет, а на планшете держит
- * меру строки — иначе в альбомной ориентации текст и кнопки растягиваются на
- * всю ширину окна. Функция, а не константа: зависит от текущей геометрии.
+ * The content column. Its width is set in prototype units, not screen ones:
+ * on a phone the cap is unreachable and changes nothing, while on a tablet it
+ * keeps the line measure — otherwise in landscape, text and buttons stretch
+ * across the whole window. A function, not a constant: depends on the current
+ * geometry.
  */
 export const column = () => ({
   width: '100%' as const,
@@ -84,47 +86,47 @@ export const column = () => ({
   alignSelf: 'center' as const,
 });
 
-/** Одинаковый боковой отступ экрана и его заголовка внутри колонки. */
+/** A matching side gutter for the screen and its header inside the column. */
 export const screenGutter = () => sc(18);
 
-/** Общий предел ширины нижних шторок на широком окне. */
+/** A shared width cap for bottom sheets on a wide window. */
 export const sheetMaxWidth = () => column().maxWidth - 2 * screenGutter();
 
-/** Единый отступ нижнего действия от безопасной зоны. */
+/** A uniform offset of the bottom action from the safe area. */
 export const bottomActionPadding = (bottomInset: number) => bottomInset + sc(12);
 
 export const colors = {
-  // фоны
+  // backgrounds
   bgHome: ['#2a1c0e', '#120b06', '#080604'] as const, // radial 85% 55% at 50% 52%
   bgScreen: ['#1a1510', '#100c08', '#0a0806'] as const, // radial 110% 70% at 50% 12%
   bgSheet: ['#1d1710', '#15100a'] as const,
   bgReader: ['#16241f', '#101b17'] as const,
 
-  // акцент — тёплое золото
+  // accent — warm gold
   amber: '#e6a23c',
   amberDeep: '#c97f1f',
   amberBright: '#f0c074',
   gold: '#d9a94e',
   goldSoft: '#e7cf95',
 
-  // текст — по ролям, не плодить оттенки:
-  // cream — заголовки и вопросы; parchment — основной текст (поля, карточки);
-  // creamBright — крупные цифры; creamDim — вторичные строки;
-  // labelGold — mono-подписи капсом; warmHint — тёплые хинты у кнопок;
-  // placeholder — плейсхолдеры полей ввода.
-  // Альфа текстовых токенов подобрана под WCAG AA (≥4.5:1) на самых светлых
-  // фонах, где они стоят: карточка cardBg поверх bgScreen и bgSheet
+  // text — by role, no extra shades:
+  // cream — headings and questions; parchment — body text (fields, cards);
+  // creamBright — large digits; creamDim — secondary lines;
+  // labelGold — uppercase mono labels; warmHint — warm hints near buttons;
+  // placeholder — input field placeholders.
+  // Text token alphas are tuned for WCAG AA (≥4.5:1) on the lightest
+  // backgrounds where they sit: a cardBg card over bgScreen and bgSheet
   cream: '#f3e6c8',
   creamBright: '#f6ecd4',
   creamDim: 'rgba(240,225,195,.65)',
   parchment: '#f2e9d6',
-  ink: '#2a1a06', // текст на золотых кнопках
+  ink: '#2a1a06', // text on gold buttons
   body: 'rgba(238,233,225,.82)',
   cardText: '#eef0e6',
   warmHint: 'rgba(240,200,140,.7)',
   placeholder: 'rgba(240,230,210,.55)',
 
-  // служебные
+  // utility
   white05: 'rgba(255,255,255,.05)',
   white08: 'rgba(255,255,255,.08)',
   white10: 'rgba(255,255,255,.1)',
@@ -142,7 +144,7 @@ export const colors = {
   greenSoft: '#a9d3bd',
   orb: ['#d8f0e2', '#6fae93', '#2f6450'] as const,
 
-  // пламя
+  // flame
   flameCore: '#ffe9b8',
   flameMid: '#ffb24a',
   flameEdge: '#d6601a',
@@ -163,7 +165,7 @@ export const fonts = {
   monoMedium: 'JetBrainsMono_500Medium',
 } as const;
 
-// Геттеры, а не замороженные объекты: значения зависят от текущей геометрии.
+// Getters, not frozen objects: values depend on the current geometry.
 export const radius = {
   get sm() {
     return sc(8);
@@ -174,7 +176,7 @@ export const radius = {
   pill: 999,
 };
 
-// подпись капсом в стиле прототипа
+// uppercase label in the prototype style
 export const kicker = {
   fontFamily: fonts.mono,
   get fontSize() {

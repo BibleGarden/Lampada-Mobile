@@ -1,21 +1,21 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
-# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+# NEEDS-RUNNER: the device locale is switched between flows by run-lng.sh
+# (the order and locales are hardcoded in the script). Not part of tagged runs.
 ---
-# LNG-006: явный выбор языка переживает холодный старт.
+# LNG-006: an explicit language choice survives a cold start.
 #
-# Предусловие: симулятор на locale=en_US, чтобы сохраняемый uk не совпадал
-# с языком устройства. Следующий флоу, ios-lng-007-choice-survives-locale.yaml,
-# должен идти сразу после этого: он читает тот же контейнер на другом locale
-# и не должен делать clearState.
+# Precondition: the simulator is on locale=en_US, so the saved uk differs from
+# the device language. The next flow, ios-lng-007-choice-survives-locale.yaml,
+# must run right after this one: it reads the same container on a different
+# locale and must not run clearState.
 - launchApp:
     stopApp: true
     clearState: true
-    # Lampada не использует геолокацию; явный список не даёт Maestro
-    # дёргать locationd (simctl privacy location) сразу после холодной
-    # перезагрузки, где locationd зависает.
+    # Lampada does not use geolocation; the explicit list keeps Maestro from
+    # poking locationd (simctl privacy location) right after a cold reboot,
+    # where locationd hangs.
     permissions:
       notifications: allow
       microphone: allow
@@ -31,9 +31,9 @@ tags:
 - assertVisible: "НАЛАШТУВАННЯ"
 - launchApp:
     stopApp: true
-    # Lampada не использует геолокацию; явный список не даёт Maestro
-    # дёргать locationd (simctl privacy location) сразу после холодной
-    # перезагрузки, где locationd зависает.
+    # Lampada does not use geolocation; the explicit list keeps Maestro from
+    # poking locationd (simctl privacy location) right after a cold reboot,
+    # where locationd hangs.
     permissions:
       notifications: allow
       microphone: allow

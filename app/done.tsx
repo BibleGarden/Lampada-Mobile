@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 
-// Старые ссылки ведут на главную без повторного подтверждения сохранения.
+// Legacy links go straight Home without re-confirming the save.
 export default function Done() {
   return <Redirect href="/" />;
 }

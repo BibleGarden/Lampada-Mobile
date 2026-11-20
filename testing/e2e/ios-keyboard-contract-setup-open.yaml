@@ -2,7 +2,7 @@ appId: twinkler
 tags:
   - prepared
 ---
-# Геометрия проверяется хостовым runner после остановки драйвера Maestro.
+# Geometry is verified by the host runner after the Maestro driver has stopped.
 - launchApp:
     stopApp: true
     clearState: true

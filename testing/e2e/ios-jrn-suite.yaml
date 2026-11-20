@@ -1,8 +1,8 @@
 appId: twinkler
 ---
-# JRN-suite: jrn-флоу с данными-зависимостями исключены из теговых прогонов.
-# Запускать целиком: maestro test testing/e2e/ios-jrn-suite.yaml
-# Порядок важен: jrn-001 стартует с чистого состояния, далее данные накапливаются.
+# JRN-suite: jrn flows with data dependencies are excluded from tagged runs.
+# Run as a whole: maestro test testing/e2e/ios-jrn-suite.yaml
+# Order matters: jrn-001 starts from a clean state, then data accumulates.
 - runFlow:
     file: ios-stage06-jrn-001-empty-history.yaml
 - runFlow:

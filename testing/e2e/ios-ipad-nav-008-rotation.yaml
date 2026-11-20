@@ -2,9 +2,10 @@ appId: twinkler
 tags:
   - ipad
 ---
-# NAV-008 (iPad): Home и второй экран переживают повороты портрет→ландшафт→
-# портрет — элементы на месте и нажимаются. Покрытие фона на скриншотах
-# смотрит человек; «JS занят во время поворота» Maestro не воспроизводит.
+# NAV-008 (iPad): Home and the secondary screen survive portrait→landscape→
+# portrait rotations — elements stay in place and tappable. Background coverage
+# in screenshots is reviewed by a human; Maestro cannot reproduce "JS busy
+# during rotation".
 - launchApp:
     stopApp: true
     clearState: true
@@ -29,7 +30,7 @@ tags:
 - assertVisible:
     id: "start-prayer-button"
 - takeScreenshot: NAV-008-home-portrait
-# второй экран: поворот на «Настройках», затем возврат домой в ландшафте
+# secondary screen: rotate while on Settings, then return home in landscape
 - tapOn:
     id: "settings-button"
 - assertVisible:

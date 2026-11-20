@@ -2,14 +2,16 @@ appId: twinkler
 tags:
   - main
 ---
-# ANS-023: в шторке записей «Готово» (во время записи) и «Записать ещё»
-# (после неё) видны и нажимаются. Флоу не привязан к устройству: тир `main`
-# гоняет его на iPhone с Home Indicator, группа iPad — на планшете, SE —
-# прямым запуском (testing/README.md). Поля у края смотрит человек по скриншотам.
+# ANS-023: in the recordings sheet, «Готово» (while recording) and
+# «Записать ещё» (components.answers.recordMore, afterwards) are visible and
+# tappable. The flow is not device-bound: the `main` tier runs it on an
+# iPhone with a Home Indicator, the iPad group on a tablet, and SE by direct
+# launch (testing/README.md).
+# Edge-adjacent fields are reviewed by a human from screenshots.
 - launchApp:
     stopApp: true
     clearState: true
-    # системный диалог микрофона локализован — разрешаем заранее
+    # the microphone system dialog is localized — grant the permission up front
     permissions:
       microphone: allow
 - tapOn:
@@ -41,8 +43,9 @@ tags:
     timeout: 2500
 - assertVisible:
     id: "recordings-stop-button"
-# Таймер записи идёт от нативных часов рекордера. Абсолютное значение зависит
-# от того, сколько Maestro ждал на тапе, поэтому проверяем m:ss и рост.
+# The recording timer is driven by the recorder's native clock. The absolute
+# value depends on how long Maestro waited before the tap, so we check the m:ss
+# format and growth.
 - copyTextFrom:
     id: "recording-elapsed"
 - evalScript: ${output.elapsed = maestro.copiedText}
@@ -76,11 +79,11 @@ tags:
     id: "answer-save-button"
 - waitForAnimationToEnd:
     timeout: 2500
-# Шторка ответа с закрытой клавиатурой: шторка и затемнение доходят до края
-# экрана, кнопки — над Home Indicator / системной навигацией.
+# Answer sheet with the keyboard closed: the sheet and its scrim reach the
+# screen edge, the buttons sit above the Home Indicator / system navigation.
 - takeScreenshot: ANS-023-answer-sheet
-# «Сохранить» доступна над закреплённой клавиатурой и закрывает шторку.
-# Что шторка уезжает за край целиком, смотрит человек (MANUAL_CHECKS.md).
+# "Save" is reachable above the pinned keyboard and closes the sheet.
+# Whether the sheet fully slides off-screen is checked by a human (MANUAL_CHECKS.md).
 - tapOn:
     id: "answer-input"
 - inputText: "ANS-023 keyboard save"

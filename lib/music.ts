@@ -8,8 +8,8 @@ export type PrayerTrack = {
   source: AudioSource;
 };
 
-// Статические require обязательны: Metro должен обнаружить все локальные
-// аудиофайлы при сборке, чтобы музыка работала полностью без сети.
+// Static requires are mandatory: Metro must discover every local audio file
+// at build time so the music works fully offline.
 export const PRAYER_TRACKS: readonly PrayerTrack[] = [
   {
     id: 'contemplation',
@@ -110,8 +110,8 @@ export const PRAYER_TRACK_SOURCES: AudioSource[] = PRAYER_TRACKS.map(
 let previousStartingTrack: number | null = null;
 
 /**
- * Начинает каждую новую молитву со случайного трека, не повторяя стартовый
- * трек предыдущей сессии. Остальные композиции продолжают играть по кругу.
+ * Starts each new prayer with a random track, never repeating the previous
+ * session's starting track. The remaining tracks keep playing in a loop.
  */
 export function getPrayerTracks(): PrayerTrack[] {
   const order = prayerTrackOrder(PRAYER_TRACK_SOURCES.length, previousStartingTrack);

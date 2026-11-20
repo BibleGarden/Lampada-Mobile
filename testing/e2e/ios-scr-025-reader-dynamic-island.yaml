@@ -2,10 +2,11 @@ appId: twinkler
 tags:
   - main
 ---
-# SCR-025: читалка длинного отрывка, раскрытая до предела, — ссылка и кнопки
-# шапки видны и нажимаются. Тир `main` идёт на iPhone с Dynamic Island
-# (Pray Smoke iPhone 17 Pro); что шапка ниже статус-бара, смотрит человек
-# по скриншоту. SE-половина — ios-stage06-scr-003-small-reader.yaml.
+# SCR-025: a long-passage reader expanded to the limit — the header reference
+# and buttons are visible and tappable. The `main` tier runs on an iPhone with
+# a Dynamic Island (Pray Smoke iPhone 17 Pro); whether the header sits below
+# the status bar is checked by a human from the screenshot. The SE half is
+# ios-stage06-scr-003-small-reader.yaml.
 - launchApp:
     stopApp: true
     clearState: true
@@ -32,7 +33,7 @@ tags:
     id: "session-title"
 - tapOn:
     id: "dock-scripture-tab"
-# листаем до отрывка, который не помещается в превью
+# page through to a passage that does not fit the preview
 - repeat:
     times: 10
     while:
@@ -45,7 +46,8 @@ tags:
     id: "scripture-read-full"
 - assertVisible:
     id: "scripture-reader-reference"
-# тянем шторку вверх до упора: у неё один снап, выше topInset она не уходит
+# drag the sheet all the way up: it has a single snap and never goes above
+# topInset
 - swipe:
     start: "50%,20%"
     end: "50%,2%"

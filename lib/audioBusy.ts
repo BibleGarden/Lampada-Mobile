@@ -1,26 +1,27 @@
 import type { RecordingOperationPhase } from './recordingOperation';
 
-/** Источники звука экрана молитвы, на время которых музыка замолкает. */
+/** Sound sources of the prayer screen, during which music pauses. */
 export type AudioBusySource = 'scripture' | 'answer';
 
 export type AudioBusyBySource = Readonly<Record<AudioBusySource, boolean>>;
 
 export const IDLE_AUDIO_SOURCES: AudioBusyBySource = { scripture: false, answer: false };
 
-// Каждый источник ставит и снимает только свой флаг: закрытие шторки ответа
-// не снимает занятость озвучки цитаты, и наоборот.
+// Each source sets and clears only its own flag: closing the answer sheet
+// does not clear the scripture narration's busy state, and vice versa.
 export const setAudioSourceBusy = (
   state: AudioBusyBySource,
   source: AudioBusySource,
   busy: boolean,
 ): AudioBusyBySource => ({ ...state, [source]: busy });
 
-/** Музыка играет, только когда свободны все источники. */
+/** Music plays only when every source is idle. */
 export const isAudioBusy = (state: AudioBusyBySource) => state.scripture || state.answer;
 
 /**
- * Шторка ответа свободна, только когда в ней не идёт запись (в том числе её
- * старт или остановка), не играет черновик и не звучит сигнал лимита.
+ * The answer sheet is idle only when no recording is in progress there
+ * (including starting or stopping one), no draft is playing, and no limit
+ * cue is sounding.
  */
 export const isAnswerAudioIdle = ({ recordingPhase, draftActive, cueActive }: {
   recordingPhase: RecordingOperationPhase;

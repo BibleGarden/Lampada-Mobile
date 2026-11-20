@@ -125,16 +125,16 @@ export async function migrateScriptureStorage(db: SQLite.SQLiteDatabase) {
 
 const FAVORITE_SESSION_BACKFILL_KEY = 'scripture_favorites_session_backfill';
 
-/** SQLite-время: created_at и started_at лежат как ISO-8601 в UTC. */
+/** SQLite time: created_at and started_at are stored as ISO-8601 in UTC. */
 const EPOCH = (column: string) =>
   `CAST(strftime('%s', replace(replace(${column}, 'T', ' '), 'Z', '')) AS INTEGER)`;
 
 /**
- * Добавляет привязку сохранённой цитаты к молитве. Колонка появилась позже
- * самой таблицы, поэтому для старых баз её доливаем через ALTER, а связь
- * восстанавливаем один раз по времени: цитата принадлежит той молитве, в чьё
- * время она сохранена. Для записей, не попавших ни в одну молитву, остаётся
- * NULL — выдумывать связь там нечем.
+ * Adds the link from a saved passage to a prayer. The column arrived after the
+ * table itself, so older databases get it via ALTER; the link is backfilled
+ * once, by time: a passage belongs to the prayer during which it was saved.
+ * Records falling outside every prayer keep NULL — there is nothing to invent
+ * a link from.
  */
 async function addFavoriteSessionColumn(db: SQLite.SQLiteDatabase) {
   const columns = await db.getAllAsync<{ name: string }>(

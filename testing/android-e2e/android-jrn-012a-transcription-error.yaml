@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-jrn-012a-transcription-error.yaml.
+# Android version of the instrumented ios-jrn-012a-transcription-error.yaml scenario.
 - launchApp:
     stopApp: true
     clearState: true

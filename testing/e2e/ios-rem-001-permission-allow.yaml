@@ -3,14 +3,14 @@ tags:
   - reminders
   - prepared
 ---
-# REM-001: первое включение напоминаний показывает системный запрос ровно один раз
-# и в момент включения, а не при старте приложения.
-# Предусловие: чистая установка после прогона REM-002 (разрешение undetermined),
-# этап онбординга пройден.
+# REM-001: the first enabling of reminders shows the system prompt exactly
+# once, at the moment of enabling, not at app start.
+# Precondition: a clean install after the REM-002 run (permission undetermined),
+# onboarding completed.
 - launchApp:
     stopApp: true
-# Запуск приложения не показывает никакого системного диалога — иначе бы следующий
-# assert увидел бы его поверх Home.
+# App launch shows no system dialog — otherwise the next assert would see it
+# on top of Home.
 - assertVisible:
     id: "start-prayer-button"
 - openLink: "lampada://settings"
@@ -22,14 +22,14 @@ tags:
     id: "reminders-toggle"
 - assertVisible: ".*уведомления.*"
 - tapOn: "Разрешить"
-# Разрешено: тумблер включён, строка расписания появилась.
+# Allowed: the toggle is on, the schedule row has appeared.
 - assertVisible:
     id: "reminders-toggle"
     checked: true
 - assertVisible:
     id: "reminders-summary"
 - assertVisible: ".*Настроить расписание 1: Каждый день: 09:00.*"
-# Повторное выключение/включение без смены системного разрешения не спрашивает снова.
+# Toggling off/on again without a system permission change does not ask again.
 - tapOn:
     id: "reminders-toggle"
 - assertVisible:

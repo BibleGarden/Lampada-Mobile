@@ -76,8 +76,9 @@ const MUSIC_CROSSFADE_MS = 2000;
 const MUSIC_CROSSFADE_TICK_MS = 50;
 const MUSIC_STATUS_UPDATE_MS = 200;
 const MUSIC_CROSSFADE_LEAD_SECONDS = 2.2;
-// В фоне ничего не ждёт окончания затухания. Переход к итогу ждёт его до
-// router.replace (плееры живут, пока смонтирован экран), поэтому оно короче.
+// Nothing in the background waits for the fade-out to finish. The transition
+// to the summary waits for it until router.replace (players live while the
+// screen is mounted), so that one is shorter.
 const MUSIC_BACKGROUND_FADE_OUT_MS = 3000;
 const MUSIC_FINISH_FADE_OUT_MS = 800;
 const SESSION_HEADER_MARGIN_CORRECTION = 9;
@@ -87,11 +88,11 @@ const SESSION_ROOMY_GAP = 14;
 const SESSION_ROOMY_CARD_MIN_HEIGHT = 230;
 type MusicPlayerSlot = 0 | 1;
 
-// Кольцо ограничиваем не только шириной, как остальные токены прототипа,
-// но и высотой окна. Иначе на широком невысоком iPhone оно съедает всё
-// пространство между шапкой и карточкой спутника.
-// На планшете доля высоты больше: там кольцу есть куда расти, и в телефонном
-// размере оно теряется посреди экрана.
+// The ring is bounded not only by width, like the other prototype tokens,
+// but also by window height. Otherwise on a wide, short iPhone it eats all
+// the space between the header and the companion card.
+// On tablets the height share is larger: the ring has room to grow there,
+// and at phone size it would be lost in the middle of the screen.
 const ringSizeFor = (height: number) =>
   Math.round(
     isTablet() ? Math.min(sc(230), height * 0.25) : Math.min(sc(146), height * 0.215),
@@ -117,9 +118,9 @@ function SessionScreen() {
     setSessionLayout((current) => Math.abs(current[part] - value) < 1
       ? current : { ...current, [part]: value });
   };
-  // Считаем место при исходных зазорах, независимо от выбранной плотности:
-  // иначе уменьшение gap само переключало бы правило обратно и вперёд.
-  // Высоты onLayout не включают отрицательные поля шапки и цели.
+  // Space is measured with the default gaps, regardless of the chosen
+  // density: otherwise shrinking the gap would flip the rule back and forth
+  // on its own. onLayout heights exclude the header and goal negative margins.
   const reservedCardHeight = insets.top + sc(2) + bottomActionPadding(insets.bottom)
     + ringSize + sc(SESSION_DEFAULT_GAP) * 3
     - sc(SESSION_HEADER_MARGIN_CORRECTION) - sc(SESSION_GOAL_MARGIN_CORRECTION);
@@ -128,9 +129,10 @@ function SessionScreen() {
   const densityMeasured = sessionLayout.frame > 0 && sessionLayout.header > 0
     && sessionLayout.goal > 0;
   const roomyCard = densityMeasured && freeCardHeight >= sc(SESSION_ROOMY_CARD_MIN_HEIGHT);
-  // Даже без шапки и цели свободного места не может быть больше этой границы.
-  // На заведомо тесном окне карточку показываем сразу; иначе первый замер
-  // выбирает плотность до её появления в общем FadeIn экрана.
+  // Even without header and goal, free space cannot exceed this bound.
+  // On an obviously tight window the card is shown right away; otherwise the
+  // first measurement picks the density before the card appears within the
+  // screen-wide FadeIn.
   const cardReady = densityMeasured
     || height - reservedCardHeight < sc(SESSION_ROOMY_CARD_MIN_HEIGHT);
   const s = useSession();
@@ -150,9 +152,10 @@ function SessionScreen() {
   const expiryNotified = useRef(false);
   const finished = useRef(false);
   const musicLeaseRef = useRef<AudioSessionLease | null>(null);
-  // Озвучка цитаты и шторка ответа держат каждая свой флаг занятости. Ref
-  // нужен потому, что cleanup React-effect запаздывает за обработчиком нажатия:
-  // уже запущенная активация музыки должна сразу увидеть запись или звук.
+  // Scripture audio and the answer sheet each keep their own busy flag. The
+  // ref exists because React-effect cleanup lags behind the press handler:
+  // a music activation that is already starting must see the recording or
+  // audio playback immediately.
   const audioBusySourcesRef = useRef<AudioBusyBySource>(IDLE_AUDIO_SOURCES);
   const [musicTracks] = useState(getPrayerTracks);
   const musicTrackIndex = useRef(0);
@@ -229,7 +232,7 @@ function SessionScreen() {
   }, [reportReleaseError]);
 
   useEffect(() => {
-    // Фоновое сопровождение должно оставаться заметно тише речи и системных звуков.
+    // Background music must stay noticeably quieter than speech and system sounds.
     musicPlayerA.volume = MUSIC_VOLUME;
     musicPlayerB.volume = 0;
     musicPlayerB.pause();
@@ -237,8 +240,8 @@ function SessionScreen() {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
-      // Из переключателя приложений iOS может завершить приложение, не прислав
-      // 'background', поэтому время сохраняется уже на 'inactive'.
+      // From the app switcher iOS may terminate the app without ever sending
+      // 'background', so elapsed time is checkpointed already on 'inactive'.
       if (nextState === 'active') useSession.getState().tick();
       else useSession.getState().checkpointElapsed();
     });
@@ -374,7 +377,7 @@ function SessionScreen() {
         return;
       }
       if (status.didJustFinish) {
-        // Редкий запасной путь, если статус перед концом не успел прийти.
+        // Rare fallback for when the status update before the end did not arrive in time.
         startMusicCrossfade(250);
         return;
       }
@@ -403,7 +406,7 @@ function SessionScreen() {
 
   useEffect(
     () => () => {
-      // Затухание не переживает экран: его плееры освобождаются вместе с ним.
+      // The fade-out does not outlive the screen: its players are released with it.
       musicFadeOut.current?.finish(false);
       if (musicCrossfadeTimer.current) clearInterval(musicCrossfadeTimer.current);
       musicCrossfadeTimer.current = null;
@@ -416,7 +419,7 @@ function SessionScreen() {
   const setSourceAudioBusy = useCallback(
     (source: AudioBusySource, busy: boolean) => {
       audioBusySourcesRef.current = setAudioSourceBusy(audioBusySourcesRef.current, source, busy);
-      // Эта остановка синхронна: запись не должна ждать React-effect.
+      // This stop is synchronous: the recording must not wait for a React effect.
       if (busy) pauseMusicPlayers();
       setAudioBusy(isAudioBusy(audioBusySourcesRef.current));
     },
@@ -447,8 +450,8 @@ function SessionScreen() {
     [scriptureAudio.stop, setSourceAudioBusy],
   );
 
-  // Секундный тик нужен лишь видимому интерфейсу. Скрытая сессия
-  // просыпается один раз у дедлайна для завершения времени и затухания музыки.
+  // The per-second tick is only needed by the visible UI. A hidden session
+  // wakes once at the deadline to finish the time and fade out the music.
   useEffect(() => {
     if (visible) {
       useSession.getState().tick();
@@ -461,15 +464,15 @@ function SessionScreen() {
     return () => clearTimeout(id);
   }, [visible, s.endsAtMs, timeExpired]);
 
-  // Android «назад» не должен срывать молитву — глотаем жест
+  // Android "back" must not break the prayer — swallow the gesture
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => sub.remove();
   }, []);
 
-  // Музыка звучит только во время молитвы и в конце затихает. Плееры
-  // ставятся на паузу после затухания, до освобождения аудиосессии. Повторный
-  // вызов не начинает второе затухание, а может только ускорить текущее.
+  // Music plays only during prayer and fades out at the end. Players are
+  // paused after the fade-out, before the audio session is released. A repeat
+  // call does not start a second fade-out; it can only hasten the current one.
   const stopPrayerMusic = useCallback((fadeOutMs: number): Promise<void> => {
     const running = musicFadeOut.current;
     if (running) {
@@ -501,7 +504,7 @@ function SessionScreen() {
       clearInterval(timer);
       settle(completed);
     };
-    // После unmount плееры уже освобождены: отменённое затухание их не трогает.
+    // After unmount the players are already released: a cancelled fade-out must not touch them.
     const stopped = faded
       .then((completed) => (completed ? stop() : undefined))
       .finally(() => {
@@ -515,18 +518,19 @@ function SessionScreen() {
     return stopped;
   }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicLease]);
 
-  // На скрытом экране переход к итогу ждёт возвращения пользователя, а музыка
-  // заканчивается вместе со временем молитвы даже под PIN-оверлеем.
+  // On a hidden screen the transition to the summary waits for the user to
+  // return, while the music ends with the prayer time even under the PIN
+  // overlay.
   useEffect(() => {
     if (!timeExpired || visible) return;
     void stopPrayerMusic(MUSIC_BACKGROUND_FADE_OUT_MS);
   }, [timeExpired, visible, stopPrayerMusic]);
 
-  // Продление истёкшего таймера, пока затухание у дедлайна ещё идёт, отменяет
-  // его: молитва продолжается, и музыка возвращается к обычной громкости.
-  // Затухание перехода к итогу (finished) не отменяется. Если музыка уже
-  // остановлена и выключена, продление её не включает — это решение
-  // пользователя, кнопка музыки рядом.
+  // Extending the expired timer while the deadline fade-out is still running
+  // cancels it: the prayer continues and the music returns to normal volume.
+  // The transition-to-summary fade-out (finished) is not cancelled. If the
+  // music has already stopped and been switched off, extending does not turn
+  // it back on — that is the user's decision, the music button is right there.
   useEffect(() => {
     const running = musicFadeOut.current;
     if (timeExpired || finished.current || !running) return;
@@ -539,13 +543,13 @@ function SessionScreen() {
   const goToReflect = async () => {
     if (finished.current) return;
     finished.current = true;
-    // открытый черновик ответа дописывается, а не выбрасывается
+    // the open answer draft is flushed, not discarded
     if (flushAnswerRef.current) await flushAnswerRef.current();
-    // useAudioPlayer освобождает native shared object при unmount, поэтому
-    // останавливаем озвучку Писания синхронно до router.replace.
+    // useAudioPlayer releases its native shared object on unmount, so stop
+    // the scripture audio synchronously before router.replace.
     scriptureAudio.stop();
-    // Останавливаем плееры до router.replace: useAudioPlayer сам удалит
-    // native shared objects при unmount, и обращаться к ним из cleanup уже нельзя.
+    // Stop the players before router.replace: useAudioPlayer will dispose
+    // the native shared objects on unmount, and cleanup must not touch them then.
     await stopPrayerMusic(MUSIC_FINISH_FADE_OUT_MS);
     await stopPrayerSystemTimer().catch((error) => {
       console.warn('Failed to stop prayer system timer', error);
@@ -562,8 +566,9 @@ function SessionScreen() {
     activityOpen,
   }, () => { void goToReflectRef.current(); }), [timeExpired, visible, activityOpen]);
 
-  // Читалку, ответ и озвучку не обрываем. После фона показываем
-  // ещё не увиденную плашку, а после возврата к таймеру завершаем сессию.
+  // The reader, the answer sheet and the audio are not cut off. After the
+  // background we show the banner that has not been seen yet, and once back
+  // at the timer the session completes.
   useEffect(() => {
     if (!timeExpired) {
       expiryNotified.current = false;
@@ -573,8 +578,9 @@ function SessionScreen() {
     if (!visible || expiryNotified.current) return;
     expiryNotified.current = true;
     setShowExpiryNotice(activityOpen);
-    // Когда ничего не открыто и не звучит, сессия сразу уходит на экран
-    // итога; иначе плашка сама не озвучивается ни на одной платформе.
+    // When nothing is open or playing, the session goes straight to the
+    // summary screen; otherwise the banner is not announced by itself on
+    // any platform.
     if (activityOpen) AccessibilityInfo.announceForAccessibility(t('screens.session.expiryNotice'));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [timeExpired, visible, activityOpen]);
@@ -585,7 +591,7 @@ function SessionScreen() {
     return () => clearTimeout(timeout);
   }, [showExpiryNotice]);
 
-  // кольцо: доля прошедшего времени (или минутный цикл в ∞-режиме)
+  // ring: fraction of elapsed time (or the minute cycle in ∞ mode)
   useEffect(() => {
     if (!visible) {
       cancelAnimation(ringProgress);
@@ -594,7 +600,7 @@ function SessionScreen() {
     if (s.remaining === null) {
       const inMinute = s.elapsed % 60;
       if (inMinute === 0) {
-        ringProgress.value = 0; // мгновенный сброс вместо анимации «назад»
+        ringProgress.value = 0; // instant reset instead of animating backwards
       } else {
         ringProgress.value = withTiming(inMinute / 60, { duration: 1000 });
       }
@@ -615,32 +621,32 @@ function SessionScreen() {
       : s.remaining === null
         ? t('screens.session.elapsed')
         : t('screens.session.remaining');
-  // у конца (меньше 5 мин) — шаг 1 минута, как в прототипе
+  // near the end (under 5 min) the step is 1 minute, as in the prototype
   const adjStep = s.remaining !== null && s.remaining < 300 ? 1 : 5;
   const adjDuration = `${adjStep} ${t(`screens.minute.${pluralCategory(language, adjStep)}`)}`;
-  // Звучащую музыку показывает сама кнопка: отдельный бейдж занимал строку
-  // над таймером и прилипал к кольцу.
+  // The button itself indicates playing music: a separate badge took up a
+  // line above the timer and clung to the ring.
   const musicPlaying = s.musicOn && !audioBusy && musicPlayersPlaying;
 
   return (
     <View style={styles.root}>
       {visible && <KeepAwakeWhileVisible />}
       <ScreenBg />
-      {/* пока открыта шторка ответа или читалка, экран под ней скрыт */}
+      {/* while the answer sheet or the reader is open, the screen beneath is hidden */}
       <Animated.View
         entering={FadeIn.duration(500)}
         style={{ flex: 1 }}
         {...screenReaderHiddenProps(answerOpen || readerOpen)}
       >
-        {/* Шапка, кольцо, цель и карточка стоят одной колонкой с общим
-            зазором; остаток высоты забирает карточка. */}
+        {/* Header, ring, goal and card form a single column with a shared
+            gap; the card takes the remaining height. */}
         <View
           style={[
             styles.sessionContent,
             roomyCard && styles.sessionContentRoomy,
             {
-              // Нижний отступ держит карточку выше системной навигации;
-              // на низком окне его забираем из свободной высоты карточки.
+              // The bottom padding keeps the card above system navigation;
+              // on short windows it is taken out of the card's free height.
               paddingTop: insets.top + sc(2),
               paddingBottom: bottomActionPadding(insets.bottom),
             },
@@ -688,7 +694,7 @@ function SessionScreen() {
               style={StyleSheet.absoluteFill}
               testID="session-timer-button"
             />
-            {/* Время и подпись под ним VoiceOver читает одной фразой */}
+            {/* VoiceOver reads the time and the caption below it as one phrase */}
             <View pointerEvents="none" accessible style={styles.timerContent}>
               <Text
                 style={[
@@ -792,8 +798,8 @@ function SessionScreen() {
   );
 }
 
-// Пока музыка звучит, кнопка тихо «дышит» тёплым ореолом — это и есть
-// индикатор вместо отдельного бейджа под шапкой.
+// While music is playing, the button quietly "breathes" with a warm halo —
+// this is the indicator replacing a separate badge under the header.
 function KeepAwakeWhileVisible() {
   useKeepAwake();
   return null;
@@ -805,8 +811,8 @@ function MusicPulse({ size, active }: { size: number; active: boolean }) {
   const pulse = useSharedValue(0);
   useEffect(() => {
     if (!active) return;
-    // withRepeat качается между стартовым значением и 1: без сброса пульс
-    // после паузы сужался бы до остатка хода.
+    // withRepeat swings between the start value and 1: without the reset the
+    // pulse would shrink to the remainder of the cycle after a pause.
     pulse.value = 0;
     pulse.value = withRepeat(
       withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
@@ -822,8 +828,8 @@ function MusicPulse({ size, active }: { size: number; active: boolean }) {
   return (
     <Animated.View
       pointerEvents="none"
-      // Ореол — единственный признак звучащей музыки, поэтому у него есть
-      // и голосовой эквивалент вместо снятого бейджа.
+      // The halo is the only sign of playing music, so it also has a spoken
+      // equivalent in place of the removed badge.
       accessible
       accessibilityLabel={t('screens.session.musicPlaying')}
       testID="music-playing"
@@ -843,9 +849,9 @@ function MusicPulse({ size, active }: { size: number; active: boolean }) {
   );
 }
 
-// тёплое дыхание за кольцом — halo 7s из прототипа.
-// Под открытым листом ответа дыхание стоит: обновления Skia-сцены
-// отнимают кадры у поля ввода, и набор текста идёт рывками.
+// warm breathing behind the ring — the 7s halo from the prototype.
+// While the answer sheet is open the breathing is paused: Skia scene
+// updates steal frames from the input field and typing becomes janky.
 const HALO_CYCLE_MS = 7000;
 const haloEasing = Easing.inOut(Easing.ease);
 
@@ -856,8 +862,8 @@ const TimerHalo = React.memo(function TimerHalo({
   size: number;
   active: boolean;
 }) {
-  // Линейная фаза цикла 0..1: после паузы дыхание продолжается с того же
-  // места и в ту же сторону, а не начинает полувдох заново.
+  // Linear cycle phase 0..1: after a pause the breathing continues from the
+  // same point and in the same direction instead of restarting a half-breath.
   const phase = useSharedValue(0);
   useEffect(() => {
     if (!active) return;
@@ -874,7 +880,7 @@ const TimerHalo = React.memo(function TimerHalo({
     );
     return () => cancelAnimation(phase);
   }, [active, phase]);
-  // вдох на первой половине фазы, выдох на второй
+  // inhale on the first half of the phase, exhale on the second
   const t = useDerivedValue(() => haloEasing(1 - Math.abs(2 * phase.value - 1)));
   const haloPad = Math.min(sc(48), ringSize * 0.28);
   const size = ringSize + haloPad * 2;
@@ -980,9 +986,10 @@ const stylesFactory = () => StyleSheet.create({
   },
   root: { flex: 1, backgroundColor: '#0a0806' },
   topBar: {
-    // Оптическая поправка к общему gap: зазор до кольца читается от строки
-    // «Молитва», а она сидит по центру ряда — до низа кнопок ещё половина их
-    // высоты, и геометрически равный отступ выглядит заметно больше.
+    // Optical correction to the shared gap: the spacing to the ring is read
+    // from the "Prayer" title line, which sits centered in the row — half a
+    // button height still remains below the buttons, so a geometrically equal
+    // gap looks noticeably larger.
     marginBottom: -sc(SESSION_HEADER_MARGIN_CORRECTION),
     flexDirection: 'row',
     alignItems: 'center',
@@ -1003,10 +1010,10 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
     ...column(),
     paddingHorizontal: sc(18),
-    // Один зазор на все стыки: шапка → кольцо → цель → карточка. На телефоне
-    // остатка нет — его целиком забирает карточка. На планшете карточка
-    // ограничена, и space-between раздаёт остаток поровну между теми же
-    // стыками: лишняя высота становится воздухом, а не пустой карточкой.
+    // One gap for every junction: header → ring → goal → card. On phones
+    // there is no remainder — the card takes all of it. On tablets the card
+    // is capped, and space-between distributes the remainder evenly across
+    // the same junctions: extra height becomes air, not an empty card.
     justifyContent: 'space-between',
     gap: sc(SESSION_DEFAULT_GAP),
   },
@@ -1024,9 +1031,9 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.serif,
     color: colors.creamBright,
   },
-  // Подсказка, что по таймеру можно нажать, раньше рисовалась пунктирным
-  // подчёркиванием — от него отказались по фидбеку владельца. paddingBottom
-  // оставлен как есть, чтобы высота блока не менялась.
+  // The hint that the timer is tappable used to be drawn as a dashed
+  // underline — dropped per the owner's feedback. The paddingBottom is kept
+  // as is so the block height does not change.
   timerTextAdjustable: {
     paddingBottom: 4,
   },
@@ -1056,7 +1063,7 @@ const stylesFactory = () => StyleSheet.create({
     width: '100%',
     paddingHorizontal: sc(12),
     alignItems: 'center',
-    // Та же поправка снизу: нижний leading строки цели съедает часть зазора.
+    // Same correction at the bottom: the goal line's bottom leading eats part of the gap.
     marginBottom: -sc(SESSION_GOAL_MARGIN_CORRECTION),
   },
   goalText: {
@@ -1069,12 +1076,12 @@ const stylesFactory = () => StyleSheet.create({
   dockUnmeasured: { opacity: 0 },
   dockWrap: {
     width: '100%',
-    // Единственный растягивающийся блок: карточка добирает остаток высоты,
-    // поэтому её габарит одинаков в режиме вопроса и Писания.
-    // На планшете рост ограничен потолком — иначе под две строки вопроса
-    // уходит половина экрана; всё, что выше потолка, `space-between` раздаёт
-    // в зазоры. Сжиматься карточка обязана: в альбомной ориентации высоты
-    // меньше, чем нужно даже минимальному набору.
+    // The only stretching block: the card absorbs the remaining height,
+    // so its footprint is the same in question and scripture modes.
+    // On tablets growth is capped — otherwise two question lines would take
+    // half the screen; whatever exceeds the cap, `space-between` hands out
+    // to the gaps. The card must be able to shrink: in landscape there is
+    // less height than even the minimal set needs.
     flexGrow: 1,
     flexShrink: 1,
     maxHeight: isTablet() ? sc(310) : undefined,

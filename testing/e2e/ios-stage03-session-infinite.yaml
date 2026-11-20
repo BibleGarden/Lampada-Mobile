@@ -29,8 +29,9 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# кнопка таймера озвучивается одной строкой «0:21, ИДЁТ»: прошедшее время и
-# подпись «идёт» в стиле uppercase; обратного отсчёта без таймера нет
+# the timer button is announced as one line «0:21, ИДЁТ»: the elapsed time
+# and the uppercase «идёт» label (screens.session.elapsed); there is no
+# countdown without a timer
 - assertVisible: "\\d+:\\d\\d, ИДЁТ"
 - assertNotVisible:
     id: "reflect-kicker"

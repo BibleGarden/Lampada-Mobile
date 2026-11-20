@@ -1,9 +1,10 @@
 appId: twinkler
 tags:
   - prepared
-# Фрагмент без тегов: не подхватывается планировщиком тиров. По замыслу
-# исполняется runFlow внутри сессии с задержанным ИИ-ответом (stub :9085);
-# standalone запуск бессмысленен — сессии нет. См. отчёт 2026-09-20.
+# A tagless fragment: the tier scheduler does not pick it up. By design it is
+# run via runFlow inside a session with a delayed AI answer (stub :9085); a
+# standalone run is pointless — there is no session. See the 2026-09-20
+# report.
 ---
 - assertVisible:
     id: "dock-answer-button"

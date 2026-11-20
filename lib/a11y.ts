@@ -1,24 +1,26 @@
 import type { ViewProps } from 'react-native';
 
-// Скрытие контента от программ чтения с экрана, пока сверху висит оверлей
-// или шторка, а также закрытой шторки, уехавшей за нижний край.
+// Hides content from screen readers while an overlay or a sheet is on top,
+// including a closed sheet that has slid below the bottom edge.
 //
-// `accessibilityViewIsModal` у оверлея здесь не замена: VoiceOver по нему
-// отбрасывает только сиблингов модального узла, а шторки `@gorhom/bottom-sheet`
-// рендерятся сиблингами экрана через фрагмент, и флаг на их содержимое не
-// доходит до экрана. TalkBack такого флага не знает вовсе. Закрытая шторка
-// лишь сдвинута трансформацией и без пометки остаётся в порядке обхода.
-// Поэтому пометку ставим на самом скрываемом поддереве, на обеих платформах.
+// `accessibilityViewIsModal` on the overlay is not a substitute here:
+// VoiceOver only excludes siblings of the modal node, while
+// `@gorhom/bottom-sheet` sheets render as siblings of the screen through a
+// fragment, so the flag on their content never reaches the screen. TalkBack
+// does not know this flag at all. A closed sheet is only shifted by a
+// transform and, without a marker, stays in the traversal order. Therefore
+// the marker goes on the hidden subtree itself, on both platforms.
 
 /**
- * Пропы для контейнера, который надо спрятать от VoiceOver и TalkBack, пока
- * `hidden`.
+ * Props for a container that must be hidden from VoiceOver and TalkBack
+ * while `hidden`.
  *
- * `collapsable: false` стоит постоянно, а не только под оверлеем: Fabric
- * схлопывает вью-обёртку без собственных свойств, и в нативном дереве не
- * остаётся узла, на котором держится пометка. Постоянный флаг ещё и не даёт
- * пересоздавать нативное поддерево на каждом включении оверлея — иначе экраны
- * под шторкой теряли бы позицию прокрутки и перезапускали анимации.
+ * `collapsable: false` is set permanently, not only under an overlay:
+ * Fabric collapses a wrapper view with no props of its own, leaving no node
+ * in the native tree to carry the marker. The permanent flag also prevents
+ * re-creating the native subtree each time the overlay is enabled —
+ * otherwise screens under a sheet would lose scroll position and restart
+ * animations.
  */
 export function screenReaderHiddenProps(
   hidden: boolean,

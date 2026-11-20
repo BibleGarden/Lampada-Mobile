@@ -2,32 +2,32 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-007: код спрашивается после минуты в фоне, но не после короткого
-# переключения на другое приложение.
+# LOCK-007: the code is requested after a minute in the background, but not
+# after a brief switch to another app.
 #
-# Возврат делается тапом по иконке на спрингборде, а не `launchApp`: launchApp
-# поднимает процесс заново, и экран блокировки появился бы просто как на
-# холодном старте — проверка стала бы бессмысленной. Признак того, что процесс
-# действительно выжил: после возврата приложение остаётся на дневнике, а не на
-# главной.
+# The return is done by tapping the icon on the springboard, not `launchApp`:
+# launchApp brings the process up anew, and the lock screen would appear just
+# like on a cold start — the check would become meaningless. The sign that the
+# process really survived: after returning, the app stays on the journal, not
+# on the home screen.
 #
-# Пауза сделана заведомо ложным ожиданием с `optional: true`: собственной
-# команды сна у Maestro нет.
+# The pause is a deliberately false wait with `optional: true`: Maestro has no
+# sleep command of its own.
 #
-# Предусловие: защита выключена. Шторка приватности в переключателе приложений
-# автоматизации не поддаётся и проверяется вручную — см. отчёт.
+# Precondition: protection disabled. The privacy curtain in the app switcher is
+# not automatable and is checked manually — see the report.
 - launchApp:
     stopApp: true
     clearState: true
 - assertVisible:
     id: "start-prayer-button"
-# Явная проверка предусловия. Оверлеи блокировки модальны для дерева
-# доступности (accessibilityViewIsModal), поэтому проверка ловит и регресс
-# самой модальности, а не только состояние защиты.
+# An explicit precondition check. Lock overlays are modal for the accessibility
+# tree (accessibilityViewIsModal), so the check also catches a regression of
+# that modality, not only the protection state.
 - assertNotVisible:
     id: "lock-screen"
 
-# Включить пин 4321.
+# Enable PIN 4321.
 - tapOn:
     id: "settings-button"
 - scrollUntilVisible:
@@ -63,7 +63,7 @@ tags:
 - assertVisible:
     id: "change-pin-button"
 
-# Уйти на экран, который холодный старт не восстановил бы.
+# Navigate to a screen that a cold start would not restore.
 - tapOn:
     point: "10%,11%"
 - tapOn:
@@ -78,7 +78,7 @@ tags:
 - assertVisible:
     id: "journal-title"
 
-# Короткое переключение код не запрашивает.
+# A brief switch does not request the code.
 - pressKey: Home
 - extendedWaitUntil:
     visible: "ЗАВЕДОМО-ЛОЖНЫЙ-МАРКЕР-ПАУЗЫ"
@@ -90,7 +90,7 @@ tags:
 - assertNotVisible:
     id: "lock-screen"
 
-# Больше минуты в фоне — код запрашивается.
+# Over a minute in the background — the code is requested.
 - pressKey: Home
 - extendedWaitUntil:
     visible: "ЗАВЕДОМО-ЛОЖНЫЙ-МАРКЕР-ПАУЗЫ"
@@ -104,7 +104,7 @@ tags:
 - assertVisible:
     id: "lock-pin-title"
 
-# Процесс тот же: после ввода кода приложение осталось на дневнике.
+# Same process: after entering the code the app stays on the journal.
 - tapOn:
     id: "pin-key-4"
 - tapOn:
@@ -120,7 +120,7 @@ tags:
 - assertVisible:
     id: "journal-title"
 
-# Уборка: вернуть приложение в состояние без защиты.
+# Cleanup: return the app to the unprotected state.
 - tapOn:
     point: "10%,11%"
 - tapOn:

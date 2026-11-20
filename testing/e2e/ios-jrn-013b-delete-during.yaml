@@ -1,10 +1,11 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: stub остаётся в режиме delay — ответ через 12 с (run-jrn-transcription.sh).
+# NEEDS-STUB: the stub stays in delay mode — the response arrives after 12 s (run-jrn-transcription.sh).
 ---
-# JRN-013 (часть 2): удаление молитвы во время расшифровки отменяет запрос —
-# поздний ответ не возвращает удалённое в UI и в базу.
+# JRN-013 (part 2): deleting the prayer during transcription cancels the
+# request — the late response does not resurrect the deleted item in the UI or
+# the database.
 - launchApp:
     stopApp: true
     clearState: true
@@ -80,7 +81,7 @@ tags:
           id: "privacy-consent-audio_transcription-allow"
 - assertVisible:
     id: "journal-recording-0-transcribing"
-# Удаляем молитву до прихода ответа (stub отвечает через 12 с).
+# Delete the prayer before the response arrives (the stub replies after 12 s).
 - tapOn:
     id: "journal-delete"
 - assertVisible:
@@ -89,7 +90,7 @@ tags:
     id: "journal-delete-confirm"
 - assertNotVisible: ".*JRN-013 удаление.*"
 - evalScript: "java.lang.Thread.sleep(16000)"
-# Поздний ответ не воскресил запись.
+# The late response did not resurrect the recording.
 - assertNotVisible: ".*JRN-013 удаление.*"
 - assertNotVisible:
     id: "journal-recording-0-transcribing"

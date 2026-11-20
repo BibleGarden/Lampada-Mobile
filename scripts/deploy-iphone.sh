@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Сборка Release + установка Lampada на подключённый iPhone.
-# Использование: npm run iphone
-#   Переопределяемо через окружение:
-#     DEVICE=<udid>   — конкретное устройство (по умолчанию — первый подключённый iPhone)
-#     TEAM=<teamId>   — команда подписи (по умолчанию платная Maria Novikov)
+# Build Release and install Lampada on a connected iPhone.
+# Usage: npm run iphone
+#   Overridable via environment:
+#     DEVICE=<udid>   — a specific device (default: the first connected iPhone)
+#     TEAM=<teamId>   — signing team (default: Maria Novikov's paid team)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 export EXPO_PUBLIC_BUILD_CHANNEL=test
 
-TEAM="${TEAM:-4SC2JCE37N}"                 # Maria Novikov (платная)
+TEAM="${TEAM:-4SC2JCE37N}"                 # Maria Novikov (paid team)
 BUNDLE="${BUNDLE:-twinkler}"
 BUILD_DIR="$(pwd -P)/ios/build"
 MODULE_CACHE="$BUILD_DIR/ModuleCache.noindex"
@@ -20,17 +20,17 @@ bash scripts/check-runtime-env.sh local
 
 node scripts/bump-version.mjs test
 
-# --- нативная папка ------------------------------------------------------
-# Синхронизируем конфигурацию и переводы разрешений даже при существующей ios/.
+# --- native folder --------------------------------------------------------------------
+# Sync the configuration and permission strings even when ios/ already exists.
 echo "▶︎ Synchronizing native iOS configuration…"
 npx expo prebuild -p ios --no-install
 
-# package.json мог получить новый native-модуль при уже существующей ios/.
-# Без pod install Xcode продолжит собирать устаревший набор Expo-модулей.
+# package.json may have gained a new native module while ios/ already existed.
+# Without pod install Xcode keeps building a stale set of Expo modules.
 echo "▶︎ Synchronizing CocoaPods…"
 npx pod-install ios
 
-# Имя нативного проекта берём из результата prebuild, а не старого имени приложения.
+# Take the native project name from the prebuild result, not the old app name.
 PROJECTS=(ios/*.xcodeproj)
 if [ "${#PROJECTS[@]}" -ne 1 ] || [ ! -d "${PROJECTS[0]}" ]; then
   echo "Expected exactly one generated iOS project." >&2
@@ -40,9 +40,9 @@ NATIVE_PROJECT="$(basename "${PROJECTS[0]}" .xcodeproj)"
 WS="ios/$NATIVE_PROJECT.xcworkspace"
 APP="$BUILD_DIR/Build/Products/Release-iphoneos/$NATIVE_PROJECT.app"
 
-# --- определяем телефон -------------------------------------------------
-# xcdevice отдаёт modelCode, поэтому iPad не попадёт под выбор,
-# даже если владелец переименовал iPhone.
+# --- detect the phone --------------------------------------------------------------------
+# xcdevice reports modelCode, so an iPad cannot slip into the selection
+# even if the owner renamed the iPhone.
 DEVICE="${DEVICE:-}"
 if [ -z "$DEVICE" ]; then
   DEVICE=$(xcrun xcdevice list 2>/dev/null | node -e '
@@ -67,8 +67,8 @@ if [ -z "$DEVICE" ]; then
 fi
 echo "▶︎ Device: $DEVICE"
 
-# PCM хранит абсолютный путь. После переноса репозитория Xcode не
-# может импортировать SwiftShims, пока старый module cache не удалён.
+# PCM files store an absolute path. After the repository is moved, Xcode cannot
+# import SwiftShims until the stale module cache is removed.
 if [ -d "$MODULE_CACHE" ]; then
   PCM_SAMPLE=$(find "$MODULE_CACHE" -type f -name '*.pcm' -print -quit)
   if [ -n "$PCM_SAMPLE" ] && ! strings "$PCM_SAMPLE" | grep -F "$MODULE_CACHE/" >/dev/null; then
@@ -77,13 +77,13 @@ if [ -d "$MODULE_CACHE" ]; then
   fi
 fi
 
-# prebuild иногда сбрасывает DEVELOPMENT_TEAM — принудительно ставим нужную
+# prebuild sometimes resets DEVELOPMENT_TEAM — force the correct one
 if [ -f "ios/$NATIVE_PROJECT.xcodeproj/project.pbxproj" ]; then
   sed -i '' "s/DEVELOPMENT_TEAM = \"[A-Z0-9]*\"/DEVELOPMENT_TEAM = \"$TEAM\"/g" \
     "ios/$NATIVE_PROJECT.xcodeproj/project.pbxproj"
 fi
 
-# --- сборка + установка --------------------------------------------------
+# --- build + install --------------------------------------------------------------------
 echo "▶︎ Building Release…"
 xcrun xcodebuild -workspace "$WS" -scheme "$NATIVE_PROJECT" \
   -configuration Release -destination "id=$DEVICE" \
