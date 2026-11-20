@@ -42,6 +42,11 @@ npm test
 keyboard unit tests (`npm run test:keyboard:unit`), so it needs Node.js 22 or
 newer and a local Python 3.
 
+## Issue branch names
+
+A branch for issue N is named `issues-BibleGarden-Lampada-Mobile-<N>`. For
+example, the branch for issue #80 is `issues-BibleGarden-Lampada-Mobile-80`.
+
 ## Running locally on Android
 
 Use Node.js 22.13 or newer, Java and Android SDK 36 with Build Tools 36.0.0,
