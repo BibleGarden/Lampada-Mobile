@@ -2,12 +2,12 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-006: "Forgot PIN?" is the only way out of a forgotten code, and it costs
-# all the data. Verifies that both confirmations really guard against an
-# accidental tap, and that after the wipe both the journal and the protection
-# itself are gone.
+# LOCK-006: «Не помнишь пин-код?» (components.security.forgotPin) is the only
+# way out of a forgotten code, and it costs all the data. Verifies that both
+# confirmations really guard against an accidental tap, and that after the
+# wipe both the journal and the protection itself are gone.
 #
-# Precondition: ios-lock-006-forgot-pin-prepare (journal entry "LOCK-006 entry",
+# Precondition: ios-lock-006-forgot-pin-prepare (journal entry «LOCK-006 запись»,
 # PIN 4321).
 - launchApp:
     stopApp: true

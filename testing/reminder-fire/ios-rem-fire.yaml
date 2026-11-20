@@ -66,8 +66,9 @@ tags:
     timeout: 9000
 - tapOn:
     point: "10%,11%"
-# Back leads to the summary screen: the "Finish" button (or the "BEFORE
-# CLOSING" dialog with its own "Finish" button in older builds).
+# Back leads to the summary screen: the «Завершить» button (or the
+# «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» dialog with its own «Завершить» button in older
+# builds).
 - assertVisible:
     id: "reflect-complete-button"
 - runFlow:

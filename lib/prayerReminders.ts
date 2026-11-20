@@ -173,7 +173,8 @@ const pad = (value: number) => String(value).padStart(2, '0');
 
 export const formatReminderTime = (time: ReminderTime) => `${pad(time.hour)}:${pad(time.minute)}`;
 
-/** Renders ranges and lists of short weekday names, or the "every day" label. */
+/** Renders ranges and lists of short weekday names ("Mon–Fri", "Sat–Sun",
+ *  "Mon, Wed, Fri"), or the "Every day" label. */
 export function formatReminderWeekdays(weekdays: readonly number[], language: UiLanguage = 'ru'): string {
   if (weekdays.length === 0) return '';
   if (weekdays.length === 7) return reminderCopy[language].everyDay;

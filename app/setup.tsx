@@ -58,8 +58,9 @@ export default function Setup() {
   const [coreConsentOpen, setCoreConsentOpen] = useState(false);
   const [entranceReady, setEntranceReady] = useState(false);
   useEffect(() => {
-    // A second tap on Home must not land on "Next" in the same spot while
-    // the new screen is appearing. The window matches the Stack transition.
+    // A second tap on Home must not land on "Continue" (screens.setup.next)
+    // in the same spot while the new screen is appearing. The window matches
+    // the Stack transition.
     const timer = setTimeout(() => setEntranceReady(true), 350);
     return () => clearTimeout(timer);
   }, []);
@@ -151,8 +152,9 @@ export default function Setup() {
                 value={s.topic}
                 onChangeText={s.setTopic}
                 multiline
-                // no placeholder: the "Prayer goal" heading and the examples
-                // under "?" say enough, and any hint would impose a tone
+                // no placeholder: the "Prayer intention" heading
+                // (screens.setup.goal) and the examples under "?" say enough,
+                // and any hint would impose a tone
                 style={[styles.topicInput, policy.fillInput && styles.topicInputCompact, styles.topicInputFill]}
                 accessibilityLabel={t('screens.setup.goal')}
                 accessibilityHint={t('screens.setup.goalHint')}
@@ -298,7 +300,8 @@ const stylesFactory = () => StyleSheet.create({
   dismissArea: { flex: 1 },
   body: { flex: 1, paddingHorizontal: screenGutter(), ...column() },
   // the field stretched to the keyboard covers the lower blocks; a long
-  // goal shrinks the field slot to the free space so "Next" stays on screen
+  // goal shrinks the field slot to the free space so "Continue"
+  // (screens.setup.next) stays on screen
   goal: { flexShrink: 1, zIndex: 1, marginTop: sc(16) },
   lower: { flexGrow: 1, justifyContent: 'space-between', gap: sc(12), paddingTop: sc(16) },
   hiddenWhileEditing: { opacity: 0, pointerEvents: 'none' },

@@ -387,8 +387,8 @@ export type JournalDetail = {
  * and question/answer texts.
  *
  * Case folding happens in JS: SQLite's LIKE is case-insensitive only for
- * ASCII and does not fold Cyrillic (a capitalized word does not match its
- * lowercase form), and lower() without the ICU extension does not either.
+ * ASCII and does not fold Cyrillic («Тревога» does not match «тревога»),
+ * and lower() without the ICU extension does not either.
  * So the searchable text is fetched as one string and filtered with
  * toLowerCase().includes() (which handles Unicode correctly).
  */

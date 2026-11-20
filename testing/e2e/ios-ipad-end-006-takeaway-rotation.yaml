@@ -3,10 +3,10 @@ tags:
   - ipad
 ---
 # END-006 (iPad): the takeaway is typed with the keyboard open — the
-# "Finish"/"Return" actions are hidden; rotating portrait→landscape→portrait
-# while typing preserves the text verbatim; taps on the left and right margins
-# outside the column and on the question close the keyboard and bring the
-# actions back without losing text.
+# «Завершить»/«Вернуться» actions (screens.reflect.finish/return) are hidden;
+# rotating portrait→landscape→portrait while typing preserves the text
+# verbatim; taps on the left and right margins outside the column and on the
+# question close the keyboard and bring the actions back without losing text.
 #
 # Keyboard visibility is checked via the locale-independent `shift` key
 # identifier (see ios-stage03-long-goal.yaml). The on-screen keyboard is raised

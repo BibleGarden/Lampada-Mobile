@@ -73,8 +73,9 @@ tags:
     id: "dock-scripture-favorite"
 - tapOn:
     id: "dock-scripture-favorite"
-# After favoriting, the label changes to "In favorites" (CompanionDock.tsx:368)
-# — wait for it, then page to the next passage, where the state is reset.
+# After favoriting, the label changes to «В избранном»
+# (components.reader.saved, CompanionDock.tsx:368) — wait for it, then page
+# to the next passage, where the state is reset.
 - assertVisible:
     id: "dock-scripture-favorite-active"
 - tapOn:

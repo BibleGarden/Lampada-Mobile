@@ -1,7 +1,8 @@
-// "Before starting" screen densities in prototype px, from the original
-// layout to the densest: briefing paddings and gaps, the Start button size,
-// and the air beneath it. The type size never changes — height is freed by
-// the decorative spacing and the button.
+// "Before you begin" screen (screens.threshold.before) densities in
+// prototype px, from the original layout to the densest: briefing paddings
+// and gaps, the "BEGIN" button (screens.threshold.start) size, and the air
+// beneath it. The type size never changes — height is freed by the
+// decorative spacing and the button.
 export const THRESHOLD_DENSITIES = [
   { padding: 16, gap: 12, button: 158, bottom: 34 },
   { padding: 8, gap: 8, button: 136, bottom: 34 },

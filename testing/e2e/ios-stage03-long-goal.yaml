@@ -4,8 +4,8 @@ tags:
 ---
 # SETUP-004 (iPhone): a long goal with the keyboard open. The field stays above
 # the keyboard, a tap inside the field continues entry, a tap above the field
-# closes the keyboard without losing the text, and after that "Next" leads
-# into the prayer.
+# closes the keyboard without losing the text, and after that «Далее»
+# (screens.setup.next) leads into the prayer.
 #
 # Keyboard visibility is checked via the system keyboard's own elements in the
 # XCTest hierarchy: `id: "shift"` is the shift key, `id: "inputView"` is its

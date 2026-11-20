@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Generates reminder time-setting steps for the editor (app/settings.tsx).
 //
-// Stepper labels include the current time ("09:00: hour forward"), so the
-// steps cannot be hardcoded as static YAML — this script computes them while
-// tracking state.
+// Stepper labels include the current time («09:00: час вперёд», as generated
+// below), so the steps cannot be hardcoded as static YAML — this script
+// computes them while tracking state.
 //
 // Scenario: the rule 0 editor is open, the rule has a single time 09:00. Each
 // subsequent argument is the next time row added by the "Add time" button

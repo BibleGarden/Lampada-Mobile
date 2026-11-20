@@ -88,7 +88,8 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# VoiceOver reads the "goal" kicker and the topic as one phrase
+# VoiceOver reads the «цель» kicker (screens.session.goal) and the topic as
+# one phrase
 - assertVisible:
     id: "session-goal"
     text: ".*Свободная молитва — без конкретной темы"

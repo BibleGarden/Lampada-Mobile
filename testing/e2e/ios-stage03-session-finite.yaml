@@ -34,8 +34,8 @@ tags:
     id: "home-title"
 - tapOn:
     point: "50%,29%"
-# the ±step buttons have the accessibility label "Subtract/Add N minutes",
-# not "−1"
+# the ±step buttons have the accessibility label «Минус {duration}» /
+# «Плюс {duration}» (screens.session.subtractTime/addTime), not "−1"
 - assertVisible:
     id: "session-time-subtract"
 - assertVisible:
@@ -60,7 +60,8 @@ tags:
     id: "reflect-return-button"
 - assertVisible:
     id: "session-title"
-# VoiceOver reads the "goal" kicker and the topic as one phrase
+# VoiceOver reads the «цель» kicker (screens.session.goal) and the topic as
+# one phrase
 - assertVisible:
     id: "session-goal"
     text: ".*SES-001 finite timer"

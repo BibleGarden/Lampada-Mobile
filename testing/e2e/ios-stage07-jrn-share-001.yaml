@@ -62,9 +62,9 @@ tags:
 - assertVisible:
     id: "dock-answer-edit-button"
 # After saving, the answer sheet may already be closed (the consent dialog
-# dismisses it) or not — the first tap either goes straight to "BEFORE YOU
-# CLOSE" or only closes the sheet; in the latter case "Answer" is visible and
-# we tap again.
+# dismisses it) or not — the first tap either goes straight to the
+# «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» screen (screens.reflect.before) or only closes the
+# sheet; in the latter case the «Ответить» button is visible and we tap again.
 - tapOn:
     point: "10%,11%"
 - runFlow:

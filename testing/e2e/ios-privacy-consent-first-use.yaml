@@ -22,7 +22,7 @@ tags:
     id: "privacy-consent-core_prayer_ai-allow"
 - tapOn:
     id: "privacy-consent-core_prayer_ai-deny"
-# After the denial the app goes to the threshold "Before the start" screen
+# After the denial the app goes to the threshold «Перед началом» screen
 # (screens.threshold.before/title); the separate pre-entry screen no longer
 # exists.
 - assertVisible:

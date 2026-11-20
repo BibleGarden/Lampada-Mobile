@@ -26,8 +26,8 @@ import QuestionHeader from './QuestionHeader';
 import { GoldButton } from './ui';
 
 // A collapsed transcript shows three lines. Only the native layer knows the
-// exact truncation, so "Show more" keys off text length: ~150 chars is
-// roughly those same three lines on a phone.
+// exact truncation, so "Show all" (components.answers.expand) keys off text
+// length: ~150 chars is roughly those same three lines on a phone.
 const isLongTranscript = (transcript: string) => transcript.trim().length > 150;
 const STOP_GUARD_MILLIS = 1_500;
 // The timer shows whole seconds; polling faster than a second keeps it from lagging.

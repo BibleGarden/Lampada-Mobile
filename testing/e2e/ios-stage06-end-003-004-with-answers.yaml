@@ -6,10 +6,11 @@ tags:
 # END-003/004 for the jrn-suite: a variant of
 # ios-stage06-end-003-004-idempotency.yaml without launchApp/clearState — the
 # suite guarantees a clean state (jrn-001). The first session additionally
-# leaves an answer with the Cyrillic keywords "trust" and "hope", a voice
-# recording (jrn-007-delete expects the "Audio recording" label in the
-# details), and a takeaway with the Cyrillic keywords "anxious" and "Cyrillic"
-# — these are what ios-stage06-jrn-003-004-search later searches for.
+# leaves an answer with the Cyrillic keywords «Кириллица про доверие» and
+# «надежда», a voice recording (jrn-007-delete expects the «Аудиозапись»
+# label in the details), and a takeaway with the Cyrillic keywords «тревожит»
+# and «Кириллица» — these are what ios-stage06-jrn-003-004-search later
+# searches for.
 # Before the start — a relaunch without clearState: the suite's previous flow
 # may end on any screen, while the fragment starts from Home.
 - launchApp:
@@ -38,9 +39,9 @@ tags:
 - waitForAnimationToEnd:
     timeout: 9000
 
-# An answer with the Cyrillic keywords "trust" and "hope" — jrn-003/004-search
-# searches by "hope", and jrn-007-delete expects this text in the END-003
-# details.
+# An answer with the Cyrillic keywords «Кириллица про доверие» and «надежда» —
+# jrn-003/004-search searches by «надежда», and jrn-007-delete expects this
+# text in the END-003 details.
 - tapOn:
     id: "dock-answer-button"
 - tapOn:
@@ -48,8 +49,8 @@ tags:
 - inputText: "Ответ Кириллица про доверие и надежда"
 - tapOn:
     id: "answer-question"
-# A voice recording attached to the answer — jrn-007-delete expects the "Audio
-# recording" entry in the END-003 details.
+# A voice recording attached to the answer — jrn-007-delete expects the
+# «Аудиозапись» entry in the END-003 details.
 - tapOn:
     id: "answer-record-button"
 - runFlow:
@@ -84,9 +85,9 @@ tags:
 - assertVisible:
     id: "dock-answer-edit-button"
 # After saving, the answer sheet may already be closed (the consent dialog
-# dismisses it) or not — the first tap either goes straight to "BEFORE YOU
-# CLOSE" or only closes the sheet; in the latter case "Answer" is visible and
-# we tap again.
+# dismisses it) or not — the first tap either goes straight to the
+# «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» screen (screens.reflect.before) or only closes the
+# sheet; in the latter case the «Ответить» button is visible and we tap again.
 - tapOn:
     point: "10%,11%"
 - runFlow:
@@ -99,13 +100,14 @@ tags:
 - assertVisible:
     id: "reflect-kicker"
 
-# A takeaway with the Cyrillic keywords "anxious" and "Cyrillic" — what
+# A takeaway with the Cyrillic keywords «тревожит» and «Кириллица» — what
 # jrn-003/004-search searches for.
 - tapOn:
     id: "reflection-input"
 - inputText: "END-003 вывод: тревожит разговор; Кириллица тест"
-# The "BEFORE YOU CLOSE" kicker is hidden while the keyboard is open
-# (app/reflect.tsx:144) — dismiss the keyboard with Enter (as in smoke-full).
+# The «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» kicker (screens.reflect.before) is hidden while
+# the keyboard is open (app/reflect.tsx:144) — dismiss the keyboard with
+# Enter (as in smoke-full).
 - pressKey: Enter
 - assertVisible:
     id: "reflect-complete-button"

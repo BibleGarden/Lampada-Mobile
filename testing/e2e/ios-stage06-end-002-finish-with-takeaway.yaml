@@ -40,8 +40,9 @@ tags:
 - tapOn:
     id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
-# The "BEFORE YOU CLOSE" kicker is hidden while the keyboard is open
-# (app/reflect.tsx:144) — dismiss the keyboard with Enter (as in smoke-full).
+# The «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» kicker (screens.reflect.before) is hidden while
+# the keyboard is open (app/reflect.tsx:144) — dismiss the keyboard with
+# Enter (as in smoke-full).
 - pressKey: Enter
 - assertVisible:
     id: "reflect-complete-button"

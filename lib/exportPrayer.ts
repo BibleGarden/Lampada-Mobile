@@ -6,7 +6,8 @@ import type { FavoriteScripture } from './scripture';
 // already sees in the journal go out.
 //
 // The text is read in notes and messengers with no markup, so the
-// structure is carried by explicit labels (topic, question, answer) and
+// structure is carried by explicit labels ("Topic:", "Question {count}:",
+// "Answer:" — screens.journal.exportTopic/exportQuestion/exportAnswer) and
 // separators of three em dashes between sections.
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
@@ -63,7 +64,8 @@ function transcriptLines(
     .map((transcript) => `${t('screens.journal.exportVoiceNote')}: ${transcript}`);
 }
 
-// "Question N" with the question text, when it was saved.
+// "Question {count}" (screens.journal.exportQuestion) with the question
+// text, when it was saved.
 function questionHeading(position: number, question: string, t: Translate): string {
   const label = t('screens.journal.exportQuestion', { count: position });
   return question ? `${label}: ${question}` : label;
@@ -92,7 +94,7 @@ export function buildPrayerExportText(
   const answers = [...(detail?.answers ?? [])].sort((a, b) => a.questionIndex - b.questionIndex);
 
   // Numbering follows display order, not questionIndex: gaps in the
-  // indexes must not leave holes in "Question N".
+  // indexes must not leave holes in "Question {count}".
   const answerBlocks: string[] = [];
   for (const answer of answers) {
     const lines = [questionHeading(answerBlocks.length + 1, answer.question.trim(), t)];

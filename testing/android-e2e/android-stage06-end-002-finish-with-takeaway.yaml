@@ -39,7 +39,8 @@ tags:
 - tapOn:
     id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
-# The "BEFORE YOU CLOSE" kicker is hidden while the keyboard is open.
+# The «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» kicker (screens.reflect.before) is hidden while
+# the keyboard is open.
 # Dismiss the keyboard by tapping outside the field after the Unicode input.
 - runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible:

@@ -2,10 +2,11 @@ appId: twinkler
 tags:
   - main
 ---
-# ANS-023: in the recordings sheet, "Done" (while recording) and
-# "Record another" (afterwards) are visible and tappable. The flow is not
-# device-bound: the `main` tier runs it on an iPhone with a Home Indicator, the
-# iPad group on a tablet, and SE by direct launch (testing/README.md).
+# ANS-023: in the recordings sheet, «Готово» (while recording) and
+# «Записать ещё» (components.answers.recordMore, afterwards) are visible and
+# tappable. The flow is not device-bound: the `main` tier runs it on an
+# iPhone with a Home Indicator, the iPad group on a tablet, and SE by direct
+# launch (testing/README.md).
 # Edge-adjacent fields are reviewed by a human from screenshots.
 - launchApp:
     stopApp: true

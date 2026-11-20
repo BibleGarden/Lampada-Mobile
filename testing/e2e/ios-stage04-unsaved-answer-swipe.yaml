@@ -43,9 +43,9 @@ tags:
     end: "50%,92%"
     duration: 500
 - assertVisible: ".*ANS-003.*"
-# The "Really close?" confirmation lives for 3 s (AnswerSheet.tsx:849) — less
-# than Maestro's delay between tapOn and assert. doubleTapOn sends both taps
-# as one command.
+# The «Точно закрыть?» confirmation (components.answers.confirmClose) lives
+# for 3 s (AnswerSheet.tsx:849) — less than Maestro's delay between tapOn and
+# assert. doubleTapOn sends both taps as one command.
 - doubleTapOn: "Отмена"
 - assertVisible:
     id: "session-title"

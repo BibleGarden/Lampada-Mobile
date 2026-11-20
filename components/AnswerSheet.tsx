@@ -1220,7 +1220,8 @@ function AnswerSheet({
       // without this, v5 mixes in a "content-based" snap point and the indices shift
       enableDynamicSizing={false}
       // Swipe is available only for an empty sheet. Otherwise it can be closed
-      // solely via "Cancel" → confirm-close or "Save".
+      // solely via "Cancel" → "Close without saving?" (components.answers.confirmClose)
+      // or "Save".
       enablePanDownToClose={!hasUnsavedContent}
       // Content panning is disabled: otherwise a vertical drag inside the
       // answer field moves the sheet instead of scrolling the text. The sheet

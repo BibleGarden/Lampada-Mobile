@@ -17,9 +17,10 @@ tags:
 - assertVisible:
     id: "start-prayer-button"
 # An explicit precondition check. Lock overlays are modal for the accessibility
-# tree (accessibilityViewIsModal), so "Start prayer" being visible already
-# implies protection is off — but the check stays: it catches a regression of
-# that modality, not only the protection state.
+# tree (accessibilityViewIsModal), so the «Начать молитву» button
+# (screens.home.start) being visible already implies protection is off — but
+# the check stays: it catches a regression of that modality, not only the
+# protection state.
 - assertNotVisible:
     id: "lock-screen"
 - tapOn:

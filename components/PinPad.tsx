@@ -41,7 +41,7 @@ export type PinPadProps = {
   onSubmit: (pin: string) => string | null | Promise<string | null>;
   /** Biometry button in the keypad's free corner. */
   biometry?: { label: string; onPress: () => void } | null;
-  /** Links under the keypad: "Forgot PIN?", "Cancel". */
+  /** Links under the keypad: "Forgot your PIN?" (components.security.forgotPin), "Cancel". */
   footer?: React.ReactNode;
   testID?: string;
   /** Stable title id for e2e: the scenario steps are told apart by it. */

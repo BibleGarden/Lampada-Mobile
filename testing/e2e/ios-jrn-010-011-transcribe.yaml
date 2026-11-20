@@ -6,7 +6,8 @@ tags:
 ---
 # JRN-010: transcribing a voice answer — loading state, text under the player,
 # persistence after reopening. JRN-011: searching by a transcript word in a
-# different case. The stub replies with a fixed Russian transcript phrase.
+# different case. The stub replies with the fixed Russian transcript phrase
+# «Стабильная расшифровка лампады номер семь».
 - launchApp:
     stopApp: true
     clearState: true
