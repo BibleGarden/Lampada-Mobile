@@ -429,6 +429,116 @@ scenario passed. Run `cleanup` afterward. Capturing a screenshot alone does
 not assert the privacy outcome.
 
 
+## Preview screenshots in CI
+
+The `Preview screenshots` workflow (`.github/workflows/preview-screenshots.yml`)
+builds a pull request twice, from its merge base ("before") and from its head
+("after"), runs both builds on an Android emulator and on an iOS simulator,
+drives them with Maestro and posts the screenshots as one comment on the pull
+request. The images are also attached to the workflow run as the artifacts
+`screens-<platform>-<before|after>`; the logs are in `logs-*`. It needs no Mac
+and is the evidence the owner approves a visual change with; it does not replace
+that approval and it does not replace the Maestro runs of "Testing changes" in
+`AGENTS.md`. The design is in
+[ADR-0045](../architect/decisions/0045-preview-screenshots-workflow.md).
+
+### Request a preview
+
+A preview runs only on request. Only people with write access can dispatch the
+workflow and only people with triage access can set a label.
+
+1. Name what to capture (see "Screens and flows" below).
+2. Start it in either way:
+   - **Label.** Put a line `Preview screens: reflect` in the description of the
+     pull request, then add the label `preview-screenshots`. The workflow
+     removes the label when it has finished: remove and add it again for a new
+     run, for example after a push.
+   - **Manual run.** Actions > "Preview screenshots" > "Run workflow", or
+     `gh workflow run preview-screenshots.yml -f pr=<number> -f screens=reflect`.
+     Choose the branch that holds the workflow (`main`).
+3. Wait for the comment. A failed or partial run says so in the comment; the
+   logs are in the run.
+
+Only pull requests from branches of this repository are accepted. The pull
+request must be open. A pull request from a fork is refused.
+
+Optional line in the description of the labelled pull request, when the label
+is set on a different pull request than the one to preview:
+`Preview target: #95`. The preview of #95 is built, and its comment is posted on
+#95. This is how a change to the workflow itself is shown on another pull
+request before it is merged: a workflow file runs from the default branch, or,
+for a label, from the labelled pull request's own branch.
+
+### Screens and flows
+
+`Preview screens:` and the `screens` input take up to eight names, separated by
+commas or spaces. A name is one of:
+
+- a **screen name**, such as `home` or `reflect`: the flows
+  `testing/preview/<name>.android.yaml` and `testing/preview/<name>.ios.yaml`.
+  They end with `takeScreenshot: <name>`, one image per platform. Add a pair of
+  files to define a new screen;
+- a **flow path** such as `testing/android-e2e/android-smoke-full-relaunch.yaml`
+  or `testing/e2e/ios-smoke-full.yaml`: an existing Maestro flow, read from the
+  pull request head. The file name starts with `android-` or `ios-` and selects
+  the platform. Images from `takeScreenshot` in the flow are collected; a flow
+  without any is captured once at its end (`<flow>-final.png`).
+
+The same flow runs on the "before" and on the "after" build, so the pair is
+comparable. A flow that fails fails that job, and the comment says which.
+
+### Environment
+
+| | Android | iOS |
+| --- | --- | --- |
+| Runner | `ubuntu-latest` with KVM | `macos-26` (arm64) |
+| Device | Pixel profile, Android 15 Google Play, 1280x2856 at 480 dpi, x86_64 system image (the `Pray_Pixel_API_35` AVD uses an ARM64 image, which cannot run on x86_64) | `iPhone 17 Pro`, the newest installed iOS runtime |
+| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild`, `npx expo run:ios --configuration Release` |
+| Driver | Maestro 2.10.0, `scripts/android-maestro-driver.sh`, the readiness gate `scripts/android-guest-load.mjs` | Maestro 2.10.0 |
+
+Both builds are Release builds on the `test` channel. The emulator has no host
+GPU: it renders in software (`swiftshader_indirect`), so frame timing says
+nothing; only the pictures matter. The clock, battery and network icons of the
+status bar are fixed to the same values in every run. Scripts: `scripts/preview/`.
+
+### Secrets
+
+The build needs two repository secrets (Settings > Secrets and variables >
+Actions). The workflow fails at the start, naming the secret, if one is missing:
+
+| Secret | Meaning |
+| --- | --- |
+| `EXPO_PUBLIC_API_URL` | Server origin of the test server, as in `.env.local` |
+| `EXPO_PUBLIC_AI_PROXY_KEY` | The test server's `LAMPADA_API_KEY` |
+
+They are exposed only to the build steps of a run a maintainer started, and
+never to a pull request from a fork. Do not put them into a flow or a
+screenshot.
+
+### Security of the workflow
+
+The workflow builds and runs code of a pull request in a public repository.
+
+- **Triggers.** `workflow_dispatch` and a `labeled` pull request event only. No
+  `pull_request_target`, `issue_comment` or `push`: nobody without write or
+  triage access can start it, and a fork cannot.
+- **Job split.** `plan` reads the pull request through the API and checks out
+  nothing. The `android` and `ios` jobs check out and run PR code with a
+  read-only `GITHUB_TOKEN`. The `publish` job is the only one with write access
+  (`contents` for the `preview-images` branch, `pull-requests` for the comment
+  and the label); it checks out no code and runs no PR code. It accepts the
+  artifacts as untrusted data: only regular PNG files with plain names, at most
+  10 MiB each and 40 in total.
+- **Images.** The comment shows the images from the `preview-images` branch,
+  which holds only images (`pr-<number>/run-<id>-<attempt>/...`). The branch
+  keeps the 40 newest runs in a single commit, so old images also leave the
+  repository history.
+
+### Duration
+
+Measured on real runs; see the pull request that introduced the workflow. A
+full run takes as long as the slowest of its four jobs, which run in parallel.
+
 ## What to do with the result
 
 A run worth remembering is described by a file in `reports/` with the date in its

@@ -42,6 +42,14 @@ npm test
 keyboard unit tests (`npm run test:keyboard:unit`), so it needs Node.js 22 or
 newer and a local Python 3.
 
+### Before/after screenshots of a pull request
+
+A pull request can get screenshots from an Android emulator and an iOS
+simulator, built in GitHub Actions, without a Mac. Describe the screens in the
+pull request (`Preview screens: reflect`) and add the label
+`preview-screenshots`. How it works, the screen names and the secrets it needs
+are in [`testing/README.md`](testing/README.md#preview-screenshots-in-ci).
+
 ## Issue branch names
 
 A branch for issue N is named `issues-BibleGarden-Lampada-Mobile-<N>`. For

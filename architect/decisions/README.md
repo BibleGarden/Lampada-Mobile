@@ -82,3 +82,4 @@ implementation details do not need one.
 - [0042: A prayer in the journal counts the day it started](0042-journal-prayer-counts-its-day.md) — partly supersedes ADR-0033
 - [0043: Skia canvases follow the current Android display density](0043-skia-follows-android-display-density.md)
 - [0044: Automatically submit Android production builds to internal testing](0044-automatic-android-internal-submission.md) — partly supersedes ADR-0040
+- [0045: On-demand before/after screenshots from emulators in GitHub Actions](0045-preview-screenshots-workflow.md)

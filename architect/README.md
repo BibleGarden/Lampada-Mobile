@@ -1178,6 +1178,12 @@ must be preserved in version control. See [ADR-0024](decisions/0024-build-patch-
   do not duplicate work management.
 - `npm run iphone` - the path the project supports for a Release build and
   installation onto a physical iPhone.
+- Before/after screenshots of a pull request from an Android emulator and an iOS
+  simulator come from the on-demand GitHub Actions workflow
+  `.github/workflows/preview-screenshots.yml` (label `preview-screenshots` or a
+  manual run; the build and emulator jobs have a read-only token, only the
+  publishing job writes). See [ADR-0045](decisions/0045-preview-screenshots-workflow.md)
+  and `testing/README.md`.
 
 ## How to maintain this document
 

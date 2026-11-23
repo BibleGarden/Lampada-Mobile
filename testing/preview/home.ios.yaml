@@ -1,0 +1,13 @@
+appId: twinkler
+---
+# Preview screen "home": the first screen of a clean install.
+- launchApp:
+    stopApp: true
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: home
