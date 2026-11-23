@@ -498,8 +498,9 @@ comparable. A flow that fails fails that job, and the comment says which.
 
 Both builds are Release builds on the `test` channel. The emulator has no host
 GPU: it renders in software (`swiftshader_indirect`), so frame timing says
-nothing; only the pictures matter. The clock, battery and network icons of the
-status bar are fixed to the same values in every run. Scripts: `scripts/preview/`.
+nothing; only the pictures matter. The status bar is fixed in every run: the
+same clock and battery on both platforms, the same network icons on iOS and none
+on Android. Scripts: `scripts/preview/`.
 
 ### Secrets
 
