@@ -19,7 +19,7 @@ import * as Haptics from 'expo-haptics';
 import ScreenBg from '../components/ScreenBg';
 import Flame from '../components/Flame';
 import { GoldButton, Kicker } from '../components/ui';
-import { Regen } from '../components/icons';
+import { ArrowLeft } from '../components/icons';
 import { useSession } from '../lib/store';
 import { useKeyboardFormPolicy, useKeyboardLayout } from '../lib/useKeyboardLayout';
 import KeyboardViewport, { KeyboardPendingSpace } from '../components/keyboard/KeyboardViewport';
@@ -213,7 +213,7 @@ function ReflectScreen() {
                     testID="reflect-return-button"
                     style={({ pressed }) => [styles.continueBtn, pressed && { transform: [{ scale: 0.985 }] }]}
                   >
-                    <Regen size={16} color={colors.amberBright} strokeWidth={1.7} />
+                    <ArrowLeft size={16} color={colors.amberBright} strokeWidth={1.7} />
                     <Text style={styles.continueLabel}>{t('screens.reflect.return')}</Text>
                   </Pressable>
                 </View>
