@@ -12,7 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        n: [1, 2, 3, 4]
+        variant: [A, B]
+        n: [1, 2]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -24,18 +25,33 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - run: bash tooling/scripts/preview/install-maestro.sh
       - run: bash tooling/scripts/preview/android-emulator.sh "$PWD/tooling" "$PWD/out/logs"
-      - run: |
+      - env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           mkdir -p out/bar
+          adb shell cmd uimode night yes
+          adb shell am start -a android.settings.SETTINGS >/dev/null
+          sleep 8
+          adb exec-out screencap -p > out/bar/shot-0-real.png
+          b() { adb shell am broadcast -a com.android.systemui.demo -e command "$@" >/dev/null; }
           for i in 1 2 3; do
+            adb shell settings put global sysui_demo_allowed 1
+            b enter; b clock -e hhmm 0941
+            b battery -e level 100 -e plugged false -e powersave false
+            b network -e wifi show -e level 4 -e fully true
+            if [ "$VARIANT" = A ]; then
+              b network -e mobile hide
+            else
+              b network -e mobile show -e datatype none -e level 4 -e fully true -e sims 1 -e nosim hide
+            fi
+            b network -e airplane hide
+            b notifications -e visible false
+            sleep 3
             adb exec-out screencap -p > out/bar/shot-$i.png
-            adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
-            adb pull /sdcard/ui.xml out/bar/ui-$i.xml >/dev/null 2>&1 || true
-            echo "--- state $i"; grep -o 'content-desc="[^"]*"' out/bar/ui-$i.xml | grep -i -E "wi-?fi|mobile|signal|battery|airplane|sim|data" | sort | uniq -c || true
-            bash tooling/scripts/preview/android-status-bar.sh emulator-5554
           done
       - if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: bar-${{ matrix.n }}
+          name: bar-${{ matrix.variant }}-${{ matrix.n }}
           path: out/bar
