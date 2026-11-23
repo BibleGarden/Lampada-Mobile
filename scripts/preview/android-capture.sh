@@ -30,6 +30,9 @@ adb -s "$serial" shell pm grant app.lampada android.permission.POST_NOTIFICATION
 bash "$tooling/scripts/android-maestro-driver.sh" "$serial" "$logs" >"$logs/driver.log" 2>&1 || { tail -30 "$logs/driver.log" >&2; exit 1; }
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
+# A software-rendered 4-vCPU guest stays busier than the Mac emulator the
+# gate's defaults were measured on (guest load ~20 right after boot).
+export ANDROID_QUIET_LOAD="${ANDROID_QUIET_LOAD:-8}" ANDROID_QUIET_TIMEOUT_SECONDS="${ANDROID_QUIET_TIMEOUT_SECONDS:-600}"
 failed=0
 for entry in "${flow_list[@]}"; do
   name="${entry%%$'\t'*}"
