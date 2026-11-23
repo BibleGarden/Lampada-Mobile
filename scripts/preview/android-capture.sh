@@ -34,7 +34,9 @@ while IFS= read -r line; do flow_list+=("$line"); done <<<"$resolved"
   || { tail -30 "$logs/sdkmanager.log" >&2; exit 1; }
 echo no | avdmanager create avd --force --name "$avd" --package "$image" --device pixel >"$logs/avdmanager.log" 2>&1 \
   || { cat "$logs/avdmanager.log" >&2; exit 1; }
-config="$HOME/.android/avd/$avd.avd/config.ini"
+avd_dir="$(avdmanager list avd | sed -n 's/^ *Path: *//p' | head -1)"
+[[ -f "$avd_dir/config.ini" ]] || { echo "AVD config not found; avdmanager reports: $(avdmanager list avd)" >&2; exit 1; }
+config="$avd_dir/config.ini"
 set_config() { sed -i "/^$1=/d" "$config"; echo "$1=$2" >> "$config"; }
 sed -i '/^skin\./d' "$config"
 set_config hw.lcd.width 1280
