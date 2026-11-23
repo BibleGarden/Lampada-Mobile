@@ -40,6 +40,7 @@ for entry in "${flow_list[@]}"; do
   run="$logs/maestro-$name"
   mkdir -p "$run"
   echo "== flow $name ($path)"
+  bash "$tooling/scripts/preview/android-status-bar.sh" "$serial"
   if ! (cd "$run" && node "$tooling/scripts/android-guest-load.mjs" run --device "$serial" --flow "$name" \
     -- maestro --device "$serial" test --no-reinstall-driver --test-output-dir "$run" "$path") >"$logs/flow-$name.log" 2>&1; then
     echo "Flow $name FAILED:" >&2

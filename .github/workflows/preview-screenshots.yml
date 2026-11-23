@@ -30,8 +30,11 @@ on:
 
 permissions: {}
 
+# A newer request for the same pull request replaces a running preview. Runs
+# started by any other label get a group of their own (they only skip), so
+# adding an unrelated label never cancels a preview.
 concurrency:
-  group: preview-screenshots-${{ github.event.pull_request.number || inputs.pr }}
+  group: preview-screenshots-${{ (github.event_name == 'workflow_dispatch' || github.event.label.name == 'preview-screenshots') && (github.event.pull_request.number || inputs.pr) || github.run_id }}
   cancel-in-progress: true
 
 jobs:
