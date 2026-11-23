@@ -8,6 +8,7 @@ appId: twinkler
     visible:
       id: start-prayer-button
     timeout: 60000
+- runFlow: _dismiss-update.yaml
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: home

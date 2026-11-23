@@ -1,0 +1,15 @@
+# Shared step of the preview flows (not a screen name): the real test server can
+# answer the version check with a soft "Update available" sheet a few seconds
+# after launch, which covers the app. Dismiss it when it shows up.
+- extendedWaitUntil:
+    visible:
+      id: update-later
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: update-later
+    commands:
+      - tapOn:
+          id: update-later
