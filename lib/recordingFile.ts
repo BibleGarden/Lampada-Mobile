@@ -13,9 +13,9 @@ export type RecordingFileMetadata = {
 export type RecordingAudioState = 'available' | 'missing' | 'unreadable';
 
 /**
- * Есть ли аудио записи на этом устройстве. После восстановления дневника из
- * облачной копии Android строки записей приходят без файлов (ADR-0040). Сбой
- * самой проверки тоже означает «аудио нет», но с отдельной причиной.
+ * Whether this device still holds the recording's audio. After restoring the
+ * diary from a cloud copy, Android delivers entry rows without their files
+ * (ADR-0040). A failing check also means "no audio", but with its own cause.
  */
 export function recordingAudioState(exists: () => boolean): RecordingAudioState {
   try {
@@ -34,14 +34,14 @@ export function recordingFileIssue(
   return file.size === null || file.size < MIN_RECORDING_BYTES ? 'incomplete' : null;
 }
 
-/** Целые секунды для текущего отсчёта записи. */
+/** Whole seconds for the live recording counter. */
 export function recordedSeconds(durationMillis: number) {
   return Math.floor(durationMillis / 1000);
 }
 
 export const UNKNOWN_RECORDING_DURATION_SECONDS = 0;
 
-/** Дробные секунды из готового файла без округления для серверного предела. */
+/** Fractional seconds from the finished file, unrounded, for the server limit. */
 export async function recordedFileDurationSeconds(
   readStatus: () => AudioPlayerReadyStatus,
   wait?: (millis: number) => Promise<void>,
@@ -54,7 +54,7 @@ export async function recordedFileDurationSeconds(
   return duration;
 }
 
-/** Привязывает файл к черновику даже при сбое чтения длительности. */
+/** Attaches the file to the draft even when reading the duration fails. */
 export async function createStoppedRecordingDraft(
   uri: string,
   readDuration: () => Promise<number>,

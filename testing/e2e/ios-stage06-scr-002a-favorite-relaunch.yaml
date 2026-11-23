@@ -1,11 +1,12 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: run-stub-phase.sh сбрасывает счётчик stub между частями
-# (POST /__control {"resetScripture":true}) — обе сессии получают первую
-# фикстуру (Псалом 22), поэтому избранное сопоставимо. В теговые прогоны не входит.
+# NEEDS-STUB: run-stub-phase.sh resets the stub counter between the parts
+# (POST /__control {"resetScripture":true}) — both sessions get the first
+# fixture (Psalm 22), so the favorites are comparable. Not included in tagged
+# runs.
 ---
-# SCR-002 (часть 1): добавить отрывок в избранное и перезапустить приложение.
+# SCR-002 (part 1): add a passage to favorites and relaunch the app.
 - launchApp:
     stopApp: true
     clearState: true

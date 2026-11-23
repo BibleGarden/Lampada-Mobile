@@ -48,8 +48,8 @@ rm "$run_dir/installed-base.apk"
 locale="$(adb -s "$device" shell settings get system system_locales | tr -d '\r')"
 [[ "$locale" == ru-RU* ]] || { echo "Expected Russian as the primary Android locale, got $locale" >&2; exit 1; }
 
-# Без --no-reinstall-driver Maestro переустанавливает драйвер в начале каждого
-# сценария, и установка нагружает гостя сразу после гейта.
+# Without --no-reinstall-driver Maestro reinstalls the driver at the start of
+# every flow, and the installation loads the guest right after the gate.
 bash scripts/android-maestro-driver.sh "$device" "$run_dir"
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
@@ -58,8 +58,8 @@ for flow in "${flows[@]}"; do
   echo "Starting $flow"
   # Relaunch must immediately follow smoke-full: it verifies the saved data.
   : > "$run_dir/$flow.log"
-  # Bash не передаёт сигналы дочернему процессу: гейт запускается в фоне,
-  # ловушка пересылает ему остановку, а он — Maestro.
+  # Bash does not forward signals to the child: the gate runs in the
+  # background, a trap sends it the stop signal, and it forwards it to Maestro.
   stopped=0
   node scripts/android-guest-load.mjs run --device "$device" --flow "$flow" --flow-log "$run_dir/$flow.log" -- \
     maestro --device "$device" test --no-reinstall-driver --test-output-dir "$run_dir/$flow" \
@@ -69,7 +69,7 @@ for flow in "${flows[@]}"; do
   set +e
   wait "$pid"
   result=$?
-  # Сигнал прерывает wait раньше выхода процесса; ждём его настоящий код.
+  # A signal interrupts wait before the process exits; wait for its real exit code.
   while (( stopped )) && kill -0 "$pid" 2>/dev/null; do
     wait "$pid"
     result=$?

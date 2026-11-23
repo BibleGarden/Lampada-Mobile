@@ -125,7 +125,7 @@ cmp -s "$PLAY_CAPTURE_APK" "$run_dir/installed-capture.apk" || { echo 'Installed
 "${adb_cmd[@]}" install -r "$PLAY_CAPTURE_PROBE_APK" >>"$run_dir/install.log" 2>&1 || { echo "Probe install failed; see $run_dir/install.log" >&2; tail -40 "$run_dir/install.log" >&2; exit 1; }
 
 "${adb_cmd[@]}" shell settings put global auto_time_zone 0
-# У Etc/GMT знаки обратные: выбираем смещение для местного времени 09:xx.
+# Etc/GMT signs are inverted: pick the offset that makes local time 09:xx.
 morning_zone="$(python3 - <<'PY'
 from datetime import datetime, timezone
 utc_hour = datetime.now(timezone.utc).hour
@@ -139,7 +139,7 @@ if [ "$local_hour" -lt 8 ] || [ "$local_hour" -gt 11 ]; then
   echo "Emulator local hour is $local_hour, expected 08–11" >&2
   exit 1
 fi
-# 1440×2560 при 480 dpi даёт 480×853 dp: высота как у утверждённого набора 1280×2560.
+# 1440x2560 at 480 dpi gives 480x853 dp: the same height as the approved 1280x2560 set.
 "${adb_cmd[@]}" shell wm size "$capture_size"
 "${adb_cmd[@]}" shell wm density "$capture_density"
 "${adb_cmd[@]}" shell settings put secure spell_checker_enabled 0
@@ -170,7 +170,7 @@ done
 today="$("${adb_cmd[@]}" shell date +%F | tr -d '\r')"
 python3 scripts/play-screens-seed.py "$serial" "$fixture" "$locale" "$today" >"$run_dir/seed.log"
 
-# Heredoc внутри <(...) bash 3.2 из macOS разбирает с brace expansion, поэтому значения идут через файл.
+# macOS bash 3.2 parses a heredoc inside <(...) with brace expansion, so values go through a file.
 python3 - "$fixture" "$locale" >"$run_dir/flow-env" <<'PY'
 import json, re, sys
 item = json.load(open(sys.argv[1]))['locales'][sys.argv[2]]
@@ -181,7 +181,7 @@ PY
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 args=()
 while IFS= read -r value; do args+=(-e "$value"); done <"$run_dir/flow-env"
-# Демо-режим включается перед самыми флоу: сразу после wm size/density SystemUI ещё пересоздаёт строку состояния и теряет значок Wi-Fi.
+# Demo mode is enabled right before the flows: immediately after wm size/density SystemUI is still recreating the status bar and loses the Wi-Fi icon.
 broadcast() { "${adb_cmd[@]}" shell am broadcast -a com.android.systemui.demo -e command "$@" >/dev/null; }
 broadcast enter
 broadcast clock -e hhmm 0941

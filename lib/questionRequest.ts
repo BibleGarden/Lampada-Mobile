@@ -12,7 +12,7 @@ export type QuestionRequest = {
   prefetch?: boolean;
 };
 
-/** История только реальных ходов, без инструкций под видом реплик человека. */
+/** History of real turns only, no instructions disguised as user replies. */
 export function buildQuestionRequest(
   stage: QuestionRequest['stage'],
   topic: string,
@@ -48,7 +48,7 @@ export function buildQuestionRequest(
   });
 }
 
-/** Старые сообщения отбрасываются целиком; последнюю реплику не обрезаем. */
+/** Older messages are dropped whole; the latest reply is never truncated. */
 export function limitQuestionRequest(request: QuestionRequest): QuestionRequest {
   let remaining = 16_000 - request.topic.length;
   if (remaining < 0) throw new Error('AI question topic exceeds the context limit');
@@ -62,7 +62,7 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
     messages.unshift({ ...message });
     remaining -= message.text.length;
   }
-  // Ответы имеют приоритет по бюджету. Повторы исключаем до сокращения истории.
+  // Answers take priority in the budget. Duplicates are excluded before trimming history.
   const answered = new Set(request.messages.filter((m) => m.role === 'assistant').map((m) => m.text.trim()));
   const skipped: string[] = [];
   const candidates = request.stage === 'first' ? [] : (request.skipped_questions ?? [])
@@ -74,7 +74,7 @@ export function limitQuestionRequest(request: QuestionRequest): QuestionRequest 
     skipped.unshift(question);
     remaining -= question.length;
   }
-  // Показанные отвеченные вопросы без переданного ответа занимают остаток бюджета.
+  // Questions shown and answered but with no sent answer take the remaining budget.
   const sentQuestions = new Set(messages.filter((message) => message.role === 'assistant')
     .map((message) => message.text.trim()));
   const skippedSet = new Set(skipped);

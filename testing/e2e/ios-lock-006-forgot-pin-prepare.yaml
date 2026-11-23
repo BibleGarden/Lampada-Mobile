@@ -2,24 +2,25 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-006, подготовка: завести запись в дневнике и включить пин 4321, чтобы
-# следующий сценарий мог доказать, что стирание убирает именно пользовательские
-# данные, а не только ключи защиты.
+# LOCK-006, preparation: create a journal entry and enable PIN 4321 so that the
+# next scenario can prove the wipe removes the user data itself, not only the
+# protection keys.
 #
-# Повторный тап по кнопке на главной — защита от dev-баннера LogBox, съедавшего
-# первый тап (86cbbqzcj; источники устранены, ретрай оставлен на случай новых
-# предупреждений). Клавиатура закрывается клавишей ввода (у поля цели это «Готово»),
-# а не `hideKeyboard`: свайп закрытия клавиатуры уводит и сам лист настройки
-# молитвы.
+# The repeated tap on the home button guards against the LogBox dev banner that
+# swallowed the first tap (86cbbqzcj; the sources are fixed, the retry stays in
+# case of new warnings). The keyboard is closed with the Enter key (on the goal
+# field it reads "Done"), not with `hideKeyboard`: the keyboard-dismiss swipe
+# also drags away the prayer setup sheet.
 - launchApp:
     stopApp: true
     clearState: true
 - assertVisible:
     id: "start-prayer-button"
-# Явная проверка предусловия. Оверлеи блокировки модальны для дерева доступности
-# (accessibilityViewIsModal), поэтому «Начать молитву» уже само по себе говорит
-# о снятой защите — но проверка оставлена: она ловит регресс этой модальности,
-# а не только состояние защиты.
+# An explicit precondition check. Lock overlays are modal for the accessibility
+# tree (accessibilityViewIsModal), so the «Начать молитву» button
+# (screens.home.start) being visible already implies protection is off — but
+# the check stays: it catches a regression of that modality, not only the
+# protection state.
 - assertNotVisible:
     id: "lock-screen"
 - tapOn:
@@ -80,7 +81,7 @@ tags:
     id: "home-title-lit"
 - assertVisible:
     id: "journal-button"
-# Запись действительно в дневнике.
+# The entry is really in the journal.
 - tapOn:
     id: "journal-button"
 - assertVisible:
@@ -89,7 +90,7 @@ tags:
 - tapOn:
     point: "10%,11%"
 
-# Включить пин 4321.
+# Enable PIN 4321.
 - tapOn:
     id: "settings-button"
 - scrollUntilVisible:

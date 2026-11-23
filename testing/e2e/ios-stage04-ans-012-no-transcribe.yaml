@@ -1,10 +1,11 @@
 appId: twinkler
 ---
-# ANS-012 (часть про UI): после остановки записи видны карточка и кнопка
-# «Расшифровать», запроса нет — нет и состояния загрузки.
+# ANS-012 (the UI part): after the recording stops, the card and the
+# "Transcribe" button are visible; there is no request, so there is no loading
+# state either.
 #
-# Что сеть и токены действительно не тратятся, Maestro не доказывает: это
-# ручная проверка прокси / логов сервера.
+# Maestro cannot prove that the network and tokens are really not spent: that
+# is a manual check of the proxy / server logs.
 - launchApp:
     stopApp: true
     clearState: true

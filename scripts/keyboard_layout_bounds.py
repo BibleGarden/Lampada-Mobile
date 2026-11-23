@@ -121,11 +121,11 @@ def main():
     if not matches:
         raise RuntimeError('No Android display dimensions')
     width, height = map(int, matches[-1])
-    # Драйвер Maestro уже завершён; новый read-only сеанс снимает дерево
-    # немедленно, без waitForIdle, который не достигается на анимациях.
+    # The Maestro driver has exited; a fresh read-only session captures the tree
+    # immediately, without waitForIdle, which never settles during animations.
     raw = subprocess.check_output(['maestro', '--device', args.device, 'hierarchy'], text=True, timeout=180)
     window = adb('shell', 'dumpsys', 'window')
-    # Сырые снимки сохраняются до разбора, чтобы провал оставлял улики.
+    # Raw snapshots are saved before parsing so a failure leaves evidence.
     output = Path(args.output)
     output.with_name(f'{output.stem}-hierarchy.json').write_text(raw)
     output.with_name(f'{output.stem}-window.txt').write_text(window)

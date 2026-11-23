@@ -62,7 +62,7 @@ def measured_frame_interval(original: list[float]) -> float:
                        if current > previous)
     if not intervals:
         raise ValueError("Raw video has no forward frame intervals")
-    # Редкие паузы не должны расширять допуск; короткие пакетные кадры не должны его сужать.
+    # Rare pauses must not widen the tolerance; short burst frames must not narrow it.
     return intervals[math.ceil(0.95 * len(intervals)) - 1]
 
 

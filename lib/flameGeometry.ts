@@ -1,12 +1,12 @@
-// Высота места, которое Flame с чашей занимает в раскладке, к его ширине.
-// Поля под гало сюда не входят: их съедает отрицательный margin холста.
+// The layout height of the Flame with its bowl, relative to its width.
+// The halo padding is not included: the canvas's negative margin consumes it.
 export const FLAME_HEIGHT_RATIO = 1.17;
 
 /**
- * Ширина огонька, при которой он вместе с подписями помещается в свой блок.
- * Пока места хватает, огонёк остаётся в полном размере `preferredWidth`;
- * на низком окне он уменьшается с сохранением пропорций, а подписи
- * не меняются. Шаг 0.5 pt — как у `sc()`.
+ * The flame width at which it fits its block together with its captions.
+ * While there is room, the flame keeps its full `preferredWidth`; in a
+ * short window it shrinks proportionally, while the captions stay
+ * unchanged. The 0.5 pt step matches `sc()`.
  */
 export function fitFlameWidth(preferredWidth: number, freeHeight: number): number {
   if (preferredWidth * FLAME_HEIGHT_RATIO <= freeHeight) return preferredWidth;

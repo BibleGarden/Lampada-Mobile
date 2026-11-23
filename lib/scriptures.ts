@@ -1,6 +1,6 @@
 export type Scripture = { ref: string; text: string };
 
-// Каталог из прототипа (Синодальный перевод)
+// Catalog carried over from the prototype (Synodal translation)
 export const scriptures: Scripture[] = [
   {
     ref: 'Колоссянам 3:23',
@@ -44,5 +44,5 @@ export const scriptures: Scripture[] = [
   },
 ];
 
-// Отрывок считается «длинным», если не помещается в 3 строки карточки
+// A passage counts as "long" when it does not fit on three card lines
 export const isLong = (s: Scripture) => s.text.length > 160;

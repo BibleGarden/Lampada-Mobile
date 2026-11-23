@@ -164,7 +164,7 @@ export async function fetchScriptureAudioClip(
   if (numbers.size !== passage.verse_end - passage.verse_start + 1) {
     throw new Error('invalid_response');
   }
-  // Все нулевые тайминги отрывка обозначают отсутствие записи в API.
+  // All-zero timings for the excerpt mean the API has no recording.
   if (verses.every((verse) => verse.startSeconds === 0 && verse.endSeconds === 0)) {
     throw new ScriptureAudioUnavailableError('no_timings');
   }

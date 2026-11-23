@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Продолжение open-фазы: без launch/clearState, чтобы проверить сохранность.
+# Continuation of the open phase: no launch/clearState, to verify persistence.
 # Enter ends editing with software or emulated hardware input.
 - pressKey: Enter
 - assertVisible:

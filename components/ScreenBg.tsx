@@ -3,12 +3,12 @@ import { StyleSheet } from 'react-native';
 import { Canvas, Fill, RadialGradient, vec } from '@shopify/react-native-skia';
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
-// Радиальный градиент фона, как в прототипе.
-// variant 'home' — тёплый очаг снизу-по-центру; 'screen' — приглушённый сверху.
+// Background radial gradient, as in the prototype.
+// variant 'home' — a warm hearth low in the center; 'screen' — a muted one at the top.
 export default function ScreenBg({ variant = 'screen' }: { variant?: 'home' | 'screen' }) {
   const size = useSharedValue({ width: 0, height: 0 });
   const home = variant === 'home';
-  // Геометрия градиента следует за Canvas на UI-потоке, даже если JS занят.
+  // The gradient geometry follows the Canvas on the UI thread even when JS is busy.
   const c = useDerivedValue(() =>
     vec(size.value.width / 2, size.value.height * (home ? 0.52 : 0.12)),
   );

@@ -2,11 +2,11 @@ appId: twinkler
 tags:
   - prepared
 ---
-# ANS-013: после «Расшифровать» появляется загрузка, через 4 с — подсказка
-# «можно закрыть окно». Закрываем шторку записей и сохраняем, пока запрос
-# жив: «Сохранить» ждёт ответ, и после повторного открытия у записи есть
-# текст расшифровки. Stub-флоу: run-stub-phase.sh, режим transcription=delay
-# (ответ через 12 с).
+# ANS-013: after "Transcribe" a loading state appears, and after 4 s — the
+# hint "you can close the window". Close the recordings sheet and save while
+# the request is in flight: "Save" waits for the answer, and after reopening
+# the recording has the transcription text. Stub flow: run-stub-phase.sh,
+# transcription=delay mode (the answer arrives after 12 s).
 - launchApp:
     stopApp: true
     clearState: true
@@ -91,7 +91,7 @@ tags:
     commands:
       - tapOn:
           id: "privacy-consent-answer_context-allow"
-# Сохранение ждёт расшифровку (до 60 с, lib/transcription.ts).
+# Saving waits for the transcription (up to 60 s, lib/transcription.ts).
 - extendedWaitUntil:
     visible:
       id: "dock-answer-edit-button"

@@ -18,8 +18,8 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-// Читалка длинных отрывков — тёмно-зелёная, как в прототипе
-// Как и шторка ответа, читалка не перерисовывается от секундного тика сессии.
+// Reader for long passages — dark green, as in the prototype.
+// Like the answer sheet, the reader does not re-render on the session's secondly tick.
 export default React.memo(ScriptureReader);
 
 function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
@@ -29,7 +29,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
   const { height: windowHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  // точечные подписки — читалка не ререндерится от тика таймера
+  // focused subscriptions — the reader does not re-render on timer ticks
   const scrList = useSession((st) => st.scrList);
   const scrIndex = useSession((st) => st.scrIndex);
   const scrFav = useSession((st) => st.scrFav);
@@ -40,11 +40,11 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
   const { mountKey, open, onIndexChange } = useSheetReflow();
   const referenceRef = useRef<Text>(null);
   const close = useCallback(() => sheetRef.current?.close(), [sheetRef]);
-  // У содержимого шторки нет общей обёртки: пометку и escape получают
-  // шапка и текст по отдельности.
+  // The sheet's content has no shared wrapper: the header and the text each
+  // get the hidden flag and escape separately.
   const contentA11y = { ...screenReaderHiddenProps(!open), onAccessibilityEscape: close };
 
-  // Экран под читалкой скрыт от программ чтения с экрана — фокус на ссылку.
+  // The screen under the reader is hidden from screen readers — focus the reference.
   useEffect(() => {
     if (open && referenceRef.current) AccessibilityInfo.sendAccessibilityEvent(referenceRef.current, 'focus');
   }, [open]);
@@ -55,7 +55,7 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
 
   const renderBackdrop = useCallback(
     (props: any) => (
-      // Фон без локализованной подписи; закрывают крестик и жест escape.
+      // The backdrop has no localized label; the close button and the escape gesture close it.
       <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.75} accessible={false} />
     ),
     [],
@@ -74,8 +74,8 @@ function ScriptureReader({ sheetRef, scriptureAudio, onOpenChange }: Props) {
         onIndexChange(index);
         onOpenChange(index >= 0);
       }}
-      // По умолчанию контейнер контента — единый элемент «Bottom Sheet», и
-      // кнопки внутри недоступны VoiceOver. Раскрываем детей.
+      // By default the content container is a single "Bottom Sheet" element
+      // and the buttons inside are unreachable by VoiceOver. Expose the children.
       accessible={false}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.bg}
@@ -208,8 +208,8 @@ const stylesFactory = () => StyleSheet.create({
     fontFamily: fonts.sansMedium,
     fontSize: sc(13),
     textTransform: 'uppercase',
-    // тот же базовый цвет, что и у текста отрывка; прозрачность гасит его
-    // до серовато-зелёного на тёмном фоне читалки
+    // the same base color as the passage text; the opacity dims it to a
+    // grayish green on the reader's dark background
     color: colors.cardText,
     opacity: 0.6,
   },

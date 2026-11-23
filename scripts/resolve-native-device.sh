@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Выбираем одну подключённую цель до того, как Expo или Maestro выберут её сами.
+# Pick the single connected target before Expo or Maestro pick one themselves.
 set -euo pipefail
 
 platform="$1"
@@ -25,7 +25,7 @@ if [[ -n "$explicit" ]]; then
     if [[ "$explicit" == emulator-* ]]; then
       "$adb_bin" -s "$explicit" get-state >/dev/null
     elif "$adb_bin" devices | awk -v s="$explicit" 'NR > 1 && $1 == s && $2 == "device" { found = 1 } END { exit !found }'; then
-      : # серийный номер подключённого устройства
+      : # serial of a connected device
     else
       matched=''
       while IFS= read -r serial; do

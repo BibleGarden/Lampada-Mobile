@@ -22,8 +22,8 @@ def run_forwarding_signals(argv, **kwargs):
         if child is not None:
             kill_group(signum)
 
-    # Обработчики ставятся до запуска: сигнал между Popen и их установкой
-    # оставил бы ребёнка без родителя.
+    # Handlers are installed before launch: a signal between Popen and their
+    # installation would leave the child orphaned.
     previous = {signum: signal.signal(signum, forward) for signum in FORWARDED_SIGNALS}
     try:
         child = subprocess.Popen(argv, start_new_session=True, **kwargs)

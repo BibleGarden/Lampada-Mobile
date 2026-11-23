@@ -36,18 +36,19 @@ import { syncRemindersAsync } from '../lib/prayerReminderScheduler';
 import { errorKind, recordDiagnostic } from '../lib/db';
 import KeyboardSystemProvider from '../components/keyboard/KeyboardSystemProvider';
 
-// Экраны, из которых нельзя выпасть случайным действием: молитвенный сценарий
-// завершается только явными кнопками. Напоминание, пришедшее во время молитвы,
-// не выбрасывает пользователя из неё.
+// Screens that must not be exited by an accidental action: the prayer flow
+// ends only through explicit buttons. A reminder arriving during prayer
+// does not pull the user out of it.
 const PRAYER_FLOW = new Set(['/session', '/reflect']);
 
-// Нативный сплэш снимается, когда пламя его копии BootSplash готово к
-// отрисовке; копия и ждёт шрифты и язык интерфейса. Без этого вызова
-// expo-router снял бы сплэш по готовности навигации, раньше пламени копии.
-// Отказ — дефект сборки и фатален: его бросает RootLayout (см. fatalError).
+// The native splash is hidden once the BootSplash copy's flame is ready to
+// render; the copy itself awaits the fonts and the UI language. Without this
+// call expo-router would hide the splash as soon as navigation is ready,
+// before the copy's flame. A rejection is a build defect and is fatal:
+// RootLayout throws it (see fatalError).
 const preventAutoHide = SplashScreen.preventAutoHideAsync();
 
-/** Тап по напоминанию открывает главную. */
+/** Tapping a notification opens Home. */
 function ReminderRouting() {
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
@@ -56,7 +57,7 @@ function ReminderRouting() {
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(() => {
       if (PRAYER_FLOW.has(pathnameRef.current)) return;
-      // Настройки, открытые из идущей молитвы (выбор Библии), — тоже часть её сценария.
+      // Settings opened from an active prayer (Bible selection) are part of its flow too.
       if (pathnameRef.current === '/settings' && useSession.getState().sessionId !== null) return;
       router.replace('/');
     });
@@ -71,9 +72,9 @@ export default function RootLayout() {
   const settingsLoaded = useSettings((state) => state.loaded);
   const uiLanguage = useSettings((state) => state.uiLanguage);
 
-  // Сбой начальной загрузки (сплэш, настройки, блокировка) нельзя проглотить:
-  // без неё приложение молча висело бы на сплэше или под шторкой блокировки.
-  // Ошибка из промиса перебрасывается в рендер, откуда падает приложение.
+  // A startup failure (splash, settings, lock) must not be swallowed:
+  // otherwise the app would silently hang on the splash or behind the lock
+  // curtain. The promise error is re-thrown into render, which crashes the app.
   const [fatalError, setFatalError] = useState<unknown>(null);
   const failFatally = useCallback(
     (error: unknown) => setFatalError(() => error ?? new Error('Startup failed')),
@@ -84,25 +85,25 @@ export default function RootLayout() {
     useSettings.getState().load().catch(failFatally);
   }, [failFatally]);
 
-  // При смене языка заменяем уже сохранённый в системе текст напоминаний.
+  // On language change, replace the reminder text already stored in the system.
   useEffect(() => {
     if (!settingsLoaded) return;
     syncRemindersAsync(useSettings.getState().reminderSchedule).catch((error: unknown) => {
-      // Экрана здесь нет: предупреждение покажут настройки (useReminderSyncStatus).
+      // There is no screen here yet: settings will show the warning (useReminderSyncStatus).
       console.error('Failed to schedule prayer reminders', errorKind(error));
       recordDiagnostic('reminders_failed', { step: 'sync', place: 'startup', errorKind: errorKind(error) });
     });
   }, [settingsLoaded, uiLanguage]);
 
-  // Состояние блокировки читается отдельно от настроек и раньше них: пока оно
-  // неизвестно, LockGate держит шторку и не показывает содержимое экранов.
+  // Lock state is read separately from settings and before them: until it
+  // is known, LockGate keeps the curtain up and hides screen content.
   useEffect(() => {
     useLock.getState().load().catch(failFatally);
   }, [failFatally]);
 
-  // Тот же признак «сверху висит оверлей», по которому LockGate решает, что
-  // показывать. Он нужен и здесь: пометку для TalkBack ставит не оверлей, а
-  // скрываемый под ним контент (см. lib/a11y).
+  // The same "an overlay is on top" flag LockGate uses to decide what to
+  // show. It is needed here too: the TalkBack marker is set not by the
+  // overlay but by the content hidden beneath it (see lib/a11y).
   const lockReady = useLock((s) => s.ready);
   const locked = useLock((s) => s.locked);
   const obscured = useLock((s) => s.obscured);
@@ -120,8 +121,8 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
   });
 
-  // Приложение монтируется только после снятия нативного сплэша: его тяжёлый
-  // первый кадр не должен стать первым кадром окна (ADR-0040).
+  // The app mounts only after the native splash is hidden: its heavy first
+  // frame must not become the window's first frame (ADR-0040).
   const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
   const hideNativeSplash = useCallback(() => {
     SplashScreen.hide();
@@ -131,9 +132,9 @@ export default function RootLayout() {
   const [bootSplashHidden, setBootSplashHidden] = useState(false);
   const hideBootSplash = useCallback(() => setBootSplashHidden(true), []);
 
-  // Шрифты встроены в сборку, и их сбой — дефект сборки. Корневой layout не
-  // экспортирует ErrorBoundary, поэтому ошибка фатальна: приложение падает с
-  // отчётом о сбое, а не висит на сплэше.
+  // Fonts are bundled into the build, so a font failure is a build defect.
+  // The root layout exports no ErrorBoundary, so the error is fatal: the app
+  // crashes with a failure report instead of hanging on the splash.
   if (fontError) throw fontError;
   if (fatalError) throw fatalError;
 
@@ -156,10 +157,10 @@ function AppContent({ covered }: { covered: boolean }) {
   return (
     <>
       <ReminderRouting />
-      {/* Обёртка нужна только как адресат пометки для программ чтения с
-          экрана: оверлеи — сиблинги навигации, а не её родитель, и пометить
-          содержимое под ними больше неоткуда. Раскладку она не трогает:
-          flex: 1 и никаких стилей сверх него. */}
+      {/* The wrapper exists only as the target of the screen reader marker:
+           overlays are siblings of navigation, not its parent, so there is
+           nowhere else to mark the content beneath them. It does not affect
+           layout: flex: 1 and no styles beyond that. */}
       <ScreenUncoveredContext.Provider value={!covered && !updateVisible}>
         <View style={{ flex: 1 }} {...screenReaderHiddenProps(covered || updateVisible)}>
           <Stack
@@ -170,15 +171,15 @@ function AppContent({ covered }: { covered: boolean }) {
               animationDuration: 350,
             }}
           >
-            {/* из сессии и рефлексии нельзя выпасть случайным жестом:
-                выход — только явными кнопками (finishEarly / завершение) */}
+            {/* session and reflection must not be exited by an accidental
+                gesture: exit only via explicit buttons (finishEarly / completion) */}
             <Stack.Screen name="session" options={{ gestureEnabled: false }} />
             <Stack.Screen name="reflect" options={{ gestureEnabled: false }} />
           </Stack>
         </View>
       </ScreenUncoveredContext.Provider>
-      {/* Последним элементом, поверх всей навигации: экран блокировки и шторку
-          приватности нельзя обойти ни переходом, ни диплинком. */}
+      {/* Last element, above all navigation: the lock screen and the privacy
+          curtain must not be bypassed by navigation or deep links. */}
       <UpdateGate covered={covered} onVisibleChange={setUpdateVisible} />
       <LockGate />
     </>

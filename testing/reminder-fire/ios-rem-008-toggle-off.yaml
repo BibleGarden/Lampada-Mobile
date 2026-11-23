@@ -3,12 +3,12 @@ tags:
   - reminders
   - prepared
 ---
-# REM-008: выключение тумблера отменяет все запланированные уведомления —
-# после выключения ничего не приходит.
+# REM-008: turning the toggle off cancels all scheduled notifications —
+# nothing arrives after it is switched off.
 #
-# Предусловия: прогон ios-rem-005 (две строки времени); /tmp/rem-set-time.yaml
-# сгенерирован одной целью now+4мин для первой строки:
-# gen-rem-set-time.mjs --init <текущее первое время> HH:MM.
+# Preconditions: the ios-rem-005 run (two time rows); /tmp/rem-set-time.yaml
+# is generated with a single now+4min target for the first row:
+# gen-rem-set-time.mjs --init <current first time> HH:MM.
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
@@ -16,7 +16,7 @@ tags:
     element:
       id: "reminders-toggle"
     direction: DOWN
-# Ближайшее время запланировано, тумблер включён.
+# The nearest time is scheduled, the toggle is on.
 - tapOn:
     id: "reminders-settings-button-0"
 - assertVisible:
@@ -28,12 +28,13 @@ tags:
 - assertVisible:
     id: "reminders-toggle"
     checked: true
-# Выключили: планировщик снимает все свои уведомления.
+# Switched off: the scheduler cancels all of its notifications.
 - tapOn:
     id: "reminders-toggle"
 - assertVisible:
     id: "reminders-toggle"
     checked: false
 - openLink: "lampada://"
-# Раннер снимает экран у цели + 4 с — то же окно, в котором он фиксирует
-# положительные срабатывания REM-004/005. Баннер SpringBoard недоступен Maestro.
+# The runner captures a screenshot at target + 4 s — the same window in which
+# it records positive REM-004/005 firings. The SpringBoard banner is not
+# accessible to Maestro.

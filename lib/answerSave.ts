@@ -1,25 +1,26 @@
 import { consentAllowsTransfer, type ConsentDecision } from './privacyConsent.ts';
 
-/** manual — кнопка «Сохранить»; auto — дописывание черновика перед размышлением. */
+/** manual — the "Save" button; auto — appending the draft before reflection. */
 export type AnswerSaveMode = 'manual' | 'auto';
 
 type AnswerSave = {
   mode: AnswerSaveMode;
-  /** Есть текст или готовая расшифровка, которые могли бы уйти в запрос. */
+  /** There is text or a finished transcript that could go into the request. */
   hasAnswerContext: boolean;
   coreAiConsent: ConsentDecision;
   answerContextConsent: ConsentDecision;
-  /** Время молитвы вышло: экран сессии вот-вот сменится размышлением. */
+  /** Prayer time is over: the session screen is about to give way to reflection. */
   prayerEnded: boolean;
 };
 
 /**
- * Ответ сохраняется локально всегда: согласие answer_context управляет только
- * передачей на сервер. Раскрытие показывается после успешной записи в БД и
- * только при ручном сохранении, пока молитва идёт: автосохранение не блокирует
- * переход к размышлению, а после конца времени экран сессии размонтируется
- * вместе с окном. Нерешённое согласие спросится при следующем ручном сохранении.
- * Ошибка записи пробрасывается, и согласие тогда не спрашивается.
+ * The answer is always saved locally: answer_context consent only governs
+ * the transfer to the server. The disclosure is shown after a successful DB
+ * write, and only for a manual save while the prayer is still running:
+ * autosaving must not block the transition to reflection, and after time
+ * runs out the session screen unmounts together with the dialog. An
+ * undecided consent is asked again at the next manual save. A write error
+ * is rethrown, and consent is not asked then.
  */
 export async function saveAnswerDraft(
   { mode, hasAnswerContext, coreAiConsent, answerContextConsent, prayerEnded }: AnswerSave,
@@ -39,9 +40,9 @@ export async function saveAnswerDraft(
 }
 
 /**
- * Одно сохранение ответа за раз. Повторный вызов во время записи не начинает
- * вторую, а ждёт текущую: автосохранение перед размышлением не должно уйти
- * со страницы раньше, чем закончится уже начатое ручное сохранение.
+ * One answer save at a time. A repeated call during a save does not start a
+ * second one but awaits the current: the autosave before reflection must
+ * not leave the page before an already started manual save finishes.
  */
 export function createAnswerSaveFlight() {
   let active: Promise<void> | null = null;

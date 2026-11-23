@@ -2,8 +2,8 @@ appId: app.lampada
 tags:
   - rare
 ---
-# Избранное сохраняем, длинный отрывок выбираем по доступности раскрытия.
-# Бэкенд возвращал 429 с Retry-After 35 с; клиент ждёт и повторяет запрос.
+# Save the favorites, and pick the long passage by the availability of the expand action.
+# The backend used to return 429 with Retry-After 35 s; the client waits and retries the request.
 - launchApp:
     stopApp: true
     clearState: true

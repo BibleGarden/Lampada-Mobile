@@ -1,19 +1,19 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
-# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+# NEEDS-RUNNER: the device locale is switched between flows by run-lng.sh
+# (the order and locales are hardcoded in the script). Not part of tagged runs.
 ---
-# LNG-005: смена языка в настройках меняет хром сразу, без перезапуска.
-# Стартовый язык устройства не важен: выбор идёт по testID, проверяем украинский.
+# LNG-005: switching the language in settings updates the chrome immediately, without a restart.
+# The starting device language does not matter: selection goes by testID; we check Ukrainian.
 #
-# Язык Писания здесь не трогаем — независимость от него проверяет LNG-008.
+# The Scripture language is not touched here — independence from it is covered by LNG-008.
 - launchApp:
     stopApp: true
     clearState: true
-    # Lampada не использует геолокацию; явный список не даёт Maestro
-    # дёргать locationd (simctl privacy location) сразу после холодной
-    # перезагрузки, где locationd зависает.
+    # Lampada does not use geolocation; the explicit list keeps Maestro from
+    # poking locationd (simctl privacy location) right after a cold reboot,
+    # where locationd hangs.
     permissions:
       notifications: allow
       microphone: allow
@@ -30,7 +30,7 @@ tags:
     text: ".*Українська.*"
 - assertVisible: "НАЛАШТУВАННЯ"
 - assertVisible: "МОВА ІНТЕРФЕЙСУ"
-# Кнопка назад — по testID: её подпись переключается вслед за языком.
+# The back button is tapped by testID: its label follows the language switch.
 - tapOn:
     id: "settings-back-button"
 - assertVisible: "Почати молитву"

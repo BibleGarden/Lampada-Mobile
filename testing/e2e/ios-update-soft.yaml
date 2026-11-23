@@ -1,11 +1,11 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: stub /api/version-check с update_type=soft (run-stub-phase.sh).
-# В теговые прогоны не входит.
+# NEEDS-STUB: the stub /api/version-check with update_type=soft
+# (run-stub-phase.sh). Not included in tagged runs.
 ---
-# Баннер мягкого обновления: показывается, «позже» скрывает до конца сессии,
-# после перезапуска появляется снова.
+# Soft update banner: shown, "later" hides it until the end of the session,
+# and it reappears after a restart.
 - launchApp:
     stopApp: true
 - extendedWaitUntil:
@@ -17,19 +17,20 @@ tags:
 - assertVisible:
     id: update-later
 - takeScreenshot: UPDATE-soft-banner
-# «Позже» скрывает баннер.
+# "Later" hides the banner.
 - tapOn:
     id: update-later
 - assertNotVisible:
     id: update-soft
-# До конца сессии баннер не возвращается (сверяем настроики и домой).
+# Until the end of the session the banner does not return (check Settings and
+# Home).
 - openLink: "lampada://settings"
 - assertNotVisible:
     id: update-soft
 - openLink: "lampada://"
 - assertNotVisible:
     id: update-soft
-# Холодный старт: проверка версии повторяется, баннер снова показан.
+# Cold start: the version check repeats, the banner is shown again.
 - launchApp:
     stopApp: true
 - extendedWaitUntil:

@@ -1,6 +1,6 @@
-// Ворота готовности эмулятора: Maestro-сценарий стартует только на тихом госте.
-// Голодание CPU гостя (фоновые задачи Play Services, установка драйвера Maestro,
-// нагрузка на хосте) ломает сценарии таймаутами, похожими на ошибки приложения.
+// Emulator readiness gate: a Maestro flow starts only on a quiet guest.
+// Starving the guest CPU (Play Services background tasks, Maestro driver
+// installation, host load) breaks flows with timeouts that look like app bugs.
 import { execFile, spawn } from 'node:child_process';
 import { appendFileSync, openSync, closeSync } from 'node:fs';
 import { constants } from 'node:os';
@@ -32,7 +32,7 @@ export function readSettings(environment) {
     }
     return [key, value];
   }));
-  // Сочетания, при которых гейт не может пройти даже на простаивающем госте.
+  // Combinations where the gate cannot pass even on an idle guest.
   const quietWindow = (settings.flowSamples - 1) * settings.intervalSeconds;
   if (settings.flowTimeoutSeconds < quietWindow) {
     throw new Error(`${name('flowTimeoutSeconds')} (${settings.flowTimeoutSeconds}) is shorter than `
@@ -57,9 +57,9 @@ export function parseUptime(text) {
   return Number(match[1]);
 }
 
-// Ждёт, пока 1-минутная загрузка гостя будет ниже порога в `samples` замерах
-// подряд. По таймауту бросает ошибку с последними замерами: сценарий не
-// запускается, «тихий» пропуск запрещён.
+// Waits until the guest 1-minute load stays below the threshold for `samples`
+// consecutive readings. On timeout throws with the latest readings: the flow
+// is not started, and a "quiet" pass-through is forbidden.
 export async function waitForQuietGuest({ sample, threshold, samples, intervalMs, timeoutMs,
   now = Date.now, wait = sleep }) {
   const started = now();
@@ -95,9 +95,9 @@ async function waitUntil(description, check, deadline, intervalMs) {
   }
 }
 
-// Разовая проверка после загрузки: система загружена (sys.boot_completed
-// выставляется после запуска менеджера пакетов) и прошло окно фоновых задач
-// холодного старта. Тишину гостя проверяет гейт каждого сценария.
+// One-time check after boot: the system is up (sys.boot_completed is set after
+// the package manager starts) and the cold-start background task window has
+// passed. Each flow's gate verifies guest quietness.
 export async function waitForBootedGuest(device, settings, report) {
   const intervalMs = settings.intervalSeconds * 1000;
   const started = Date.now();
@@ -111,8 +111,8 @@ export async function waitForBootedGuest(device, settings, report) {
     + `waited=${Math.round((Date.now() - started) / 1000)}s`);
 }
 
-// Запускает команду; сигналы остановки передаются ей, чтобы Maestro не
-// продолжал управлять эмулятором после остановки прогона.
+// Spawns the command; stop signals are forwarded to it so Maestro does not
+// keep driving the emulator after the run is stopped.
 export function execute(command, output) {
   return new Promise((done, fail) => {
     const child = spawn(command[0], command.slice(1), { stdio: ['ignore', output, output] });
@@ -125,9 +125,9 @@ export function execute(command, output) {
   });
 }
 
-// Гейт перед сценарием, сам сценарий и замер после него. Код выхода — код
-// сценария; если замер после него не удался, об этом сообщается отдельно,
-// а успешный сценарий получает код 1.
+// The gate before a flow, the flow itself, and a load reading after it. The
+// exit code is the flow's; if the reading after it fails, that is reported
+// separately and a successful flow gets exit code 1.
 export async function runFlowOnQuietGuest({ flow, sample, launch, settings, report }) {
   const { load, waitedMs } = await waitForQuietGuest({ sample, threshold: settings.threshold,
     samples: settings.flowSamples, intervalMs: settings.intervalSeconds * 1000,

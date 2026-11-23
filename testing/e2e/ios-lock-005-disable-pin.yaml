@@ -2,11 +2,11 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-005: выключить защиту можно только тем, кто знает текущий код. Отмена и
-# неверный ввод защиту не снимают; после успешного снятия холодный старт
-# открывает приложение сразу.
+# LOCK-005: only someone who knows the current code can disable protection.
+# Cancelling and a wrong entry do not remove it; after a successful removal the
+# cold start opens the app straight away.
 #
-# Предусловие: включён пин 9876 (состояние после ios-lock-004).
+# Precondition: PIN 9876 enabled (state after ios-lock-004).
 - launchApp:
     stopApp: true
 - assertVisible:
@@ -29,10 +29,11 @@ tags:
       id: "lock-toggle"
     direction: DOWN
 
-# Отмена на запросе кода оставляет защиту включённой.
+# Cancelling the code prompt keeps protection enabled.
 #
-# Повторный тап по «Отмене» — обход того же поведения, что и на главной: тап,
-# пришедшийся на появление оверлея, до обработчика не доходит.
+# The second tap on "Cancel" works around the same behaviour as on the home
+# screen: a tap that lands while the overlay is appearing never reaches the
+# handler.
 - tapOn:
     id: "lock-toggle"
 - assertVisible:
@@ -52,7 +53,7 @@ tags:
 - assertVisible:
     id: "change-pin-button"
 
-# Неверный код защиту не снимает.
+# A wrong code does not disable protection.
 - tapOn:
     id: "lock-toggle"
 - assertVisible:
@@ -71,8 +72,8 @@ tags:
 - assertVisible:
     id: "pin-prompt"
 
-# Верный код снимает защиту: строка смены кода исчезает, подсказка снова про
-# то, что код можно завести.
+# The correct code removes protection: the change-PIN row disappears and the
+# hint again offers to set up a code.
 - tapOn:
     id: "pin-key-9"
 - tapOn:
@@ -88,7 +89,7 @@ tags:
 - assertNotVisible:
     id: "change-pin-button"
 
-# Холодный старт больше не спрашивает код.
+# The cold start no longer asks for the code.
 - launchApp:
     stopApp: true
 - assertVisible:

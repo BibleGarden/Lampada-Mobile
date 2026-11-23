@@ -2,9 +2,9 @@ import React from 'react';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { sc } from '../lib/theme';
 
-// Иконки из прототипа (лаконичный стиль stroke 1.7–2).
-// size задаётся в px прототипа и масштабируется под экран через sc();
-// штрих масштабируется сам вместе с viewBox.
+// Icons from the prototype (concise stroke 1.7–2 style).
+// size is in prototype px and scaled to the screen via sc();
+// the stroke scales itself along with the viewBox.
 
 type P = { size?: number; color?: string; strokeWidth?: number };
 
@@ -117,7 +117,7 @@ export const PauseIcon = ({ size = 14, color = '#e7cf95' }: P) => (
   </Svg>
 );
 
-// «в текст» — расшифровка голосовой записи
+// "to text" — voice recording transcription
 export const TextLines = ({ size = 15, color = '#a9d3bd', strokeWidth = 1.7 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
     <Path d="M4 6h16M4 12h16M4 18h9" />
@@ -137,7 +137,7 @@ export const Flag = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth = 
   </Svg>
 );
 
-// Системная иконка «Поделиться» iOS: коробка с выходящей вверх стрелкой.
+// The iOS system Share icon: a box with an arrow pointing up out of it.
 export const ShareIcon = ({ size = 15, color = 'rgba(255,255,255,.5)', strokeWidth = 1.7 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
     <Path d="M12 15V3" />

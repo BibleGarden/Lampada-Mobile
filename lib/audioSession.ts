@@ -1,6 +1,6 @@
 import { setIsAudioActiveAsync } from 'expo-audio';
 import { createAudioModeCoordinator } from './audioModeCoordinator';
 
-// Режим и активность аудиосессии Expo глобальны для процесса, поэтому
-// координатор у приложения один.
+// Expo's audio-session mode and activity are process-wide, so the app has
+// a single coordinator.
 export const audioModeCoordinator = createAudioModeCoordinator(setIsAudioActiveAsync);

@@ -1,12 +1,13 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: пейлоды жалоб принимает stub :9085 (run-stub-phase.sh или
-# вручную: npm run scripture:stub). В теговые прогоны не входит.
+# NEEDS-STUB: report payloads are accepted by the stub on :9085
+# (run-stub-phase.sh, or manually: npm run scripture:stub). Not included in
+# tagged runs.
 ---
-# RPT-001: жалоба на вопрос без комментария.
-# RPT-002: жалоба на отрывок из карточки с комментарием.
-# Предусловие: stub в режиме contentReports=ok.
+# RPT-001: reporting a question without a comment.
+# RPT-002: reporting a passage from the card with a comment.
+# Precondition: the stub in contentReports=ok mode.
 - launchApp:
     stopApp: true
     clearState: true
@@ -34,7 +35,7 @@ tags:
 - assertVisible:
     id: "session-title"
 
-# === RPT-001: вопрос без комментария ===
+# === RPT-001: question without a comment ===
 - tapOn:
     id: "question-report-button"
 - assertVisible:
@@ -49,7 +50,7 @@ tags:
 - tapOn:
     id: "content-report-done"
 
-# === RPT-002: отрывок из карточки с комментарием ===
+# === RPT-002: passage from the card with a comment ===
 - tapOn:
     id: "dock-scripture-tab"
 - extendedWaitUntil:
@@ -72,8 +73,8 @@ tags:
 - takeScreenshot: RPT-002-sent
 - tapOn:
     id: "content-report-done"
-# В полном ридере своей кнопки жалобы больше нет. Кнопка карточки остаётся
-# в дереве под шторкой, поэтому ищем только в ряду кнопок ридера.
+# The full reader no longer has its own report button. The card's button stays
+# in the tree under the sheet, so search only within the reader's button row.
 - tapOn:
     id: "scripture-read-full"
 - extendedWaitUntil:

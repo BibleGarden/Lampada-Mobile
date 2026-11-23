@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-update-hard.yaml.
+# Android version of the instrumented ios-update-hard.yaml scenario.
 - launchApp:
     stopApp: true
     permissions:

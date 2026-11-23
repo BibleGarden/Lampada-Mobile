@@ -1,6 +1,6 @@
 import type { AppStateStatic } from 'react-native';
 
-/** Обновляем календарь, пока Home открыт: при возврате из фона и в полночь. */
+/** Refreshes the calendar while Home is open: on return from the background and at midnight. */
 export function startHomeRefresh(
   appState: Pick<AppStateStatic, 'currentState' | 'addEventListener'>,
   refresh: () => void,
@@ -12,7 +12,7 @@ export function startHomeRefresh(
     refresh();
     const now = new Date();
     const midnight = new Date(now);
-    // Календарная полночь учитывает сутки длиной 23 или 25 часов при DST.
+    // Calendar midnight accounts for 23- or 25-hour days during DST.
     midnight.setHours(24, 0, 0, 0);
     timer = setTimeout(refreshAndSchedule, midnight.getTime() - now.getTime());
   };

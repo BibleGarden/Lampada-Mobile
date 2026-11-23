@@ -65,7 +65,7 @@ tags:
     id: content-report-comment
     above:
       id: inputView
-# Тап по открытой левой кромке фона, а не по его центру под карточкой.
+# Tap the open left edge of the background, not its centre under the card.
 - tapOn:
     point: "3%,10%"
     waitToSettleTimeoutMs: 500
@@ -79,8 +79,8 @@ tags:
     id: content-report-comment
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-# inputText поднимает экранную клавиатуру и при подключённой аппаратной.
-# Цифры не вызывают меню проверки орфографии при повторном тапе.
+# inputText raises the on-screen keyboard even with a hardware one attached.
+# Digits do not trigger the spell-check menu on a repeated tap.
 - inputText: "x"
 - copyTextFrom:
     id: content-report-comment

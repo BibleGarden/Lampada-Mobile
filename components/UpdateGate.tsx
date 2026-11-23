@@ -21,7 +21,7 @@ export default function UpdateGate({ covered, onVisibleChange }: {
   useEffect(() => {
     const controller = new AbortController();
     const version = Application.nativeApplicationVersion;
-    // Магазины есть только у нативных сборок; в вебе версии установки нет.
+    // Stores exist only in native builds; on web there is no install version.
     const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null;
     if (version && platform) void checkVersion(resolveApiUrl(apiPaths.versionCheck), version, platform,
       process.env.EXPO_PUBLIC_AI_PROXY_KEY, controller.signal).then((result) => {
@@ -30,8 +30,8 @@ export default function UpdateGate({ covered, onVisibleChange }: {
         setData(result.check);
         return;
       }
-      // Приложение остаётся доступным, но отказ виден в диагностике: иначе
-      // сервер без поля platform незаметно выключил бы все обновления.
+      // The app stays usable, but the refusal shows in diagnostics: otherwise
+      // a server missing the platform field would silently disable all updates.
       const { reason, status } = result;
       recordDiagnostic('version_check_ignored', status === undefined ? { reason, platform } : { reason, platform, status });
     });

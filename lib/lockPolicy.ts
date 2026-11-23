@@ -1,57 +1,58 @@
-// Чистые правила блокировки пин-кодом: длина кода, проверка ввода, окно
-// возврата из фона и разбор сохранённой конфигурации.
+// Pure PIN-lock rules: code length, input validation, the background
+// re-entry window, and parsing the stored configuration.
 //
-// Модуль намеренно не знает ни про SecureStore, ни про zustand, ни про
-// react-native: сами правила — арифметика и разбор строк, и их хочется
-// проверять юнит-тестами в обычном node, без эмулятора и моков нативных
-// модулей. Всё, что умеет хранить и шифровать, живёт в `lock.ts`, который
-// реэкспортирует эти сущности наружу.
+// The module deliberately knows nothing about SecureStore, zustand, or
+// react-native: the rules themselves are arithmetic and string parsing,
+// and we want to unit-test them in plain node, without an emulator or
+// native-module mocks. Everything that stores and encrypts lives in
+// `lock.ts`, which re-exports these entities.
 
-/** Пин-код — от четырёх до восьми цифр; длину выбирает пользователь. */
+/** The PIN is four to eight digits; the user picks the length. */
 export const PIN_MIN_LENGTH = 4;
 export const PIN_MAX_LENGTH = 8;
 
 /**
- * Длина по умолчанию — на случай, если запись длины потерялась, а хэш остался.
- * Экран разблокировки тогда покажет минимальное число точек и будет проверять
- * ввод на каждой цифре начиная с четвёртой.
+ * The default length, for when the length record is lost but the hash
+ * remains. The unlock screen then shows the minimum number of dots and
+ * validates the input at every digit from the fourth on.
  */
 export const FALLBACK_PIN_LENGTH = PIN_MIN_LENGTH;
 
 /**
- * Сколько приложение может пробыть в фоне, не запрашивая пин. Быстрое
- * «свернул — развернул» (ответить на сообщение, посмотреть время) не должно
- * превращаться в ввод кода, а через минуту телефон уже мог сменить руки.
+ * How long the app may stay in the background without asking for the PIN.
+ * A quick background-and-return (answer a message, check the time) must
+ * not turn into a code entry, while after a minute the phone could have
+ * changed hands.
  */
 export const LOCK_GRACE_MS = 60_000;
 
-/** Пин допустимой длины из одних цифр. */
+/** A PIN of a valid length made of digits only. */
 export const isValidPin = (pin: string) =>
   new RegExp(`^\\d{${PIN_MIN_LENGTH},${PIN_MAX_LENGTH}}$`).test(pin);
 
 export const clampLength = (value: number) =>
   Math.min(PIN_MAX_LENGTH, Math.max(PIN_MIN_LENGTH, value));
 
-/** Пора ли снова спрашивать пин после возвращения из фона. */
+/** Whether to ask for the PIN again after returning from the background. */
 export const shouldLockAfterBackground = (backgroundedAt: number | null, nowMs: number) =>
   backgroundedAt !== null && nowMs - backgroundedAt >= LOCK_GRACE_MS;
 
-// ---- хранимая конфигурация ----
+// ---- stored configuration ----
 
 export type LockConfig = {
   enabled: boolean;
   biometrics: boolean;
-  /** Длина сохранённого пина: столько точек показывает экран разблокировки. */
+  /** The stored PIN's length: that many dots the unlock screen shows. */
   pinLength: number;
 };
 
-/** Сырые записи защищённого хранилища: отсутствующий ключ приходит как null. */
+/** Raw secure-storage records: a missing key arrives as null. */
 export type RawLockConfig = Record<
   'enabled' | 'hash' | 'salt' | 'biometrics' | 'length',
   string | null
 >;
 
-/** Разобрать записи хранилища. Повреждённая или неполная запись = выключено. */
+/** Parse the storage records. A corrupted or incomplete record = disabled. */
 export function parseLockConfig({
   enabled,
   hash,
@@ -59,8 +60,9 @@ export function parseLockConfig({
   biometrics,
   length,
 }: RawLockConfig): LockConfig {
-  // Без соли и хэша проверить пин нечем, поэтому флаг сам по себе ничего не
-  // значит: неполная запись равнозначна выключенной защите.
+  // Without a salt and hash there is nothing to verify the PIN against, so
+  // the flag alone means nothing: an incomplete record equals a disabled
+  // protection.
   const on = enabled === '1' && !!hash && !!salt;
   const parsed = Number.parseInt(length ?? '', 10);
   return {
@@ -70,23 +72,24 @@ export function parseLockConfig({
   };
 }
 
-// ---- название биометрии ----
+// ---- biometrics naming ----
 
-/** Какой способ называть; `other` — несколько датчиков или тип неизвестен. */
+/** Which method to name; `other` — several sensors or an unknown type. */
 export type BiometryKind = 'face' | 'finger' | 'other';
 
-/** Где звучит название способа: строка настроек, системный запрос, ошибка, экран блокировки. */
+/** Where the method name appears: the settings row, system prompt, error, lock screen. */
 export type BiometryText = 'label' | 'confirm' | 'enableError' | 'orUnlock' | 'unlock';
 
-// Значения AuthenticationType из expo-local-authentication.
+// AuthenticationType values from expo-local-authentication.
 const FINGERPRINT = 1;
 const FACIAL_RECOGNITION = 2;
 
 /**
- * Способ по типам, которые сообщила система. На iOS датчик один. Android
- * перечисляет аппаратные возможности, а системный запрос (уровень `weak`)
- * сам выбирает среди зарегистрированных образцов, поэтому конкретное название
- * верно, только когда тип ровно один; иначе — общее слово, как у самого Android.
+ * The method derived from the types the system reported. iOS has a single
+ * sensor. Android enumerates hardware capabilities while the system prompt
+ * (`weak` class) picks among the enrolled samples itself, so a specific
+ * name is correct only when there is exactly one type; otherwise a
+ * generic word, as Android itself uses.
  */
 export function biometryKind(platform: string, types: readonly number[]): BiometryKind {
   if (platform === 'ios') {
@@ -108,10 +111,10 @@ const APPLE_TEMPLATES: Record<Exclude<BiometryText, 'label'>, string> = {
 };
 
 /**
- * Текст про биометрию. Face ID и Touch ID — несклоняемые названия Apple и
- * подставляются в общий шаблон только на iOS. На Android у каждого способа
- * своя готовая фраза: «отпечаток пальца» в шаблоне «Войти через {name}»
- * не согласуется по падежу.
+ * Biometrics text. Face ID and Touch ID are indeclinable Apple names and
+ * are substituted into the shared template on iOS only. On Android each
+ * method has its own ready-made phrase: a "fingerprint" substituted into
+ * the "Sign in with {name}" template would not inflect correctly.
  */
 export function biometryText(
   platform: string, kind: BiometryKind, text: BiometryText,

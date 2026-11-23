@@ -8,10 +8,10 @@ import {
 } from '../../lib/keyboardGeometry';
 import { KeyboardFramesContext, KeyboardLayoutContext } from '../../lib/useKeyboardLayout';
 
-// Резерв под клавиатуру: состояние даёт классификатор React Native, кадры
-// анимации — Keyboard Controller (reservedKeyboardHeight). Цель — резерв, к
-// которому идёт текущая анимация: высоту назначения Keyboard Controller
-// сообщает в её начале.
+// Keyboard reserve: the state comes from React Native's classifier, animation
+// frames from Keyboard Controller (reservedKeyboardHeight). The target is the
+// reserve the current animation is heading to: Keyboard Controller reports the
+// destination height at its start.
 function KeyboardReservation({ kind, children }: React.PropsWithChildren<{ kind: KeyboardLayout['kind'] }>) {
   const { height } = useReanimatedKeyboardAnimation();
   const moving = useSharedValue(false);
@@ -20,7 +20,7 @@ function KeyboardReservation({ kind, children }: React.PropsWithChildren<{ kind:
     onStart: (event) => { 'worklet'; moving.value = true; destination.value = event.height; },
     onEnd: (event) => { 'worklet'; moving.value = false; destination.value = event.height; },
   }, []);
-  // height в Keyboard Controller отрицательна: это сдвиг вверх.
+  // height in Keyboard Controller is negative: it is an upward shift.
   const reserved = useDerivedValue(() => reservedKeyboardHeight(kind, moving.value, -height.value), [kind]);
   const target = useDerivedValue(() => reservedKeyboardHeight(kind, moving.value, destination.value), [kind]);
   const frames = useMemo(() => ({ reserved, target }), [reserved, target]);
@@ -57,9 +57,9 @@ export default function KeyboardSystemProvider({ children }: React.PropsWithChil
     return () => subscriptions.forEach((subscription) => subscription.remove());
   }, []);
 
-  // На iPad плавающая панель может быть шире окна Stage Manager, но она
-  // всё равно уже системной закреплённой клавиатуры текущего дисплея.
-  // Android ширину не сравнивает (keyboardLayoutFor).
+  // On iPad the floating panel can be wider than the Stage Manager window, but
+  // it is still narrower than the current display's docked system keyboard.
+  // Android does not compare widths (keyboardLayoutFor).
   const dockedWidth = Platform.OS === 'ios' ? Dimensions.get('screen').width : null;
   const layout = useMemo(() => keyboardLayoutFor(state, dockedWidth), [state, dockedWidth]);
   return (

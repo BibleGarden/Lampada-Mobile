@@ -3,12 +3,12 @@ tags:
   - reminders
   - prepared
 ---
-# REM-005: несколько времён в правиле — строка расписания читается корректно,
-# уведомление приходит на каждое установленное время.
+# REM-005: several times in one rule — the schedule row renders correctly,
+# and a notification fires for each configured time.
 #
-# Предусловия: прогон ios-rem-fire завершён (в правиле одна строка времени,
-# начальное время известно); /tmp/rem-set-time.yaml сгенерирован двумя целями
-# now+4мин и now+9мин: gen-rem-set-time.mjs --init <текущее> HH:MM HH:MM.
+# Preconditions: the ios-rem-fire run has completed (the rule has one time row,
+# the initial time is known); /tmp/rem-set-time.yaml is generated with two
+# targets, now+4min and now+9min: gen-rem-set-time.mjs --init <current> HH:MM HH:MM.
 - launchApp:
     stopApp: true
 - openLink: "lampada://settings"
@@ -26,10 +26,10 @@ tags:
     id: "reminders-editor-done"
 - waitForAnimationToEnd:
     timeout: 5000
-# Строка расписания показывает оба времени (значения через -e REM_T1/REM_T2).
+# The schedule row shows both times (values passed via -e REM_T1/REM_T2).
 - assertVisible: ".*${REM_T1}.*"
 - assertVisible: ".*${REM_T2}.*"
 - openLink: "lampada://"
 - assertVisible:
     id: "start-prayer-button"
-# Срабатывания на оба времени фиксирует run-rem-fire.sh скриншотами.
+# Firings at both times are captured by run-rem-fire.sh with screenshots.

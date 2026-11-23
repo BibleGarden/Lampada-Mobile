@@ -2,12 +2,12 @@ appId: twinkler
 tags:
   - main
 ---
-# LOCK-001: пока пользователь не включил защиту, ни один экран не ведёт себя
-# иначе. Проверяется холодный старт и пин-код в секции «Конфиденциальность».
+# LOCK-001: until the user enables protection, no screen behaves differently.
+# Checks the cold start and the PIN item in the "Privacy" section.
 #
-# Ключи защиты лежат в Keychain, а не в контейнере приложения, и `clearState`
-# их не стирает. Сценарий рассчитан на установку, где пин ещё не включали, либо
-# на запуск после ios-lock-005 (отключение защиты).
+# Protection keys live in the Keychain rather than the app container, and
+# `clearState` does not wipe them. The scenario targets an install where the
+# PIN has never been enabled, or a run after ios-lock-005 (protection disabled).
 - launchApp:
     stopApp: true
     clearState: true

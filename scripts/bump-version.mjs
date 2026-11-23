@@ -1,9 +1,9 @@
 import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-// release — сборка для стора: следующая минорная версия без патча (1.1.3 -> 1.2);
-// keep — вторая платформа того же релиза: версия не меняется и должна быть магазинной (1.2);
-// test — локальная или внутренняя сборка: следующий патч текущего релиза (1.2 -> 1.2.1).
+// release — a store build: the next minor version without a patch (1.1.3 -> 1.2);
+// keep — the second platform of the same release: the version is unchanged and must be the store one (1.2);
+// test — a local or internal build: the next patch of the current release (1.2 -> 1.2.1).
 const mode = process.argv[2];
 if (!['release', 'keep', 'test'].includes(mode)) throw new Error('Usage: bump-version.mjs release | keep | test');
 

@@ -10,8 +10,8 @@ type Props = {
   questionRef?: React.Ref<Text>;
 };
 
-// Вопрос, на который отвечает молящийся: в шторке ответа и в шторке записей,
-// чтобы при голосовом ответе вопрос оставался перед глазами.
+// The question the person praying answers: shown in the answer sheet and the
+// recordings sheet, so the question stays in view during a voice answer.
 export default function QuestionHeader({ question, testID, questionRef }: Props) {
   const { t } = useI18n();
   const styles = useStyles(stylesFactory);

@@ -47,7 +47,7 @@ tags:
     retryTapIfNoChange: false
 - assertVisible:
     id: music-playing
-# Пустой список записей сразу начинает запись.
+# An empty recordings list starts recording immediately.
 - tapOn:
     id: dock-answer-button
     waitToSettleTimeoutMs: 500
@@ -60,8 +60,8 @@ tags:
     timeout: 2500
 - assertVisible:
     id: recordings-stop-button
-# Остановка разрешена не раньше чем через 1,5 с записи: ждём двух секунд
-# на таймере, иначе нажатие без повтора может прийти слишком рано.
+# Stopping is allowed no earlier than 1.5 s into the recording: wait for a
+# two-second timer, otherwise a tap without retry may land too early.
 - extendedWaitUntil:
     visible:
       id: recording-elapsed
@@ -78,7 +78,7 @@ tags:
     id: recordings-close-button
     waitToSettleTimeoutMs: 500
     retryTapIfNoChange: false
-# Несохранённая запись: первое нажатие «Отмена» просит подтверждения.
+# Unsaved recording: the first "Cancel" tap asks for confirmation.
 - tapOn:
     id: answer-cancel-button
     waitToSettleTimeoutMs: 500

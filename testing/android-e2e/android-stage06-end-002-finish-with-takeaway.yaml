@@ -35,19 +35,20 @@ tags:
     id: "session-finish-button"
 - assertVisible:
     id: "reflect-kicker"
-# по testID, а не по точке: на iPhone SE в 47% высоты лежит вопрос, а не поле
+# By testID, not by coordinates: on iPhone SE the question sits at 47% height, not the field
 - tapOn:
     id: "reflection-input"
 - inputText: "END-002 вывод молитвы"
-# Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
-# Закрываем клавиатуру тапом вне поля после ввода Unicode.
+# The «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» kicker (screens.reflect.before) is hidden while
+# the keyboard is open.
+# Dismiss the keyboard by tapping outside the field after the Unicode input.
 - runFlow: helpers/dismiss-keyboard.yaml
 - assertVisible:
     id: "reflect-complete-button"
 - takeScreenshot: END-002-reflect-filled
 - tapOn:
     id: "reflect-complete-button"
-# Остаточный риск: tapOn ждёт успокоения экрана, и долгий переход может съесть часть 4-секундного окна уведомления.
+# Residual risk: tapOn waits for the screen to settle, and a slow transition may eat into the 4-second notice window.
 - assertVisible:
     id: "prayer-saved-notice"
 - assertNotVisible:

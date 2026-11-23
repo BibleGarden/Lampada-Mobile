@@ -80,14 +80,14 @@ const RECORDING_OPTIONS = {
 
 type Props = {
   sheetRef: React.RefObject<BottomSheet | null>;
-  /** Единственный способ открыть шторку: черновик готовится ДО анимации,
-   * иначе на открытии мелькает контент прошлого вопроса */
+  /** The only way to open the sheet: the draft is prepared BEFORE the
+   * animation, otherwise the previous question's content flashes on open */
   openRef: React.MutableRefObject<(() => void) | null>;
-  /** Сессия зовёт это перед уходом на рефлексию: дописать открытый черновик */
+  /** The session calls this before moving on to reflection: flush the open draft */
   flushRef?: React.MutableRefObject<(() => Promise<void>) | null>;
-  /** Завершение сессии ждёт закрытия ответа, включая остановку записи. */
+  /** Session completion waits for the answer sheet to close, including stopping any recording. */
   onOpenChange?: (open: boolean) => void;
-  /** Музыка сессии уступает аудиофокус записи и прослушиванию черновика. */
+  /** Session music yields the audio focus to recording and draft playback. */
   onAudioBusyChange?: (busy: boolean) => void;
 };
 
@@ -104,11 +104,11 @@ const LIMIT_CUE_PLAYBACK_MODE = {
   interruptionMode: 'mixWithOthers' as const,
 };
 
-// Шторка ответа: текст ответа и счётчик голосовых записей. Сами записи живут
-// в отдельной шторке поверх (RecordingsSheet). Открывается на текущем вопросе,
-// черновик считывается из сохранённого ответа.
-// Экран сессии перерисовывается каждую секунду ради таймера. Шторке это не
-// нужно: она обновляется от своих props (стабильных) и подписок на store.
+// Answer sheet: the answer text and the voice recording counter. The
+// recordings themselves live in a separate sheet on top (RecordingsSheet).
+// Opens on the current question; the draft is loaded from the saved answer.
+// The session screen re-renders every second for its timer. The sheet does not
+// need that: it updates from its own (stable) props and store subscriptions.
 export default React.memo(AnswerSheet);
 
 function AnswerSheet({
@@ -123,7 +123,7 @@ function AnswerSheet({
   const limitLabel = `${limitDisplay.count} ${t(limitDisplay.unitKey)}`;
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  // подписка только на нужное — не ререндерим шторку от тика таймера
+  // subscribe only to what is needed — no re-rendering the sheet on timer ticks
   const questions = useSession((st) => st.questions);
   const qIndex = useSession((st) => st.qIndex);
   const saveAnswerToStore = useSession((st) => st.saveAnswer);
@@ -131,7 +131,7 @@ function AnswerSheet({
   const answerInputRef = useRef<React.ComponentRef<typeof KeyboardSheetTextInput>>(null);
   const [recs, setRecs] = useState<RecordingDraft[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  // Расшифровка показывается свёрнутой — три строки; раскрытая читается целиком.
+  // Transcripts render collapsed to three lines; an expanded one is read in full.
   const [expandedTranscripts, setExpandedTranscripts] = useState<Record<number, boolean>>({});
   const [recordingsSheetOpen, setRecordingsSheetOpen] = useState(false);
   const recSheetRef = useRef<BottomSheet | null>(null);
@@ -147,20 +147,20 @@ function AnswerSheet({
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const openSheetRef = useRef(false); // фактическое состояние шторки (для слушателей клавиатуры)
+  const openSheetRef = useRef(false); // actual sheet state (for keyboard listeners)
   const [saveFlight] = useState(createAnswerSaveFlight);
   const recsRef = useRef<RecordingDraft[]>([]);
   const pendingTranscriptions = useRef(
     new Map<number, { controller: AbortController; promise: Promise<void> }>(),
   );
   const pendingConsentRecording = useRef<RecordingDraft | null>(null);
-  // Не даём keyboardDidHide вернуть шторку на 62% после старта записи.
+  // Keep keyboardDidHide from snapping the sheet back to 62% once recording starts.
   const recordingOverlayActiveRef = useRef(false);
-  // Только эти файлы принадлежат текущему несохранённому черновику. Записи,
-  // загруженные из сохранённого ответа, нельзя удалять при отмене редактирования.
+  // Only these files belong to the current unsaved draft. Recordings loaded
+  // from the saved answer must not be deleted when editing is cancelled.
   const unsavedRecordingUris = useRef(new Set<string>());
-  // qIndex фиксируется при открытии шторки: пока человек пишет, индекс в store
-  // может уехать (навигация, генерация) — ответ должен лечь под свой вопрос
+  // qIndex is captured when the sheet opens: while the person writes, the store
+  // index may move (navigation, generation) — the answer must land under its own question
   const answerIndexRef = useRef(0);
   const recorderErrorRef = useRef<string | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
@@ -189,8 +189,8 @@ function AnswerSheet({
     return lease?.release() ?? Promise.resolve();
   };
   const recordingSheetOpenRef = useRef(false);
-  // Нативный recorderState обновляется с задержкой и не подходит как mutex.
-  // Pure coordinator синхронно держит фазу, state только отражает её в UI.
+  // Native recorderState updates with a delay and cannot serve as a mutex.
+  // The pure coordinator holds the phase synchronously; state only mirrors it in the UI.
   const recordingOperationRef = useRef<ReturnType<typeof createRecordingOperation> | null>(null);
   if (!recordingOperationRef.current) {
     recordingOperationRef.current = createRecordingOperation(setRecordingPhase);
@@ -234,8 +234,8 @@ function AnswerSheet({
   const limitCueOperation = limitCueOperationRef.current;
   const limitCueCompletionRef = useRef<(() => void) | null>(null);
   const limitCueActiveRef = useRef(false);
-  // Флаг шторки выводится из её собственных источников: запоздалое завершение
-  // одного из них не снимает занятость, которую держит запись или другой звук.
+  // The sheet's busy flag derives from its own sources: a late completion of
+  // one of them must not clear busyness held by a recording or other audio.
   const releaseAudioBusyIfIdle = () => {
     if (isAnswerAudioIdle({
       recordingPhase: recordingOperation.getPhase(),
@@ -267,7 +267,7 @@ function AnswerSheet({
       await playback.promise;
     } finally {
       limitCueCompletionRef.current = null;
-      // Отменённый сигнал уже сбросил флаг; новый сигнал держит свой.
+      // A cancelled cue has already reset the flag; a new cue holds its own.
       if (limitCueOperation.isCurrent(generation)) limitCueActiveRef.current = false;
       if (nativeAudioMountedRef.current) limitCuePlayer.pause();
       await limitCueOperation.complete(generation);
@@ -275,15 +275,15 @@ function AnswerSheet({
     }
   };
 
-  // Вторая точка — вся высота под статус-баром (topInset): на неё шторку
-  // поднимает эффект открытой клавиатуры ниже, чтобы поле ввода и кнопки
-  // остались видны. Высоту тела держит KeyboardSheet.
+  // The second snap point is the full height below the status bar (topInset):
+  // the keyboard effect below raises the sheet there so the input field and
+  // buttons stay visible. KeyboardSheet owns the body height.
   const [open, setOpen] = useState(false);
   const snapPoints = useMemo(() => [`${REST_SNAP_FRACTION * 100}%`, '100%'], []);
   const questionRef = useRef<Text>(null);
 
-  // Экран под шторкой скрыт от программ чтения с экрана, и фокус с кнопки
-  // «Ответить» уходит в никуда — ставим его на вопрос.
+  // The screen behind the sheet is hidden from screen readers, and focus from
+  // the "Answer" button would go nowhere — move it to the question.
   useEffect(() => {
     if (open && questionRef.current) AccessibilityInfo.sendAccessibilityEvent(questionRef.current, 'focus');
   }, [open]);
@@ -293,11 +293,11 @@ function AnswerSheet({
   const [inputFocused, setInputFocused] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const landscapeTablet = isTablet() && windowWidth > windowHeight;
-  // Точка, которую требует клавиатура (null — решает человек).
+  // The snap point the keyboard requires (null — the person decides).
   const keyboardSnap = useRef<KeyboardSnap>(null);
-  // Человек держит ручку шторки (касание ещё не отпущено и не стало жестом).
+  // The person is holding the sheet handle (touch not yet released or turned into a gesture).
   const handlePressed = useRef(false);
-  // Непрерывный индекс шторки от Gorhom: целое значение — шторка стоит.
+  // Continuous sheet index from Gorhom: an integer value means the sheet is settled.
   const sheetIndex = useSharedValue(-1);
 
   const updateRecs = useCallback(
@@ -391,9 +391,9 @@ function AnswerSheet({
     setExpandedTranscripts((current) => ({ ...current, [id]: !current[id] }));
   }, []);
 
-  // Единственный способ поправить распознанное: перенести в ответ и править там.
-  // Шторку записей при этом закрываем — иначе текст ложится в поле за ней и
-  // непонятно, сработало ли действие.
+  // The only way to edit a transcript is to move it into the answer and edit
+  // it there. The recordings sheet closes for this — otherwise the text lands
+  // in the field behind it and it is unclear whether the action worked.
   const appendTranscriptToAnswer = useCallback((transcript: string) => {
     const addition = transcript.trim();
     if (!addition) return;
@@ -402,8 +402,8 @@ function AnswerSheet({
     recSheetRef.current?.close();
   }, []);
 
-  // черновик текущего вопроса подтягивается ДО показа шторки: если делать
-  // это в onChange, на открытии успевает мелькнуть контент прошлого вопроса
+  // the current question's draft is loaded BEFORE the sheet is shown: loading
+  // it in onChange lets the previous question's content flash on open
   const handleOpen = useCallback(() => {
     openSheetRef.current = true;
     onOpenChange?.(true);
@@ -437,7 +437,7 @@ function AnswerSheet({
   useEffect(() => {
     nativeAudioMountedRef.current = true;
     return () => {
-      // Expo уже мог освободить shared objects до cleanup этого эффекта.
+      // Expo may have already released shared objects before this effect's cleanup.
       nativeAudioMountedRef.current = false;
       recordingSheetOpenRef.current = false;
       cancelDraftPlayback();
@@ -448,13 +448,13 @@ function AnswerSheet({
       abortAllTranscriptions();
       const phase = recordingOperation.getPhase();
       if (phase === 'recording') {
-        // useAudioRecorder сам освобождает нативный recorder при unmount.
+        // useAudioRecorder releases the native recorder itself on unmount.
         recordingAudioModeLeaseRef.current?.release();
         recordingAudioModeLeaseRef.current = null;
         observeRelease(releaseRecordingSession());
         onAudioBusyChange?.(false);
       } else if (phase === 'stopping') {
-        // Незавершённый stop сам освободит lease после ответа нативного слоя.
+        // An unfinished stop releases the lease itself once the native layer responds.
         const pendingStop = recordingOperation.getPendingStop();
         const releaseAfterUnmount = () => {
           recordingAudioModeLeaseRef.current?.release();
@@ -474,14 +474,14 @@ function AnswerSheet({
     };
   }, [abortAllTranscriptions, onAudioBusyChange, recordingOperation]);
 
-  // Snap — политика формы, а не геометрия (см. keyboardSnapTarget). Каждая
-  // смена клавиатуры или фокуса запрашивает точку цели (reconcileKeyboardSnap),
-  // а полная высота проверяется снова при каждой остановке шторки
-  // (settledKeyboardSnapRequest). Gorhom вызывает onChange только при смене
-  // индекса, поэтому остановка видна по animatedIndex: он становится целым
-  // после движения. Закрывающаяся клавиатура полной высоты уже не требует
-  // (keyboardShowing): шторка опускается вместе с ней. Высоту тела держит
-  // KeyboardSheet. Синхронный флаг закрытия защищает сохранение от позднего didHide.
+  // Snap is the form's policy, not geometry (see keyboardSnapTarget). Every
+  // keyboard or focus change requests a target point (reconcileKeyboardSnap),
+  // and full height is rechecked each time the sheet settles
+  // (settledKeyboardSnapRequest). Gorhom fires onChange only when the index
+  // changes, so settling is observed via animatedIndex: it becomes an integer
+  // after motion. A closing keyboard no longer requires full height
+  // (keyboardShowing): the sheet lowers together with it. KeyboardSheet owns
+  // the body height. The synchronous close flag protects saving from a late didHide.
   const requestSnap = useCallback((step: { request: number | null; target: KeyboardSnap }) => {
     keyboardSnap.current = step.target;
     if (step.request !== null) sheetRef.current?.snapToIndex(step.request);
@@ -521,10 +521,10 @@ function AnswerSheet({
     if (!attempt) return;
     cancelDraftPlayback();
     observeRelease(cancelLimitCue());
-    // Оверлей записи не должен остаться под открытой клавиатурой.
+    // The recording overlay must not remain under an open keyboard.
     dismissKeyboard();
-    // Сначала синхронно останавливаем музыку/черновик, затем меняем глобальный
-    // audio mode: иначе музыка может попасть в начало голосовой записи.
+    // First stop music/draft playback synchronously, then change the global
+    // audio mode: otherwise music can leak into the start of the voice recording.
     player.pause();
     setPlayingId(null);
     setPausedId(null);
@@ -545,7 +545,7 @@ function AnswerSheet({
         const file = new File(uri);
         if (file.exists) file.delete();
       } catch {
-        // Отмена старта важнее best-effort очистки пустого файла.
+        // Cancelling the start matters more than best-effort cleanup of an empty file.
       }
     };
     const startIsCurrent = () =>
@@ -567,17 +567,17 @@ function AnswerSheet({
       recordingAudioModeLeaseRef.current = audioModeLease;
       audioModeEnabled = true;
       if (!startIsCurrent()) return;
-      // пресет обязателен: без options рекордер переиспользует один URL
-      // и каждая новая запись затирает файл предыдущей
+      // the preset is mandatory: without options the recorder reuses one URL
+      // and each new recording overwrites the previous file
       await recorder.prepareToRecordAsync(RECORDING_OPTIONS);
       prepared = true;
       if (!startIsCurrent()) {
         if (!nativeAudioMountedRef.current) {
-          nativeStopConfirmed = true; // Нативный recorder уже удалён хуком Expo.
+          nativeStopConfirmed = true; // The native recorder was already deleted by the Expo hook.
           return;
         }
-        // Android не разрешает повторный prepare, пока предыдущий MediaRecorder
-        // не reset. stop() после prepare освобождает его даже без record().
+        // Android forbids a repeat prepare until the previous MediaRecorder is
+        // reset. stop() after prepare releases it even without record().
         await recorder.stop();
         nativeStopConfirmed = true;
         discardPreparedFile();
@@ -588,8 +588,8 @@ function AnswerSheet({
       // reset the state/duration of the new recording and corrupt its stop.
       startPreparedRecording(recorder);
       recordingStartedAtRef.current = Date.now();
-      // Шторку могли программно закрыть между последним await и record().
-      // Тогда немедленно гасим нативную запись и не создаём черновик.
+      // The sheet may have been closed programmatically between the last await
+      // and record(). Then kill the native recording immediately and create no draft.
       if (!startIsCurrent()) {
         if (!nativeAudioMountedRef.current) {
           nativeStopConfirmed = true;
@@ -603,7 +603,7 @@ function AnswerSheet({
             const cancelledFile = new File(cancelledUri);
             if (cancelledFile.exists) cancelledFile.delete();
           } catch {
-            // Отмена старта важнее best-effort очистки временного файла.
+            // Cancelling the start matters more than best-effort cleanup of a temp file.
           }
         }
         return;
@@ -619,30 +619,30 @@ function AnswerSheet({
       );
       setAudioError('components.answers.startFailed');
     } finally {
-      // После успешного старта режим вернёт stopRecording. Во всех остальных
-      // исходах (отказ, ошибка, dismiss) восстанавливаем его здесь.
+      // After a successful start, stopRecording restores the mode. In every
+      // other outcome (denial, error, dismiss) restore it here.
       try {
         if (!started) {
-          // Ошибка могла случиться после успешного prepare, но до record().
-          // Освобождаем подготовленный Android-recorder для следующей попытки.
+          // The error may have happened after a successful prepare but before
+          // record(). Release the prepared Android recorder for the next attempt.
           if (prepared && !nativeStopConfirmed) {
             if (!nativeAudioMountedRef.current) {
-              nativeStopConfirmed = true; // Expo освободил recorder при unmount.
+              nativeStopConfirmed = true; // Expo released the recorder on unmount.
             } else {
               try {
                 await recorder.stop();
                 nativeStopConfirmed = true;
                 discardPreparedFile();
               } catch {
-                // Без подтверждённого stop lease остаётся активным: playback mode
-                // на iOS мог бы оборвать всё ещё живой нативный recorder.
+                // Without a confirmed stop the lease stays active: playback mode
+                // on iOS could cut off a native recorder that is still alive.
                 nativeCleanupUncertain = true;
               }
             }
           }
           if (nativeCleanupUncertain && attempt.recoverAsRecording()) {
-            // Не возвращаем idle при неизвестном нативном состоянии. Показываем
-            // управление stop снова и удерживаем recording lease/audio busy.
+            // Do not go idle with an unknown native state. Show the stop
+            // controls again and keep the recording lease/audio busy.
             started = true;
             recordingSheetOpenRef.current = true;
             recordingOverlayActiveRef.current = true;
@@ -670,7 +670,7 @@ function AnswerSheet({
           }
         }
       } finally {
-        // Новому start нельзя вклиниться раньше, чем старый вернул audio mode.
+        // A new start must not slip in before the old one has returned the audio mode.
         attempt.finish();
         if (!started) {
           releaseAudioBusyIfIdle();
@@ -679,8 +679,8 @@ function AnswerSheet({
     }
   };
 
-  // Микрофон в шторке ответа ведёт в записи. Пустой список — сразу пишем:
-  // человек нажал микрофон, чтобы говорить, а не чтобы смотреть на пустоту.
+  // The answer sheet's mic leads to the recordings. With an empty list we
+  // record right away: the person tapped the mic to speak, not to stare at emptiness.
   const openRecordings = () => {
     answerInputRef.current?.blur();
     recordingsSheetGenerationRef.current += 1;
@@ -746,13 +746,13 @@ function AnswerSheet({
         error instanceof Error ? error.message : 'unknown error',
       );
       setAudioError('components.answers.saveFailed');
-      // Исключение stop не доказывает, что нативный recorder остановился.
-      // Не удаляем его URI и оставляем фазу recording для видимого retry.
+      // A stop exception does not prove the native recorder stopped. Keep its
+      // URI and the recording phase for a visible retry.
       throw error;
     } finally {
-      // Ошибка native stop не подтверждает остановку. В таком случае сохраняем
-      // аудиофокус и оверлей до успешной повторной попытки, чтобы музыка не
-      // возобновилась поверх потенциально продолжающейся записи.
+      // A native stop error does not confirm the stop. In that case keep the
+      // audio focus and overlay until a successful retry, so music does not
+      // resume over a potentially ongoing recording.
       if (nativeStopped) {
         recordingStartedAtRef.current = null;
         recordingOverlayActiveRef.current = false;
@@ -772,8 +772,8 @@ function AnswerSheet({
   };
 
   const stopRecording = (keepAudioBusy = false): Promise<RecordingDraft | null> => {
-    // Все конкурирующие вызовы получают одну операцию. Поэтому второй catch
-    // не может удалить файл, уже сохранённый первым stop.
+    // All competing calls get the same operation. So the second catch cannot
+    // delete a file already saved by the first stop.
     return recordingOperation.runStop((confirm) =>
       performStopRecording(confirm, keepAudioBusy),
     ).catch(() => null);
@@ -809,7 +809,7 @@ function AnswerSheet({
     return true;
   };
 
-  // Нативный счётчик нужен только во время записи; итоговую длину берём из файла.
+  // The native counter is only needed while recording; the final length comes from the file.
   const getRecordedMillis = useCallback(() => recorder.getStatus().durationMillis, [recorder]);
 
   const recordingLimit = useRecordingLimit({
@@ -891,9 +891,9 @@ function AnswerSheet({
             }
             releaseAudioBusyIfIdle();
           });
-          // Android молча игнорирует play() при выключенной аудиосессии: черновик
-          // не должен остаться «играющим». Таймер снимается вместе со слушателем
-          // при любой отмене, в том числе при unmount (ADR-0036).
+          // Android silently ignores play() when the audio session is off: the
+          // draft must not stay stuck as "playing". The timer is removed together
+          // with the listener on any cancellation, including unmount (ADR-0036).
           const cancelStartWatch = watchNativePlaybackStart({
             readStatus: () => player.currentStatus,
             onFailed: (reason, status) => {
@@ -942,20 +942,20 @@ function AnswerSheet({
     observeRelease(cancelLimitCue());
     cancelDraftPlayback();
     player.pause();
-    // Активную запись снимет её собственный stop ниже.
+    // An active recording is cleared by its own stop below.
     releaseAudioBusyIfIdle();
     setRecordingsSheetOpen(false);
     setPausedId(null);
     recordingSheetOpenRef.current = false;
-    // Незавершённый start после следующего await увидит новый token и не
-    // сможет включить микрофон за закрытой шторкой.
+    // An unfinished start will see the new token after the next await and
+    // cannot enable the mic behind the closed sheet.
     recordingOperation.cancelStart();
     setConfirmDeleteId(null);
     if (recordingOperation.getPhase() === 'recording') {
       void stopRecording().then(() => {
         if (recordingOperation.getPhase() !== 'recording') return;
-        // Нативный stop не подтвердился: возвращаем управление микрофоном,
-        // чтобы запись не осталась скрытой за закрытой шторкой.
+        // Native stop was not confirmed: bring back the mic controls so the
+        // recording does not stay hidden behind the closed sheet.
         recordingSheetOpenRef.current = true;
         setRecordingsSheetOpen(true);
         recSheetRef.current?.snapToIndex(0);
@@ -970,7 +970,7 @@ function AnswerSheet({
         const file = new File(uri);
         if (file.exists) file.delete();
       } catch {
-        // Отмена ответа не должна ломаться, если iOS уже очистила файл.
+        // Cancelling the answer must not break if iOS has already cleaned up the file.
       }
     }
     unsavedRecordingUris.current.clear();
@@ -995,7 +995,7 @@ function AnswerSheet({
           const file = new File(removed.uri);
           if (file.exists) file.delete();
         } catch {
-          // Удаление из списка должно сработать, даже если файл уже недоступен.
+          // Removal from the list must work even if the file is already unavailable.
         }
       }
       updateRecs((current) => current.filter((r) => r.id !== id));
@@ -1006,17 +1006,17 @@ function AnswerSheet({
     confirmTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
   };
 
-  // Повторный вызов во время записи ждёт её, а не пишет второй раз.
+  // A repeated call during a recording waits for it instead of recording again.
   const save = (mode: AnswerSaveMode) => saveFlight.run(() => runSave(mode));
 
   const runSave = async (mode: AnswerSaveMode) => {
     setSaving(true);
     try {
-      // Снимаем фокус до окна согласия: при его закрытии iOS иначе может
-      // вернуть клавиатуру уже поверх закрытой шторки ответа.
+      // Blur before the consent dialog: when it closes, iOS might otherwise
+      // restore the keyboard above the already-closed answer sheet.
       answerInputRef.current?.blur();
       dismissKeyboard();
-      // активная запись не должна молча продолжаться после сохранения
+      // an active recording must not silently continue after saving
       if (
         recordingOperation.getPhase() === 'recording' ||
         recordingOperation.getPhase() === 'stopping'
@@ -1043,17 +1043,18 @@ function AnswerSheet({
           () => setAnswerConsentOpen(true),
         );
       } catch (error) {
-        // Шторка с черновиком остаётся открытой: ответ не считается сохранённым.
+        // The draft sheet stays open: the answer is not considered saved.
         recordDiagnostic('answer_save_failed', { errorKind: errorKind(error) });
         Alert.alert(t('components.answers.answerSaveFailed'), t('screens.retryMessage'), [
           { text: t('screens.understood') },
         ]);
         return;
       }
-      // После сохранения файлы принадлежат ответу и больше не являются черновиком.
+      // After saving, the files belong to the answer and are no longer a draft.
       unsavedRecordingUris.current.clear();
-      // Флаг снимаем до dismiss: willHide может вернуть snap, пока close() идёт.
-      // и слушатель вернул бы шторку на нижнюю точку вместо закрытия
+      // Clear the flag before dismiss: willHide may request a snap while
+      // close() is still running, and the listener would return the sheet to
+      // the lower snap point instead of closing it
       openSheetRef.current = false;
       dismissKeyboard();
       sheetRef.current?.close();
@@ -1068,7 +1069,7 @@ function AnswerSheet({
     setAnswerConsentOpen(false);
   };
 
-  // «Отмена» с подтверждением: несохранённый контент не выбрасываем молча
+  // "Cancel" asks for confirmation: unsaved content is never discarded silently
   const requestClose = () => {
     if (saveFlight.isActive()) return;
     const hasContent = !!text.trim() || recs.length > 0;
@@ -1077,20 +1078,20 @@ function AnswerSheet({
       setConfirmCancel(false);
       abortAllTranscriptions();
       discardUnsavedRecordings();
-      openSheetRef.current = false; // см. комментарий в save()
+      openSheetRef.current = false; // see the comment in save()
       dismissKeyboard();
       sheetRef.current?.close();
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // смена подписи на кнопке под фокусом сама не озвучивается
+    // a label change on the focused button is not announced on its own
     AccessibilityInfo.announceForAccessibility(t('components.answers.confirmClose'));
     setConfirmCancel(true);
     if (cancelTimer.current) clearTimeout(cancelTimer.current);
     cancelTimer.current = setTimeout(() => setConfirmCancel(false), 3000);
   };
 
-  // автосохранение при истечении таймера: черновик не должен пропасть
+  // auto-save when the timer expires: the draft must not be lost
   useEffect(() => {
     if (!flushRef) return;
     flushRef.current = async () => {
@@ -1102,8 +1103,8 @@ function AnswerSheet({
     };
   });
 
-  // Пока в шторке есть черновик, жест и тап по фону не должны обходить
-  // двухшаговое подтверждение кнопкой «Отмена».
+  // While the sheet holds a draft, the gesture and backdrop tap must not bypass
+  // the two-step confirmation on the "Cancel" button.
   const hasUnsavedContent = text.length > 0 || recs.length > 0;
 
   const renderBackdrop = useCallback(
@@ -1114,7 +1115,7 @@ function AnswerSheet({
         disappearsOnIndex={-1}
         opacity={0.7}
         pressBehavior={hasUnsavedContent ? 'none' : 'close'}
-        // Фон без локализованной подписи; закрывают «Отмена» и жест escape.
+        // The backdrop has no localized label; "Cancel" and the escape gesture close the sheet.
         accessible={false}
       />
     ),
@@ -1126,8 +1127,8 @@ function AnswerSheet({
       <View
         style={styles.handleWrap}
         testID="answer-sheet-handle"
-        // Жест Gorhom, начавшись, отменяет касание React Native: отмена —
-        // перетаскивание, отпускание — простое касание
+        // Once the Gorhom gesture starts, it cancels the React Native touch:
+        // a cancel is a drag, a release is a plain tap
         // (keyboardSnapOnHandleRelease).
         onTouchStart={() => { handlePressed.current = true; }}
         onTouchEnd={() => releaseHandle(false)}
@@ -1145,7 +1146,7 @@ function AnswerSheet({
 
   const recording = recordingPhase === 'recording' || recordingPhase === 'stopping';
 
-  // Пауза сохраняет позицию и её отображение на той же карточке.
+  // Pause keeps the position and shows it on the same card.
   const playProgress =
     (playingId !== null || pausedId !== null) && playerStatus.duration > 0
       ? Math.min(playerStatus.currentTime / playerStatus.duration, 1)
@@ -1160,9 +1161,10 @@ function AnswerSheet({
     <View style={[styles.footerContent, landscapeTablet && styles.footerGrid]}>
       {landscapeTablet && <View style={styles.questionColumn} />}
       <View style={[styles.actionsRow, landscapeTablet && styles.footerActionsLandscape]}>
-        {/* микрофон — квадрат в одном ряду с кнопками, как навигация у
-            карточки-спутника. Бадж показывает, сколько записей уже есть:
-            сами они живут в отдельной шторке и из ответа не видны. */}
+        {/* the mic is a square in the same row as the buttons, like the
+            navigation of the companion card. The badge shows how many
+            recordings exist: they live in a separate sheet and are not
+            visible from the answer. */}
         <Pressable
           accessibilityLabel={
             recs.length ? t('components.answers.voiceCount', { count: recs.length }) : t('components.answers.recordAudio')
@@ -1215,14 +1217,15 @@ function AnswerSheet({
       animatedIndex={sheetIndex}
       index={-1}
       snapPoints={snapPoints}
-      // без этого v5 подмешивает snap-точку «по контенту», и индексы съезжают
+      // without this, v5 mixes in a "content-based" snap point and the indices shift
       enableDynamicSizing={false}
-      // Свайп доступен только для пустой шторки. Иначе закрытие возможно
-      // исключительно через «Отмена» → «Точно закрыть?» или «Сохранить».
+      // Swipe is available only for an empty sheet. Otherwise it can be closed
+      // solely via "Cancel" → "Close without saving?" (components.answers.confirmClose)
+      // or "Save".
       enablePanDownToClose={!hasUnsavedContent}
-      // Жест содержимого выключен: иначе вертикальное протягивание внутри
-      // поля ответа двигает шторку вместо прокрутки текста. Шторку тянут
-      // за ручку.
+      // Content panning is disabled: otherwise a vertical drag inside the
+      // answer field moves the sheet instead of scrolling the text. The sheet
+      // is dragged by its handle.
       enableContentPanningGesture={false}
       onChange={async (i) => {
         if (!nativeAudioMountedRef.current) return;
@@ -1231,20 +1234,20 @@ function AnswerSheet({
         openSheetRef.current = editing;
         if (editing) onOpenChange?.(true);
         if (i < 0) {
-          // Потерянное отпускание ручки не должно задерживать скрытия клавиатуры.
+          // A lost handle release must not delay keyboard dismissal.
           handlePressed.current = false;
           recordingsSheetGenerationRef.current += 1;
           observeRelease(cancelLimitCue());
           cancelDraftPlayback();
           player.pause();
           setPausedId(null);
-          // Отменяем start до первого await: запись не сможет включиться уже
-          // после начала закрытия родительской шторки.
+          // Cancel the start before the first await: the recording cannot start
+          // after the parent sheet has begun closing.
           recordingSheetOpenRef.current = false;
           setRecordingsSheetOpen(false);
           recordingOperation.cancelStart();
         }
-        // Закрыли (свайпом/кнопкой) во время записи — дождаться единого stop.
+        // Closed (swipe/button) during a recording — wait for the shared stop.
         if (
           i < 0 &&
           (recordingOperation.getPhase() === 'recording' ||
@@ -1252,8 +1255,8 @@ function AnswerSheet({
         ) {
           await stopRecording();
           if (recordingOperation.getPhase() === 'recording') {
-            // Если native stop упал, закрытие небезопасно: возвращаем обе
-            // шторки и оставляем видимую кнопку повторной остановки.
+            // If the native stop failed, closing is unsafe: reopen both sheets
+            // and keep the visible retry-stop button.
             openSheetRef.current = true;
             recordingSheetOpenRef.current = true;
             sheetRef.current?.snapToIndex(0);
@@ -1273,8 +1276,9 @@ function AnswerSheet({
           if (!openSheetRef.current) onOpenChange?.(false);
         }
       }}
-      // По умолчанию контейнер контента шторки — единый элемент доступности,
-      // и всё внутри скрыто от VoiceOver и от Maestro. Раскрываем детей.
+      // By default the sheet's content container is a single accessibility
+      // element and everything inside is hidden from VoiceOver and Maestro.
+      // Expose the children.
       accessible={false}
       backdropComponent={renderBackdrop}
       handleComponent={renderHandle}
@@ -1285,11 +1289,11 @@ function AnswerSheet({
       footerStyle={landscapeTablet ? styles.landscapeFooter : undefined}
       onAccessibilityEscape={requestClose}
     >
-      {/* В альбомном окне планшета вопрос стоит рядом с формой, оставляя
-          полю высоту над клавиатурой. Длинный вопрос прокручивается отдельно. */}
+      {/* In the tablet's landscape window the question sits next to the form,
+          leaving the field height above the keyboard. A long question scrolls separately. */}
       <KeyboardSheetBody
         {...screenReaderHiddenProps(!open || recordingsSheetOpen)}
-        // Боковые поля шторки тоже закрывают клавиатуру, не перехватывая ввод.
+        // The sheet's side gutters also dismiss the keyboard without intercepting input.
         onStartShouldSetResponder={() => {
           if (keyboardOpen) dismissKeyboard();
           return false;
@@ -1307,8 +1311,8 @@ function AnswerSheet({
           ) : questionHeader}
 
           <View style={styles.form}>
-            {/* Поле занимает всю оставшуюся высоту и прокручивается само:
-                курсор при наборе всегда остаётся в поле зрения. */}
+            {/* The field takes the remaining height and scrolls itself: the
+                cursor always stays in view while typing. */}
             <KeyboardSheetTextInput
               ref={answerInputRef}
               testID="answer-input"
@@ -1377,7 +1381,7 @@ const stylesFactory = () => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.white08,
   },
-  // Gorhom измеряет ручку и резервирует её в доступной области.
+  // Gorhom measures the handle and reserves it in the available area.
   handleWrap: {
     height: sc(22),
     alignItems: 'center',
@@ -1389,13 +1393,13 @@ const stylesFactory = () => StyleSheet.create({
     height: sc(4),
     borderRadius: sc(2),
   },
-  // ADR-0012: колонка держит меру строки. Без неё на планшете строка ответа
-  // уходила на ~70 символов, а «Сохранить» растягивалась во всю ширину окна.
+  // ADR-0012: the column holds the line measure. Without it the tablet's
+  // answer line ran ~70 chars and "Save" stretched to the full window width.
   content: {
     flex: 1,
     ...column(),
     paddingHorizontal: screenGutter(),
-    // Вместе с верхним отступом footer (sc(10)) — sc(14) от поля до кнопок.
+    // Together with the footer's top padding (sc(10)) — sc(14) from field to buttons.
     paddingBottom: sc(4),
   },
   contentLandscape: {
@@ -1417,11 +1421,12 @@ const stylesFactory = () => StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  // Шапка не сжимается скроллом: вопрос — контекст ответа и должен быть виден.
-  // flexShrink на крайний случай очень длинного вопроса на низком экране.
+  // The header is not squeezed by scrolling: the question is the answer's
+  // context and must stay visible. flexShrink is a last resort for a very
+  // long question on a short screen.
   input: {
-    // Всё тело шторки минус вопрос и кнопки. Длинный ответ прокручивается
-    // внутри поля, поэтому коробка не растёт и ничего не выталкивает.
+    // The whole sheet body minus the question and buttons. A long answer
+    // scrolls inside the field, so the box does not grow and pushes nothing out.
     flex: 1,
     minHeight: sc(72),
     padding: sc(12),
@@ -1446,8 +1451,8 @@ const stylesFactory = () => StyleSheet.create({
     borderColor: 'rgba(127,174,154,.28)',
   },
   actionDisabled: { opacity: 0.4 },
-  // Счётчик записей сидит на углу микрофона: сами карточки видны только
-  // в шторке записей, и без баджа непонятно, что там уже что-то есть.
+  // The recording count sits on the mic's corner: the cards are visible only
+  // in the recordings sheet, and without the badge it is unclear any exist.
   micBadge: {
     position: 'absolute',
     top: -sc(6),
@@ -1476,7 +1481,7 @@ const stylesFactory = () => StyleSheet.create({
   footerActionsLandscape: { flex: 1 },
   landscapeFooter: { maxWidth: 1120, paddingHorizontal: sc(24) },
   cancelBtn: {
-    // высота как у кнопок карточки-спутника (CompanionDock/cardBtnSize)
+    // same height as the companion card buttons (CompanionDock/cardBtnSize)
     paddingHorizontal: sc(14),
     height: sc(32),
     alignItems: 'center',

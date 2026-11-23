@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Удаляет скриншоты XCTest-драйвера Maestro из остановленного симулятора:
-# <симулятор>/data/Containers/Data/InternalDaemon/<id>/tmp/Attachments в
-# контейнере com.apple.testmanagerd. Maestro их не чистит; на Pray Smoke
-# iPhone 17 Pro они доросли до 24 ГБ. Трогает только этот каталог.
-# Использование: clean-sim-attachments.sh "<имя симулятора>"
+# Removes Maestro's XCTest-driver screenshots from a shut-down simulator:
+# <simulator>/data/Containers/Data/InternalDaemon/<id>/tmp/Attachments in
+# the com.apple.testmanagerd container. Maestro never cleans them up; on Pray
+# Smoke iPhone 17 Pro they grew to 24 GB. Touches only this directory.
+# Usage: clean-sim-attachments.sh "<simulator name>"
 set -euo pipefail
 
 if [ "$#" -ne 1 ]; then

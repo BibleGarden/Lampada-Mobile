@@ -1,20 +1,21 @@
 appId: twinkler
 tags:
   - prepared
-# Только через run-lock-storage-check.sh (LOCK-011): скрипт одновременно пишет
-# системный лог устройства и грепает контейнер приложения.
+# Only through run-lock-storage-check.sh (LOCK-011): the script simultaneously
+# writes the device system log and greps the app container.
 ---
-# LOCK-011 (часть 2): ввод неверного и верного пина под записью лога.
-# Скрипт уже проверил контейнер; здесь генерируем события ввода пина.
+# LOCK-011 (part 2): entering a wrong and the correct PIN while the log is
+# being recorded. The script has already checked the container; here we
+# generate PIN entry events.
 #
-# Предусловия: защита включена пином 123456 (см. run-lock-storage-check.sh).
+# Preconditions: protection enabled with PIN 123456 (see run-lock-storage-check.sh).
 - launchApp:
     stopApp: true
 - waitForAnimationToEnd:
     timeout: 5000
 - assertVisible:
     id: "lock-screen"
-# Неверный пин (000000): не пускает, ошибка показана.
+# Wrong PIN (000000): does not unlock, the error is shown.
 - tapOn:
     id: "pin-key-0"
 - tapOn:
@@ -28,7 +29,7 @@ tags:
 - tapOn:
     id: "pin-key-0"
 - assertVisible: "Неверный пин-код"
-# Верный пин: пускает.
+# Correct PIN: unlocks.
 - tapOn:
     id: "pin-key-1"
 - tapOn:

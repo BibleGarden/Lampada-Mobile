@@ -20,17 +20,18 @@ import {
   type LockConfig,
 } from './lockPolicy';
 
-// Локальная блокировка приложения пин-кодом.
+// Local app lock with a PIN.
 //
-// Защита опциональна и по умолчанию выключена: пока пользователь не включил её
-// в настройках, ни один экран не ведёт себя иначе. Пин-код нигде не хранится и
-// не логируется — в Keychain/Keystore лежат только случайная соль и
-// SHA-256(соль + пин). Проверка пина сводится к сравнению хэшей, поэтому
-// восстановить забытый код невозможно ни приложению, ни тому, кто получил
-// доступ к хранилищу.
+// The protection is optional and off by default: until the user enables it
+// in settings, no screen behaves differently. The PIN is never stored or
+// logged — only a random salt and SHA-256(salt + pin) live in the
+// Keychain/Keystore. Verifying the PIN is just a hash comparison, so a
+// forgotten code cannot be recovered — not by the app, not by anyone with
+// access to the storage.
 //
-// Шифрование самой базы данных сюда не входит (ADR-0014): блокировка защищает
-// от чужого взгляда в разблокированный телефон, а не от извлечения диска.
+// Encrypting the database itself is out of scope here (ADR-0014): the lock
+// protects against a stranger's glance at an unlocked phone, not against
+// disk extraction.
 
 const KEY_SALT = 'lampada.lock.salt';
 const KEY_HASH = 'lampada.lock.hash';
@@ -40,9 +41,9 @@ const KEY_LENGTH = 'lampada.lock.length';
 
 const ALL_KEYS = [KEY_SALT, KEY_HASH, KEY_ENABLED, KEY_BIOMETRICS, KEY_LENGTH] as const;
 
-// Правила без нативных зависимостей вынесены в `lockPolicy.ts`, чтобы их можно
-// было проверять юнит-тестами вне эмулятора. Наружу они по-прежнему видны
-// отсюда: для остальных модулей `lock.ts` остаётся единственной точкой входа.
+// Rules with no native dependencies live in `lockPolicy.ts` so they can be
+// unit-tested outside an emulator. They are still re-exported from here:
+// for the other modules `lock.ts` remains the single entry point.
 export {
   FALLBACK_PIN_LENGTH,
   LOCK_GRACE_MS,
@@ -62,24 +63,25 @@ const toHex = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 
 /**
- * Хэш пина. Соль случайна и уникальна для установки, поэтому одинаковые пины на
- * разных устройствах дают разные хэши, а перебор нельзя подготовить заранее.
- * Хэшируется полный пин целиком, какой бы длины он ни был.
+ * The PIN hash. The salt is random and unique per install, so equal PINs
+ * on different devices yield different hashes and a brute-force table
+ * cannot be prepared in advance. The whole PIN is hashed in full,
+ * whatever its length.
  */
 const hashPin = (salt: string, pin: string) =>
   Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${salt}:${pin}`);
 
 type SecureOperation = 'read' | 'write' | 'delete';
 
-/** В диагностику попадают имя ключа и вид ошибки, но не значения. */
+/** Diagnostics get the key name and error kind, never the values. */
 const reportSecureFailure = (operation: SecureOperation, key: string, error: unknown) => {
   console.warn('SecureStore operation failed', operation, key, errorKind(error));
   recordDiagnostic('secure_store_failed', { operation, key, errorKind: errorKind(error) });
 };
 
-// Чтение защищённого хранилища не должно ронять приложение: на платформе без
-// SecureStore (web) и при повреждённой записи блокировка просто считается
-// выключенной — иначе пользователь остался бы без доступа к своим данным.
+// Reading the secure storage must not crash the app: on a platform without
+// SecureStore (web) or with a corrupted record the lock is simply treated
+// as disabled — otherwise the user would be locked out of their own data.
 const readSecure = async (key: string): Promise<string | null> => {
   try {
     return await SecureStore.getItemAsync(key);
@@ -92,8 +94,8 @@ const readSecure = async (key: string): Promise<string | null> => {
 const writeSecure = async (key: string, value: string) => {
   try {
     await SecureStore.setItemAsync(key, value, {
-      // Ключи не должны уезжать в резервную копию и на другое устройство:
-      // блокировка — свойство именно этой установки.
+      // The keys must not travel into a backup or another device: the
+      // lock is a property of this particular install.
       keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
     });
   } catch (error) {
@@ -102,8 +104,9 @@ const writeSecure = async (key: string, value: string) => {
   }
 };
 
-// Отсутствующий ключ SecureStore удаляет без ошибки, поэтому любой сбой здесь
-// настоящий: ключ защиты остался бы на устройстве при выключенной защите.
+// SecureStore deletes a missing key without error, so any failure here is
+// real: a protection key would stay on the device after the protection
+// was turned off.
 const deleteSecure = async (key: string) => {
   try {
     await SecureStore.deleteItemAsync(key);
@@ -113,9 +116,9 @@ const deleteSecure = async (key: string) => {
   }
 };
 
-// ---- хранимая конфигурация ----
+// ---- stored configuration ----
 
-/** Прочитать состояние защиты. Повреждённая или неполная запись = выключено. */
+/** Read the protection state. A corrupted or incomplete record = disabled. */
 export async function readLockConfig(): Promise<LockConfig> {
   const [enabled, hash, salt, biometrics, length] = await Promise.all([
     readSecure(KEY_ENABLED),
@@ -135,20 +138,21 @@ export async function isBiometricsEnabled(): Promise<boolean> {
   return (await readLockConfig()).biometrics;
 }
 
-/** Сохранённая длина пина — сколько цифр ждёт экран разблокировки. */
+/** The stored PIN length — how many digits the unlock screen expects. */
 export async function storedPinLength(): Promise<number> {
   return (await readLockConfig()).pinLength;
 }
 
-/** Включить защиту с указанным пином. Сам пин никуда не сохраняется. */
+/** Enable the protection with the given PIN. The PIN itself is never stored. */
 export async function enableLock(pin: string): Promise<void> {
   if (!isValidPin(pin)) {
     throw new Error(translate('system.pinLength', { min: PIN_MIN_LENGTH, max: PIN_MAX_LENGTH }));
   }
   const salt = toHex(await Crypto.getRandomBytesAsync(16));
   const hash = await hashPin(salt, pin);
-  // Соль, хэш и длина пишутся до флага: прерванная на середине запись оставит
-  // защиту выключенной, а не включённой с непроверяемым пином.
+  // Salt, hash, and length are written before the flag: a write
+  // interrupted midway leaves the protection disabled, not enabled with an
+  // unverifiable PIN.
   await writeSecure(KEY_SALT, salt);
   await writeSecure(KEY_HASH, hash);
   await writeSecure(KEY_LENGTH, String(pin.length));
@@ -161,7 +165,7 @@ export async function enableLock(pin: string): Promise<void> {
   });
 }
 
-/** Выключить защиту и стереть все её ключи. Данные приложения не трогаются. */
+/** Disable the protection and erase all of its keys. App data is untouched. */
 export async function disableLock(): Promise<void> {
   await Promise.all(ALL_KEYS.map(deleteSecure));
   useLock.setState({
@@ -174,7 +178,7 @@ export async function disableLock(): Promise<void> {
   });
 }
 
-/** Сверить введённый пин с сохранённым хэшем. */
+/** Check the entered PIN against the stored hash. */
 export async function verifyPin(pin: string): Promise<boolean> {
   if (!isValidPin(pin)) return false;
   const [salt, hash] = await Promise.all([readSecure(KEY_SALT), readSecure(KEY_HASH)]);
@@ -182,7 +186,7 @@ export async function verifyPin(pin: string): Promise<boolean> {
   return (await hashPin(salt, pin)) === hash;
 }
 
-/** Сменить пин: новый принимается только вместе с верным текущим. */
+/** Change the PIN: the new one is accepted only together with the correct current one. */
 export async function changePin(currentPin: string, nextPin: string): Promise<boolean> {
   if (!(await verifyPin(currentPin))) return false;
   await enableLock(nextPin);
@@ -190,8 +194,8 @@ export async function changePin(currentPin: string, nextPin: string): Promise<bo
 }
 
 /**
- * Включить или выключить биометрию. Она существует только поверх пина: без
- * пин-кода нет и запасного способа войти, если датчик перестанет узнавать.
+ * Enable or disable biometrics. It exists only on top of the PIN: without
+ * a PIN there is no fallback way in if the sensor stops recognizing you.
  */
 export async function setBiometrics(on: boolean): Promise<void> {
   if (on && !(await isLockEnabled())) return;
@@ -200,16 +204,16 @@ export async function setBiometrics(on: boolean): Promise<void> {
   useLock.setState({ biometrics: on });
 }
 
-// ---- биометрия устройства ----
+// ---- device biometrics ----
 
 export type BiometryInfo = {
-  /** Датчик есть и в системе зарегистрирован хотя бы один образец. */
+  /** A sensor exists and at least one sample is enrolled in the system. */
   available: boolean;
-  /** Какой способ называть в интерфейсе; тексты строит `biometryText`. */
+  /** Which method to name in the UI; texts are built by `biometryText`. */
   kind: BiometryKind;
 };
 
-/** Что за биометрия доступна прямо сейчас; образцы могли удалить в системе. */
+/** Which biometrics are available right now; samples may have been removed in the system. */
 export async function biometryInfo(): Promise<BiometryInfo> {
   try {
     const [hardware, enrolled, types] = await Promise.all([
@@ -219,25 +223,25 @@ export async function biometryInfo(): Promise<BiometryInfo> {
     ]);
     return { available: hardware && enrolled, kind: biometryKind(Platform.OS, types) };
   } catch (error) {
-    // Без ответа системы биометрию не предлагаем, но след остаётся.
+    // Without a system answer we do not offer biometrics, but the trace remains.
     console.warn('Biometry check failed', errorKind(error));
     recordDiagnostic('biometry_check_failed', { errorKind: errorKind(error) });
     return { available: false, kind: 'other' };
   }
 }
 
-/** Итог системного запроса биометрии, понятный вызывающему без знания кодов SDK. */
+/** The outcome of a system biometric prompt, meaningful to the caller without SDK error codes. */
 export type BiometricAuthResult =
   | { ok: true }
-  /** Пользователь сам прервал запрос (или его прервала система/приложение) — не ошибка. */
+  /** The user dismissed the prompt (or the system/app interrupted it) — not an error. */
   | { ok: false; reason: 'cancelled' }
-  /** Что-то помешало пройти проверку — текст уже готов для показа человеку. */
+  /** Something prevented the check — the message is ready to show to the person. */
   | { ok: false; reason: 'error'; message: string };
 
-// Эти три кода — явный отказ от запроса, а не сбой: пользователь нажал
-// «Отмена»/«Ввести пин-код», либо систему/приложение прервало извне
-// (например, сворачиванием). Всё остальное — реальная ошибка, о которой стоит
-// сказать человеку словами, а не молчать.
+// These three codes are an explicit refusal of the prompt, not a failure:
+// the user tapped cancel or enter-PIN, or the prompt was interrupted
+// externally (e.g. by backgrounding). Everything else is a real error the
+// person should hear about in words rather than silence.
 const CANCELLED_BIOMETRIC_ERRORS = new Set<string>(['user_cancel', 'system_cancel', 'app_cancel']);
 
 function describeBiometricError(error: string): string {
@@ -260,13 +264,13 @@ function describeBiometricError(error: string): string {
 }
 
 /**
- * Системный запрос биометрии. Возврат к паролю устройства отключён: запасной
- * путь у нас свой — пин-код приложения, и он не должен подменяться кодом
- * разблокировки телефона, который знают все домашние.
+ * The system biometric prompt. Device-passcode fallback is disabled: our
+ * fallback path is the app's own PIN, and it must not be replaced by the
+ * phone's unlock code that everyone at home knows.
  *
- * Отказ никогда не должен быть немым: вызывающий получает не просто `false`,
- * а различает отмену пользователем и настоящую ошибку с готовым для показа
- * текстом.
+ * A refusal must never be silent: the caller gets more than `false` and
+ * can tell a user cancellation from a real error with a ready-to-show
+ * message.
  */
 export async function authenticateWithBiometrics(
   promptMessage: string,
@@ -282,9 +286,9 @@ export async function authenticateWithBiometrics(
     if (CANCELLED_BIOMETRIC_ERRORS.has(result.error)) return { ok: false, reason: 'cancelled' };
     return { ok: false, reason: 'error', message: describeBiometricError(result.error) };
   } catch (error) {
-    // Сюда попадает и `missing_usage_description` (не настроен Info.plist) —
-    // на устройстве пользователя это выглядит так же, как любой другой сбой
-    // системного запроса, и должно быть сказано словами, а не проглочено.
+    // `missing_usage_description` (Info.plist not configured) also lands
+    // here — on the user's device it looks like any other system-prompt
+    // failure and must be said in words, not swallowed.
     const raw = error instanceof Error ? error.message : '';
     const message = /usage description/i.test(raw)
       ? translate('system.facePermission')
@@ -293,24 +297,25 @@ export async function authenticateWithBiometrics(
   }
 }
 
-// ---- полное стирание ----
+// ---- full wipe ----
 
 export type WipeResult = { remindersCancelled: boolean };
 
 /**
- * Сброс забытого пина. Восстановить код нельзя, поэтому единственный выход —
- * стереть всё: дневник, аудиозаписи, избранное, настройки и сами ключи защиты.
- * Экран вызывает это только после двух явных подтверждений.
+ * Forgotten-PIN reset. The code cannot be recovered, so the only way out
+ * is to erase everything: the journal, audio recordings, favorites,
+ * settings, and the protection keys themselves. The screen calls this only
+ * after two explicit confirmations.
  *
- * Сбой снятия системных напоминаний не останавливает стирание (иначе забытый
- * пин нельзя было бы сбросить вовсе), но возвращается экрану, чтобы человек
- * узнал о неполном стирании.
+ * A failure to cancel system reminders does not stop the wipe (otherwise a
+ * forgotten PIN could never be reset at all) but is returned to the screen
+ * so the person learns the wipe was incomplete.
  */
 export async function wipeEverything(): Promise<WipeResult> {
-  // Сбой удаления данных не меняет ни ключи, ни живые состояния защиты.
+  // A data deletion failure changes neither the keys nor the live protection state.
   await wipeLocalData();
-  // Расписание напоминаний живёт в системе, а не только в базе: не сняв его,
-  // приложение продолжало бы напоминать по стёртому расписанию.
+  // The reminder schedule lives in the system, not only in the database:
+  // unless cancelled, the app would keep notifying per the erased schedule.
   let remindersError: unknown = null;
   let remindersCancelled = true;
   let keysDeleted = false;
@@ -322,16 +327,17 @@ export async function wipeEverything(): Promise<WipeResult> {
       remindersError = error;
     }
     if (!remindersCancelled) {
-      // Пишем после wipeLocalData: стирание удаляет и диагностический лог.
+      // Written after wipeLocalData: the wipe deletes the diagnostic log too.
       console.error('Wipe could not cancel prayer reminders', errorKind(remindersError));
       recordDiagnostic('wipe_incomplete', { step: 'reminders', errorKind: errorKind(remindersError) });
     }
     await Promise.all(ALL_KEYS.map(deleteSecure));
     keysDeleted = true;
   } finally {
-    // Даже если SecureStore не удалил ключ, память не должна ссылаться на
-    // уже стёртые сессии и согласия. LockGate остаётся до успешного удаления
-    // всех ключей: из него можно повторить «Забыли PIN?» над пустыми данными.
+    // Even if SecureStore kept a key, memory must not reference the
+    // already erased sessions and consents. LockGate stays until all keys
+    // are successfully deleted: the "Forgot PIN?" flow can then be retried
+    // over empty data.
     resetSettingsStore();
     resetSessionStore();
     useLock.setState({
@@ -347,18 +353,18 @@ export async function wipeEverything(): Promise<WipeResult> {
   return { remindersCancelled };
 }
 
-// ---- состояние экрана блокировки ----
+// ---- lock screen state ----
 
 type LockState = {
-  /** Конфигурация прочитана; до этого момента контент показывать нельзя. */
+  /** The config is loaded; until then no content may be shown. */
   ready: boolean;
   enabled: boolean;
   biometrics: boolean;
   locked: boolean;
-  /** Шторка приватности: приложение неактивно, снимок не должен видеть дневник. */
+  /** Privacy shade: the app is inactive, a snapshot must not reveal the journal. */
   obscured: boolean;
   backgroundedAt: number | null;
-  /** Сколько цифр ждёт экран разблокировки. */
+  /** How many digits the unlock screen expects. */
   pinLength: number;
 
   load: () => Promise<void>;
@@ -380,7 +386,7 @@ export const useLock = create<LockState>((set, get) => ({
 
   load: async () => {
     const config = await readLockConfig();
-    // Холодный старт при включённой защите всегда начинается с экрана пина.
+    // A cold start with the protection enabled always begins at the PIN screen.
     set({
       ready: true,
       enabled: config.enabled,
@@ -400,8 +406,8 @@ export const useLock = create<LockState>((set, get) => ({
   noteBackground: (nowMs = Date.now()) =>
     set((s) =>
       s.enabled
-        ? // Отсчёт ведётся от первого ухода в фон: цепочка inactive → background
-          // не должна каждый раз сдвигать точку отсчёта вперёд.
+        ? // The clock starts at the first backgrounding: an inactive →
+          // background chain must not keep pushing the reference point forward.
           { obscured: true, backgroundedAt: s.backgroundedAt ?? nowMs }
         : s,
     ),

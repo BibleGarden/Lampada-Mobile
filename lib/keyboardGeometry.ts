@@ -17,14 +17,15 @@ export function updateKeyboardState(state: KeyboardState, signal: KeyboardSignal
   }
 }
 
-// Плавающая Android-клавиатура видима, но не занимает полосу окна:
-// IME inset не больше системной панели, и React Native передаёт высоту ≤ 0.
-// Узкая плавающая клавиатура iPad может сообщать ненулевую высоту, поэтому на
-// iOS её ширина сравнивается с шириной закреплённой клавиатуры (dockedWidth).
-// На Android ширину не сравнивают (null): React Native передаёт там ширину
-// видимого окна, а не IME. Она ничего не говорит о плавающей клавиатуре и
-// устаревает после изменения только ширины окна (раскрытие Fold, split
-// screen), потому что keyboardDidShow тогда не повторяется.
+// A floating Android keyboard is visible but occupies no window band:
+// the IME inset is at most the system bar, and React Native reports a
+// height <= 0. A narrow floating iPad keyboard can report a non-zero
+// height, so on iOS its width is compared with the docked keyboard width
+// (dockedWidth). On Android the width is not compared (null): React Native
+// reports the visible window width there, not the IME's. It says nothing
+// about a floating keyboard and goes stale after a window-width-only
+// change (unfolding a Fold, split screen), because keyboardDidShow is not
+// repeated then.
 export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number | null) {
   const { coordinates, phase } = state;
   const visible = phase !== 'hidden';
@@ -39,13 +40,14 @@ export function keyboardLayoutFor(state: KeyboardState, dockedWidth: number | nu
 
 export type KeyboardLayout = ReturnType<typeof keyboardLayoutFor>;
 
-// Поле заполняет форму, пока закреплённая клавиатура открывается или открыта.
-// Закрывающаяся клавиатура раскладку редактирования уже не держит: в начале
-// скрытия форма целиком, с отложенными действиями, возвращается к обычной
-// раскладке, а не растягивает поле на освобождающееся место и не перестраивается
-// второй раз после keyboardDidHide. Резерв viewport идёт вниз с клавиатурой,
-// поэтому действия едут над ней. Потеря фокуса или нулевая высота клавиатуры
-// действий не возвращают: решает только фаза клавиатуры.
+// The field fills the form while a docked keyboard is opening or open.
+// A closing keyboard no longer holds the editing layout: when hiding
+// starts, the whole form, deferred actions included, returns to the normal
+// layout instead of stretching the field into the freed space and
+// rebuilding a second time after keyboardDidHide. The viewport reserve
+// follows the keyboard down, so the actions ride above it. Focus loss or a
+// zero keyboard height does not restore the actions: only the keyboard
+// phase decides.
 export function keyboardFormPolicy(layout: KeyboardLayout) {
   const showing = keyboardShowing(layout);
   return {
@@ -54,16 +56,17 @@ export function keyboardFormPolicy(layout: KeyboardLayout) {
   };
 }
 
-// Клавиатура нужна форме и шторке, пока она открывается или открыта.
-// Закрывающаяся (iOS keyboardWillHide) уже не нужна: шторка возвращается на
-// исходную точку вместе с ней, а не отдельным движением после keyboardDidHide.
-// Android сообщает скрытие в начале анимации, поэтому там фазы closing нет.
+// The form and the sheet need the keyboard while it is opening or open.
+// A closing one (iOS keyboardWillHide) is already unneeded: the sheet
+// returns to its home position along with it, not in a separate move
+// after keyboardDidHide. Android reports hiding at the start of the
+// animation, so there is no closing phase there.
 export function keyboardShowing(layout: KeyboardLayout) {
   return layout.phase === 'opening' || layout.phase === 'open';
 }
 
-// Точка шторки ответа, которую требует клавиатура: 1 — вся высота, 0 —
-// вернуть на исходную, null — точку выбирает человек.
+// The answer-sheet snap the keyboard demands: 1 — full height, 0 — return
+// to the home position, null — the person chooses the snap.
 export type KeyboardSnap = 0 | 1 | null;
 
 export function keyboardSnapTarget(current: KeyboardSnap, form: {
@@ -75,15 +78,16 @@ export function keyboardSnapTarget(current: KeyboardSnap, form: {
   if (!form.open) return null;
   if (form.keyboardShowing && form.inputFocused) return 1;
   if (current === null) return null;
-  // После старта записи шторку не опускаем.
+  // Do not lower the sheet after a recording has started.
   return form.recording ? null : 0;
 }
 
-// Запрос, которым сверяется цель при смене клавиатуры или фокуса. Цель не
-// сравнивается с индексом шторки: на JS-потоке он отстаёт от анимации. Возврат
-// на исходную точку — однократный запрос: после него точку снова выбирает
-// человек, в том числе жестом. Пока человек держит ручку, возврат ждёт
-// отпускания (keyboardSnapOnHandleRelease).
+// The request that re-checks the target when the keyboard or focus
+// changes. The target is not compared with the sheet index: on the JS
+// thread it lags behind the animation. Returning to the home position is a
+// one-shot request: afterwards the person picks the snap again, including
+// by gesture. While the person holds the handle, the return waits for the
+// release (keyboardSnapOnHandleRelease).
 export function reconcileKeyboardSnap(target: KeyboardSnap, handlePressed = false): {
   request: number | null;
   target: KeyboardSnap;
@@ -92,9 +96,10 @@ export function reconcileKeyboardSnap(target: KeyboardSnap, handlePressed = fals
   return { request: target, target: target === 0 ? null : target };
 }
 
-// Касание ручки скрывает клавиатуру. Простое касание ведёт себя как любое
-// скрытие — шторка возвращается на исходную точку; перетаскивание оставляет
-// точку человеку, и запрос клавиатуры не спорит с его жестом.
+// Touching the handle hides the keyboard. A plain tap behaves like any
+// dismissal — the sheet returns to its home position; dragging leaves the
+// snap to the person, and the keyboard request does not fight their
+// gesture.
 export function keyboardSnapOnHandleRelease(target: KeyboardSnap, dragged: boolean): {
   request: number | null;
   target: KeyboardSnap;
@@ -102,62 +107,69 @@ export function keyboardSnapOnHandleRelease(target: KeyboardSnap, dragged: boole
   return dragged ? { request: null, target: null } : reconcileKeyboardSnap(target);
 }
 
-// Повторный запрос полной высоты, когда шторка остановилась ниже неё.
-// Gorhom отбрасывает запрос точки, к которой идёт текущая анимация, даже если
-// более ранний запрос, ещё не дошедший до UI-потока, эту точку меняет. Поэтому
-// при быстрой смене IME запрос полной высоты может потеряться, и цель
-// проверяется снова при каждой остановке шторки — в том числе на прежней
-// точке, о которой Gorhom не сообщает ни onChange, ни onAnimate.
+// Re-requests full height when the sheet has settled below it. Gorhom
+// discards a request for the point the current animation is heading to,
+// even when an earlier request, not yet on the UI thread, changes that
+// point. So on a fast IME switch the full-height request can get lost, and
+// the target is re-checked every time the sheet settles — including at the
+// previous point, which Gorhom reports through neither onChange nor
+// onAnimate.
 export function settledKeyboardSnapRequest(target: KeyboardSnap, index: number): number | null {
   return target === 1 && index >= 0 && index !== 1 ? 1 : null;
 }
 
-// Высота, которую резервирует форма под клавиатурой. Видима ли закреплённая
-// клавиатура, решает классификатор React Native (keyboardLayoutFor), а
-// Keyboard Controller даёт только кадры анимации. Высоту Keyboard Controller
-// после быстрой смены IME может не обновить, поэтому без классификатора она
-// оставляла бы фантомный отступ. На Android скрытие видно классификатору уже в
-// начале анимации, поэтому, пока анимация идёт, резерв следует за клавиатурой
-// вниз. Плавающая клавиатура не занимает полосу окна.
+// The height the form reserves under the keyboard. Whether a docked
+// keyboard is visible is decided by the React Native classifier
+// (keyboardLayoutFor), while Keyboard Controller only provides animation
+// frames. After a fast IME switch Keyboard Controller may not update the
+// height, so without the classifier it would leave a phantom gap. On
+// Android the classifier sees hiding at the very start of the animation,
+// so while the animation runs the reserve follows the keyboard down. A
+// floating keyboard occupies no window band.
 export function reservedKeyboardHeight(kind: KeyboardLayout['kind'], moving: boolean, height: number): number {
   'worklet';
   return kind === 'docked' || (kind === 'hidden' && moving) ? Math.max(0, height) : 0;
 }
 
-// Полоса, которую открывающаяся клавиатура ещё займёт в KeyboardViewport:
-// резерв, которым кончится анимация, за вычетом резерва сейчас (оба не меньше
-// безопасной зоны). Поле, заполняющее форму над закреплённой клавиатурой,
-// стоит над этой полосой и поэтому с первого кадра имеет итоговую высоту:
-// клавиатура поднимается в пустую полосу, а не сжимает многострочное поле
-// кадр за кадром. Закрывающаяся клавиатура полосы не оставляет — цель ниже.
+// The band an opening keyboard will still claim in the KeyboardViewport:
+// the reserve the animation will end with, minus the current reserve (both
+// at least the safe area). The field filling the form above the docked
+// keyboard stands above this band and thus has its final height from the
+// first frame: the keyboard rises into an empty band instead of squeezing
+// the multiline field frame by frame. A closing keyboard leaves no band —
+// its target is lower.
 export function pendingKeyboardReserve(safeBottom: number, reserved: number, target: number): number {
   'worklet';
   return Math.max(0, Math.max(safeBottom, target) - Math.max(safeBottom, reserved));
 }
 
-// Позиция footer шторки (от верха её содержимого) с подъёмом над
-// клавиатурой. Клавиатура не отнимает тело целиком: Android снимает фокус с
-// поля, чей предок сжался до нуля (View.sizeChange), и набор уходит в никуда.
-// Поэтому подъём останавливается на минимальной высоте тела, даже если
-// клавиатура выше (полноэкранная IME, низкая snap-точка на маленьком экране).
-// Закрывающаяся шторка, которая уже ниже этого минимума, едет вниз вместе с footer.
+// The sheet footer position (from the top of its content) lifted above the
+// keyboard. The keyboard must not take away the whole body: Android drops
+// focus from a field whose ancestor has collapsed to zero
+// (View.sizeChange), and typing goes nowhere. So the lift stops at the
+// minimum body height even when the keyboard is taller (full-screen IME, a
+// low snap point on a small screen). A closing sheet already below this
+// minimum rides down together with the footer.
 export function sheetFooterPosition(natural: number, keyboard: number, safeBottom: number, minBody: number): number {
   'worklet';
   const lifted = natural - Math.max(0, keyboard - safeBottom);
   return Math.max(0, lifted, Math.min(natural, minBody));
 }
 
-// Высота тела шторки над footer. Footer движется трансформацией кадр в кадр,
-// а высота тела — раскладка всего содержимого с многострочным полем, поэтому
-// она меняется один раз в начале каждого перехода: тело сразу берёт высоту,
-// которая будет над footer, когда шторка и клавиатура дойдут до цели. Пока
-// footer едет к ней, он скользит к уже готовому полю или закрывает фоном шторки
-// ту часть тела, которую ещё не открыл; в конце перехода ничего не меняется.
-// Пока Gorhom не измерил ручку и footer (отрицательные размеры), тела ещё нет.
+// The sheet body height above the footer. The footer moves via a
+// frame-by-frame transform, while the body height is a layout of the whole
+// content with the multiline field, so it changes once at the start of
+// each transition: the body immediately takes the height it will have
+// above the footer once the sheet and the keyboard reach their targets.
+// While the footer travels there, it slides toward the already-sized field
+// or covers with the sheet background the part of the body it has not
+// opened yet; nothing changes at the end of the transition. Until Gorhom
+// has measured the handle and the footer (negative sizes), there is no
+// body yet.
 export type SheetLayout = { containerHeight: number; handleHeight: number; footerHeight: number };
 
-// Позиция footer, которую Gorhom ставит шторке на позиции position
-// (BottomSheetFooterContainer), — без подъёма над клавиатурой.
+// The footer position Gorhom gives the sheet at position `position`
+// (BottomSheetFooterContainer) — without the keyboard lift.
 export function naturalFooterPosition(layout: SheetLayout, position: number): number {
   'worklet';
   const { containerHeight, handleHeight, footerHeight } = layout;
@@ -165,10 +177,11 @@ export function naturalFooterPosition(layout: SheetLayout, position: number): nu
   return Math.max(0, containerHeight - position) - footerHeight - handleHeight;
 }
 
-// Цель шторки — позиция, к которой идёт её анимация (nextPosition Gorhom), а
-// стоящей — текущая. Закрытие и жест человека тело не перестраивают (null):
-// закрывающаяся шторка уезжает с содержимым, а цель жеста станет известна,
-// когда после отпускания Gorhom запустит анимацию к точке.
+// A moving sheet's target is the position its animation is heading to
+// (Gorhom's nextPosition); a settled sheet uses its current one. Closing
+// and the person's gesture do not rebuild the body (null): a closing sheet
+// slides away with its content, and a gesture's target becomes known only
+// when, after release, Gorhom starts animating toward a point.
 export type SheetMotion = { position: number; nextIndex?: number; nextPosition?: number; dragging: boolean };
 
 export function sheetBodyHeight(

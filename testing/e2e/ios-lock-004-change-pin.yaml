@@ -2,11 +2,11 @@ appId: twinkler
 tags:
   - prepared
 ---
-# LOCK-004: смена пина 123456 → 9876. Новый код короче старого, поэтому заодно
-# проверяется, что экран разблокировки перечитал длину: после смены он ждёт
-# четыре цифры, а не шесть.
+# LOCK-004: changing the PIN 123456 → 9876. The new code is shorter than the
+# old one, which also verifies that the unlock screen re-reads the length:
+# after the change it expects four digits, not six.
 #
-# Предусловие: включён пин 123456 (состояние после ios-lock-002).
+# Precondition: PIN 123456 enabled (state after ios-lock-002).
 - launchApp:
     stopApp: true
 - assertVisible:
@@ -35,7 +35,7 @@ tags:
 - tapOn:
     id: "change-pin-button"
 
-# Текущий код: длина известна, подтверждение не требуется.
+# Current code: the length is known, no confirmation required.
 - assertVisible:
     id: "pin-prompt-change-current"
 - tapOn:
@@ -51,7 +51,7 @@ tags:
 - tapOn:
     id: "pin-key-6"
 
-# Новый код из четырёх цифр — минимально допустимая длина.
+# New four-digit code — the minimum allowed length.
 - assertVisible:
     id: "pin-prompt-change-create"
 - tapOn:
@@ -82,8 +82,9 @@ tags:
 - assertVisible:
     id: "change-pin-button"
 
-# После перезапуска старый код не подходит, новый впускает. Целиком старый код
-# набрать уже нельзя: поле ждёт четыре цифры и проверяет ввод на четвёртой.
+# After the restart the old code no longer works and the new one unlocks. The
+# full old code can no longer be entered: the field expects four digits and
+# validates the entry on the fourth.
 - launchApp:
     stopApp: true
 - assertVisible:

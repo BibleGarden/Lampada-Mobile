@@ -89,7 +89,7 @@ export type FavoriteScripture = {
   text: string;
   translationAlias: string | null;
   language: ScriptureLanguage | null;
-  /** Полный ответ сервера: ключевые стихи и разбивка отрывка. NULL у legacy-записей. */
+  /** Full server response: key verses and passage structure. NULL on legacy records. */
   selection: ScriptureSelection | null;
   createdAt: string;
   legacy?: unknown;
@@ -288,9 +288,9 @@ export function toScriptureDisplay(
 }
 
 /**
- * Восстанавливает отображаемый отрывок из сохранённой записи, чтобы избранное
- * рисовалось тем же компонентом, что и карточка во время молитвы. Возвращает
- * null для legacy-записей: у них нет ответа сервера, только плоский текст.
+ * Rebuilds the displayable passage from a stored record so favorites render
+ * with the same component as the in-prayer card. Returns null for legacy
+ * records: they have no server response, only flat text.
  */
 export function favoriteToScriptureDisplay(
   favorite: FavoriteScripture,

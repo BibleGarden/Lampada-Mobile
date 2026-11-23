@@ -1,9 +1,9 @@
 #!/bin/zsh
-# Рендер графики Google Play через headless Chrome:
-# feature graphic 1024x500 из store/play/feature-graphic.html на каждый язык — PNG без альфы
-# (Play требует 24-bit; альфа снимается через BMP), и иконка 512x512 из assets/icon.png —
-# 32-bit PNG с альфой, как требует Play.
-# Headless Chrome сохраняет скриншот, но не завершается сам, поэтому ждём файл и гасим процесс.
+# Render Google Play graphics with headless Chrome:
+# a 1024x500 feature graphic from store/play/feature-graphic.html per language — PNG without alpha
+# (Play requires 24-bit; alpha is stripped via BMP), and a 512x512 icon from assets/icon.png —
+# a 32-bit PNG with alpha, as Play requires.
+# Headless Chrome writes the screenshot but never exits on its own, so wait for the file and kill the process.
 set -euo pipefail
 ROOT=${0:A:h:h}
 HTML=$ROOT/store/play/feature-graphic.html
@@ -28,7 +28,7 @@ for lang in ru uk en; do
   sips -s format bmp $raw --out $WORK/$lang.bmp >/dev/null
   sips -s format png $WORK/$lang.bmp --out $ROOT/store/play/feature-graphic-$lang.png >/dev/null
 done
-# jimp-compact приходит с Expo (@expo/image-utils) и пишет PNG как RGBA.
+# jimp-compact ships with Expo (@expo/image-utils) and writes PNG as RGBA.
 node -e "require('jimp-compact').read(process.argv[1]).then(i => i.resize(512, 512).writeAsync(process.argv[2]))" \
   $ROOT/assets/icon.png $ROOT/store/play/icon-512.png
 sips -g pixelWidth -g pixelHeight -g hasAlpha $ROOT/store/play/feature-graphic-*.png $ROOT/store/play/icon-512.png

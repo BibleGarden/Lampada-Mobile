@@ -1,9 +1,9 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-STUB: непосредственно перед прогоном stub переводится в
-# contentReports=fail-once (run-stub-phase.sh). Самодостаточен: поднимает
-# новую сессию для жалобы на вопрос.
+# NEEDS-STUB: immediately before the run the stub is switched to
+# contentReports=fail-once (run-stub-phase.sh). Self-contained: starts a new
+# session to report a question.
 ---
 - launchApp:
     stopApp: true
@@ -31,7 +31,7 @@ tags:
     duration: 1700
 - assertVisible:
     id: "session-title"
-# === RPT-003: сбой и повтор ===
+# === RPT-003: failure and retry ===
 - tapOn:
     id: "question-report-button"
 - assertVisible:
@@ -41,14 +41,15 @@ tags:
 - inputText: "Черновик комментария RPT-003"
 - tapOn:
     id: "content-report-send"
-# Первый запрос в режиме fail-once получает 500: ошибка, диалог и текст живы.
+# The first request in fail-once mode gets a 500: the error, the dialog and the
+# text all survive.
 - assertVisible: "Сейчас не удалось отправить жалобу. Попробуй ещё раз."
 - assertVisible:
     id: "content-report-dialog"
 - assertVisible:
     id: "content-report-comment"
 - takeScreenshot: RPT-003-error
-# Повтор — stub уже вернулся в ok, комментарий сохранился в поле.
+# Retry — the stub is back to ok, the comment has survived in the field.
 - tapOn:
     id: "content-report-send"
 - assertVisible: "Спасибо. Мы её проверим."

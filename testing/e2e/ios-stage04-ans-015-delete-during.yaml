@@ -1,8 +1,9 @@
 appId: twinkler
 ---
-# ANS-015 (часть про удаление во время запроса): запись пропадает из списка,
-# запрос отменяется. Что поздний ответ сервера не вернёт строку в БД, Maestro
-# не доказывает — нужна медленная сеть и ручная проверка.
+# ANS-015 (the deletion-during-request part): the recording disappears from
+# the list, the request is cancelled. Maestro cannot prove that a late server
+# answer will not put the row back into the DB — that needs a slow network and
+# a manual check.
 - launchApp:
     stopApp: true
     clearState: true

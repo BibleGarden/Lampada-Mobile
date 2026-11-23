@@ -1,20 +1,21 @@
 appId: twinkler
 tags:
   - prepared
-# NEEDS-RUNNER: локаль устройства переключает run-lng.sh между флоу
-# (порядок и локали зашиты в скрипте). В теговые прогоны не входит.
+# NEEDS-RUNNER: the device locale is switched between flows by run-lng.sh
+# (the order and locales are hardcoded in the script). Not part of tagged runs.
 ---
-# LNG-007: явный выбор не сбрасывается сменой языка устройства.
+# LNG-007: an explicit choice is not reset by changing the device language.
 #
-# Предусловие: только что отработал ios-lng-006-persist-relaunch.yaml
-# (в SQLite лежит ui_language=uk). Раннер переключил симулятор на locale=de_DE
-# — Maestro сам системный язык сменить не может. clearState здесь нельзя:
-# сотрётся сохранённый выбор, и проверять будет нечего.
+# Precondition: ios-lng-006-persist-relaunch.yaml has just run
+# (SQLite holds ui_language=uk). The runner switched the simulator to
+# locale=de_DE — Maestro cannot change the system language itself. clearState
+# is forbidden here: it would wipe the saved choice and there would be nothing
+# to check.
 - launchApp:
     stopApp: true
-    # Lampada не использует геолокацию; явный список не даёт Maestro
-    # дёргать locationd (simctl privacy location) сразу после холодной
-    # перезагрузки, где locationd зависает.
+    # Lampada does not use geolocation; the explicit list keeps Maestro from
+    # poking locationd (simctl privacy location) right after a cold reboot,
+    # where locationd hangs.
     permissions:
       notifications: allow
       microphone: allow

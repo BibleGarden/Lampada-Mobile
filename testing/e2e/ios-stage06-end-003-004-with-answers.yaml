@@ -2,15 +2,17 @@ appId: twinkler
 tags:
   - prepared
 ---
-# Фрагмент для ios-jrn-suite.yaml, самостоятельно не запускать.
-# END-003/004 для jrn-suite: вариант ios-stage06-end-003-004-idempotency.yaml без
-# launchApp/clearState — suite гарантирует чистое состояние (jrn-001). Первая
-# сессия дополнительно оставляет ответ со словами «Кириллица про доверие» и
-# «надежда», голосовую запись (jrn-007-delete ждёт «Аудиозапись» в деталях) и
-# takeaway со словами «тревожит» и «Кириллица» — по ним потом ищет
-# ios-stage06-jrn-003-004-search.
-# Перед стартом — relaunch без clearState: предыдущий флоу suite может закончить
-# на любом экране, а фрагмент стартует с Home.
+# A fragment for ios-jrn-suite.yaml; do not run on its own.
+# END-003/004 for the jrn-suite: a variant of
+# ios-stage06-end-003-004-idempotency.yaml without launchApp/clearState — the
+# suite guarantees a clean state (jrn-001). The first session additionally
+# leaves an answer with the Cyrillic keywords «Кириллица про доверие» and
+# «надежда», a voice recording (jrn-007-delete expects the «Аудиозапись»
+# label in the details), and a takeaway with the Cyrillic keywords «тревожит»
+# and «Кириллица» — these are what ios-stage06-jrn-003-004-search later
+# searches for.
+# Before the start — a relaunch without clearState: the suite's previous flow
+# may end on any screen, while the fragment starts from Home.
 - launchApp:
     stopApp: true
 - tapOn:
@@ -37,8 +39,9 @@ tags:
 - waitForAnimationToEnd:
     timeout: 9000
 
-# Ответ со словами «Кириллица про доверие» и «надежда» — по «надежда» ищет
-# jrn-003/004-search, текст ждёт jrn-007-delete в деталях END-003.
+# An answer with the Cyrillic keywords «Кириллица про доверие» and «надежда» —
+# jrn-003/004-search searches by «надежда», and jrn-007-delete expects this
+# text in the END-003 details.
 - tapOn:
     id: "dock-answer-button"
 - tapOn:
@@ -46,7 +49,8 @@ tags:
 - inputText: "Ответ Кириллица про доверие и надежда"
 - tapOn:
     id: "answer-question"
-# Голосовая запись к ответу — jrn-007-delete ждёт «Аудиозапись» в деталях END-003.
+# A voice recording attached to the answer — jrn-007-delete expects the
+# «Аудиозапись» entry in the END-003 details.
 - tapOn:
     id: "answer-record-button"
 - runFlow:
@@ -80,9 +84,10 @@ tags:
           id: "privacy-consent-answer_context-allow"
 - assertVisible:
     id: "dock-answer-edit-button"
-# Шторка ответа после сохранения может быть уже закрыта (consent-диалог её
-# гасит) или нет — первый тап либо уводит сразу на «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ»,
-# либо только закрывает шторку; во втором случае «Ответить» виден и жмём ещё раз.
+# After saving, the answer sheet may already be closed (the consent dialog
+# dismisses it) or not — the first tap either goes straight to the
+# «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» screen (screens.reflect.before) or only closes the
+# sheet; in the latter case the «Ответить» button is visible and we tap again.
 - tapOn:
     point: "10%,11%"
 - runFlow:
@@ -95,12 +100,14 @@ tags:
 - assertVisible:
     id: "reflect-kicker"
 
-# Takeaway со словами «тревожит» и «Кириллица» — по ним ищет jrn-003/004-search.
+# A takeaway with the Cyrillic keywords «тревожит» and «Кириллица» — what
+# jrn-003/004-search searches for.
 - tapOn:
     id: "reflection-input"
 - inputText: "END-003 вывод: тревожит разговор; Кириллица тест"
-# Кикер «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» скрывается при открытой клавиатуре
-# (app/reflect.tsx:144) — гасим клавиатуру через Enter (как в smoke-full).
+# The «ПРЕЖДЕ ЧЕМ ЗАКРЫТЬ» kicker (screens.reflect.before) is hidden while
+# the keyboard is open (app/reflect.tsx:144) — dismiss the keyboard with
+# Enter (as in smoke-full).
 - pressKey: Enter
 - assertVisible:
     id: "reflect-complete-button"
@@ -111,7 +118,7 @@ tags:
 - assertVisible:
     id: "journal-button"
 
-# Вторая сессия — как в оригинале (ios-stage06-end-003-004-idempotency).
+# The second session — as in the original (ios-stage06-end-003-004-idempotency).
 - tapOn:
     id: "start-prayer-button"
 - tapOn:

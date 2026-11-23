@@ -9,19 +9,19 @@ export type NativePlaybackStartFailure = 'not_started' | 'buffering_timeout';
 
 type Timer = ReturnType<typeof setTimeout>;
 
-// Как часто сверяться с нативным плеером после play().
+// How often to poll the native player after play().
 const POLL_MS = 200;
-// Сколько ждать начала воспроизведения, если плеер не буферизуется.
+// How long to wait for playback to start when the player is not buffering.
 export const NATIVE_START_TIMEOUT_MS = 2_000;
-// Общий предел ожидания, даже если плеер всё это время сообщает о буферизации:
-// иначе зависший поток навсегда остался бы «играющим».
+// Overall wait limit even if the player reports buffering the whole time:
+// otherwise a stuck stream would stay "playing" forever.
 export const NATIVE_START_BUFFERING_LIMIT_MS = 15_000;
 
 /**
- * Следит, что нативный плеер действительно начал играть после play(). Android
- * молча игнорирует play() при выключенной аудиосессии, а поток может бесконечно
- * буферизоваться, поэтому интерфейс не должен верить play() на слово.
- * Возвращает отмену; onFailed вызывается не больше одного раза.
+ * Watches that the native player actually started playing after play(). Android
+ * silently ignores play() when the audio session is off, and a stream can
+ * buffer forever, so the UI must not take play() at its word.
+ * Returns a cancel function; onFailed fires at most once.
  */
 export function watchNativePlaybackStart({
   readStatus,
@@ -34,7 +34,7 @@ export function watchNativePlaybackStart({
   clearTimer = clearTimeout,
 }: {
   readStatus: () => NativePlaybackStatus;
-  /** Начало, уже подтверждённое событием статуса. */
+  /** A start already confirmed by a status event. */
   hasStarted?: () => boolean;
   onFailed: (reason: NativePlaybackStartFailure, status: NativePlaybackStatus) => void;
   timeoutMs?: number;

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Готовит драйвер Maestro к прогону с --no-reinstall-driver: установленный
-# драйвер или сервер переиспользуется, пока он байт в байт совпадает с APK
-# текущего Maestro; другой удаляется, и первый сценарий ставит текущий.
-# Версии пакетов для этого бесполезны: у всех выпусков Maestro они одинаковы.
+# Prepares the Maestro driver for a run with --no-reinstall-driver: an
+# installed driver or server is reused while it matches the current Maestro's
+# APK byte for byte; any other one is removed and the first flow installs the
+# current one. Package versions are useless for this: every Maestro release
+# ships the same ones.
 # Usage: android-maestro-driver.sh <device> <log-dir>
 set -euo pipefail
 

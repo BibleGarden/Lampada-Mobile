@@ -1,6 +1,6 @@
 type RecordingOverlayFit = { gap: number; waveHeight: number };
 
-/** Уменьшает промежутки и волну только тогда, когда замеренная шторка тесна. */
+/** Shrinks the gaps and the wave only when the measured overlay turns out tight. */
 export function fitRecordingOverlay(
   availableHeight: number,
   textHeight: number,

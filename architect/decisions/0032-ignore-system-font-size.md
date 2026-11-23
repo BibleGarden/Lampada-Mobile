@@ -43,4 +43,4 @@ scaling back, and library text stays scaled.
 
 ## References
 
-- ClickUp: [Проверить accessibility Lampada](https://app.clickup.com/t/86cb8jrqy)
+- ClickUp: [Check Lampada accessibility](https://app.clickup.com/t/86cb8jrqy)

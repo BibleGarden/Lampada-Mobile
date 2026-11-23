@@ -6,7 +6,7 @@ tags:
     stopApp: true
     clearState: true
 - openLink: "lampada://settings"
-# Согласия живут в BottomSheet «Данные для ИИ» (app/settings.tsx:913,1076).
+# Consent settings live in the "Data for AI" bottom sheet (app/settings.tsx:913,1076).
 - tapOn:
     id: "privacy-settings-button"
 - assertVisible:

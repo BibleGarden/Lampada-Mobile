@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { colors, fonts, radius, sc, touchSlop, useStyles } from '../lib/theme';
 
-/** Подпись капсом моноширинным — фирменный элемент прототипа */
+/** Uppercase monospace label — a signature element of the prototype */
 export function Kicker({
   children,
   style,
@@ -37,7 +37,7 @@ export function Kicker({
   );
 }
 
-/** Главная золотая кнопка */
+/** The primary gold button */
 export function GoldButton({
   label,
   onPress,
@@ -52,10 +52,10 @@ export function GoldButton({
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   testID?: string;
-  /** Низкий вариант: высота как у кнопок карточки-спутника */
+  /** Low variant: the same height as the companion card buttons */
   compact?: boolean;
   disabled?: boolean;
-  /** Действие, когда видимая подпись — его состояние («Готово» останавливает запись) */
+  /** The action when the visible label is its state ("Done" stops the recording) */
   accessibilityLabel?: string;
   accessibilityValue?: AccessibilityValue;
 }) {
@@ -79,8 +79,8 @@ export function GoldButton({
         colors={[colors.amber, colors.amberDeep]}
         style={[styles.goldBtn, compact && styles.goldBtnCompact]}
       >
-        {/* Длинная подпись («Сохранить и завершить») не должна распирать
-            кнопку до краёв: сжимаем кегль вместо переноса и обрезки. */}
+        {/* A long label ("Save and finish") must not bloat the button to the
+            edges: shrink the font instead of wrapping and clipping. */}
         <Text
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -94,7 +94,7 @@ export function GoldButton({
   );
 }
 
-/** Круглая иконка-кнопка (назад, крестик, музыка) */
+/** Round icon button (back, close, music) */
 export function IconButton({
   children,
   onPress,
@@ -113,7 +113,7 @@ export function IconButton({
   bg?: string;
   border?: string;
   style?: StyleProp<ViewStyle>;
-  /** Кнопка из одной иконки: без подписи программа чтения с экрана её не назовёт */
+  /** An icon-only button: without a label a screen reader cannot name it */
   accessibilityLabel: string;
   accessibilityState?: AccessibilityState;
   disabled?: boolean;
@@ -153,12 +153,12 @@ export function IconButton({
 }
 
 /**
- * Появление содержимого снизу — аналог qIn из прототипа: прозрачность и
- * подъём на 25 pt за 350 мс при монтировании; новое появление — новый `key`.
- * Анимированным стилем, а не layout-анимацией `entering`: на Android
- * Reanimated теряет кадры `entering`, пришедшие до монтирования нативного
- * вида, и восстанавливает только прозрачность — содержимое оставалось
- * сдвинутым вниз и вылезало за рамку карточки.
+ * Content appearing from below — the prototype's qIn: opacity plus a 25 pt
+ * rise over 350 ms on mount; a new appearance needs a new `key`.
+ * An animated style, not the `entering` layout animation: on Android
+ * Reanimated drops `entering` frames that arrive before the native view is
+ * mounted and restores only opacity — the content stayed shifted down and
+ * poked out of the card frame.
  */
 export function CardIn({
   children,
@@ -181,11 +181,12 @@ export function CardIn({
 }
 
 /**
- * Точки-индикатор с «окном» из 7, как _winDots в прототипе.
+ * Indicator dots with a 7-dot "window", like _winDots in the prototype.
  *
- * Для VoiceOver ряд — один элемент-регулятор, как системный UIPageControl:
- * «Вопрос, 3 из 7», свайп вверх/вниз листает. Отдельные точки мельче 44 pt
- * и продублированы кнопками «назад/вперёд» рядом, поэтому скрыты.
+ * For VoiceOver the row is one adjustable element, like the system
+ * UIPageControl: "Question, 3 of 7", swipe up/down to page. The individual
+ * dots are smaller than 44 pt and duplicated by the nearby back/forward
+ * buttons, so they are hidden.
  */
 export function WindowDots({
   total,
@@ -224,9 +225,9 @@ export function WindowDots({
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ text: t('components.reader.position', { current: current + 1, total }) }}
-      // iOS (Fabric) шлёт свайпы регулятора в onAccessibilityAction по одной
-      // роли adjustable, а объявленные действия стали бы лишними пунктами
-      // ротора «Действия»; TalkBack листает только объявленными действиями.
+      // iOS (Fabric) delivers adjuster swipes to onAccessibilityAction by the
+      // adjustable role alone, and declared actions would become extra items
+      // in the Actions rotor; TalkBack pages only with declared actions.
       accessibilityActions={
         Platform.OS === 'android' ? [{ name: 'increment' }, { name: 'decrement' }] : undefined
       }
@@ -285,7 +286,7 @@ const stylesFactory = () => StyleSheet.create({
     fontSize: sc(14),
     color: colors.ink,
   },
-  // низкий вариант — и шрифт как у кнопок карточки-спутника
+  // low variant — and the font of the companion card buttons
   goldBtnLabelCompact: {
     fontFamily: fonts.sansMedium,
     fontSize: sc(12),

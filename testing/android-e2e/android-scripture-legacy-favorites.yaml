@@ -2,7 +2,7 @@ appId: app.lampada
 tags:
   - prepared
 ---
-# Android-версия управляемого сценария ios-scripture-legacy-favorites.yaml.
+# Android version of the instrumented ios-scripture-legacy-favorites.yaml scenario.
 - launchApp:
     stopApp: true
     permissions:

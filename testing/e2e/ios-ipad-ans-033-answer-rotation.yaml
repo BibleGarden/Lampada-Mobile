@@ -2,9 +2,9 @@ appId: twinkler
 tags:
   - ipad
 ---
-# ANS-033 (iPad): ответ в ландшафте — вопрос и форма в разных колонках,
-# действия видны при открытой клавиатуре; повороты ландшафт→портрет→ландшафт
-# сохраняют введённый текст дословно и перестраивают раскладку.
+# ANS-033 (iPad): answering in landscape — the question and the form sit in
+# separate columns, the actions stay visible with the keyboard open; rotations
+# landscape→portrait→landscape keep the typed text verbatim and rebuild the layout.
 - launchApp:
     stopApp: true
     clearState: true

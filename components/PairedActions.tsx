@@ -4,7 +4,7 @@ import { screenReaderHiddenProps } from '../lib/a11y';
 
 type Action = {
   label: string;
-  /** Все состояния подписи: переключение действия не должно менять раскладку. */
+  /** All label states: toggling the action must not change the layout. */
   labels: readonly [string, ...string[]];
   onPress: () => void;
   testID?: string;
@@ -21,7 +21,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Обе подписи сохраняют общий кегль: если одна не входит, ставим кнопки столбцом. */
+/** Both labels keep a shared font size: if one does not fit, stack the buttons in a column. */
 export default function PairedActions({ actions, labelStyle, gap, style }: Props) {
   const [width, setWidth] = useState(0);
   const [measurement, setMeasurement] = useState({ key: '', lines: [0, 0] });
@@ -39,8 +39,8 @@ export default function PairedActions({ actions, labelStyle, gap, style }: Props
         style={[styles.row, { gap }, stacked && styles.stacked]}
       >
         {width > 0 && (
-          // Проба всегда измеряет исходную пару в строку: столбец не должен
-          // отменять собственное решение, когда подписи в нём снова помещаются.
+          // The probe always measures the original pair in a row: the column
+          // must not undo its own decision once the labels fit in it again.
           <View
             pointerEvents="none"
             accessible={false}

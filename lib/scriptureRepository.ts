@@ -236,7 +236,7 @@ export async function getFavoriteScriptures(): Promise<FavoriteScripture[]> {
   return rows.map(favoriteFromRow);
 }
 
-/** Цитаты, сохранённые во время конкретной молитвы, — в порядке сохранения. */
+/** Passages saved during a given prayer, in the order they were saved. */
 export async function getFavoriteScripturesBySession(
   sessionId: number,
 ): Promise<FavoriteScripture[]> {

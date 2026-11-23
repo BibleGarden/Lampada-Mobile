@@ -1,6 +1,6 @@
 import { recordingLimitReached } from './transcriptionLimits.ts';
 
-/** Один раз останавливает запись по нативному числу записанных миллисекунд. */
+/** Stops the recording exactly once, based on the native recorded-milliseconds count. */
 export function createRecordingLimitController(
   readRecordedMillis: () => number,
   isRecording: () => boolean,

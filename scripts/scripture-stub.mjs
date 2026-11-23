@@ -5,13 +5,13 @@ const mode = process.env.SCRIPTURE_STUB_MODE ?? 'main';
 let requestCount = 0;
 let privacySafe = true;
 
-// --- управляемое состояние (меняется через POST /__control между прогонами) ---
+// --- controllable state (changed between runs via POST /__control) ---
 
-/** 'ok' — вернуть текст; 'fail' — HTTP 500; 'delay' — ответ через 12 с. */
+/** 'ok' — return the text; 'fail' — HTTP 500; 'delay' — respond after 12 s. */
 let transcriptionMode = 'ok';
-/** Задержка ответа /api/ai/question, мс (0 — без задержки). */
+/** Delay of the /api/ai/question response, ms (0 — no delay). */
 let questionDelayMs = 0;
-/** Ответ /api/version-check; update_type переключает update-soft/hard флоу. */
+/** /api/version-check response; update_type switches the update-soft/hard flows. */
 let versionResponse = {
   app: 'lampada',
   update_type: 'none',
@@ -19,14 +19,14 @@ let versionResponse = {
   store_url: 'https://example.com/lampada',
   message: null,
 };
-/** 'ok' — успех; 'fail-once' — первый запрос 500 (ретрай-сценарий RPT-003). */
+/** 'ok' — success; 'fail-once' — the first request gets 500 (RPT-003 retry scenario). */
 let contentReportMode = 'ok';
 /**
- * 'ok' — полный каталог; 'fail' — 503 на языки и переводы (SCR-013);
- * 'unvoiced-ru' — русский перевод без озвучки, начального выбора нет (SCR-027).
+ * 'ok' — full catalog; 'fail' — 503 on languages and translations (SCR-013);
+ * 'unvoiced-ru' — Russian translation without voice, no default selection (SCR-027).
  */
 let catalogMode = 'ok';
-/** Пейлоды принятых жалоб — для проверки раннером через /__status. */
+/** Payloads of received content reports — for the runner to check via /__status. */
 const contentReports = [];
 
 const TRANSCRIBE_TEXT = 'Стабильная расшифровка лампады номер семь';
@@ -91,7 +91,7 @@ const server = http.createServer((request, response) => {
     });
     return;
   }
-  // Управление поведением между шагами прогона: curl -X POST localhost:9085/__control
+  // Behavior control between run steps: curl -X POST localhost:9085/__control
   // -d '{"transcription":"fail","version":{"update_type":"soft",...},"questionDelayMs":8000,"resetScripture":true}'
   if (request.method === 'POST' && url.pathname === '/__control') {
     let raw = '';
@@ -111,14 +111,15 @@ const server = http.createServer((request, response) => {
     return;
   }
   if (request.method === 'GET' && url.pathname === '/api/version-check') {
-    // Как настоящий API: ответ несёт platform запросившей сборки. Без platform —
-    // ios (уже установленные iOS-сборки его не шлют), неизвестное значение — 422.
+    // Like the real API: the response carries the platform of the requesting
+    // build. Without platform — ios (already installed iOS builds do not send
+    // it); an unknown value — 422.
     const platform = url.searchParams.get('platform') ?? 'ios';
     if (!['ios', 'android'].includes(platform)) { json(response, 422, { detail: 'unknown platform' }); return; }
     json(response, 200, { ...versionResponse, platform });
     return;
   }
-  // Транскрипция: приложение шлёт multipart — тело просто вычитываем.
+  // Transcription: the app sends multipart — just drain the body.
   if (request.method === 'POST' && url.pathname === '/api/ai/transcribe') {
     request.resume();
     request.on('end', () => {
@@ -132,7 +133,7 @@ const server = http.createServer((request, response) => {
     });
     return;
   }
-  // Жалобы на контент: ловим пейлоуд для проверок раннера, отвечаем как прокси.
+  // Content reports: capture the payload for runner checks, respond like the proxy.
   if (request.method === 'POST' && url.pathname === '/api/ai/content-reports') {
     let raw = '';
     request.setEncoding('utf8');

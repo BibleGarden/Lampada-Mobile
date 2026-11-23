@@ -1,8 +1,8 @@
 #!/bin/bash
-# Группа iPad: флоу ios-ipad-*.yaml (тег `ipad`, повороты — на iPhone
-# приложение только портретное) и ANS-023, который не привязан к устройству.
+# iPad group: the ios-ipad-*.yaml flows (`ipad` tag, rotations — on iPhone
+# the app is portrait-only) plus ANS-023, which is not device-bound.
 #
-# Устройство: UDID=<udid>, по умолчанию симулятор «Pray iPad2».
+# Device: UDID=<udid>, default simulator "Pray iPad2".
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
