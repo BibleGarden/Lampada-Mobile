@@ -42,13 +42,14 @@ resolve_flows() {
 }
 
 # collect_screenshots <maestro output dir> <out dir>
-# Copies the images a flow took with takeScreenshot into <out dir>. Maestro's
-# own failure screenshots ("screenshot-*") are not evidence and are skipped.
+# Copies the images a flow took with takeScreenshot into <out dir>. The images
+# Maestro saves itself for failed or optional steps ("screenshot-*", "step-*")
+# are not evidence and are skipped.
 collect_screenshots() {
   local from="$1" out="$2" file n=0
   mkdir -p "$out"
   while IFS= read -r file; do
-    [[ "$(basename "$file")" == screenshot-* ]] && continue
+    case "$(basename "$file")" in screenshot-*|step-*) continue ;; esac
     cp "$file" "$out/$(basename "$file")"
     n=$((n + 1))
   done < <(find "$from" -type f -name '*.png' | sort)

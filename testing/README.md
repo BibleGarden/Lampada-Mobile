@@ -534,11 +534,6 @@ The workflow builds and runs code of a pull request in a public repository.
   keeps the 40 newest runs in a single commit, so old images also leave the
   repository history.
 
-### Duration
-
-Measured on real runs; see the pull request that introduced the workflow. A
-full run takes as long as the slowest of its four jobs, which run in parallel.
-
 ## What to do with the result
 
 A run worth remembering is described by a file in `reports/` with the date in its
