@@ -29,11 +29,6 @@ xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
   || { echo 'The app (twinkler) is not installed on the simulator; run ios-build.sh first.' >&2; exit 1; }
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
-# The first Maestro command on a fresh simulator stalled once, at the launch of
-# the first flow; a throw-away flow absorbs that. Its failure is logged, not fatal.
-(cd "$logs" && maestro --device "$udid" test --test-output-dir "$logs/maestro-warm-up" \
-  "$tooling/testing/preview/_warm-up.ios.yaml") >"$logs/flow-warm-up.log" 2>&1 \
-  || echo "Warm-up flow failed (ignored); see flow-warm-up.log"
 failed=0
 for entry in "${flow_list[@]}"; do
   name="${entry%%$'\t'*}"
