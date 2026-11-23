@@ -47,9 +47,10 @@ export const Regen = ({ size = 18, color = '#e7cf95', strokeWidth = 1.9 }: P) =>
   </Svg>
 );
 
-export const ArrowLeft = ({ size = 18, color = '#e7cf95', strokeWidth = 1.7 }: P) => (
+export const UTurn = ({ size = 18, color = '#e7cf95', strokeWidth = 1.7 }: P) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-    <Path d="M19 12H5M11 6l-6 6 6 6" />
+    <Path d="M9 14L4 9l5-5" />
+    <Path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
   </Svg>
 );
 
