@@ -1,0 +1,9 @@
+appId: twinkler
+---
+# Not a screen (the name starts with an underscore): scripts/preview/ios-capture.sh
+# runs it once before the real flows. The first Maestro command on a fresh
+# simulator can stall while the driver starts; here it costs nothing.
+- launchApp:
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 3000
