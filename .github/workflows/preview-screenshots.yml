@@ -184,6 +184,10 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
+        env:
+          # A dropped connection (ECONNRESET) failed a run once; no secrets here.
+          NPM_CONFIG_FETCH_RETRIES: 5
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: npm ci
 
       - name: Build the x86_64 Release APK
@@ -274,6 +278,10 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
+        env:
+          # A dropped connection (ECONNRESET) failed a run once; no secrets here.
+          NPM_CONFIG_FETCH_RETRIES: 5
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: npm ci
 
       - name: Build for the simulator and install
