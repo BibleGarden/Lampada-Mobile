@@ -37,6 +37,10 @@ set_config hw.cpu.ncore 4
 set_config hw.keyboard yes
 set_config disk.dataPartition.size 6G
 
+# A Play image accepts only adb keys it knew at boot: create the host key and
+# start the adb server before the emulator, or the device stays "unauthorized".
+[[ -f "$HOME/.android/adbkey" ]] || adb keygen "$HOME/.android/adbkey"
+adb start-server
 nohup setsid emulator -avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics \
   -gpu swiftshader_indirect -accel on >"$logs/emulator.log" 2>&1 &
 emulator_pid=$!
