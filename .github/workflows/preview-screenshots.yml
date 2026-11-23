@@ -201,6 +201,9 @@ jobs:
       - name: Install Maestro
         run: bash tooling/scripts/preview/install-maestro.sh
 
+      - name: Start the emulator
+        run: bash tooling/scripts/preview/android-emulator.sh "$PWD/tooling" "$PWD/out/logs"
+
       - name: Capture screenshots on the emulator
         run: |
           # SCREENS holds validated tokens only (names and testing/ paths).
@@ -232,7 +235,7 @@ jobs:
     needs: plan
     if: ${{ needs.plan.outputs.ios == 'true' }}
     runs-on: macos-26
-    timeout-minutes: 90
+    timeout-minutes: 120
     permissions:
       contents: read
     strategy:
