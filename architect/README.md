@@ -458,7 +458,7 @@ waits for the app to return, and over 0.8 s on that transition otherwise (see
 [ADR-0033](decisions/0033-prayer-time-bounds-music-and-day.md)). Music that
 played when the prayer ended is remembered in the session store with its track
 and position, and "Return to prayer" turns it back on from there; finishing the
-prayer or starting a new one forgets it
+prayer, starting a new one or extending the timer forgets it
 ([ADR-0046](decisions/0046-resume-music-on-return-to-prayer.md)). Voice recording, playback of a
 draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a

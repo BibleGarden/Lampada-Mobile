@@ -25,21 +25,25 @@ cannot keep the state across the trip to the reflection screen.
    `musicResume = { trackId, positionSeconds }`, taken from the active player
    before it is paused. The same step turns `musicOn` off. Music that is
    already off changes nothing: a second stop after the deadline stop in the
-   background keeps what the first one recorded.
+   background keeps what the first one recorded, unless the timer was extended
+   in between (item 5).
 2. `resumeSession()` turns `musicOn` back on when `musicResume` is set. The
    session screen reads `musicResume` once at mount and clears it in the store.
    It puts the recorded track first in its track cycle (`startFromTrack`, the
    track is found by `id`, not by index, because the order is random per mount)
    and seeks to the recorded position before the first `play()`. If the seek
    fails, the track plays from the start.
-3. The recorded music is dropped when the person presses the music button, when
-   the prayer is completed (`complete`), and when a new prayer starts
-   (`enterSession`, `reset`). A finished prayer never starts music.
+3. The recorded music is dropped when the person presses the music button,
+   when the timer is extended, when the prayer is completed (`complete`) and
+   when a new prayer starts (`enterSession`, `reset`). A finished prayer never
+   starts music.
 4. Other audio keeps its priority: the restored music starts through the same
    effect as a tap on the music button, so it waits while a recording, a draft
    or scripture narration holds the audio (ADR-0036).
-5. Extending the timer on the session screen is unchanged (ADR-0033 item 1): it
-   does not turn the stopped music back on.
+5. Extending the timer on the session screen does not turn the stopped music
+   back on (ADR-0033 item 1), and it drops the recorded music: a prayer that
+   continues after the stop ends without music, so a later "Return to prayer"
+   keeps the music off.
 
 ## Options considered
 
@@ -72,4 +76,3 @@ sake of a state that two numbers describe.
 - [ADR-0027](0027-resume-current-prayer.md),
   [ADR-0033](0033-prayer-time-bounds-music-and-day.md),
   [ADR-0036](0036-audio-session-leases.md)
-- Issue BibleGarden/Lampada-Mobile#94 (parent #91)

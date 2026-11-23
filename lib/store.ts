@@ -599,6 +599,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
         remaining: adjusted.remaining,
         endsAtMs: adjusted.endsAtMs,
         minutes,
+        // The prayer goes on after the music stopped at its deadline: it
+        // ends later without music, so there is nothing to bring back.
+        musicResume: null,
       };
     });
     const current = get();
