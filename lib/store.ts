@@ -108,6 +108,13 @@ type SessionState = {
 
   dockMode: 'question' | 'scripture';
   musicOn: boolean;
+  /**
+   * The music of a prayer that ended while it was playing: the track and the
+   * position where it stopped. It lives here, not on the session screen,
+   * because the screen's players are released when it unmounts. Returning to
+   * the prayer turns the music back on from it (ADR-0046).
+   */
+  musicResume: PrayerMusicResume | null;
 
   remaining: number | null; // seconds; null = no timer
   elapsed: number;
@@ -121,6 +128,11 @@ type SessionState = {
   takeaway: string;
 
   streak: db.Streak;
+};
+
+export type PrayerMusicResume = {
+  trackId: string;
+  positionSeconds: number;
 };
 
 type SessionActions = {
@@ -151,7 +163,16 @@ type SessionActions = {
   retryScripture: () => Promise<void>;
 
   setDockMode: (m: 'question' | 'scripture') => void;
+  /** The user's choice: it also drops the remembered music of an ended prayer. */
   toggleMusic: () => void;
+  /**
+   * The prayer's music stops because the prayer ends. Playing music is turned
+   * off and remembered for a return to the prayer; music that is already off
+   * leaves the remembered state as it is.
+   */
+  endPrayerMusic: (playback: PrayerMusicResume) => void;
+  /** The session screen took the remembered music over: it is not restored twice. */
+  clearMusicResume: () => void;
 
   finish: () => Promise<void>;
   complete: (takeaway: string) => Promise<void>;
@@ -344,6 +365,7 @@ const initial: SessionState = {
   scrError: null,
   dockMode: 'question',
   musicOn: false,
+  musicResume: null,
   remaining: DEFAULT_PRAYER_MINUTES * 60,
   elapsed: 0,
   startedAtMs: null,
@@ -473,6 +495,7 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       scrError: null,
       dockMode: 'question',
       musicOn: false,
+      musicResume: null,
       remaining: minutes === 0 ? null : minutes * 60,
       elapsed: 0,
       startedAtMs,
@@ -528,6 +551,9 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       endsAtMs,
       elapsed: Math.max(s.elapsed, sessionTimerSnapshot(s.startedAtMs, s.endsAtMs, nowMs).elapsed),
       reflectGenerating: false,
+      // Music that played when the prayer ended plays again; the session
+      // screen continues the remembered track from its position.
+      musicOn: s.musicOn || s.musicResume !== null,
     });
     void (endsAtMs === null
       ? stopPrayerSystemTimer()
@@ -794,7 +820,13 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
       void loadFirstScripture(state.sessionId, scriptureToken);
     }
   },
-  toggleMusic: () => set((s) => ({ musicOn: !s.musicOn })),
+  toggleMusic: () => set((s) => ({ musicOn: !s.musicOn, musicResume: null })),
+
+  endPrayerMusic: (playback) => set((s) => (
+    s.musicOn ? { musicOn: false, musicResume: playback } : s
+  )),
+
+  clearMusicResume: () => set((s) => (s.musicResume === null ? s : { musicResume: null })),
 
   finish: async () => {
     const s = get();
@@ -848,7 +880,8 @@ export const useSession = create<SessionState & SessionActions>((set, get) => ({
     // finishSession marks the day from sessions.started_at in the same transaction.
     await db.finishSession(s.sessionId, s.elapsed, takeaway);
     const streak = await db.getStreak();
-    set({ takeaway, streak });
+    // A finished prayer does not bring its music back.
+    set({ takeaway, streak, musicResume: null });
   },
 
   reset: () => {
