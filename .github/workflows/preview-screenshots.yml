@@ -8,10 +8,20 @@ name: Preview screenshots
 #   - It starts only by a maintainer: workflow_dispatch needs write access and a
 #     label needs triage access. There is no pull_request_target, issue_comment
 #     or push trigger. Pull requests from forks are refused.
-#   - Only the "build" and "emulator" jobs touch PR code. They have a read-only
-#     GITHUB_TOKEN; the build secrets are exposed only to the build steps.
+#   - Only the build and capture jobs touch PR code. They have a read-only
+#     GITHUB_TOKEN; the build secrets are exposed only to the native build
+#     steps of the build jobs. The capture jobs have no secrets.
 #   - Only the "publish" job has write permissions. It checks out no code, runs
 #     no PR code and treats the screenshot artifacts as untrusted data.
+#
+# Build and capture are separate jobs. A build job produces the app (the
+# simulator .app, the x86_64 APK) and stores it in the Actions cache under an
+# app key (scripts/preview/app-key.sh), so a commit that was already built with
+# the same toolchain, scripts and build secrets is not built again. The capture
+# jobs restore the app from that cache and run the flows in parallel chunks. The
+# app is not passed as a workflow artifact: it bundles the EXPO_PUBLIC_* secret
+# values and artifacts of a public repository can be downloaded by anyone who
+# is signed in. See ADR-0045 for the cache scoping.
 
 on:
   workflow_dispatch:
@@ -53,6 +63,9 @@ jobs:
       screens: ${{ steps.plan.outputs.screens }}
       android: ${{ steps.plan.outputs.android }}
       ios: ${{ steps.plan.outputs.ios }}
+      android_chunks: ${{ steps.plan.outputs.android_chunks }}
+      ios_chunks: ${{ steps.plan.outputs.ios_chunks }}
+      env_hash: ${{ steps.secrets.outputs.env_hash }}
     steps:
       # No checkout: this job runs only the script below, never PR code.
       - name: Resolve the pull request and the screens
@@ -109,8 +122,20 @@ jobs:
               }
             }
             const platformOf = (token) => (token.includes('/') ? token.split('/').pop().split('-')[0] : null);
-            const android = tokens.some((t) => platformOf(t) !== 'ios');
-            const ios = tokens.some((t) => platformOf(t) !== 'android');
+
+            // The capture jobs run in parallel chunks: one screen or flow per
+            // chunk, at most four chunks per platform and variant (each chunk
+            // boots its own emulator or simulator), the rest shared round-robin.
+            const chunksOf = (platform) => {
+              const mine = tokens.filter((t) => platformOf(t) === null || platformOf(t) === platform);
+              const chunks = Array.from({ length: Math.min(mine.length, 4) }, (_, id) => ({ id: String(id), list: [] }));
+              mine.forEach((token, index) => chunks[index % chunks.length].list.push(token));
+              return chunks.map((chunk) => ({ id: chunk.id, screens: chunk.list.join(' ') }));
+            };
+            const androidChunks = chunksOf('android');
+            const iosChunks = chunksOf('ios');
+            const android = androidChunks.length > 0;
+            const ios = iosChunks.length > 0;
 
             core.setOutput('pr', String(target));
             core.setOutput('head_sha', pr.head.sha);
@@ -118,12 +143,17 @@ jobs:
             core.setOutput('screens', tokens.join(' '));
             core.setOutput('android', String(android));
             core.setOutput('ios', String(ios));
+            // A job that is skipped still needs a valid matrix.
+            const placeholder = [{ id: '0', screens: '' }];
+            core.setOutput('android_chunks', JSON.stringify(android ? androidChunks : placeholder));
+            core.setOutput('ios_chunks', JSON.stringify(ios ? iosChunks : placeholder));
             await core.summary
               .addHeading(`Preview of PR #${target}`, 3)
               .addRaw(`Before: \`${base}\` (merge base). After: \`${pr.head.sha}\`. Screens: \`${tokens.join(' ')}\`.`, true)
               .write();
 
-      - name: Check the build secrets
+      - name: Check the build secrets and hash them for the cache key
+        id: secrets
         env:
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
           EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
@@ -135,10 +165,16 @@ jobs:
               missing=1
             fi
           done
-          exit "$missing"
+          [ "$missing" = 0 ] || exit 1
+          # The values are baked into the app, so they belong in the app cache
+          # key, but only as one hash over all of them (the proxy key is not
+          # guessable, so the API URL cannot be recovered from the hash). Add
+          # a name here when the app bakes in another secret EXPO_PUBLIC_* value.
+          hash="$(printf 'preview-env v1\n%s\n%s\n' "$EXPO_PUBLIC_API_URL" "$EXPO_PUBLIC_AI_PROXY_KEY" | sha256sum | cut -c1-32)"
+          echo "env_hash=$hash" >> "$GITHUB_OUTPUT"
 
-  android:
-    name: Android ${{ matrix.variant }}
+  build-android:
+    name: Build Android ${{ matrix.variant }}
     needs: plan
     if: ${{ needs.plan.outputs.android == 'true' }}
     runs-on: ubuntu-latest
@@ -149,9 +185,12 @@ jobs:
       fail-fast: false
       matrix:
         variant: [before, after]
+    # One output per variant: the outputs of a matrix job are merged by name.
+    outputs:
+      before: ${{ steps.key.outputs.before }}
+      after: ${{ steps.key.outputs.after }}
     env:
       APP_SHA: ${{ matrix.variant == 'before' && needs.plan.outputs.base_sha || needs.plan.outputs.head_sha }}
-      SCREENS: ${{ needs.plan.outputs.screens }}
     steps:
       - name: Check out the preview tooling (scripts and flows of this workflow run)
         uses: actions/checkout@v7
@@ -166,14 +205,6 @@ jobs:
           path: app
           persist-credentials: false
 
-      - name: Check out the flows of the pull request head
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.plan.outputs.head_sha }}
-          path: flows
-          sparse-checkout: testing
-          persist-credentials: false
-
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
@@ -185,7 +216,28 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # The keys are computed before any PR code runs and are step outputs, which
+      # later steps cannot change.
+      - name: Compute the cache keys
+        id: key
+        env:
+          ENV_HASH: ${{ needs.plan.outputs.env_hash }}
+        run: bash tooling/scripts/preview/app-key.sh android "${{ matrix.variant }}" "$PWD/tooling" "$PWD/app" "$APP_SHA" "$ENV_HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Look for the app in the cache
+        id: app
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/preview-app
+          key: ${{ steps.key.outputs.app_key }}
+          lookup-only: true
+
+      - name: Report the app cache
+        run: |
+          echo "App cache for ${{ matrix.variant }} (\`${APP_SHA:0:9}\`): ${{ steps.app.outputs.cache-hit == 'true' && '**hit**, the build is skipped' || '**miss**, the app is built' }}." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Install dependencies
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
         working-directory: app
         env:
           # A dropped connection (ECONNRESET) failed a run once; no secrets here.
@@ -193,11 +245,92 @@ jobs:
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
 
+      - name: Restore the Gradle caches
+        id: gradle
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.key.outputs.deps_key }}-gradle
+          restore-keys: preview-deps-android-
+
       - name: Build the x86_64 Release APK
+        id: build
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
         env:
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
           EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
-        run: bash tooling/scripts/preview/build-android.sh app
+        run: bash tooling/scripts/preview/build-android.sh app "$PWD/tooling" "$RUNNER_TEMP/preview-app"
+
+      - name: Save the Gradle caches
+        if: ${{ !cancelled() && steps.app.outputs.cache-hit != 'true' && steps.gradle.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.key.outputs.deps_key }}-gradle
+
+      - name: Save the app in the cache
+        if: ${{ steps.build.outcome == 'success' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/preview-app
+          key: ${{ steps.key.outputs.app_key }}
+
+      - name: Phase durations
+        if: ${{ always() }}
+        run: bash tooling/scripts/preview/phase-summary.sh "build android ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
+
+  capture-android:
+    name: Android ${{ matrix.variant }} ${{ matrix.chunk.screens }}
+    needs: [plan, build-android]
+    if: ${{ needs.plan.outputs.android == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+        chunk: ${{ fromJSON(needs.plan.outputs.android_chunks) }}
+    env:
+      SCREENS: ${{ matrix.chunk.screens }}
+    steps:
+      - name: Check out the preview tooling (scripts and flows of this workflow run)
+        uses: actions/checkout@v7
+        with:
+          path: tooling
+          persist-credentials: false
+
+      - name: Check out the flows of the pull request head
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.head_sha }}
+          path: flows
+          sparse-checkout: testing
+          persist-credentials: false
+
+      - name: Restore the app from the cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/preview-app
+          key: ${{ needs.build-android.outputs[matrix.variant] }}
+          fail-on-cache-miss: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
 
       - name: Enable KVM
         run: |
@@ -216,18 +349,18 @@ jobs:
           # SCREENS holds validated tokens only (names and testing/ paths).
           # shellcheck disable=SC2086
           bash tooling/scripts/preview/phase.sh capture bash tooling/scripts/preview/android-capture.sh \
-            "$PWD/app/android/app/build/outputs/apk/release/app-release.apk" \
+            "$RUNNER_TEMP/preview-app/app-release.apk" \
             "$PWD/tooling" "$PWD/flows" "$PWD/out" $SCREENS
 
       - name: Phase durations
         if: ${{ always() }}
-        run: bash tooling/scripts/preview/phase-summary.sh "android ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
+        run: bash tooling/scripts/preview/phase-summary.sh "capture android ${{ matrix.variant }} ${{ matrix.chunk.screens }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: screens-android-${{ matrix.variant }}
+          name: screens-android-${{ matrix.variant }}-${{ matrix.chunk.id }}
           path: out/screens/*.png
           if-no-files-found: ignore
           retention-days: 14
@@ -236,13 +369,13 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: logs-android-${{ matrix.variant }}
+          name: logs-android-${{ matrix.variant }}-${{ matrix.chunk.id }}
           path: out/logs
           if-no-files-found: ignore
           retention-days: 7
 
-  ios:
-    name: iOS ${{ matrix.variant }}
+  build-ios:
+    name: Build iOS ${{ matrix.variant }}
     needs: plan
     if: ${{ needs.plan.outputs.ios == 'true' }}
     runs-on: macos-26
@@ -253,9 +386,12 @@ jobs:
       fail-fast: false
       matrix:
         variant: [before, after]
+    # One output per variant: the outputs of a matrix job are merged by name.
+    outputs:
+      before: ${{ steps.key.outputs.before }}
+      after: ${{ steps.key.outputs.after }}
     env:
       APP_SHA: ${{ matrix.variant == 'before' && needs.plan.outputs.base_sha || needs.plan.outputs.head_sha }}
-      SCREENS: ${{ needs.plan.outputs.screens }}
     steps:
       - name: Check out the preview tooling (scripts and flows of this workflow run)
         uses: actions/checkout@v7
@@ -270,6 +406,156 @@ jobs:
           path: app
           persist-credentials: false
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # The keys are computed before any PR code runs and are step outputs, which
+      # later steps cannot change.
+      - name: Compute the cache keys
+        id: key
+        env:
+          ENV_HASH: ${{ needs.plan.outputs.env_hash }}
+        run: bash tooling/scripts/preview/app-key.sh ios "${{ matrix.variant }}" "$PWD/tooling" "$PWD/app" "$APP_SHA" "$ENV_HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Look for the app in the cache
+        id: app
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/preview-app
+          key: ${{ steps.key.outputs.app_key }}
+          lookup-only: true
+
+      - name: Report the app cache
+        run: |
+          echo "App cache for ${{ matrix.variant }} (\`${APP_SHA:0:9}\`): ${{ steps.app.outputs.cache-hit == 'true' && '**hit**, the build is skipped' || '**miss**, the app is built' }}." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install dependencies
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        working-directory: app
+        env:
+          # A dropped connection (ECONNRESET) failed a run once; no secrets here.
+          NPM_CONFIG_FETCH_RETRIES: 5
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
+        run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
+
+      - name: Install ccache
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        run: bash tooling/scripts/preview/phase.sh ccache-install brew install ccache
+
+      - name: Generate the native project
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
+        run: bash tooling/scripts/preview/ios-prebuild.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs"
+
+      # The Podfile and its inputs are in the key, so a restored Pods folder
+      # belongs to this Podfile; `pod install` then only confirms it.
+      - name: Restore the CocoaPods
+        id: pods
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            app/ios/Pods
+            app/ios/Podfile.lock
+          key: ${{ steps.key.outputs.deps_key }}-pods
+
+      - name: Install the CocoaPods
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
+        run: bash tooling/scripts/preview/ios-pods.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs"
+
+      - name: Save the CocoaPods
+        if: ${{ steps.app.outputs.cache-hit != 'true' && steps.pods.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            app/ios/Pods
+            app/ios/Podfile.lock
+          key: ${{ steps.key.outputs.deps_key }}-pods
+
+      # ccache is keyed by content, so an older cache is still useful: take the
+      # newest one of this Podfile, else the newest one at all.
+      - name: Restore the ccache
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/ccache
+          key: preview-ccache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
+          restore-keys: |
+            preview-ccache-ios-${{ steps.key.outputs.deps_key }}-
+            preview-ccache-ios-
+
+      - name: Build for the simulator
+        id: build
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
+        run: bash tooling/scripts/preview/ios-build.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs" "$RUNNER_TEMP/preview-app"
+
+      - name: Save the ccache
+        if: ${{ !cancelled() && steps.app.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/ccache
+          key: preview-ccache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
+
+      - name: Save the app in the cache
+        if: ${{ steps.build.outcome == 'success' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/preview-app
+          key: ${{ steps.key.outputs.app_key }}
+
+      - name: Phase durations
+        if: ${{ always() }}
+        run: |
+          bash tooling/scripts/preview/phase-summary.sh "build ios ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
+          for file in out/logs/build-timing.txt out/logs/ccache-stats.txt; do
+            [ -s "$file" ] || continue
+            { echo "<details><summary>$(basename "$file")</summary>"; echo; echo '```'; cat "$file"; echo '```'; echo; echo '</details>'; echo; } >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Upload logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: logs-ios-${{ matrix.variant }}-build
+          path: out/logs
+          if-no-files-found: ignore
+          retention-days: 7
+
+  capture-ios:
+    name: iOS ${{ matrix.variant }} ${{ matrix.chunk.screens }}
+    needs: [plan, build-ios]
+    if: ${{ needs.plan.outputs.ios == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [before, after]
+        chunk: ${{ fromJSON(needs.plan.outputs.ios_chunks) }}
+    env:
+      SCREENS: ${{ matrix.chunk.screens }}
+    steps:
+      - name: Check out the preview tooling (scripts and flows of this workflow run)
+        uses: actions/checkout@v7
+        with:
+          path: tooling
+          persist-credentials: false
+
       - name: Check out the flows of the pull request head
         uses: actions/checkout@v7
         with:
@@ -278,24 +564,12 @@ jobs:
           sparse-checkout: testing
           persist-credentials: false
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - name: Restore the app from the cache
+        uses: actions/cache/restore@v6
         with:
-          node-version: 22
-
-      - name: Install dependencies
-        working-directory: app
-        env:
-          # A dropped connection (ECONNRESET) failed a run once; no secrets here.
-          NPM_CONFIG_FETCH_RETRIES: 5
-          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
-        run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
-
-      - name: Build for the simulator and install
-        env:
-          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
-          EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
-        run: bash tooling/scripts/preview/ios-build.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs"
+          path: ${{ runner.temp }}/preview-app
+          key: ${{ needs.build-ios.outputs[matrix.variant] }}
+          fail-on-cache-miss: true
 
       - name: Install Maestro
         run: bash tooling/scripts/preview/phase.sh maestro-install bash tooling/scripts/preview/install-maestro.sh
@@ -305,17 +579,17 @@ jobs:
           # SCREENS holds validated tokens only (names and testing/ paths).
           # shellcheck disable=SC2086
           bash tooling/scripts/preview/phase.sh capture bash tooling/scripts/preview/ios-capture.sh \
-            "$PWD/tooling" "$PWD/flows" "$PWD/out" $SCREENS
+            "$PWD/tooling" "$PWD/flows" "$PWD/out" "$RUNNER_TEMP/preview-app" $SCREENS
 
       - name: Phase durations
         if: ${{ always() }}
-        run: bash tooling/scripts/preview/phase-summary.sh "ios ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
+        run: bash tooling/scripts/preview/phase-summary.sh "capture ios ${{ matrix.variant }} ${{ matrix.chunk.screens }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload screenshots
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: screens-ios-${{ matrix.variant }}
+          name: screens-ios-${{ matrix.variant }}-${{ matrix.chunk.id }}
           path: out/screens/*.png
           if-no-files-found: ignore
           retention-days: 14
@@ -324,14 +598,14 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: logs-ios-${{ matrix.variant }}
+          name: logs-ios-${{ matrix.variant }}-${{ matrix.chunk.id }}
           path: out/logs
           if-no-files-found: ignore
           retention-days: 7
 
   publish:
     name: Publish to the pull request
-    needs: [plan, android, ios]
+    needs: [plan, build-android, capture-android, build-ios, capture-ios]
     if: ${{ !cancelled() && needs.plan.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -347,8 +621,12 @@ jobs:
       HEAD_SHA: ${{ needs.plan.outputs.head_sha }}
       BASE_SHA: ${{ needs.plan.outputs.base_sha }}
       SCREENS: ${{ needs.plan.outputs.screens }}
-      ANDROID_RESULT: ${{ needs.android.result }}
-      IOS_RESULT: ${{ needs.ios.result }}
+      ANDROID_REQUESTED: ${{ needs.plan.outputs.android }}
+      ANDROID_BUILD_RESULT: ${{ needs.build-android.result }}
+      ANDROID_CAPTURE_RESULT: ${{ needs.capture-android.result }}
+      IOS_REQUESTED: ${{ needs.plan.outputs.ios }}
+      IOS_BUILD_RESULT: ${{ needs.build-ios.result }}
+      IOS_CAPTURE_RESULT: ${{ needs.capture-ios.result }}
     steps:
       - name: Download the screenshots
         uses: actions/download-artifact@v8
@@ -359,23 +637,29 @@ jobs:
 
       - name: Validate the screenshots
         # The files come from jobs that ran PR code: treat them as untrusted.
-        # Keep only regular PNG files with plain names, in the four known folders.
+        # Keep only regular PNG files with plain names, in the artifacts of the
+        # capture jobs (screens-<platform>-<variant>-<chunk>), merged into one
+        # folder per platform and variant.
         run: |
           set -euo pipefail
           mkdir -p validated
           count=0
-          for dir in screens-android-before screens-android-after screens-ios-before screens-ios-after; do
-            [ -d "incoming/$dir" ] || continue
-            mkdir -p "validated/$dir"
-            for file in incoming/$dir/*; do
+          for path in incoming/screens-*; do
+            [ -d "$path" ] && [ ! -L "$path" ] || continue
+            dir="$(basename "$path")"
+            [[ "$dir" =~ ^screens-(android|ios)-(before|after)-[0-9]$ ]] || { echo "Skipping $dir: unexpected artifact name"; continue; }
+            target="screens-${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+            mkdir -p "validated/$target"
+            for file in "$path"/*; do
               [ -e "$file" ] || continue
               name="$(basename "$file")"
               [ -f "$file" ] && [ ! -L "$file" ] || { echo "Skipping $name: not a regular file"; continue; }
               [[ "$name" =~ ^[A-Za-z0-9._-]{1,80}\.png$ ]] || { echo "Skipping $name: unexpected name"; continue; }
               [ "$(stat -c %s "$file")" -le 10485760 ] || { echo "Skipping $name: larger than 10 MiB"; continue; }
               [ "$(head -c 8 "$file" | od -An -tx1 | tr -d ' \n')" = 89504e470d0a1a0a ] || { echo "Skipping $name: not a PNG"; continue; }
+              [ ! -e "validated/$target/$name" ] || { echo "Skipping $name: already taken from another chunk"; continue; }
               [ "$count" -lt 40 ] || { echo "Skipping $name: more than 40 screenshots"; continue; }
-              cp "$file" "validated/$dir/$name"
+              cp "$file" "validated/$target/$name"
               count=$((count + 1))
             done
           done
@@ -430,7 +714,13 @@ jobs:
             const image = (platform, variant, file) => (file
               ? `<img src="${rawBase}/screens-${platform}-${variant}/${file}" width="260" alt="${platform} ${variant} ${stem(file)}">`
               : '_no screenshot_');
-            const results = { android: process.env.ANDROID_RESULT, ios: process.env.IOS_RESULT };
+            // A platform that was not requested is skipped; a failed build
+            // leaves nothing to capture, so its result is the build's.
+            const resultOf = (requested, build, capture) => (requested !== 'true' ? 'skipped' : build !== 'success' ? `${build} (build)` : capture);
+            const results = {
+              android: resultOf(process.env.ANDROID_REQUESTED, process.env.ANDROID_BUILD_RESULT, process.env.ANDROID_CAPTURE_RESULT),
+              ios: resultOf(process.env.IOS_REQUESTED, process.env.IOS_BUILD_RESULT, process.env.IOS_CAPTURE_RESULT),
+            };
             const label = { android: 'Android emulator (Pixel, API 35, 1280x2856)', ios: 'iOS simulator (iPhone 17 Pro)' };
 
             let body = '<!-- preview-screenshots -->\n';

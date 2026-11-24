@@ -12,6 +12,6 @@ phase_run() {
   started="$(date +%s)"
   "$@" || rc=$?
   printf '%s\t%s\t%s\n' "$name" "$(($(date +%s) - started))" "$rc" >>"$PHASE_FILE"
-  echo "phase $name: $(($(date +%s) - started)) s (exit $rc)"
+  echo "phase $name: $(($(date +%s) - started)) s (exit $rc)" >&2
   return "$rc"
 }

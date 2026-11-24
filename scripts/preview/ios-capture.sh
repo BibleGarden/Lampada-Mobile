@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# Runs the requested preview flows with Maestro on the "iPhone 17 Pro"
-# simulator that ios-build.sh installed the app on. Needs no secrets.
+# Installs the built app on the "iPhone 17 Pro" simulator, booting it first, and
+# runs the requested preview flows with Maestro. Needs no secrets.
 #
-# Usage: ios-capture.sh <tooling-dir> <flows-dir> <out-dir> <token>...
+# Usage: ios-capture.sh <tooling-dir> <flows-dir> <out-dir> <app-dir> <token>...
+#   <app-dir> holds the twinkler.app that ios-build.sh built.
 # Writes <out-dir>/screens/*.png and <out-dir>/logs/*.
 set -euo pipefail
-tooling="${1:?tooling-dir}" flows="${2:?flows-dir}" out="${3:?out-dir}"
-shift 3
+tooling="${1:?tooling-dir}" flows="${2:?flows-dir}" out="${3:?out-dir}" appdir="${4:?app-dir}"
+shift 4
 (($#)) || { echo 'No preview screens requested.' >&2; exit 2; }
 # shellcheck source=screens.sh
 source "$tooling/scripts/preview/screens.sh"
+# shellcheck source=phases.sh
+source "$tooling/scripts/preview/phases.sh"
 mkdir -p "$out/screens" "$out/logs"
 logs="$(cd "$out/logs" && pwd)"
 
@@ -20,13 +23,14 @@ flow_list=()
 while IFS= read -r line; do flow_list+=("$line"); done <<<"$resolved"
 
 udid="$(ios_simulator_udid)"
-xcrun simctl boot "$udid" 2>/dev/null || true
-xcrun simctl bootstatus "$udid" -b >"$logs/bootstatus.log" 2>&1
+phase_run simulator-boot bash -c 'xcrun simctl boot "$1" 2>/dev/null || true; xcrun simctl bootstatus "$1" -b' _ "$udid" >"$logs/bootstatus.log" 2>&1
+[[ -d "$appdir/twinkler.app" ]] || { echo "No built app in $appdir (twinkler.app)." >&2; exit 1; }
+phase_run app-install xcrun simctl install "$udid" "$appdir/twinkler.app"
 # The same status bar in every run.
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 \
   --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4
 xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
-  || { echo 'The app (twinkler) is not installed on the simulator; run ios-build.sh first.' >&2; exit 1; }
+  || { echo 'The app (twinkler) is not installed on the simulator.' >&2; exit 1; }
 
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
 failed=0
