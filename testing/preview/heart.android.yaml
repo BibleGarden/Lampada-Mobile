@@ -57,17 +57,8 @@ appId: app.lampada
     visible:
       id: scripture-audio-button
     timeout: 30000
-- waitForAnimationToEnd:
-    timeout: 2000
-- takeScreenshot: heart-dock-outlined
-- tapOn:
-    id: dock-scripture-favorite
-- assertVisible:
-    id: dock-scripture-favorite-active
-- waitForAnimationToEnd:
-    timeout: 2000
-- takeScreenshot: heart-dock-filled
-# Scripture reader: the favourite is on, so the heart is filled first.
+# Move to a passage that can be read in full (the reader opens from it). The
+# favourite below is saved for this passage, so the reader shows it too.
 - repeat:
     while:
       notVisible:
@@ -80,6 +71,17 @@ appId: app.lampada
           timeout: 2000
 - assertVisible:
     id: scripture-read-full
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: heart-dock-outlined
+- tapOn:
+    id: dock-scripture-favorite
+- assertVisible:
+    id: dock-scripture-favorite-active
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: heart-dock-filled
+# Scripture reader: the favourite is on, so the heart is filled first.
 - tapOn:
     id: scripture-read-full
 - extendedWaitUntil:
