@@ -1,0 +1,130 @@
+appId: app.lampada
+tags:
+  - prepared
+---
+# Music returns with the prayer (Android): music on, a short timer, the timer
+# ends, "Return to prayer". Screenshots, in order: the session with the music
+# on, the system media controls before the timer ends (title and progress of
+# the playing track), the session after the return, the media controls after
+# the return. On a build without the return behaviour the music is off after
+# the return and the media controls show no playing track; the steps after the
+# return are therefore optional, so that such a build still produces its images.
+# Used by the preview workflow (docs: testing/README.md), see ADR-0046.
+- launchApp:
+    stopApp: true
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+# The real test server can answer the version check with a soft "Update
+# available" sheet a few seconds after launch; it covers the app. Dismiss it.
+- extendedWaitUntil:
+    visible:
+      id: update-later
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: update-later
+    commands:
+      - tapOn:
+          id: update-later
+- tapOn:
+    id: start-prayer-button
+- tapOn:
+    id: setup-examples-button
+- tapOn:
+    id: setup-example-0
+- tapOn:
+    id: setup-preset-5
+- tapOn:
+    id: setup-next-button
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+- longPressOn:
+    id: threshold-hold-button
+- assertVisible:
+    id: session-title
+- tapOn:
+    id: session-music-off
+- assertVisible:
+    id: music-playing
+# Shorten the timer: the step is 5 minutes while 5:00 or more is left, so the
+# first press clamps it to the 5 second lower bound and the later ones keep it
+# there; from then on the step is 1 minute, and two presses of "+" leave about
+# two minutes.
+- tapOn:
+    id: session-timer-button
+- repeat:
+    times: 6
+    commands:
+      - tapOn:
+          id: session-time-subtract
+          retryTapIfNoChange: false
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: session-time-add
+          retryTapIfNoChange: false
+- tapOn:
+    id: session-timer-button
+    retryTapIfNoChange: false
+    optional: true
+# Maestro has no sleep command: a deliberately false wait lets the music play.
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-music"
+    timeout: 8000
+    optional: true
+- takeScreenshot: music-before-session
+# The media notification of the app: one swipe down opens the notification
+# shade, a second one expands the quick settings with the media player.
+- swipe:
+    start: 50%,1%
+    end: 50%,55%
+- takeScreenshot: music-before-controls-shade
+- swipe:
+    start: 50%,1%
+    end: 50%,60%
+- takeScreenshot: music-before-controls
+- pressKey: back
+
+- extendedWaitUntil:
+    visible:
+      id: reflect-kicker
+    timeout: 300000
+- tapOn:
+    id: reflect-return-button
+- extendedWaitUntil:
+    visible:
+      id: session-title
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: music-playing
+    timeout: 15000
+    optional: true
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-music"
+    timeout: 6000
+    optional: true
+- takeScreenshot: music-after-session
+# The media notification of the app: one swipe down opens the notification
+# shade, a second one expands the quick settings with the media player.
+- swipe:
+    start: 50%,1%
+    end: 50%,55%
+- takeScreenshot: music-after-controls-shade
+- swipe:
+    start: 50%,1%
+    end: 50%,60%
+- takeScreenshot: music-after-controls
+- pressKey: back
+
