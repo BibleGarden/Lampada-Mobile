@@ -56,23 +56,21 @@ tags:
     id: session-music-off
 - assertVisible:
     id: music-playing
-# Shorten the timer: the step is 5 minutes while 5:00 or more is left, so the
-# first press clamps it to the 5 second lower bound and the later ones keep it
-# there; from then on the step is 1 minute, and two presses of "+" leave about
-# two minutes.
+# Shorten the timer. The step is 5 minutes while 5:00 or more is left and the
+# first press would clamp the timer to its 5 second lower bound, ending the
+# prayer before the next press: wait for the first tick to go under 5:00, where
+# the step is 1 minute, then press "-" twice for about two minutes.
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-timer"
+    timeout: 4000
+    optional: true
 - tapOn:
     id: session-timer-button
-- repeat:
-    times: 6
-    commands:
-      - tapOn:
-          id: session-time-subtract
-          retryTapIfNoChange: false
 - repeat:
     times: 2
     commands:
       - tapOn:
-          id: session-time-add
+          id: session-time-subtract
           retryTapIfNoChange: false
 - tapOn:
     id: session-timer-button
