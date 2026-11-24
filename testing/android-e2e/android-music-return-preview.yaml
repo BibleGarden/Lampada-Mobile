@@ -76,11 +76,12 @@ tags:
     id: session-timer-button
     retryTapIfNoChange: false
     optional: true
-# Maestro has no sleep command: a deliberately false wait lets the music play.
+# The track must be named as close to the end of the prayer as possible, so
+# that a track change of the playlist does not fall between the two readings:
+# wait until under a minute is left (the timer shows 0:30 to 0:59).
 - extendedWaitUntil:
-    visible: "no-such-text-wait-for-the-music"
-    timeout: 8000
-    optional: true
+    visible: "0:[3-5][0-9]"
+    timeout: 240000
 - takeScreenshot: music-before-session
 # The media notification of the app: one swipe down opens the notification
 # shade, a second one expands it with the media player. The system sometimes
@@ -109,16 +110,8 @@ tags:
     visible:
       id: session-title
     timeout: 30000
-- extendedWaitUntil:
-    visible:
-      id: music-playing
-    timeout: 15000
-    optional: true
-- extendedWaitUntil:
-    visible: "no-such-text-wait-for-the-music"
-    timeout: 6000
-    optional: true
-- takeScreenshot: music-after-session
+# Right after the return, before anything else takes time: the media player
+# shows the track and its position as the prayer continues.
 # The media notification of the app: one swipe down opens the notification
 # shade, a second one expands it with the media player. The system sometimes
 # ignores a swipe, so a screenshot is taken after each of three swipes.
@@ -135,4 +128,14 @@ tags:
     end: 50%,60%
 - takeScreenshot: music-after-controls-3
 - pressKey: back
+- extendedWaitUntil:
+    visible:
+      id: music-playing
+    timeout: 15000
+    optional: true
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-music"
+    timeout: 6000
+    optional: true
+- takeScreenshot: music-after-session
 
