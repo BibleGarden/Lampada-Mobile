@@ -83,19 +83,20 @@ tags:
     optional: true
 - takeScreenshot: music-before-session
 # The media notification of the app: one swipe down opens the notification
-# shade (a swipe that the system ignores is repeated), another one expands the
-# quick settings with the media player.
+# shade, a second one expands it with the media player. The system sometimes
+# ignores a swipe, so a screenshot is taken after each of three swipes.
 - swipe:
     start: 50%,1%
     end: 50%,55%
+- takeScreenshot: music-before-controls-1
 - swipe:
     start: 50%,1%
     end: 50%,55%
-- takeScreenshot: music-before-controls-shade
+- takeScreenshot: music-before-controls-2
 - swipe:
     start: 50%,1%
     end: 50%,60%
-- takeScreenshot: music-before-controls
+- takeScreenshot: music-before-controls-3
 - pressKey: back
 
 - extendedWaitUntil:
@@ -119,18 +120,19 @@ tags:
     optional: true
 - takeScreenshot: music-after-session
 # The media notification of the app: one swipe down opens the notification
-# shade (a swipe that the system ignores is repeated), another one expands the
-# quick settings with the media player.
+# shade, a second one expands it with the media player. The system sometimes
+# ignores a swipe, so a screenshot is taken after each of three swipes.
 - swipe:
     start: 50%,1%
     end: 50%,55%
+- takeScreenshot: music-after-controls-1
 - swipe:
     start: 50%,1%
     end: 50%,55%
-- takeScreenshot: music-after-controls-shade
+- takeScreenshot: music-after-controls-2
 - swipe:
     start: 50%,1%
     end: 50%,60%
-- takeScreenshot: music-after-controls
+- takeScreenshot: music-after-controls-3
 - pressKey: back
 

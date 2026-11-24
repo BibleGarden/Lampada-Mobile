@@ -3,13 +3,11 @@ tags:
   - prepared
 ---
 # Music returns with the prayer (iOS): music on, the prayer ends, "Return to
-# prayer". Screenshots, in order: the session with the music on, the Control
-# Center with the Now Playing tile before the prayer ends (title and progress of
-# the playing track), the session after the return, the Control Center after
-# the return. On a build without the return behaviour the music is off after
-# the return and the Now Playing tile shows no playing track; the steps after
-# the return are therefore optional, so that such a build still produces its
-# images.
+# prayer". Screenshots, in order: the session with the music on, the session
+# after the return. On a build without the return behaviour the music button is
+# off after the return. The Control Center of the CI simulator shows no Now
+# Playing tile (checked in the first runs), so the playing track cannot be
+# captured on iOS.
 # The prayer is left with "Finish", not by the timer: on the CI simulator each
 # Maestro command takes tens of seconds, so no timer short enough to wait for
 # is long enough to reach the end of the flow. "Finish" and the timer end go
@@ -70,17 +68,6 @@ tags:
     timeout: 8000
     optional: true
 - takeScreenshot: music-before-session
-# The Now Playing tile of the Control Center: a swipe down from the top right
-# corner opens it; the way back is a swipe up.
-- swipe:
-    start: 95%,1%
-    end: 95%,60%
-- waitForAnimationToEnd:
-    timeout: 3000
-- takeScreenshot: music-before-controls
-- swipe:
-    start: 50%,70%
-    end: 50%,10%
 - tapOn:
     id: session-finish-button
 - extendedWaitUntil:
@@ -103,15 +90,4 @@ tags:
     timeout: 6000
     optional: true
 - takeScreenshot: music-after-session
-# The Now Playing tile of the Control Center: a swipe down from the top right
-# corner opens it; the way back is a swipe up.
-- swipe:
-    start: 95%,1%
-    end: 95%,60%
-- waitForAnimationToEnd:
-    timeout: 3000
-- takeScreenshot: music-after-controls
-- swipe:
-    start: 50%,70%
-    end: 50%,10%
 
