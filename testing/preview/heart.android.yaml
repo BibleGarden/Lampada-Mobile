@@ -1,0 +1,126 @@
+appId: app.lampada
+---
+# Preview screen "heart": the Heart icon in the three places that use it, in
+# outlined and filled state: the favourite button in the prayer dock, the
+# scripture reader and the journal card. The path to the session is the one of
+# "reflect".
+- launchApp:
+    stopApp: true
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+# The real test server can answer the version check with a soft "Update
+# available" sheet a few seconds after launch; it covers the app. Dismiss it.
+- extendedWaitUntil:
+    visible:
+      id: update-later
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: update-later
+    commands:
+      - tapOn:
+          id: update-later
+- tapOn:
+    id: start-prayer-button
+- tapOn:
+    id: setup-examples-button
+- tapOn:
+    id: setup-example-0
+- tapOn:
+    id: setup-preset-0
+- tapOn:
+    id: setup-next-button
+- runFlow:
+    when:
+      visible:
+        id: privacy-consent-core_prayer_ai
+    commands:
+      - tapOn:
+          id: privacy-consent-core_prayer_ai-allow
+- longPressOn:
+    id: threshold-hold-button
+- assertVisible:
+    id: session-title
+# Dock: the favourite button of the scripture card, outlined, then filled.
+- tapOn:
+    id: dock-scripture-tab
+- extendedWaitUntil:
+    visible:
+      id: dock-scripture-favorite
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: scripture-audio-button
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: heart-dock-outlined
+- tapOn:
+    id: dock-scripture-favorite
+- assertVisible:
+    id: dock-scripture-favorite-active
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: heart-dock-filled
+# Scripture reader: the favourite is on, so the heart is filled first.
+- repeat:
+    while:
+      notVisible:
+        id: scripture-read-full
+    times: 5
+    commands:
+      - tapOn:
+          id: dock-scripture-next
+      - waitForAnimationToEnd:
+          timeout: 2000
+- assertVisible:
+    id: scripture-read-full
+- tapOn:
+    id: scripture-read-full
+- extendedWaitUntil:
+    visible:
+      id: scripture-reader-reference
+    timeout: 20000
+- assertVisible:
+    id: scripture-reader-favorite-active
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: heart-reader-filled
+- tapOn:
+    id: scripture-reader-favorite-active
+- assertVisible:
+    id: scripture-reader-favorite
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: heart-reader-outlined
+# Back to saved: the journal card below counts the saved passages.
+- tapOn:
+    id: scripture-reader-favorite
+- assertVisible:
+    id: scripture-reader-favorite-active
+- tapOn:
+    id: scripture-reader-close
+# Journal: the card of the finished prayer shows the small outlined heart with
+# the number of saved passages.
+- tapOn:
+    id: session-finish-button
+- extendedWaitUntil:
+    visible:
+      id: reflect-kicker
+    timeout: 30000
+- tapOn:
+    id: reflect-complete-button
+- assertVisible:
+    id: prayer-saved-notice
+- tapOn:
+    id: journal-button
+- assertVisible:
+    id: journal-title
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: heart-journal
