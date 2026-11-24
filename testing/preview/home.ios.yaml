@@ -1,0 +1,27 @@
+appId: twinkler
+---
+# Preview screen "home": the first screen of a clean install.
+- launchApp:
+    stopApp: true
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+# The real test server can answer the version check with a soft "Update
+# available" sheet a few seconds after launch; it covers the app. Dismiss it.
+- extendedWaitUntil:
+    visible:
+      id: update-later
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: update-later
+    commands:
+      - tapOn:
+          id: update-later
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: home
