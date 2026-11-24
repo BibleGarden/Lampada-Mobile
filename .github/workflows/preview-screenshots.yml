@@ -191,7 +191,7 @@ jobs:
           # A dropped connection (ECONNRESET) failed a run once; no secrets here.
           NPM_CONFIG_FETCH_RETRIES: 5
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
-        run: npm ci
+        run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
 
       - name: Build the x86_64 Release APK
         env:
@@ -206,18 +206,22 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Install Maestro
-        run: bash tooling/scripts/preview/install-maestro.sh
+        run: bash tooling/scripts/preview/phase.sh maestro-install bash tooling/scripts/preview/install-maestro.sh
 
       - name: Start the emulator
-        run: bash tooling/scripts/preview/android-emulator.sh "$PWD/tooling" "$PWD/out/logs"
+        run: bash tooling/scripts/preview/phase.sh emulator-start bash tooling/scripts/preview/android-emulator.sh "$PWD/tooling" "$PWD/out/logs"
 
       - name: Capture screenshots on the emulator
         run: |
           # SCREENS holds validated tokens only (names and testing/ paths).
           # shellcheck disable=SC2086
-          bash tooling/scripts/preview/android-capture.sh \
+          bash tooling/scripts/preview/phase.sh capture bash tooling/scripts/preview/android-capture.sh \
             "$PWD/app/android/app/build/outputs/apk/release/app-release.apk" \
             "$PWD/tooling" "$PWD/flows" "$PWD/out" $SCREENS
+
+      - name: Phase durations
+        if: ${{ always() }}
+        run: bash tooling/scripts/preview/phase-summary.sh "android ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload screenshots
         if: ${{ always() }}
@@ -285,7 +289,7 @@ jobs:
           # A dropped connection (ECONNRESET) failed a run once; no secrets here.
           NPM_CONFIG_FETCH_RETRIES: 5
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
-        run: npm ci
+        run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
 
       - name: Build for the simulator and install
         env:
@@ -294,14 +298,18 @@ jobs:
         run: bash tooling/scripts/preview/ios-build.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs"
 
       - name: Install Maestro
-        run: bash tooling/scripts/preview/install-maestro.sh
+        run: bash tooling/scripts/preview/phase.sh maestro-install bash tooling/scripts/preview/install-maestro.sh
 
       - name: Capture screenshots on the simulator
         run: |
           # SCREENS holds validated tokens only (names and testing/ paths).
           # shellcheck disable=SC2086
-          bash tooling/scripts/preview/ios-capture.sh \
+          bash tooling/scripts/preview/phase.sh capture bash tooling/scripts/preview/ios-capture.sh \
             "$PWD/tooling" "$PWD/flows" "$PWD/out" $SCREENS
+
+      - name: Phase durations
+        if: ${{ always() }}
+        run: bash tooling/scripts/preview/phase-summary.sh "ios ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload screenshots
         if: ${{ always() }}
