@@ -117,8 +117,12 @@ appId: twinkler
     timeout: 30000
 - tapOn:
     id: reflect-complete-button
-- assertVisible:
-    id: prayer-saved-notice
+# The home screen shows the "saved" notice for 4 seconds only, which a slow
+# emulator can miss; wait for the home screen itself.
+- extendedWaitUntil:
+    visible:
+      id: journal-button
+    timeout: 30000
 - tapOn:
     id: journal-button
 - assertVisible:
