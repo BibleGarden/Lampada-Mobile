@@ -78,26 +78,33 @@ tags:
     optional: true
 # The track must be named as close to the end of the prayer as possible, so
 # that a track change of the playlist does not fall between the two readings:
-# wait until under a minute is left (the timer shows 0:30 to 0:59).
+# wait until under a minute is left (the timer shows 0:40 to 0:59).
 - extendedWaitUntil:
-    visible: "0:[3-5][0-9]"
+    visible: "0:[4-5][0-9]"
     timeout: 240000
 - takeScreenshot: music-before-session
 # The media notification of the app: one swipe down opens the notification
 # shade, a second one expands it with the media player. The system sometimes
-# ignores a swipe, so a screenshot is taken after each of three swipes.
+# ignores a swipe or draws the shade late, so a screenshot is taken after each of two
+# swipes, each after a pause for the shade to settle.
 - swipe:
     start: 50%,1%
     end: 50%,55%
+    duration: 800
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-shade"
+    timeout: 3000
+    optional: true
 - takeScreenshot: music-before-controls-1
 - swipe:
     start: 50%,1%
     end: 50%,55%
+    duration: 800
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-shade"
+    timeout: 3000
+    optional: true
 - takeScreenshot: music-before-controls-2
-- swipe:
-    start: 50%,1%
-    end: 50%,60%
-- takeScreenshot: music-before-controls-3
 - pressKey: back
 
 - extendedWaitUntil:
@@ -114,19 +121,26 @@ tags:
 # shows the track and its position as the prayer continues.
 # The media notification of the app: one swipe down opens the notification
 # shade, a second one expands it with the media player. The system sometimes
-# ignores a swipe, so a screenshot is taken after each of three swipes.
+# ignores a swipe or draws the shade late, so a screenshot is taken after each of two
+# swipes, each after a pause for the shade to settle.
 - swipe:
     start: 50%,1%
     end: 50%,55%
+    duration: 800
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-shade"
+    timeout: 3000
+    optional: true
 - takeScreenshot: music-after-controls-1
 - swipe:
     start: 50%,1%
     end: 50%,55%
+    duration: 800
+- extendedWaitUntil:
+    visible: "no-such-text-wait-for-the-shade"
+    timeout: 3000
+    optional: true
 - takeScreenshot: music-after-controls-2
-- swipe:
-    start: 50%,1%
-    end: 50%,60%
-- takeScreenshot: music-after-controls-3
 - pressKey: back
 - extendedWaitUntil:
     visible:
