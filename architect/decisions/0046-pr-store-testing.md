@@ -60,7 +60,8 @@ Neither is used as a fallback.
   EAS build alone is insufficient.
 - Play internal testing contains the latest release. Parallel PRs overwrite
   each other; the implementer rebuilds at the owner's request.
-- The maintainer keeps the version variable compatible with both stores.
+- The version must exceed the latest App Store release (equality is allowed only
+  before that version is approved) and be at least the latest Google Play version.
 
 ## References
 

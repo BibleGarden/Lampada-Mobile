@@ -159,10 +159,10 @@ lampada_key="$(ssh bible.garden "sed -n 's/^LAMPADA_API_KEY=//p' /root/cep/bible
 trap 'unset lampada_key' EXIT
 test "${#lampada_key}" -ge 32
 for environment in preview production development; do
-  npx eas-cli@latest env:create --environment "$environment" \
+  bash scripts/eas-cli.sh env:create --environment "$environment" \
     --name EXPO_PUBLIC_AI_PROXY_KEY --visibility sensitive \
     --value "$lampada_key" --force
-  npx eas-cli@latest env:list "$environment" --format short | cut -d= -f1
+  bash scripts/eas-cli.sh env:list "$environment" --format short | cut -d= -f1
 done
 ```
 

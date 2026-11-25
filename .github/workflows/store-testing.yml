@@ -57,7 +57,7 @@ jobs:
             }
             const version = process.env.STORE_VERSION;
             if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)) {
-              throw new Error('Set repository variable STORE_TESTING_VERSION to the store version (major.minor.patch), at least the latest version on either store.');
+              throw new Error('Set repository variable STORE_TESTING_VERSION (major.minor.patch) above the latest App Store release (equal only before approval) and at least the latest Google Play version.');
             }
             core.setOutput('pr', String(number));
             core.setOutput('sha', pr.head.sha);
