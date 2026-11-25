@@ -26,7 +26,7 @@ case "$MODE" in
     trap 'find "$CHECK_DIR" -depth -delete' EXIT
     OUTPUT="$CHECK_DIR/eas-env.txt"
 
-    npx eas-cli@latest env:list "$EAS_ENVIRONMENT" --format short > "$OUTPUT"
+    bash scripts/eas-cli.sh env:list "$EAS_ENVIRONMENT" --format short > "$OUTPUT"
     if ! check_names_in_file "$OUTPUT"; then
       echo "Configure the variables with 'eas env:create' first. Do not commit their values to git." >&2
       exit 1

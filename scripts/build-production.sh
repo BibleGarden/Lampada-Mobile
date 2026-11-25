@@ -34,10 +34,10 @@ node scripts/bump-version.mjs "$VERSION_MODE"
 
 if [ "$PLATFORM" = all ]; then
   # Android goes to internal testing; iOS is only built.
-  npx eas-cli@latest build --platform android --profile production --auto-submit "$@"
-  exec npx eas-cli@latest build --platform ios --profile production "$@"
+  bash scripts/eas-cli.sh build --platform android --profile production --auto-submit "$@"
+  exec bash scripts/eas-cli.sh build --platform ios --profile production "$@"
 elif [ "$PLATFORM" = android ]; then
-  exec npx eas-cli@latest build --platform android --profile production --auto-submit "$@"
+  exec bash scripts/eas-cli.sh build --platform android --profile production --auto-submit "$@"
 else
-  exec npx eas-cli@latest build --platform ios --profile production "$@"
+  exec bash scripts/eas-cli.sh build --platform ios --profile production "$@"
 fi

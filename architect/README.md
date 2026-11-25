@@ -1151,7 +1151,8 @@ the required repository variable `STORE_TESTING_VERSION`, applied only to the
 disposable build checkout. EAS remotely increments native build numbers.
 The workflow separates PR validation, read-only build execution and comment
 publishing without repository code. Build links and numbers identify the exact
-PR revision for acceptance. See [ADR-0046](decisions/0046-pr-store-testing.md)
+PR revision for human acceptance, after CI, review and AI tester validation.
+AI testing retains its own build process. See [ADR-0046](decisions/0046-pr-store-testing.md)
 and [the procedure](../docs/store-testing.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo

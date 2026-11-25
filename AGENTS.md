@@ -107,24 +107,17 @@ Shut a simulator down when you are done with it.
 
 # Builds and environments
 
-- An app-changing task is ready for acceptance only after its PR revision has
-  been distributed through `store-testing.yml`. After CI is green and review
-  is approved, the implementer starts it by adding the `store-testing` PR label
-  or using `workflow_dispatch` with the PR number. In the issue, record the
-  branch, exact SHA, version, iOS build number, Android versionCode and both
-  EAS build links. Confirm submission and store processing have completed.
-  The tester checks those exact builds, and the handoff to the owner names
-  those same build numbers. If another PR replaces the Play internal release,
-  the implementer starts `store-testing.yml` again at the owner's request and
-  records the new numbers. Documentation-only and CI-only tasks do not need
-  store distribution.
-- `store-testing.yml` uses the `store-testing` EAS build and submit profiles:
-  store distribution, `EXPO_PUBLIC_BUILD_CHANNEL=test`, runtime variables from
-  the EAS `preview` environment, TestFlight and Play internal testing. The
-  repository variable `STORE_TESTING_VERSION` supplies the store version;
-  EAS remotely increments native build numbers. The workflow changes
-  `app.json` only in its disposable checkout, never in a commit. See
-  `docs/store-testing.md` for setup and reporting.
+- Before handing an app-changing task to a human (the owner or client) for
+  acceptance, the implementer distributes the PR revision through
+  `store-testing.yml`, after green CI, approved review and AI tester validation.
+  Start it with the `store-testing` PR label or `workflow_dispatch`. Record the
+  branch, exact SHA, version, iOS build number, Android versionCode and both EAS
+  build links in the issue; confirm submission and store processing. The human
+  accepts those exact builds. If another PR replaces the release, rebuild at
+  the owner's request and record the new numbers. Tasks without app changes
+  need no distribution. The AI tester keeps its own build and validation
+  process; store distribution is not a prerequisite for AI testing. See
+  [the store-testing procedure](docs/store-testing.md).
 - Never substitute the build method silently. A request to install the app on a
   physical iPhone means `npm run iphone` — a local standalone Release build that
   takes its variables from `.env.local`.

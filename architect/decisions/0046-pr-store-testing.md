@@ -5,7 +5,7 @@
 
 ## Context
 
-Acceptance of app changes needs installable builds of the reviewed PR revision
+Human acceptance of app changes needs installable builds of the reviewed PR revision
 before merge. Local test versions do not necessarily match the versions already
 published on the stores. The public repository must separate code execution
 with build credentials from PR comment permissions.
@@ -47,9 +47,15 @@ Neither is used as a fallback.
 
 ## Consequences
 
-- App-changing tasks require distribution after green CI and approved review.
-  The issue and owner handoff identify the exact builds tested. Documentation
-  and CI changes are exempt.
+- When handing an app-changing task to a human (the owner or client) for
+  acceptance, the implementer starts distribution with the `store-testing`
+  PR label or `workflow_dispatch`, after green CI, approved review and AI
+  tester validation. The issue records the branch, exact SHA, version, iOS
+  build number, Android versionCode and both EAS build links. The handoff names
+  those builds, and the human accepts exactly them. Tasks without app changes
+  need no distribution.
+- The AI tester keeps its own build and validation tools and process. Store
+  distribution is not a prerequisite for AI testing.
 - Store processing and submission must be checked before acceptance; a finished
   EAS build alone is insufficient.
 - Play internal testing contains the latest release. Parallel PRs overwrite

@@ -11,4 +11,4 @@ bash scripts/check-runtime-env.sh eas preview
 node scripts/bump-version.mjs test
 
 echo "▶︎ Starting an internal EAS preview build…"
-exec npx eas-cli@latest build --platform ios --profile preview "$@"
+exec bash scripts/eas-cli.sh build --platform ios --profile preview "$@"

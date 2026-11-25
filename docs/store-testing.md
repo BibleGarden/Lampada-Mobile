@@ -1,7 +1,8 @@
 # PR store testing
 
 `store-testing.yml` builds the exact head SHA of an open PR and requests EAS
-auto-submission to TestFlight and Google Play internal testing before merge.
+auto-submission to TestFlight and Google Play internal testing for human
+acceptance before merge.
 It accepts only branches of this repository; forks are refused.
 
 ## Setup
@@ -28,11 +29,17 @@ their own behavior.
 
 ## Run and accept
 
-After green CI and approved review, the implementer adds the `store-testing`
-label to the PR, or runs `store-testing.yml` from Actions with its PR number.
-For another label-triggered run, remove and reapply the label. Manual dispatch
-becomes available once the workflow is on the default branch; the label can
-exercise the workflow on its own PR before merge.
+When handing an app-changing task to a human (the owner or client) for
+acceptance, after green CI, approved review and AI tester validation, the
+implementer adds the `store-testing` label to the PR, or runs
+`store-testing.yml` from Actions with its PR number.
+For another label-triggered run, remove and reapply the label.
+Manual dispatch runs the workflow from the default branch.
+For a label event, the workflow uses the payload head SHA and refuses to build
+if the current PR head has moved; re-add the label to request the new revision.
+
+Preflight and build commands use the same EAS CLI version pinned in
+`scripts/eas-cli.sh`, which also serves local EAS build scripts.
 
 The workflow checks out the resolved head SHA, replaces `expo.version` only in
 that disposable checkout, then runs:
@@ -50,12 +57,20 @@ The run summary and a separate PR comment list the version, exact SHA, iOS and
 Android build numbers and EAS build links; the raw JSON is a workflow artifact.
 Build completion and an auto-submit request do not prove store availability:
 check EAS submission status and wait for TestFlight/Play processing. Resolve a
-failed submission before handing the builds to a tester.
+failed submission before handing the builds to a human.
+
+Reporting runs only after the combined build/auto-submit command succeeds.
+If that command fails, including a submission failure after completed builds,
+the workflow stays red and does not upload the result JSON or publish build
+numbers in the summary or PR comment. The implementer retrieves the build
+numbers and links from EAS, records them and the failure in the issue, and
+resolves submission and store processing before human acceptance.
 
 In the issue, the implementer records the branch, SHA, version, both build
-numbers and links. The tester installs and checks exactly those builds. The
-handoff to the owner names the same numbers. App changes require this delivery;
-documentation-only and CI-only tasks do not.
+numbers and links. The human installs and accepts exactly those builds; the
+handoff names the same numbers. Tasks without app changes need no distribution.
+The AI tester uses its own build and validation tools; this workflow does not
+change that process and is not a prerequisite for AI testing.
 
 Play internal testing exposes the latest release. Parallel PRs can replace
 each other's releases; at the owner's request, start `store-testing.yml` again

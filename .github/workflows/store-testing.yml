@@ -42,8 +42,16 @@ jobs:
               ? context.payload.inputs.pr : String(context.payload.pull_request.number);
             if (!/^[1-9]\d*$/.test(input)) throw new Error('Use the PR number without spaces or leading zeros.');
             const number = Number(input);
-            if (!Number.isSafeInteger(number) || number <= 0) throw new Error('Invalid PR number.');
-            const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
+            if (!Number.isSafeInteger(number)) throw new Error('Invalid PR number.');
+            const pr = context.eventName === 'pull_request' ? context.payload.pull_request
+              : (await github.rest.pulls.get({ ...context.repo, pull_number: number })).data;
+            if (context.eventName === 'pull_request') {
+              const { data: current } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
+              if (current.head.sha !== pr.head.sha) {
+                throw new Error('PR head moved after labeling; re-add the label');
+              }
+              if (current.state !== 'open') throw new Error('The PR must still be open.');
+            }
             if (pr.state !== 'open' || pr.head.repo?.full_name !== `${context.repo.owner}/${context.repo.repo}` || pr.head.repo.fork) {
               throw new Error('An open PR from a branch of this repository is required; forks are refused.');
             }
@@ -90,7 +98,6 @@ jobs:
       - name: Check runtime variables, build and auto-submit both platforms
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_BUILD_CHANNEL: test
         run: |
           set -euo pipefail
           if [ -z "$EXPO_TOKEN" ]; then
@@ -98,7 +105,7 @@ jobs:
             exit 1
           fi
           bash scripts/check-runtime-env.sh eas preview
-          npx eas-cli@20.4.0 build --platform all --profile store-testing \
+          bash scripts/eas-cli.sh build --platform all --profile store-testing \
             --non-interactive --auto-submit --wait --json > "$RUNNER_TEMP/store-builds.json"
 
       - name: Save EAS results
