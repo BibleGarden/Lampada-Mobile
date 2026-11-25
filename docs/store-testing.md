@@ -49,13 +49,16 @@ that disposable checkout, then runs:
 bash scripts/eas-cli.sh build --platform all --profile store-testing --non-interactive --auto-submit --wait --json
 ```
 
+It then records each build's final state with `eas build:view <id> --json`;
+that combined JSON is the workflow artifact.
+
 EAS owns `ios.buildNumber` and Android `versionCode` through
 `appVersionSource: remote` and auto-increment. Repeated builds can share the
 store version but receive new native build numbers. No version change is
 committed to `app.json`.
 
 The run summary and a separate PR comment list the version, exact SHA, iOS and
-Android build numbers and EAS build links; the raw JSON is a workflow artifact.
+Android build numbers and EAS build links.
 Build completion and an auto-submit request do not prove store availability:
 check EAS submission status and wait for TestFlight/Play processing. Resolve a
 failed submission before handing the builds to a human.

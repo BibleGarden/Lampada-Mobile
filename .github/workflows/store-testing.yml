@@ -110,7 +110,7 @@ jobs:
           # The build output can hold a status captured before the build
           # finished; record the final state of each build instead.
           jq -r '.[].id' "$RUNNER_TEMP/started-builds.json" | while read -r id; do
-            bash scripts/eas-cli.sh build:view "$id" --json
+            bash scripts/eas-cli.sh build:view "$id" --json </dev/null
           done | jq -s . > "$RUNNER_TEMP/store-builds.json"
 
       - name: Save EAS results
