@@ -106,7 +106,12 @@ jobs:
           fi
           bash scripts/check-runtime-env.sh eas preview
           bash scripts/eas-cli.sh build --platform all --profile store-testing \
-            --non-interactive --auto-submit --wait --json > "$RUNNER_TEMP/store-builds.json"
+            --non-interactive --auto-submit --wait --json > "$RUNNER_TEMP/started-builds.json"
+          # The build output can hold a status captured before the build
+          # finished; record the final state of each build instead.
+          jq -r '.[].id' "$RUNNER_TEMP/started-builds.json" | while read -r id; do
+            bash scripts/eas-cli.sh build:view "$id" --json
+          done | jq -s . > "$RUNNER_TEMP/store-builds.json"
 
       - name: Save EAS results
         uses: actions/upload-artifact@v7
