@@ -92,7 +92,7 @@ export const Book = ({ size = 13, color = '#e7cf95', strokeWidth = 1.7 }: P) => 
 
 export const Heart = ({ size = 15, color = '#e7cf95', fill = 'none', strokeWidth = 1.7 }: P & { fill?: string }) => (
   <Svg width={sc(size)} height={sc(size)} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-    <Path d="M12 20s-7-4.3-9.3-8.5C1 8 2.8 5 6 5c2 0 3.2 1.2 4 2.3C10.8 6.2 12 5 14 5c3.2 0 5 3 3.3 6.5C19 15.7 12 20 12 20z" />
+    <Path d="M12 7.6C11 5.4 9.2 4 7 4C4.2 4 2.5 6.1 2.5 8.6C2.5 14 9.5 18.3 12 20.5C14.5 18.3 21.5 14 21.5 8.6C21.5 6.1 19.8 4 17 4C14.8 4 13 5.4 12 7.6Z" />
   </Svg>
 );
 

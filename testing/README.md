@@ -476,8 +476,9 @@ commas or spaces. A name is one of:
 
 - a **screen name**, such as `home` or `reflect`: the flows
   `testing/preview/<name>.android.yaml` and `testing/preview/<name>.ios.yaml`.
-  They end with `takeScreenshot: <name>`, one image per platform. Add a pair of
-  files to define a new screen;
+  They end with `takeScreenshot: <name>`, one image per platform (the screen
+  `heart` takes several, named `heart-*`: the Heart icon in the dock, the
+  scripture reader and the journal). Add a pair of files to define a new screen;
 - a **flow path** such as `testing/android-e2e/android-smoke-full-relaunch.yaml`
   or `testing/e2e/ios-smoke-full.yaml`: an existing Maestro flow, read from the
   pull request head. The file name starts with `android-` or `ios-` and selects
