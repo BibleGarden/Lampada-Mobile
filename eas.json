@@ -29,10 +29,27 @@
       },
       "autoIncrement": true,
       "environment": "production"
+    },
+    "store-testing": {
+      "env": {
+        "EXPO_PUBLIC_BUILD_CHANNEL": "test"
+      },
+      "distribution": "store",
+      "environment": "preview",
+      "autoIncrement": true
     }
   },
   "submit": {
     "production": {
+      "ios": {
+        "ascAppId": "6806024678"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "completed"
+      }
+    },
+    "store-testing": {
       "ios": {
         "ascAppId": "6806024678"
       },

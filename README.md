@@ -207,7 +207,8 @@ restarting Metro for Debug and rebuilding for Release.
 
 ### Automatic app versions
 
-`app.json` → `expo.version` is the source of the app version. Each
+For local and production npm builds, `app.json` → `expo.version` is the source
+of the app version. Each
 `npm run eas:production:<all|ios|android>` reserves the next two-part store
 version before building: `1.1` → `1.2`, dropping any patch (`1.1.3` → `1.2`).
 One release has one version on both stores: build both with
@@ -220,6 +221,10 @@ next minor. `npm run iphone`,
 `npm run ios`, `npm run android` and `npm run eas:preview` are test builds and
 reserve the next patch of the current store version: `1.2` → `1.2.1` → `1.2.2`.
 The major number remains manual.
+PR store testing uses `store-testing.yml` and the explicit repository variable
+`STORE_TESTING_VERSION` instead; it does not reserve or commit an app version.
+See [PR store testing](docs/store-testing.md) for TestFlight and Play internal
+distribution, setup and acceptance.
 Required environment checks run before reserving a version for iPhone and EAS
 builds. A later failure consumes the number; gaps are expected.
 
