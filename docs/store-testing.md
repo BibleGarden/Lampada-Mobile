@@ -10,10 +10,10 @@ It accepts only branches of this repository; forks are refused.
 - Repository secret `EXPO_TOKEN`: the `nf404` robot token. Signing credentials,
   the Play service account key and App Store Connect API key stay in EAS.
 - Repository variable `STORE_TESTING_VERSION`: the authoritative store version
-  as `major.minor.patch`, for example `1.5.0`. It must exceed the latest App Store
-  release (equality is allowed only before that version is approved) and be at
-  least the latest Google Play version. Do not derive it from the patch counter in `app.json` or from an
-  unauthenticated store lookup. A missing or malformed value fails the run.
+  as `major.minor.patch`, for example `1.5.0`. It must exceed the latest App
+  Store release (equality is allowed only before that version is approved) and
+  be at least the latest Google Play version. Do not derive it from the patch
+  counter in `app.json` or from an unauthenticated store lookup. A missing or malformed value fails the run.
 - EAS environment `preview`: `EXPO_PUBLIC_API_URL` and
   `EXPO_PUBLIC_AI_PROXY_KEY` must be configured and pass the runtime preflight.
   The `store-testing` profile uses the EAS `preview` environment.
@@ -33,8 +33,9 @@ acceptance, after green CI, approved review and AI tester validation, the
 implementer adds the `store-testing` label to the PR, or runs
 `store-testing.yml` from Actions with its PR number.
 For another label-triggered run, remove and reapply the label.
-Manual dispatch runs the workflow from the default branch.
-If the PR has merge conflicts, GitHub does not run `pull_request` workflows, so the label has no effect; rebase or use `workflow_dispatch`.
+Run manual dispatch from `main`.
+If the PR has merge conflicts, GitHub does not run `pull_request` workflows,
+so the label has no effect; rebase or use `workflow_dispatch`.
 For a label event, the workflow uses the payload head SHA and refuses to build
 if the current PR head has moved; re-add the label to request the new revision.
 
@@ -45,7 +46,7 @@ The workflow checks out the resolved head SHA, replaces `expo.version` only in
 that disposable checkout, then runs:
 
 ```sh
-eas build --platform all --profile store-testing --non-interactive --auto-submit --wait --json
+bash scripts/eas-cli.sh build --platform all --profile store-testing --non-interactive --auto-submit --wait --json
 ```
 
 EAS owns `ios.buildNumber` and Android `versionCode` through
