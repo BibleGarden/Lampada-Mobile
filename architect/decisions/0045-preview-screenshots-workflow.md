@@ -121,6 +121,9 @@ the "Jobs" bullet:
   (one entry per set of dependency inputs). React Native's ccache wrapper
   (`USE_CCACHE`) was tried and left out: Xcode's build system does not call the
   compiler through the `CC` build setting, so ccache saw no compilation.
+  Caching DerivedData was tried and left out too: with 2.1 GB (7.3 GB raw)
+  restored Xcode still planned and replayed every target, and the build took as
+  long as without it (see the measurements in the pull request of #114).
 - **The app does not travel as a workflow artifact.** The app bundles the
   `EXPO_PUBLIC_*` values from the repository secrets, and the artifacts of a
   public repository can be downloaded by anyone who is signed in. The Actions

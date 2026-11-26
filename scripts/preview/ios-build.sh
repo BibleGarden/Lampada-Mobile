@@ -29,16 +29,12 @@ stamp() {
   while IFS= read -r line; do printf '%s %s\n' "$(date +%s)" "$line"; done
 }
 cache_before="$(du -sk "$PREVIEW_XCODE_CACHE_DIR" | cut -f1)"
-derived="$HOME/Library/Developer/Xcode/DerivedData"
-mkdir -p "$derived"
-echo "DerivedData before the build: $(($(du -sk "$derived" | cut -f1) / 1024)) MB"
 phase_run xcodebuild-and-install npx expo run:ios --configuration Release --device "$udid" --no-bundler 2>&1 \
   | stamp >"$logs/build.log" || { tail -n 60 "$logs/build.log" | cut -d' ' -f2- >&2; echo 'The iOS build failed.' >&2; exit 1; }
 tail -n 15 "$logs/build.log" | cut -d' ' -f2-
 {
   echo "compilation cache before the build: $((cache_before / 1024)) MB"
   echo "compilation cache after the build:  $(($(du -sk "$PREVIEW_XCODE_CACHE_DIR" | cut -f1) / 1024)) MB"
-  echo "DerivedData after the build:         $(($(du -sk "$derived" | cut -f1) / 1024)) MB"
 } >"$logs/compilation-cache.txt"
 cat "$logs/compilation-cache.txt"
 bash "$tooling/scripts/preview/log-gaps.sh" "$logs/build.log" >"$logs/build-timeline.txt" || true

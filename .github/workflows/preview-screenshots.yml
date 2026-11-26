@@ -471,16 +471,6 @@ jobs:
           key: preview-xcodecache-ios-${{ steps.key.outputs.deps_key }}
           restore-keys: preview-xcodecache-ios-
 
-      # Xcode's build database lives in DerivedData: with it restored, only what
-      # changed since the cached build is rebuilt.
-      - name: Restore DerivedData
-        id: dd
-        if: ${{ steps.app.outputs.cache-hit != 'true' }}
-        uses: actions/cache/restore@v6
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: preview-dd-ios-${{ steps.key.outputs.deps_key }}
-
       - name: Build for the simulator
         id: build
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
@@ -513,13 +503,6 @@ jobs:
             app/ios/Pods
             app/ios/Podfile.lock
           key: ${{ steps.key.outputs.deps_key }}-pods
-
-      - name: Save DerivedData
-        if: ${{ steps.build.outcome == 'success' && steps.dd.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@v6
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: preview-dd-ios-${{ steps.key.outputs.deps_key }}
 
       - name: Phase durations
         if: ${{ always() }}
