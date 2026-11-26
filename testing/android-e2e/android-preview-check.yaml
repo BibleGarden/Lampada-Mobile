@@ -1,0 +1,10 @@
+appId: app.lampada
+---
+- launchApp:
+    stopApp: true
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: start-prayer-button
+    timeout: 60000
+- takeScreenshot: preview-check
