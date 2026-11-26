@@ -140,16 +140,24 @@ the "Jobs" bullet:
 - **A cache written while building PR code cannot replace the app of another
   SHA.** The key of an app contains the full SHA that the job checked out, and
   it is computed by a step that runs before any PR code, as a step output that
-  later steps cannot change. A label run can write only to the scope of its own
-  pull request, which only that pull request reads, so it can poison nothing
-  else. A dispatch run writes to `main` but only for the commit it built, and
-  the first entry written for a key stays (keys are immutable). What remains is
-  the general limit of any cache in a workflow that runs PR code: PR code that
-  runs in a job can reach the cache token of that job and could write an entry
-  under another key of the same scope. This needs a branch of this repository
-  (forks are refused), so an author with write access, and a maintainer who
-  starts the run; the same person could already read the build secrets with a
-  workflow of their own branch. The capture jobs only read the cache.
+  later steps cannot change. In a manual run the workflow and `scripts/preview/`
+  are those of `main`. In a label run they come from the labelled pull request
+  itself (its merge ref), so that step is only as trustworthy as that pull
+  request; this is harmless because a label run writes only to the scope of its
+  own pull request, which only that pull request reads, so it can poison nothing
+  else. A manual run writes to `main` but only for the commit it built, and the
+  first entry written for a key stays (keys are immutable). What remains in a
+  manual run, which builds the code of the target pull request with the workflow
+  of `main`: (1) PR code that runs in a job can reach the cache token of that job
+  and could write an entry under another key of the same scope; (2) the save
+  steps of the workflow itself store what PR code left in `~/.gradle/caches`,
+  `ios/Pods` and the compilation cache into the `main` scope, and later builds of
+  other commits restore them: the pods and the Gradle caches by their keys, the
+  Gradle and compilation caches also by prefix. Both need a branch of this
+  repository (forks are refused), so an author with write access, and a
+  maintainer who starts the run; the same person could already read the build
+  secrets with a workflow of their own branch. The capture jobs only read the
+  cache.
 - **Cache budget.** The repository limit is 10 GB with least-recently-used
   eviction. Measured entry sizes (compressed): CocoaPods 0.4 GB and the Xcode
   compilation cache 0.7 GB per Podfile key, the Gradle caches 2.4 GB per set of

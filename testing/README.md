@@ -459,6 +459,23 @@ workflow and only people with triage access can set a label.
 3. Wait for the comment. A failed or partial run says so in the comment; the
    logs are in the run.
 
+What each trigger reuses and writes (the Actions cache is scoped by git ref):
+
+| | Runs on | Reads caches of | Writes caches to |
+| --- | --- | --- | --- |
+| Label | the merge ref of the labelled pull request | that pull request and `main` | that pull request only |
+| Manual run | `main` | `main` | `main`, which every pull request reads |
+
+A run started by the label shares nothing with other pull requests: the first
+labelled preview of a pull request finds neither the native caches (CocoaPods,
+Xcode compilation, Gradle) nor the base app, and is cold (75-80 minutes); the
+next previews of the same pull request are warm (about 40 minutes after a new
+commit, about 20 when nothing changed). A manual run writes to the `main` scope
+that all pull requests read, so run it once on a base commit, and again after the
+native inputs on `main` change (`package-lock.json`, `app.json`, `plugins/`,
+`patches/`, `modules/`, the build scripts), to give every later labelled
+preview warm native caches and a cached base app.
+
 Only pull requests from branches of this repository are accepted. The pull
 request must be open. A pull request from a fork is refused.
 
@@ -486,7 +503,10 @@ commas or spaces. A name is one of:
   without any is captured once at its end (`<flow>-final.png`).
 
 The same flow runs on the "before" and on the "after" build, so the pair is
-comparable. A flow that fails fails that job, and the comment says which.
+comparable. A flow that fails fails that job, and the comment says which. On iOS
+a failed flow is run again, up to three attempts in all (every flow starts from
+a cleared app): a flow that passes on a later attempt passes the job, and the
+logs of the failed attempts stay in the `logs-*` artifact of the job.
 
 ### Environment
 
@@ -494,7 +514,7 @@ comparable. A flow that fails fails that job, and the comment says which.
 | --- | --- | --- |
 | Runner | `ubuntu-latest` with KVM | `macos-26` (arm64) |
 | Device | Pixel profile, Android 15 Google Play, 1280x2856 at 480 dpi, x86_64 system image (the `Pray_Pixel_API_35` AVD uses an ARM64 image, which cannot run on x86_64) | `iPhone 17 Pro`, the newest installed iOS runtime |
-| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild`, `pod install`, `npx expo run:ios --configuration Release` |
+| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild --no-install`, then `npx expo run:ios --configuration Release` (it runs `pod install` itself) |
 | Driver | Maestro 2.10.0, `scripts/android-maestro-driver.sh`, the readiness gate `scripts/android-guest-load.mjs` | Maestro 2.10.0 |
 
 Both builds are Release builds on the `test` channel. The emulator has no host
@@ -526,8 +546,10 @@ The app key changes with the app commit, the lockfile, the Xcode and iOS SDK
 as "after". The first preview of a commit is cold (the iOS build takes over an
 hour without the native caches); a second run of the same pull request finds
 both apps and only captures. Every job summary lists the phase durations
-(`scripts/preview/phases.sh`): prebuild, `pod install`, the native build, the
-simulator boot, the install and the capture.
+(`scripts/preview/phases.sh`): `npm-ci`, `prebuild`, `gradle` (Android),
+`xcodebuild-and-install` (iOS; it includes `pod install`, the JS bundle and the
+install), `simulator-boot`, `app-install`, `maestro-install`, `emulator-start`
+and `capture`.
 
 The app goes through the Actions cache, not through a workflow artifact: it
 bundles the secret values and artifacts of a public repository can be

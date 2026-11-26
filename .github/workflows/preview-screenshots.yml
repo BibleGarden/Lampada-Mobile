@@ -289,7 +289,9 @@ jobs:
   capture-android:
     name: Android ${{ matrix.variant }} ${{ matrix.chunk.screens }}
     needs: [plan, build-android]
-    if: ${{ needs.plan.outputs.android == 'true' }}
+    # Also when the build of one variant failed: the other variant is captured
+    # and the leg of the failed one stops at its own restore of the app.
+    if: ${{ !cancelled() && needs.plan.outputs.android == 'true' && needs.build-android.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -527,7 +529,9 @@ jobs:
   capture-ios:
     name: iOS ${{ matrix.variant }} ${{ matrix.chunk.screens }}
     needs: [plan, build-ios]
-    if: ${{ needs.plan.outputs.ios == 'true' }}
+    # Also when the build of one variant failed: the other variant is captured
+    # and the leg of the failed one stops at its own restore of the app.
+    if: ${{ !cancelled() && needs.plan.outputs.ios == 'true' && needs.build-ios.result != 'skipped' }}
     runs-on: macos-26
     timeout-minutes: 60
     permissions:

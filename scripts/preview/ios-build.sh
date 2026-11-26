@@ -2,7 +2,8 @@
 # Builds the app in <app-dir> for the iOS simulator (Release, as
 # `npx expo run:ios` in README.md) on an "iPhone 17 Pro" simulator, which it
 # boots first, and copies the built app to <out-dir>/twinkler.app. The native
-# project and the pods must be ready (ios-prebuild.sh); `expo run:ios` installs the pods itself.
+# project must exist (ios-prebuild.sh); `expo run:ios` runs `pod install` itself,
+# which only confirms a restored ios/Pods.
 #
 # Usage: ios-build.sh <app-dir> <tooling-dir> <log-dir> <out-dir>
 # Needs EXPO_PUBLIC_API_URL and EXPO_PUBLIC_AI_PROXY_KEY in the environment.
