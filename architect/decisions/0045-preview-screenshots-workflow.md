@@ -153,6 +153,6 @@ the "Jobs" bullet:
   dependency inputs, and 74 MB for each stored app (two per platform and
   previewed commit). The steady set is about 3.5 GB plus 0.3 GB per previewed
   commit, so about twenty previews fit in a week before the oldest app entries
-  leave. Nothing was left out for size; if the budget is exceeded one day, the
-  Gradle build cache directory is the first candidate to drop, because the
-  dependency download cache beside it gives most of the Android gain.
+  leave. Nothing was left out for size. If the budget is exceeded one day, the
+  Gradle build cache directory is the first candidate to drop; measure the
+  Android build before and after dropping it.
