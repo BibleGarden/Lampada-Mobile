@@ -513,7 +513,7 @@ not made again:
 2. `build-android` and `build-ios` run for the "before" and the "after" commit.
    Each computes the app key (`scripts/preview/app-key.sh`) and looks for the
    app in the Actions cache. A hit skips the build. A miss builds the app,
-   using the CocoaPods, ccache and Gradle caches, and stores it under the key.
+   using the CocoaPods, Xcode compilation and Gradle caches, and stores it under the key.
    The job summary names the components of the key and says hit or miss.
 3. `capture-android` and `capture-ios` run a matrix of variant by chunk in
    parallel: each restores the app from the cache, boots its own emulator or

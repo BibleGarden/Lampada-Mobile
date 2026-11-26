@@ -9,10 +9,14 @@
 #             toolchain of the runner (Xcode and the iOS SDK, CocoaPods, or the
 #             Java, SDK build tools and NDK), the build scripts of this
 #             directory and the secret build values (as a hash).
-#   deps_key  the key of the native dependency caches (CocoaPods, Gradle). It
-#             changes with the inputs that produce the Podfile and the Gradle
-#             project: package-lock.json, app.json, plugins/, patches/,
+#   deps_key  the key of the native dependency caches (CocoaPods, Xcode's
+#             compilation cache). It changes with the inputs that produce the
+#             Podfile: package-lock.json, app.json, plugins/, patches/,
 #             modules/, the toolchain and the build scripts.
+#   gradle_key the key of the Gradle caches (about 2.4 GB, the largest entry).
+#             It follows the same inputs but neither the toolchain nor the
+#             build scripts, so a change of a script does not write a new copy:
+#             Gradle checks its own cache entries.
 #   <variant> the same as app_key, so a job output can be named by variant (the
 #             outputs of a matrix job are merged by name).
 # A table of the components goes to $GITHUB_STEP_SUMMARY, so two runs show which
@@ -61,6 +65,7 @@ app_digest="$(printf 'app-key v1\n%s\n%s\n%s\n%s\n%s\n%s\n' "$platform" "$sha" "
 deps_digest="$(printf 'deps-key v1\n%s\n%s\n%s\n%s\n' "$platform" "$inputs_digest" "$toolchain_digest" "$scripts_digest" | short)"
 app_key="preview-app-$platform-$sha-$app_digest"
 deps_key="preview-deps-$platform-$deps_digest"
+gradle_key="preview-gradle-$platform-$inputs_digest"
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   {
@@ -75,11 +80,13 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     echo "| secret build values (hash) | \`${env_hash:0:12}\` |"
     echo "| app key | \`$app_key\` |"
     echo "| dependency key | \`$deps_key\` |"
+    echo "| Gradle key | \`$gradle_key\` |"
     echo
   } >>"$GITHUB_STEP_SUMMARY"
 fi
 {
   echo "app_key=$app_key"
   echo "deps_key=$deps_key"
+  echo "gradle_key=$gradle_key"
   echo "$variant=$app_key"
 }
