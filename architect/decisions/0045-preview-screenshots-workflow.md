@@ -108,7 +108,7 @@ the "Jobs" bullet:
   `EXPO_PUBLIC_AI_PROXY_KEY`). The `plan` job makes that hash from both values
   together, so the key and the logs hold no secret and the API URL cannot be
   recovered from the hash (the proxy key is not guessable). A new baked-in
-  secret must be added to that hash in `plan`. Each build job writes the
+  secret must be added to that hash in `plan`, in the same change. Each build job writes the
   components of the key to its job summary, so two runs show which input made
   the key miss.
 - **Native build caches** (only when the app key misses): CocoaPods (`ios/Pods`
