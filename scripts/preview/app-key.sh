@@ -54,12 +54,16 @@ if [[ "$platform" == ios ]]; then
     "$(pod --version)" "$(uname -m)" "$node_major")"
 else
   sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+  # Java by its major version: a patch release of the JDK does not change the
+  # APK. The Android key of an unchanged commit missed between two runs without
+  # a known cause; the toolchain line below is logged to find it if it recurs.
   toolchain="$(printf 'java %s; build-tools %s; ndk %s; cmake %s; %s; node %s' \
-    "$(java -version 2>&1 | head -1)" "$(ls "$sdk/build-tools" | tr '\n' ',')" \
+    "$(java -version 2>&1 | sed -n '1s/.*version "\([0-9]*\).*/\1/p')" "$(ls "$sdk/build-tools" | tr '\n' ',')" \
     "$(ls "$sdk/ndk" 2>/dev/null | tr '\n' ',')" "$(ls "$sdk/cmake" 2>/dev/null | tr '\n' ',')" \
     "$(uname -m)" "$node_major")"
 fi
 toolchain_digest="$(printf '%s' "$toolchain" | short)"
+echo "toolchain: $toolchain" >&2
 
 app_digest="$(printf 'app-key v1\n%s\n%s\n%s\n%s\n%s\n%s\n' "$platform" "$sha" "$lock_digest" "$toolchain_digest" "$scripts_digest" "$env_hash" | short)"
 deps_digest="$(printf 'deps-key v1\n%s\n%s\n%s\n%s\n' "$platform" "$inputs_digest" "$toolchain_digest" "$scripts_digest" | short)"
