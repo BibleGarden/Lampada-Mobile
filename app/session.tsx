@@ -42,6 +42,7 @@ import { CardIn, IconButton, Kicker } from '../components/ui';
 import { Close, Music } from '../components/icons';
 import { fmtTime, useSession } from '../lib/store';
 import { getPrayerTracks } from '../lib/music';
+import { startFromTrack } from '../lib/musicOrder';
 import { bottomActionPadding, colors, column, fonts, isTablet, sc, screenGutter, useStyles } from '../lib/theme';
 import { useScriptureAudio } from '../lib/useScriptureAudio';
 import { stopPrayerSystemTimer } from '../lib/prayerSystemTimer';
@@ -157,7 +158,15 @@ function SessionScreen() {
   // a music activation that is already starting must see the recording or
   // audio playback immediately.
   const audioBusySourcesRef = useRef<AudioBusyBySource>(IDLE_AUDIO_SOURCES);
-  const [musicTracks] = useState(getPrayerTracks);
+  // Returning from reflection with the music that played when the prayer
+  // ended: the same track goes first and starts from where it stopped. The
+  // state is taken once, at mount, and cleared in the store right after.
+  const [musicResume] = useState(() => {
+    const state = useSession.getState();
+    return state.musicOn ? state.musicResume : null;
+  });
+  const [musicTracks] = useState(() => startFromTrack(getPrayerTracks(), musicResume?.trackId));
+  const pendingMusicSeek = useRef(musicResume?.positionSeconds ?? 0);
   const musicTrackIndex = useRef(0);
   const activeMusicPlayerSlot = useRef<MusicPlayerSlot>(0);
   const musicCrossfadeTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -232,6 +241,10 @@ function SessionScreen() {
   }, [reportReleaseError]);
 
   useEffect(() => {
+    useSession.getState().clearMusicResume();
+  }, []);
+
+  useEffect(() => {
     // Background music must stay noticeably quieter than speech and system sounds.
     musicPlayerA.volume = MUSIC_VOLUME;
     musicPlayerB.volume = 0;
@@ -274,6 +287,23 @@ function SessionScreen() {
         const activePlayer = musicPlayerForSlot(activeSlot);
         activePlayer.volume = MUSIC_VOLUME;
         setMusicLockScreen(activeSlot, musicTrackIndex.current);
+        if (pendingMusicSeek.current > 0) {
+          const position = pendingMusicSeek.current;
+          try {
+            await activePlayer.seekTo(position);
+          } catch (error) {
+            // Music from the start is better than no music.
+            console.warn('Failed to restore the music position', error);
+          }
+          pendingMusicSeek.current = 0;
+          if (
+            !active ||
+            isAudioBusy(audioBusySourcesRef.current) ||
+            !modeGrant.isCurrent()
+          ) {
+            return;
+          }
+        }
         activePlayer.play();
       }
     })().catch((error) => {
@@ -480,8 +510,20 @@ function SessionScreen() {
       return running.stopped;
     }
     const stop = async () => {
+      // Playing music is remembered with its track and position, so that a
+      // return to the prayer continues it (ADR-0047). Read before the pause:
+      // the players are released together with the screen.
+      const track = musicTracks[musicTrackIndex.current];
+      const positionSeconds = musicPlayerForSlot(activeMusicPlayerSlot.current).currentTime;
       pauseMusicPlayers();
-      if (useSession.getState().musicOn) useSession.getState().toggleMusic();
+      if (track) {
+        useSession.getState().endPrayerMusic({
+          trackId: track.id,
+          positionSeconds: Number.isFinite(positionSeconds) ? Math.max(0, positionSeconds) : 0,
+        });
+      } else if (useSession.getState().musicOn) {
+        useSession.getState().toggleMusic();
+      }
       await releaseMusicLease();
     };
     if (!useSession.getState().musicOn || isAudioBusy(audioBusySourcesRef.current)) return stop();
@@ -516,7 +558,7 @@ function SessionScreen() {
       stopped,
     };
     return stopped;
-  }, [cancelMusicCrossfade, musicPlayerForSlot, pauseMusicPlayers, releaseMusicLease]);
+  }, [cancelMusicCrossfade, musicPlayerForSlot, musicTracks, pauseMusicPlayers, releaseMusicLease]);
 
   // On a hidden screen the transition to the summary waits for the user to
   // return, while the music ends with the prayer time even under the PIN

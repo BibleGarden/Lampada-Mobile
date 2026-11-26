@@ -84,3 +84,4 @@ implementation details do not need one.
 - [0044: Automatically submit Android production builds to internal testing](0044-automatic-android-internal-submission.md) — partly supersedes ADR-0040
 - [0045: On-demand before/after screenshots from emulators in GitHub Actions](0045-preview-screenshots-workflow.md)
 - [0046: Distribute PR builds through TestFlight and Play internal testing](0046-pr-store-testing.md)
+- [0047: Resume the music when returning to the prayer](0047-resume-music-on-return-to-prayer.md) — extends ADR-0027 and ADR-0033

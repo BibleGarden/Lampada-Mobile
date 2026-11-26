@@ -171,7 +171,7 @@ upgrading it requires rebuilding the native app.
 | `lib/scriptureRepository.ts` | History, the cache, book names and favourite snapshots in SQLite |
 | `lib/scriptures.ts` | The old catalogue, used only by the lossless migration of favourites |
 | `lib/music.ts` | The catalogue of the bundled CC0 pieces and the static audio assets |
-| `lib/musicOrder.ts` | The pure logic of a random starting track without repeats between sessions |
+| `lib/musicOrder.ts` | The pure logic of a random starting track without repeats between sessions, and of restarting the cycle from a remembered track |
 | `lib/prayerSystemTimer.*.ts` | The platform lifecycle of the timer on the locked screen |
 | `widgets/PrayerLiveActivity.tsx` | The iOS Live Activity and Dynamic Island with the system countdown |
 | `modules/prayer-timer-notification/` | The Android ongoing notification with the system chronometer |
@@ -455,7 +455,11 @@ session, and native background playback is enabled by the `expo-audio` config
 plugin. The music fades out when the prayer ends: over 3 s at the finite deadline
 in the background or on the locked screen, where the transition to reflection
 waits for the app to return, and over 0.8 s on that transition otherwise (see
-[ADR-0033](decisions/0033-prayer-time-bounds-music-and-day.md)). Voice recording, playback of a
+[ADR-0033](decisions/0033-prayer-time-bounds-music-and-day.md)). Music that
+played when the prayer ended is remembered in the session store with its track
+and position, and "Return to prayer" turns it back on from there; finishing the
+prayer, starting a new one or extending the timer forgets it
+([ADR-0047](decisions/0047-resume-music-on-return-to-prayer.md)). Voice recording, playback of a
 draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.

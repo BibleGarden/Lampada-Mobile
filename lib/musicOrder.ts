@@ -17,3 +17,16 @@ export function prayerTrackOrder(
 
   return [...all.slice(startIndex), ...all.slice(0, startIndex)];
 }
+
+/**
+ * Rotates a track cycle so that the track with the given id comes first and
+ * the order of the rest is kept. An unknown or missing id leaves the cycle as
+ * it is.
+ */
+export function startFromTrack<T extends { id: string }>(
+  tracks: readonly T[],
+  id: string | null | undefined,
+): T[] {
+  const start = tracks.findIndex((track) => track.id === id);
+  return start <= 0 ? [...tracks] : [...tracks.slice(start), ...tracks.slice(0, start)];
+}
