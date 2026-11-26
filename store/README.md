@@ -414,7 +414,7 @@ npm run eas:production:android                     # build and submit to Play in
 npm run eas:production:all                         # build both; submit Android only
 npm run eas:production:android -- --keep-version   # build and submit Android at the reserved version
 npm run eas:production:ios                         # build iOS without submitting
-npx eas-cli@latest submit --platform android --profile production --latest  # recover a failed auto-submit without rebuilding
+bash scripts/eas-cli.sh submit --platform android --profile production --latest  # recover a failed auto-submit without rebuilding
 ```
 
 The build uses the EAS `production` environment and produces an AAB; EAS
@@ -431,7 +431,7 @@ If Android fails during `all`, finish iOS with
 The `eas-submit@lampada-play.iam.gserviceaccount.com` service account has only
 **Release to testing tracks** permission for Lampada in Play Console: no
 production release or tester-list management. Its JSON key is stored in EAS,
-never in git. In `npx eas-cli@latest credentials --platform android`, choose
+never in git. In `bash scripts/eas-cli.sh credentials --platform android`, choose
 `production` → Google Service Account → Manage your Google Service Account Key
 for Play Store Submissions → **Upload a Google Service Account Key**, then
 return to Manage → Play Store Submissions → **Select an existing key** for

@@ -1,0 +1,173 @@
+name: Store testing
+
+# Maintainer-triggered PR code with a read-only token; only the EAS step gets
+# EXPO_TOKEN. The publishing job checks out and executes no repository code.
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Number of the pull request to distribute
+        required: true
+        type: string
+  pull_request:
+    types: [labeled]
+
+permissions: {}
+
+# Do not cancel an upload already in flight. Other labels cannot replace it.
+concurrency:
+  group: store-testing-${{ (github.event_name == 'workflow_dispatch' || github.event.label.name == 'store-testing') && (github.event.pull_request.number || inputs.pr) || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.label.name == 'store-testing' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      pr: ${{ steps.plan.outputs.pr }}
+      sha: ${{ steps.plan.outputs.sha }}
+      version: ${{ steps.plan.outputs.version }}
+    steps:
+      - name: Validate the PR and store version
+        id: plan
+        uses: actions/github-script@v9
+        env:
+          STORE_VERSION: ${{ vars.STORE_TESTING_VERSION }}
+        with:
+          script: |
+            const input = context.eventName === 'workflow_dispatch'
+              ? context.payload.inputs.pr : String(context.payload.pull_request.number);
+            if (!/^[1-9]\d*$/.test(input)) throw new Error('Use the PR number without spaces or leading zeros.');
+            const number = Number(input);
+            if (!Number.isSafeInteger(number)) throw new Error('Invalid PR number.');
+            const pr = context.eventName === 'pull_request' ? context.payload.pull_request
+              : (await github.rest.pulls.get({ ...context.repo, pull_number: number })).data;
+            if (context.eventName === 'pull_request') {
+              const { data: current } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
+              if (current.head.sha !== pr.head.sha) {
+                throw new Error('PR head moved after labeling; re-add the label');
+              }
+              if (current.state !== 'open') throw new Error('The PR must still be open.');
+            }
+            if (pr.state !== 'open' || pr.head.repo?.full_name !== `${context.repo.owner}/${context.repo.repo}` || pr.head.repo.fork) {
+              throw new Error('An open PR from a branch of this repository is required; forks are refused.');
+            }
+            const version = process.env.STORE_VERSION;
+            if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)) {
+              throw new Error('Set repository variable STORE_TESTING_VERSION (major.minor.patch) above the latest App Store release (equal only before approval) and at least the latest Google Play version.');
+            }
+            core.setOutput('pr', String(number));
+            core.setOutput('sha', pr.head.sha);
+            core.setOutput('version', version);
+
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the exact PR revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set the version in the disposable build checkout
+        env:
+          STORE_VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const app = JSON.parse(readFileSync('app.json', 'utf8'));
+          app.expo.version = process.env.STORE_VERSION;
+          writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          JS
+
+      - name: Check runtime variables, build and auto-submit both platforms
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo '::error::Repository secret EXPO_TOKEN is required.'
+            exit 1
+          fi
+          bash scripts/check-runtime-env.sh eas preview
+          bash scripts/eas-cli.sh build --platform all --profile store-testing \
+            --non-interactive --auto-submit --wait --json > "$RUNNER_TEMP/started-builds.json"
+          # The build output can hold a status captured before the build
+          # finished; record the final state of each build instead.
+          jq -r '.[].id' "$RUNNER_TEMP/started-builds.json" | while read -r id; do
+            bash scripts/eas-cli.sh build:view "$id" --json </dev/null
+          done | jq -s . > "$RUNNER_TEMP/store-builds.json"
+
+      - name: Save EAS results
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-builds
+          path: ${{ runner.temp }}/store-builds.json
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download build results as untrusted data
+        uses: actions/download-artifact@v8
+        with:
+          name: store-builds
+          path: results
+
+      - name: Report the builds
+        uses: actions/github-script@v9
+        env:
+          PR_NUMBER: ${{ needs.plan.outputs.pr }}
+          BUILD_SHA: ${{ needs.plan.outputs.sha }}
+          STORE_VERSION: ${{ needs.plan.outputs.version }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = 'results/store-builds.json';
+            if (fs.statSync(path).size > 1024 * 1024) throw new Error('Oversized EAS result.');
+            const builds = JSON.parse(fs.readFileSync(path, 'utf8'));
+            if (!Array.isArray(builds) || builds.length !== 2) throw new Error('Expected two EAS builds.');
+            const rows = ['| Platform | Version | Build number | EAS build |', '| --- | --- | --- | --- |'];
+            for (const platform of ['IOS', 'ANDROID']) {
+              const matches = builds.filter((build) => build.platform === platform);
+              if (matches.length !== 1) throw new Error(`Expected one ${platform} build.`);
+              const build = matches[0];
+              if (build.status !== 'FINISHED' || build.appVersion !== process.env.STORE_VERSION
+                || !/^\d+(\.\d+){0,2}$/.test(String(build.appBuildVersion))
+                || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(build.id)) {
+                throw new Error(`Invalid or unfinished ${platform} build result.`);
+              }
+              const url = `https://expo.dev/accounts/nf404/projects/pray/builds/${build.id}`;
+              rows.push(`| ${platform === 'IOS' ? 'iOS (TestFlight)' : 'Android (Play internal)'} | ${build.appVersion} | ${build.appBuildVersion} | [Build](${url}) |`);
+            }
+            const body = [
+              '### Store testing builds',
+              `PR #${process.env.PR_NUMBER}, commit \`${process.env.BUILD_SHA}\`.`,
+              '', ...rows, '',
+              'EAS auto-submit requested for both builds. Check submission status in EAS and wait for store processing before testing; build completion alone does not confirm store availability.',
+              'Play internal testing exposes the latest release; another PR can replace this build.',
+            ].join('\n');
+            await core.summary.addRaw(body).write();
+            await github.rest.issues.createComment({
+              ...context.repo, issue_number: Number(process.env.PR_NUMBER), body,
+            });

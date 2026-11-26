@@ -1144,13 +1144,23 @@ releases to Play internal testing. `all` builds Android with auto-submit, then
 builds iOS without submitting it. The service account key is held in EAS
 credentials. See [ADR-0040](decisions/0040-google-play-release.md) and
 [ADR-0044](decisions/0044-automatic-android-internal-submission.md).
+PR distribution through `store-testing.yml` uses a separate `store-testing`
+build/submit profile: store distribution with the test channel, EAS `preview`
+runtime variables, TestFlight and Play internal testing. Its store version is
+the required repository variable `STORE_TESTING_VERSION`, applied only to the
+disposable build checkout. EAS remotely increments native build numbers.
+The workflow separates PR validation, read-only build execution and comment
+publishing without repository code. Build links and numbers identify the exact
+PR revision for human acceptance, after CI, review and AI tester validation.
+AI testing retains its own build process. See [ADR-0046](decisions/0046-pr-store-testing.md)
+and [the procedure](../docs/store-testing.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo
 config fallback for web and Expo Go. This matches the installed version used
 by the update gate. EAS remote build numbers remain independent.
 The About footer always renders the installed version. A separate build-time
 `EXPO_PUBLIC_BUILD_CHANNEL=test` adds a localized "Test build" label and API
-origin. Local scripts and EAS development/preview select `test`; production
+origin. Local scripts and EAS development/preview/store-testing select `test`; production
 selects `store` for TestFlight, the App Store and Google Play. Missing channel values hide
 test details. This is independent of Debug/Release optimization; local iPhone
 installs remain standalone Release builds. See [ADR-0026](decisions/0026-test-build-label.md).
