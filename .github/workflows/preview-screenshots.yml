@@ -441,11 +441,14 @@ jobs:
         run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
 
       - name: Install ccache
+        id: ccache
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
           HOMEBREW_NO_INSTALL_CLEANUP: 1
-        run: bash tooling/scripts/preview/phase.sh ccache-install brew install ccache
+        run: |
+          bash tooling/scripts/preview/phase.sh ccache-install brew install ccache
+          echo "dir=$(ccache -k cache_dir)" >> "$GITHUB_OUTPUT"
 
       - name: Generate the native project
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
@@ -488,7 +491,7 @@ jobs:
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         uses: actions/cache/restore@v6
         with:
-          path: ${{ runner.temp }}/ccache
+          path: ${{ steps.ccache.outputs.dir }}
           key: preview-ccache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
           restore-keys: |
             preview-ccache-ios-${{ steps.key.outputs.deps_key }}-
@@ -506,7 +509,7 @@ jobs:
         if: ${{ !cancelled() && steps.app.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v6
         with:
-          path: ${{ runner.temp }}/ccache
+          path: ${{ steps.ccache.outputs.dir }}
           key: preview-ccache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
 
       - name: Save the app in the cache

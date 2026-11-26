@@ -29,7 +29,7 @@ EXPO_PROFILE=1 phase_run xcodebuild-and-install npx expo run:ios --configuration
   >"$logs/build.log" 2>&1 || { tail -n 60 "$logs/build.log" >&2; echo 'The iOS build failed.' >&2; exit 1; }
 tail -n 15 "$logs/build.log"
 sed -n '/Build Timing Summary/,$p' "$logs/build.log" | head -40 >"$logs/build-timing.txt" || true
-ccache --show-stats >"$logs/ccache-stats.txt" 2>&1 || true
+{ echo "cache_dir: $(ccache -k cache_dir)"; ccache --show-stats; du -sh "$(ccache -k cache_dir)"; } >"$logs/ccache-stats.txt" 2>&1 || true
 cat "$logs/ccache-stats.txt"
 
 bundle="$(xcrun simctl get_app_container "$udid" twinkler app)" \
