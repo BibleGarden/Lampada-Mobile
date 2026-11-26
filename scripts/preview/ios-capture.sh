@@ -35,20 +35,38 @@ xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
 # A fresh runner builds and starts the XCTest driver cold: 3 minutes were not
 # always enough ("iOS driver not ready in time").
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=480000
+# A flow that fails is run again, twice at most: every flow starts from a cleared
+# app, so a rerun is a fresh try. The reflect flow sometimes presses the hold
+# button of the prayer screen while the screen still says "Preparing a question"
+# (the real server answers slowly), and then it fails at session-title. The log
+# and the failure screenshot of every failed attempt are kept in the logs.
+max_attempts=3
 failed=0
 for entry in "${flow_list[@]}"; do
   name="${entry%%$'\t'*}"
   path="${entry#*$'\t'}"
-  run="$logs/maestro-$name"
-  mkdir -p "$run"
   echo "== flow $name ($path)"
-  if ! (cd "$run" && maestro --device "$udid" test --test-output-dir "$run" "$path") >"$logs/flow-$name.log" 2>&1; then
-    echo "Flow $name FAILED:" >&2
-    tail -40 "$logs/flow-$name.log" >&2
-    xcrun simctl io "$udid" screenshot "$logs/$name-failure.png" >/dev/null 2>&1 || true
+  passed=0
+  attempt=1
+  while ((attempt <= max_attempts)); do
+    suffix=""
+    ((attempt == 1)) || suffix="-attempt$attempt"
+    run="$logs/maestro-$name$suffix"
+    mkdir -p "$run"
+    if (cd "$run" && maestro --device "$udid" test --test-output-dir "$run" "$path") >"$logs/flow-$name$suffix.log" 2>&1; then
+      passed=1
+      break
+    fi
+    echo "Flow $name FAILED (attempt $attempt of $max_attempts):" >&2
+    tail -40 "$logs/flow-$name$suffix.log" >&2
+    xcrun simctl io "$udid" screenshot "$logs/$name-failure$suffix.png" >/dev/null 2>&1 || true
+    attempt=$((attempt + 1))
+  done
+  if ((passed == 0)); then
     failed=1
     continue
   fi
+  ((attempt == 1)) || echo "Flow $name passed on attempt $attempt."
   count="$(collect_screenshots "$run" "$out/screens")"
   if [[ "$count" == 0 ]]; then
     xcrun simctl io "$udid" screenshot "$out/screens/$name-final.png"
