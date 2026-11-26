@@ -264,8 +264,10 @@ jobs:
           EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
         run: bash tooling/scripts/preview/build-android.sh app "$PWD/tooling" "$RUNNER_TEMP/preview-app"
 
+      # Only after a successful build: an entry is never replaced, so a partial
+      # one would stay partial.
       - name: Save the Gradle caches
-        if: ${{ !cancelled() && steps.app.outputs.cache-hit != 'true' && steps.gradle.outputs.cache-hit != 'true' }}
+        if: ${{ steps.build.outcome == 'success' && steps.gradle.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v6
         with:
           path: |
@@ -482,7 +484,7 @@ jobs:
       # One entry per Podfile: a build of another commit with the same pods adds
       # nothing that is worth a second copy of the 0.7 GB.
       - name: Save the compilation cache
-        if: ${{ !cancelled() && steps.app.outputs.cache-hit != 'true' && steps.cas.outputs.cache-hit != 'true' }}
+        if: ${{ steps.build.outcome == 'success' && steps.cas.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v6
         with:
           path: ~/Library/Caches/preview-xcode-cas
