@@ -152,6 +152,20 @@ jobs:
               .addRaw(`Before: \`${base}\` (merge base). After: \`${pr.head.sha}\`. Screens: \`${tokens.join(' ')}\`.`, true)
               .write();
 
+      # download-artifact extracts a single matching artifact straight into the
+      # target folder, without the folder named after the artifact that publish
+      # relies on. One more artifact (no screenshot in it) keeps the count at two
+      # or more whenever a capture job produced screenshots.
+      - name: Write a marker artifact for the publish job
+        run: echo "preview plan for pull request ${{ steps.plan.outputs.pr }}" > plan-marker.txt
+
+      - name: Upload the marker artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: screens-plan
+          path: plan-marker.txt
+          retention-days: 1
+
       - name: Check the build secrets and hash them for the cache key
         id: secrets
         env:
