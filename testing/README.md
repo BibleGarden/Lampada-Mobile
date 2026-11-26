@@ -436,7 +436,7 @@ builds a pull request twice, from its merge base ("before") and from its head
 ("after"), runs both builds on an Android emulator and on an iOS simulator,
 drives them with Maestro and posts the screenshots as one comment on the pull
 request. The images are also attached to the workflow run as the artifacts
-`screens-<platform>-<before|after>`; the logs are in `logs-*`. It needs no Mac
+`screens-<platform>-<before|after>-<chunk>`; the logs are in `logs-*`. It needs no Mac
 and is the evidence the owner approves a visual change with; it does not replace
 that approval and it does not replace the Maestro runs of "Testing changes" in
 `AGENTS.md`. The design is in
@@ -494,7 +494,7 @@ comparable. A flow that fails fails that job, and the comment says which.
 | --- | --- | --- |
 | Runner | `ubuntu-latest` with KVM | `macos-26` (arm64) |
 | Device | Pixel profile, Android 15 Google Play, 1280x2856 at 480 dpi, x86_64 system image (the `Pray_Pixel_API_35` AVD uses an ARM64 image, which cannot run on x86_64) | `iPhone 17 Pro`, the newest installed iOS runtime |
-| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild`, `npx expo run:ios --configuration Release` |
+| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild`, `pod install`, `npx expo run:ios --configuration Release` |
 | Driver | Maestro 2.10.0, `scripts/android-maestro-driver.sh`, the readiness gate `scripts/android-guest-load.mjs` | Maestro 2.10.0 |
 
 Both builds are Release builds on the `test` channel. The emulator has no host
@@ -502,6 +502,37 @@ GPU: it renders in software (`swiftshader_indirect`), so frame timing says
 nothing; only the pictures matter. The status bar is fixed in every run: the
 same clock and battery on both platforms, the same network icons on iOS and none
 on Android. Scripts: `scripts/preview/`.
+
+### Build, cache and capture jobs
+
+The build is separate from the capture, and a build that was already made is
+not made again:
+
+1. `plan` resolves the pull request and splits the screens into chunks (one
+   screen or flow each, at most four chunks per platform and variant).
+2. `build-android` and `build-ios` run for the "before" and the "after" commit.
+   Each computes the app key (`scripts/preview/app-key.sh`) and looks for the
+   app in the Actions cache. A hit skips the build. A miss builds the app,
+   using the CocoaPods, ccache and Gradle caches, and stores it under the key.
+   The job summary names the components of the key and says hit or miss.
+3. `capture-android` and `capture-ios` run a matrix of variant by chunk in
+   parallel: each restores the app from the cache, boots its own emulator or
+   simulator and runs its flows. They need no secrets.
+4. `publish` merges the chunks into the one comment.
+
+The app key changes with the app commit, the lockfile, the Xcode and iOS SDK
+(or Java, SDK build tools and NDK) versions of the runner, the build scripts in
+`scripts/preview/` and a hash of the secret values, so a stale app is never shown
+as "after". The first preview of a commit is cold (the iOS build takes over an
+hour without the native caches); a second run of the same pull request finds
+both apps and only captures. Every job summary lists the phase durations
+(`scripts/preview/phases.sh`): prebuild, `pod install`, the native build, the
+simulator boot, the install and the capture.
+
+The app goes through the Actions cache, not through a workflow artifact: it
+bundles the secret values and artifacts of a public repository can be
+downloaded by anyone who is signed in. The cache set has to stay within the
+10 GB of the repository (ADR-0045, "Amendment").
 
 ### Secrets
 
@@ -525,8 +556,9 @@ The workflow builds and runs code of a pull request in a public repository.
   `pull_request_target`, `issue_comment` or `push`: nobody without write or
   triage access can start it, and a fork cannot.
 - **Job split.** `plan` reads the pull request through the API and checks out
-  nothing. The `android` and `ios` jobs check out and run PR code with a
-  read-only `GITHUB_TOKEN`. The `publish` job is the only one with write access
+  nothing. The build and capture jobs check out and run PR code with a
+  read-only `GITHUB_TOKEN`; the secrets are exposed only to the native build
+  steps of the build jobs. The `publish` job is the only one with write access
   (`contents` for the `preview-images` branch, `pull-requests` for the comment
   and the label); it checks out no code and runs no PR code. It accepts the
   artifacts as untrusted data: only regular PNG files with plain names, at most
