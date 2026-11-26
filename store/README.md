@@ -437,3 +437,35 @@ for Play Store Submissions → **Upload a Google Service Account Key**, then
 return to Manage → Play Store Submissions → **Select an existing key** for
 `app.lampada`. The uploaded key is shared at the EAS account level; the
 selection assigns it to this app. `eas.json` needs no `serviceAccountKeyPath`.
+
+### Production release
+
+Checked in Play Console on **2026-11-21**, while preparing the first Production
+release by hand.
+
+- Production access (Closed testing, step 4) is a one-time gate. Every
+  Production release, country change and listing change still goes through
+  Google's regular review; Play Console says "up to seven days".
+- The Production track has its own country list, initially empty: every
+  country is "Not targeted". It does not inherit the closed-test countries. The
+  first release selected all 177 countries plus **Add remaining countries**, so
+  new regions are added automatically.
+- The `eas-submit` service account can release only to testing tracks (see
+  "Build and submit"), so Production releases are created by hand.
+- Managed publishing is off: an approved change goes live without a further
+  action.
+
+To create a Production release:
+
+1. In Play Console, open Production → **Create release** → **Add from
+   library** and pick the bundle already tested in closed testing (the first
+   release used 1.5, versionCode 3).
+2. Enter release notes for en-US, ru-RU and uk. The first release's notes say
+   "first release" plus the listing's short description, instead of the
+   closed-test changelog.
+3. **Save**, then open Publishing overview and choose **Send changes for
+   review**.
+
+Play's pre-review check flagged `android.hardware.screen.portrait` as a
+required feature. The first release skipped the warning as "fix already
+planned" (#88).
