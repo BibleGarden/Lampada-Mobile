@@ -431,6 +431,11 @@ jobs:
         run: |
           echo "App cache for ${{ matrix.variant }} (\`${APP_SHA:0:9}\`): ${{ steps.app.outputs.cache-hit == 'true' && '**hit**, the build is skipped' || '**miss**, the app is built' }}." >> "$GITHUB_STEP_SUMMARY"
 
+      # The simulator boots while the dependencies and the pods are installed.
+      - name: Start booting the simulator
+        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        run: bash tooling/scripts/preview/ios-boot.sh "$PWD/tooling"
+
       - name: Install dependencies
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         working-directory: app
@@ -514,7 +519,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bash tooling/scripts/preview/phase-summary.sh "build ios ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
-          for file in out/logs/build-timing.txt out/logs/compilation-cache.txt; do
+          for file in out/logs/compilation-cache.txt out/logs/build-timeline.txt; do
             [ -s "$file" ] || continue
             { echo "<details><summary>$(basename "$file")</summary>"; echo; echo '```'; cat "$file"; echo '```'; echo; echo '</details>'; echo; } >> "$GITHUB_STEP_SUMMARY"
           done
@@ -549,6 +554,10 @@ jobs:
         with:
           path: tooling
           persist-credentials: false
+
+      # The simulator boots while the app is restored and Maestro is installed.
+      - name: Start booting the simulator
+        run: bash tooling/scripts/preview/ios-boot.sh "$PWD/tooling"
 
       - name: Check out the flows of the pull request head
         uses: actions/checkout@v7

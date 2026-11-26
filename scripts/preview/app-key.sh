@@ -39,7 +39,7 @@ files_digest() {
   (cd "$dir" && find "${existing[@]}" -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256 | short)
 }
 
-build_scripts=(env.sh xcode-cache-env.sh app-key.sh build-android.sh ios-prebuild.sh ios-pods.sh ios-build.sh)
+build_scripts=(env.sh xcode-cache-env.sh app-key.sh build-android.sh ios-prebuild.sh ios-pods.sh ios-build.sh ios-boot.sh)
 scripts_digest="$(
   cd "$tooling/scripts/preview"
   for f in "${build_scripts[@]}"; do [[ -f "$f" ]] && echo "$f"; done | xargs shasum -a 256 | short

@@ -22,19 +22,23 @@ echo "Simulator: $udid"
 phase_run simulator-boot bash -c 'xcrun simctl boot "$1" 2>/dev/null || true; xcrun simctl bootstatus "$1" -b' _ "$udid" >"$logs/bootstatus.log" 2>&1
 
 cd "$app"
-# EXPO_PROFILE makes xcodebuild print its build timing summary (compile versus
-# script phases such as the JS bundle).
-EXPO_PROFILE=1 phase_run xcodebuild-and-install npx expo run:ios --configuration Release --device "$udid" --no-bundler \
-  >"$logs/build.log" 2>&1 || { tail -n 60 "$logs/build.log" >&2; echo 'The iOS build failed.' >&2; exit 1; }
-tail -n 15 "$logs/build.log"
-sed -n '/Build Timing Summary/,$p' "$logs/build.log" | head -40 >"$logs/build-timing.txt" || true
-# The diagnostic remarks say, for every compilation, whether the cache served it.
+# Every line of the build output gets the time it arrived (seconds since the
+# epoch), so that log-gaps.sh can show where the build spent its time.
+stamp() {
+  local line
+  while IFS= read -r line; do printf '%s %s\n' "$(date +%s)" "$line"; done
+}
+cache_before="$(du -sk "$PREVIEW_XCODE_CACHE_DIR" | cut -f1)"
+phase_run xcodebuild-and-install npx expo run:ios --configuration Release --device "$udid" --no-bundler 2>&1 \
+  | stamp >"$logs/build.log" || { tail -n 60 "$logs/build.log" | cut -d' ' -f2- >&2; echo 'The iOS build failed.' >&2; exit 1; }
+tail -n 15 "$logs/build.log" | cut -d' ' -f2-
 {
-  echo "compilation cache directory: $PREVIEW_XCODE_CACHE_DIR ($(du -sh "$PREVIEW_XCODE_CACHE_DIR" | cut -f1))"
-  echo "cache hits:   $(grep -c -i 'cache hit' "$logs/build.log" || true)"
-  echo "cache misses: $(grep -c -i 'cache miss' "$logs/build.log" || true)"
+  echo "compilation cache before the build: $((cache_before / 1024)) MB"
+  echo "compilation cache after the build:  $(($(du -sk "$PREVIEW_XCODE_CACHE_DIR" | cut -f1) / 1024)) MB"
 } >"$logs/compilation-cache.txt"
 cat "$logs/compilation-cache.txt"
+bash "$tooling/scripts/preview/log-gaps.sh" "$logs/build.log" >"$logs/build-timeline.txt" || true
+cat "$logs/build-timeline.txt"
 
 bundle="$(xcrun simctl get_app_container "$udid" twinkler app)" \
   || { echo 'The app (twinkler) is not installed on the simulator.' >&2; exit 1; }
