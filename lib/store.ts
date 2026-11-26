@@ -112,7 +112,7 @@ type SessionState = {
    * The music of a prayer that ended while it was playing: the track and the
    * position where it stopped. It lives here, not on the session screen,
    * because the screen's players are released when it unmounts. Returning to
-   * the prayer turns the music back on from it (ADR-0046).
+   * the prayer turns the music back on from it (ADR-0047).
    */
   musicResume: PrayerMusicResume | null;
 

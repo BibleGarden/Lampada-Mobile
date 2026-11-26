@@ -511,7 +511,7 @@ function SessionScreen() {
     }
     const stop = async () => {
       // Playing music is remembered with its track and position, so that a
-      // return to the prayer continues it (ADR-0046). Read before the pause:
+      // return to the prayer continues it (ADR-0047). Read before the pause:
       // the players are released together with the screen.
       const track = musicTracks[musicTrackIndex.current];
       const positionSeconds = musicPlayerForSlot(activeMusicPlayerSlot.current).currentTime;

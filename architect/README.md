@@ -459,7 +459,7 @@ waits for the app to return, and over 0.8 s on that transition otherwise (see
 played when the prayer ended is remembered in the session store with its track
 and position, and "Return to prayer" turns it back on from there; finishing the
 prayer, starting a new one or extending the timer forgets it
-([ADR-0046](decisions/0046-resume-music-on-return-to-prayer.md)). Voice recording, playback of a
+([ADR-0047](decisions/0047-resume-music-on-return-to-prayer.md)). Voice recording, playback of a
 draft and scripture narration take the audio focus temporarily: the music is
 paused until the corresponding action finishes, so that it does not leak into a
 recording or mix with the user's audio.
@@ -1156,7 +1156,7 @@ disposable build checkout. EAS remotely increments native build numbers.
 The workflow separates PR validation, read-only build execution and comment
 publishing without repository code. Build links and numbers identify the exact
 PR revision for human acceptance, after CI, review and AI tester validation.
-AI testing retains its own build process. See [ADR-0046](decisions/0046-pr-store-testing.md)
+AI testing retains its own build process. See [ADR-0047](decisions/0046-pr-store-testing.md)
 and [the procedure](../docs/store-testing.md).
 Local native builds run prebuild to synchronize existing native projects.
 The About screen uses `expo-application.nativeApplicationVersion`, with an Expo

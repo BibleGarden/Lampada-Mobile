@@ -11,7 +11,7 @@ tags:
 # The prayer is left with "Finish", not by the timer: on the CI simulator each
 # Maestro command takes tens of seconds, so no timer short enough to wait for
 # is long enough to reach the end of the flow. "Finish" and the timer end go
-# through the same stop (ADR-0033, ADR-0046). The preset is an hour for the same
+# through the same stop (ADR-0033, ADR-0047). The preset is an hour for the same
 # reason.
 # Used by the preview workflow (docs: testing/README.md).
 - launchApp:

@@ -9,7 +9,7 @@ tags:
 # the return. On a build without the return behaviour the music is off after
 # the return and the media controls show no playing track; the steps after the
 # return are therefore optional, so that such a build still produces its images.
-# Used by the preview workflow (docs: testing/README.md), see ADR-0046.
+# Used by the preview workflow (docs: testing/README.md), see ADR-0047.
 - launchApp:
     stopApp: true
     clearState: true

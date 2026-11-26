@@ -1,4 +1,4 @@
-# ADR-0046: Resume the music when returning to the prayer
+# ADR-0047: Resume the music when returning to the prayer
 
 - Status: Accepted
 - Date: 2026-11-23
