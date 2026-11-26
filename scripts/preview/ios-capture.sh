@@ -32,7 +32,9 @@ xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --ba
 xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
   || { echo 'The app (twinkler) is not installed on the simulator.' >&2; exit 1; }
 
-export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
+# A fresh runner builds and starts the XCTest driver cold: 3 minutes were not
+# always enough ("iOS driver not ready in time").
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=480000
 failed=0
 for entry in "${flow_list[@]}"; do
   name="${entry%%$'\t'*}"

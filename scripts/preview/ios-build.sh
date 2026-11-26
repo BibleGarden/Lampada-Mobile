@@ -14,23 +14,27 @@ source "$tooling/scripts/preview/screens.sh"
 source "$tooling/scripts/preview/phases.sh"
 # shellcheck source=env.sh
 source "$tooling/scripts/preview/env.sh"
-# shellcheck source=ccache-env.sh
-source "$tooling/scripts/preview/ccache-env.sh"
+# shellcheck source=xcode-cache-env.sh
+source "$tooling/scripts/preview/xcode-cache-env.sh"
 mkdir -p "$logs" "$out"
 udid="$(ios_simulator_udid)"
 echo "Simulator: $udid"
 phase_run simulator-boot bash -c 'xcrun simctl boot "$1" 2>/dev/null || true; xcrun simctl bootstatus "$1" -b' _ "$udid" >"$logs/bootstatus.log" 2>&1
 
 cd "$app"
-ccache --zero-stats >/dev/null
 # EXPO_PROFILE makes xcodebuild print its build timing summary (compile versus
 # script phases such as the JS bundle).
 EXPO_PROFILE=1 phase_run xcodebuild-and-install npx expo run:ios --configuration Release --device "$udid" --no-bundler \
   >"$logs/build.log" 2>&1 || { tail -n 60 "$logs/build.log" >&2; echo 'The iOS build failed.' >&2; exit 1; }
 tail -n 15 "$logs/build.log"
 sed -n '/Build Timing Summary/,$p' "$logs/build.log" | head -40 >"$logs/build-timing.txt" || true
-{ echo "cache_dir: $(ccache -k cache_dir)"; ccache --show-stats; du -sh "$(ccache -k cache_dir)"; } >"$logs/ccache-stats.txt" 2>&1 || true
-cat "$logs/ccache-stats.txt"
+# The diagnostic remarks say, for every compilation, whether the cache served it.
+{
+  echo "compilation cache directory: $PREVIEW_XCODE_CACHE_DIR ($(du -sh "$PREVIEW_XCODE_CACHE_DIR" | cut -f1))"
+  echo "cache hits:   $(grep -c -i 'cache hit' "$logs/build.log" || true)"
+  echo "cache misses: $(grep -c -i 'cache miss' "$logs/build.log" || true)"
+} >"$logs/compilation-cache.txt"
+cat "$logs/compilation-cache.txt"
 
 bundle="$(xcrun simctl get_app_container "$udid" twinkler app)" \
   || { echo 'The app (twinkler) is not installed on the simulator.' >&2; exit 1; }

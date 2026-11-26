@@ -440,16 +440,6 @@ jobs:
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
 
-      - name: Install ccache
-        id: ccache
-        if: ${{ steps.app.outputs.cache-hit != 'true' }}
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
-        run: |
-          bash tooling/scripts/preview/phase.sh ccache-install brew install ccache
-          echo "dir=$(ccache -k cache_dir)" >> "$GITHUB_OUTPUT"
-
       - name: Generate the native project
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         env:
@@ -485,17 +475,17 @@ jobs:
             app/ios/Podfile.lock
           key: ${{ steps.key.outputs.deps_key }}-pods
 
-      # ccache is keyed by content, so an older cache is still useful: take the
-      # newest one of this Podfile, else the newest one at all.
-      - name: Restore the ccache
+      # Xcode's compilation cache is keyed by content, so an older cache is still
+      # useful: take the newest one of this Podfile, else the newest one at all.
+      - name: Restore the compilation cache
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         uses: actions/cache/restore@v6
         with:
-          path: ${{ steps.ccache.outputs.dir }}
-          key: preview-ccache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
+          path: ~/Library/Caches/preview-xcode-cas
+          key: preview-xcodecache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
           restore-keys: |
-            preview-ccache-ios-${{ steps.key.outputs.deps_key }}-
-            preview-ccache-ios-
+            preview-xcodecache-ios-${{ steps.key.outputs.deps_key }}-
+            preview-xcodecache-ios-
 
       - name: Build for the simulator
         id: build
@@ -505,12 +495,12 @@ jobs:
           EXPO_PUBLIC_AI_PROXY_KEY: ${{ secrets.EXPO_PUBLIC_AI_PROXY_KEY }}
         run: bash tooling/scripts/preview/ios-build.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs" "$RUNNER_TEMP/preview-app"
 
-      - name: Save the ccache
+      - name: Save the compilation cache
         if: ${{ !cancelled() && steps.app.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v6
         with:
-          path: ${{ steps.ccache.outputs.dir }}
-          key: preview-ccache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
+          path: ~/Library/Caches/preview-xcode-cas
+          key: preview-xcodecache-ios-${{ steps.key.outputs.deps_key }}-${{ github.run_id }}
 
       - name: Save the app in the cache
         if: ${{ steps.build.outcome == 'success' }}
@@ -523,7 +513,7 @@ jobs:
         if: ${{ always() }}
         run: |
           bash tooling/scripts/preview/phase-summary.sh "build ios ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
-          for file in out/logs/build-timing.txt out/logs/ccache-stats.txt; do
+          for file in out/logs/build-timing.txt out/logs/compilation-cache.txt; do
             [ -s "$file" ] || continue
             { echo "<details><summary>$(basename "$file")</summary>"; echo; echo '```'; cat "$file"; echo '```'; echo; echo '</details>'; echo; } >> "$GITHUB_STEP_SUMMARY"
           done
