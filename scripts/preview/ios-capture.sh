@@ -35,13 +35,14 @@ xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
 # A fresh runner builds and starts the XCTest driver cold: 3 minutes were not
 # always enough ("iOS driver not ready in time").
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=480000
-# A flow that fails is run again, twice at most: the screen flows in
-# testing/preview/ clear the app at their start, so a rerun is a fresh try (a
-# flow path without clearState may start from what the failed attempt left).
-# The reflect flow sometimes presses the hold button of the prayer screen while
-# the screen still says "Preparing a question" (the real server answers slowly),
-# and then it fails at session-title. The log and the failure screenshot of
-# every failed attempt are kept in the logs.
+# A flow is run again, twice at most, only when the Maestro driver did not start
+# on the simulator: that is an infrastructure failure, before any step of the
+# flow ran. Any other failure (a step, an app crash) fails the flow at once, so
+# a retry never hides a defect. A flow that passed on a later attempt leaves an
+# empty marker <name>.attempt<N> next to its screenshots, and the comment on the
+# pull request says so. The log and the failure screenshot of every failed
+# attempt are kept in the logs.
+driver_failure='driver not ready in time|driver did not start up in time'
 max_attempts=3
 failed=0
 for entry in "${flow_list[@]}"; do
@@ -62,13 +63,21 @@ for entry in "${flow_list[@]}"; do
     echo "Flow $name FAILED (attempt $attempt of $max_attempts):" >&2
     tail -40 "$logs/flow-$name$suffix.log" >&2
     xcrun simctl io "$udid" screenshot "$logs/$name-failure$suffix.png" >/dev/null 2>&1 || true
+    if ! grep -qiE "$driver_failure" "$logs/flow-$name$suffix.log"; then
+      echo "Flow $name failed in the flow itself; it is not run again." >&2
+      break
+    fi
+    echo "The Maestro driver did not start; running flow $name again." >&2
     attempt=$((attempt + 1))
   done
   if ((passed == 0)); then
     failed=1
     continue
   fi
-  ((attempt == 1)) || echo "Flow $name passed on attempt $attempt."
+  if ((attempt > 1)); then
+    echo "Flow $name passed on attempt $attempt."
+    : >"$out/screens/$name.attempt$attempt"
+  fi
   count="$(collect_screenshots "$run" "$out/screens")"
   if [[ "$count" == 0 ]]; then
     xcrun simctl io "$udid" screenshot "$out/screens/$name-final.png"

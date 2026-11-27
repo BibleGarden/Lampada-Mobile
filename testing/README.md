@@ -504,11 +504,12 @@ commas or spaces. A name is one of:
 
 The same flow runs on the "before" and on the "after" build, so the pair is
 comparable. A flow that fails fails that job, and the comment says which. On iOS
-a failed flow is run again, up to three attempts in all: a flow that passes on a
-later attempt passes the job, and the logs of the failed attempts stay in the
-`logs-*` artifact of the job. The screen flows in `testing/preview/` clear the
-app at their start, so each attempt starts clean; a flow path without
-`clearState` may start its retry from the state the failed attempt left.
+a flow is run again, up to three attempts in all, only when the Maestro driver
+did not start on the simulator (a cold runner can need minutes for it); a
+failure inside the flow is never retried. A flow that passed on a later attempt
+is named in the comment ("passed on attempt N"), and the logs of the failed
+attempts stay in the `logs-*` artifact of the job. A name given twice fails the
+request.
 
 ### Environment
 

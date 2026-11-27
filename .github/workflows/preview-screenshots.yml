@@ -121,6 +121,16 @@ jobs:
                 return fail(`Invalid screen or flow "${token}". Use a screen name such as "reflect", or a path testing/.../android-name.yaml or testing/.../ios-name.yaml.`);
               }
             }
+            // A screen runs once: reject a name given twice, with the name rule
+            // of resolve_flows (scripts/preview/screens.sh): the screen name,
+            // or the file name without its extension for a flow path. Checked
+            // here because the chunks below would split the copies apart.
+            const nameOf = (token) => (token.includes('/') ? token.split('/').pop().replace(/\.ya?ml$/, '') : token);
+            const seen = new Set();
+            for (const token of tokens) {
+              if (seen.has(nameOf(token))) return fail(`Preview screen "${nameOf(token)}" is listed twice.`);
+              seen.add(nameOf(token));
+            }
             const platformOf = (token) => (token.includes('/') ? token.split('/').pop().split('-')[0] : null);
 
             // The capture jobs run in parallel chunks: one screen or flow per
@@ -600,7 +610,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: screens-ios-${{ matrix.variant }}-${{ matrix.chunk.id }}
-          path: out/screens/*.png
+          # The screenshots and the markers of flows that needed a retry.
+          path: |
+            out/screens/*.png
+            out/screens/*.attempt*
           if-no-files-found: ignore
           retention-days: 14
 
@@ -664,6 +677,12 @@ jobs:
               [ -e "$file" ] || continue
               name="$(basename "$file")"
               [ -f "$file" ] && [ ! -L "$file" ] || { echo "Skipping $name: not a regular file"; continue; }
+              # An empty <flow>.attempt<N> marks a flow that passed on attempt N
+              # after the Maestro driver failed to start (ios-capture.sh).
+              if [[ "$name" =~ ^([A-Za-z0-9_-][A-Za-z0-9._-]{0,79})\.attempt([23])$ ]] && [ ! -s "$file" ]; then
+                echo "${BASH_REMATCH[1]} ${target#screens-} ${BASH_REMATCH[2]}" >> retries.txt
+                continue
+              fi
               [[ "$name" =~ ^[A-Za-z0-9._-]{1,80}\.png$ ]] || { echo "Skipping $name: unexpected name"; continue; }
               [ "$(stat -c %s "$file")" -le 10485760 ] || { echo "Skipping $name: larger than 10 MiB"; continue; }
               [ "$(head -c 8 "$file" | od -An -tx1 | tr -d ' \n')" = 89504e470d0a1a0a ] || { echo "Skipping $name: not a PNG"; continue; }
@@ -753,6 +772,17 @@ jobs:
               }
               if (results[platform] !== 'success') {
                 body += `\n:warning: The ${platform} jobs ended with "${results[platform]}"; some screenshots may be missing. See the run for logs.\n`;
+              }
+            }
+            // Flows that passed only after the Maestro driver failed to start.
+            const retries = fs.existsSync('retries.txt')
+              ? [...new Set(fs.readFileSync('retries.txt', 'utf8').split('\n').filter(Boolean))].sort()
+              : [];
+            if (retries.length > 0) {
+              body += '\nRetried after the Maestro driver did not start (the flow itself did not fail):\n';
+              for (const line of retries.slice(0, 20)) {
+                const [flow, where, attempt] = line.split(' ');
+                body += `- \`${flow}\` (${where.replace('-', ', ')}) passed on attempt ${attempt}.\n`;
               }
             }
             body += '\nThe screenshots are also attached to the workflow run as artifacts. They are evidence for the owner\'s visual approval, not the approval.\n';
