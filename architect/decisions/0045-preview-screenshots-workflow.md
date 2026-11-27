@@ -97,8 +97,8 @@ security rules above, and replace the "Jobs" bullet:
   most four chunks per platform and variant, so a preview of several screens
   boots several emulators or simulators in parallel. In a manual run the
   capture jobs are skipped and each build job captures its own screens after
-  the build, with the same scripts and arguments and without secrets (see "The
-  app is never cached in a scope that fork runs read").
+  the build, with the same scripts and arguments and without secrets (see
+  "Nothing is saved from a run whose cache scope fork runs read").
 - **App cache.** In a label run a build job stores the simulator `.app` or the x86_64 APK in the
   Actions cache under the app key `preview-app-<platform>-<app sha>-<digest>`.
   When the key exists, the build is skipped and the capture jobs restore the app
