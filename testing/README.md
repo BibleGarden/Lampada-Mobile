@@ -463,18 +463,24 @@ What each trigger reuses and writes (the Actions cache is scoped by git ref):
 
 | | Runs on | Reads caches of | Writes caches to |
 | --- | --- | --- | --- |
-| Label | the merge ref of the labelled pull request | that pull request and `main` | that pull request only |
-| Manual run | `main` | `main` | `main`, which every pull request reads |
+| Label | the merge ref of the labelled pull request | that pull request and `main` | that pull request only: the native caches and the two apps |
+| Manual run | `main` | `main` | `main`: the native caches only, never an app |
 
-A run started by the label shares nothing with other pull requests: unless a
-manual run has filled `main`, the first labelled preview of a pull request finds
-neither the native caches (CocoaPods, Xcode compilation, Gradle) nor the base
-app, and is cold (75-80 minutes); the next previews of the same pull request
-are warm (about 40 minutes after a new commit, about 20 when nothing changed). A manual run writes to the `main` scope
-that all pull requests read, so run it once on a base commit, and again after the
-native inputs on `main` change (`package-lock.json`, `app.json`, `plugins/`,
-`patches/`, `modules/`, the build scripts), to give every later labelled
-preview warm native caches and a cached base app.
+The built app is reused only within one pull request. The `main` scope can be
+read by runs of every pull request, forks included (a fork can edit `ci.yml` to
+restore any entry of `main`), and the app bundles the `EXPO_PUBLIC_*` values, so
+an app is never stored there (ADR-0045, "Amendment"). A manual run therefore
+captures its screens in its build jobs, one screen after another, instead of in
+parallel capture jobs.
+
+The first labelled preview of a pull request builds both apps. It finds the
+native caches (CocoaPods, Xcode compilation, Gradle) only if a manual run has
+filled `main`; without them it is cold (75-80 minutes). The next previews of the
+same pull request reuse its apps: about 40 minutes after a new commit (the
+"before" app comes from the cache), about 20 when nothing changed. Run a manual
+run once on a base commit, and again after the native inputs on `main` change
+(`package-lock.json`, `app.json`, `plugins/`, `patches/`, `modules/`, the build
+scripts), to give every later labelled preview warm native caches.
 
 Only pull requests from branches of this repository are accepted. The pull
 request must be open. A pull request from a fork is refused.
@@ -534,13 +540,15 @@ not made again:
 1. `plan` resolves the pull request and splits the screens into chunks (one
    screen or flow each, at most four chunks per platform and variant).
 2. `build-android` and `build-ios` run for the "before" and the "after" commit.
-   Each computes the app key (`scripts/preview/app-key.sh`) and looks for the
-   app in the Actions cache. A hit skips the build. A miss builds the app,
-   using the CocoaPods, Xcode compilation and Gradle caches, and stores it under the key.
-   The job summary names the components of the key and says hit or miss.
-3. `capture-android` and `capture-ios` run a matrix of variant by chunk in
-   parallel: each restores the app from the cache, boots its own emulator or
-   simulator and runs its flows. They need no secrets.
+   Each computes the app key (`scripts/preview/app-key.sh`) and, in a label
+   run, looks for the app in the Actions cache. A hit skips the build. A miss
+   builds the app, using the CocoaPods, Xcode compilation and Gradle caches, and
+   stores it under the key. The job summary names the components of the key and
+   says hit or miss. In a manual run the app is always built and never stored:
+   the build job then captures the screens itself, with the scripts of step 3.
+3. In a label run, `capture-android` and `capture-ios` run a matrix of variant
+   by chunk in parallel: each restores the app from the cache, boots its own
+   emulator or simulator and runs its flows. They need no secrets.
 4. `publish` merges the chunks into the one comment.
 
 The app key changes with the app commit, the lockfile, the Xcode and iOS SDK
@@ -554,9 +562,10 @@ both apps and only captures. Every job summary lists the phase durations
 install), `simulator-boot`, `app-install`, `maestro-install`, `emulator-start`
 and `capture`.
 
-The app goes through the Actions cache, not through a workflow artifact: it
-bundles the secret values and artifacts of a public repository can be
-downloaded by anyone who is signed in. The cache set has to stay within the
+The app goes from build to capture through the cache of the labelled pull
+request, not through a workflow artifact: it bundles the secret values and
+artifacts of a public repository can be downloaded by anyone who is signed in.
+The cache set has to stay within the
 10 GB of the repository (ADR-0045, "Amendment").
 
 ### Secrets

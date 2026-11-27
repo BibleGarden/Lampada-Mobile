@@ -96,8 +96,11 @@ the "Jobs" bullet:
   A build job produces the app for one variant (before or after); the capture
   jobs run a matrix of variant by chunk. A chunk is one screen or flow, with at
   most four chunks per platform and variant, so a preview of several screens
-  boots several emulators or simulators in parallel.
-- **App cache.** A build job stores the simulator `.app` or the x86_64 APK in the
+  boots several emulators or simulators in parallel. In a manual run the
+  capture jobs are skipped and each build job captures its own screens after
+  the build, with the same scripts and arguments and without secrets (see "The
+  app is never cached in a scope that fork runs read").
+- **App cache.** In a label run a build job stores the simulator `.app` or the x86_64 APK in the
   Actions cache under the app key `preview-app-<platform>-<app sha>-<digest>`.
   When the key exists, the build is skipped and the capture jobs restore the app
   from it. The digest covers everything that changes the built app: the lockfile,
@@ -126,17 +129,29 @@ the "Jobs" bullet:
   long as without it (see the measurements in the pull request of #114).
 - **The app does not travel as a workflow artifact.** The app bundles the
   `EXPO_PUBLIC_*` values from the repository secrets, and the artifacts of a
-  public repository can be downloaded by anyone who is signed in. The Actions
-  cache can be read only by workflows of this repository, so the built app goes
-  through it. The screenshots stay artifacts: they hold no secret.
+  public repository can be downloaded by anyone who is signed in. The screenshots
+  stay artifacts: they hold no secret.
 - **Cache scoping.** A cache entry is readable by runs of the same ref and of
-  the default branch, and an existing key cannot be overwritten. A run started
-  by the `preview-screenshots` label runs on the merge ref of the labelled pull
-  request, so it writes to that pull request's scope, which no other pull
-  request reads. A `workflow_dispatch` run runs on `main` and writes to the
-  `main` scope, which every pull request reads. That is how the "before" build of
-  a base already built on `main` is reused by later previews, and also the
-  reason for the next point.
+  the base branch, and an existing key cannot be overwritten. Runs for pull
+  requests from forks read the `main` scope too: GitHub lets a pull request run
+  restore the caches of its base branch, including for forks, and `ci.yml` runs
+  on every pull request with the workflow file of that pull request, so a fork
+  can restore any `main` entry whose key it knows or guesses by prefix. A run
+  started by the `preview-screenshots` label runs on the merge ref of the
+  labelled pull request, so it writes to that pull request's scope, which no
+  other pull request reads. A `workflow_dispatch` run runs on `main` and writes
+  to the `main` scope, which every pull request, forks included, reads.
+- **The app is never cached in a scope that fork runs read.** A label run
+  stores the app only in the scope of its pull request, so an app is reused
+  within that pull request (a repeated preview, or the "before" app of the next
+  commit with the same merge base), not across pull requests. A manual run
+  stores no app at all: it would land in `main`. Its build jobs capture the
+  screens themselves instead of handing the app to capture jobs, and they still
+  store the native build caches in `main`, which hold no baked-in value (the
+  JavaScript bundle with the `EXPO_PUBLIC_*` values is not a cached Gradle task
+  output, and the compilation cache and the pods hold native code). So the first
+  labelled preview of a pull request builds both apps, with the native caches of
+  `main` if a manual run has filled them.
 - **A cache written while building PR code cannot replace the app of another
   SHA.** The key of an app contains the full SHA that the job checked out, and
   it is computed by a step that runs before any PR code, as a step output that
@@ -145,8 +160,8 @@ the "Jobs" bullet:
   itself (its merge ref), so that step is only as trustworthy as that pull
   request; this is harmless because a label run writes only to the scope of its
   own pull request, which only that pull request reads, so it can poison nothing
-  else. A manual run writes to `main` but only for the commit it built, and the
-  first entry written for a key stays (keys are immutable). What remains in a
+  else. A manual run stores no app, and the first entry written for a key stays
+  (keys are immutable). What remains in a
   manual run, which builds the code of the target pull request with the workflow
   of `main`: (1) PR code that runs in a job can reach the cache token of that job
   and could write an entry under another key of the same scope; (2) the save
@@ -161,8 +176,8 @@ the "Jobs" bullet:
 - **Cache budget.** The repository limit is 10 GB with least-recently-used
   eviction. Measured entry sizes (compressed): CocoaPods 0.4 GB and the Xcode
   compilation cache 0.7 GB per Podfile key, the Gradle caches 2.4 GB per set of
-  dependency inputs, and 74 MB for each stored app (two per platform and
-  previewed commit). The steady set is about 3.5 GB plus 0.3 GB per previewed
+  dependency inputs, and 74 MB for each app stored by a label run (two per
+  platform and previewed commit). The steady set is about 3.5 GB plus 0.3 GB per previewed
   commit, so about twenty previews fit in a week before the oldest app entries
   leave. Nothing was left out for size. If the budget is exceeded one day, the
   Gradle build cache directory is the first candidate to drop; measure the
