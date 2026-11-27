@@ -78,7 +78,11 @@ for entry in "${flow_list[@]}"; do
     echo "Flow $name passed on attempt $attempt."
     : >"$out/screens/$name.attempt$attempt"
   fi
-  count="$(collect_screenshots "$run" "$out/screens")"
+  if ! count="$(collect_screenshots "$run" "$out/screens")"; then
+    echo "Flow $name FAILED: a screenshot it took is empty." >&2
+    failed=1
+    continue
+  fi
   if [[ "$count" == 0 ]]; then
     xcrun simctl io "$udid" screenshot "$out/screens/$name-final.png"
     echo "Flow $name took no screenshots; saved the final screen as $name-final.png"
