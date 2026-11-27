@@ -623,3 +623,5 @@ inset measurement or physical external-keyboard acceptance. Floating mode must
 be selected in the real system keyboard before invoking `--mode floating`.
 `npm run test:keyboard:unit` covers both native bounds readers; `npm test` runs it
 too.
+
+<!-- Throwaway change for the preview measurement of #114; this pull request is closed unmerged. -->
