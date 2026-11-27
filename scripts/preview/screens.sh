@@ -45,9 +45,9 @@ resolve_flows() {
 # Copies the images a flow took with takeScreenshot into <out dir>. The images
 # Maestro saves itself for failed or optional steps ("screenshot-*", "step-*")
 # are not evidence and are skipped. An image smaller than 100x100 pixels is an
-# empty capture (the iOS simulator once returned a 1x1 PNG for a takeScreenshot
-# that otherwise completed): it is not copied and the function fails, so the
-# flow fails instead of publishing a blank "screenshot".
+# empty capture (a takeScreenshot can complete with a 1x1 PNG): it is not copied
+# and the function fails, so the flow fails instead of publishing a blank
+# "screenshot".
 collect_screenshots() {
   local from="$1" out="$2" file size n=0 empty=0
   mkdir -p "$out"

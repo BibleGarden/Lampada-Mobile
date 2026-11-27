@@ -32,8 +32,8 @@ xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --ba
 xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
   || { echo 'The app (twinkler) is not installed on the simulator.' >&2; exit 1; }
 
-# A fresh runner builds and starts the XCTest driver cold: 3 minutes were not
-# always enough ("iOS driver not ready in time").
+# A fresh runner builds and starts the XCTest driver cold, which can take
+# several minutes ("iOS driver not ready in time" when the timeout is too short).
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=480000
 # A flow is run again, twice at most, only when the Maestro driver did not start
 # on the simulator: that is an infrastructure failure, before any step of the

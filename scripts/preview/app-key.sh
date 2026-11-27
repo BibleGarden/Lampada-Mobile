@@ -13,7 +13,7 @@
 #             compilation cache). It changes with the inputs that produce the
 #             Podfile: package-lock.json, app.json, plugins/, patches/,
 #             modules/, the toolchain and the build scripts.
-#   gradle_key the key of the Gradle caches (about 2.4 GB, the largest entry).
+#   gradle_key the key of the Gradle caches (the largest entry).
 #             It follows the same inputs but neither the toolchain nor the
 #             build scripts, so a change of a script does not write a new copy:
 #             Gradle checks its own cache entries.
@@ -55,8 +55,7 @@ if [[ "$platform" == ios ]]; then
 else
   sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
   # Java by its major version: a patch release of the JDK does not change the
-  # APK. The Android key of an unchanged commit missed between two runs without
-  # a known cause; the toolchain line below is logged to find it if it recurs.
+  # APK. The toolchain line is logged, so a miss can be traced to its input.
   toolchain="$(printf 'java %s; build-tools %s; ndk %s; cmake %s; %s; node %s' \
     "$(java -version 2>&1 | sed -n '1s/.*version "\([0-9]*\).*/\1/p')" "$(ls "$sdk/build-tools" | tr '\n' ',')" \
     "$(ls "$sdk/ndk" 2>/dev/null | tr '\n' ',')" "$(ls "$sdk/cmake" 2>/dev/null | tr '\n' ',')" \

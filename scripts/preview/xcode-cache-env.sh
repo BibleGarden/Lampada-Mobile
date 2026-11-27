@@ -5,8 +5,8 @@
 # xcconfig file that xcodebuild reads from XCODE_XCCONFIG_FILE, and puts the
 # cache in one directory that the workflow saves and restores. The cache is
 # content-addressed, so entries of an older build stay valid. React Native's
-# ccache wrapper (USE_CCACHE) does not work here: Xcode's build system does not
-# call the compiler through the CC build setting, so ccache saw no compilation.
+# ccache wrapper (USE_CCACHE) is not used: Xcode's build system does not call
+# the compiler through the CC build setting, so ccache would see no compilation.
 PREVIEW_XCODE_CACHE_DIR="${PREVIEW_XCODE_CACHE_DIR:-$HOME/Library/Caches/preview-xcode-cas}"
 mkdir -p "$PREVIEW_XCODE_CACHE_DIR"
 xcconfig="${RUNNER_TEMP:-/tmp}/preview-xcode-cache.xcconfig"

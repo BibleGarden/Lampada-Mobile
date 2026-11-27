@@ -21,10 +21,12 @@ name: Preview screenshots
 # jobs restore the app from that cache and run the flows in parallel chunks. The
 # app is not passed as a workflow artifact: it bundles the EXPO_PUBLIC_* secret
 # values and artifacts of a public repository can be downloaded by anyone who
-# is signed in. Only a label run does this, in the cache scope of its pull
-# request. A manual run never stores the app: it runs on a branch whose cache
-# scope runs of fork pull requests can read, so each build job captures its own
-# screens with the same scripts and the capture jobs are skipped. See ADR-0045.
+# is signed in. Only a label run writes to the cache, in the scope of its pull
+# request: the app and the native build caches. A manual run writes nothing to
+# the cache: it runs on a branch whose cache scope runs of fork pull requests can
+# read, and anything built with the build secrets may carry them. It restores the
+# native caches only, always builds the app, and each build job captures its
+# own screens with the same scripts; the capture jobs are skipped. See ADR-0045.
 
 on:
   workflow_dispatch:
@@ -273,7 +275,7 @@ jobs:
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         working-directory: app
         env:
-          # A dropped connection (ECONNRESET) failed a run once; no secrets here.
+          # Retry dropped connections; no secrets here.
           NPM_CONFIG_FETCH_RETRIES: 5
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
@@ -299,8 +301,10 @@ jobs:
 
       # Only after a successful build: an entry is never replaced, so a partial
       # one would stay partial.
+      # Not in a manual run, which writes nothing to the cache: the Gradle build
+      # cache holds task outputs built with the secrets (see the top of the file).
       - name: Save the Gradle caches
-        if: ${{ steps.build.outcome == 'success' && steps.gradle.outputs.cache-hit != 'true' }}
+        if: ${{ steps.build.outcome == 'success' && steps.gradle.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
         uses: actions/cache/save@v6
         with:
           path: |
@@ -532,7 +536,7 @@ jobs:
         if: ${{ steps.app.outputs.cache-hit != 'true' }}
         working-directory: app
         env:
-          # A dropped connection (ECONNRESET) failed a run once; no secrets here.
+          # Retry dropped connections; no secrets here.
           NPM_CONFIG_FETCH_RETRIES: 5
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
@@ -577,9 +581,11 @@ jobs:
         run: bash tooling/scripts/preview/ios-build.sh "$PWD/app" "$PWD/tooling" "$PWD/out/logs" "$RUNNER_TEMP/preview-app"
 
       # One entry per Podfile: a build of another commit with the same pods adds
-      # nothing that is worth a second copy of the 0.7 GB.
+      # nothing that is worth a second copy. Not in a manual run, which writes
+      # nothing to the cache (see the top of the file); the same holds for the
+      # CocoaPods below.
       - name: Save the compilation cache
-        if: ${{ steps.build.outcome == 'success' && steps.cas.outputs.cache-hit != 'true' }}
+        if: ${{ steps.build.outcome == 'success' && steps.cas.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
         uses: actions/cache/save@v6
         with:
           path: ~/Library/Caches/preview-xcode-cas
@@ -593,7 +599,7 @@ jobs:
           key: ${{ steps.key.outputs.app_key }}
 
       - name: Save the CocoaPods
-        if: ${{ steps.build.outcome == 'success' && steps.pods.outputs.cache-hit != 'true' }}
+        if: ${{ steps.build.outcome == 'success' && steps.pods.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
         uses: actions/cache/save@v6
         with:
           path: |

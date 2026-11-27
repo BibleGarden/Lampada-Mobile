@@ -463,24 +463,21 @@ What each trigger reuses and writes (the Actions cache is scoped by git ref):
 
 | | Runs on | Reads caches of | Writes caches to |
 | --- | --- | --- | --- |
-| Label | the merge ref of the labelled pull request | that pull request and `main` | that pull request only: the native caches and the two apps |
-| Manual run | `main` | `main` | `main`: the native caches only, never an app |
+| Label | the merge ref of the labelled pull request | that pull request | that pull request only: the native caches and the two apps |
+| Manual run | `main` | `main` | nothing |
 
-The built app is reused only within one pull request. The `main` scope can be
-read by runs of every pull request, forks included (a fork can edit `ci.yml` to
-restore any entry of `main`), and the app bundles the `EXPO_PUBLIC_*` values, so
-an app is never stored there (ADR-0045, "Amendment"). A manual run therefore
-captures its screens in its build jobs, one screen after another, instead of in
-parallel capture jobs.
+The `main` scope can be read by runs of every pull request, forks included (a
+fork can edit `ci.yml` to restore any entry of `main`), and whatever a build
+produces with the secrets may carry them: the app, and also the Gradle build
+cache. So a manual run writes nothing to the cache (ADR-0045, "Amendment"): it
+always builds both apps and captures its screens in its build jobs, one screen
+after another, instead of in parallel capture jobs.
 
-The first labelled preview of a pull request builds both apps. It finds the
-native caches (CocoaPods, Xcode compilation, Gradle) only if a manual run has
-filled `main`; without them it is cold (75-80 minutes). The next previews of the
-same pull request reuse its apps: about 40 minutes after a new commit (the
-"before" app comes from the cache), about 20 when nothing changed. Run a manual
-run once on a base commit, and again after the native inputs on `main` change
-(`package-lock.json`, `app.json`, `plugins/`, `patches/`, `modules/`, the build
-scripts), to give every later labelled preview warm native caches.
+The first labelled preview of a pull request builds both apps with cold native
+caches (CocoaPods, Xcode compilation, Gradle). The next previews of the same
+pull request reuse them: after a new commit only the "after" app is built, with
+warm native caches, and when nothing changed both apps come from the cache and
+the run only captures.
 
 Only pull requests from branches of this repository are accepted. The pull
 request must be open. A pull request from a fork is refused.
@@ -543,9 +540,10 @@ not made again:
    Each computes the app key (`scripts/preview/app-key.sh`) and, in a label
    run, looks for the app in the Actions cache. A hit skips the build. A miss
    builds the app, using the CocoaPods, Xcode compilation and Gradle caches, and
-   stores it under the key. The job summary names the components of the key and
-   says hit or miss. In a manual run the app is always built and never stored:
-   the build job then captures the screens itself, with the scripts of step 3.
+   stores the app and new native caches. The job summary names the components
+   of the key and says hit or miss. In a manual run the app is always built and
+   nothing is stored: the build job then captures the screens itself, with the
+   scripts of step 3.
 3. In a label run, `capture-android` and `capture-ios` run a matrix of variant
    by chunk in parallel: each restores the app from the cache, boots its own
    emulator or simulator and runs its flows. They need no secrets.
@@ -554,9 +552,9 @@ not made again:
 The app key changes with the app commit, the lockfile, the Xcode and iOS SDK
 (or Java, SDK build tools and NDK) versions of the runner, the build scripts in
 `scripts/preview/` and a hash of the secret values, so a stale app is never shown
-as "after". The first preview of a commit is cold (the iOS build takes over an
-hour without the native caches); a second run of the same pull request finds
-both apps and only captures. Every job summary lists the phase durations
+as "after". The first preview of a pull request is cold (the iOS build is the
+longest part); a second run of the same pull request finds both apps and only
+captures. Every job summary lists the phase durations
 (`scripts/preview/phases.sh`): `npm-ci`, `prebuild`, `gradle` (Android),
 `xcodebuild-and-install` (iOS; it includes `pod install`, the JS bundle and the
 install), `simulator-boot`, `app-install`, `maestro-install`, `emulator-start`
