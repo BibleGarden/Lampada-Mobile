@@ -35,11 +35,13 @@ xcrun simctl get_app_container "$udid" twinkler app >/dev/null \
 # A fresh runner builds and starts the XCTest driver cold: 3 minutes were not
 # always enough ("iOS driver not ready in time").
 export MAESTRO_DRIVER_STARTUP_TIMEOUT=480000
-# A flow that fails is run again, twice at most: every flow starts from a cleared
-# app, so a rerun is a fresh try. The reflect flow sometimes presses the hold
-# button of the prayer screen while the screen still says "Preparing a question"
-# (the real server answers slowly), and then it fails at session-title. The log
-# and the failure screenshot of every failed attempt are kept in the logs.
+# A flow that fails is run again, twice at most: the screen flows in
+# testing/preview/ clear the app at their start, so a rerun is a fresh try (a
+# flow path without clearState may start from what the failed attempt left).
+# The reflect flow sometimes presses the hold button of the prayer screen while
+# the screen still says "Preparing a question" (the real server answers slowly),
+# and then it fails at session-title. The log and the failure screenshot of
+# every failed attempt are kept in the logs.
 max_attempts=3
 failed=0
 for entry in "${flow_list[@]}"; do

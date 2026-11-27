@@ -164,7 +164,9 @@ jobs:
         with:
           name: screens-plan
           path: plan-marker.txt
-          retention-days: 1
+          # Same retention as the screenshots: a re-run of publish alone must
+          # still find the marker next to them.
+          retention-days: 14
 
       - name: Check the build secrets and hash them for the cache key
         id: secrets

@@ -466,11 +466,11 @@ What each trigger reuses and writes (the Actions cache is scoped by git ref):
 | Label | the merge ref of the labelled pull request | that pull request and `main` | that pull request only |
 | Manual run | `main` | `main` | `main`, which every pull request reads |
 
-A run started by the label shares nothing with other pull requests: the first
-labelled preview of a pull request finds neither the native caches (CocoaPods,
-Xcode compilation, Gradle) nor the base app, and is cold (75-80 minutes); the
-next previews of the same pull request are warm (about 40 minutes after a new
-commit, about 20 when nothing changed). A manual run writes to the `main` scope
+A run started by the label shares nothing with other pull requests: unless a
+manual run has filled `main`, the first labelled preview of a pull request finds
+neither the native caches (CocoaPods, Xcode compilation, Gradle) nor the base
+app, and is cold (75-80 minutes); the next previews of the same pull request
+are warm (about 40 minutes after a new commit, about 20 when nothing changed). A manual run writes to the `main` scope
 that all pull requests read, so run it once on a base commit, and again after the
 native inputs on `main` change (`package-lock.json`, `app.json`, `plugins/`,
 `patches/`, `modules/`, the build scripts), to give every later labelled
@@ -504,9 +504,11 @@ commas or spaces. A name is one of:
 
 The same flow runs on the "before" and on the "after" build, so the pair is
 comparable. A flow that fails fails that job, and the comment says which. On iOS
-a failed flow is run again, up to three attempts in all (every flow starts from
-a cleared app): a flow that passes on a later attempt passes the job, and the
-logs of the failed attempts stay in the `logs-*` artifact of the job.
+a failed flow is run again, up to three attempts in all: a flow that passes on a
+later attempt passes the job, and the logs of the failed attempts stay in the
+`logs-*` artifact of the job. The screen flows in `testing/preview/` clear the
+app at their start, so each attempt starts clean; a flow path without
+`clearState` may start its retry from the state the failed attempt left.
 
 ### Environment
 
