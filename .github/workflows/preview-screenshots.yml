@@ -212,7 +212,7 @@ jobs:
     if: ${{ needs.plan.outputs.android == 'true' }}
     runs-on: ubuntu-latest
     # A manual run also captures up to eight screens here.
-    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && 135 || 75 }}
+    timeout-minutes: 135
     permissions:
       contents: read
     strategy:
@@ -262,7 +262,7 @@ jobs:
       # always builds it.
       - name: Look for the app in the cache
         id: app
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+        if: ${{ false }}
         uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/preview-app
@@ -286,7 +286,7 @@ jobs:
       # file); the same holds for the iOS native caches.
       - name: Restore the Gradle caches
         id: gradle
-        if: ${{ steps.app.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.app.outputs.cache-hit != 'true' && false }}
         uses: actions/cache/restore@v6
         with:
           path: |
@@ -308,7 +308,7 @@ jobs:
       # Not in a manual run, which writes nothing to the cache: the Gradle build
       # cache holds task outputs built with the secrets (see the top of the file).
       - name: Save the Gradle caches
-        if: ${{ steps.build.outcome == 'success' && steps.gradle.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.build.outcome == 'success' && steps.gradle.outputs.cache-hit != 'true' && false }}
         uses: actions/cache/save@v6
         with:
           path: |
@@ -317,7 +317,7 @@ jobs:
           key: ${{ steps.key.outputs.gradle_key }}
 
       - name: Save the app in the cache
-        if: ${{ steps.build.outcome == 'success' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.build.outcome == 'success' && false }}
         uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/preview-app
@@ -326,7 +326,7 @@ jobs:
       # A manual run: the capture of the capture-android job, here, with the
       # same scripts and arguments, and no secrets.
       - name: Check out the flows of the pull request head
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         uses: actions/checkout@v7
         with:
           ref: ${{ needs.plan.outputs.head_sha }}
@@ -335,22 +335,22 @@ jobs:
           persist-credentials: false
 
       - name: Enable KVM
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Install Maestro
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         run: bash tooling/scripts/preview/phase.sh maestro-install bash tooling/scripts/preview/install-maestro.sh
 
       - name: Start the emulator
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         run: bash tooling/scripts/preview/phase.sh emulator-start bash tooling/scripts/preview/android-emulator.sh "$PWD/tooling" "$PWD/out/logs"
 
       - name: Capture screenshots on the emulator
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         env:
           SCREENS: ${{ needs.plan.outputs.screens }}
         run: |
@@ -366,7 +366,7 @@ jobs:
         run: bash tooling/scripts/preview/phase-summary.sh "build android ${{ matrix.variant }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload screenshots
-        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
           name: screens-android-${{ matrix.variant }}-0
@@ -375,7 +375,7 @@ jobs:
           retention-days: 14
 
       - name: Upload logs
-        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
           name: logs-android-${{ matrix.variant }}-0
@@ -388,7 +388,7 @@ jobs:
     needs: [plan, build-android]
     # Also when the build of one variant failed: the other variant is captured
     # and the leg of the failed one stops at its own restore of the app.
-    if: ${{ !cancelled() && github.event_name != 'workflow_dispatch' && needs.plan.outputs.android == 'true' && needs.build-android.result != 'skipped' }}
+    if: ${{ !cancelled() && false && needs.plan.outputs.android == 'true' && needs.build-android.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -481,7 +481,7 @@ jobs:
     if: ${{ needs.plan.outputs.ios == 'true' }}
     runs-on: macos-26
     # A manual run also captures up to eight screens here.
-    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && 200 || 120 }}
+    timeout-minutes: 200
     permissions:
       contents: read
     strategy:
@@ -525,7 +525,7 @@ jobs:
       # always builds it.
       - name: Look for the app in the cache
         id: app
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+        if: ${{ false }}
         uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/preview-app
@@ -557,7 +557,7 @@ jobs:
       # the restored folder it only confirms it.
       - name: Restore the CocoaPods
         id: pods
-        if: ${{ steps.app.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.app.outputs.cache-hit != 'true' && false }}
         uses: actions/cache/restore@v6
         with:
           path: |
@@ -569,7 +569,7 @@ jobs:
       # useful: take the newest one of this Podfile, else the newest one at all.
       - name: Restore the compilation cache
         id: cas
-        if: ${{ steps.app.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.app.outputs.cache-hit != 'true' && false }}
         uses: actions/cache/restore@v6
         with:
           path: ~/Library/Caches/preview-xcode-cas
@@ -589,21 +589,21 @@ jobs:
       # nothing to the cache (see the top of the file); the same holds for the
       # CocoaPods below.
       - name: Save the compilation cache
-        if: ${{ steps.build.outcome == 'success' && steps.cas.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.build.outcome == 'success' && steps.cas.outputs.cache-hit != 'true' && false }}
         uses: actions/cache/save@v6
         with:
           path: ~/Library/Caches/preview-xcode-cas
           key: preview-xcodecache-ios-${{ steps.key.outputs.deps_key }}
 
       - name: Save the app in the cache
-        if: ${{ steps.build.outcome == 'success' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.build.outcome == 'success' && false }}
         uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/preview-app
           key: ${{ steps.key.outputs.app_key }}
 
       - name: Save the CocoaPods
-        if: ${{ steps.build.outcome == 'success' && steps.pods.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
+        if: ${{ steps.build.outcome == 'success' && steps.pods.outputs.cache-hit != 'true' && false }}
         uses: actions/cache/save@v6
         with:
           path: |
@@ -614,7 +614,7 @@ jobs:
       # A manual run: the capture of the capture-ios job, here, with the same
       # scripts and arguments, and no secrets.
       - name: Check out the flows of the pull request head
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         uses: actions/checkout@v7
         with:
           ref: ${{ needs.plan.outputs.head_sha }}
@@ -623,11 +623,11 @@ jobs:
           persist-credentials: false
 
       - name: Install Maestro
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         run: bash tooling/scripts/preview/phase.sh maestro-install bash tooling/scripts/preview/install-maestro.sh
 
       - name: Capture screenshots on the simulator
-        if: ${{ github.event_name == 'workflow_dispatch' && steps.build.outcome == 'success' }}
+        if: ${{ steps.build.outcome == 'success' }}
         env:
           SCREENS: ${{ needs.plan.outputs.screens }}
         run: |
@@ -638,7 +638,7 @@ jobs:
             "$PWD/tooling" "$PWD/flows" "$PWD/out" "$RUNNER_TEMP/preview-app" $SCREENS
 
       - name: Upload screenshots
-        if: ${{ always() && github.event_name == 'workflow_dispatch' }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
           name: screens-ios-${{ matrix.variant }}-0
@@ -672,7 +672,7 @@ jobs:
     needs: [plan, build-ios]
     # Also when the build of one variant failed: the other variant is captured
     # and the leg of the failed one stops at its own restore of the app.
-    if: ${{ !cancelled() && github.event_name != 'workflow_dispatch' && needs.plan.outputs.ios == 'true' && needs.build-ios.result != 'skipped' }}
+    if: ${{ !cancelled() && false && needs.plan.outputs.ios == 'true' && needs.build-ios.result != 'skipped' }}
     runs-on: macos-26
     timeout-minutes: 60
     permissions:
@@ -762,11 +762,11 @@ jobs:
       ANDROID_REQUESTED: ${{ needs.plan.outputs.android }}
       ANDROID_BUILD_RESULT: ${{ needs.build-android.result }}
       # A manual run captures in the build jobs (the capture jobs are skipped).
-      ANDROID_CAPTURE_RESULT: ${{ github.event_name == 'workflow_dispatch' && needs.build-android.result || needs.capture-android.result }}
+      ANDROID_CAPTURE_RESULT: ${{ needs.build-android.result }}
       IOS_REQUESTED: ${{ needs.plan.outputs.ios }}
       IOS_BUILD_RESULT: ${{ needs.build-ios.result }}
-      IOS_CAPTURE_RESULT: ${{ github.event_name == 'workflow_dispatch' && needs.build-ios.result || needs.capture-ios.result }}
-      INLINE_CAPTURE: ${{ github.event_name == 'workflow_dispatch' }}
+      IOS_CAPTURE_RESULT: ${{ needs.build-ios.result }}
+      INLINE_CAPTURE: 'true'
     steps:
       - name: Download the screenshots
         uses: actions/download-artifact@v8
