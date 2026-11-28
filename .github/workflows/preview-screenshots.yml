@@ -24,9 +24,11 @@ name: Preview screenshots
 # is signed in. Only a label run writes to the cache, in the scope of its pull
 # request: the app and the native build caches. A manual run writes nothing to
 # the cache: it runs on a branch whose cache scope runs of fork pull requests can
-# read, and anything built with the build secrets may carry them. It restores the
-# native caches only, always builds the app, and each build job captures its
-# own screens with the same scripts; the capture jobs are skipped. See ADR-0045.
+# read, and anything built with the build secrets may carry them. It does not
+# read the cache either (nothing is ever saved to its scope, so a restore could
+# only pick up an entry that someone else put there): it builds the app with
+# cold native caches, and each build job captures its own screens with the same
+# scripts; the capture jobs are skipped. See ADR-0045.
 
 on:
   workflow_dispatch:
@@ -280,9 +282,11 @@ jobs:
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 5000
         run: bash "$GITHUB_WORKSPACE/tooling/scripts/preview/phase.sh" npm-ci npm ci
 
+      # Not in a manual run, which reads and writes no cache (see the top of the
+      # file); the same holds for the iOS native caches.
       - name: Restore the Gradle caches
         id: gradle
-        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        if: ${{ steps.app.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
         uses: actions/cache/restore@v6
         with:
           path: |
@@ -553,7 +557,7 @@ jobs:
       # the restored folder it only confirms it.
       - name: Restore the CocoaPods
         id: pods
-        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        if: ${{ steps.app.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
         uses: actions/cache/restore@v6
         with:
           path: |
@@ -565,7 +569,7 @@ jobs:
       # useful: take the newest one of this Podfile, else the newest one at all.
       - name: Restore the compilation cache
         id: cas
-        if: ${{ steps.app.outputs.cache-hit != 'true' }}
+        if: ${{ steps.app.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch' }}
         uses: actions/cache/restore@v6
         with:
           path: ~/Library/Caches/preview-xcode-cas

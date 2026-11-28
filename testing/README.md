@@ -464,14 +464,15 @@ What each trigger reuses and writes (the Actions cache is scoped by git ref):
 | | Runs on | Reads caches of | Writes caches to |
 | --- | --- | --- | --- |
 | Label | the merge ref of the labelled pull request | that pull request | that pull request only: the native caches and the two apps |
-| Manual run | `main` | `main` | nothing |
+| Manual run | `main` | nothing | nothing |
 
 The `main` scope can be read by runs of every pull request, forks included (a
 fork can edit `ci.yml` to restore any entry of `main`), and whatever a build
 produces with the secrets may carry them: the app, and also the Gradle build
-cache. So a manual run writes nothing to the cache (ADR-0045, "Amendment"): it
-always builds both apps and captures its screens in its build jobs, one screen
-after another, instead of in parallel capture jobs.
+cache. So a manual run writes nothing to the cache, and reads nothing either,
+since nothing is ever saved to its scope (ADR-0045, "Amendment"): it always
+builds both apps with cold native caches and captures its screens in its build
+jobs, one screen after another, instead of in parallel capture jobs.
 
 The first labelled preview of a pull request builds both apps with cold native
 caches (CocoaPods, Xcode compilation, Gradle). The next previews of the same
@@ -541,9 +542,9 @@ not made again:
    run, looks for the app in the Actions cache. A hit skips the build. A miss
    builds the app, using the CocoaPods, Xcode compilation and Gradle caches, and
    stores the app and new native caches. The job summary names the components
-   of the key and says hit or miss. In a manual run the app is always built and
-   nothing is stored: the build job then captures the screens itself, with the
-   scripts of step 3.
+   of the key and says hit or miss. In a manual run the app is always built,
+   no cache is restored or stored, and the build job then captures the screens
+   itself, with the scripts of step 3.
 3. In a label run, `capture-android` and `capture-ios` run a matrix of variant
    by chunk in parallel: each restores the app from the cache, boots its own
    emulator or simulator and runs its flows. They need no secrets.
