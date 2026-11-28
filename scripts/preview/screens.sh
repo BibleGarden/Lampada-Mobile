@@ -44,16 +44,26 @@ resolve_flows() {
 # collect_screenshots <maestro output dir> <out dir>
 # Copies the images a flow took with takeScreenshot into <out dir>. The images
 # Maestro saves itself for failed or optional steps ("screenshot-*", "step-*")
-# are not evidence and are skipped.
+# are not evidence and are skipped. An image smaller than 100x100 pixels is an
+# empty capture (a takeScreenshot can complete with a 1x1 PNG): it is not copied
+# and the function fails, so the flow fails instead of publishing a blank
+# "screenshot".
 collect_screenshots() {
-  local from="$1" out="$2" file n=0
+  local from="$1" out="$2" file size n=0 empty=0
   mkdir -p "$out"
   while IFS= read -r file; do
     case "$(basename "$file")" in screenshot-*|step-*) continue ;; esac
-    cp "$file" "$out/$(basename "$file")"
-    n=$((n + 1))
+    size="$(python3 -c 'import struct, sys; d = open(sys.argv[1], "rb").read(24); print("%dx%d" % struct.unpack(">II", d[16:24]) if d[12:16] == b"IHDR" else "0x0")' "$file")"
+    if [[ "$size" =~ ^([0-9]+)x([0-9]+)$ ]] && ((BASH_REMATCH[1] >= 100 && BASH_REMATCH[2] >= 100)); then
+      cp "$file" "$out/$(basename "$file")"
+      n=$((n + 1))
+    else
+      echo "Screenshot $(basename "$file") is empty ($size pixels)." >&2
+      empty=1
+    fi
   done < <(find "$from" -type f -name '*.png' | sort)
   echo "$n"
+  return "$empty"
 }
 
 # ios_simulator_udid: prints the UDID of an available "iPhone 17 Pro" on the

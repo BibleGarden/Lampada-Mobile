@@ -49,7 +49,11 @@ for entry in "${flow_list[@]}"; do
     failed=1
     continue
   fi
-  count="$(collect_screenshots "$run" "$out/screens")"
+  if ! count="$(collect_screenshots "$run" "$out/screens")"; then
+    echo "Flow $name FAILED: a screenshot it took is empty." >&2
+    failed=1
+    continue
+  fi
   if [[ "$count" == 0 ]]; then
     adb -s "$serial" exec-out screencap -p >"$out/screens/$name-final.png"
     echo "Flow $name took no screenshots; saved the final screen as $name-final.png"

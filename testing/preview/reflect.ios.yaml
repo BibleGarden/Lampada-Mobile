@@ -43,8 +43,13 @@ appId: twinkler
           id: privacy-consent-core_prayer_ai-allow
 - longPressOn:
     id: threshold-hold-button
-- assertVisible:
-    id: session-title
+# After the hold the screen says "Preparing a question" until the server
+# answers; the session opens only then, and the test server can take more than
+# the default wait of assertVisible.
+- extendedWaitUntil:
+    visible:
+      id: session-title
+    timeout: 60000
 - tapOn:
     id: session-finish-button
 - extendedWaitUntil:

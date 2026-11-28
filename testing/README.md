@@ -436,7 +436,7 @@ builds a pull request twice, from its merge base ("before") and from its head
 ("after"), runs both builds on an Android emulator and on an iOS simulator,
 drives them with Maestro and posts the screenshots as one comment on the pull
 request. The images are also attached to the workflow run as the artifacts
-`screens-<platform>-<before|after>`; the logs are in `logs-*`. It needs no Mac
+`screens-<platform>-<before|after>-<chunk>`; the logs are in `logs-*`. It needs no Mac
 and is the evidence the owner approves a visual change with; it does not replace
 that approval and it does not replace the Maestro runs of "Testing changes" in
 `AGENTS.md`. The design is in
@@ -458,6 +458,27 @@ workflow and only people with triage access can set a label.
      Choose the branch that holds the workflow (`main`).
 3. Wait for the comment. A failed or partial run says so in the comment; the
    logs are in the run.
+
+What each trigger reuses and writes (the Actions cache is scoped by git ref):
+
+| | Runs on | Reads caches of | Writes caches to |
+| --- | --- | --- | --- |
+| Label | the merge ref of the labelled pull request | that pull request | that pull request only: the native caches and the two apps |
+| Manual run | `main` | nothing | nothing |
+
+The `main` scope can be read by runs of every pull request, forks included (a
+fork can edit `ci.yml` to restore any entry of `main`), and whatever a build
+produces with the secrets may carry them: the app, and also the Gradle build
+cache. So a manual run writes nothing to the cache, and reads nothing either,
+since nothing is ever saved to its scope (ADR-0045, "Amendment"): it always
+builds both apps with cold native caches and captures its screens in its build
+jobs, one screen after another, instead of in parallel capture jobs.
+
+The first labelled preview of a pull request builds both apps with cold native
+caches (CocoaPods, Xcode compilation, Gradle). The next previews of the same
+pull request reuse them: after a new commit only the "after" app is built, with
+warm native caches, and when nothing changed both apps come from the cache and
+the run only captures.
 
 Only pull requests from branches of this repository are accepted. The pull
 request must be open. A pull request from a fork is refused.
@@ -486,7 +507,13 @@ commas or spaces. A name is one of:
   without any is captured once at its end (`<flow>-final.png`).
 
 The same flow runs on the "before" and on the "after" build, so the pair is
-comparable. A flow that fails fails that job, and the comment says which.
+comparable. A flow that fails fails that job, and the comment says which. On iOS
+a flow is run again, up to three attempts in all, only when the Maestro driver
+did not start on the simulator (a cold runner can need minutes for it); a
+failure inside the flow is never retried. A flow that passed on a later attempt
+is named in the comment ("passed on attempt N"), and the logs of the failed
+attempts stay in the `logs-*` artifact of the job. A name given twice fails the
+request.
 
 ### Environment
 
@@ -494,7 +521,7 @@ comparable. A flow that fails fails that job, and the comment says which.
 | --- | --- | --- |
 | Runner | `ubuntu-latest` with KVM | `macos-26` (arm64) |
 | Device | Pixel profile, Android 15 Google Play, 1280x2856 at 480 dpi, x86_64 system image (the `Pray_Pixel_API_35` AVD uses an ARM64 image, which cannot run on x86_64) | `iPhone 17 Pro`, the newest installed iOS runtime |
-| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild`, `npx expo run:ios --configuration Release` |
+| Build | `npx expo prebuild`, Gradle `assembleRelease`, x86_64 only | `npx expo prebuild --no-install`, then `npx expo run:ios --configuration Release` (it runs `pod install` itself) |
 | Driver | Maestro 2.10.0, `scripts/android-maestro-driver.sh`, the readiness gate `scripts/android-guest-load.mjs` | Maestro 2.10.0 |
 
 Both builds are Release builds on the `test` channel. The emulator has no host
@@ -502,6 +529,43 @@ GPU: it renders in software (`swiftshader_indirect`), so frame timing says
 nothing; only the pictures matter. The status bar is fixed in every run: the
 same clock and battery on both platforms, the same network icons on iOS and none
 on Android. Scripts: `scripts/preview/`.
+
+### Build, cache and capture jobs
+
+The build is separate from the capture, and a build that was already made is
+not made again:
+
+1. `plan` resolves the pull request and splits the screens into chunks (one
+   screen or flow each, at most four chunks per platform and variant).
+2. `build-android` and `build-ios` run for the "before" and the "after" commit.
+   Each computes the app key (`scripts/preview/app-key.sh`) and, in a label
+   run, looks for the app in the Actions cache. A hit skips the build. A miss
+   builds the app, using the CocoaPods, Xcode compilation and Gradle caches, and
+   stores the app and new native caches. The job summary names the components
+   of the key and says hit or miss. In a manual run the app is always built,
+   no cache is restored or stored, and the build job then captures the screens
+   itself, with the scripts of step 3.
+3. In a label run, `capture-android` and `capture-ios` run a matrix of variant
+   by chunk in parallel: each restores the app from the cache, boots its own
+   emulator or simulator and runs its flows. They need no secrets.
+4. `publish` merges the chunks into the one comment.
+
+The app key changes with the app commit, the lockfile, the Xcode and iOS SDK
+(or Java, SDK build tools and NDK) versions of the runner, the build scripts in
+`scripts/preview/` and a hash of the secret values, so a stale app is never shown
+as "after". The first preview of a pull request is cold (the iOS build is the
+longest part); a second run of the same pull request finds both apps and only
+captures. Every job summary lists the phase durations
+(`scripts/preview/phases.sh`): `npm-ci`, `prebuild`, `gradle` (Android),
+`xcodebuild-and-install` (iOS; it includes `pod install`, the JS bundle and the
+install), `simulator-boot`, `app-install`, `maestro-install`, `emulator-start`
+and `capture`.
+
+The app goes from build to capture through the cache of the labelled pull
+request, not through a workflow artifact: it bundles the secret values and
+artifacts of a public repository can be downloaded by anyone who is signed in.
+The cache set has to stay within the
+10 GB of the repository (ADR-0045, "Amendment").
 
 ### Secrets
 
@@ -525,8 +589,9 @@ The workflow builds and runs code of a pull request in a public repository.
   `pull_request_target`, `issue_comment` or `push`: nobody without write or
   triage access can start it, and a fork cannot.
 - **Job split.** `plan` reads the pull request through the API and checks out
-  nothing. The `android` and `ios` jobs check out and run PR code with a
-  read-only `GITHUB_TOKEN`. The `publish` job is the only one with write access
+  nothing. The build and capture jobs check out and run PR code with a
+  read-only `GITHUB_TOKEN`; the secrets are exposed only to the native build
+  steps of the build jobs. The `publish` job is the only one with write access
   (`contents` for the `preview-images` branch, `pull-requests` for the comment
   and the label); it checks out no code and runs no PR code. It accepts the
   artifacts as untrusted data: only regular PNG files with plain names, at most
